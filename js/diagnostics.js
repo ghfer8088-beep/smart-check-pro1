@@ -1156,4 +1156,63 @@ function computeDiagnosisOld(jointId, answers, age, bmi, duration, severity, chr
     };
 }
 
+// توليد التقرير النصي المفصل والشخصي
+function generateDetailedReport(diagnosisList, jointName, answers, age, bmi, gender, patientName, severity, duration, chronicDiseases, pattern) {
+    let primary = diagnosisList[0];
+    let pronoun = gender === 'male' ? 'تعاني' : 'تعانين';
+    let pronoun2 = gender === 'male' ? 'أنت' : 'أنتِ';
+    let namePart = patientName ? (gender === 'male' ? `عزيزي ${patientName}` : `عزيزتي ${patientName}`) : pronoun2;
+    
+    // التعامل مع الحالة التي تكون فيها الاحتمالية 0% أو منخفضة جداً
+    if(primary.prob === 0 || primary.prob < 10) {
+        let report = `
+            <div style="background: linear-gradient(135deg, #1e2633 0%, #2d3748 100%); padding: 25px; border-radius: 16px; border: 2px solid #f59e0b; margin-bottom: 20px;">
+                <h3 style="color: #f59e0b; margin: 0 0 15px 0; font-size: 1.4em;">🔍 تحليل الأعراض</h3>
+                <p style="color: #e5e7eb; line-height: 1.8; margin: 0;">بناءً على تحليل شامل لأعراضك ${namePart}، لم يتمكن النظام من تحديد تشخيص محدد بنسبة عالية. هذا يعني أن الأعراض غير كافية أو غير محددة للوصول إلى تشخيص دقيق.</p>
+            </div>
+            
+            <div style="background: #1e2633; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                <h4 style="color: #d4af37; margin: 0 0 15px 0; font-size: 1.2em;">📊 تحليل نمط الأعراض</h4>
+                <ul style="color: #e5e7eb; line-height: 1.8; margin: 0; padding-right: 20px;">
+        `;
+        
+        if(pattern.mechanical) report += `<li>تشير الأعراض إلى طبيعة ميكانيكية (تزداد مع الحركات المحددة)</li>`;
+        if(pattern.inflammatory) report += `<li>تشير الأعراض إلى طبيعة التهابية (تيبس صباحي، ألم مستمر)</li>`;
+        if(pattern.neuropathic) report += `<li>تشير الأعراض إلى طبيعة عصبية (تنميل، امتداد الألم)</li>`;
+        if(pattern.weakness) report += `<li>يوجد ضعف في العضلات يتطلب تقييماً عصبياً</li>`;
+        
+        report += `
+                </ul>
+            </div>
+            
+            <div style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                <h4 style="color: white; margin: 0 0 10px 0; font-size: 1.2em;">⚠️ التوصية الطبية</h4>
+                <p style="color: white; line-height: 1.8; margin: 0;">يوصى بإجراء فحص سريري متخصص لتقييم حالتك بدقة. قد يحتاج الأمر إلى صور أشعة أو رنين مغناطيسي للتأكيد.</p>
+            </div>
+        `;
+        
+        return report;
+    }
+    
+    let report = `
+        <div style="background: linear-gradient(135deg, #1e2633 0%, #2d3748 100%); padding: 25px; border-radius: 16px; border: 2px solid #10b981; margin-bottom: 20px;">
+            <h3 style="color: #10b981; margin: 0 0 15px 0; font-size: 1.4em;">🏥 التشخيص المحتمل</h3>
+            <p style="color: #e5e7eb; line-height: 1.8; margin: 0;">بناءً على تحليل شامل لأعراضك ${namePart}، يبدو أنك ${pronoun} من <strong style="color: #10b981; font-size: 1.2em;">${primary.name}</strong> بنسبة احتمالية <strong style="color: #10b981; font-size: 1.2em;">${primary.prob}%</strong>.</p>
+        </div>
+    `;
+    
+    // إضافة معلومات إضافية
+    report += `
+        <div style="background: #1e2633; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+            <h4 style="color: #d4af37; margin: 0 0 15px 0; font-size: 1.2em;">📋 تفاصيل إضافية</h4>
+            <p style="color: #e5e7eb; line-height: 1.8; margin: 0;">منطقة الألم: ${jointName}</p>
+            <p style="color: #e5e7eb; line-height: 1.8; margin: 0;">شدة الألم: ${severity}/10</p>
+            <p style="color: #e5e7eb; line-height: 1.8; margin: 0;">مدة الألم: ${duration}</p>
+            ${bmi ? `<p style="color: #e5e7eb; line-height: 1.8; margin: 0;">مؤشر كتلة الجسم: ${bmi.toFixed(1)}</p>` : ''}
+        </div>
+    `;
+    
+    return report;
+}
+
 console.log('✅ Diagnostics module loaded');
