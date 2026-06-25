@@ -2,6 +2,11 @@
 function formatExercisesNew(exercises) {
     if (!exercises) return '';
     
+    // إذا كانت مصفوفة، حولها إلى نص
+    if (Array.isArray(exercises)) {
+        exercises = exercises.join('\n');
+    }
+    
     // إذا كان التمرين بالفعل بتنسيق HTML الجديد، أرجعه كما هو
     if (exercises.includes('<div class="exercise-list">')) {
         return exercises;
