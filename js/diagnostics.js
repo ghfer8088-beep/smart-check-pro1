@@ -1215,4 +1215,35 @@ function generateDetailedReport(diagnosisList, jointName, answers, age, bmi, gen
     return report;
 }
 
+// دالة للحصول على التمارين المنزلية والتحذيرات
+async function getHomeExercisesAndWarnings(diagnosisList, jointId, pattern, age, bmi, severity, duration) {
+    const exercises = [];
+    const warnings = [];
+    
+    // تحذيرات عامة
+    warnings.push('⚠️ هذه الإرشادات مؤقتة وليست بديلاً عن التشخيص السريري');
+    
+    if (severity >= 8) {
+        warnings.push('🚨 شدة الألم عالية - يرجى استشارة الطبيب فوراً');
+    }
+    
+    if (pattern.neuropathic) {
+        warnings.push('⚠️ أعراض عصبية - قد تحتاج تقييماً عصبياً متخصصاً');
+    }
+    
+    // تمارين بناءً على التشخيص
+    diagnosisList.forEach(diagnosis => {
+        if (diagnosis.prob > 50) {
+            exercises.push(`تمارين خاصة بـ ${diagnosis.name}`);
+        }
+    });
+    
+    // تمارين عامة
+    exercises.push('تمارين إطالة خفيفة');
+    exercises.push('المشي لمدة 10-15 دقيقة');
+    exercises.push('تطبيق كمادات باردة أو دافئة حسب الحالة');
+    
+    return { exercises, warnings };
+}
+
 console.log('✅ Diagnostics module loaded');
