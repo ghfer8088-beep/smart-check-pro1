@@ -1,0 +1,242 @@
+{
+  "symptoms": [
+    {
+      "id": "pain_radiates_to_leg",
+      "question": "هل يمتد الألم إلى الساق؟",
+      "clinicalFeatures": ["radiatingPain", "nerveIrritation"],
+      "weight": 3
+    },
+    {
+      "id": "pain_worse_with_sitting",
+      "question": "هل يزداد الألم مع الجلوس؟",
+      "clinicalFeatures": ["worseWithSitting", "nerveCompression"],
+      "weight": 2
+    },
+    {
+      "id": "pain_better_with_walking",
+      "question": "هل يتحسن الألم بالمشي؟",
+      "clinicalFeatures": ["betterWithWalking", "mechanicalPain"],
+      "weight": 2
+    },
+    {
+      "id": "numbness_present",
+      "question": "هل تشعر بتنميل أو خدر؟",
+      "clinicalFeatures": ["numbness", "nerveInvolvement"],
+      "weight": 3
+    },
+    {
+      "id": "muscle_weakness",
+      "question": "هل تشعر بضعف في العضلات؟",
+      "clinicalFeatures": ["muscleWeakness", "nerveDamage"],
+      "weight": 3
+    },
+    {
+      "id": "stiffness_present",
+      "question": "هل تشعر بتصلب أو تيبس؟",
+      "clinicalFeatures": ["stiffness", "jointRestriction"],
+      "weight": 2
+    },
+    {
+      "id": "limited_movement",
+      "question": "هل لديك محدودية في الحركة؟",
+      "clinicalFeatures": ["limitedMovement", "jointRestriction"],
+      "weight": 2
+    },
+    {
+      "id": "inflammation_signs",
+      "question": "هل هناك احمرار أو تورم أو حرارة؟",
+      "clinicalFeatures": ["inflammation", "acuteInjury"],
+      "weight": 2
+    },
+    {
+      "id": "pain_with_exertion",
+      "question": "هل يزداد الألم مع المجهود؟",
+      "clinicalFeatures": ["exertionRelated", "mechanicalPain"],
+      "weight": 2
+    },
+    {
+      "id": "pain_with_bending",
+      "question": "هل يزداد الألم مع الانحناء؟",
+      "clinicalFeatures": ["bendingRelated", "mechanicalPain"],
+      "weight": 2
+    },
+    {
+      "id": "muscle_spasm",
+      "question": "هل تشعر بتشنج عضلي؟",
+      "clinicalFeatures": ["muscleSpasm", "acuteInjury"],
+      "weight": 2
+    },
+    {
+      "id": "night_pain",
+      "question": "هل يزداد الألم في الليل؟",
+      "clinicalFeatures": ["nightPain", "inflammatory"],
+      "weight": 2
+    },
+    {
+      "id": "morning_stiffness",
+      "question": "هل تشعر بتصلب في الصباح؟",
+      "clinicalFeatures": ["morningStiffness", "inflammatory"],
+      "weight": 2
+    },
+    {
+      "id": "pain_worse_with_rest",
+      "question": "هل يزداد الألم مع الراحة؟",
+      "clinicalFeatures": ["worseWithRest", "inflammatory"],
+      "weight": 2
+    },
+    {
+      "id": "pain_worse_with_activity",
+      "question": "هل يزداد الألم مع النشاط؟",
+      "clinicalFeatures": ["worseWithActivity", "mechanicalPain"],
+      "weight": 2
+    },
+    {
+      "id": "clicking_popping",
+      "question": "هل تسمع صوت نقرة أو فرقعة؟",
+      "clinicalFeatures": ["jointInstability", "mechanicalIssue"],
+      "weight": 1
+    },
+    {
+      "id": "giving_way",
+      "question": "هل يشعر المفصل بأنه يعطي أو يفقد الثبات؟",
+      "clinicalFeatures": ["jointInstability", "ligamentIssue"],
+      "weight": 2
+    },
+    {
+      "id": "swelling_present",
+      "question": "هل هناك تورم؟",
+      "clinicalFeatures": ["swelling", "inflammation"],
+      "weight": 2
+    },
+    {
+      "id": "redness_present",
+      "question": "هل هناك احمرار؟",
+      "clinicalFeatures": ["redness", "inflammation"],
+      "weight": 2
+    },
+    {
+      "id": "heat_present",
+      "question": "هل هناك حرارة في المنطقة؟",
+      "clinicalFeatures": ["heat", "inflammation"],
+      "weight": 2
+    }
+  ],
+  "clinicalFeatures": {
+    "radiatingPain": {
+      "name": "انتشار الألم",
+      "description": "الألم يمتد من المنطقة الأصلية إلى مناطق أخرى"
+    },
+    "nerveIrritation": {
+      "name": "تهيج عصبي",
+      "description": "تهيج أو ضغط على الأعصاب"
+    },
+    "worseWithSitting": {
+      "name": "زيادة الألم مع الجلوس",
+      "description": "الألم يزداد عند الجلوس لفترات طويلة"
+    },
+    "betterWithWalking": {
+      "name": "تحسن بالمشي",
+      "description": "الألم يتحسن مع الحركة والمشي"
+    },
+    "nerveCompression": {
+      "name": "ضغط عصبي",
+      "description": "ضغط على الأعصاب يسبب أعراض عصبية"
+    },
+    "mechanicalPain": {
+      "name": "ألم ميكانيكي",
+      "description": "ألم مرتبط بالحركة والوضعية"
+    },
+    "numbness": {
+      "name": "تنميل",
+      "description": "شعور بالخدر أو فقدان الإحساس"
+    },
+    "nerveInvolvement": {
+      "name": "تورط عصبي",
+      "description": "تورط الأعصاب في المشكلة"
+    },
+    "muscleWeakness": {
+      "name": "ضعف عضلي",
+      "description": "ضعف في قوة العضلات"
+    },
+    "nerveDamage": {
+      "name": "ضرر عصبي",
+      "description": "ضرر فعلي في الأعصاب"
+    },
+    "stiffness": {
+      "name": "تيبس",
+      "description": "شعور بالصلابة وتقليل المرونة"
+    },
+    "jointRestriction": {
+      "name": "محدودية مفصلية",
+      "description": "محدودية في حركة المفاصل"
+    },
+    "limitedMovement": {
+      "name": "محدودية الحركة",
+      "description": "صعوبة في الحركة الطبيعية"
+    },
+    "inflammation": {
+      "name": "التهاب",
+      "description": "استجابة التهابية في الأنسجة"
+    },
+    "acuteInjury": {
+      "name": "إصابة حادة",
+      "description": "إصابة حديثة أو حادة"
+    },
+    "exertionRelated": {
+      "name": "مرتبط بالمجهود",
+      "description": "الألم يظهر مع المجهود البدني"
+    },
+    "bendingRelated": {
+      "name": "مرتبط بالانحناء",
+      "description": "الألم يزداد مع الانحناء"
+    },
+    "muscleSpasm": {
+      "name": "تشنج عضلي",
+      "description": "انقباض غير إرادي للعضلات"
+    },
+    "nightPain": {
+      "name": "ألم ليلي",
+      "description": "الألم يزداد في الليل"
+    },
+    "inflammatory": {
+      "name": "التهابي",
+      "description": "طبيعة التهابية للمشكلة"
+    },
+    "morningStiffness": {
+      "name": "تيبس صباحي",
+      "description": "تيبس يظهر في الصباح"
+    },
+    "worseWithRest": {
+      "name": "زيادة مع الراحة",
+      "description": "الألم يزداد عند الراحة"
+    },
+    "worseWithActivity": {
+      "name": "زيادة مع النشاط",
+      "description": "الألم يزداد مع النشاط البدني"
+    },
+    "jointInstability": {
+      "name": "عدم ثبات المفصل",
+      "description": "المفصل يشعر بعدم الثبات"
+    },
+    "mechanicalIssue": {
+      "name": "مشكلة ميكانيكية",
+      "description": "مشكلة في الميكانيكا الحيوية"
+    },
+    "ligamentIssue": {
+      "name": "مشكلة رباطية",
+      "description": "مشكلة في الأربطة"
+    },
+    "swelling": {
+      "name": "تورم",
+      "description": "تراكم السوائل في الأنسجة"
+    },
+    "redness": {
+      "name": "احمرار",
+      "description": "احمرار في المنطقة المصابة"
+    },
+    "heat": {
+      "name": "حرارة",
+      "description": "ارتفاع درجة حرارة المنطقة"
+    }
+  }
+}

@@ -1,0 +1,253 @@
+{
+  "exercises": [
+    {
+      "id": "nerve_flossing_lumbar",
+      "title": "تمرين لتقليل الضغط الممتد من أسفل الظهر إلى الساق",
+      "treatmentGoals": ["reduce_nerve_pressure", "reduce_nerve_irritation"],
+      "difficultyLevel": "beginner",
+      "region": "lumbar",
+      "contraindications": ["severe_pain", "acute_injury", "muscle_weakness"],
+      "instructions": {
+        "why": "هذا التمرين يساعد على تقليل الضغط على العصب الممتد من أسفل الظهر إلى الساق عن طريق تحريك العصب بلطف داخل القناة العصبية",
+        "steps": [
+          "استلقِ على ظهرك على سطح مستوٍ",
+          "اثنِ ركبتيك وضعهما على الأرض",
+          "أمسك ركبتك اليمنى بكلتا يديك",
+          "اسحب الركبة ببطء نحو صدرك حتى تشعر بتمدد خفيف",
+          "أرجع الركبة ببطء إلى وضع البداية",
+          "كرر التمرين مع الركبة اليسرى"
+        ],
+        "repetitions": "10-15 تكرار لكل ركبة",
+        "sets": "2-3 جولات",
+        "restDuration": "30 ثانية بين الجولات",
+        "expectedSensation": "شعور بتمدد خفيف في أسفل الظهر والساق",
+        "stopImmediately": "إذا شعرت بألم حاد أو تنميل شديد أو ضعف في الساق"
+      }
+    },
+    {
+      "id": "mckenzie_extension_lumbar",
+      "title": "تمرين للمساعدة في تقليل الضغط الممتد من أسفل الظهر إلى الساق",
+      "treatmentGoals": ["reduce_nerve_pressure", "reduce_nerve_irritation"],
+      "difficultyLevel": "beginner",
+      "region": "lumbar",
+      "contraindications": ["severe_pain", "acute_injury", "muscle_weakness"],
+      "instructions": {
+        "why": "هذا التمرين يساعد على تقليل الضغط على الغضروف والعصب عن طريق إطالة العمود الفقري للخلف",
+        "steps": [
+          "استلقِ على بطنك على سطح مستوٍ",
+          "ضع يديك تحت كتفيك",
+          "اضغط على يديك لرفع الجزء العلوي من جسمك ببطء",
+          "حافظ على حوضك على الأرض",
+          "ارفع جسمك حتى تشعر بتمدد خفيف في أسفل الظهر",
+          "احتفظ بالوضعية لمدة 2-3 ثواني",
+          "أنزل جسمك ببطء إلى وضع البداية"
+        ],
+        "repetitions": "10-15 تكرار",
+        "sets": "2-3 جولات",
+        "restDuration": "30 ثانية بين الجولات",
+        "expectedSensation": "شعور بتمدد خفيف في أسفل الظهر",
+        "stopImmediately": "إذا شعرت بألم حاد أو زيادة في التنميل"
+      }
+    },
+    {
+      "id": "cat_cow_stretch",
+      "title": "تمرين لتحسين مرونة العمود الفقري وتقليل التيبس",
+      "treatmentGoals": ["improve_range_of_motion", "improve_muscle_flexibility", "restore_normal_movement"],
+      "difficultyLevel": "beginner",
+      "region": "lumbar",
+      "contraindications": ["severe_pain", "acute_injury"],
+      "instructions": {
+        "why": "هذا التمرين يساعد على تحسين مرونة العمود الفقري وتقليل التيبس عن طريق تحريك العمود الفقري في اتجاهين مختلفين",
+        "steps": [
+          "ابدأ على أربع بوضعية اليدين والركبتين",
+          "ضع يديك تحت كتفيك وركبتيك تحت وركيك",
+          "أرخِ رأسك لأسفل واربط ظهرك للأعلى (وضعية القطة)",
+          "احتفظ بالوضعية لمدة 2-3 ثواني",
+          "ارفع رأسك للأعلى وانحنِ ظهرك للأسفل (وضعية البقرة)",
+          "احتفظ بالوضعية لمدة 2-3 ثواني",
+          "كرر الحركة ببطء وبشكل متكرر"
+        ],
+        "repetitions": "10-15 تكرار",
+        "sets": "2-3 جولات",
+        "restDuration": "30 ثانية بين الجولات",
+        "expectedSensation": "شعور بتمدد خفيف في العمود الفقري",
+        "stopImmediately": "إذا شعرت بألم حاد"
+      }
+    },
+    {
+      "id": "pelvic_tilt",
+      "title": "تمرين لتقوية عضلات البطن وتحسين ثبات العمود الفقري",
+      "treatmentGoals": ["improve_joint_stability", "strengthen_core_muscles", "improve_posture"],
+      "difficultyLevel": "beginner",
+      "region": "lumbar",
+      "contraindications": ["severe_pain", "acute_injury"],
+      "instructions": {
+        "why": "هذا التمرين يساعد على تقوية عضلات البطن وتحسين ثبات العمود الفقري عن طريق تحريك الحوض",
+        "steps": [
+          "استلقِ على ظهرك مع ثني الركبتين",
+          "ضع قدميك على الأرض بعرض الكتفين",
+          "اضغط ظهرك على الأرض",
+          "شد عضلات بطنك",
+          "حرك حوضك للأعلى ببطء",
+          "احتفظ بالوضعية لمدة 5-10 ثواني",
+          "أرخِ الحوض ببطء إلى وضع البداية"
+        ],
+        "repetitions": "10-15 تكرار",
+        "sets": "2-3 جولات",
+        "restDuration": "30 ثانية بين الجولات",
+        "expectedSensation": "شعور بتوتر خفيف في عضلات البطن",
+        "stopImmediately": "إذا شعرت بألم حاد"
+      }
+    },
+    {
+      "id": "hamstring_stretch",
+      "title": "تمرين لتحسين مرونة عضلات الفخذ الخلفية",
+      "treatmentGoals": ["improve_muscle_flexibility", "improve_range_of_motion", "reduce_mechanical_inflammation"],
+      "difficultyLevel": "beginner",
+      "region": "lumbar",
+      "contraindications": ["severe_pain", "acute_injury"],
+      "instructions": {
+        "why": "هذا التمرين يساعد على تحسين مرونة عضلات الفخذ الخلفية وتقليل الضغط على أسفل الظهر",
+        "steps": [
+          "استلقِ على ظهرك",
+          "اثنِ ركبة واحدة وضعهما على الأرض",
+          "ارفع الرجل الأخرى ببطء",
+          "أمسك الرجل المرفوعة من خلف الركبة",
+          "اسحب الرجل ببطء نحو صدرك",
+          "احتفظ بالوضعية لمدة 20-30 ثانية",
+          "أنزل الرجل ببطء إلى وضع البداية",
+          "كرر مع الرجل الأخرى"
+        ],
+        "repetitions": "2-3 تكرار لكل رجل",
+        "sets": "2-3 جولات",
+        "restDuration": "30 ثانية بين الجولات",
+        "expectedSensation": "شعور بتمدد خفيف في عضلات الفخذ الخلفية",
+        "stopImmediately": "إذا شعرت بألم حاد"
+      }
+    },
+    {
+      "id": "shoulder_pendulum",
+      "title": "تمرين لتحسين حركة الكتف وتقليل الألم",
+      "treatmentGoals": ["improve_range_of_motion", "reduce_mechanical_inflammation", "restore_normal_movement"],
+      "difficultyLevel": "beginner",
+      "region": "shoulder",
+      "contraindications": ["severe_pain", "acute_injury"],
+      "instructions": {
+        "why": "هذا التمرين يساعد على تحسين حركة الكتف وتقليل الألم عن طريق استخدام الجاذبية لتحريك الذراع",
+        "steps": [
+          "قف بجانب طاولة",
+          "اتكأ على الطاولة بذراعك السليم",
+          "دع الذراع المصابة تتدلى بحرية",
+          "استخدم وزن جسمك فقط، لا تستخدم عضلاتك",
+          "حرك الذراع في دوائر صغيرة (حجم طبق)",
+          "حرك 10 مرات في اتجاه عقارب الساعة",
+          "حرك 10 مرات في عكس اتجاه عقارب الساعة",
+          "حرك الذراع للأمام والخلف 10 مرات",
+          "حرك الذراع للجانبين 10 مرات"
+        ],
+        "repetitions": "10 مرات لكل اتجاه",
+        "sets": "3 مرات يومياً",
+        "restDuration": "لا حاجة للراحة",
+        "expectedSensation": "شعور بحركة خفيفة في الكتف",
+        "stopImmediately": "إذا شعرت بألم حاد"
+      }
+    },
+    {
+      "id": "shoulder_wall_walk",
+      "title": "تمرين لتحسين مدى حركة رفع الذراع",
+      "treatmentGoals": ["improve_range_of_motion", "restore_normal_movement"],
+      "difficultyLevel": "intermediate",
+      "region": "shoulder",
+      "contraindications": ["severe_pain", "acute_injury"],
+      "instructions": {
+        "why": "هذا التمرين يساعد على تحسين مدى حركة رفع الذراع عن طريق استخدام الحائط كدعم",
+        "steps": [
+          "قف أمام حائط",
+          "ضع يديك على الحائط عند مستوى الخصر",
+          "امشِ بأصابعك ببطء على الحائط للأعلى",
+          "استمر حتى مستوى الكتف أو حتى تشعر بألم",
+          "أنزل يديك ببطء إلى وضع البداية",
+          "كرر التمرين عدة مرات"
+        ],
+        "repetitions": "10-20 مرة",
+        "sets": "2-3 جولات",
+        "restDuration": "30 ثانية بين الجولات",
+        "expectedSensation": "شعور بتمدد خفيف في الكتف",
+        "stopImmediately": "إذا شعرت بألم حاد"
+      }
+    },
+    {
+      "id": "knee_straight_leg_raise",
+      "title": "تمرين لتقوية عضلات الفخذ الأمامية",
+      "treatmentGoals": ["improve_joint_stability", "strengthen_core_muscles"],
+      "difficultyLevel": "beginner",
+      "region": "knee",
+      "contraindications": ["severe_pain", "acute_injury"],
+      "instructions": {
+        "why": "هذا التمرين يساعد على تقوية عضلات الفخذ الأمامية وتحسين ثبات الركبة",
+        "steps": [
+          "استلقِ على ظهرك",
+          "اثنِ ركبة واحدة وضعهما على الأرض",
+          "حافظ على الرجل الأخرى مستقيمة",
+          "ارفع الرجل المستقيمة ببطء حتى مستوى الركبة الأخرى",
+          "احتفظ بالوضعية لمدة 2-3 ثواني",
+          "أنزل الرجل ببطء إلى وضع البداية",
+          "كرر مع الرجل الأخرى"
+        ],
+        "repetitions": "10-15 تكرار لكل رجل",
+        "sets": "2-3 جولات",
+        "restDuration": "30 ثانية بين الجولات",
+        "expectedSensation": "شعور بتوتر خفيف في عضلات الفخذ",
+        "stopImmediately": "إذا شعرت بألم حاد"
+      }
+    },
+    {
+      "id": "knee_wall_sit",
+      "title": "تمرين لتقوية عضلات الفخذ وتحسين ثبات الركبة",
+      "treatmentGoals": ["improve_joint_stability", "strengthen_core_muscles"],
+      "difficultyLevel": "intermediate",
+      "region": "knee",
+      "contraindications": ["severe_pain", "acute_injury"],
+      "instructions": {
+        "why": "هذا التمرين يساعد على تقوية عضلات الفخذ وتحسين ثبات الركبة",
+        "steps": [
+          "قف بظهرك ضد الحائط",
+          "ضع قدميك على الأرض بعرض الكتفين",
+          "انزل ببطء حتى تكون ركبتاك بزاوية 90 درجة",
+          "احتفظ بالوضعية لمدة 10-30 ثانية",
+          "ارفع ببطء إلى وضع البداية"
+        ],
+        "repetitions": "1-3 تكرار",
+        "sets": "2-3 جولات",
+        "restDuration": "30 ثانية بين الجولات",
+        "expectedSensation": "شعور بتوتر في عضلات الفخذ",
+        "stopImmediately": "إذا شعرت بألم حاد"
+      }
+    },
+    {
+      "id": "gentle_muscle_relaxation",
+      "title": "تمرين للاسترخاء العضلي وتقليل التشنج",
+      "treatmentGoals": ["reduce_muscle_spasm", "improve_muscle_flexibility"],
+      "difficultyLevel": "beginner",
+      "region": "general",
+      "contraindications": ["severe_pain"],
+      "instructions": {
+        "why": "هذا التمرين يساعد على الاسترخاء العضلي وتقليل التشنج عن طريق التنفس العميق والاسترخاء التدريجي",
+        "steps": [
+          "اجلس أو استلقِ في وضعية مريحة",
+          "أغلق عينيك",
+          "خذ نفساً عميقاً ببطء",
+          "احبس النفس لمدة 3 ثواني",
+          "أخرج النفس ببطء",
+          "كرر التنفس العميق لمدة 5-10 دقائق",
+          "ركز على استرخاء كل عضلة في جسمك"
+        ],
+        "repetitions": "5-10 دقائق",
+        "sets": "1-2 مرات يومياً",
+        "restDuration": "لا حاجة للراحة",
+        "expectedSensation": "شعور بالاسترخاء العام",
+        "stopImmediately": "إذا شعرت بدوار أو ضيق في التنفس"
+      }
+    }
+  ]
+}

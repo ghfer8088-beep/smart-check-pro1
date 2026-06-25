@@ -1,0 +1,464 @@
+{
+  "diagnoses": [
+    {
+      "id": "herniated_disc",
+      "name": "انزلاق غضروفي",
+      "region": "lumbar",
+      "supportingFactors": [
+        {
+          "clinicalFeature": "radiatingPain",
+          "weight": 3,
+          "reason": "الانزلاق الغضروفي يضغط على العصب ويسبب انتشار الألم للساق"
+        },
+        {
+          "clinicalFeature": "numbness",
+          "weight": 3,
+          "reason": "الضغط على العصب يسبب تنميل في المنطقة المغذية"
+        },
+        {
+          "clinicalFeature": "worseWithSitting",
+          "weight": 2,
+          "reason": "الجلوس يزيد الضغط على الغضروف والعصب"
+        },
+        {
+          "clinicalFeature": "betterWithWalking",
+          "weight": 2,
+          "reason": "المشي يقلل الضغط على العصب"
+        },
+        {
+          "clinicalFeature": "muscleWeakness",
+          "weight": 3,
+          "reason": "الضغط العصبي يسبب ضعفاً عضلياً"
+        }
+      ],
+      "opposingFactors": [
+        {
+          "clinicalFeature": "worseWithRest",
+          "weight": -2,
+          "reason": "الانزلاق الغضروفي عادة يتحسن بالراحة"
+        },
+        {
+          "clinicalFeature": "morningStiffness",
+          "weight": -1,
+          "reason": "التيبس الصباحي أكثر شيوعاً في الحالات الالتهابية"
+        }
+      ],
+      "minConfidence": 60
+    },
+    {
+      "id": "muscle_strain",
+      "name": "إجهاد عضلي",
+      "region": "lumbar",
+      "supportingFactors": [
+        {
+          "clinicalFeature": "muscleSpasm",
+          "weight": 3,
+          "reason": "الإجهاد العضلي يسبب تشنجاً عضلياً"
+        },
+        {
+          "clinicalFeature": "worseWithActivity",
+          "weight": 2,
+          "reason": "النشاط يزيد الإجهاد العضلي"
+        },
+        {
+          "clinicalFeature": "betterWithRest",
+          "weight": 2,
+          "reason": "الراحة تساعد على شفاء العضلات"
+        },
+        {
+          "clinicalFeature": "limitedMovement",
+          "weight": 2,
+          "reason": "الإجهاد يسبب محدودية في الحركة"
+        },
+        {
+          "clinicalFeature": "acuteInjury",
+          "weight": 2,
+          "reason": "غالباً يحدث بعد إصابة حادة"
+        }
+      ],
+      "opposingFactors": [
+        {
+          "clinicalFeature": "radiatingPain",
+          "weight": -2,
+          "reason": "الإجهاد العضلي نادراً ما يسبب انتشار الألم"
+        },
+        {
+          "clinicalFeature": "numbness",
+          "weight": -3,
+          "reason": "الإجهاد العضلي لا يسبب تنميلاً"
+        }
+      ],
+      "minConfidence": 50
+    },
+    {
+      "id": "spinal_stenosis",
+      "name": "تضيق العمود الفقري",
+      "region": "lumbar",
+      "supportingFactors": [
+        {
+          "clinicalFeature": "worseWithWalking",
+          "weight": 3,
+          "reason": "المشي يزيد الضغط على الأعصاب في التضيق"
+        },
+        {
+          "clinicalFeature": "betterWithSitting",
+          "weight": 3,
+          "reason": "الجلوس يفتح القناة الفقرية ويقلل الضغط"
+        },
+        {
+          "clinicalFeature": "radiatingPain",
+          "weight": 2,
+          "reason": "التضيق يضغط على الأعصاب ويسبب انتشار الألم"
+        },
+        {
+          "clinicalFeature": "numbness",
+          "weight": 2,
+          "reason": "الضغط العصبي يسبب تنميلاً"
+        }
+      ],
+      "opposingFactors": [
+        {
+          "clinicalFeature": "worseWithSitting",
+          "weight": -3,
+          "reason": "التضيق عادة يتحسن بالجلوس"
+        },
+        {
+          "clinicalFeature": "muscleSpasm",
+          "weight": -1,
+          "reason": "التشنج العضلي ليس سمة رئيسية للتضيق"
+        }
+      ],
+      "minConfidence": 60
+    },
+    {
+      "id": "sciatica",
+      "name": "عصب الورك",
+      "region": "lumbar",
+      "supportingFactors": [
+        {
+          "clinicalFeature": "radiatingPain",
+          "weight": 3,
+          "reason": "عصب الورك يسبب انتشار الألم من الظهر للساق"
+        },
+        {
+          "clinicalFeature": "numbness",
+          "weight": 2,
+          "reason": "تهيج العصب يسبب تنميلاً"
+        },
+        {
+          "clinicalFeature": "worseWithSitting",
+          "weight": 2,
+          "reason": "الجلوس يزيد الضغط على عصب الورك"
+        },
+        {
+          "clinicalFeature": "nerveIrritation",
+          "weight": 3,
+          "reason": "تهيج واضح للعصب"
+        }
+      ],
+      "opposingFactors": [
+        {
+          "clinicalFeature": "worseWithRest",
+          "weight": -1,
+          "reason": "عصب الورك عادة يتحسن بالراحة"
+        }
+      ],
+      "minConfidence": 55
+    },
+    {
+      "id": "facet_joint_arthritis",
+      "name": "خشونة مفاصل الوجه",
+      "region": "lumbar",
+      "supportingFactors": [
+        {
+          "clinicalFeature": "worseWithActivity",
+          "weight": 2,
+          "reason": "النشاط يزيد الضغط على المفاصل"
+        },
+        {
+          "clinicalFeature": "betterWithRest",
+          "weight": 2,
+          "reason": "الراحة تقلل الضغط على المفاصل"
+        },
+        {
+          "clinicalFeature": "morningStiffness",
+          "weight": 2,
+          "reason": "الخشونة تسبب تيبساً صباحياً"
+        },
+        {
+          "clinicalFeature": "stiffness",
+          "weight": 2,
+          "reason": "الخشونة تسبب تيبساً عاماً"
+        },
+        {
+          "clinicalFeature": "limitedMovement",
+          "weight": 2,
+          "reason": "الخشونة تحد من الحركة"
+        }
+      ],
+      "opposingFactors": [
+        {
+          "clinicalFeature": "radiatingPain",
+          "weight": -2,
+          "reason": "خشونة المفاصل نادراً ما تسبب انتشار الألم"
+        },
+        {
+          "clinicalFeature": "numbness",
+          "weight": -3,
+          "reason": "خشونة المفاصل لا تسبب تنميلاً"
+        }
+      ],
+      "minConfidence": 50
+    },
+    {
+      "id": "sacroiliac_joint_dysfunction",
+      "name": "خلل مفصل العجز الحرقفي",
+      "region": "sacrum",
+      "supportingFactors": [
+        {
+          "clinicalFeature": "worseWithActivity",
+          "weight": 2,
+          "reason": "النشاط يزيد الضغط على المفصل"
+        },
+        {
+          "clinicalFeature": "betterWithRest",
+          "weight": 2,
+          "reason": "الراحة تقلل الضغط على المفصل"
+        },
+        {
+          "clinicalFeature": "limitedMovement",
+          "weight": 2,
+          "reason": "الخلل يحد من الحركة"
+        },
+        {
+          "clinicalFeature": "mechanicalPain",
+          "weight": 2,
+          "reason": "مشكلة ميكانيكية في المفصل"
+        }
+      ],
+      "opposingFactors": [
+        {
+          "clinicalFeature": "radiatingPain",
+          "weight": -1,
+          "reason": "الخلل نادراً ما يسبب انتشار الألم للساق"
+        },
+        {
+          "clinicalFeature": "numbness",
+          "weight": -3,
+          "reason": "الخلل لا يسبب تنميلاً"
+        }
+      ],
+      "minConfidence": 45
+    },
+    {
+      "id": "shoulder_impingement",
+      "name": "انحشار الكتف",
+      "region": "shoulder",
+      "supportingFactors": [
+        {
+          "clinicalFeature": "worseWithActivity",
+          "weight": 3,
+          "reason": "رفع الذراع يزيد الانحشار"
+        },
+        {
+          "clinicalFeature": "limitedMovement",
+          "weight": 2,
+          "reason": "الانحشار يحد من حركة الذراع"
+        },
+        {
+          "clinicalFeature": "nightPain",
+          "weight": 2,
+          "reason": "الألم يزداد في الليل"
+        },
+        {
+          "clinicalFeature": "mechanicalPain",
+          "weight": 2,
+          "reason": "مشكلة ميكانيكية في الكتف"
+        }
+      ],
+      "opposingFactors": [
+        {
+          "clinicalFeature": "radiatingPain",
+          "weight": -1,
+          "reason": "الانحشار نادراً ما يسبب انتشار الألم"
+        },
+        {
+          "clinicalFeature": "numbness",
+          "weight": -3,
+          "reason": "الانحشار لا يسبب تنميلاً"
+        }
+      ],
+      "minConfidence": 55
+    },
+    {
+      "id": "rotator_cuff_tendinitis",
+      "name": "التهاب أوتار الكفة المدورة",
+      "region": "shoulder",
+      "supportingFactors": [
+        {
+          "clinicalFeature": "worseWithActivity",
+          "weight": 3,
+          "reason": "النشاط يزيد التهاب الأوتار"
+        },
+        {
+          "clinicalFeature": "betterWithRest",
+          "weight": 2,
+          "reason": "الراحة تقلل الالتهاب"
+        },
+        {
+          "clinicalFeature": "nightPain",
+          "weight": 2,
+          "reason": "الالتهاب يسبب ألماً ليلياً"
+        },
+        {
+          "clinicalFeature": "inflammation",
+          "weight": 2,
+          "reason": "التهاب واضح في الأوتار"
+        }
+      ],
+      "opposingFactors": [
+        {
+          "clinicalFeature": "radiatingPain",
+          "weight": -1,
+          "reason": "التهاب الأوتار نادراً ما يسبب انتشار الألم"
+        },
+        {
+          "clinicalFeature": "numbness",
+          "weight": -3,
+          "reason": "التهاب الأوتار لا يسبب تنميلاً"
+        }
+      ],
+      "minConfidence": 50
+    },
+    {
+      "id": "frozen_shoulder",
+      "name": "الكتف المتجمد",
+      "region": "shoulder",
+      "supportingFactors": [
+        {
+          "clinicalFeature": "stiffness",
+          "weight": 3,
+          "reason": "تيبس شديد في الكتف"
+        },
+        {
+          "clinicalFeature": "limitedMovement",
+          "weight": 3,
+          "reason": "محدودية شديدة في الحركة"
+        },
+        {
+          "clinicalFeature": "morningStiffness",
+          "weight": 2,
+          "reason": "تيبس صباحي واضح"
+        },
+        {
+          "clinicalFeature": "worseWithRest",
+          "weight": 1,
+          "reason": "الراحة تزيد التيبس"
+        }
+      ],
+      "opposingFactors": [
+        {
+          "clinicalFeature": "radiatingPain",
+          "weight": -1,
+          "reason": "الكتف المتجمد نادراً ما يسبب انتشار الألم"
+        },
+        {
+          "clinicalFeature": "numbness",
+          "weight": -3,
+          "reason": "الكتف المتجمد لا يسبب تنميلاً"
+        }
+      ],
+      "minConfidence": 60
+    },
+    {
+      "id": "knee_osteoarthritis",
+      "name": "خشونة الركبة",
+      "region": "knee",
+      "supportingFactors": [
+        {
+          "clinicalFeature": "worseWithActivity",
+          "weight": 2,
+          "reason": "النشاط يزيد الضغط على المفصل"
+        },
+        {
+          "clinicalFeature": "betterWithRest",
+          "weight": 2,
+          "reason": "الراحة تقلل الضغط"
+        },
+        {
+          "clinicalFeature": "morningStiffness",
+          "weight": 2,
+          "reason": "الخشونة تسبب تيبساً صباحياً"
+        },
+        {
+          "clinicalFeature": "stiffness",
+          "weight": 2,
+          "reason": "تيبس عام في المفصل"
+        },
+        {
+          "clinicalFeature": "limitedMovement",
+          "weight": 2,
+          "reason": "الخشونة تحد من الحركة"
+        }
+      ],
+      "opposingFactors": [
+        {
+          "clinicalFeature": "radiatingPain",
+          "weight": -2,
+          "reason": "خشونة الركبة لا تسبب انتشار الألم"
+        },
+        {
+          "clinicalFeature": "numbness",
+          "weight": -3,
+          "reason": "خشونة الركبة لا تسبب تنميلاً"
+        }
+      ],
+      "minConfidence": 55
+    },
+    {
+      "id": "meniscus_tear",
+      "name": "تمزق الغضروف الهلالي",
+      "region": "knee",
+      "supportingFactors": [
+        {
+          "clinicalFeature": "jointInstability",
+          "weight": 2,
+          "reason": "التمزق يسبب عدم ثبات المفصل"
+        },
+        {
+          "clinicalFeature": "givingWay",
+          "weight": 3,
+          "reason": "المفصل يعطي أو يفقد الثبات"
+        },
+        {
+          "clinicalFeature": "clickingPopping",
+          "weight": 2,
+          "reason": "التمزق يسبب صوت نقرة"
+        },
+        {
+          "clinicalFeature": "limitedMovement",
+          "weight": 2,
+          "reason": "التمزق يحد من الحركة"
+        },
+        {
+          "clinicalFeature": "acuteInjury",
+          "weight": 2,
+          "reason": "غالباً يحدث بعد إصابة حادة"
+        }
+      ],
+      "opposingFactors": [
+        {
+          "clinicalFeature": "morningStiffness",
+          "weight": -1,
+          "reason": "التيبس الصباحي ليس سمة رئيسية للتمزق"
+        },
+        {
+          "clinicalFeature": "radiatingPain",
+          "weight": -2,
+          "reason": "التمزق لا يسبب انتشار الألم"
+        }
+      ],
+      "minConfidence": 55
+    }
+  ]
+}

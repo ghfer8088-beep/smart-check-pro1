@@ -1,0 +1,310 @@
+:root {
+    --bg-dark: #07090c;
+    --card-dark: #0f131a;
+    --primary-gold: #d4af37;
+    --text-light: #f1f5f9;
+    --text-muted: #94a3b8;
+    --medical-green: #10b981;
+    --border-color: #1e2633;
+    --danger-red: #ef4444;
+    --info-blue: #3b82f6;
+}
+
+/* أيقونات المساعدة السياقية */
+.help-icon {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+    text-align: center;
+    background: var(--info-blue);
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    cursor: help;
+    margin-right: 5px;
+    position: relative;
+}
+
+.help-icon:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e2633;
+    color: var(--text-light);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    border: 1px solid var(--primary-gold);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
+body { background-color: var(--bg-dark); color: var(--text-light); padding: 20px; }
+.container { max-width: 1400px; margin: 0 auto; }
+
+/* الطباعة */
+@media print {
+    body { background: white; padding: 0; }
+    .no-print { display: none !important; }
+    .card, .report-block { background: white; color: black; border: 1px solid #ccc; }
+    .report-block h4 { color: #b8860b; }
+    * { color: black !important; }
+}
+/* أنماط الطباعة المحسنة لـ PDF احترافي */
+@media print {
+    .no-print, header, footer, .control-panel, .chronic-diseases, .actions-group, .consultation-card, .comparison-wrapper, .btn-submit, .btn-reset, .print-pdf-btn, #share-btn, .loader, .modal, .status-bar, .progress-bar, .range-container, .red-flags-box, .dynamic-question-box, .welcome-placeholder, .anatomy-wrapper, .inputs-container { display: none !important; }
+    body, .container, #report-section, .card, .report-block { background: white !important; color: black !important; box-shadow: none !important; border: none !important; padding: 0 !important; margin: 0 !important; }
+    .report-header { border-bottom: 3px solid #b8860b; margin-bottom: 25px; padding-bottom: 15px; }
+    .diagnosis-badge { background: #2563eb !important; color: white !important; padding: 8px 16px; border-radius: 4px; }
+    .report-block { border-right: 4px solid #b8860b !important; margin-bottom: 25px; page-break-inside: avoid; padding: 20px !important; background: #f9f9f9 !important; border: 1px solid #ddd !important; }
+    h2, h4 { color: #b8860b !important; margin-bottom: 15px; }
+    body { font-size: 12pt; line-height: 1.6; font-family: 'Tajawal', 'Arial', sans-serif; }
+    @page { size: A4; margin: 1.5cm; }
+    .report-header h2:before { content: "➤ "; color: #b8860b; }
+    .report-header { display: flex; justify-content: space-between; align-items: center; }
+    .report-header h2 { font-size: 18pt; margin: 0; }
+    .diagnosis-badge { font-size: 11pt; }
+    .recommendations-box { border: 2px solid #10b981 !important; border-radius: 8px; padding: 20px !important; margin-top: 20px; background: #f0fdf4 !important; }
+    .recommendations-box h4 { color: #10b981 !important; border-bottom: 2px solid #10b981; padding-bottom: 10px; }
+    #home-exercises { font-size: 11pt; line-height: 1.8; }
+    #home-exercises span[style*="color: #10b981"] { color: #10b981 !important; font-weight: bold; }
+    #home-exercises span[style*="color: #ef4444"] { color: #dc2626 !important; font-weight: bold; }
+    #home-exercises span[style*="color: #d4af37"] { color: #b8860b !important; font-weight: bold; }
+    .warning-list { color: #dc2626 !important; }
+    .warning-list li { margin-bottom: 8px; padding-left: 20px; }
+    #differential-dx div { margin-bottom: 12px; padding: 10px; background: #f5f5f5; border-left: 3px solid #b8860b; }
+    #detailed-assessment { font-size: 11pt; line-height: 1.8; }
+    footer:after { content: "تقرير صادر عن نظام Smart Check Pro - هذه المعلومات لا تغني عن الفحص السريري"; display: block; margin-top: 30px; font-size: 9pt; text-align: center; color: #666; border-top: 1px dashed #ccc; padding-top: 10px; }
+    #report-section { display: block !important; margin-top: 0 !important; border: none !important; }
+    .report-grid { display: block !important; }
+    .report-grid > div { margin-bottom: 20px; }
+}
+
+header { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 30px; padding: 30px; background: linear-gradient(135deg, var(--card-dark) 0%, #151b24 100%); border: 1px solid var(--border-color); border-radius: 16px; flex-wrap: wrap; }
+.header-text { flex: 1; }
+header h1 { color: var(--primary-gold); font-size: 2.2rem; font-weight: 900; }
+.license-tag { font-weight: 700; color: var(--primary-gold); margin-top: 8px; display: inline-block; background: rgba(212, 175, 55, 0.08); padding: 5px 16px; border-radius: 20px; border: 1px solid rgba(212, 175, 55, 0.2); font-size: 0.9rem; }
+.logo-container { width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.3); }
+.logo-img { max-width: 90%; max-height: 90%; object-fit: contain; }
+.main-grid { display: grid; grid-template-columns: 1fr 1.1fr; gap: 35px; }
+@media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } }
+.card { background-color: var(--card-dark); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+.card-title { font-size: 1.3rem; font-weight: 700; color: var(--primary-gold); border-bottom: 2px solid var(--border-color); padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+.progress-bar { width: 150px; height: 6px; background: var(--border-color); border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--primary-gold); width: 0%; transition: width 0.3s; }
+.anatomy-wrapper { position: relative; width: 100%; max-width: 550px; margin: 0 auto; background: #0a0e14; border-radius: 16px; border: 1px solid var(--border-color); aspect-ratio: 0.75/1; overflow: hidden; }
+.image-container { position: relative; width: 100%; height: 100%; }
+.skeleton-img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.pain-point { position: absolute; width: 26px; height: 26px; background: rgba(212,175,55,0.85); border: 2px solid white; border-radius: 50%; cursor: pointer; transform: translate(-50%,-50%); transition: all 0.2s ease; z-index: 10; }
+.pain-point:hover { transform: translate(-50%,-50%) scale(1.2); background: #ef4444; }
+.pain-point.selected { background: var(--medical-green); transform: translate(-50%,-50%) scale(1.15); box-shadow: 0 0 0 3px rgba(16,185,129,0.5); }
+.pain-point .tooltip-text { visibility: hidden; background: rgba(0,0,0,0.85); color: white; padding: 5px 10px; border-radius: 6px; position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%); width: 120px; text-align: center; font-size: 0.8rem; white-space: nowrap; pointer-events: none; }
+.pain-point:hover .tooltip-text { visibility: visible; }
+.status-bar { margin-top: 15px; background: #0f131a; padding: 14px; border-radius: 8px; border-right: 4px solid var(--primary-gold); text-align: center; font-weight: bold; }
+.control-panel { background: #141a24; padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); width: 100%; margin-bottom: 15px; }
+.switch-group { display: flex; gap: 10px; }
+.view-btn { flex: 1; background: #07090c; border: 1px solid var(--border-color); color: var(--text-muted); padding: 12px; border-radius: 8px; cursor: pointer; text-align: center; transition: 0.3s; }
+.view-btn.active { background: var(--primary-gold); color: black; }
+.form-group { margin-bottom: 20px; }
+.form-label { display: block; margin-bottom: 8px; font-weight: 700; }
+.input-control, .form-select { width: 100%; padding: 12px; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 8px; color: white; font-size: 1rem; }
+.checkbox-label { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #0c1017; border-radius: 6px; cursor: pointer; transition: 0.2s; margin-bottom: 8px; }
+.checkbox-label:hover { background: #141a24; }
+.checkbox-label input[type="checkbox"] { accent-color: var(--primary-gold); width: 18px; height: 18px; }
+.form-textarea { width: 100%; padding: 12px; background: #0c1017; border: 1px solid #2a3441; border-radius: 6px; color: #e0e0e0; font-size: 14px; resize: vertical; transition: 0.2s; }
+.form-textarea:focus { outline: none; border-color: var(--primary-gold); box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2); }
+.form-textarea::placeholder { color: #6a7280; }
+.grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.range-container { display: flex; align-items: center; gap: 15px; background: #07090c; padding: 12px; border-radius: 8px; }
+.range-slider { flex: 1; accent-color: var(--primary-gold); }
+.range-value { font-weight: 900; color: var(--primary-gold); font-size: 1.2rem; }
+.dynamic-question-box { margin-bottom: 20px; padding: 18px; background: rgba(0,0,0,0.2); border-radius: 10px; border-right: 4px solid var(--primary-gold); }
+.option-group { display: flex; flex-direction: column; gap: 8px; }
+.option-label { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #0c1017; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+.btn-submit { width: 100%; background: linear-gradient(135deg, var(--primary-gold), #b89324); color: black; padding: 16px; border: none; border-radius: 8px; font-weight: 900; font-size: 1.1rem; cursor: pointer; margin-top: 20px; transition: 0.3s; }
+.btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(212,175,55,0.4); }
+.btn-reset { background: linear-gradient(135deg, #4b5563, #374151); margin-top: 10px; }
+.loader { display: none; text-align: center; margin: 20px; }
+.loader.active { display: block; }
+.spinner { width: 40px; height: 40px; border: 4px solid rgba(212,175,55,0.3); border-top-color: var(--primary-gold); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.red-flags-box { background: rgba(239,68,68,0.15); border: 2px solid var(--danger-red); border-radius: 12px; padding: 20px; margin-bottom: 20px; display: none; }
+#report-section { display: none; margin-top: 30px; border: 2px solid var(--primary-gold); }
+.report-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+.diagnosis-badge { background: var(--info-blue); padding: 8px 20px; border-radius: 30px; font-weight: bold; }
+.print-pdf-btn { background: #2c3e66; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; margin-right: 10px; }
+.report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+@media (max-width: 768px) { .report-grid { grid-template-columns: 1fr; } }
+
+/* التصميم المتجاوب للهواتف المحمولة */
+@media (max-width: 768px) {
+    body { padding: 10px; }
+    .container { padding: 0; }
+    
+    .grid-2col {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+    
+    .card {
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .control-panel {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .control-panel button {
+        width: 100%;
+        padding: 12px;
+        font-size: 14px;
+    }
+    
+    .anatomy-wrapper {
+        flex-direction: column;
+    }
+    
+    .anatomy-wrapper > div {
+        width: 100% !important;
+        margin-bottom: 15px;
+    }
+    
+    .modal-content {
+        width: 95% !important;
+        max-width: none !important;
+        margin: 10px;
+        padding: 20px;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .input-control {
+        font-size: 16px; /* منع التكبير التلقائي في iOS */
+        padding: 12px;
+    }
+    
+    .btn-submit, .btn-reset {
+        width: 100%;
+        padding: 15px;
+        font-size: 16px;
+    }
+    
+    /* تحسين عرض التقرير على الموبايل */
+    .report-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .report-block {
+        padding: 15px;
+    }
+    
+    /* تحسين عرض لوحة الإدارة */
+    #statistics-dashboard {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 10px;
+    }
+    
+    #statistics-dashboard > div {
+        padding: 15px;
+    }
+    
+    #statistics-dashboard > div > div:first-child {
+        font-size: 1.5em;
+    }
+    
+    /* تحسين عرض قائمة المرضى */
+    .admin-patient-item {
+        padding: 10px;
+    }
+    
+    .admin-patient-item > div {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    /* تحسين عرض السجل اليومي */
+    .daily-tracking-section {
+        padding: 15px;
+    }
+    
+    .range-container {
+        padding: 10px;
+    }
+    
+    /* إخفاء العناصر غير الضرورية على الموبايل */
+    .no-mobile {
+        display: none !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #statistics-dashboard {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .card-title {
+        font-size: 16px;
+    }
+    
+    .form-label {
+        font-size: 14px;
+    }
+    
+    .option-label {
+        font-size: 13px;
+    }
+}
+.report-block { background: #07090c; border-right: 4px solid var(--primary-gold); padding: 20px; border-radius: 8px; }
+.recommendations-box { background: rgba(16,185,129,0.1); border: 1px solid var(--medical-green); border-radius: 12px; padding: 20px; margin-top: 20px; }
+.exercise-list { display: flex; flex-direction: column; gap: 15px; }
+.exercise-item { background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.2); border-radius: 8px; padding: 15px; }
+.exercise-name { color: var(--primary-gold); font-weight: bold; font-size: 1rem; margin-bottom: 10px; }
+.exercise-illustration { background: rgba(0,0,0,0.3); border-radius: 6px; padding: 10px; margin: 10px 0; text-align: center; }
+.exercise-illustration pre { margin: 0; font-family: 'Courier New', monospace; font-size: 0.85rem; line-height: 1.2; color: #d4af37; white-space: pre; }
+.exercise-desc { color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; }
+.warning-list { margin-top: 15px; padding-top: 10px; border-top: 1px solid var(--border-color); color: #f87171; font-size: 0.9rem; }
+.comparison-wrapper { overflow-x: auto; margin: 20px 0; }
+.comparison-table { width: 100%; border-collapse: collapse; min-width: 600px; text-align: right; }
+.comparison-table th, .comparison-table td { border: 1px solid var(--border-color); padding: 16px; vertical-align: top; background-color: #0a0e14; }
+.comparison-table th { background: #141a24; text-align: center; font-weight: bold; }
+.comparison-table th.highlight-header { background: #2e240a; color: var(--primary-gold); border: 2px solid var(--primary-gold); }
+.chiro-success-col { background: rgba(20,184,166,0.1); }
+.consultation-card { background: linear-gradient(135deg, #1e2a3a, #0f1722); border-radius: 16px; padding: 20px; margin: 20px 0; text-align: center; border: 1px solid var(--primary-gold); }
+.consultation-btn { display: inline-block; background: #25d366; color: black; padding: 12px 30px; border-radius: 40px; font-weight: 900; text-decoration: none; margin-top: 10px; }
+.facebook-btn { display: inline-block; background: #1877f2; color: white; padding: 12px 30px; border-radius: 40px; text-decoration: none; margin-top: 10px; margin-right: 10px; }
+.actions-group { display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap; }
+.btn-action { padding: 12px 20px; border-radius: 8px; text-align: center; font-weight: 700; flex: 1; cursor: pointer; border: none; }
+.btn-share { background: #1e2633; color: white; }
+footer { text-align: center; padding: 25px; color: var(--text-muted); margin-top: 30px; border-top: 1px solid var(--border-color); }
+.warning-text { font-size: 0.8rem; color: #f87171; margin-top: 10px; }
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 1000; overflow-y: auto; }
+.modal-content { background: var(--card-dark); padding: 30px; border-radius: 16px; text-align: center; max-width: 500px; border: 1px solid var(--primary-gold); max-height: 90vh; overflow-y: auto; }
+.btn-modal { background: var(--primary-gold); color: black; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; }
+.bmi-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; margin: 5px; }
+.bmi-normal { background: var(--medical-green); color: black; }
+.bmi-overweight { background: #f59e0b; color: black; }
+.bmi-obese { background: var(--danger-red); color: white; }
+.bmi-underweight { background: #6b7280; color: white; }
+.welcome-placeholder { text-align: center; padding: 60px 20px; background: #0f131a; border-radius: 16px; border: 1px dashed var(--border-color); }
+.chronic-diseases { margin-top: 20px; background: #0a0e14; border-radius: 12px; padding: 15px; border: 1px solid var(--border-color); }
+.chronic-diseases h4 { color: var(--primary-gold); margin-bottom: 10px; font-size: 1rem; }
+.chronic-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.chronic-grid label { display: flex; align-items: center; gap: 8px; background: #141a24; padding: 8px 15px; border-radius: 40px; cursor: pointer; }
+.chronic-grid label:hover { background: #1e2a3a; }
+.chronic-grid input { accent-color: var(--primary-gold); width: 18px; height: 18px; }
+.data-consent-box { margin-top: 20px; padding: 18px; background: rgba(59, 130, 246, 0.1); border-radius: 10px; border-right: 4px solid var(--info-blue); }
+.consent-info { font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; margin-right: 30px; }
+.questions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+.questions-column { display: flex; flex-direction: column; gap: 15px; }
+@media (max-width: 768px) { .questions-grid { grid-template-columns: 1fr; } }
+.conditional-question { margin-bottom: 15px; }

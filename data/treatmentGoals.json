@@ -1,0 +1,139 @@
+{
+  "treatmentGoals": [
+    {
+      "id": "reduce_nerve_pressure",
+      "name": "تقليل الضغط العصبي",
+      "description": "تقليل الضغط على الأعصاب لتخفيف الأعراض العصبية",
+      "requiredClinicalFeatures": ["radiatingPain", "nerveIrritation", "numbness"],
+      "optionalClinicalFeatures": ["muscleWeakness", "worseWithSitting"],
+      "priority": "high",
+      "estimatedDuration": "4-6 أسابيع"
+    },
+    {
+      "id": "improve_range_of_motion",
+      "name": "تحسين مدى الحركة",
+      "description": "تحسين مرونة المفاصل وزيادة مدى الحركة",
+      "requiredClinicalFeatures": ["stiffness", "limitedMovement"],
+      "optionalClinicalFeatures": ["morningStiffness", "jointRestriction"],
+      "priority": "high",
+      "estimatedDuration": "3-4 أسابيع"
+    },
+    {
+      "id": "reduce_muscle_spasm",
+      "name": "تقليل التشنج العضلي",
+      "description": "تقليل التشنج العضلي وتحسين استرخاء العضلات",
+      "requiredClinicalFeatures": ["muscleSpasm"],
+      "optionalClinicalFeatures": ["limitedMovement", "acuteInjury"],
+      "priority": "high",
+      "estimatedDuration": "1-2 أسابيع"
+    },
+    {
+      "id": "improve_joint_stability",
+      "name": "تحسين ثبات المفصل",
+      "description": "تقوية العضلات المحيطة بالمفصل لتحسين الثبات",
+      "requiredClinicalFeatures": ["jointInstability", "givingWay"],
+      "optionalClinicalFeatures": ["limitedMovement", "muscleWeakness"],
+      "priority": "high",
+      "estimatedDuration": "6-8 أسابيع"
+    },
+    {
+      "id": "improve_muscle_flexibility",
+      "name": "تحسين مرونة العضلات",
+      "description": "تحسين مرونة العضلات وتقليل التوتر",
+      "requiredClinicalFeatures": ["stiffness"],
+      "optionalClinicalFeatures": ["limitedMovement", "muscleSpasm"],
+      "priority": "medium",
+      "estimatedDuration": "3-4 أسابيع"
+    },
+    {
+      "id": "reduce_mechanical_inflammation",
+      "name": "تقليل الالتهاب الميكانيكي",
+      "description": "تقليل الالتهاب الناتج عن الإجهاد الميكانيكي",
+      "requiredClinicalFeatures": ["inflammation", "mechanicalPain"],
+      "optionalClinicalFeatures": ["worseWithActivity", "swelling"],
+      "priority": "medium",
+      "estimatedDuration": "2-3 أسابيع"
+    },
+    {
+      "id": "restore_normal_movement",
+      "name": "استعادة الحركة الطبيعية",
+      "description": "استعادة أنماط الحركة الطبيعية والصحيحة",
+      "requiredClinicalFeatures": ["limitedMovement", "mechanicalIssue"],
+      "optionalClinicalFeatures": ["stiffness", "jointRestriction"],
+      "priority": "medium",
+      "estimatedDuration": "4-6 أسابيع"
+    },
+    {
+      "id": "reduce_acute_inflammation",
+      "name": "تقليل الالتهاب الحاد",
+      "description": "تقليل الالتهاب الحاد والتورم",
+      "requiredClinicalFeatures": ["acuteInjury", "inflammation"],
+      "optionalClinicalFeatures": ["swelling", "redness", "heat"],
+      "priority": "high",
+      "estimatedDuration": "1-2 أسابيع"
+    },
+    {
+      "id": "improve_posture",
+      "name": "تحسين الوضعية",
+      "description": "تحسين الوضعية العامة لتقليل الضغط على المفاصل",
+      "requiredClinicalFeatures": ["mechanicalPain", "worseWithActivity"],
+      "optionalClinicalFeatures": ["stiffness", "limitedMovement"],
+      "priority": "medium",
+      "estimatedDuration": "4-6 أسابيع"
+    },
+    {
+      "id": "strengthen_core_muscles",
+      "name": "تقوية عضلات الجذع",
+      "description": "تقوية عضلات الجذع لدعم العمود الفقري",
+      "requiredClinicalFeatures": ["mechanicalPain", "limitedMovement"],
+      "optionalClinicalFeatures": ["muscleWeakness", "stiffness"],
+      "priority": "medium",
+      "estimatedDuration": "6-8 أسابيع"
+    },
+    {
+      "id": "reduce_nerve_irritation",
+      "name": "تقليل تهيج العصب",
+      "description": "تقليل تهيج العصب وتخفيف الأعراض العصبية",
+      "requiredClinicalFeatures": ["nerveIrritation", "radiatingPain"],
+      "optionalClinicalFeatures": ["numbness", "worseWithSitting"],
+      "priority": "high",
+      "estimatedDuration": "3-4 أسابيع"
+    },
+    {
+      "id": "improve_circulation",
+      "name": "تحسين الدورة الدموية",
+      "description": "تحسين الدورة الدموية لتسريع الشفاء",
+      "requiredClinicalFeatures": ["inflammation", "acuteInjury"],
+      "optionalClinicalFeatures": ["swelling", "heat"],
+      "priority": "low",
+      "estimatedDuration": "2-3 أسابيع"
+    },
+    {
+      "id": "reduce_pain_with_movement",
+      "name": "تقليل الألم مع الحركة",
+      "description": "تقليل الألم المرتبط بالحركة والنشاط",
+      "requiredClinicalFeatures": ["worseWithActivity", "mechanicalPain"],
+      "optionalClinicalFeatures": ["limitedMovement", "stiffness"],
+      "priority": "medium",
+      "estimatedDuration": "3-4 أسابيع"
+    },
+    {
+      "id": "improve_functional_movement",
+      "name": "تحسين الحركة الوظيفية",
+      "description": "تحسين القدرة على أداء الأنشطة اليومية",
+      "requiredClinicalFeatures": ["limitedMovement", "mechanicalIssue"],
+      "optionalClinicalFeatures": ["stiffness", "jointRestriction"],
+      "priority": "medium",
+      "estimatedDuration": "4-6 أسابيع"
+    },
+    {
+      "id": "reduce_chronic_pain",
+      "name": "تقليل الألم المزمن",
+      "description": "إدارة وتقليل الألم المزمن",
+      "requiredClinicalFeatures": ["worseWithRest", "inflammatory"],
+      "optionalClinicalFeatures": ["morningStiffness", "nightPain"],
+      "priority": "high",
+      "estimatedDuration": "8-12 أسابيع"
+    }
+  ]
+}

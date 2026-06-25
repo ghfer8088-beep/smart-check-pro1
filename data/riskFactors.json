@@ -1,0 +1,124 @@
+{
+  "riskFactors": [
+    {
+      "id": "loss_of_bladder_control",
+      "name": "فقدان السيطرة على البول",
+      "severity": "critical",
+      "question": "هل فقدت السيطرة على البول؟",
+      "action": "immediate_medical_attention",
+      "message": "⚠️ تحذير شديد: فقدان السيطرة على البول علامة خطيرة تتطلب عناية طبية فورية. يرجى استشارتنا لتأكيد التشخيص فوراً."
+    },
+    {
+      "id": "loss_of_bowel_control",
+      "name": "فقدان السيطرة على البراز",
+      "severity": "critical",
+      "question": "هل فقدت السيطرة على البراز؟",
+      "action": "immediate_medical_attention",
+      "message": "⚠️ تحذير شديد: فقدان السيطرة على البراز علامة خطيرة تتطلب عناية طبية فورية. يرجى استشارتنا لتأكيد التشخيص فوراً."
+    },
+    {
+      "id": "sudden_severe_weakness",
+      "name": "ضعف شديد مفاجئ",
+      "severity": "critical",
+      "question": "هل تعاني من ضعف شديد مفاجئ في الأطراف؟",
+      "action": "immediate_medical_attention",
+      "message": "⚠️ تحذير شديد: الضعف الشديد المفاجئ علامة خطيرة تتطلب عناية طبية فورية. يرجى استشارتنا لتأكيد التشخيص فوراً."
+    },
+    {
+      "id": "fever_present",
+      "name": "حمى",
+      "severity": "high",
+      "question": "هل تعاني من حمى (ارتفاع درجة الحرارة)؟",
+      "action": "medical_consultation",
+      "message": "⚠️ تحذير: الحمى مع ألم في الظهر قد تشير إلى عدوى. يرجى استشارتنا لتأكيد التشخيص."
+    },
+    {
+      "id": "unexplained_weight_loss",
+      "name": "فقدان وزن غير مفسر",
+      "severity": "high",
+      "question": "هل فقدت وزناً غير مفسر في الآونة الأخيرة؟",
+      "action": "medical_consultation",
+      "message": "⚠️ تحذير: فقدان الوزن غير المفسر مع ألم في الظهر قد يشير إلى مشكلة خطيرة. يرجى استشارتنا لتأكيد التشخيص."
+    },
+    {
+      "id": "recent_severe_injury",
+      "name": "إصابة قوية حديثة",
+      "severity": "high",
+      "question": "هل تعرضت لإصابة قوية حديثة (سقوط، حادث، إلخ)؟",
+      "action": "medical_consultation",
+      "message": "⚠️ تحذير: الإصابة القوية الحديثة تتطلب تقييماً متخصصاً. يرجى استشارتنا لتأكيد التشخيص."
+    },
+    {
+      "id": "severe_night_pain",
+      "name": "ألم ليلي شديد",
+      "severity": "medium",
+      "question": "هل تعاني من ألم ليلي شديد يمنعك من النوم؟",
+      "action": "medical_consultation",
+      "message": "⚠️ تحذير: الألم الليلي الشديد قد يشير إلى مشكلة خطيرة. يرجى استشارتنا لتأكيد التشخيص."
+    },
+    {
+      "id": "progressive_weakness",
+      "name": "ضعف تدريجي",
+      "severity": "high",
+      "question": "هل يزداد الضعف تدريجياً مع الوقت؟",
+      "action": "medical_consultation",
+      "message": "⚠️ تحذير: الضعف التدريجي علامة خطيرة تتطلب عناية طبية. يرجى استشارتنا لتأكيد التشخيص."
+    },
+    {
+      "id": "numbness_in_groin_area",
+      "name": "تنميل في منطقة العانة",
+      "severity": "critical",
+      "question": "هل تشعر بتنميل في منطقة العانة (منطقة الحساس)؟",
+      "action": "immediate_medical_attention",
+      "message": "⚠️ تحذير شديد: التنميل في منطقة العانة علامة خطيرة جداً (Cauda Equina Syndrome) تتطلب عناية طبية فورية. يرجى استشارتنا لتأكيد التشخيص فوراً."
+    },
+    {
+      "id": "history_of_cancer",
+      "name": "تاريخ من السرطان",
+      "severity": "high",
+      "question": "هل لديك تاريخ من السرطان؟",
+      "action": "medical_consultation",
+      "message": "⚠️ تحذير: تاريخ السرطان مع ألم في الظهر يتطلب تقييماً متخصصاً دقيقاً. يرجى استشارتنا لتأكيد التشخيص."
+    },
+    {
+      "id": "recent_infection",
+      "name": "عدوى حديثة",
+      "severity": "medium",
+      "question": "هل تعرضت لعدوى حديثة (عدوى بولية، عدوى جلدية، إلخ)؟",
+      "action": "medical_consultation",
+      "message": "⚠️ تحذير: العدوى الحديثة مع ألم في الظهر قد تشير إلى مشكلة خطيرة. يرجى استشارتنا لتأكيد التشخيص."
+    },
+    {
+      "id": "prolonged_steroid_use",
+      "name": "استخدام طويل للكورتيزون",
+      "severity": "medium",
+      "question": "هل تستخدم الكورتيزون لفترة طويلة؟",
+      "action": "medical_consultation",
+      "message": "⚠️ تحذير: الاستخدام الطويل للكورتيزون قد يزيد من خطر الإصابة. يرجى استشارتنا لتأكيد التشخيص."
+    },
+    {
+      "id": "severe_abdominal_pain",
+      "name": "ألم بطني شديد",
+      "severity": "high",
+      "question": "هل تعاني من ألم بطني شديد مع ألم الظهر؟",
+      "action": "immediate_medical_attention",
+      "message": "⚠️ تحذير شديد: الألم البطني الشديد مع ألم الظهر قد يشير إلى مشكلة خطيرة. يرجى استشارتنا لتأكيد التشخيص فوراً."
+    },
+    {
+      "id": "difficulty_walking",
+      "name": "صعوبة في المشي",
+      "severity": "high",
+      "question": "هل تعاني من صعوبة في المشي؟",
+      "action": "medical_consultation",
+      "message": "⚠️ تحذير: صعوبة المشي علامة خطيرة تتطلب عناية طبية. يرجى استشارتنا لتأكيد التشخيص."
+    },
+    {
+      "id": "loss_of_sensation",
+      "name": "فقدان الإحساس",
+      "severity": "high",
+      "question": "هل فقدت الإحساس في أي جزء من جسمك؟",
+      "action": "medical_consultation",
+      "message": "⚠️ تحذير: فقدان الإحساس علامة خطيرة تتطلب عناية طبية. يرجى استشارتنا لتأكيد التشخيص."
+    }
+  ]
+}
