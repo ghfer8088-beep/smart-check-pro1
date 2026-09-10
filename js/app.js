@@ -169,6 +169,7 @@ window.stopAllActiveAudio = stopAllActiveAudio;
 // اختيار نقطة الألم
 function selectAnatomyPoint(point, element) {
     // إيقاف الصوت التوجيهي الترحيبي فوراً عند اختيار نقطة الألم لمنع أي تداخل نهائياً
+    introPlayedOrAttempted = true;
     stopAllActiveAudio();
 
     document.querySelectorAll('.anatomy-hotspot').forEach(p => p.classList.remove('active'));
@@ -2138,8 +2139,9 @@ function displayDiagnosticReport(data) {
                 </div>
 
                 <div id="plan-activation-btn-wrapper" style="text-align: center;">
-                    <button type="button" onclick="activateRecoveryPlanInstantly()" class="btn-plan-shimmer" style="background: linear-gradient(135deg, #10b981 0%, #059669 45%, var(--primary-gold) 100%); color: #ffffff; border: 2px solid #fef08a; padding: 15px 32px; border-radius: 14px; font-size: 1.12em; font-weight: 800; cursor: pointer; box-shadow: 0 8px 30px rgba(16, 185, 129, 0.45); transition: 0.2s; width: 100%; max-width: 520px; letter-spacing: 0.4px;">
-                        🚀 تفعيل الخطة المجانية للراحة المنزلية (7 أيام)
+                    <button type="button" onclick="activateRecoveryPlanInstantly()" class="btn-plan-shimmer" style="background: linear-gradient(135deg, #059669 0%, #10b981 40%, #d4af37 100%); color: #ffffff; border: 2.5px solid #fef08a; padding: 18px 36px; border-radius: 16px; font-size: 1.18em; font-weight: 900; cursor: pointer; box-shadow: 0 0 25px rgba(16, 185, 129, 0.6), 0 0 15px rgba(212, 175, 55, 0.5); transition: all 0.3s ease; width: 100%; max-width: 540px; letter-spacing: 0.5px; display: inline-flex; align-items: center; justify-content: center; gap: 10px;">
+                        <span style="font-size: 1.25em;">🚀</span>
+                        <span>تفعيل الخطة المجانية للراحة والتعافي المنزلي (7 أيام مجاناً)</span>
                     </button>
                     
                     <!-- شريط الإهداء والصدقة الجارية تحت زر التفعيل مباشرة -->
@@ -2202,6 +2204,54 @@ function displayDiagnosticReport(data) {
             </div>
         </div>
     `;
+
+    // تفعيل وتوليد التحليل السريري المخصص بالذكاء الاصطناعي فوراً
+    setTimeout(() => {
+        if (typeof Wada3anAiEngine !== 'undefined') {
+            const statusBadge = document.getElementById('ai-status-badge');
+            const contentArea = document.getElementById('ai-insight-content-area');
+
+            const rawPName = clinicalDialogueState.patientName || document.getElementById('patient-name')?.value?.trim() || data.patientName || activePatient?.name;
+            const pName = (rawPName && rawPName !== 'المراجع الكريم') ? rawPName : '';
+            const painDurationMap = {
+                'days': 'ألم حاد حديث (أقل من أسبوع)',
+                '1_week': 'من أسبوع إلى شهر',
+                'chronic': 'ألم مزمن مستمر (أكثر من 3 أشهر)'
+            };
+            const durationText = painDurationMap[data.painDuration] || 'ألم مستمر';
+
+            Wada3anAiEngine.generateClinicalInsight({
+                patientName: pName,
+                painAreaTitle: data.title || data.painAreaTitle || data.painPointTitle || data.primaryDiagnosis || 'العمود الفقري والمفاصل',
+                primaryDiagnosis: data.primaryDiagnosis || data.title,
+                probableCondition: data.primaryDiagnosis || data.title,
+                pointId: data.pointId || data.painAreaKey,
+                probability: data.probability || 85,
+                region: data.region || 'الظهر',
+                painSeverity: data.painSeverity || 7,
+                painDurationText: durationText,
+                userNotes: data.userNotes || '',
+                allSymptoms: data.allSelectedSymptoms || [],
+                lifeImpact: data.lifeImpactSelected || [],
+                rootLevel: data.rootLevel || '',
+                secondaryDiagnosis: data.secondaryDiagnosis || '',
+                biomechanicalMechanism: data.biomechanicalMechanism || '',
+                chiropracticProtocol: data.chiropracticProtocol || ''
+            }).then(html => {
+                if (contentArea) contentArea.innerHTML = html;
+                if (statusBadge) {
+                    const isLive = typeof WADA3AN_AI_CONFIG !== 'undefined' && WADA3AN_AI_CONFIG.isConfigured();
+                    statusBadge.innerHTML = isLive ? '🟢 تحليل فوري' : '⚡ تحليل ذكي';
+                    statusBadge.style.color = isLive ? '#6ee7b7' : '#fef08a';
+                    statusBadge.style.borderColor = isLive ? '#10b981' : '#d4af37';
+                }
+            }).catch(err => {
+                console.warn('AI insight error:', err);
+                if (contentArea) contentArea.innerHTML = Wada3anAiEngine.generateOfflineClinicalFallback(data);
+            });
+        }
+    }, 60);
+}
 
 // دوال إدارة النوافذ المنبثقة لخدمة قراءة الرنين وقصص النجاح بالفيديو
 function openMriConsultationModal() {
@@ -2274,7 +2324,8 @@ function renderVideoSuccessStories() {
     const list = getVideoSuccessStories();
     container.innerHTML = list.map(item => {
         const titleSafe = (item.title || '').replace(/"/g, '&quot;');
-        const urlSafe = (item.url || item.embedUrl || item.directUrl || '').replace(/"/g, '&quot;');
+        const targetUrl = item.directUrl || item.url || item.embedUrl || 'https://www.facebook.com/Wada3an.Al.Alam';
+        const urlSafe = targetUrl.replace(/"/g, '&quot;');
         const descSafe = (item.description || '').replace(/"/g, '&quot;');
         const catSafe = item.category || '⚡ حالة سريرية موثقة';
 
@@ -2292,9 +2343,9 @@ function renderVideoSuccessStories() {
                     <p style="color: #cbd5e1; font-size: 0.84em; line-height: 1.6; margin: 0 0 14px 0;">${item.description}</p>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <button type="button" onclick="openInAppVideoPlayer('${urlSafe}', '${titleSafe}')" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #fff; border: none; padding: 10px 14px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(37,99,235,0.35);">
+                    <a href="${urlSafe}" target="_blank" rel="noopener noreferrer" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #fff; text-decoration: none; padding: 10px 14px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(37,99,235,0.35);">
                         <span>▶️ مشاهدة الفيديو المباشر</span>
-                    </button>
+                    </a>
                     <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; text-decoration: none; padding: 8px 12px; border-radius: 8px; font-size: 0.8em; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 6px;">
                         <span>💬 اطلب فيديو الحالة عبر واتساب</span>
                     </a>
@@ -2367,54 +2418,6 @@ window.openVideoSuccessStoriesModal = openVideoSuccessStoriesModal;
 window.closeVideoSuccessStoriesModal = closeVideoSuccessStoriesModal;
 window.openInAppVideoPlayer = openInAppVideoPlayer;
 window.closeInAppVideoPlayer = closeInAppVideoPlayer;
-
-    // تفعيل وتوليد التحليل السريري المخصص بالذكاء الاصطناعي فوراً
-    setTimeout(() => {
-        if (typeof Wada3anAiEngine !== 'undefined') {
-            const statusBadge = document.getElementById('ai-status-badge');
-            const contentArea = document.getElementById('ai-insight-content-area');
-
-            const rawPName = clinicalDialogueState.patientName || document.getElementById('patient-name')?.value?.trim() || data.patientName || activePatient?.name;
-            const pName = (rawPName && rawPName !== 'المراجع الكريم') ? rawPName : '';
-            const painDurationMap = {
-                'days': 'ألم حاد حديث (أقل من أسبوع)',
-                '1_week': 'من أسبوع إلى شهر',
-                'chronic': 'ألم مزمن مستمر (أكثر من 3 أشهر)'
-            };
-            const durationText = painDurationMap[data.painDuration] || 'ألم مستمر';
-
-            Wada3anAiEngine.generateClinicalInsight({
-                patientName: pName,
-                painAreaTitle: data.title || data.painAreaTitle || data.painPointTitle || data.primaryDiagnosis || 'العمود الفقري والمفاصل',
-                primaryDiagnosis: data.primaryDiagnosis || data.title,
-                probableCondition: data.primaryDiagnosis || data.title,
-                pointId: data.pointId || data.painAreaKey,
-                probability: data.probability || 85,
-                region: data.region || 'الظهر',
-                painSeverity: data.painSeverity || 7,
-                painDurationText: durationText,
-                userNotes: data.userNotes || '',
-                allSymptoms: data.allSelectedSymptoms || [],
-                lifeImpact: data.lifeImpactSelected || [],
-                rootLevel: data.rootLevel || '',
-                secondaryDiagnosis: data.secondaryDiagnosis || '',
-                biomechanicalMechanism: data.biomechanicalMechanism || '',
-                chiropracticProtocol: data.chiropracticProtocol || ''
-            }).then(html => {
-                if (contentArea) contentArea.innerHTML = html;
-                if (statusBadge) {
-                    const isLive = typeof WADA3AN_AI_CONFIG !== 'undefined' && WADA3AN_AI_CONFIG.isConfigured();
-                    statusBadge.innerHTML = isLive ? '🟢 تحليل فوري' : '⚡ تحليل ذكي';
-                    statusBadge.style.color = isLive ? '#6ee7b7' : '#fef08a';
-                    statusBadge.style.borderColor = isLive ? '#10b981' : '#d4af37';
-                }
-            }).catch(err => {
-                console.warn('AI insight error:', err);
-                if (contentArea) contentArea.innerHTML = Wada3anAiEngine.generateOfflineClinicalFallback(data);
-            });
-        }
-    }, 60);
-}
 
 // كتم / تفعيل الصوت
 function toggleAudioMuteStatus(btn) {
@@ -2627,6 +2630,11 @@ async function loadPatientRecoveryDashboard(patientId) {
 
     activePatient = sessionData.patient;
     goToStep(4);
+    setTimeout(() => {
+        if (typeof playStationAudio === 'function') {
+            playStationAudio('motivation');
+        }
+    }, 400);
 
     const lockStatus = await PatientFlow.getSessionLockStatus(patientId);
     const dashboardContainer = document.getElementById('patient-recovery-dashboard');
@@ -2867,18 +2875,24 @@ async function loadPatientRecoveryDashboard(patientId) {
 
                     <!-- 2. تقييم المدى الحركي المنسجم مع نقطة الألم -->
                     <div style="margin-bottom: 20px; background: #111827; padding: 15px; border-radius: 10px; border: 1px solid rgba(56, 189, 248, 0.3);">
-                        <label style="color: #38bdf8; font-size: 0.95em; font-weight: bold; display: block; margin-bottom: 10px;">
-                            ${anatomicalConfig ? anatomicalConfig.mobilityQuestion : '2. كيف تصف حركتك ومرونة المفصل اليوم؟'}
-                        </label>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <label style="color: #38bdf8; font-size: 0.95em; font-weight: bold;">
+                                ${anatomicalConfig ? anatomicalConfig.mobilityQuestion : '2. نسبة استعادة المدى الحركي والمرونة اليوم:'}
+                            </label>
+                            <span id="daily-mobility-val" style="color: #38bdf8; font-weight: bold; font-size: 1.15em;">70 %</span>
+                        </div>
+                        <input type="range" id="daily-mobility-slider" min="10" max="100" value="70" oninput="document.getElementById('daily-mobility-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #38bdf8; margin-bottom: 12px;">
+                        
+                        <div style="color: #94a3b8; font-size: 0.82em; margin-bottom: 8px;">اختر كل ما ينطبق على حركتك اليوم (اختيار متعدد):</div>
                         <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
                             ${(anatomicalConfig ? anatomicalConfig.mobilityOptions : [
-                                { val: 95, text: "حرية حركة ممتازة دون تيبس أو إعاقة (95%)" },
-                                { val: 75, text: "تحسن ملحوظ في الحركة مع انزعاج طفيف عند أقصى المدى (75%)" },
-                                { val: 45, text: "حركة مقيدة جزئياً مع تيبس يستغرق وقتاً ليلين (45%)" },
-                                { val: 20, text: "صعوبة وتيبس شديد ومحدودية حركية واضحة (20%)" }
-                            ]).map((opt, idx) => `
+                                { val: 95, text: "حرية حركة ممتازة دون تيبس أو إعاقة" },
+                                { val: 75, text: "تحسن ملحوظ في الحركة مع انزعاج طفيف عند أقصى المدى" },
+                                { val: 45, text: "حركة مقيدة جزئياً مع تيبس يستغرق وقتاً ليلين" },
+                                { val: 20, text: "صعوبة وتيبس شديد ومحدودية حركية واضحة" }
+                            ]).map((opt) => `
                                 <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                    <input type="radio" name="daily_mobility" value="${opt.val}" ${idx === 0 ? 'checked' : ''} style="accent-color: #38bdf8;"> ${opt.text}
+                                    <input type="checkbox" name="daily_mobility_check" value="${opt.val}" style="accent-color: #38bdf8; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
                                 </label>
                             `).join('')}
                         </div>
@@ -2886,18 +2900,24 @@ async function loadPatientRecoveryDashboard(patientId) {
 
                     <!-- 3. تقييم جودة النوم المنسجم مع نقطة الألم -->
                     <div style="margin-bottom: 20px; background: #111827; padding: 15px; border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.3);">
-                        <label style="color: #10b981; font-size: 0.95em; font-weight: bold; display: block; margin-bottom: 10px;">
-                            ${anatomicalConfig ? anatomicalConfig.sleepQuestion : '3. كيف كانت جودة نومك وراحتك الليلة الماضية؟'}
-                        </label>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <label style="color: #10b981; font-size: 0.95em; font-weight: bold;">
+                                ${anatomicalConfig ? anatomicalConfig.sleepQuestion : '3. نسبة جودة وعمق النوم والراحة الليلة الماضية:'}
+                            </label>
+                            <span id="daily-sleep-val" style="color: #10b981; font-weight: bold; font-size: 1.15em;">70 %</span>
+                        </div>
+                        <input type="range" id="daily-sleep-slider" min="10" max="100" value="70" oninput="document.getElementById('daily-sleep-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #10b981; margin-bottom: 12px;">
+
+                        <div style="color: #94a3b8; font-size: 0.82em; margin-bottom: 8px;">اختر كل ما ينطبق على نومك (اختيار متعدد):</div>
                         <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
                             ${(anatomicalConfig ? anatomicalConfig.sleepOptions : [
-                                { val: 95, text: "نوم عميق ومريح ومتواصل طوال الليل دون ألم (95%)" },
-                                { val: 75, text: "نوم جيد مع استيقاظ عابر عند التقلب دون ألم حاد (75%)" },
-                                { val: 45, text: "نوم متقطع وصعوبة في إيجاد وضعية مريحة للمفصل (45%)" },
-                                { val: 20, text: "أرق شديد واستيقاظ متكرر بسبب نوبات الألم (20%)" }
-                            ]).map((opt, idx) => `
+                                { val: 95, text: "نوم عميق ومريح ومتواصل طوال الليل دون ألم" },
+                                { val: 75, text: "نوم جيد مع استيقاظ عابر عند التقلب دون ألم حاد" },
+                                { val: 45, text: "نوم متقطع وصعوبة في إيجاد وضعية مريحة للمفصل" },
+                                { val: 20, text: "أرق شديد واستيقاظ متكرر بسبب نوبات الألم" }
+                            ]).map((opt) => `
                                 <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                    <input type="radio" name="daily_sleep" value="${opt.val}" ${idx === 0 ? 'checked' : ''} style="accent-color: #10b981;"> ${opt.text}
+                                    <input type="checkbox" name="daily_sleep_check" value="${opt.val}" style="accent-color: #10b981; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
                                 </label>
                             `).join('')}
                         </div>
@@ -2912,9 +2932,9 @@ async function loadPatientRecoveryDashboard(patientId) {
                                 { id: "beh-posture", text: "حافظت على وضعية جلوس ووقوف مستقيمة" },
                                 { id: "beh-walk", text: "قمت بالمشي الخفيف وتنشيط الدورة الدموية" },
                                 { id: "beh-heat", text: "استخدمت الكمادات الدافئة / الراحة الكافية" }
-                            ]).map((beh, idx) => `
+                            ]).map((beh) => `
                                 <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer;">
-                                    <input type="checkbox" id="${beh.id}" ${idx < 2 ? 'checked' : ''} style="accent-color: #10b981; width: 16px; height: 16px;"> ${beh.text}
+                                    <input type="checkbox" id="${beh.id}" style="accent-color: #10b981; width: 16px; height: 16px;"> ${beh.text}
                                 </label>
                             `).join('')}
                         </div>
@@ -3005,8 +3025,11 @@ async function loadPatientRecoveryDashboard(patientId) {
 // حفظ التسجيل اليومي الشامل
 async function submitComprehensiveDailyLog(patientId, sessionNumber) {
     const painScore = parseInt(document.getElementById('daily-pain-input')?.value || 3);
-    const mobilityRate = parseInt(document.querySelector('input[name="daily_mobility"]:checked')?.value || 75);
-    const sleepRate = parseInt(document.querySelector('input[name="daily_sleep"]:checked')?.value || 75);
+    const mobilityRate = parseInt(document.getElementById('daily-mobility-slider')?.value || document.querySelector('input[name="daily_mobility_check"]:checked')?.value || 75);
+    const sleepRate = parseInt(document.getElementById('daily-sleep-slider')?.value || document.querySelector('input[name="daily_sleep_check"]:checked')?.value || 75);
+
+    const mobilitySelected = Array.from(document.querySelectorAll('input[name="daily_mobility_check"]:checked')).map(el => el.value);
+    const sleepSelected = Array.from(document.querySelectorAll('input[name="daily_sleep_check"]:checked')).map(el => el.value);
 
     const exercisesDone = document.getElementById('beh-exercise')?.checked || false;
     const goodPosture = document.getElementById('beh-posture')?.checked || false;
@@ -3813,14 +3836,16 @@ async function exportClinicalSummaryForDoctor(patientId) {
                     <ul style="color: #cbd5e1; font-size: 0.85em; margin: 0; padding-right: 20px; line-height: 1.8;">
                         ${logsSummary.map(s => `<li>${s}</li>`).join('')}
                     </ul>
-                ` : '<div style="color: #94a3b8; font-size: 0.85em;">لم يتم تسجيل جلسات يومية بعد.</div>'}
+                ` : `<div style="color: #fef08a; background: rgba(212, 175, 55, 0.1); border: 1px dashed var(--primary-gold); padding: 12px; border-radius: 8px; font-size: 0.88em; line-height: 1.6;">🌱 <strong>المريض في الجلسة الأولى (بداية خطة التعافي والتأهيل المنزلي):</strong> تم رصد القياس السريري المبدئي (Baseline Pain: ${baselinePain}/10) لمنطقة (${painArea})، وهو مهيأ لبدء تمارين اليوم الأول وبانتظار أول تقييم يومي للمتابعة.</div>`}
             </div>
 
             <!-- توجيهات جلسة المعالج اليدوية في جلسة التقويم -->
             <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid var(--primary-gold); padding: 14px; border-radius: 10px;">
                 <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.9em; margin-bottom: 6px;">👐 خطة التدخل اليدوي الموصى بها للمعالج جمال:</div>
                 <p style="color: #e2e8f0; font-size: 0.85em; line-height: 1.6; margin: 0;">
-                    المريض أبدى استجابة حركية بنسبة ${painDrop}% مع التمارين المنزلية، وهو جاهز حالياً لجلسة <strong>تفريغ ضغط الفقرات بالكايروبراكتيك (Chiropractic Adjustment)</strong> وفك التشنج الليفي العميق لتثبيت النتائج ومنع الانتكاس.
+                    ${logsSummary.length > 0 
+                        ? `المريض أبدى استجابة حركية بنسبة ${painDrop}% مع التمارين المنزلية، وهو جاهز حالياً لجلسة <strong>تفريغ ضغط الفقرات بالكايروبراكتيك (Chiropractic Adjustment)</strong> وفك التشنج الليفي العميق لتثبيت النتائج ومنع الانتكاس.`
+                        : `المريض في مرحلة تسكين الألم الحاد والبدء ببرنامج التعافي لمنطقة (${painArea}) بمستوى ألم مبدئي (${baselinePain}/10). يُوصى بالبدء بتمارين التليين والتفريغ المقررة لليوم الأول مع إمكانية خضوعه لجلسة <strong>تقويم كايروبراكتيك وتفريغ يدوي (Manual Decompression)</strong> لإزالة الضغط عن الأعصاب والمفاصل فوراً.`}
                 </p>
             </div>
         `;
@@ -4041,7 +4066,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // تفعيل فوري مع أول لمسة أو نقرة على شاشة الهاتف لفك قيود المتصفحات (iOS Safari / Chrome Mobile)
     const mobileFirstTouchUnlock = () => {
         Wada3anAiEngine.unlockAudio();
-        if (!introPlayedOrAttempted) {
+        if (!introPlayedOrAttempted && !currentSelectedPoint && currentStep === 1) {
+            introPlayedOrAttempted = true;
             triggerAutoIntro();
         }
         window.removeEventListener('pointerdown', mobileFirstTouchUnlock);
@@ -4462,6 +4488,9 @@ async function initAiClinicalChat() {
                 </div>
                 <div style="color: #cbd5e1; font-size: 0.8em; background: rgba(15, 23, 42, 0.8); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(212, 175, 55, 0.3); display: flex; align-items: center; gap: 6px;">
                     <span>🔒</span> استشارة سريرية خاصة وآمنة 100%
+                </div>
+                <div style="background: rgba(234, 179, 8, 0.12); border: 1px solid rgba(234, 179, 8, 0.4); border-radius: 8px; padding: 8px 12px; margin-top: 10px; color: #fef08a; font-size: 0.82em; line-height: 1.5; width: 100%; box-sizing: border-box; text-align: right;">
+                    ⚠️ <strong>تنبيه دقة التشخيص:</strong> يرجى الإجابة بدقة وأمانة على أسئلة الطبيب لتشخيص ميكانيكية ألمك بدقة متناهية وتحديد الخطة العلاجية والتمارين الآمنة لحالتك تماماً.
                 </div>
             </div>
         `;

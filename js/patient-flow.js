@@ -105,11 +105,11 @@ const PatientFlow = (function() {
 
         // حساب مؤشرات التحسن الثلاثة المحددة بدقة ومن مدخلات المريض الفعلية حصراً
         const latestAssessment = assessments.length > 0 ? assessments[assessments.length - 1] : null;
-        const baselinePain = (latestAssessment && typeof latestAssessment.painSeverity === 'number' && !isNaN(latestAssessment.painSeverity))
+        const baselinePain = (latestAssessment && typeof latestAssessment.painSeverity === 'number' && !isNaN(latestAssessment.painSeverity) && latestAssessment.painSeverity > 0)
             ? latestAssessment.painSeverity
-            : (patient && typeof patient.painLevel === 'number' && !isNaN(patient.painLevel))
+            : (patient && typeof patient.painLevel === 'number' && !isNaN(patient.painLevel) && patient.painLevel > 0)
                 ? patient.painLevel
-                : null;
+                : 10;
         const latestLog = dailyLogs.length > 0 ? dailyLogs[dailyLogs.length - 1] : null;
         const currentPain = latestLog && typeof latestLog.painScore === 'number' ? latestLog.painScore : (baselinePain || 0);
 

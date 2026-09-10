@@ -200,6 +200,59 @@ body {
     transform: translateY(-1px);
 }
 
+.btn-header-unified {
+    background: #1e293b;
+    color: #f1f5f9;
+    border: 1px solid rgba(212, 175, 55, 0.4);
+    transition: all 0.2s ease;
+}
+
+.btn-header-unified:hover {
+    background: rgba(212, 175, 55, 0.2);
+    border-color: var(--primary-gold);
+    color: #fef08a;
+    transform: translateY(-1px);
+}
+
+.btn-header-whatsapp {
+    background: #25d366 !important;
+    color: #ffffff !important;
+    border: 1px solid #1ebe5d !important;
+    font-weight: bold !important;
+    box-shadow: 0 0 10px rgba(37, 211, 102, 0.4) !important;
+}
+
+.btn-header-whatsapp:hover {
+    background: #1ebe5d !important;
+    transform: translateY(-1px);
+}
+
+.btn-header-call {
+    background: #10b981 !important;
+    color: #ffffff !important;
+    border: 1px solid #059669 !important;
+    font-weight: bold !important;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4) !important;
+}
+
+.btn-header-call:hover {
+    background: #059669 !important;
+    transform: translateY(-1px);
+}
+
+.btn-header-new-test {
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #60a5fa !important;
+    font-weight: 800 !important;
+    box-shadow: 0 0 12px rgba(37, 99, 235, 0.5) !important;
+}
+
+.btn-header-new-test:hover {
+    background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%) !important;
+    transform: translateY(-1px);
+}
+
 /* شريط المشاكل والتخصصات التي نعالجها */
 .clinical-specialties-banner {
     background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%);
@@ -980,7 +1033,7 @@ body {
     bottom: 0;
     background: rgba(5, 8, 15, 0.9);
     backdrop-filter: blur(8px);
-    z-index: 10000;
+    z-index: 2000000;
     display: none;
     align-items: center;
     justify-content: center;
@@ -1627,7 +1680,6 @@ body {
     .ai-card-header-actions button,
     .ai-card-header-actions span,
     .session-top-badges button,
-    .session-top-badges div,
     .completion-action-grid button,
     .completion-action-grid a,
     .stories-action-buttons a {
@@ -1640,6 +1692,19 @@ body {
         text-align: center !important;
         padding: 8px 4px !important;
         font-size: 0.78em !important;
+        box-sizing: border-box !important;
+    }
+
+    .session-top-badges div {
+        width: 100% !important;
+        min-width: 0 !important;
+        white-space: normal !important;
+        line-height: 1.35 !important;
+        word-break: break-word !important;
+        justify-content: center !important;
+        text-align: center !important;
+        padding: 6px 6px !important;
+        font-size: 0.76em !important;
         box-sizing: border-box !important;
     }
 

@@ -115,7 +115,30 @@ const Wada3anAiEngine = {
         }
 
         const painArea = patientData.painAreaTitle || patientData.title || 'منطقة الألم';
-        const condition = patientData.primaryDiagnosis || patientData.probableCondition || patientData.conditionName || 'إجهاد ميكانيكي حركي';
+        let condition = patientData.primaryDiagnosis || patientData.probableCondition || patientData.conditionName || '';
+        const pointId = (patientData.pointId || patientData.painAreaKey || '').toLowerCase();
+        const painAreaLower = painArea.toLowerCase();
+
+        // استنتاج التشخيص التشريحي الدقيق للمنطقة إن كان المدخل عاماً أو مفقوداً لمنع التعميم نهائياً
+        if (!condition || condition === 'إجهاد ميكانيكي حركي' || condition.includes('تقرير استرشادي') || condition.includes('استرشادي')) {
+            if (pointId.includes('knee') || painAreaLower.includes('ركب') || painAreaLower.includes('صابون')) {
+                condition = 'متلازمة الألم الرضفي الفخذي واحتكاك صابونة الركبة (Patellofemoral Pain Syndrome)';
+            } else if (pointId.includes('lumbar') || painAreaLower.includes('قطني') || painAreaLower.includes('أسفل الظهر')) {
+                condition = 'انزلاق غضروفي قطني واعتلال الجذور العصبية L4-S1 (Lumbar Disc Herniation & Radiculopathy)';
+            } else if (pointId.includes('cervical') || painAreaLower.includes('عنق') || painAreaLower.includes('رقب')) {
+                condition = 'انزلاق غضروفي عنقي وانحباس مفاصل الفقرات C5-C7 (Cervical Disc & Facet Syndrome)';
+            } else if (pointId.includes('scapula') || pointId.includes('trapezius') || painAreaLower.includes('أبهر') || painAreaLower.includes('كتف')) {
+                condition = 'متلازمة عقد الأبهر الليفية وتشنج العضلات المعينية واللوحية (Rhomboid & Scapular Trigger Points)';
+            } else if (pointId.includes('sacroiliac') || pointId.includes('gluteal') || painAreaLower.includes('حوض') || painAreaLower.includes('عرق النسا')) {
+                condition = 'متلازمة العضلة الكمثرية وعرق النسا الانضغاطي (Piriformis Syndrome & Sciatica)';
+            } else if (pointId.includes('shoulder') || painAreaLower.includes('كتف')) {
+                condition = 'متلازمة انحشار أوتار الكفة المدورة وتيبس مفصل الكتف (Rotator Cuff Impingement)';
+            } else if (pointId.includes('plantar') || pointId.includes('ankle') || painAreaLower.includes('كعب') || painAreaLower.includes('قدم')) {
+                condition = 'التهاب اللفافة الأخمصية ومسمار العظم وإجهاد وتر أكيليس (Plantar Fasciitis)';
+            } else {
+                condition = 'اضطراب ميكانيكي حركي وانحباس وظيفي في مفاصل الفقرات';
+            }
+        }
         const probability = patientData.probability || 85;
         const duration = patientData.painDurationText || patientData.painDuration || 'ألم مستمر';
         const severity = (patientData.hasExplicitPain && patientData.painSeverity) 
@@ -454,7 +477,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
    - فقط عندما تتجمع لديك أركان التشخيص بالكامل:
      * لخص له التشخيص البيوميكانيكي لحالته بوضوح واطمئنان في سطرين.
       * اطلب رقم هاتفه بوضوح واطمئنان:
-        "اكتمل الآن تقييمك السريري الشامل وتحددت طبيعة المشكلة بدقة! يرجى تزويدي برقم هاتفك لربط ملفك الطبي ونقلك مباشرة إلى صفحة التشخيص السريري وخطة التعافي المعتمدة من «وداعاً للألم»:"
+        "اكتمل الآن تقييمك السريري الشامل وتحددت طبيعة المشكلة بدقة! أدخل رقم هاتفك لفتح التقرير السريري الخاص بك ولربط ملفك بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:"
     - عند استلام رقم هاتف محمول صالح بعد اكتمال الفحص، اختم بـ [READY_FOR_DIAGNOSIS].
 
 9. التعامل مع الحالات والأسئلة خارج نطاق الاختصاص والشفافية الطبية (Out-of-Scope Handling):
@@ -842,7 +865,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
 
         // د) فقط وفقط عند استكمال أركان الفحص السريري وتوفر صورة سريرية ناضجة (بعد عدة جولات استجواب حقيقية)
         return {
-            message: `اكتمل الآن تقييمك السريري الشامل لحالتك وتحددت ميكانيكية الخلل في **${title}** بدقة${nameSuffix || ' يا عزيزي'}!\n\nنود إعلامك بتوفر خطة تمارين تأهيلية استرشادية مجانية بانتظارك في التقرير، وتوفر خدمة الاستشارات وقراءة الرنين والزيارات المنزلية.\n\nولنتمكن من حفظ ملفك السريري ونقلك مباشرة إلى صفحة التشخيص وخطة التعافي المخصصة لك، يرجى تزويدي برقم هاتفك المحمول:`,
+            message: `اكتمل الآن تقييمك السريري الشامل لحالتك وتحددت ميكانيكية الخلل في **${title}** بدقة${nameSuffix || ' يا غالي'}!\n\nأدخل رقم هاتفك لفتح التقرير السريري الخاص بك ولربط ملفك بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:`,
             quickReplies: [],
             nextStep: 'ask_phone',
             isPhonePrompt: true,
@@ -1085,8 +1108,8 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
 
         // نموذج Gemini الرسمي المعتمد للتوليد الصوتي البشري (Aoede / Charon / Puck)
         const audioModels = [
-            'gemini-3.1-flash-tts-preview',
-            'gemini-2.5-flash-preview-tts'
+            'gemini-2.5-flash-preview-tts',
+            'gemini-3.1-flash-tts-preview'
         ];
 
         const pool = WADA3AN_AI_CONFIG.getPoolKeys();
@@ -1577,6 +1600,95 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
     },
 
     // نطق نص تقرير الطبيب بصوت استوديو بشري حقيقي فائق النقاء
+    // استرجاع أفضل صوت عربي طبيعي متوفر في المتصفح مع تفضيل الأصوات البشرية السلسة
+    getBestArabicVoice(isFemale) {
+        if (typeof window === 'undefined' || !('speechSynthesis' in window)) return null;
+        const voices = window.speechSynthesis.getVoices() || [];
+        if (!voices || voices.length === 0) return null;
+
+        const arVoices = voices.filter(v => (v.lang && v.lang.toLowerCase().startsWith('ar')) || (v.name && /arabic|عربي|عربية/i.test(v.name)));
+        if (arVoices.length === 0) return null;
+
+        if (isFemale) {
+            const prefFemale = arVoices.find(v => /salma|laila|zeina|zariyah|mariam|hoda|fatima|female/i.test(v.name));
+            if (prefFemale) return prefFemale;
+        } else {
+            const prefMale = arVoices.find(v => /shakir|naayf|maged|tarik|hamed|male/i.test(v.name));
+            if (prefMale) return prefMale;
+        }
+
+        const naturalAr = arVoices.find(v => /natural|online|neural|google|apple|microsoft/i.test(v.name));
+        if (naturalAr) return naturalAr;
+
+        return arVoices[0];
+    },
+
+    // تشغيل نطق صوتي فوري بنظام المتصفح الصوتي العربي المتقدم كشبكة أمان دائمة تضمن عدم الصمت إطلاقاً
+    speakWithNaturalSystemVoice(text, onEndCallback) {
+        if (typeof window === 'undefined' || !('speechSynthesis' in window) || !text) {
+            if (onEndCallback) onEndCallback();
+            return;
+        }
+
+        try {
+            window.speechSynthesis.cancel();
+            const cleanText = this.sanitizeSpeechArabicText(text);
+            if (!cleanText || cleanText.length < 2) {
+                if (onEndCallback) onEndCallback();
+                return;
+            }
+
+            const persona = this.getSessionDoctorPersona();
+            const isFemale = (persona.id === 'sarah' || (persona.name && persona.name.includes('سارة')));
+            const bestVoice = this.getBestArabicVoice(isFemale);
+
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            if (bestVoice) {
+                utterance.voice = bestVoice;
+                utterance.lang = bestVoice.lang;
+            } else {
+                utterance.lang = 'ar-SA';
+            }
+
+            utterance.rate = 0.95; // وتيرة هادئة وطبيعية غير متسرعة
+            utterance.pitch = isFemale ? 1.05 : 0.95;
+
+            this.isSpeaking = true;
+            this.showLiveAudioPill();
+
+            let hasEnded = false;
+            const endHandler = () => {
+                if (hasEnded) return;
+                hasEnded = true;
+                this.isSpeaking = false;
+                this.hideLiveAudioPill();
+                if (onEndCallback) onEndCallback();
+            };
+
+            utterance.onend = endHandler;
+            utterance.onerror = (err) => {
+                console.warn('System voice playback event:', err);
+                endHandler();
+            };
+
+            // صمام أمان لإلغاء التعليق في بعض المتصفحات
+            const safetyDuration = Math.max(8000, cleanText.length * 100);
+            setTimeout(() => {
+                if (this.isSpeaking && !hasEnded) {
+                    endHandler();
+                }
+            }, safetyDuration);
+
+            window.speechSynthesis.speak(utterance);
+        } catch (e) {
+            console.warn('speakWithNaturalSystemVoice failed:', e);
+            this.isSpeaking = false;
+            this.hideLiveAudioPill();
+            if (onEndCallback) onEndCallback();
+        }
+    },
+
+    // نطق نص تقرير الطبيب بصوت استوديو بشري حقيقي فائق النقاء أو الصوت العربي الطبيعي الفوري
     async speakText(text, onEndCallback) {
         this.stopSpeaking();
         if (!text) {
@@ -1602,7 +1714,8 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
             console.warn('Gemini studio neural voice notice:', e);
         }
 
-        if (onEndCallback) onEndCallback();
+        // شبكة أمان فورية لتقرير الحالة: تشغيل الصوت المباشر دون أي صمت
+        this.speakWithNaturalSystemVoice(text, onEndCallback);
     },
 
     // تشغيل نطق رسالة الشات بصوت الاستوديو الطبيعي
@@ -1627,10 +1740,14 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
             console.warn('Speak message notice:', e);
         }
 
-        if (btnEl) btnEl.textContent = '▶️';
+        // شبكة أمان فورية: تشغيل الصوت العربي الطبيعي
+        if (btnEl) btnEl.textContent = '⏹️';
+        this.speakWithNaturalSystemVoice(text, () => {
+            if (btnEl) btnEl.textContent = '▶️';
+        });
     },
 
-    // نطق رد الطبيب بالصوت البشري الاستوديو الحقيقي 100% فقط (Zero Robot Voice)
+    // نطق رد الطبيب بالصوت البشري الاستوديو أو الصوت العربي الطبيعي الفوري بضمان عدم الصمت التام
     async speakDoctorResponse(text, expectedToken, onEndCallback) {
         if (!text) {
             if (onEndCallback) onEndCallback();
@@ -1684,14 +1801,19 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
             console.warn('Studio human voice generation notice:', e);
         }
 
+        // في حال استنفاد الحصة السحابية أو انقطاع النت: استخدام الصوت العربي الفوري (Zero-Silence Guarantee)
+        if (expectedToken === undefined || expectedToken === null || expectedToken === this._speechSessionToken) {
+            this.speakWithNaturalSystemVoice(textToSynthesize, onEndCallback);
+            return;
+        }
+
         this.hideLiveAudioPill();
         if (onEndCallback) onEndCallback();
     },
 
-    // تم تعطيل أصوات الرجل الآلي (speechSynthesis) نهائياً لمنع أي صوت ميكانيكي وحصر التجربة بالصوت البشري فقط
+    // تشغيل الصوت العربي الطبيعي الفوري
     speakWithSystemVoice(text, onEndCallback) {
-        if (onEndCallback) onEndCallback();
-        return;
+        this.speakWithNaturalSystemVoice(text, onEndCallback);
     },
 
     stopSpeaking() {

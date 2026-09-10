@@ -17,11 +17,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=12.1">
+    <link rel="stylesheet" href="css/style.css?v=12.9">
     <script>
-        // التحقق من تحديثات Service Worker وتفريغ الكاش القديم فوراً عند الترقية للإصدار 11.9
+        // التحقق من تحديثات Service Worker وتفريغ الكاش القديم فوراً عند الترقية للإصدار 12.9
         (function() {
-            const APP_TARGET_VER = '11.9';
+            const APP_TARGET_VER = '12.9';
             const currentVer = localStorage.getItem('smart_app_version');
             if (currentVer !== APP_TARGET_VER) {
                 if ('caches' in window) {
@@ -149,19 +149,19 @@
             </button>
 
             <div class="header-actions" id="main-header-actions">
-                <button type="button" class="btn-header btn-header-emerald" onclick="openMriConsultationModal(); closeMobileMenu();" title="خدمة قراءة وتفسير صور الرنين المغناطيسي والأشعة مجاناً">🩻 قراءة صور الرنين</button>
-                <button type="button" class="btn-header btn-header-gold" onclick="openVideoSuccessStoriesModal(); closeMobileMenu();" title="شاهد بالفيديو تجارب تعافي حقيقية موثقة">📹 قصص نجاحنا بالفيديو</button>
-                <button type="button" class="btn-header btn-header-gold" onclick="openChiropracticExplainerModal(); closeMobileMenu();">✨ ما هو الكايروبراكتيك؟</button>
-                <button type="button" class="btn-header btn-header-gold" onclick="openWelcomeTourModal(); closeMobileMenu();">💡 دليل الأداة</button>
-                <button type="button" class="btn-header btn-header-gold" onclick="openExerciseLibraryModal('all'); closeMobileMenu();">📚 مكتبة التمارين</button>
-                <a href="https://wa.me/962790360440" target="_blank" class="btn-header btn-header-emerald">💬 واتساب المعالج</a>
-                <a href="tel:00962790360440" class="btn-header btn-header-emerald-soft">📞 اتصل بالمعالج</a>
-                <button type="button" id="btn-header-text-editor" class="btn-header btn-header-gold" onclick="openTextEditorModal(); closeMobileMenu();" style="display: none;">✏️ تعديل النصوص</button>
-                <button type="button" class="btn-header btn-header-gold" onclick="resetToInitialState(); closeMobileMenu();">🔄 فحص جديد</button>
-                <button type="button" class="btn-header btn-header-emerald btn-span-full" onclick="openAppInstallShareModal(); closeMobileMenu();" title="تثبيت التطبيق على الموبايل أو مشاركته مع الأصدقاء">
+                <button type="button" class="btn-header btn-header-unified" onclick="openMriConsultationModal(); closeMobileMenu();" title="خدمة قراءة وتفسير صور الرنين المغناطيسي والأشعة مجاناً">🩻 قراءة صور الرنين</button>
+                <button type="button" class="btn-header btn-header-unified" onclick="openVideoSuccessStoriesModal(); closeMobileMenu();" title="شاهد بالفيديو تجارب تعافي حقيقية موثقة">📹 قصص نجاحنا بالفيديو</button>
+                <button type="button" class="btn-header btn-header-unified" onclick="openChiropracticExplainerModal(); closeMobileMenu();">✨ ما هو الكايروبراكتيك؟</button>
+                <button type="button" class="btn-header btn-header-unified" onclick="openWelcomeTourModal(); closeMobileMenu();">💡 دليل الأداة</button>
+                <button type="button" class="btn-header btn-header-unified" onclick="openExerciseLibraryModal('all'); closeMobileMenu();">📚 مكتبة التمارين</button>
+                <a href="https://wa.me/962790360440" target="_blank" class="btn-header btn-header-whatsapp">💬 واتساب المعالج</a>
+                <a href="tel:00962790360440" class="btn-header btn-header-call">📞 اتصل بالمعالج</a>
+                <button type="button" id="btn-header-text-editor" class="btn-header btn-header-unified" onclick="openTextEditorModal(); closeMobileMenu();" style="display: none;">✏️ تعديل النصوص</button>
+                <button type="button" class="btn-header btn-header-new-test" onclick="resetToInitialState(); closeMobileMenu();">🔄 فحص جديد</button>
+                <button type="button" class="btn-header btn-header-unified btn-span-full" onclick="openAppInstallShareModal(); closeMobileMenu();" title="تثبيت التطبيق على الموبايل أو مشاركته مع الأصدقاء">
                     <span>📲 تثبيت ومشاركة</span>
                 </button>
-                <button type="button" class="btn-header btn-header-gold btn-span-full" onclick="closeMobileMenu(); forceAppUpdateAndClearCache();" title="جلب أحدث التمارين والبيانات وتنشيط التطبيق">⚡ تنشيط وتحديث التطبيق</button>
+                <button type="button" class="btn-header btn-header-unified btn-span-full" onclick="closeMobileMenu(); forceAppUpdateAndClearCache();" title="جلب أحدث التمارين والبيانات وتنشيط التطبيق">⚡ تنشيط وتحديث التطبيق</button>
             </div>
         </div>
     </header>
@@ -1432,16 +1432,16 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/database.js?v=12.8"></script>
-    <script src="js/exercise-image-studio.js?v=12.8"></script>
-    <script src="js/exercises-db.js?v=12.8"></script>
-    <script src="js/diagnostic-engine.js?v=12.8"></script>
-    <script src="js/audio-pacer.js?v=12.8"></script>
-    <script src="js/patient-flow.js?v=12.8"></script>
-    <script src="js/admin-engine.js?v=12.8"></script>
-    <script src="js/ai-config.js?v=12.8"></script>
-    <script src="js/ai-engine.js?v=12.8"></script>
-    <script src="js/app.js?v=12.8"></script>
-    <script src="js/text-editor.js?v=12.8"></script>
+    <script src="js/database.js?v=12.9"></script>
+    <script src="js/exercise-image-studio.js?v=12.9"></script>
+    <script src="js/exercises-db.js?v=12.9"></script>
+    <script src="js/diagnostic-engine.js?v=12.9"></script>
+    <script src="js/audio-pacer.js?v=12.9"></script>
+    <script src="js/patient-flow.js?v=12.9"></script>
+    <script src="js/admin-engine.js?v=12.9"></script>
+    <script src="js/ai-config.js?v=12.9"></script>
+    <script src="js/ai-engine.js?v=12.9"></script>
+    <script src="js/app.js?v=12.9"></script>
+    <script src="js/text-editor.js?v=12.9"></script>
 </body>
 </html>
