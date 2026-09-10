@@ -1,0 +1,36 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 215" width="320" height="215">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#090e17"/><stop offset="100%" style="stop-color:#131d2e"/></linearGradient>
+    <linearGradient id="skin" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#e8b89a"/><stop offset="100%" style="stop-color:#c8906a"/></linearGradient>
+    <linearGradient id="suit" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#1e293b"/><stop offset="100%" style="stop-color:#0f172a"/></linearGradient>
+  </defs>
+  <rect width="320" height="215" fill="url(#bg)"/>
+  <rect x="60" y="178" width="200" height="3" rx="1.5" fill="rgba(212,175,55,0.2)"/>
+  <rect x="148" y="98" width="38" height="55" rx="8" fill="url(#suit)"/>
+  <line x1="148" y1="105" x2="186" y2="105" stroke="#d4af37" stroke-width="1" opacity="0.5"/>
+  <rect x="154" y="148" width="12" height="30" rx="5" fill="url(#suit)"/>
+  <rect x="170" y="148" width="12" height="30" rx="5" fill="url(#suit)"/>
+  <ellipse cx="160" cy="179" rx="10" ry="4" fill="#1e293b"/>
+  <ellipse cx="176" cy="179" rx="10" ry="4" fill="#1e293b"/>
+  <ellipse cx="167" cy="80" rx="19" ry="21" fill="#e8b89a"/>
+  <ellipse cx="167" cy="62" rx="19" ry="11" fill="#2d1810"/>
+  <rect x="161" y="91" width="12" height="10" rx="5" fill="#e8b89a"/>
+  <!-- Arm extended, wrist + fingers bent DOWN (finger extension stretch) -->
+  <path d="M186 110 Q210 110 235 112" stroke="url(#suit)" stroke-width="13" fill="none" stroke-linecap="round"/>
+  <!-- Hand with fingers spread/extended wide, palm down -->
+  <ellipse cx="242" cy="115" rx="12" ry="8" fill="#e8b89a"/>
+  <!-- Fingers spread -->
+  <rect x="234" y="120" width="4" height="15" rx="2" fill="#e8b89a" transform="rotate(-10 234 120)"/>
+  <rect x="241" y="122" width="4" height="15" rx="2" fill="#e8b89a"/>
+  <rect x="248" y="121" width="4" height="14" rx="2" fill="#e8b89a" transform="rotate(10 248 121)"/>
+  <!-- Spread arrows from palm outward -->
+  <line x1="246" y1="110" x2="260" y2="102" stroke="#d4af37" stroke-width="2" opacity="0.8"/>
+  <polygon points="255,100 264,98 259,108" fill="#d4af37"/>
+  <line x1="238" y1="108" x2="224" y2="100" stroke="#d4af37" stroke-width="2" opacity="0.8"/>
+  <polygon points="229,98 220,98 225,108" fill="#d4af37"/>
+  <!-- Wrist extension downward arrow -->
+  <path d="M242 124 L242 140" stroke="#38bdf8" stroke-width="2.5" fill="none"/>
+  <polygon points="237,139 242,148 247,139" fill="#38bdf8"/>
+  <text x="160" y="200" font-family="Arial" font-size="10.5" fill="#38bdf8" text-anchor="middle" font-weight="bold">تمديد وبسط الأصابع والرسغ</text>
+  <text x="160" y="212" font-family="Arial" font-size="9" fill="rgba(212,175,55,0.7)" text-anchor="middle">Finger Extension &amp; Wrist Stretch</text>
+</svg>

@@ -1,0 +1,44 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 215" width="320" height="215">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#090e17"/><stop offset="100%" style="stop-color:#131d2e"/></linearGradient>
+    <linearGradient id="skin" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#e8b89a"/><stop offset="100%" style="stop-color:#c8906a"/></linearGradient>
+    <linearGradient id="suit" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#1e293b"/><stop offset="100%" style="stop-color:#0f172a"/></linearGradient>
+  </defs>
+  <rect width="320" height="215" fill="url(#bg)"/>
+  <rect x="50" y="178" width="220" height="3" rx="1.5" fill="rgba(212,175,55,0.2)"/>
+  <!-- Chair behind -->
+  <rect x="120" y="148" width="80" height="6" rx="3" fill="#1e293b" stroke="#d4af37" stroke-width="1"/>
+  <rect x="125" y="154" width="6" height="24" rx="2" fill="#1e293b"/>
+  <rect x="189" y="154" width="6" height="24" rx="2" fill="#1e293b"/>
+  <rect x="116" y="98" width="8" height="50" rx="3" fill="#1e293b" stroke="#d4af37" stroke-width="0.8"/>
+  <!-- Figure in squat position (about to sit or just risen) -->
+  <!-- Torso leaning forward slightly -->
+  <path d="M145 100 Q155 105 162 118" stroke="url(#suit)" stroke-width="34" fill="none" stroke-linecap="round"/>
+  <path d="M145 100 Q155 105 162 118" stroke="#0f172a" stroke-width="28" fill="none" stroke-linecap="round"/>
+  <path d="M145 99 Q155 104 162 117" stroke="#d4af37" stroke-width="1" fill="none" opacity="0.4"/>
+  <!-- Hips back (squat position) -->
+  <ellipse cx="162" cy="122" rx="28" ry="15" fill="url(#suit)"/>
+  <!-- Thighs angled down -->
+  <path d="M148 130 Q145 148 148 168" stroke="url(#suit)" stroke-width="17" fill="none" stroke-linecap="round"/>
+  <path d="M176 130 Q179 148 176 168" stroke="url(#suit)" stroke-width="17" fill="none" stroke-linecap="round"/>
+  <!-- Feet -->
+  <ellipse cx="148" cy="170" rx="12" ry="5" fill="#1e293b"/>
+  <ellipse cx="176" cy="170" rx="12" ry="5" fill="#1e293b"/>
+  <!-- Head -->
+  <ellipse cx="150" cy="82" rx="19" ry="22" fill="#e8b89a"/>
+  <ellipse cx="150" cy="63" rx="19" ry="11" fill="#2d1810"/>
+  <rect x="144" y="95" width="12" height="8" rx="4" fill="#e8b89a"/>
+  <!-- Arms forward for balance -->
+  <path d="M145 108 Q130 108 115 108" stroke="url(#suit)" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <ellipse cx="111" cy="108" rx="9" ry="5" fill="#e8b89a"/>
+  <!-- Upward arrow (rising from squat) -->
+  <path d="M200 145 L200 118" stroke="#d4af37" stroke-width="3" stroke-linecap="round"/>
+  <polygon points="195,120 200,108 205,120" fill="#d4af37"/>
+  <!-- Down arrow (lowering) -->
+  <path d="M215 118 L215 145" stroke="#38bdf8" stroke-width="2.5" fill="none" stroke-dasharray="5,3"/>
+  <polygon points="210,143 215,155 220,143" fill="#38bdf8"/>
+  <text x="222" y="125" font-family="Arial" font-size="8" fill="#d4af37">قيام</text>
+  <text x="222" y="148" font-family="Arial" font-size="8" fill="#38bdf8">جلوس</text>
+  <text x="160" y="200" font-family="Arial" font-size="10.5" fill="#38bdf8" text-anchor="middle" font-weight="bold">تمرين السكواط على الكرسي</text>
+  <text x="160" y="212" font-family="Arial" font-size="9" fill="rgba(212,175,55,0.7)" text-anchor="middle">Chair Squat Exercise</text>
+</svg>

@@ -1,0 +1,236 @@
+﻿{
+    "el_3":  {
+                 "visualType":  "forearm_rotation",
+                 "name":  "تمرين تدوير الساعد (Pronation \u0026 Supination)",
+                 "file":  "assets/exercises/custom_el_3.jpg",
+                 "size":  66593
+             },
+    "kn_1":  {
+                 "visualType":  "quad_set",
+                 "name":  "تمرين الشد الثابت للعضلة الرباعية (Quad Set)",
+                 "file":  "assets/exercises/custom_kn_1.jpg",
+                 "size":  67426
+             },
+    "wr_1":  {
+                 "visualType":  "wrist_flexor",
+                 "name":  "إطالة أوتار الرسغ وتفريغ النفق الرسغي",
+                 "file":  "assets/exercises/custom_wr_1.jpg",
+                 "size":  55368
+             },
+    "ch_1":  {
+                 "visualType":  "doorway_chest_stretch",
+                 "name":  "تمرين فتح الصدر والتمدد على المدخل",
+                 "file":  "assets/exercises/custom_ch_1.jpg",
+                 "size":  56236
+             },
+    "ank_4":  {
+                  "visualType":  "ankle_rotation",
+                  "name":  "تمرين تدوير الكاحل ورسم الدوائر",
+                  "file":  "assets/exercises/custom_ank_4.jpg",
+                  "size":  67749
+              },
+    "th_3":  {
+                 "visualType":  "doorway_chest_stretch",
+                 "name":  "تمرين إطالة الصدر على المدخل لتحرير لوح الكتف (Doorway Stretch)",
+                 "file":  "assets/exercises/custom_th_3.jpg",
+                 "size":  71388
+             },
+    "kn_5":  {
+                 "visualType":  "hamstring_stretch",
+                 "name":  "إطالة عضلات الفخذ الخلفية (Hamstring Stretch)",
+                 "file":  "assets/exercises/custom_kn_5.jpg",
+                 "size":  63764
+             },
+    "sh_2":  {
+                 "visualType":  "shoulder_cross_stretch",
+                 "name":  "تمرين إطالة الكبسولة الخلفية للكتف عبر الصدر (Cross-Body Stretch)",
+                 "file":  "assets/exercises/custom_sh_2.jpg",
+                 "size":  57557
+             },
+    "lu_1":  {
+                 "visualType":  "press_up_cobra",
+                 "name":  "تمرين تمديد الفقرات القطنية ودفع الديسك للمركز (ماكنزي)",
+                 "file":  "assets/exercises/custom_lu_1.jpg",
+                 "size":  62992
+             },
+    "si_4":  {
+                 "visualType":  "slump_floss",
+                 "name":  "تمرين تحرير المسار العصبي (Slump Nerve Floss)",
+                 "file":  "assets/exercises/custom_si_4.jpg",
+                 "size":  48272
+             },
+    "lu_2":  {
+                 "visualType":  "cat_cow",
+                 "name":  "تمرين القطة والبقرة لتليين العمود الفقري",
+                 "file":  "assets/exercises/custom_lu_2.jpg",
+                 "size":  65449
+             },
+    "lu_4":  {
+                 "visualType":  "glute_bridge",
+                 "name":  "تمرين الجسر الحوضي لبناء ثبات الظهر (Glute Bridge)",
+                 "file":  "assets/exercises/custom_lu_4.jpg",
+                 "size":  63204
+             },
+    "si_5":  {
+                 "visualType":  "clamshell",
+                 "name":  "تمرين الصدفة لتقوية عضلات الحوض والورك (Clamshell)",
+                 "file":  "assets/exercises/custom_si_5.jpg",
+                 "size":  55761
+             },
+    "cerv_1":  {
+                   "visualType":  "chin_tuck",
+                   "name":  "تمرين تراجع الذقن واستقامة الفقرات العنقية",
+                   "file":  "assets/exercises/custom_cerv_1.jpg",
+                   "size":  58166
+               },
+    "wr_3":  {
+                 "visualType":  "wrist_curls",
+                 "name":  "تمرين ثني وتدوير الرسغ لتقوية الأوتار",
+                 "file":  "assets/exercises/custom_wr_3.jpg",
+                 "size":  46375
+             },
+    "th_2":  {
+                 "visualType":  "trapezius_shrug",
+                 "name":  "تمرين ضم لوحي الكتف وفك عقد الأبهر (Scapular Retraction)",
+                 "file":  "assets/exercises/custom_th_2.jpg",
+                 "size":  73180
+             },
+    "lu_5":  {
+                 "visualType":  "bird_dog",
+                 "name":  "تمرين الطائر الكلب لبناء ثبات الجذع (Bird-Dog)",
+                 "file":  "assets/exercises/custom_lu_5.jpg",
+                 "size":  63880
+             },
+    "el_2":  {
+                 "visualType":  "golfer_elbow_stretch",
+                 "name":  "إطالة أوتار الكوع والرسغ الداخلية (مرفق الجولف)",
+                 "file":  "assets/exercises/custom_el_2.jpg",
+                 "size":  64438
+             },
+    "si_1":  {
+                 "visualType":  "piriformis_figure4",
+                 "name":  "إطالة العضلة الكمثرية ومسار عرق النسا (شكل 4)",
+                 "file":  "assets/exercises/custom_si_1.jpg",
+                 "size":  63048
+             },
+    "ch_3":  {
+                 "visualType":  "doorway_chest_stretch",
+                 "name":  "وضعية فتح وتمديد القفص الصدري والتنفس الحجابي",
+                 "file":  "assets/exercises/custom_ch_3.jpg",
+                 "size":  67407
+             },
+    "kn_3":  {
+                 "visualType":  "straight_leg_raise",
+                 "name":  "تمرين رفع الساق المستقيمة لبناء القوة",
+                 "file":  "assets/exercises/custom_kn_3.jpg",
+                 "size":  63993
+             },
+    "ch_2":  {
+                 "visualType":  "lower_trunk_rotation",
+                 "name":  "تمرين تدوير الجذع لتليين القفص الصدري",
+                 "file":  "assets/exercises/custom_ch_2.jpg",
+                 "size":  65520
+             },
+    "ank_1":  {
+                  "visualType":  "slant_board",
+                  "name":  "إطالة اللفافة الأخمصية وعضلة السمانة على لوح مائل/حائط",
+                  "file":  "assets/exercises/custom_ank_1.jpg",
+                  "size":  50201
+              },
+    "sh_4":  {
+                 "visualType":  "shoulder_wall_slide",
+                 "name":  "تمرين انزلاق الذراعين على الحائط لثبات لوح الكتف (Scapular Wall Slide)",
+                 "file":  "assets/exercises/custom_sh_4.jpg",
+                 "size":  67368
+             },
+    "sh_1":  {
+                 "visualType":  "shoulder_pendulum",
+                 "name":  "تمرين بندول كودمان لتفريغ ضغط الكتف (Codman Pendulum)",
+                 "file":  "assets/exercises/custom_sh_1.jpg",
+                 "size":  56778
+             },
+    "lu_3":  {
+                 "visualType":  "child_pose",
+                 "name":  "وضعية الطفل لتفريغ ضغط الديسك والمفاصل",
+                 "file":  "assets/exercises/custom_lu_3.jpg",
+                 "size":  64154
+             },
+    "kn_2":  {
+                 "visualType":  "terminal_knee_ext",
+                 "name":  "تمرين فرد الركبة النهائي لتصحيح المسار (TKE)",
+                 "file":  "assets/exercises/custom_kn_2.jpg",
+                 "size":  66891
+             },
+    "si_2":  {
+                 "visualType":  "sciatic_glide",
+                 "name":  "تمرين انزلاق العصب الوركي على الكرسي (Sciatic Glide)",
+                 "file":  "assets/exercises/custom_si_2.jpg",
+                 "size":  66729
+             },
+    "ank_2":  {
+                  "visualType":  "heel_raise_two",
+                  "name":  "تمرين رفع الكعبين لتقوية وتر أكيليس والسمانة",
+                  "file":  "assets/exercises/custom_ank_2.jpg",
+                  "size":  62529
+              },
+    "el_1":  {
+                 "visualType":  "tennis_elbow_stretch",
+                 "name":  "إطالة أوتار الكوع الخارجية (مرفق التنس)",
+                 "file":  "assets/exercises/custom_el_1.jpg",
+                 "size":  66732
+             },
+    "kn_4":  {
+                 "visualType":  "knee_to_chest",
+                 "name":  "تمرين سحب الركبة للصدر لتليين المفصل",
+                 "file":  "assets/exercises/custom_kn_4.jpg",
+                 "size":  64210
+             },
+    "lu_6":  {
+                 "visualType":  "pelvic_tilt",
+                 "name":  "تمرين إمالة الحوض لتخفيف ضغط الفقرات القطنية (Pelvic Tilt)",
+                 "file":  "assets/exercises/custom_lu_6.jpg",
+                 "size":  58512
+             },
+    "si_3":  {
+                 "visualType":  "buttocks_stretch",
+                 "name":  "إطالة عضلات الأرداف العميقة المستلقية",
+                 "file":  "assets/exercises/custom_si_3.jpg",
+                 "size":  63649
+             },
+    "cerv_2":  {
+                   "visualType":  "neck_lateral_stretch",
+                   "name":  "إطالة الرقبة الجانبية والعضلة شبه المنحرفة",
+                   "file":  "assets/exercises/custom_cerv_2.jpg",
+                   "size":  53955
+               },
+    "sh_3":  {
+                 "visualType":  "forearm_rotation",
+                 "name":  "تمرين الشد الثابت للكفة المدورة وتثبيت الكتف (Isometric Rotator Cuff)",
+                 "file":  "assets/exercises/custom_sh_3.jpg",
+                 "size":  62871
+             },
+    "wr_2":  {
+                 "visualType":  "finger_extensions",
+                 "name":  "تمرين تمديد وبسط الأصابع وتفريغ الاحتقان",
+                 "file":  "assets/exercises/custom_wr_2.jpg",
+                 "size":  61989
+             },
+    "th_1":  {
+                 "visualType":  "lower_trunk_rotation",
+                 "name":  "تمرين تدوير الجذع وفتح الفقرات الصدرية (Open-Book)",
+                 "file":  "assets/exercises/custom_th_1.jpg",
+                 "size":  67784
+             },
+    "ank_3":  {
+                  "visualType":  "ankle_bends",
+                  "name":  "تمرين ثني وبسط الكاحل لتنشيط الدورة الدموية",
+                  "file":  "assets/exercises/custom_ank_3.jpg",
+                  "size":  66241
+              },
+    "cerv_3":  {
+                   "visualType":  "trapezius_shrug",
+                   "name":  "تمرين رفع وهز الكتفين لتنشيط التروية الدموية",
+                   "file":  "assets/exercises/custom_cerv_3.jpg",
+                   "size":  57875
+               }
+}

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 400" width="100%" height="100%">
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  
+  <!-- Torso upper body -->
+  <line x1="250" y1="130" x2="250" y2="280" stroke="#334155" stroke-width="36" stroke-linecap="round"/>
+  
+  <!-- Neck and Head -->
+  <circle cx="250" cy="75" r="28" fill="#fcd34d" stroke="#d97706" stroke-width="3"/>
+  <line x1="250" y1="105" x2="250" y2="135" stroke="#fed7aa" stroke-width="16" stroke-linecap="round"/>
+  
+  <!-- Left Shoulder Target Area (Cross Body Stretch) -->
+  <!-- Target Arm (crossing horizontally across chest) -->
+  <line x1="230" y1="145" x2="330" y2="155" stroke="#ea580c" stroke-width="20" stroke-linecap="round"/>
+  <line x1="330" y1="155" x2="380" y2="175" stroke="#f97316" stroke-width="18" stroke-linecap="round"/>
+  
+  <!-- Opposite Arm pulling and supporting the elbow -->
+  <path d="M 270 145 L 345 205 L 340 150" fill="none" stroke="#0284c7" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Stretch Arrow indicating gentle pull across chest -->
+  <defs>
+    <marker id="arrowRight" viewBox="0 0 10 10" refX="5" refY="3" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 6 3 L 0 6 z" fill="#ef4444" />
+    </marker>
+  </defs>
+  <path d="M 290 120 C 330 115 360 130 365 145" fill="none" stroke="#ef4444" stroke-width="5" stroke-dasharray="6,4" marker-end="url(#arrowRight)"/>
+  
+  <!-- Posterior Shoulder Highlight -->
+  <circle cx="215" cy="140" r="14" fill="#ef4444" opacity="0.75"/>
+  
+  <!-- Badge Label -->
+  <rect x="90" y="355" width="320" height="34" rx="8" fill="#0f172a"/>
+  <text x="250" y="377" fill="#fcd34d" font-size="14" font-weight="bold" font-family="sans-serif" text-anchor="middle">إطالة الكبسولة الخلفية للكتف عبر الصدر</text>
+</svg>

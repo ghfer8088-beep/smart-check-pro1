@@ -98,44 +98,15 @@ function checkConditionalQuestions() {
         const conditionalValues = conditionalValuesAttr ? conditionalValuesAttr.split(',') : [];
         
         if (conditionalField) {
-            // دعم أنواع مختلفة من الحقول كشروط (select, checkbox, textarea)
-            const selectElement = container.querySelector(`select[name="${conditionalField}"]`);
-            const checkboxElement = container.querySelector(`input[type="checkbox"][name="${conditionalField}"]`);
-            const textareaElement = container.querySelector(`textarea[name="${conditionalField}"]`);
-            
-            let conditionMet = false;
-            let fieldValue = null;
-            
-            // التحقق من select
-            if (selectElement && selectElement.value) {
-                fieldValue = selectElement.value;
-                conditionMet = conditionalValues.includes(fieldValue);
-            }
-            // التحقق من checkbox
-            else if (checkboxElement) {
-                fieldValue = checkboxElement.checked ? 'true' : 'false';
-                conditionMet = conditionalValues.includes(fieldValue);
-            }
-            // التحقق من textarea
-            else if (textareaElement && textareaElement.value.trim()) {
-                fieldValue = textareaElement.value.trim();
-                // للـ textarea، نتحقق من وجود النص إذا كانت القيمة المشروطة 'any'
-                conditionMet = conditionalValues.includes('any') || conditionalValues.includes(fieldValue);
-            }
-            
-            if (conditionMet) {
-                question.style.display = 'block';
-            } else {
-                question.style.display = 'none';
-                // إعادة تعيين جميع الحقول في السؤال المخفي
-                const questionSelect = question.querySelector('select');
-                if (questionSelect) questionSelect.value = '';
-                
-                const questionTextarea = question.querySelector('textarea');
-                if (questionTextarea) questionTextarea.value = '';
-                
-                const questionCheckboxes = question.querySelectorAll('input[type="checkbox"]');
-                questionCheckboxes.forEach(cb => cb.checked = false);
+            const fieldElement = container.querySelector(`select[name="${conditionalField}"]`);
+            if (fieldElement && fieldElement.value) {
+                if (conditionalValues.includes(fieldElement.value)) {
+                    question.style.display = 'block';
+                } else {
+                    question.style.display = 'none';
+                    const selectElement = question.querySelector('select');
+                    if (selectElement) selectElement.value = ''; // إعادة تعيين القيمة
+                }
             }
         }
     });
@@ -197,6 +168,12 @@ function selectRegion(point) {
     renderQuestions(activeJointId);
     document.getElementById('progress-fill').style.width = "25%";
     
+    // إظهار قسم الأمراض المزمنة
+    const chronicDiseasesSection = document.querySelector('.chronic-diseases');
+    if (chronicDiseasesSection) {
+        chronicDiseasesSection.style.display = 'block';
+    }
+    
     // تحديث مؤشرات الخطوات
     updateStepIndicator(2);
     
@@ -206,7 +183,7 @@ function selectRegion(point) {
     if (existingMessage) existingMessage.remove();
     
     const guidanceMessage = document.createElement('div');
-    guidanceMessage.className = 'step-guidance';
+    guidanceMessage.className = 'step-guidance personal-data-section';
     guidanceMessage.style.cssText = 'background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;';
     guidanceMessage.innerHTML = `
         <div style="color: white; font-weight: bold; margin-bottom: 5px;">✨ الخطوة التالية</div>
@@ -253,39 +230,8 @@ function saveState() {
         weight: document.getElementById('weight')?.value || '',
         height: document.getElementById('height')?.value || '',
         severity: document.getElementById('severity')?.value || '',
-        duration: document.getElementById('duration')?.value || '',
-        // حفظ إجابات الأسئلة الديناميكية
-        dynamicAnswers: {}
+        duration: document.getElementById('duration')?.value || ''
     };
-    
-    // جمع إجابات الأسئلة الديناميكية
-    const container = document.getElementById('dynamic-questions');
-    if (container) {
-        const selects = container.querySelectorAll('select');
-        selects.forEach(select => {
-            if (select.value) {
-                state.dynamicAnswers[select.name] = select.value;
-            }
-        });
-        
-        const textareas = container.querySelectorAll('textarea');
-        textareas.forEach(textarea => {
-            if (textarea.value.trim()) {
-                state.dynamicAnswers[textarea.name] = textarea.value.trim();
-            }
-        });
-        
-        const checkboxes = container.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(checkbox => {
-            if (checkbox.checked) {
-                if (!state.dynamicAnswers[checkbox.name]) {
-                    state.dynamicAnswers[checkbox.name] = [];
-                }
-                state.dynamicAnswers[checkbox.name].push(checkbox.value);
-            }
-        });
-    }
-    
     localStorage.setItem('smartProState', JSON.stringify(state));
 }
 
@@ -308,41 +254,6 @@ function loadState() {
             document.getElementById('severity').value = s.severity||5;
             document.getElementById('severity-value').innerText = s.severity||5;
             document.getElementById('duration').value = s.duration||'acute';
-            
-            // تحميل إجابات الأسئلة الديناميكية بعد تأخير إضافي لضمان تحميل الأسئلة
-            setTimeout(() => {
-                if (s.dynamicAnswers) {
-                    const container = document.getElementById('dynamic-questions');
-                    if (container) {
-                        // تحميل قيم select
-                        Object.keys(s.dynamicAnswers).forEach(name => {
-                            const value = s.dynamicAnswers[name];
-                            if (Array.isArray(value)) {
-                                // checkbox values
-                                value.forEach(val => {
-                                    const checkbox = container.querySelector(`input[type="checkbox"][name="${name}"][value="${val}"]`);
-                                    if (checkbox) checkbox.checked = true;
-                                });
-                            } else {
-                                // select or textarea value
-                                const select = container.querySelector(`select[name="${name}"]`);
-                                if (select) {
-                                    select.value = value;
-                                } else {
-                                    const textarea = container.querySelector(`textarea[name="${name}"]`);
-                                    if (textarea) {
-                                        textarea.value = value;
-                                    }
-                                }
-                            }
-                        });
-                        
-                        // تحديث الأسئلة المشروطة بعد تحميل القيم
-                        checkConditionalQuestions();
-                        updateQuestionsProgress();
-                    }
-                }
-            }, 500);
         }
     } catch(e){}
 }

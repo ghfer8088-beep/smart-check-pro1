@@ -3,972 +3,1445 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#0a0e14">
+    <title>Smart Check Pro 2.0 - مطورة من قبل "وداعاً للألم"</title>
+    
+    <!-- وسوم تطبيق الويب التقدمي PWA والأيقونات الرسمية -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="assets/logo.png">
+    <link rel="shortcut icon" href="assets/logo.png">
+    <link rel="apple-touch-icon" href="assets/logo.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="assets/logo.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/logo.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="assets/logo.png">
+    <meta name="theme-color" content="#d4af37">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="description" content="نظام تشخيص ذكي متخصص في فقرات وعضلات وأعصاب الجسم">
-    <title>Smart Check Pro - التشخيص الذكي المتقدم</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
-    <style>
-        /* تحسينات الموبايل */
-        @media (max-width: 768px) {
-            .container {
-                padding: 10px !important;
+    <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
+    <link rel="stylesheet" href="css/style.css?v=12.1">
+    <script>
+        // التحقق من تحديثات Service Worker وتفريغ الكاش القديم فوراً عند الترقية للإصدار 11.9
+        (function() {
+            const APP_TARGET_VER = '11.9';
+            const currentVer = localStorage.getItem('smart_app_version');
+            if (currentVer !== APP_TARGET_VER) {
+                if ('caches' in window) {
+                    caches.keys().then(function(keys) {
+                        return Promise.all(keys.map(k => caches.delete(k)));
+                    }).then(function() {
+                        localStorage.setItem('smart_app_version', APP_TARGET_VER);
+                        if ('serviceWorker' in navigator) {
+                            navigator.serviceWorker.getRegistrations().then(function(regs) {
+                                for (let r of regs) { r.unregister(); }
+                            });
+                        }
+                    }).catch(function() {});
+                } else {
+                    localStorage.setItem('smart_app_version', APP_TARGET_VER);
+                }
             }
-            
-            .header-text h1 {
-                font-size: 1.5em !important;
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for (let registration of registrations) {
+                        registration.update();
+                    }
+                });
             }
-            
-            .header-text p {
-                font-size: 0.8em !important;
-            }
-            
-            .grid-2col {
-                grid-template-columns: 1fr !important;
-            }
-            
-            .card {
-                padding: 15px !important;
-            }
-            
-            .btn-submit {
-                padding: 12px 20px !important;
-                font-size: 1em !important;
-            }
-            
-            .input-control {
-                padding: 12px !important;
-                font-size: 16px !important; /* منع التكبير التلقائي في iOS */
-            }
-            
-            .range-slider {
-                height: 8px !important;
-            }
-            
-            .report-block {
-                padding: 15px !important;
-            }
-            
-            .comparison-table {
-                font-size: 0.8em !important;
-            }
-            
-            .comparison-table th, .comparison-table td {
-                padding: 8px !important;
-            }
-            
-            /* تحسين اللمس */
-            button, input, select, textarea {
-                -webkit-tap-highlight-color: transparent;
-                touch-action: manipulation;
-            }
-            
-            /* تحسين التمرير */
-            ::-webkit-scrollbar {
-                width: 6px;
-                height: 6px;
-            }
-            
-            ::-webkit-scrollbar-thumb {
-                background: #374151;
-                border-radius: 3px;
-            }
-        }
-        
-        /* تحسينات للأجهزة اللوحية */
-        @media (min-width: 769px) and (max-width: 1024px) {
-            .container {
-                max-width: 95% !important;
-            }
-        }
-        
-        /* تحسينات للشاشات الكبيرة */
-        @media (min-width: 1025px) {
-            .container {
-                max-width: 1200px !important;
-            }
-        }
-        
-        /* تحسين الأداء */
-        * {
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        
-        /* تحسين الصور */
-        img {
-            max-width: 100%;
-            height: auto;
-            content-visibility: auto;
-        }
-        
-        /* تحسين الرسوم المتحركة */
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
-    </style>
+        })();
+    </script>
 </head>
 <body>
-<div class="container">
-    <header class="no-print">
-        <div class="header-text">
-            <h1>Smart Check Pro</h1>
-            <p>نظام التشخيص الذكي المتقدم | إصدار العيادات</p>
-            <span class="license-tag">🛡️ مرخصة لـ "وداعاً للألم"</span>
+
+    <!-- شريط تثبيت تطبيق الويب PWA الذكي -->
+    <div id="pwa-install-banner" class="no-print" style="display: none; background: linear-gradient(135deg, #0b1322 0%, #17253d 100%); border-bottom: 2px solid var(--primary-gold); padding: 10px 25px; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; position: sticky; top: 0; z-index: 1001; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <img src="assets/logo.png" alt="شعار" style="height: 36px; width: 36px; border-radius: 50%; border: 1px solid var(--primary-gold);">
+            <div>
+                <strong style="color: #ffffff; font-size: 0.9em;">📱 ثبت تطبيق وداعاً للألم على هاتفك!</strong>
+                <div style="color: #94a3b8; font-size: 0.78em;">تصفح سريع وخطة تمارين تعمل حتى بدون إنترنت.</div>
+            </div>
         </div>
-        <div class="logo-container">
-            <img src="assets/logo.png" class="logo-img" alt="شعار العيادة" onerror="this.src='https://via.placeholder.com/100x100?text=شعارك'">
+        <div style="display: flex; gap: 8px;">
+            <button type="button" onclick="openAppInstallShareModal('install')" class="btn-header" style="background: var(--primary-gold); color: #0a0e14; border: none; padding: 6px 16px; font-size: 0.85em; font-weight: bold; cursor: pointer;">تثبيت الآن</button>
+            <button type="button" onclick="document.getElementById('pwa-install-banner').style.display='none'" style="background: none; border: none; color: #94a3b8; font-size: 1.2em; cursor: pointer;">&times;</button>
         </div>
-        <div class="admin-panel-btn no-print">
-            <button id="patient-logout-btn" class="btn-admin" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.9em; margin-left: 10px; display: none;">🚪 تسجيل خروج</button>
-            <button id="patient-login-header-btn" class="btn-admin" style="background: var(--primary-gold); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.9em; margin-left: 10px;">👤 تسجيل دخول</button>
-            <button id="admin-panel-btn" class="btn-admin" style="background: #6b7280; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.9em;">🔐 لوحة الإدارة</button>
+    </div>
+
+    <!-- نافذة الترحيب بالمشترك الجديد والتعريف بالأداة والإقرار الطبي -->
+    <div id="welcome-tour-modal" class="app-modal" style="display: none;">
+        <div class="modal-inner" style="max-width: 650px; text-align: center; border: 2px solid var(--primary-gold); padding: 25px 28px; background: #0f172a; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.7);">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 12px;">
+                <img src="assets/logo.png" alt="شعار وداعاً للألم" style="height: 54px; width: 54px; border-radius: 50%; border: 1.5px solid var(--primary-gold);">
+                <div style="text-align: right;">
+                    <h2 style="color: var(--primary-gold); margin: 0; font-size: 1.35em;">أهلاً بك في منصة وداعاً للألم 🌿</h2>
+                    <div style="color: #94a3b8; font-size: 0.85em;">نظام الفحص الذكي وخطة الراحة الحركية (Smart Check Pro 2.0)</div>
+                </div>
+            </div>
+
+            <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(16, 185, 129, 0.08) 100%); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 14px 18px; text-align: right; margin-bottom: 16px; color: #cbd5e1; font-size: 0.9em; line-height: 1.7;">
+                <p style="margin: 0 0 6px 0;">نرحب بك في الأداة السريرية الأولى المصممة لمساعدتك في فهم ميكانيكية ألمك (الديسك، الفقرات، المفاصل، الصداع) وإرشادك نحو الراحة الطبيعية عبر تقنية الكايروبراكتيك دون مسكنات أو جراحة.</p>
+                <div style="color: #6ee7b7; font-weight: bold; font-size: 0.88em;">✨ 90% من آلام العمود الفقري والمفاصل قابلة للتحسن الملموس من الجلسة الأولى عند تفريغ الضغط يدوياً.</div>
+            </div>
+
+            <!-- خطوات الاستخدام السريعة الأربعة -->
+            <div style="text-align: right; margin-bottom: 16px;">
+                <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.95em; margin-bottom: 8px;">🧭 كيف تبدأ وتستفيد من الأداة في 4 خطوات:</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div style="background: #111827; padding: 10px 12px; border-radius: 8px; border: 1px solid #1e293b;">
+                        <strong style="color: #38bdf8; font-size: 0.86em; display: block; margin-bottom: 2px;">1. حدد موضع الألم:</strong>
+                        <span style="color: #94a3b8; font-size: 0.76em;">انقر على النقطة الحمراء على المجسم أو ابحث باسم العرض.</span>
+                    </div>
+                    <div style="background: #111827; padding: 10px 12px; border-radius: 8px; border: 1px solid #1e293b;">
+                        <strong style="color: #10b981; font-size: 0.86em; display: block; margin-bottom: 2px;">2. التقييم السريري:</strong>
+                        <span style="color: #94a3b8; font-size: 0.76em;">أجب عن أسئلة الأعراض وفترة المعاناة ومؤشر كتلة الجسم.</span>
+                    </div>
+                    <div style="background: #111827; padding: 10px 12px; border-radius: 8px; border: 1px solid #1e293b;">
+                        <strong style="color: #f59e0b; font-size: 0.86em; display: block; margin-bottom: 2px;">3. التقرير والتمارين:</strong>
+                        <span style="color: #94a3b8; font-size: 0.76em;">احصل على التشخيص الأرجح وتمارين اليوم الأول المخصصة.</span>
+                    </div>
+                    <div style="background: #111827; padding: 10px 12px; border-radius: 8px; border: 1px solid #1e293b;">
+                        <strong style="color: var(--primary-gold); font-size: 0.86em; display: block; margin-bottom: 2px;">4. خطة الـ 7 أيام:</strong>
+                        <span style="color: #94a3b8; font-size: 0.76em;">برنامج راحة واستطالة منزلي مؤتمت مع متابعة يومية.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- بطاقة التواصل المباشر مع المعالج -->
+            <div style="background: #111827; border: 1.5px solid #10b981; border-radius: 10px; padding: 12px 16px; text-align: right; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <div style="color: #10b981; font-weight: bold; font-size: 0.9em;">👨‍⚕️ تحتاج استشارة فورية أو حجز جلسة مباشرة؟</div>
+                    <div style="color: #cbd5e1; font-size: 0.82em;">تواصل فوراً مع المعالج المختص: <strong style="color: #ffffff; direction: ltr; display: inline-block;">0790360440</strong></div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <a href="tel:00962790360440" style="background: #10b981; color: #fff; text-decoration: none; padding: 7px 14px; border-radius: 6px; font-size: 0.85em; font-weight: bold; display: inline-flex; align-items: center; gap: 4px;">📞 اتصال هاتفي</a>
+                    <a href="https://wa.me/962790360440" target="_blank" style="background: #25d366; color: #fff; text-decoration: none; padding: 7px 14px; border-radius: 6px; font-size: 0.85em; font-weight: bold; display: inline-flex; align-items: center; gap: 4px;">💬 واتساب</a>
+                </div>
+            </div>
+
+            <button type="button" onclick="acceptWelcomeTourModal()" style="width: 100%; background: linear-gradient(135deg, var(--primary-gold) 0%, var(--primary-gold-dark) 100%); color: #0a0e14; border: none; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 1.05em; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);">
+                🚀 أوافق وأبدأ الفحص السريري الذكي الآن
+            </button>
+        </div>
+    </div>
+
+    <!-- أزرار التواصل السريع العائمة (Floating Quick Contact Buttons) -->
+    <div id="floating-quick-contact" class="no-print" style="position: fixed; bottom: 20px; left: 20px; z-index: 999; display: flex; flex-direction: column; gap: 10px; filter: drop-shadow(0 6px 18px rgba(0,0,0,0.6));">
+        <a href="https://wa.me/962790360440" target="_blank" title="محادثة المعالج واتساب (0790360440)" style="background: #25d366; color: #ffffff; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.6em; text-decoration: none; border: 2px solid #ffffff; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+            💬
+        </a>
+        <a href="tel:00962790360440" title="اتصال هاتفي مباشر بالمعالج (0790360440)" style="background: #10b981; color: #ffffff; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5em; text-decoration: none; border: 2px solid #ffffff; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+            📞
+        </a>
+    </div>
+
+    <!-- الهيدر الرئيسي مع شعار وداعاً للألم وأزرار التواصل -->
+    <header class="app-header">
+        <div class="brand-wrapper" onclick="handleSecretBackdoorClick()" style="cursor: pointer;" title="Smart Check Pro 2.0">
+            <img src="assets/logo.png" alt="شعار وداعاً للألم" class="clinic-logo-img">
+            <div>
+                <div class="brand-title">Smart Check Pro <span style="color: var(--primary-gold); font-size: 0.8em;">2.0</span></div>
+                <div class="brand-subtitle">مطورة من قبل "وداعاً للألم"</div>
+            </div>
+        </div>
+
+        <div class="header-right-group">
+            <button type="button" class="btn-mobile-menu-toggle" id="btn-mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="القائمة">
+                <span id="hamburger-icon-char">☰</span>
+            </button>
+
+            <div class="header-actions" id="main-header-actions">
+                <button type="button" class="btn-header btn-header-emerald" onclick="openMriConsultationModal(); closeMobileMenu();" title="خدمة قراءة وتفسير صور الرنين المغناطيسي والأشعة مجاناً">🩻 قراءة صور الرنين</button>
+                <button type="button" class="btn-header btn-header-gold" onclick="openVideoSuccessStoriesModal(); closeMobileMenu();" title="شاهد بالفيديو تجارب تعافي حقيقية موثقة">📹 قصص نجاحنا بالفيديو</button>
+                <button type="button" class="btn-header btn-header-gold" onclick="openChiropracticExplainerModal(); closeMobileMenu();">✨ ما هو الكايروبراكتيك؟</button>
+                <button type="button" class="btn-header btn-header-gold" onclick="openWelcomeTourModal(); closeMobileMenu();">💡 دليل الأداة</button>
+                <button type="button" class="btn-header btn-header-gold" onclick="openExerciseLibraryModal('all'); closeMobileMenu();">📚 مكتبة التمارين</button>
+                <a href="https://wa.me/962790360440" target="_blank" class="btn-header btn-header-emerald">💬 واتساب المعالج</a>
+                <a href="tel:00962790360440" class="btn-header btn-header-emerald-soft">📞 اتصل بالمعالج</a>
+                <button type="button" id="btn-header-text-editor" class="btn-header btn-header-gold" onclick="openTextEditorModal(); closeMobileMenu();" style="display: none;">✏️ تعديل النصوص</button>
+                <button type="button" class="btn-header btn-header-gold" onclick="resetToInitialState(); closeMobileMenu();">🔄 فحص جديد</button>
+                <button type="button" class="btn-header btn-header-emerald btn-span-full" onclick="openAppInstallShareModal(); closeMobileMenu();" title="تثبيت التطبيق على الموبايل أو مشاركته مع الأصدقاء">
+                    <span>📲 تثبيت ومشاركة</span>
+                </button>
+                <button type="button" class="btn-header btn-header-gold btn-span-full" onclick="closeMobileMenu(); forceAppUpdateAndClearCache();" title="جلب أحدث التمارين والبيانات وتنشيط التطبيق">⚡ تنشيط وتحديث التطبيق</button>
+            </div>
         </div>
     </header>
+    <div id="mobile-menu-backdrop" class="mobile-backdrop" onclick="closeMobileMenu()"></div>
 
-    <!-- صفحة ترحيبية -->
-    <div id="welcome-modal" class="modal">
-        <div class="modal-content" style="max-width: 700px;">
-            <div style="text-align: center; margin-bottom: 20px;">
-                <div style="font-size: 4em; margin-bottom: 10px;">🏥</div>
-                <h2 style="color: var(--primary-gold); margin-bottom: 10px;">مرحباً بك في Smart Check Pro</h2>
-                <p style="color: #9ca3af; font-size: 1.1em;">نظام التشخيص الذكي المتقدم | إصدار العيادات</p>
+    <!-- شريط تتبع الخطوات المنطقي القابل للنقر للتنقل الحر -->
+    <div class="stepper-container no-print">
+        <div class="stepper-node active" id="stepper-node-1" onclick="handleStepperClick(1)" style="cursor: pointer;" title="الانتقال للخطوة 1: موضع الألم">
+            <div class="node-circle">1</div>
+            <div class="node-label">موضع الألم</div>
+        </div>
+        <div class="stepper-node" id="stepper-node-2" onclick="handleStepperClick(2)" style="cursor: pointer;" title="الانتقال للخطوة 2: التقييم السريري">
+            <div class="node-circle">2</div>
+            <div class="node-label">التقييم السريري</div>
+        </div>
+        <div class="stepper-node" id="stepper-node-3" onclick="handleStepperClick(3)" style="cursor: pointer;" title="الانتقال للخطوة 3: التقرير الطبي">
+            <div class="node-circle">3</div>
+            <div class="node-label">التقرير الطبي</div>
+        </div>
+        <div class="stepper-node" id="stepper-node-4" onclick="handleStepperClick(4)" style="cursor: pointer;" title="الانتقال للخطوة 4: خطة التعافي">
+            <div class="node-circle">4</div>
+            <div class="node-label">خطة التعافي (7 أيام)</div>
+        </div>
+    </div>
+
+    <!-- الحاوية المركزية للتطبيق -->
+    <main class="main-wrapper">
+
+        <!-- ================= الخطوة 1: فحص وتحديد موضع الألم ================= -->
+        <section id="step-section-1" class="app-step-section">
+
+            <!-- وسام الريادة العالمية: المنظومة السريرية الذكية الأولى والوحيدة في العالم (تصميم عصري رشيق للهاتف والكمبيوتر) -->
+            <div class="prestige-compact-showcase no-print" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.16) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 14px 20px; margin-bottom: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #d4af37 0%, #854d0e 100%); display: flex; align-items: center; justify-content: center; font-size: 1.6em; box-shadow: 0 0 15px rgba(212, 175, 55, 0.5); flex-shrink: 0; border: 1.5px solid #fff59d;">
+                        👑
+                    </div>
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 2px;">
+                            <h2 style="color: #ffffff; margin: 0; font-size: 1.15em; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
+                                المنظومة السريرية الذكية <span style="color: var(--primary-gold); text-shadow: 0 0 10px rgba(212, 175, 55, 0.4);">الأولى والوحيدة في العالم</span>
+                            </h2>
+                            <span style="background: rgba(212, 175, 55, 0.22); border: 1px solid var(--primary-gold); color: #fef08a; font-size: 0.72em; padding: 2px 8px; border-radius: 12px; font-weight: bold;">براءة ابتكار سريري</span>
+                        </div>
+                        <p style="color: #cbd5e1; margin: 0; font-size: 0.84em; line-height: 1.4;">
+                            فحص سريري فوري ذاتي وتصميم خطط الراحة والاستشفاء بتقنية الكايروبراكتيك المعتمدة • «وداعاً للألم»
+                        </p>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <span style="background: rgba(16, 185, 129, 0.18); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.82em; font-weight: bold; padding: 5px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px;">
+                        <span>✓</span> فحص مجاني متاح للجميع 100%
+                    </span>
+                </div>
             </div>
-            
-            <div style="background: #1e2633; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-                <h3 style="color: var(--primary-gold); margin-bottom: 15px;">📋 ما هي هذه الأداة؟</h3>
-                <p style="color: #d1d5db; line-height: 1.8; margin-bottom: 15px;">
-                    Smart Check Pro هو نظام تشخيصي ذكي يساعدك على فهم حالتك الصحية من خلال خوارزميات متقدمة. الأداة تستخدم معلوماتك الشخصية وأعراضك لتقديم تشخيص أولي وتوصيات منزلية مؤقتة.
+
+            <!-- شريط المشاكل والتخصصات السريرية التي نعالجها في وداعاً للألم -->
+            <div class="clinical-specialties-banner no-print">
+                <div class="specialties-header">
+                    <div class="specialties-title-wrap">
+                        <span class="specialties-icon">🩺</span>
+                        <h3 class="specialties-title">نطاق الحالات والمشاكل التي نعالجها في «وداعاً للألم»</h3>
+                    </div>
+                    <span class="specialties-tag">تقنية الكايروبراكتيك المعتمدة</span>
+                </div>
+                <div class="specialties-grid">
+                    <div class="specialty-chip">
+                        <span class="chip-icon">🦴</span>
+                        <div class="chip-content">
+                            <strong>مشاكل الفقرات</strong>
+                            <span>الديسك، انزلاق الفقرات، احتكاك وتضيق القناة الشوكية</span>
+                        </div>
+                    </div>
+                    <div class="specialty-chip">
+                        <span class="chip-icon">💪</span>
+                        <div class="chip-content">
+                            <strong>مشاكل العضلات والأوتار</strong>
+                            <span>متلازمة الأبهر، التشنج المزمن، وتمزق وإجهاد الأوتار</span>
+                        </div>
+                    </div>
+                    <div class="specialty-chip">
+                        <span class="chip-icon">⚡</span>
+                        <div class="chip-content">
+                            <strong>مشاكل الخدر والتنميل</strong>
+                            <span>عرق النسا (سياتيكا)، النفق الرسغي، وانضغاط الأعصاب</span>
+                        </div>
+                    </div>
+                    <div class="specialty-chip">
+                        <span class="chip-icon">🛡️</span>
+                        <div class="chip-content">
+                            <strong>مشاكل الأكتاف والمفاصل</strong>
+                            <span>تجمد الكتف، الكفة المدورة، احتكاك الركبتين والحوض</span>
+                        </div>
+                    </div>
+                    <div class="specialty-chip">
+                        <span class="chip-icon">🧠</span>
+                        <div class="chip-content">
+                            <strong>التأهيل لمرضى الجلطات والمشاكل الحركية</strong>
+                            <span>استعادة المشي والتوازن، وتليين التصلب وضعف الحركة</span>
+                        </div>
+                    </div>
+                    <div class="specialty-chip">
+                        <span class="chip-icon">📐</span>
+                        <div class="chip-content">
+                            <strong>الجنف (Scoliosis)</strong>
+                            <span>تقويم انحراف واعوجاج العمود الفقري وتعديل التوازن</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="anatomy-card">
+                <!-- قسم المجسم التفاعلي ونقاط الألم الشاملة عالية الوضوح -->
+                <div class="skeleton-column">
+                    <div id="welcome-audio-guidance-bar" style="display: none; width: 100%; box-sizing: border-box; background: linear-gradient(135deg, rgba(56, 189, 248, 0.22) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #38bdf8; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; align-items: center; justify-content: space-between; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1.2em;">🎙️</span>
+                            <span style="color: #f1f5f9; font-size: 0.84em; font-weight: bold;">د. سارة ترشدك للبدء.. استمع لتحديد موضع ألمك بدقة</span>
+                        </div>
+                        <button type="button" onclick="skipWelcomeAudioAndUnlockPoints()" style="background: rgba(212, 175, 55, 0.25); border: 1px solid var(--primary-gold); color: #fef08a; padding: 5px 12px; border-radius: 6px; font-size: 0.78em; font-weight: bold; cursor: pointer; white-space: nowrap;">
+                            تخطي التوجيه الصوتي ⏭️
+                        </button>
+                    </div>
+                    <div class="view-controls">
+                        <button type="button" id="btn-view-front" class="btn-view-toggle active" onclick="switchAnatomyView('front')">👤 المنظر الأمامي</button>
+                        <button type="button" id="btn-view-back" class="btn-view-toggle" onclick="switchAnatomyView('back')">🔄 المنظر الخلفي</button>
+                    </div>
+
+                    <div class="skeleton-viewport">
+                        <!-- المنظر الأمامي -->
+                        <div id="front-anatomy-container" class="skeleton-container-layer">
+                            <img src="assets/skeleton-back.png" alt="المنظر الأمامي" class="skeleton-img">
+                        </div>
+
+                        <!-- المنظر الخلفي -->
+                        <div id="back-anatomy-container" class="skeleton-container-layer is-hidden" style="display: none;">
+                            <img src="assets/skeleton-front.png" alt="المنظر الخلفي" class="skeleton-img">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- تفاصيل النقطة ووصف الحالة الموحد -->
+                <div class="anatomy-form-col" style="background: rgba(15, 23, 42, 0.7); border-radius: 14px; border: 1px solid rgba(212, 175, 55, 0.3);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 6px;">
+                        <div style="font-size: 0.85em; color: var(--primary-gold); font-weight: bold;">الخطوة الأولى:</div>
+                    </div>
+                    <h2 style="color: #ffffff; margin: 0 0 8px 0; font-size: 1.45em;">تحديد موضع الشكوى والألم</h2>
+                    <p style="color: #94a3b8; font-size: 0.9em; line-height: 1.5; margin-bottom: 16px;">انقر مباشرة على النقطة التشريحية الحمراء المضيئة على المجسم، أو ابحث باسم العرض أدناه:</p>
+
+                    <!-- شريط البحث الذكي الفوري عن موضع الشكوى -->
+                    <div style="position: relative; margin-bottom: 18px;">
+                        <input type="text" id="smart-pain-search-input" oninput="handleSmartPainSearch(this.value)" placeholder="🔍 اكتب مكان الألم (مثال: ديسك أسفل الظهر، طقطقة فك، مسمار كعب، ألم كتف)..." style="width: 100%; background: #0b111e; border: 1.5px solid var(--primary-gold); border-radius: 8px; color: #ffffff; padding: 12px 16px; font-size: 0.92em; outline: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                        <div id="search-pain-results" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: #0f172a; border: 1px solid var(--primary-gold); border-radius: 0 0 8px 8px; max-height: 220px; overflow-y: auto; z-index: 100; box-shadow: 0 8px 24px rgba(0,0,0,0.8);"></div>
+                    </div>
+
+                    <div style="background: #0f172a; padding: 14px 16px; border-radius: 10px; border-right: 3px solid var(--primary-gold); margin-bottom: 20px;">
+                        <div style="color: #94a3b8; font-size: 0.82em;">المنطقة المحددة حالياً:</div>
+                        <div id="selected-point-label" style="color: #d4af37; font-weight: bold; font-size: 1.1em; margin-top: 4px;">انقر على مكان الألم على المجسم</div>
+                    </div>
+
+                    <!-- مربع نصي موحد لوصف الحالة -->
+                    <div style="margin-bottom: 20px;">
+                        <label style="color: #cbd5e1; font-size: 0.9em; font-weight: bold; display: block; margin-bottom: 8px;">📝 صف ما تشعر به بإيجاز (اختياري):</label>
+                        <textarea id="patient-condition-notes" rows="3" placeholder="مثال: ألم يزداد عند الجلوس ويمتد إلى الكتف الأيمن مع تنميل..." style="width: 100%; background: #0b111e; border: 1px solid #334155; border-radius: 8px; color: #ffffff; padding: 12px; font-size: 0.92em; outline: none; resize: vertical;"></textarea>
+                    </div>
+
+                    <!-- بطاقة زرع الأمل والأمان السريري -->
+                    <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 23, 42, 0.9) 100%); border: 1.5px solid #10b981; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 1.8em;">🌿</span>
+                        <div>
+                            <strong style="color: #6ee7b7; font-size: 0.95em; display: block;">مهما بلغت شدة ألمك.. 90% من آلام الديسك والفقرات والمفاصل لا تحتاج جراحة!</strong>
+                            <span style="color: #cbd5e1; font-size: 0.84em;">تقنية الكايروبراكتيك اليدوية (30 دقيقة) تعيد اصطفاف المفاصل وتفرغ الضغط العصبي بأمان تام 100% دون مسكنات كيميائية مع فريق وداعاً للألم.</span>
+                        </div>
+                    </div>
+
+                    <button type="button" id="btn-goto-step2" disabled onclick="if(window.Wada3anAiEngine) Wada3anAiEngine.unlockAudio(); goToStep(2);" style="width: 100%; background: linear-gradient(135deg, var(--primary-gold) 0%, var(--primary-gold-dark) 100%); color: #0a0e14; border: none; padding: 15px; border-radius: 10px; font-size: 1.05em; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); opacity: 0.5;">
+                        التالي: التقييم السريري الذكي ⬅️
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= الخطوة 2: التقييم السريري (العيادة الافتراضية الذكية) ================= -->
+        <section id="step-section-2" class="app-step-section" style="display: none;">
+            <div style="background: var(--bg-card); border: 1px solid var(--border-gold-subtle); border-radius: 16px; padding: 25px; box-shadow: var(--shadow-gold-glow);">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <h2 style="color: #ffffff; margin: 0 0 4px 0; font-size: 1.35em; display: flex; align-items: center; gap: 8px;">
+                            <span>🩺</span> الاستشارة السريرية الذكية
+                        </h2>
+                        <div id="step-2-subtitle" style="color: var(--primary-gold); font-size: 0.85em;">حوار واستجواب سريري حي بالذكاء الاصطناعي لتشخيص منطقة الألم بدقة</div>
+                    </div>
+                    
+                    <!-- أزرار التبديل والرجوع للمجسم -->
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <div style="background: #0b111e; padding: 3px; border-radius: 8px; border: 1px solid #334155; display: inline-flex;">
+                            <button type="button" id="btn-mode-chat" onclick="switchIntakeMode('chat')" style="background: var(--primary-gold); color: #0a0e14; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 0.82em; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                                <span>🤖</span> الطبيب الافتراضي (موصى به)
+                            </button>
+                            <button type="button" id="btn-mode-form" onclick="switchIntakeMode('form')" style="background: transparent; color: #94a3b8; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 0.82em; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                                <span>⚡</span> فحص سريع بالخيارات
+                            </button>
+                        </div>
+                        <button type="button" onclick="goToStep(1)" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.82em;">رجوع للمجسم</button>
+                    </div>
+                </div>
+
+                <!-- ================= 1. واجهة الحوار السريري مع الطبيب الافتراضي (Interactive AI Chat) ================= -->
+                <div id="ai-chat-intake-container" style="display: block;">
+                    <!-- شريط اختيار الطبيب الاستشاري للجلسة (د. سارة / د. جمال / د. عمر) -->
+                    <div id="doctor-persona-selector-bar" style="display: flex; align-items: center; justify-content: space-between; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 8px 14px; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1.15em;">🩺</span>
+                            <span style="color: #94a3b8; font-size: 0.84em; font-weight: bold;">طبيبك الاستشاري للحوار:</span>
+                        </div>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <button type="button" id="btn-doc-sarah" onclick="selectConsultantDoctor('Aoede')" class="btn-doc-choice" style="padding: 5px 12px; border-radius: 16px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; background: rgba(56, 189, 248, 0.25); border: 1.5px solid #38bdf8; color: #ffffff; transition: all 0.2s ease;">
+                                <span>👩</span> د. سارة (Aoede)
+                            </button>
+                            <button type="button" id="btn-doc-jamal" onclick="selectConsultantDoctor('Charon')" class="btn-doc-choice" style="padding: 5px 12px; border-radius: 16px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; background: #1e293b; border: 1.5px solid #475569; color: #94a3b8; transition: all 0.2s ease;">
+                                <span>👨</span> د. جمال (Charon)
+                            </button>
+                            <button type="button" id="btn-doc-omar" onclick="selectConsultantDoctor('Puck')" class="btn-doc-choice" style="padding: 5px 12px; border-radius: 16px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; background: #1e293b; border: 1.5px solid #475569; color: #94a3b8; transition: all 0.2s ease;">
+                                <span>👨</span> د. عمر (Puck)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- نافذة المحادثة الطبية الفاخرة -->
+                    <div id="ai-chat-messages-box" style="background: #080d1a; border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 14px; padding: 18px; min-height: 280px; max-height: 440px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px; scroll-behavior: smooth;">
+                        <!-- الرسائل ستولد هنا تلقائياً -->
+                    </div>
+
+                    <!-- أزرار الإجابات السريعة المقترحة (تم إخفاؤها نهائياً لتجربة حوار طبي حر) -->
+                    <div id="ai-chat-quick-replies" style="display: none !important;"></div>
+
+                    <!-- شريط إدخال الرسائل العادي -->
+                    <div id="ai-chat-input-bar" style="background: #0f172a; border: 1.5px solid rgba(212, 175, 55, 0.35); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+                        <button type="button" id="btn-chat-mic" onclick="startVoiceNoteRecording()" title="انقر للتحدث وتسجيل رسالة صوتية للطبيب" style="background: rgba(239, 68, 68, 0.15); border: 1.5px solid #ef4444; color: #fca5a5; width: 44px; height: 44px; border-radius: 50%; font-size: 1.25em; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s ease; flex-shrink: 0;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                            🎙️
+                        </button>
+                        <input type="text" id="ai-chat-input" placeholder="اكتب ردك هنا، أو انقر على 🎙️ لتسجيل رسالة صوتية للطبيب..." oninput="if(typeof Wada3anAiEngine!=='undefined'&&Wada3anAiEngine.isSpeaking) Wada3anAiEngine.stopSpeaking();" onkeypress="if(event.key==='Enter') sendChatMessage()" style="flex: 1; background: transparent; border: none; color: #ffffff; font-size: 0.95em; outline: none; font-family: inherit;">
+                        <button type="button" onclick="sendChatMessage()" style="background: var(--primary-gold); color: #0a0e14; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 0.9em; cursor: pointer; display: flex; align-items: center; gap: 6px; flex-shrink: 0; box-shadow: 0 2px 10px rgba(212, 175, 55, 0.3);">
+                            <span>إرسال</span> <span>⬅️</span>
+                        </button>
+                    </div>
+
+                    <!-- شريط تسجيل الرسالة الصوتية الحية (Voice Note Recording Active Bar) -->
+                    <div id="ai-chat-recording-bar" style="display: none; background: rgba(239, 68, 68, 0.16); border: 2px solid #ef4444; border-radius: 12px; padding: 12px 16px; align-items: center; justify-content: space-between; gap: 10px; box-shadow: 0 0 20px rgba(239, 68, 68, 0.35);">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="width: 14px; height: 14px; border-radius: 50%; background: #ef4444; display: inline-block; box-shadow: 0 0 10px #ef4444;"></span>
+                            <span id="recording-timer-text" style="color: #ffffff; font-weight: bold; font-size: 0.92em;">0:00 - جاري الاستماع، تحدث بحرية...</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button type="button" onclick="cancelVoiceNoteRecording()" style="background: rgba(148, 163, 184, 0.25); border: 1px solid #64748b; color: #cbd5e1; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 0.85em; font-weight: bold;">
+                                إلغاء ✖️
+                            </button>
+                            <button type="button" onclick="stopAndSendVoiceNote()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; color: #ffffff; padding: 7px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.88em; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(16, 185, 129, 0.4);">
+                                <span>إرسال للطبيب</span> <span>✔️</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 0.82em; color: #94a3b8; text-align: center; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span>💡 للتحدث بصوتك: انقر على 🎙️ لتسجيل رسالة صوتية مباشرة يستمع إليها الطبيب</span>
+                    </div>
+                </div>
+
+                <!-- ================= 2. واجهة الفحص السريع بالخيارات (Rapid Form Intake) ================= -->
+                <div id="rapid-form-intake-container" style="display: none;">
+
+                <!-- البيانات الحيوية المطلوبة: العمر، الجنس، الوزن، الطول -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; background: #0f172a; padding: 20px; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                    <div>
+                        <label style="color: #94a3b8; font-size: 0.85em; display: block; margin-bottom: 6px;">العمر (بالسنوات):</label>
+                        <input type="number" id="patient-age" placeholder="35" min="10" max="100" style="width: 100%; background: #111827; border: 1px solid #334155; padding: 10px; border-radius: 8px; color: #fff;">
+                    </div>
+                    <div>
+                        <label style="color: #94a3b8; font-size: 0.85em; display: block; margin-bottom: 6px;">الجنس:</label>
+                        <div style="display: flex; gap: 10px; padding-top: 4px;">
+                            <label style="color: #fff; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                                <input type="radio" name="patient_gender" value="ذكر" checked style="accent-color: var(--primary-gold);"> ذكر
+                            </label>
+                            <label style="color: #fff; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                                <input type="radio" name="patient_gender" value="أنثى" style="accent-color: var(--primary-gold);"> أنثى
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label style="color: #94a3b8; font-size: 0.85em; display: block; margin-bottom: 6px;">الوزن (كجم):</label>
+                        <input type="number" id="patient-weight" placeholder="75" style="width: 100%; background: #111827; border: 1px solid #334155; padding: 10px; border-radius: 8px; color: #fff;">
+                    </div>
+                    <div>
+                        <label style="color: #94a3b8; font-size: 0.85em; display: block; margin-bottom: 6px;">الطول (سم):</label>
+                        <input type="number" id="patient-height" placeholder="175" style="width: 100%; background: #111827; border: 1px solid #334155; padding: 10px; border-radius: 8px; color: #fff;">
+                    </div>
+                </div>
+
+                <!-- مقياس شدة الألم وفترة المعاناة -->
+                <div style="background: #0f172a; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <label style="color: #e2e8f0; font-weight: bold; font-size: 0.95em;">مقياس شدة الألم (VAS 1-10):</label>
+                        <span id="pain-severity-val" style="color: var(--primary-gold); font-size: 1.2em; font-weight: bold;">7 / 10</span>
+                    </div>
+                    <input type="range" id="pain-severity-slider" min="1" max="10" value="7" oninput="document.getElementById('pain-severity-val').textContent = this.value + ' / 10'" style="width: 100%; accent-color: var(--primary-gold); margin-bottom: 15px;">
+
+                    <div>
+                        <label style="color: #94a3b8; font-size: 0.85em; display: block; margin-bottom: 6px;">منذ متى تعاني من هذا الألم؟</label>
+                        <select id="pain-duration-select" style="width: 100%; background: #111827; border: 1px solid #334155; padding: 10px; border-radius: 8px; color: #fff;">
+                            <option value="days">ألم حاد حديث (أقل من أسبوع)</option>
+                            <option value="1_week" selected>من أسبوع إلى شهر</option>
+                            <option value="chronic">ألم مزمن مستمر (أكثر من 3 أشهر)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- مقياس أثر الألم على جودة الحياة اليومية (Life-Impact Compass) -->
+                <div style="margin-bottom: 25px; background: #0f172a; padding: 20px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3);">
+                    <div style="color: #38bdf8; font-weight: bold; font-size: 0.95em; margin-bottom: 6px;">🧭 ما هي أكثر الأمور الحياتية التي حرمك منها هذا الألم؟ (اختر كل ما ينطبق):</div>
+                    <div style="color: #94a3b8; font-size: 0.82em; margin-bottom: 12px;">تساعدنا هذه البيانات في تخصيص خطة الاستشفاء الحركي لاستعادة نمط حياتك الطبيعي</div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px;">
+                        <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer; background: #111827; padding: 8px 12px; border-radius: 8px; border: 1px solid #1e293b;">
+                            <input type="checkbox" name="life_impact" value="الصلاة بسجود كامل وخشوع" style="accent-color: #38bdf8; width: 16px; height: 16px;"> 🕌 الصلاة بسجود كامل وخشوع
+                        </label>
+                        <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer; background: #111827; padding: 8px 12px; border-radius: 8px; border: 1px solid #1e293b;">
+                            <input type="checkbox" name="life_impact" value="النوم العميق المتواصل دون ألم" style="accent-color: #38bdf8; width: 16px; height: 16px;"> 🌙 النوم العميق المتواصل دون ألم
+                        </label>
+                        <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer; background: #111827; padding: 8px 12px; border-radius: 8px; border: 1px solid #1e293b;">
+                            <input type="checkbox" name="life_impact" value="حمل الأطفال واللعب مع الأسرة" style="accent-color: #38bdf8; width: 16px; height: 16px;"> 👨‍👩‍👧‍👦 حمل الأطفال واللعب مع الأسرة
+                        </label>
+                        <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer; background: #111827; padding: 8px 12px; border-radius: 8px; border: 1px solid #1e293b;">
+                            <input type="checkbox" name="life_impact" value="الجلوس المريح والإنتاجية في العمل والقيادة" style="accent-color: #38bdf8; width: 16px; height: 16px;"> 💼 الجلوس المريح والإنتاجية في العمل والقيادة
+                        </label>
+                    </div>
+                </div>
+
+                <!-- الأسئلة السريرية التكيفية لمنطقة الألم المختارة -->
+                <div style="margin-bottom: 25px;">
+                    <div style="color: var(--primary-gold); font-weight: bold; font-size: 1.05em; margin-bottom: 6px;">🔍 الفحص السريري التفاعلي لمنطقة الألم:</div>
+                    <div style="color: #94a3b8; font-size: 0.85em; margin-bottom: 15px;">يمكنك اختيار أكثر من عرض مجتمع في نفس الوقت للحصول على أعلى دقة سريرية</div>
+                    <div id="adaptive-questions-list"></div>
+                </div>
+
+                <!-- مساحة التعبير الحر بالصوت أو الكتابة للذكاء الاصطناعي السريري -->
+                <div style="margin-bottom: 25px; background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.8) 100%); padding: 20px; border-radius: 14px; border: 1.5px solid rgba(56, 189, 248, 0.4); box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1.3em;">🎙️</span>
+                            <label for="patient-condition-notes" style="color: #38bdf8; font-weight: bold; font-size: 0.98em; margin: 0;">
+                                تحدث أو اكتب ما تشعر به بكلماتك الخاصة (اختياري):
+                            </label>
+                        </div>
+                        <button type="button" id="btn-voice-input" onclick="toggleVoiceSpeechInput()" style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #38bdf8; padding: 6px 14px; border-radius: 20px; font-size: 0.84em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;">
+                            <span id="voice-icon">🎤</span>
+                            <span id="voice-status-text">تحدث صوتياً (إملاء فوري)</span>
+                        </button>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 0.82em; margin-bottom: 10px; line-height: 1.5;">
+                        مثال: "بحس بخدر ونمنمة نازلة ع رجلي الشمال لما أسوق السيارة، وبزيد لما أنحني أربط حذائي..."
+                    </div>
+                    <textarea id="patient-condition-notes" rows="3" placeholder="صف شعورك بحرية، متى يشتد الألم، أو أي تفاصيل خاصة لم تذكرها الأسئلة السابقة... سيحللها الذكاء الاصطناعي مباشرة." style="width: 100%; background: #0b111e; border: 1.5px solid #334155; padding: 12px 14px; border-radius: 10px; color: #fff; font-size: 0.92em; line-height: 1.6; resize: vertical; box-sizing: border-box; font-family: inherit;"></textarea>
+                </div>
+
+                <!-- فحص الأمراض المزمنة والتاريخ الصحي -->
+                <div style="margin-bottom: 25px; background: #0f172a; padding: 20px; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                    <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.95em; margin-bottom: 12px;">🩺 هل تعاني من أي أمراض مزمنة أو حالات خاصة؟</div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;">
+                        <label style="color: #cbd5e1; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" name="chronic_disease" value="diabetes" style="accent-color: var(--primary-gold); width: 16px; height: 16px;"> داء السكري (Diabetes)
+                        </label>
+                        <label style="color: #cbd5e1; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" name="chronic_disease" value="hypertension" style="accent-color: var(--primary-gold); width: 16px; height: 16px;"> ضغط الدم المرتفع (Hypertension)
+                        </label>
+                        <label style="color: #cbd5e1; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" name="chronic_disease" value="osteoporosis" style="accent-color: var(--primary-gold); width: 16px; height: 16px;"> هشاشة أو لين العظام (Osteoporosis)
+                        </label>
+                        <label style="color: #cbd5e1; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" name="chronic_disease" value="rheumatoid" style="accent-color: var(--primary-gold); width: 16px; height: 16px;"> روماتويد أو أمراض مناعية
+                        </label>
+                        <label style="color: #cbd5e1; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" name="chronic_disease" value="spine_surgery" style="accent-color: var(--primary-gold); width: 16px; height: 16px;"> عمليات جراحية سابقة للظهر/المفاصل
+                        </label>
+                        <label style="color: #10b981; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" name="chronic_disease" value="none" checked style="accent-color: #10b981; width: 16px; height: 16px;"> لا توجد أمراض مزمنة (سليم بحمد الله)
+                        </label>
+                    </div>
+                </div>
+
+                <!-- فحص العلامات التحذيرية للسلامة -->
+                <div style="margin-bottom: 30px;">
+                    <div style="color: #ef4444; font-weight: bold; font-size: 0.95em; margin-bottom: 10px;">⚠️ فحص السلامة العامة والأعلام الحمراء:</div>
+                    <div id="red-flags-list"></div>
+                </div>
+
+                <button type="button" onclick="runDiagnosticAnalysis()" style="width: 100%; background: linear-gradient(135deg, var(--primary-gold) 0%, var(--primary-gold-dark) 100%); color: #0a0e14; border: none; padding: 15px; border-radius: 10px; font-size: 1.1em; font-weight: bold; cursor: pointer; box-shadow: 0 4px 20px rgba(212, 175, 55, 0.35);">
+                    🩺 استخراج التقرير الطبي الشامل والتمارين ⬅️
+                </button>
+            </div>
+        </div>
+    </section>
+
+
+        <!-- ================= الخطوة 3: التقرير الطبي ================= -->
+        <section id="step-section-3" class="app-step-section" style="display: none;">
+            <div id="clinical-report-container"></div>
+        </section>
+
+
+        <!-- ================= الخطوة 4: خطة التعافي والمتابعة اليومية ================= -->
+        <section id="step-section-4" class="app-step-section" style="display: none;">
+            <div id="patient-recovery-dashboard"></div>
+        </section>
+
+
+        <!-- ================= القسم السفلي الدائم الثابت (جدول الكايروبراكتيك + الفوتر) ================= -->
+        <div id="permanent-bottom-section"></div>
+
+    </main>
+
+
+    <!-- نافذة التعريف الشامل بتقنية الكايروبراكتيك ومقارنة الأمان -->
+    <div id="chiropractic-explainer-modal" class="app-modal" style="display: none;">
+        <div class="modal-inner" style="max-width: 780px; max-height: 88vh; overflow-y: auto; background: #0f172a; border: 2px solid var(--primary-gold); border-radius: 16px; padding: 25px 28px; box-shadow: 0 10px 40px rgba(0,0,0,0.85);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(212, 175, 55, 0.25); padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 1.7em;">✨</span>
+                    <div>
+                        <h2 style="color: var(--primary-gold); margin: 0; font-size: 1.35em; font-weight: 800;">ما هي تقنية الكايروبراكتيك اليدوية؟</h2>
+                        <div style="color: #94a3b8; font-size: 0.85em; margin-top: 2px;">العلم الطبي المتخصص في محاذاة العمود الفقري وإزالة الضغط العصبي طبيعياً</div>
+                    </div>
+                </div>
+                <button type="button" onclick="closeChiropracticExplainerModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.8em; cursor: pointer; line-height: 1;">&times;</button>
+            </div>
+
+            <!-- بطاقة المقدمة -->
+            <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(16, 185, 129, 0.1) 100%); border: 1.5px solid rgba(212, 175, 55, 0.35); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; color: #e2e8f0; font-size: 0.94em; line-height: 1.8;">
+                <strong style="color: var(--primary-gold);">الكايروبراكتيك (Chiropractic)</strong> هو تخصص طبي معتمد عالمياً يُعنى بتشخيص وعلاج اضطرابات الجهاز العضلي الهيكلي، ولا سيما العمود الفقري والمفاصل. يعتمد على تقويم يدوي دقيق ومدروس لإعادة اصطفاف الفقرات، مما يؤدي إلى <strong>تفريغ فوري للضغط الانضغاطي الواقع على جذور الأعصاب</strong> واستعادة الجسم لقدرته الطبيعية على الحركة والراحة دون أدوية كيميائية أو جراحة.
+            </div>
+
+            <!-- الميزات الأربع الجوهرية -->
+            <h3 style="color: #38bdf8; font-size: 1.1em; margin: 0 0 14px 0; display: flex; align-items: center; gap: 8px;">
+                <span>🎯</span> لماذا يختار المرضى تقنية الكايروبراكتيك في «وداعاً للألم»؟
+            </h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 24px;">
+                <div style="background: rgba(17, 24, 39, 0.85); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 10px; padding: 14px 16px;">
+                    <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.94em; margin-bottom: 4px;">1. علاج السبب الميكانيكي الجذري</div>
+                    <div style="color: #cbd5e1; font-size: 0.85em; line-height: 1.6;">بدلاً من إخفاء الألم بالمسكنات المؤقتة، نقوم بإعادة المفاصل لموقعها التشريحي الصحيح ليزول الألم تلقائياً.</div>
+                </div>
+                <div style="background: rgba(17, 24, 39, 0.85); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 10px; padding: 14px 16px;">
+                    <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.94em; margin-bottom: 4px;">2. تغذية وتروية الغضاريف</div>
+                    <div style="color: #cbd5e1; font-size: 0.85em; line-height: 1.6;">فتح المسافة بين الفقرات يولد قوة سحب عكسية تجعل الغضروف المنزلق يرتد لمكانه وتتدفق السوائل المغذية له.</div>
+                </div>
+                <div style="background: rgba(17, 24, 39, 0.85); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 10px; padding: 14px 16px;">
+                    <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.94em; margin-bottom: 4px;">3. أمان وسلامة تامة 100%</div>
+                    <div style="color: #cbd5e1; font-size: 0.85em; line-height: 1.6;">علاج طبيعي يدوي آمن تماماً، بدون مسكنات ترهق المعدة والكلى، وبدون أي مخاطر جراحية.</div>
+                </div>
+                <div style="background: rgba(17, 24, 39, 0.85); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 10px; padding: 14px 16px;">
+                    <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.94em; margin-bottom: 4px;">4. فارق واضح من أول جلسة (30 دقيقة)</div>
+                    <div style="color: #cbd5e1; font-size: 0.85em; line-height: 1.6;">يشعر المراجع بخفة فورية وزوال للشد العصبي ومحدودية الحركة مباشرة بعد الجلسة السريرية.</div>
+                </div>
+            </div>
+
+            <!-- جدول المقارنة الفخم -->
+            <h3 style="color: var(--primary-gold); font-size: 1.1em; margin: 0 0 14px 0; display: flex; align-items: center; gap: 8px;">
+                <span>⚖️</span> مقارنة الأمان والتوفير: الكايروبراكتيك مقابل الجراحة والمسكنات
+            </h3>
+            <div style="overflow-x: auto; margin-bottom: 24px; border-radius: 10px; border: 1px solid #334155;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.88em; text-align: right;">
+                    <thead>
+                        <tr style="background: #1e293b; color: var(--primary-gold);">
+                            <th style="padding: 12px 14px; border-bottom: 1px solid #334155;">وجه المقارنة</th>
+                            <th style="padding: 12px 14px; border-bottom: 1px solid #334155; color: #10b981;">مسار الكايروبراكتيك في «وداعاً للألم»</th>
+                            <th style="padding: 12px 14px; border-bottom: 1px solid #334155; color: #ef4444;">المسكنات والتدخل الجراحي</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid #1e293b; background: rgba(15, 23, 42, 0.6);">
+                            <td style="padding: 12px 14px; font-weight: bold; color: #fef08a;">طريقة التعامل مع الألم</td>
+                            <td style="padding: 12px 14px; color: #6ee7b7;">حل جذري بإعادة اصطفاف الفقرات وتحرير العصب</td>
+                            <td style="padding: 12px 14px; color: #cbd5e1;">تخدير مؤقت للألم دون معالجة الخلل الميكانيكي</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #1e293b; background: rgba(15, 23, 42, 0.4);">
+                            <td style="padding: 12px 14px; font-weight: bold; color: #fef08a;">مستوى الأمان الصحي</td>
+                            <td style="padding: 12px 14px; color: #6ee7b7;">آمن 100% بدون أي مواد كيميائية أو أدوية</td>
+                            <td style="padding: 12px 14px; color: #cbd5e1;">قرحة المعدة، إجهاد الكلى، ومخاطر التخدير الجراحي</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #1e293b; background: rgba(15, 23, 42, 0.6);">
+                            <td style="padding: 12px 14px; font-weight: bold; color: #fef08a;">سرعة التعافي والعودة للحياة</td>
+                            <td style="padding: 12px 14px; color: #6ee7b7;">فورية ومباشرة بعد الجلسة دون انقطاع عن العمل</td>
+                            <td style="padding: 12px 14px; color: #cbd5e1;">أسابيع وأشهر من الراحة الإجبارية بعد الجراحة</td>
+                        </tr>
+                        <tr style="background: rgba(15, 23, 42, 0.4);">
+                            <td style="padding: 12px 14px; font-weight: bold; color: #fef08a;">التكلفة الاقتصادية</td>
+                            <td style="padding: 12px 14px; color: #6ee7b7;">تكلفة رمزية وموفرة تتجاوز 90% مقارنة بالعمليات</td>
+                            <td style="padding: 12px 14px; color: #cbd5e1;">تكاليف مستشفيات باهظة وأدوية شهرية مستمرة</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- زر التواصل والإغلاق -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <a href="https://wa.me/962790360440?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20%D8%AC%D9%84%D8%B3%D8%A7%D8%AA%20%D8%A7%D9%84%D9%83%D8%A7%D9%8A%D8%B1%D9%88%D8%A8%D8%B1%D8%A7%D9%83%D8%AA%D9%8A%D9%83%20%D9%81%D9%8A%20%C2%AB%D9%88%D8%AF%D8%A7%D8%B9%D8%A7%D9%8B%20%D9%84%D9%84%D8%A3%D9%84%D9%85%C2%BB" target="_blank" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.95em; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);">
+                    <span>💬 تواصل مع «وداعاً للألم» للاستفسار أو حجز جلسة</span>
+                    <span>⬅️</span>
+                </a>
+                <button type="button" onclick="closeChiropracticExplainerModal()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 11px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9em;">
+                    إغلاق النافذة
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة خدمة قراءة وتفسير صور الرنين المغناطيسي (MRI) -->
+    <div id="mri-consultation-modal" class="app-modal" style="display: none;">
+        <div class="modal-inner" style="max-width: 620px; border: 2px solid #38bdf8; background: #0f172a; border-radius: 16px; padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(56, 189, 248, 0.3); padding-bottom: 14px; margin-bottom: 18px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8em;">🩻</span>
+                    <div>
+                        <h3 style="color: #38bdf8; margin: 0; font-size: 1.25em; font-weight: 800;">خدمة قراءة وتفسير صور الرنين المغناطيسي (MRI)</h3>
+                        <div style="color: #94a3b8; font-size: 0.82em;">استشارة سريرية مجانية بإشراف المعالج جمال</div>
+                    </div>
+                </div>
+                <button type="button" onclick="closeMriConsultationModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.8em; cursor: pointer; line-height: 1;">&times;</button>
+            </div>
+
+            <div style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 16px; margin-bottom: 18px; line-height: 1.7; color: #e2e8f0; font-size: 0.92em; text-align: justify;">
+                <p style="margin: 0 0 10px 0;">
+                    لديك صورة أو تقرير رنين مغناطيسي <span class="medical-latin-badge" dir="ltr">(MRI)</span> أو أشعة سينية سابقة للعمود الفقري أو مفاصل الجسم؟ 
+                    أرسل التقرير أو الصور مباشرة عبر الواتساب ليقوم المعالج بفحصها وتوضيح الخلل الميكانيكي ومستوى الانضغاط <strong>مجاناً وبشكل مفصل</strong>.
                 </p>
-                
-                <h3 style="color: var(--primary-gold); margin-bottom: 15px;">✨ كيف تعمل؟</h3>
-                <div style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 15px;">
-                    <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: #0a0e14; border-radius: 8px;">
-                        <span style="background: var(--primary-gold); color: black; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">1</span>
-                        <span style="color: #d1d5db;">اختر نقطة الألم على المجسم</span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: #0a0e14; border-radius: 8px;">
-                        <span style="background: var(--primary-gold); color: black; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">2</span>
-                        <span style="color: #d1d5db;">أدخل بياناتك الشخصية وأجب عن الأسئلة</span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: #0a0e14; border-radius: 8px;">
-                        <span style="background: var(--primary-gold); color: black; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">3</span>
-                        <span style="color: #d1d5db;">احصل على تقرير تشخيصي مفصل وتوصيات</span>
+                <div style="color: #6ee7b7; font-weight: bold; font-size: 0.88em;">✓ استشارة سريرية دقيقة وتوجيه طبي أمين دون أي التزام مالي مسبق.</div>
+            </div>
+
+            <div style="background: #111827; border: 1px solid #1e293b; border-radius: 10px; padding: 14px; margin-bottom: 20px;">
+                <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.92em; margin-bottom: 8px;">📋 ماذا نقدم لك في قراءة الرنين؟</div>
+                <ul class="ai-styled-list" style="margin: 0; padding-right: 20px; color: #cbd5e1; font-size: 0.86em; line-height: 1.75;">
+                    <li>تحديد دقيق لدرجة بروز الغضروف والديسك واتجاه الضغط على الأعصاب.</li>
+                    <li>تبيان هل تستجيب حالتك لتقويم الكايروبراكتيك وتفريغ الضغط اليدوي لتفادي الجراحة.</li>
+                    <li>إرشادك للتمارين والحركات الآمنة المناسبة لمستوى إصابتك بدقة.</li>
+                </ul>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap;">
+                <a href="https://wa.me/962790360440?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%20%D8%AF%D9%83%D8%AA%D9%88%D8%B1%D8%8C%20%D9%84%D8%AF%D9%8A%20%D8%B5%D9%88%D8%B1%D8%A9%2F%D8%AA%D9%82%D8%B1%D9%8A%D8%B1%20%D8%B1%D9%86%D9%8A%D9%86%20%D9%85%D8%BA%D9%86%D8%A7%D8%B7%D9%8A%D8%B3%D9%8A%20(MRI)%20%D9%88%D8%A3%D9%88%D8%AF%20%D8%A5%D8%B1%D8%B3%D8%A7%D9%84%D9%87%D8%A7%20%D9%84%D9%82%D8%B1%D8%A7%D8%A1%D8%AA%D9%87%D8%A7%20%D9%88%D8%AA%D8%AD%D8%AF%D9%8A%D8%AF%20%D8%AE%D8%B7%D8%A9%20%D8%A7%D9%84%D8%B9%D9%84%D8%A7%D8%AC%20%D8%A7%D9%84%D9%85%D9%86%D8%A7%D8%B3%D8%A8%D8%A9%20%D9%84%D8%AD%D8%A7%D9%84%D8%AA%D9%8A." target="_blank" style="flex: 1; min-width: 220px; background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); color: #0a0e14; padding: 12px 18px; border-radius: 8px; text-decoration: none; font-weight: 800; font-size: 0.95em; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.35);">
+                    <span>💬 أرسل صورة الرنين للمعالج واتساب</span>
+                </a>
+                <button type="button" onclick="closeMriConsultationModal()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة قصص نجاحنا بالفيديو (حالات تعافي حقيقية موثقة) -->
+    <div id="video-success-stories-modal" class="app-modal" style="display: none;">
+        <div class="modal-inner" style="max-width: 820px; border: 2px solid rgba(24, 119, 242, 0.6); background: #0b1322; border-radius: 16px; padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.85); max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(24, 119, 242, 0.3); padding-bottom: 14px; margin-bottom: 18px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8em;">📹</span>
+                    <div>
+                        <h3 style="color: #60a5fa; margin: 0; font-size: 1.3em; font-weight: 800;">قصص نجاحنا بالفيديو: حالات تعافي حقيقية</h3>
+                        <div style="color: #94a3b8; font-size: 0.82em;">توثيق سريري مرئي لمرضى استعادوا حياتهم الطبيعية في «وداعاً للألم»</div>
                     </div>
                 </div>
-                
-                <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 15px; border-radius: 8px;">
-                    <h4 style="color: white; margin: 0 0 10px 0;">🎁 مميزات إضافية</h4>
-                    <ul style="color: white; margin: 0; padding-right: 20px;">
-                        <li>خطة تعافي مجانية لمدة أسبوع</li>
-                        <li>متابعة يومية لتقدمك</li>
-                        <li>تمارين مخصصة لحالتك</li>
-                        <li>استشارة مجانية على واتساب</li>
-                    </ul>
+                <button type="button" onclick="closeVideoSuccessStoriesModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.8em; cursor: pointer; line-height: 1;">&times;</button>
+            </div>
+
+            <p style="color: #cbd5e1; font-size: 0.9em; line-height: 1.7; margin: 0 0 18px 0; text-align: justify;">
+                شاهد تجارب مصورة لمرضى ومراجعين تخلصوا من آلام الديسك، عرق النسا، احتكاك المفاصل، وتيبس الفقرات، واستعادة التوازن الحركي عبر تقنية الكايروبراكتيك اليدوية بدون أدوية أو جراحة:
+            </p>
+
+            <!-- حاوية كروت الفيديوهات الديناميكية -->
+            <div id="video-success-stories-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 20px;">
+                <!-- يتم بناؤها برمجياً عبر renderVideoSuccessStories() -->
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap;">
+                <a href="${CLINIC_WHATSAPP}" target="_blank" rel="noopener noreferrer" style="flex: 1; min-width: 220px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; padding: 12px 18px; border-radius: 8px; text-decoration: none; font-weight: 800; font-size: 0.95em; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 18px rgba(16, 185, 129, 0.4);">
+                    <span>💬 اطلب فيديو أي حالة مباشرة عبر الواتساب</span>
+                </a>
+                <button type="button" onclick="closeVideoSuccessStoriesModal()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة مشغل الفيديو الداخلي المباشر بدون قيود فيسبوك (In-App Video Player) -->
+    <div id="in-app-video-player-modal" class="app-modal" style="display: none; z-index: 100000;">
+        <div class="modal-inner" style="max-width: 760px; border: 2px solid var(--primary-gold); background: #0b1322; border-radius: 16px; padding: 22px; box-shadow: 0 10px 40px rgba(0,0,0,0.95);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(212, 175, 55, 0.3); padding-bottom: 12px; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span>🎬</span>
+                    <h3 id="in-app-video-player-title" style="color: var(--primary-gold); margin: 0; font-size: 1.15em;">مشاهدة توثيق الحالة</h3>
+                </div>
+                <button type="button" onclick="closeInAppVideoPlayer()" style="background: none; border: none; color: #94a3b8; font-size: 1.8em; cursor: pointer; line-height: 1;">&times;</button>
+            </div>
+            <div id="in-app-video-player-frame-wrap" style="position: relative; width: 100%; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; background: #000; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.1);">
+                <!-- مشغل الفيديو يُحقن ديناميكياً -->
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <a id="in-app-video-whatsapp-btn" href="#" target="_blank" class="btn-header btn-whatsapp-cta" style="font-size: 0.88em; padding: 10px 18px;">
+                    💬 استشر المعالج حول إمكانية علاج حالتك
+                </a>
+                <button type="button" onclick="closeInAppVideoPlayer()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">إغلاق المشغل</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة مكتبة التمارين المصورة الكاملة -->
+    <div id="exercise-library-modal" class="app-modal">
+        <div class="modal-inner">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                <h2 style="color: var(--primary-gold); margin: 0; font-size: 1.4em;">📚 مكتبة التمارين العلاجية المصورة</h2>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button type="button" id="btn-admin-gallery-studio" onclick="if(typeof ExerciseImageStudio !== 'undefined') ExerciseImageStudio.openGalleryManagerModal();" class="btn-header" style="display: none; background: rgba(212, 175, 55, 0.18); border-color: var(--primary-gold); color: var(--primary-gold); font-size: 0.85em; padding: 6px 14px; align-items: center; gap: 6px; font-weight: bold;">
+                        🖼️ مدير واستوديو صور التمارين
+                    </button>
+                    <button type="button" onclick="document.getElementById('exercise-library-modal').style.display='none'" style="background: none; border: none; color: #94a3b8; font-size: 1.5em; cursor: pointer;">&times;</button>
                 </div>
             </div>
-            
-            <div style="background: #fee2e2; padding: 15px; border-radius: 8px; border: 2px solid #ef4444; margin-bottom: 20px;">
-                <h4 style="color: #991b1b; margin: 0 0 10px 0;">⚠️ تنبيه مهم</h4>
-                <p style="color: #991b1b; margin: 0; font-size: 0.9em;">
-                    هذه الأداة للإرشاد فقط ولا تغني عن الفحص الطبي السريري. في حال وجود علامات خطر (فقدان السيطرة على البول/البراز، ضعف مفاجئ، حمى مرتفعة) يجب التوجه للطوارئ فوراً.
+
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;">
+                <button type="button" data-category="all" onclick="openExerciseLibraryModal('all')" class="btn-header" style="background: var(--primary-gold); color: #0a0e14;">الكل</button>
+                <button type="button" data-category="cervical" onclick="openExerciseLibraryModal('cervical')" class="btn-header">الرقبة والرأس</button>
+                <button type="button" data-category="jaw" onclick="openExerciseLibraryModal('jaw')" class="btn-header">مفصل الفك (TMJ)</button>
+                <button type="button" data-category="thoracic_scapula" onclick="openExerciseLibraryModal('thoracic_scapula')" class="btn-header">أعلى الظهر والأبهر</button>
+                <button type="button" data-category="chest_ribs" onclick="openExerciseLibraryModal('chest_ribs')" class="btn-header">القفص الصدري والأضلاع</button>
+                <button type="button" data-category="shoulder" onclick="openExerciseLibraryModal('shoulder')" class="btn-header">الكتف والكفة المدورة</button>
+                <button type="button" data-category="lumbar" onclick="openExerciseLibraryModal('lumbar')" class="btn-header">أسفل الظهر والديسك</button>
+                <button type="button" data-category="si_joint" onclick="openExerciseLibraryModal('si_joint')" class="btn-header">عرق النسا والحوض</button>
+                <button type="button" data-category="elbow" onclick="openExerciseLibraryModal('elbow')" class="btn-header">الكوع والساعد</button>
+                <button type="button" data-category="wrist" onclick="openExerciseLibraryModal('wrist')" class="btn-header">الرسغ واليد</button>
+                <button type="button" data-category="knee" onclick="openExerciseLibraryModal('knee')" class="btn-header">الركبة والفخذ</button>
+                <button type="button" data-category="ankle" onclick="openExerciseLibraryModal('ankle')" class="btn-header">الكاحل والقدم</button>
+            </div>
+
+            <div id="exercise-library-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;"></div>
+        </div>
+    </div>
+
+
+    <!-- نافذة تسجيل الدخول للمريض -->
+    <div id="patient-login-modal" class="app-modal">
+        <div class="modal-inner" style="max-width: 450px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="color: var(--primary-gold); margin: 0;">🔑 تسجيل دخول المراجع</h3>
+                <button type="button" onclick="document.getElementById('patient-login-modal').style.display='none'" style="background: none; border: none; color: #94a3b8; font-size: 1.5em; cursor: pointer;">&times;</button>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="color: #cbd5e1; font-size: 0.85em; display: block; margin-bottom: 6px;">رقم ملف المريض (ID) أو رقم الجوال:</label>
+                <input type="text" id="login-patient-id" onkeyup="if(event.key==='Enter') handlePatientLogin()" placeholder="مثال: P-123456 أو 0790000000" style="width: 100%; background: #0f172a; border: 1px solid #334155; padding: 10px; border-radius: 8px; color: #fff;">
+            </div>
+            <button type="button" onclick="handlePatientLogin()" style="width: 100%; background: var(--primary-gold); color: #0a0e14; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                دخول إلى خطتي العلاجية (7 أيام)
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= الباب الخلفي السري للإدارة والمعايرة (Hidden Admin Backdoor Modal) ================= -->
+    <div id="secret-admin-backdoor-modal" class="app-modal" style="display: none;">
+        <div class="modal-inner" style="max-width: 520px; text-align: center; border: 2px solid var(--primary-gold); background: #0b1322; border-radius: 16px; padding: 25px 28px; box-shadow: 0 12px 50px rgba(0,0,0,0.85);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 12px; margin-bottom: 18px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.5em;">🔒</span>
+                    <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.25em;">بوابة التحكم والإدارة السرية</h3>
+                </div>
+                <button type="button" onclick="closeSecretBackdoorModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.5em; cursor: pointer;">&times;</button>
+            </div>
+
+            <!-- مرحلة طلب رمز المرور السري -->
+            <div id="backdoor-auth-stage">
+                <p style="color: #cbd5e1; font-size: 0.9em; margin-bottom: 16px;">يرجى إدخال رمز المرور السري للمعالج للوصول إلى لوحة التحكم:</p>
+                <div style="margin-bottom: 18px;">
+                    <input type="password" id="backdoor-pin-input" placeholder="••••" maxlength="10" onkeyup="if(event.key==='Enter') verifyBackdoorPIN()" style="width: 180px; text-align: center; font-size: 1.5em; letter-spacing: 6px; background: #0f172a; border: 1.5px solid var(--primary-gold); padding: 10px; border-radius: 8px; color: #fef08a; outline: none;">
+                </div>
+                <button type="button" onclick="verifyBackdoorPIN()" style="background: linear-gradient(135deg, var(--primary-gold) 0%, var(--primary-gold-dark) 100%); color: #0a0e14; border: none; padding: 12px 30px; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);">
+                    🔓 تأكيد ودخول
+                </button>
+            </div>
+
+            <!-- مرحلة خيارات الإدارة بعد التحقق -->
+            <div id="backdoor-menu-stage" style="display: none; text-align: right;">
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 8px; padding: 10px 14px; margin-bottom: 18px; color: #6ee7b7; font-size: 0.88em; text-align: center;">
+                    ✅ مرحباً بك دكتور! تم فتح صلاحيات الإدارة بنجاح.
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                    <a href="admin.html" target="_blank" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1.5px solid var(--primary-gold); color: #fef08a; text-decoration: none; padding: 14px 18px; border-radius: 10px; font-weight: bold; font-size: 0.98em; display: flex; align-items: center; justify-content: space-between; transition: transform 0.2s;">
+                        <span>⚙️ فتح لوحة إدارة المرضى والجلسات (Admin Panel)</span>
+                        <span>➔</span>
+                    </a>
+
+                    <a href="calibrator.html" target="_blank" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1.5px solid #38bdf8; color: #38bdf8; text-decoration: none; padding: 14px 18px; border-radius: 10px; font-weight: bold; font-size: 0.98em; display: flex; align-items: center; justify-content: space-between; transition: transform 0.2s;">
+                        <span>🎯 فتح أداة معايرة وتحريك نقاط الألم (Calibrator)</span>
+                        <span>➔</span>
+                    </a>
+
+                    <button type="button" onclick="closeSecretBackdoorModal(); openAiKeySettingsModal();" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(6, 78, 59, 0.4) 100%); border: 1.5px solid #10b981; color: #6ee7b7; padding: 14px 18px; border-radius: 10px; font-weight: bold; font-size: 0.98em; cursor: pointer; text-align: right; display: flex; align-items: center; justify-content: space-between;">
+                        <span>🤖 إعداد وربط مفتاح الذكاء الاصطناعي (Gemini Key)</span>
+                        <span>⚙️</span>
+                    </button>
+
+                    <button type="button" onclick="forceAppUpdateAndClearCache()" style="background: #111827; border: 1px solid #10b981; color: #10b981; padding: 12px 18px; border-radius: 10px; font-weight: bold; font-size: 0.95em; cursor: pointer; text-align: right; display: flex; align-items: center; justify-content: space-between;">
+                        <span>⚡ تفريغ الكاش وإعادة تشغيل التطبيق بالكامل</span>
+                        <span>🔄</span>
+                    </button>
+                </div>
+
+                <div style="text-align: center;">
+                    <button type="button" onclick="lockSecretBackdoor()" style="background: none; border: 1px solid #ef4444; color: #fca5a5; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-size: 0.88em;">
+                        🔒 قفل الباب السري والخروج
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= نافذة تثبيت ومشاركة التطبيق على الموبايل والكمبيوتر ================= -->
+    <div id="app-install-share-modal" class="app-modal" style="display: none;">
+        <div class="modal-inner" style="max-width: 680px; background: #0b1322; border: 2px solid var(--primary-gold); border-radius: 18px; padding: 26px; box-shadow: 0 15px 50px rgba(0,0,0,0.85);">
+            <!-- ترويسة النافذة -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(212, 175, 55, 0.25); padding-bottom: 15px; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <img src="assets/logo.png" alt="شعار وداعاً للألم" style="width: 54px; height: 54px; border-radius: 50%; border: 2px solid var(--primary-gold); box-shadow: 0 0 15px rgba(212, 175, 55, 0.4); object-fit: cover;">
+                    <div>
+                        <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.25em;">📲 تثبيت ومشاركة تطبيق وداعاً للألم</h3>
+                        <div style="color: #94a3b8; font-size: 0.82em;">Smart Check Pro 2.0 - تقنية الكايروبراكتيك 30 دقيقة</div>
+                    </div>
+                </div>
+                <button type="button" onclick="closeAppInstallShareModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.8em; cursor: pointer; padding: 0 5px;" title="إغلاق">&times;</button>
+            </div>
+
+            <!-- تبويبات سريعة للتنقل -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px;">
+                <button type="button" id="tab-btn-install" onclick="switchAppModalTab('install')" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(16, 185, 129, 0.2) 100%); border: 1.5px solid var(--primary-gold); color: #fef08a; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 0.95em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <span>📱 تثبيت التطبيق على جهازك</span>
+                </button>
+                <button type="button" id="tab-btn-share" onclick="switchAppModalTab('share')" style="background: #0f172a; border: 1.5px solid #334155; color: #94a3b8; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 0.95em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <span>📢 مشاركة الأداة مع الأصدقاء</span>
+                </button>
+            </div>
+
+            <!-- المحتوى: تبويب التثبيت -->
+            <div id="tab-content-install" style="display: block;">
+                <!-- بطاقة المزايا -->
+                <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(16, 185, 129, 0.08) 100%); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 12px; padding: 14px 18px; margin-bottom: 20px;">
+                    <div style="color: #6ee7b7; font-weight: bold; font-size: 0.92em; margin-bottom: 6px;">✨ مميزات تثبيت التطبيق على هاتفك:</div>
+                    <ul style="margin: 0; padding-right: 20px; color: #cbd5e1; font-size: 0.85em; line-height: 1.7;">
+                        <li>ظهور أيقونة التطبيق الرسمية بشعار <strong>وداعاً للألم</strong> على شاشتك الرئيسية كأي تطبيق رسمي.</li>
+                        <li>وصول فوري لخطة التمارين اليومية (7 أيام) والتقارير حتى <strong>بدون اتصال بالإنترنت</strong>.</li>
+                        <li>شاشة كاملة وتصفح سريع ومستقر بدون شريط المتصفح.</li>
+                    </ul>
+                </div>
+
+                <!-- توجيه نظام أندرويد -->
+                <div id="install-guide-android" class="device-install-card" style="background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 14px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1.4em;">🤖</span>
+                            <strong style="color: #38bdf8; font-size: 0.95em;">مستخدمو هواتف أندرويد (Samsung / Xiaomi / Huawei / وغيرها):</strong>
+                        </div>
+                    </div>
+                    <p style="color: #94a3b8; font-size: 0.84em; margin: 0 0 10px 0;">اضغط على الزر أدناه لتثبيت التطبيق بنقرة واحدة، أو من قائمة خيارات المتصفح (⋮) اضغط "تثبيت التطبيق" أو "إضافة إلى الشاشة الرئيسية".</p>
+                    <div style="background: rgba(56, 189, 248, 0.1); border: 1px dashed rgba(56, 189, 248, 0.35); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; font-size: 0.82em; color: #cbd5e1; line-height: 1.6;">
+                        💡 <strong>ملاحظة للمستخدم:</strong> لتثبيت التطبيق كبرنامج أصيل مستقل (WebAPK بشعار العيادة الكامل وبدون أي شعار للمتصفح)، يتطلب نظام أندرويد فتح الرابط عبر اتصال مشفر (HTTPS)، وهو ما يتم تلقائياً وفورياً على موقعكم الرسمي المعتمد.
+                    </div>
+                    <button type="button" id="btn-trigger-android-pwa" onclick="triggerPwaInstall()" style="width: 100%; background: linear-gradient(135deg, var(--primary-gold) 0%, var(--primary-gold-dark) 100%); color: #0a0e14; border: none; padding: 13px; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35); display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span>⬇️ تثبيت التطبيق على هاتف أندرويد الآن</span>
+                    </button>
+                </div>
+
+                <!-- توجيه نظام آبل آيفون / آيباد -->
+                <div id="install-guide-ios" class="device-install-card" style="background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 14px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                        <span style="font-size: 1.4em;">🍎</span>
+                        <strong style="color: #fef08a; font-size: 0.95em;">مستخدمو الآيفون والآيباد (iOS - Safari):</strong>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <div style="display: flex; align-items: flex-start; gap: 10px; background: #111827; padding: 10px 14px; border-radius: 8px; border: 1px solid #1e293b;">
+                            <span style="background: var(--primary-gold); color: #000; border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8em; flex-shrink: 0;">1</span>
+                            <div style="color: #cbd5e1; font-size: 0.86em;">اضغط على زر <strong>المشاركة ⎋ (Share)</strong> في الشريط السفلي لمتصفح Safari.</div>
+                        </div>
+                        <div style="display: flex; align-items: flex-start; gap: 10px; background: #111827; padding: 10px 14px; border-radius: 8px; border: 1px solid #1e293b;">
+                            <span style="background: var(--primary-gold); color: #000; border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8em; flex-shrink: 0;">2</span>
+                            <div style="color: #cbd5e1; font-size: 0.86em;">مرر للأسفل في القائمة واختر <strong>"إضافة إلى الشاشة الرئيسية" ➕ (Add to Home Screen)</strong>.</div>
+                        </div>
+                        <div style="display: flex; align-items: flex-start; gap: 10px; background: #111827; padding: 10px 14px; border-radius: 8px; border: 1px solid #1e293b;">
+                            <span style="background: var(--primary-gold); color: #000; border-radius: 50%; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8em; flex-shrink: 0;">3</span>
+                            <div style="color: #cbd5e1; font-size: 0.86em;">اضغط على <strong>"إضافة" (Add)</strong> في أعلى اليمين. ستظهر الأيقونة بشعار وداعاً للألم فوراً!</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- توجيه أجهزة الكمبيوتر والتنبيه المحلي -->
+                <div id="install-guide-local" style="background: #111827; border: 1.5px dashed rgba(212, 175, 55, 0.4); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px;">
+                    <div style="color: #fef08a; font-weight: bold; font-size: 0.88em; margin-bottom: 6px;">💡 ملاحظة فتح التطبيق من الكمبيوتر:</div>
+                    <div style="color: #94a3b8; font-size: 0.82em; line-height: 1.6;">
+                        إذا كنت تتصفح حالياً من جهاز الكمبيوتر، يمكنك تثبيته كبرنامج مستقل عبر متصفح Chrome أو Edge بالنقر على رمز التثبيت <strong>(⊕)</strong> في شريط العنوان أعلى الشاشة. ولتثبيته على هاتفك، امسح كود الـ QR الموجود في تبويب "مشاركة الأداة" بكاميرا هاتفك ليفتح وتثبته مباشرة!
+                    </div>
+                </div>
+            </div>
+
+            <!-- المحتوى: تبويب المشاركة والـ QR -->
+            <div id="tab-content-share" style="display: none;">
+                <p style="color: #cbd5e1; font-size: 0.88em; margin: 0 0 16px 0;">شارك أداة الفحص الذكي وخطة الراحة الحركية مع أفراد عائلتك وأصدقائك عبر مختلف الوسائل:</p>
+
+                <!-- رابط المشاركة الجاهز -->
+                <div style="margin-bottom: 18px;">
+                    <label style="color: #94a3b8; font-size: 0.82em; display: block; margin-bottom: 6px;">🔗 رابط التطبيق للمشاركة:</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="share-link-input" readonly style="flex: 1; background: #0f172a; border: 1px solid #334155; padding: 10px 14px; border-radius: 8px; color: #fef08a; font-size: 0.9em; direction: ltr; font-family: monospace;">
+                        <button type="button" onclick="copyAppShareLink()" style="background: var(--primary-gold); color: #0a0e14; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9em;">📋 نسخ</button>
+                    </div>
+                </div>
+
+                <!-- أزرار الإجراءات السريعة -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                    <button type="button" onclick="shareViaWhatsApp()" style="background: #25d366; color: #ffffff; border: none; padding: 13px; border-radius: 10px; font-weight: bold; font-size: 0.95em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);">
+                        <span style="font-size: 1.2em;">💬</span>
+                        <span>مشاركة عبر واتساب</span>
+                    </button>
+                    <button type="button" onclick="shareViaNative()" id="btn-native-share" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1.5px solid #38bdf8; color: #38bdf8; padding: 13px; border-radius: 10px; font-weight: bold; font-size: 0.95em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span style="font-size: 1.2em;">📲</span>
+                        <span>مشاركة عبر تطبيقات أخرى</span>
+                    </button>
+                </div>
+
+                <!-- بطاقة QR Code للمسح من شاشة الكمبيوتر -->
+                <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; text-align: center;">
+                    <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.9em; margin-bottom: 6px;">📷 امسح الرمز بكاميرا هاتفك لفتح الأداة وتثبيتها:</div>
+                    <div style="color: #94a3b8; font-size: 0.78em; margin-bottom: 12px;">وجه كاميرا الموبايل نحو هذا الرمز لفتح التطبيق وتثبيته فوراً على هاتفك.</div>
+                    <div id="app-qr-container" style="display: inline-block; background: #ffffff; padding: 10px; border-radius: 12px; border: 2px solid var(--primary-gold);">
+                        <img id="app-qr-image" src="" alt="QR Code" style="width: 150px; height: 150px; display: block;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- زر الإغلاق السفلي -->
+            <div style="margin-top: 20px; text-align: center;">
+                <button type="button" onclick="closeAppInstallShareModal()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 10px 28px; border-radius: 8px; cursor: pointer; font-size: 0.9em;">
+                    إغلاق النافذة
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 1. نافذة وسام الانتصار على الألم ووثيقة التعافي الحركي الرسمية (Victory & Recovery Medal Modal) ================= -->
+    <div id="completion-certificate-modal" class="app-modal" style="display: none;">
+        <div class="modal-inner" style="max-width: 860px; background: #0b1322; border: 2px solid var(--primary-gold); padding: 25px; border-radius: 16px; box-sizing: border-box; width: 95%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;" class="no-print">
+                <div style="color: var(--primary-gold); font-weight: bold; font-size: 1.15em; display: flex; align-items: center; gap: 8px;">
+                    <span>🏆</span> وسام الانتصار على الألم والتعافي الحركي الرسمي
+                </div>
+                <button type="button" onclick="closeCompletionCertificateModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.6em; cursor: pointer;">&times;</button>
+            </div>
+
+            <!-- وثيقة ووسام التكريم السريري القابلة للطباعة والتصدير -->
+            <div id="certificate-print-content" class="certificate-printable" style="background: radial-gradient(circle at center, #132035 0%, #060a12 100%); border: 3px double var(--primary-gold); border-radius: 14px; padding: 32px 30px; text-align: center; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.85); overflow: hidden; box-sizing: border-box;">
+                <!-- إطار زخرفي ملكي داخلي -->
+                <div style="position: absolute; top: 10px; bottom: 10px; left: 10px; right: 10px; border: 1px solid rgba(212, 175, 55, 0.4); pointer-events: none; border-radius: 10px;"></div>
+                
+                <!-- الترويسة الملكية المعتمدة -->
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(212, 175, 55, 0.4); padding-bottom: 18px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                    <div style="text-align: right;">
+                        <div style="color: #cbd5e1; font-size: 0.82em;">المملكة الأردنية الهاشمية</div>
+                        <div style="color: var(--primary-gold); font-weight: 800; font-size: 1.1em; letter-spacing: 0.5px;">«وداعاً للألم» للكايروبراكتيك</div>
+                        <div style="color: #94a3b8; font-size: 0.76em;">عمان - خلدا | بإشراف المعالج جمال قبها</div>
+                    </div>
+                    <img src="assets/logo.png" alt="شعار وداعاً للألم" style="height: 72px; width: 72px; border-radius: 50%; border: 2.5px solid var(--primary-gold); background: #000; box-shadow: 0 4px 18px rgba(212, 175, 55, 0.45);">
+                    <div style="text-align: left;">
+                        <div style="color: #cbd5e1; font-size: 0.82em;">رقم وسام الاعتماد السريري:</div>
+                        <div id="cert-code-display" style="color: #38bdf8; font-family: monospace; font-weight: bold; font-size: 0.95em;">WADA3AN-CERT-0000</div>
+                        <div id="cert-date-display" style="color: #94a3b8; font-size: 0.76em;">التاريخ: --/--/----</div>
+                    </div>
+                </div>
+
+                <!-- أيقونة المجسم والوسام الذهبي الفاخر SVG -->
+                <div style="margin-bottom: 14px;">
+                    <svg viewBox="0 0 120 120" width="90" height="90" style="filter: drop-shadow(0 6px 14px rgba(212, 175, 55, 0.45));">
+                        <!-- أشرطة الوسام السفلية -->
+                        <polygon points="40,75 30,115 50,105 60,115 52,75" fill="#b8860b" opacity="0.85"/>
+                        <polygon points="80,75 90,115 70,105 60,115 68,75" fill="#d4af37" opacity="0.95"/>
+                        <polygon points="45,78 35,110 50,102 54,78" fill="#10b981" opacity="0.8"/>
+                        <polygon points="75,78 85,110 70,102 66,78" fill="#059669" opacity="0.8"/>
+                        <!-- الميدالية الدائرية المركزية -->
+                        <circle cx="60" cy="50" r="38" fill="url(#medalGoldGrad)" stroke="#fef08a" stroke-width="2.5"/>
+                        <circle cx="60" cy="50" r="32" fill="#09101d" stroke="#d4af37" stroke-width="1.5" stroke-dasharray="3,2"/>
+                        <!-- كأس البطولة والتأهيل -->
+                        <path d="M48,36 L72,36 L70,52 C69,59 63,64 60,64 C57,64 51,59 50,52 Z" fill="url(#trophyGrad)" stroke="#fef08a" stroke-width="1"/>
+                        <path d="M48,38 C42,38 42,48 49,48" fill="none" stroke="#fef08a" stroke-width="1.8"/>
+                        <path d="M72,38 C78,38 78,48 71,48" fill="none" stroke="#fef08a" stroke-width="1.8"/>
+                        <rect x="57" y="64" width="6" height="7" fill="#d4af37"/>
+                        <rect x="52" y="70" width="16" height="4" rx="2" fill="#fef08a"/>
+                        <!-- نجمة التعافي اللامعة -->
+                        <polygon points="60,40 62,45 67,45 63,48 65,53 60,50 55,53 57,48 53,45 58,45" fill="#ffffff"/>
+                        <!-- تدرجات الألوان -->
+                        <defs>
+                            <linearGradient id="medalGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#fef08a"/>
+                                <stop offset="50%" stop-color="#d4af37"/>
+                                <stop offset="100%" stop-color="#996515"/>
+                            </linearGradient>
+                            <linearGradient id="trophyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#ffffff"/>
+                                <stop offset="50%" stop-color="#fef08a"/>
+                                <stop offset="100%" stop-color="#d4af37"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+
+                <!-- عنوان الوثيقة الملكي المعبر عن الانتصار والتعافي -->
+                <div style="margin-bottom: 16px;">
+                    <div style="color: var(--primary-gold); font-size: 0.88em; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;">Honorary Clinical Milestone of Recovery</div>
+                    <h1 style="color: #ffffff; margin: 6px 0; font-size: 1.85em; font-weight: 900; text-shadow: 0 2px 12px rgba(212,175,55,0.45);">
+                        وسام الانتصار على الألم والتعافي الحركي
+                    </h1>
+                    <div style="color: #10b981; font-weight: bold; font-size: 0.95em;">وفق بروتوكولات تفريغ الضغط وتقويم الحركة المعتمدة</div>
+                </div>
+
+                <!-- نص التكريم والتتويج السريري -->
+                <p style="color: #cbd5e1; font-size: 1.05em; line-height: 1.9; margin: 0 auto 14px auto; max-width: 680px;">
+                    تقديراً لعزيمة التحدي والالتزام ببرنامج التعافي، تمنح إدارة <strong>(وداعاً للألم للكايروبراكتيك)</strong> هذا الوسام السريري الفخري إلى:
                 </p>
-            </div>
-            
-            <button id="welcome-btn" class="btn-modal" style="background: var(--primary-gold); font-size: 1.1em; padding: 12px 30px;">🚀 ابدأ التشخيص</button>
-        </div>
-    </div>
 
-    <div id="consent-modal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <h2 style="color: var(--primary-gold);">تنبيه طبي مهم</h2>
-            <p style="margin: 20px 0;">هذه الأداة تستخدم خوارزميات تشخيصية متقدمة، لكنها لا تغني عن الفحص الطبي السريري. في حال وجود علامات خطر (فقدان السيطرة على البول/البراز، ضعف مفاجئ، حمى مرتفعة) يجب التوجه للطوارئ فوراً.</p>
-            <button id="consent-btn" class="btn-modal">أوافق وأبدأ التشخيص</button>
-        </div>
-    </div>
-
-    <div id="lock-modal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <h2 style="color: var(--primary-gold);">⏰ موعد السجل اليومي القادم</h2>
-            <p style="margin: 20px 0;">لقد قمت بحفظ سجلك اليومي. يمكنك تحديث البيانات مرة أخرى بعد 24 ساعة.</p>
-            <div id="countdown-timer" style="font-size: 1.5em; font-weight: bold; color: var(--primary-gold); margin: 20px 0;"></div>
-            <p style="font-size: 0.9em; color: #9ca3af;">هذا لضمان دقة المتابعة وتجنب الإدخال المتكرر.</p>
-            <button id="switch-patient-btn" class="btn-modal">🔄 التبديل إلى حساب آخر</button>
-        </div>
-    </div>
-
-    <div id="switch-patient-modal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <h2 style="color: var(--primary-gold);">🔄 التبديل إلى حساب آخر</h2>
-            <p style="margin: 20px 0;">اختر الحساب الذي تريد التبديل إليه:</p>
-            <div id="patient-list" style="max-height: 300px; overflow-y: auto; margin: 20px 0;"></div>
-            <div style="margin-top: 20px;">
-                <button id="add-new-patient-btn" class="btn-modal">➕ إضافة حساب جديد</button>
-                <button id="cancel-switch-btn" class="btn-modal" style="background: #6b7280;">إلغاء</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="patient-login-modal" class="modal" style="display:none;">
-        <div class="modal-content" style="max-width: 400px;">
-            <h2 style="color: var(--primary-gold);">👤 تسجيل الدخول</h2>
-            <p style="margin: 20px 0;">أدخل رقم هاتفك للوصول إلى حسابك ومتابعة خطة التعافي</p>
-            <div style="margin: 20px 0;">
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; color: #9ca3af;">رمز الدولة</label>
-                    <select id="login-country" class="input-control">
-                        <option value="jo">🇯🇴 الأردن (+962)</option>
-                        <option value="sa">🇸🇦 السعودية (+966)</option>
-                        <option value="ae">🇦🇪 الإمارات (+971)</option>
-                        <option value="eg">🇪🇬 مصر (+20)</option>
-                        <option value="qa">🇶🇦 قطر (+974)</option>
-                        <option value="kw">🇰🇼 الكويت (+965)</option>
-                        <option value="bh">🇧🇭 البحرين (+973)</option>
-                        <option value="om">🇴🇲 عمان (+968)</option>
-                        <option value="ps">🇵🇸 فلسطين (+970)</option>
-                        <option value="lb">🇱🇦 لبنان (+961)</option>
-                        <option value="sy">🇸🇾 سوريا (+963)</option>
-                        <option value="iq">🇮🇶 العراق (+964)</option>
-                        <option value="ye">🇾🇪 اليمن (+967)</option>
-                        <option value="dz">🇩🇿 الجزائر (+213)</option>
-                        <option value="ma">🇲🇦 المغرب (+212)</option>
-                        <option value="tn">🇹🇳 تونس (+216)</option>
-                        <option value="ly">🇱🇾 ليبيا (+218)</option>
-                        <option value="sd">🇸🇩 السودان (+249)</option>
-                    </select>
+                <div style="display: inline-block; padding: 6px 36px; background: rgba(212, 175, 55, 0.14); border-bottom: 2.5px solid var(--primary-gold); margin-bottom: 16px; border-radius: 6px;">
+                    <div style="color: #94a3b8; font-size: 0.82em; font-weight: bold; margin-bottom: 2px;">المراجع البطل:</div>
+                    <h2 id="cert-patient-name" style="color: var(--primary-gold); margin: 0; font-size: 1.85em; font-weight: 800; letter-spacing: 1px;">
+                        اسم المريض
+                    </h2>
                 </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; color: #9ca3af;">رقم الهاتف</label>
-                    <input type="tel" id="login-phone" class="input-control" placeholder="مثال: 790000000">
-                </div>
-            </div>
-            <div style="margin-top: 20px;">
-                <button id="patient-login-btn" class="btn-modal" style="background: var(--primary-gold);">🔐 دخول</button>
-                <button id="patient-login-cancel-btn" class="btn-modal" style="background: #6b7280;">إلغاء</button>
-            </div>
-            <div style="margin-top: 15px; text-align: center;">
-                <button id="new-diagnosis-btn" style="background: transparent; border: 1px solid var(--primary-gold); color: var(--primary-gold); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.9em;">🔍 تشخيص جديد</button>
-            </div>
-        </div>
-    </div>
 
+                <p style="color: #e2e8f0; font-size: 0.98em; line-height: 1.9; margin: 0 auto 20px auto; max-width: 700px;">
+                    لإتمامه بنجاح كامل متطلبات برنامج التأهيل الحركي الذكي الممتد على مدار <strong>(7 أيام متتالية)</strong> والمخصص لمنطقة <span id="cert-pain-area" style="color: #38bdf8; font-weight: bold;">العمود الفقري</span>، محققاً المؤشرات السريرية الموثقة التالية:
+                </p>
 
-    <div id="admin-panel-modal" class="modal" style="display:none;">
-        <div class="modal-content" style="max-width: 900px;">
-            <h2 style="color: var(--primary-gold);">🔐 لوحة إدارة المرضى</h2>
-            <div style="margin: 20px 0;">
-                <input type="password" id="admin-password" class="input-control" placeholder="أدخل كلمة مرور المدير" style="margin-bottom: 10px;">
-                <button id="admin-login-btn" class="btn-modal" style="background: var(--primary-gold);">دخول</button>
-            </div>
-            <div id="admin-content" style="display:none;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 style="margin: 0;">👥 الحسابات المسجلة</h3>
-                    <div style="display: flex; gap: 10px;">
-                        <button id="doctor-dashboard-btn" class="btn-modal" style="background: #8b5cf6; padding: 5px 10px; font-size: 0.8em;">👨‍⚕️ لوحة الطبيب</button>
-                        <button id="add-patient-btn" class="btn-modal" style="background: #10b981; padding: 5px 10px; font-size: 0.8em;">➕ إضافة حساب</button>
-                        <button id="export-patients-btn" class="btn-modal" style="background: #3b82f6; padding: 5px 10px; font-size: 0.8em;">📤 تصدير البيانات</button>
-                        <button id="change-password-btn" class="btn-modal" style="background: #f59e0b; padding: 5px 10px; font-size: 0.8em;">🔑 تغيير الباسورد</button>
-                        <button id="toggle-developer-mode-btn" class="btn-modal" style="background: #8b5cf6; padding: 5px 10px; font-size: 0.8em;">🔧 وضع المطور</button>
-                        <button id="admin-logout-btn" class="btn-modal" style="background: #ef4444; padding: 5px 10px; font-size: 0.8em;">خروج</button>
+                <!-- بطاقات الإنجاز الثلاثية داخل الوثيقة -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; max-width: 650px; margin: 0 auto 24px auto;">
+                    <div style="background: rgba(15, 23, 42, 0.8); border: 1.5px solid #10b981; border-radius: 10px; padding: 12px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
+                        <div id="cert-pain-drop" style="font-size: 1.75em; font-weight: 900; color: #10b981;">0%</div>
+                        <div style="color: #cbd5e1; font-size: 0.78em; margin-top: 2px;">تراجع وتسكين الألم 📉</div>
+                    </div>
+                    <div style="background: rgba(15, 23, 42, 0.8); border: 1.5px solid #38bdf8; border-radius: 10px; padding: 12px; box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);">
+                        <div id="cert-mobility-gain" style="font-size: 1.75em; font-weight: 900; color: #38bdf8;">0%</div>
+                        <div style="color: #cbd5e1; font-size: 0.78em; margin-top: 2px;">استعادة المدى الحركي 🤸‍♂️</div>
+                    </div>
+                    <div style="background: rgba(15, 23, 42, 0.8); border: 1.5px solid #f59e0b; border-radius: 10px; padding: 12px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);">
+                        <div id="cert-compliance" style="font-size: 1.75em; font-weight: 900; color: #fef08a;">100%</div>
+                        <div style="color: #cbd5e1; font-size: 0.78em; margin-top: 2px;">عزيمة الالتزام بالبرنامج 🏅</div>
                     </div>
                 </div>
-                <div style="margin-bottom: 15px;">
-                    <input type="text" id="patient-search" class="input-control" placeholder="🔍 بحث بالاسم أو رقم الهاتف..." style="width: 100%;">
-                </div>
-                
-                <!-- لوحة الإحصائيات العامة -->
-                <div id="statistics-dashboard" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
-                    <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 20px; border-radius: 12px; text-align: center;">
-                        <div style="font-size: 2em; color: white; font-weight: bold;" id="stat-total-patients">0</div>
-                        <div style="color: rgba(255,255,255,0.8); font-size: 0.9em;">إجمالي المرضى</div>
-                    </div>
-                    <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 20px; border-radius: 12px; text-align: center;">
-                        <div style="font-size: 2em; color: white; font-weight: bold;" id="stat-recovery-plans">0</div>
-                        <div style="color: rgba(255,255,255,0.8); font-size: 0.9em;">خطط التعافي</div>
-                    </div>
-                    <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 20px; border-radius: 12px; text-align: center;">
-                        <div style="font-size: 2em; color: white; font-weight: bold;" id="stat-diagnoses">0</div>
-                        <div style="color: rgba(255,255,255,0.8); font-size: 0.9em;">التشخيصات</div>
-                    </div>
-                    <div style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); padding: 20px; border-radius: 12px; text-align: center;">
-                        <div style="font-size: 2em; color: white; font-weight: bold;" id="stat-daily-logs">0</div>
-                        <div style="color: rgba(255,255,255,0.8); font-size: 0.9em;">السجلات اليومية</div>
-                    </div>
-                </div>
-                
-                <div id="admin-patient-list" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px;"></div>
-                
-                <!-- قسم تفاصيل المريض - يظهر في نفس الصفحة -->
-                <div id="admin-patient-details" style="display:none; background: #1e2633; padding: 20px; border-radius: 12px; border: 2px solid var(--primary-gold);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <h4 style="color: var(--primary-gold); margin: 0;">📋 تفاصيل الحساب</h4>
-                        <button id="close-patient-details-btn" class="btn-modal" style="background: #6b7280; padding: 5px 10px; font-size: 0.8em;">✕ إغلاق</button>
-                    </div>
-                    <div id="admin-patient-info"></div>
-                    <div id="admin-patient-logs" style="margin-top: 20px;"></div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- نافذة تفاصيل الحساب المستقلة (محجوزة للاستخدام المستقبلي) -->
+                <!-- تذييل الوثيقة: الختم والتوقيع السريري -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid rgba(212, 175, 55, 0.35); padding-top: 18px; flex-wrap: wrap; gap: 15px;">
+                    <!-- توقيع المعالج -->
+                    <div style="text-align: right;">
+                        <div style="color: #cbd5e1; font-size: 0.82em; margin-bottom: 4px;">المعالج السريري المشرف:</div>
+                        <div style="color: var(--primary-gold); font-weight: bold; font-size: 1.05em;">أخصائي تقويم الكايروبراكتيك</div>
+                        <div style="color: #ffffff; font-weight: bold; font-size: 0.95em;">المعالج جمال قبها</div>
+                    </div>
 
-    <!-- نافذة رسالة النجاح -->
-    <div id="success-modal" class="modal" style="display:none;">
-        <div class="modal-content" style="max-width: 500px; text-align: center;">
-            <div style="font-size: 4em; margin-bottom: 20px;">🎉</div>
-            <h2 style="color: var(--primary-gold); margin-bottom: 15px;">تم الحفظ بنجاح!</h2>
-            <p id="success-message" style="margin-bottom: 20px; color: #9ca3af;">رسالة النجاح</p>
-            <button id="success-modal-ok-btn" class="btn-modal" style="background: var(--primary-gold);">موافق</button>
-        </div>
-    </div>
+                    <!-- الختم الدائري الذهبي الرسمي SVG -->
+                    <div>
+                        <svg viewBox="0 0 120 120" width="85" height="85">
+                            <circle cx="60" cy="60" r="54" fill="none" stroke="#d4af37" stroke-width="2.5" stroke-dasharray="4,2"/>
+                            <circle cx="60" cy="60" r="47" fill="rgba(212, 175, 55, 0.08)" stroke="#d4af37" stroke-width="1.5"/>
+                            <path id="sealTextPath" d="M 22,60 A 38,38 0 1,1 98,60 A 38,38 0 1,1 22,60" fill="none"/>
+                            <text font-size="8.5" fill="#d4af37" font-weight="bold" letter-spacing="1.5">
+                                <textPath href="#sealTextPath" startOffset="50%" text-anchor="middle">
+                                    ★ وداعاً للألم • معتمد سريرياً ★
+                                </textPath>
+                            </text>
+                            <text x="60" y="56" fill="#10b981" font-size="16" font-weight="bold" text-anchor="middle">✓</text>
+                            <text x="60" y="70" fill="#fef08a" font-size="7.5" font-weight="bold" text-anchor="middle">VERIFIED</text>
+                            <text x="60" y="79" fill="#d4af37" font-size="6.5" text-anchor="middle">7-DAYS DONE</text>
+                        </svg>
+                    </div>
 
-    <!-- نافذة تغيير الباسورد -->
-    <div id="change-password-modal" class="modal" style="display:none;">
-        <div class="modal-content" style="max-width: 400px;">
-            <h2 style="color: var(--primary-gold); margin-bottom: 15px;">🔑 تغيير الباسورد</h2>
-            <div style="margin-bottom: 15px;">
-                <label class="form-label">الباسورد الحالي</label>
-                <input type="password" id="current-password" class="input-control" placeholder="أدخل الباسورد الحالي">
-            </div>
-            <div style="margin-bottom: 15px;">
-                <label class="form-label">الباسورد الجديد</label>
-                <input type="password" id="new-password" class="input-control" placeholder="أدخل الباسورد الجديد">
-            </div>
-            <div style="margin-bottom: 15px;">
-                <label class="form-label">تأكيد الباسورد الجديد</label>
-                <input type="password" id="confirm-password" class="input-control" placeholder="أعد إدخال الباسورد الجديد">
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <button id="save-password-btn" class="btn-modal" style="background: var(--primary-gold); flex: 1;">حفظ</button>
-                <button id="cancel-password-btn" class="btn-modal" style="background: #ef4444; flex: 1;">إلغاء</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- نافذة إضافة حساب جديد -->
-    <div id="add-patient-modal" class="modal" style="display:none;">
-        <div class="modal-content" style="max-width: 500px;">
-            <h2 style="color: var(--primary-gold); margin-bottom: 15px;">➕ إضافة حساب جديد</h2>
-            <div style="margin-bottom: 15px;">
-                <label class="form-label">الاسم</label>
-                <input type="text" id="new-patient-name" class="input-control" placeholder="أدخل الاسم">
-            </div>
-            <div style="margin-bottom: 15px;">
-                <label class="form-label">رقم الهاتف</label>
-                <input type="text" id="new-patient-phone" class="input-control" placeholder="أدخل رقم الهاتف">
-            </div>
-            <div style="margin-bottom: 15px;">
-                <label class="form-label">الدولة</label>
-                <select id="new-patient-country" class="input-control">
-                    <option value="jo">🇯🇴 الأردن</option>
-                    <option value="sa">🇸🇦 السعودية</option>
-                    <option value="ae">🇦🇪 الإمارات</option>
-                    <option value="eg">🇪🇬 مصر</option>
-                    <option value="kw">🇰🇼 الكويت</option>
-                    <option value="qa">🇶🇦 قطر</option>
-                    <option value="bh">🇧🇭 البحرين</option>
-                    <option value="om">🇴🇲 عمان</option>
-                    <option value="iq">🇮🇶 العراق</option>
-                    <option value="sy">🇸🇾 سوريا</option>
-                    <option value="lb">🇱🇧 لبنان</option>
-                    <option value="ps">🇵🇸 فلسطين</option>
-                </select>
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <button id="save-new-patient-btn" class="btn-modal" style="background: var(--primary-gold); flex: 1;">حفظ</button>
-                <button id="cancel-new-patient-btn" class="btn-modal" style="background: #ef4444; flex: 1;">إلغاء</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="main-grid">
-        <div class="model-container">
-            <!-- مؤشرات الخطوات -->
-            <div class="steps-indicator no-print" style="background: #1e2633; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--primary-gold);">
-                <h4 style="color: var(--primary-gold); margin: 0 0 10px 0; text-align: center;">📋 خطوات التشخيص</h4>
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                    <div id="step-1" class="step-item active" style="flex: 1; text-align: center; padding: 10px; background: var(--primary-gold); color: black; border-radius: 8px; font-weight: bold;">
-                        <span style="font-size: 1.2em;">1</span>
-                        <div style="font-size: 0.8em; margin-top: 5px;">اختر الألم</div>
-                    </div>
-                    <div style="color: var(--primary-gold); font-size: 1.5em;">→</div>
-                    <div id="step-2" class="step-item" style="flex: 1; text-align: center; padding: 10px; background: #374151; color: #9ca3af; border-radius: 8px;">
-                        <span style="font-size: 1.2em;">2</span>
-                        <div style="font-size: 0.8em; margin-top: 5px;">أدخل البيانات</div>
-                    </div>
-                    <div style="color: var(--primary-gold); font-size: 1.5em;">→</div>
-                    <div id="step-3" class="step-item" style="flex: 1; text-align: center; padding: 10px; background: #374151; color: #9ca3af; border-radius: 8px;">
-                        <span style="font-size: 1.2em;">3</span>
-                        <div style="font-size: 0.8em; margin-top: 5px;">أجب الأسئلة</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="control-panel no-print">
-                <div class="switch-group">
-                    <button class="view-btn active" id="btn-front">المنظر الأمامي</button>
-                    <button class="view-btn" id="btn-back">المنظر الخلفي</button>
-                </div>
-            </div>
-            <div class="anatomy-wrapper">
-                <div id="front-container" class="image-container" style="display: block;">
-                    <img src="https://h.top4top.io/p_3794bh1ot1.png" class="skeleton-img" alt="أمامي">
-                </div>
-                <div id="back-container" class="image-container" style="display: none;">
-                    <img src="https://i.top4top.io/p_37949nysx2.png" class="skeleton-img" alt="خلفي">
-                </div>
-            </div>
-            <div class="status-bar" id="selected-status">🔍 اضغط على نقطة الألم لبدء التشخيص</div>
-            <div class="chronic-diseases no-print">
-                <h4>📋 أمراض مزمنة (اختر إن وجدت)</h4>
-                <div class="chronic-grid">
-                    <label><input type="checkbox" name="chronic" value="diabetes"> السكري</label>
-                    <label><input type="checkbox" name="chronic" value="hypertension"> ضغط الدم</label>
-                    <label><input type="checkbox" name="chronic" value="osteoporosis"> هشاشة عظام</label>
-                    <label><input type="checkbox" name="chronic" value="rheumatoid"> روماتويد</label>
-                    <label><input type="checkbox" name="chronic" value="cancer_history"> تاريخ سرطاني</label>
-                </div>
-                <div class="chronic-questions" style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
-                    <div class="form-group" style="margin-bottom: 10px;">
-                        <label class="form-label" style="font-size: 0.9rem;">هل لديك تاريخ سابق لإصابات في نفس المنطقة؟</label>
-                        <select id="injury-history" class="form-select" style="font-size: 0.9rem; padding: 8px;">
-                            <option value="no">لا</option>
-                            <option value="yes">نعم</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 10px;">
-                        <label class="form-label" style="font-size: 0.9rem;">هل تعمل في وظيفة تتطلب رفع أثقال أو حركات متكررة؟</label>
-                        <select id="work-type" class="form-select" style="font-size: 0.9rem; padding: 8px;">
-                            <option value="no">لا</option>
-                            <option value="yes">نعم</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 10px;">
-                        <label class="form-label" style="font-size: 0.9rem;">هل تمارس الرياضة بانتظام؟</label>
-                        <select id="exercise-habit" class="form-select" style="font-size: 0.9rem; padding: 8px;">
-                            <option value="no">لا</option>
-                            <option value="yes">نعم</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 10px;">
-                        <label class="form-label" style="font-size: 0.9rem;">مدة الألم</label>
-                        <select id="duration" class="form-select" style="font-size: 0.9rem; padding: 8px;">
-                            <option value="acute">حاد (أقل من أسبوع)</option>
-                            <option value="subacute">تحت حاد (أسبوع - شهر)</option>
-                            <option value="chronic">مزمن (أكثر من شهر)</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 10px;">
-                        <label class="form-label" style="font-size: 0.9rem;">شدة الألم (1-10)</label>
-                        <div class="range-container" style="display: flex; align-items: center; gap: 10px;">
-                            <input type="range" id="severity" class="range-slider" min="1" max="10" value="5" style="flex: 1;">
-                            <span id="severity-value" class="range-value" style="min-width: 30px; text-align: center;">5</span>
+                    <!-- باركود وتاريخ التحقق -->
+                    <div style="text-align: left;">
+                        <div style="color: #cbd5e1; font-size: 0.82em; margin-bottom: 4px;">رمز التوثيق السريري:</div>
+                        <div style="background: #ffffff; color: #000; padding: 3px 8px; border-radius: 4px; font-family: monospace; font-size: 0.8em; font-weight: bold; display: inline-block;">
+                            ||||| | |||| ||| ||
                         </div>
+                        <div style="color: #10b981; font-size: 0.76em; margin-top: 4px;">✓ معتمد وموثق رقمياً</div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="inputs-container">
-            <div id="welcome-box" class="welcome-placeholder">
-                <h3>نظام التشخيص الذكي المتقدم</h3>
-                <p>✋ اختر نقطة الألم على المجسم.<br>📋 ثم أدخل بياناتك وأجب عن الأسئلة بدقة.</p>
-            </div>
-            <div id="diagnostic-card" class="card" style="display:none;">
-                <div class="card-title">
-                    <span id="region-title">تشخيص المنطقة</span>
-                    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-                </div>
-                <div class="grid-2col">
-                    <div class="form-group"><label class="form-label">العمر (سنة) <span class="help-icon" title="أدخل عمرك الحالي بالسنوات">❓</span></label><input type="number" id="age" class="input-control" placeholder="مثال: 45"></div>
-                    <div class="form-group"><label class="form-label">الجنس <span class="help-icon" title="اختر جنسك للحصول على تشخيص أدق">❓</span></label><select id="gender" class="input-control"><option value="">اختر</option><option value="male">ذكر</option><option value="female">أنثى</option></select></div>
-                </div>
-                <div class="grid-2col">
-                    <div class="form-group"><label class="form-label">الوزن (كغم) <span class="help-icon" title="أدخل وزنك الحالي بالكيلوجرام">❓</span></label><input type="number" id="weight" class="input-control" step="0.1" placeholder="مثال: 75"></div>
-                    <div class="form-group"><label class="form-label">الطول (سم) <span class="help-icon" title="أدخل طولك الحالي بالسنتيمتر">❓</span></label><input type="number" id="height" class="input-control" step="0.1" placeholder="مثال: 170"></div>
-                </div>
-                <div id="bmi-display" style="display:none; padding:8px; background:#0a0e14; border-radius:8px; text-align:center; margin-bottom:15px;"></div>
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label class="form-label">📝 وصف حالتك بالكلمات الخاصة (اختياري)</label>
-                    <textarea id="free-description" class="input-control" rows="3" placeholder="اكتب وصفاً لحالتك بالكلمات الخاصة... مثال: ألم في الرقبة يزداد عند العمل على الكمبيوتر، أحياناً يشع للكتف، بدأ منذ شهرين"></textarea>
-                    <div id="description-analysis" style="display:none; margin-top:10px; padding:10px; background:#0a0e14; border-radius:8px; border-right:3px solid var(--primary-gold);"></div>
-                </div>
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label class="form-label">📌 ملاحظات شخصية (اختياري) <span class="help-icon" title="أضف أي ملاحظات شخصية تود تذكرها لاحقاً">❓</span></label>
-                    <textarea id="personal-notes" class="input-control" rows="2" placeholder="ملاحظات شخصية... مثال: الألم يزداد عند الجلوس لفترات طويلة، أفضل وضعية النوم هي على الجانب"></textarea>
-                </div>
-                <div id="dynamic-questions"></div>
-                <div class="dynamic-question-box" style="border-right-color: var(--danger-red);">
-                    <p>🚨 أسئلة الأمان (العلامات الحمراء)</p>
-                    <div class="option-group">
-                        <label class="option-label"><input type="checkbox" name="redflag" value="cauda"> فقدان مفاجئ للسيطرة على البول أو البراز</label>
-                        <label class="option-label"><input type="checkbox" name="redflag" value="fever"> حمى + تعرق ليلي + فقدان وزن غير مبرر</label>
-                        <label class="option-label"><input type="checkbox" name="redflag" value="trauma"> بدأ الألم بعد حادث سير أو سقوط شديد</label>
-                        <label class="option-label"><input type="checkbox" name="redflag" value="saddle"> خدر أو تنميل في منطقة السرج (بين الفخذين)</label>
-                        <label class="option-label"><input type="checkbox" name="redflag" value="cancer"> تاريخ سابق للإصابة بالسرطان</label>
-                    </div>
-                </div>
-                <button id="diagnose-btn" class="btn-submit">🔬 إجراء التشخيص الذكي المتقدم</button>
-                <button id="reset-btn" class="btn-submit btn-reset">🗑️ إعادة تعيين كامل البيانات</button>
-                <div id="loader" class="loader"><div class="spinner"></div><p>جاري التحليل باستخدام خوارزميات التشخيص...</p></div>
-            </div>
-            
-            <!-- رسالة للمريض المشترك في خطة التعافي -->
-            <div id="recovery-plan-active-message" style="display:none; padding: 20px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px; border: 2px solid #10b981; text-align: center; margin-top: 20px;">
-                <h3 style="margin: 0 0 10px 0; color: white; font-size: 1.2em;">✅ أنت مشترك في خطة التعافي</h3>
-                <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 0.95em;">تابع تقدمك في قسم المتابعة اليومية. لا حاجة لإعادة التشخيص.</p>
+            <!-- أزرار الإجراءات للوسام والوثيقة مع ضبط العرض الكامل وتجنب الخروج من الإطار -->
+            <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; width: 100%; box-sizing: border-box;" class="no-print">
+                <button type="button" onclick="printCertificate()" style="background: #3b82f6; color: #ffffff; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex: 1 1 200px; max-width: 100%; box-sizing: border-box;">
+                    🖨️ طباعة الوسام / حفظ PDF
+                </button>
+                <button type="button" id="btn-share-cert-whatsapp" onclick="shareCertificateToWhatsApp()" style="background: #25d366; color: #ffffff; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex: 1 1 240px; max-width: 100%; box-sizing: border-box;">
+                    💬 مشاركة وسام الانتصار على واتساب
+                </button>
+                <button type="button" onclick="closeCompletionCertificateModal()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 12px 22px; border-radius: 8px; cursor: pointer; flex: 0 0 auto; box-sizing: border-box;">
+                    إغلاق
+                </button>
             </div>
         </div>
     </div>
 
-    <div id="report-section" class="card">
-        <div id="red-flags-warning" class="red-flags-box"><h4>⚠️ تنبيه عاجل</h4><p id="red-flags-text"></p></div>
-        <div class="report-header">
-            <h2>التقرير التشخيصي المفصل</h2>
-            <div><span class="diagnosis-badge" id="confidence-badge">التحليل</span><button id="print-pdf-btn" class="print-pdf-btn no-print">🖨️ طباعة / حفظ PDF</button></div>
-        </div>
-        <div class="report-grid">
-            <div class="report-block"><h4>🔍 التشخيص التفاضلي (نسب الاحتمال)</h4><div id="differential-dx"></div><div id="bmi-impact" style="margin-top:15px;"></div></div>
-            <div class="report-block"><h4>📖 التقييم الطبي المفصل</h4><div id="detailed-assessment"></div></div>
-        </div>
-        <div class="recommendations-box"><h4>🏠 إرشادات أولية مؤقتة (راحة منزلية)</h4><div id="home-exercises"></div><div class="warning-list" id="warning-list"></div><div class="warning-text" id="exercise-warning"></div></div>
-        
-        <!-- عبارة ترويجية إضافية -->
-        <div id="clinic-promo-banner" style="margin: 20px 0; padding: 20px; background: linear-gradient(135deg, #1e2633 0%, #2d3748 100%); border-radius: 16px; border: 2px solid #d4af37; text-align: center;">
-            <h3 style="margin: 0 0 10px 0; color: #d4af37; font-size: 1.3em;">🏥 هل تحتاج خطة علاج مخصصة؟</h3>
-            <p style="margin: 0 0 15px 0; color: #e5e7eb; font-size: 0.95em;">المعالج متخصص بالكايروبراكتيك وجاهز لمساعدتك في أي وقت .. يتوفر خدمة العلاج المنزلي داخل عمان والزرقاء .</p>
-            <a href="https://wa.me/962700000000" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #d4af37 0%, #b8962e 100%); color: white; padding: 12px 30px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 1em; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);">💬 احجز استشارة مجانية</a>
-        </div>
-        
-        <!-- زر المتابعة بخطة التعافي - مدمج في التقرير -->
-        <div id="recovery-plan-cta" class="report-block" style="display:none;">
-            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 25px; border-radius: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h3 style="color: white; margin: 0; font-size: 1.3em;">🎁 خطة تعافي مجانية لمدة أسبوع!</h3>
-                    <span style="background: rgba(255,255,255,0.2); color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9em;">مجاناً</span>
+    <!-- ================= 2. نافذة التقرير السريري الشامل للمعالج (Doctor Clinical Summary Modal) ================= -->
+    <div id="doctor-summary-modal" class="app-modal" style="display: none;">
+        <div class="modal-inner" style="max-width: 800px; background: #0b1322; border: 2px solid #38bdf8; padding: 25px; border-radius: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;" class="no-print">
+                <div style="color: #38bdf8; font-weight: bold; font-size: 1.1em; display: flex; align-items: center; gap: 8px;">
+                    <span>📋</span> التقرير السريري الشامل للمعالج (Clinical Progress Dossier)
                 </div>
-                <p style="color: white; margin: 0 0 15px 0; font-size: 1em; line-height: 1.6;">احصل على خطة تعافي شخصية مع متابعة يومية مجانية</p>
-                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                    <h4 style="color: white; margin: 0 0 10px 0; font-size: 1em;">✨ ما ستحصل عليه:</h4>
-                    <ul style="color: white; margin: 0; padding-right: 20px; font-size: 0.9em;">
-                        <li>متابعة يومية لمدة أسبوع</li>
-                        <li>تمارين مخصصة لحالتك</li>
-                        <li>تقييم سلوكياتك الحركية</li>
-                        <li>مؤشر تعافي شخصي</li>
-                        <li>توصيات يومية للتحسن</li>
-                    </ul>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <button id="start-recovery-plan-btn" class="btn-modal" style="background: white; color: #10b981; font-weight: bold; padding: 12px 30px; font-size: 1.1em; flex: 1;">ابدأ خطة التعافي المجانية</button>
-                    <button id="decline-recovery-plan-btn" class="btn-modal" style="background: rgba(255,255,255,0.2); color: white; padding: 12px 20px; font-size: 1em;">لا، شكراً</button>
-                </div>
+                <button type="button" onclick="closeDoctorSummaryModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.6em; cursor: pointer;">&times;</button>
             </div>
-        </div>
-        
-        <!-- قسم تاريخ التشخيصات السابقة -->
-        <div id="diagnosis-history-section" class="card" style="display:none; margin-top: 30px;">
-            <div class="report-header">
-                <h2>📜 تاريخ التشخيصات السابقة</h2>
-                <button id="toggle-history-btn" class="print-pdf-btn no-print">🔄 تحديث</button>
-            </div>
-            <div id="diagnosis-history-list" style="margin-top: 20px;">
-                <p style="color: #9ca3af; text-align: center;">لا يوجد تشخيصات سابقة</p>
-            </div>
-        </div>
-        
-        <!-- قسم حفظ البيانات (يظهر فقط بعد الموافقة على خطة التعافي) -->
-        <div id="daily-tracking-section" class="card" style="display:none;">
-            <div class="report-header">
-                <h2>📅 المتابعة اليومية</h2>
-                <div>
-                    <span class="diagnosis-badge" id="day-counter" style="background: var(--primary-gold);">اليوم 1 من 7</span>
-                    <span class="diagnosis-badge" id="recovery-score-badge">مؤشر التعافي: 0%</span>
-                    <button id="reminder-settings-btn" class="print-pdf-btn no-print" style="background: #8b5cf6;">⏰ إعدادات التذكير</button>
-                    <button id="export-data-btn" class="print-pdf-btn no-print">📤 تصدير البيانات</button>
-                </div>
-            </div>
-            
-            <div id="daily-tracking-message" style="color: #10b981; margin-bottom: 15px;"></div>
-            
-            <!-- عداد تنازلي للوقت المتبقي -->
-            <div id="daily-countdown" style="display:none;"></div>
-            
-            <!-- مؤشر التعافي -->
-            <div class="report-block">
-                <h4>📊 مؤشر التعافي</h4>
-                <div id="recovery-progress">
-                    <div class="progress-bar-container">
-                        <div class="progress-bar-fill" id="recovery-bar" style="width: 0%;"></div>
-                    </div>
-                    <p id="recovery-text">ابدأ بتسجيل تقدمك اليومي لحساب مؤشر التعافي</p>
-                </div>
-            </div>
-            
-            <!-- خطة اليوم -->
-            <div class="report-block">
-                <h4>🎯 خطة اليوم</h4>
-                <div id="daily-plan">
-                    <ul id="daily-tasks">
-                        <li>سجل شدة الألم اليوم</li>
-                        <li>نفذ التمارين الموصى بها</li>
-                        <li>سجل مدة المشي</li>
-                        <li>سجل جودة النوم</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <!-- نموذج السجل اليومي -->
-            <div class="report-block">
-                <h4>📝 سجل اليوم</h4>
-                <p style="color: #f59e0b; font-size: 0.9em; margin-bottom: 15px;">⚠️ السجل اليومي ضروري لمتابعة تقدمك وتحسين خطة التعافي.</p>
-                <div id="daily-log-form">
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label class="form-label">شدة الألم اليوم (1-10)</label>
-                        <div class="range-container" style="display: flex; align-items: center; gap: 10px;">
-                            <input type="range" id="daily-pain-score" class="range-slider" min="1" max="10" value="5" style="flex: 1;">
-                            <span id="daily-pain-value" class="range-value" style="min-width: 30px; text-align: center;">5</span>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label class="form-label">تحسن الحركة (1-10)</label>
-                        <div class="range-container" style="display: flex; align-items: center; gap: 10px;">
-                            <input type="range" id="daily-movement-score" class="range-slider" min="1" max="10" value="5" style="flex: 1;">
-                            <span id="daily-movement-value" class="range-value" style="min-width: 30px; text-align: center;">5</span>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label class="form-label">مدة المشي (دقيقة)</label>
-                        <input type="number" id="daily-walking-minutes" class="input-control" placeholder="مثال: 20" min="0">
-                    </div>
-                    
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label class="form-label">جودة النوم (1-10)</label>
-                        <div class="range-container" style="display: flex; align-items: center; gap: 10px;">
-                            <input type="range" id="daily-sleep-quality" class="range-slider" min="1" max="10" value="5" style="flex: 1;">
-                            <span id="daily-sleep-value" class="range-value" style="min-width: 30px; text-align: center;">5</span>
-                        </div>
-                    </div>
-                    
-                    <h5 style="margin: 20px 0 15px 0; color: var(--primary-gold);">🏃 السلوكيات الحركية</h5>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                        <label class="option-label" style="background: #1e2633; padding: 10px; border-radius: 6px; border: 1px solid #374151;">
-                            <input type="checkbox" id="daily-exercise-completed">
-                            <span>💪 نفذت التمارين</span>
-                        </label>
-                        <label class="option-label" style="background: #1e2633; padding: 10px; border-radius: 6px; border: 1px solid #374151;">
-                            <input type="checkbox" id="daily-walking-done">
-                            <span>🚶 مشيت 15+ دقيقة</span>
-                        </label>
-                        <label class="option-label" style="background: #1e2633; padding: 10px; border-radius: 6px; border: 1px solid #374151;">
-                            <input type="checkbox" id="daily-stretching-done">
-                            <span>🧘 تمارين الإطالة</span>
-                        </label>
-                        <label class="option-label" style="background: #1e2633; padding: 10px; border-radius: 6px; border: 1px solid #374151;">
-                            <input type="checkbox" id="daily-heat-therapy">
-                            <span>🔥 العلاج الحراري</span>
-                        </label>
-                        <label class="option-label" style="background: #1e2633; padding: 10px; border-radius: 6px; border: 1px solid #374151;">
-                            <input type="checkbox" id="daily-good-posture">
-                            <span>🪑 وضعية جيدة</span>
-                        </label>
-                        <label class="option-label" style="background: #1e2633; padding: 10px; border-radius: 6px; border: 1px solid #374151;">
-                            <input type="checkbox" id="daily-rest-enough">
-                            <span>😴 راحة كافية</span>
-                        </label>
-                    </div>
-                    
-                    <h5 style="margin: 20px 0 15px 0; color: var(--danger-red);">⚠️ السلوكيات السلبية (تجنبها)</h5>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                        <label class="option-label" style="background: #2d1f1f; padding: 10px; border-radius: 6px; border: 1px solid #7f1d1d;">
-                            <input type="checkbox" id="daily-long-sitting">
-                            <span>🪑 جلسة طويلة</span>
-                        </label>
-                        <label class="option-label" style="background: #2d1f1f; padding: 10px; border-radius: 6px; border: 1px solid #7f1d1d;">
-                            <input type="checkbox" id="daily-excessive-walking">
-                            <span>🚶 مشي زائد</span>
-                        </label>
-                        <label class="option-label" style="background: #2d1f1f; padding: 10px; border-radius: 6px; border: 1px solid #7f1d1d;">
-                            <input type="checkbox" id="daily-heavy-lifting">
-                            <span>🏋️ جهد بدني</span>
-                        </label>
-                        <label class="option-label" style="background: #2d1f1f; padding: 10px; border-radius: 6px; border: 1px solid #7f1d1d;">
-                            <input type="checkbox" id="daily-phone-usage">
-                            <span>📱 موبايل طويل</span>
-                        </label>
-                        <label class="option-label" style="background: #2d1f1f; padding: 10px; border-radius: 6px; border: 1px solid #7f1d1d;">
-                            <input type="checkbox" id="daily-poor-sleep">
-                            <span>😴 نوم سيء</span>
-                        </label>
-                        <label class="option-label" style="background: #2d1f1f; padding: 10px; border-radius: 6px; border: 1px solid #7f1d1d;">
-                            <input type="checkbox" id="daily-pain-radiation">
-                            <span>⚡ امتداد الألم</span>
-                        </label>
-                    </div>
-                    
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label class="form-label">ملاحظات (اختياري)</label>
-                        <textarea id="daily-notes" class="input-control" rows="3" placeholder="اكتب أي ملاحظات عن حالتك اليوم..."></textarea>
-                    </div>
-                    
-                    <button id="save-daily-log-btn" class="btn-submit">💾 حفظ السجل اليومي</button>
-                </div>
-            </div>
-            
-            <!-- سجل التقدم -->
-            <div class="report-block">
-                <h4>📈 سجل التقدم</h4>
-                <div id="progress-chart">
-                    <div id="progress-data" style="display: flex; flex-direction: column; gap: 10px;">
-                        <p>لا توجد بيانات سابقة</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- قسم حفظ البيانات (يظهر فقط بعد الموافقة على خطة التعافي) -->
-        <div id="save-data-section" class="card" style="display:none;">
-            <div class="report-header">
-                <h2>💾 حفظ بياناتك ومتابعة تقدمك</h2>
-            </div>
-            <div class="report-block">
-                <p style="margin-bottom: 15px;">🎉 تهانينا! لقد أكملت تقييمك الأولي. لحفظ نتائجك ومتابعة تقدمك يومياً والحصول على خطة تعافي مجانية، أدخل بياناتك:</p>
-                
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label class="form-label">الدولة</label>
-                    <select id="patient-country" class="input-control" onchange="updateSelectedCountryFlag()">
-                        <option value="jo" data-flag="🇯🇴" data-prefix="079">🇯🇴 الأردن</option>
-                        <option value="sa" data-flag="🇸🇦" data-prefix="05">🇸🇦 السعودية</option>
-                        <option value="ae" data-flag="🇦🇪" data-prefix="05">🇦🇪 الإمارات</option>
-                        <option value="eg" data-flag="🇪🇬" data-prefix="01">🇪🇬 مصر</option>
-                        <option value="kw" data-flag="🇰🇼" data-prefix="06">🇰🇼 الكويت</option>
-                        <option value="qa" data-flag="🇶🇦" data-prefix="03">🇶🇦 قطر</option>
-                        <option value="bh" data-flag="🇧🇭" data-prefix="03">🇧🇭 البحرين</option>
-                        <option value="om" data-flag="🇴🇲" data-prefix="09">🇴🇲 عمان</option>
-                        <option value="iq" data-flag="🇮🇶" data-prefix="07">🇮🇶 العراق</option>
-                        <option value="sy" data-flag="🇸🇾" data-prefix="09">🇸🇾 سوريا</option>
-                        <option value="lb" data-flag="🇱🇧" data-prefix="03">🇱🇧 لبنان</option>
-                        <option value="ps" data-flag="🇵🇸" data-prefix="05">🇵🇸 فلسطين</option>
-                    </select>
-                    <div id="selected-country-flag-display" style="font-size: 3em; margin-top: 10px; text-align: center; min-height: 50px;"></div>
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label class="form-label">الاسم الكامل</label>
-                    <input type="text" id="patient-name-save" class="input-control" placeholder="مثال: أحمد محمد">
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label class="form-label">رقم الهاتف</label>
-                    <input type="tel" id="patient-phone-save" class="input-control" placeholder="مثال: 0791234567">
-                </div>
-                
-                <div class="encouragement-box" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-                    <h3 style="color: white; margin: 0 0 10px 0;">🎁 خطة تعافي مجانية لمدة أسبوع!</h3>
-                    <p style="color: white; margin: 0;">احفظ بياناتك الآن واحصل على خطة تعافي شخصية لمدة أسبوع مع متابعة يومية مجانية.</p>
-                </div>
-                
-                <div style="display: flex; gap: 10px;">
-                    <button id="save-patient-data-main-btn" class="btn-submit" style="flex: 2;">💾 حفظ البيانات وبدء خطة التعافي</button>
-                    <button id="clear-data-btn" class="btn-submit" style="background: #ef4444; flex: 1;">🗑️ مسح البيانات</button>
-                </div>
-            </div>
-            
-            <!-- عرض البيانات المحفوظة -->
-            <div id="patient-info-display" class="report-block" style="display:none;">
-                <h4 style="color: var(--primary-gold); margin-bottom: 15px;">👤 بياناتك المحفوظة</h4>
-                <div id="patient-info-content" style="background: #1e2633; padding: 15px; border-radius: 8px;"></div>
-            </div>
-        </div>
 
-        <!-- نافذة خطة التعافي المجانية -->
-        <div id="recovery-plan-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 1000; align-items: center; justify-content: center;">
-            <div class="modal-content" style="background: #0a0e14; padding: 30px; border-radius: 16px; max-width: 500px; width: 90%; border: 2px solid var(--primary-gold);">
-                <h2 style="color: var(--primary-gold); margin: 0 0 20px 0;">🎯 خطة التعافي المجانية</h2>
-                <p style="margin-bottom: 20px; color: #9ca3af;">للبدء في خطة التعافي المجانية لمدة أسبوع مع متابعة يومية، يرجى إدخال بياناتك:</p>
-                
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label class="form-label">الدولة</label>
-                    <select id="recovery-country" class="input-control">
-                        <option value="jo" data-flag="🇯🇴" data-prefix="079">🇯🇴 الأردن</option>
-                        <option value="sa" data-flag="🇸🇦" data-prefix="05">🇸🇦 السعودية</option>
-                        <option value="ae" data-flag="🇦🇪" data-prefix="05">🇦🇪 الإمارات</option>
-                        <option value="eg" data-flag="🇪🇬" data-prefix="01">🇪🇬 مصر</option>
-                        <option value="kw" data-flag="🇰🇼" data-prefix="06">🇰🇼 الكويت</option>
-                        <option value="qa" data-flag="🇶🇦" data-prefix="03">🇶🇦 قطر</option>
-                        <option value="bh" data-flag="🇧🇭" data-prefix="03">🇧🇭 البحرين</option>
-                        <option value="om" data-flag="🇴🇲" data-prefix="09">🇴🇲 عمان</option>
-                        <option value="iq" data-flag="🇮🇶" data-prefix="07">🇮🇶 العراق</option>
-                        <option value="sy" data-flag="🇸🇾" data-prefix="09">🇸🇾 سوريا</option>
-                        <option value="lb" data-flag="🇱🇧" data-prefix="03">🇱🇧 لبنان</option>
-                        <option value="ps" data-flag="🇵🇸" data-prefix="05">🇵🇸 فلسطين</option>
-                    </select>
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label class="form-label">الاسم الكامل</label>
-                    <input type="text" id="recovery-name" class="input-control" placeholder="مثال: أحمد محمد">
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label class="form-label">رقم الهاتف</label>
-                    <input type="tel" id="recovery-phone" class="input-control" placeholder="مثال: 0791234567">
-                </div>
-                
-                <div style="display: flex; gap: 10px;">
-                    <button id="start-recovery-btn" class="btn-submit" style="flex: 2;">🎯 بدء خطة التعافي</button>
-                    <button id="cancel-recovery-btn" class="btn-submit" style="background: #6b7280; flex: 1;">إلغاء</button>
-                </div>
+            <!-- حاوية الملخص السريري -->
+            <div id="doctor-summary-content" class="doctor-summary-printable" style="background: #0f172a; border-radius: 12px; padding: 25px; border: 1px solid rgba(56, 189, 248, 0.3);">
+                <!-- سيتم تعبئتها ديناميكياً بواسطة دالة exportClinicalSummaryForDoctor -->
             </div>
-        </div>
-        </div>
-        <div class="comparison-wrapper">
-            <h4 style="margin-bottom: 15px; color: var(--primary-gold);">📊 مقارنة خيارات العلاج المتاحة</h4>
-            <table class="comparison-table">
-                <thead>
-                    <tr>
-                        <th style="width: 25%;">المعيار</th>
-                        <th class="highlight-header" style="width: 25%;">التعديل اليدوي والتقويم الفقري (الكايروبراكتيك)<br><span style="font-size: 1.5em; font-weight: 900; color: #10b981; text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);">فعالية: 85%</span></th>
-                        <th style="width: 25%;">المسكنات والأدوية<br><span style="font-size: 1.2em; font-weight: 700; color: #f59e0b;">فعالية: 40%</span></th>
-                        <th style="width: 25%;">العلاج الطبيعي التقليدي<br><span style="font-size: 1.2em; font-weight: 700; color: #3b82f6;">فعالية: 60%</span></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="chiro-success-col"><strong>التعامل مع سبب المشكلة</strong></td>
-                        <td class="chiro-success-col">يعيد المحاذاة الطبيعية للمفاصل والفقرات ويصحح الانحرافات</td>
-                        <td class="other-fail-col">يخفي الألم مؤقتاً فقط دون علاج السبب الجذري</td>
-                        <td class="other-fail-col">يركز على تقوية العضلات ودعم المفاصل</td>
-                    </tr>
-                    <tr>
-                        <td class="chiro-success-col"><strong>التأثير على الغضاريف</strong></td>
-                        <td class="chiro-success-col">يعيد توزيع الأحمال ويقلل الضغط على الغضاريف ويبطئ التآكل</td>
-                        <td class="other-fail-col">الاستخدام الطويل قد يسرع تآكل الغضاريف والمفاصل</td>
-                        <td class="other-fail-col">يحسن الدعم العضلي ويقلل الضغط على الغضاريف</td>
-                    </tr>
-                    <tr>
-                        <td class="chiro-success-col"><strong>السلامة والآثار الجانبية</strong></td>
-                        <td class="chiro-success-col">آمن جداً عند تطبيقه بواسطة مختص معتمد</td>
-                        <td class="other-fail-col">مخاطر على الكلى والكبد والمعدة مع احتمال الإدمان</td>
-                        <td class="other-fail-col">آمن عموماً مع مخاطر بسيطة عند الإفراط</td>
-                    </tr>
-                    <tr>
-                        <td class="chiro-success-col"><strong>النتائج طويلة المدى</strong></td>
-                        <td class="chiro-success-col">نتائج مستدامة مع تصحيح المحاذاة وتحسين الوظيفة</td>
-                        <td class="other-fail-col">نتائج مؤقتة تتطلب تكرار الجرعات</td>
-                        <td class="other-fail-col">نتائج جيدة مع الاستمرار والالتزام</td>
-                    </tr>
-                    <tr>
-                        <td class="chiro-success-col"><strong>التكلفة الاقتصادية</strong></td>
-                        <td class="chiro-success-col">تكلفة معقولة مقارنة بالعمليات الجراحية</td>
-                        <td class="other-fail-col">تكلفة منخفضة لكنها تتراكم مع الاستخدام الطويل</td>
-                        <td class="other-fail-col">تكلفة متوسطة تتطلب عدة جلسات</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="consultation-card no-print">
-            <h3 style="color: var(--primary-gold);">📱 استشارة مجانية عبر واتساب</h3>
-            <p>احصل على توجيه أولي من فريق "وداعاً للألم" بناءً على تقريرك.</p>
-            <p style="color: #ff6b6b; font-weight: bold;">⚠️ للتشخيص الدقيق والعلاج المناسب، ننصح بشدة بالتواصل مع عيادتنا للحصول على تقييم سريري شامل.</p>
-            <a href="#" id="whatsapp-consult-btn" class="consultation-btn" target="_blank">📲 طلب استشارة مجانية الآن</a>
-            <a href="https://www.facebook.com/wadaaanalalam" target="_blank" class="facebook-btn">👍 تابعنا على فيسبوك</a>
-        </div>
-        <div class="actions-group no-print">
-            <button id="share-btn" class="btn-action btn-share">🔗 مشاركة الأداة</button>
-        </div>
-    </div>
-    
-    <!-- لوحة تحكم متقدمة للطبيب -->
-    <div id="doctor-dashboard" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 1200px; width: 95%; max-height: 90vh; overflow-y: auto;">
-            <div class="report-header">
-                <h2>👨‍⚕️ لوحة التحكم المتقدمة للطبيب</h2>
-                <button id="close-doctor-dashboard" class="btn-submit" style="background: #ef4444;">✕ إغلاق</button>
-            </div>
-            
-            <!-- إحصائيات عامة -->
-            <div class="report-block">
-                <h4>📊 الإحصائيات العامة</h4>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
-                    <div style="background: #1e2633; padding: 20px; border-radius: 8px; border-right: 3px solid #10b981;">
-                        <h5 style="color: #10b981; margin: 0 0 10px 0;">إجمالي المرضى</h5>
-                        <p id="total-patients-count" style="font-size: 2em; font-weight: bold; color: white; margin: 0;">0</p>
-                    </div>
-                    <div style="background: #1e2633; padding: 20px; border-radius: 8px; border-right: 3px solid #3b82f6;">
-                        <h5 style="color: #3b82f6; margin: 0 0 10px 0;">التقييمات الكلية</h5>
-                        <p id="total-assessments-count" style="font-size: 2em; font-weight: bold; color: white; margin: 0;">0</p>
-                    </div>
-                    <div style="background: #1e2633; padding: 20px; border-radius: 8px; border-right: 3px solid #f59e0b;">
-                        <h5 style="color: #f59e0b; margin: 0 0 10px 0;">السجلات اليومية</h5>
-                        <p id="total-daily-logs-count" style="font-size: 2em; font-weight: bold; color: white; margin: 0;">0</p>
-                    </div>
-                    <div style="background: #1e2633; padding: 20px; border-radius: 8px; border-right: 3px solid #8b5cf6;">
-                        <h5 style="color: #8b5cf6; margin: 0 0 10px 0;">المشتركين في خطة التعافي</h5>
-                        <p id="subscribed-patients-count" style="font-size: 2em; font-weight: bold; color: white; margin: 0;">0</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- قائمة المرضى -->
-            <div class="report-block">
-                <h4>👥 قائمة المرضى</h4>
-                <div style="margin: 15px 0;">
-                    <input type="text" id="patient-search" class="input-control" placeholder="🔍 بحث عن مريض بالاسم أو رقم الهاتف..." style="width: 100%;">
-                </div>
-                <div id="patients-list" style="max-height: 400px; overflow-y: auto;">
-                    <p style="color: #6b7280; text-align: center; padding: 20px;">جاري تحميل البيانات...</p>
-                </div>
-            </div>
-            
-            <!-- تفاصيل المريض المحدد -->
-            <div id="patient-details-section" class="report-block" style="display: none;">
-                <h4>📋 تفاصيل المريض</h4>
-                <div id="patient-details-content"></div>
-                
-                <div style="margin-top: 20px; display: flex; gap: 10px;">
-                    <button id="view-patient-assessments-btn" class="btn-submit" style="flex: 1;">📊 عرض التقييمات</button>
-                    <button id="view-patient-logs-btn" class="btn-submit" style="flex: 1;">📅 عرض السجلات اليومية</button>
-                    <button id="export-patient-data-btn" class="btn-submit" style="flex: 1; background: #10b981;">📤 تصدير بيانات المريض</button>
-                    <button id="delete-patient-btn" class="btn-submit" style="flex: 1; background: #ef4444;">🗑️ حذف المريض</button>
-                </div>
-            </div>
-            
-            <!-- تقييمات المريض -->
-            <div id="patient-assessments-section" class="report-block" style="display: none;">
-                <h4>📊 تقييمات المريض</h4>
-                <div id="patient-assessments-content"></div>
-            </div>
-            
-            <!-- السجلات اليومية للمريض -->
-            <div id="patient-logs-section" class="report-block" style="display: none;">
-                <h4>📅 السجلات اليومية للمريض</h4>
-                <div id="patient-logs-content"></div>
+
+            <div style="display: flex; justify-content: center; gap: 12px; margin-top: 20px; flex-wrap: wrap;" class="no-print">
+                <button type="button" id="btn-send-doctor-whatsapp" onclick="sendDoctorSummaryWhatsApp()" style="background: #25d366; color: #ffffff; border: none; padding: 12px 26px; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                    💬 إرسال الملف كاملاً للمعالج عبر واتساب
+                </button>
+                <button type="button" onclick="window.print()" style="background: #3b82f6; color: #ffffff; border: none; padding: 12px 22px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                    🖨️ طباعة الملخص
+                </button>
+                <button type="button" onclick="closeDoctorSummaryModal()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 12px 20px; border-radius: 8px; cursor: pointer;">
+                    إغلاق
+                </button>
             </div>
         </div>
     </div>
-</div>
-    <footer class="no-print"><p>© 2025 Smart Check Pro - نظام تشخيص سريري معتمد | هذه الأداة لا تغني عن الفحص الطبي الشخصي.</p></footer>
-</div>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-<script src="js/firebase-config.js?v=1"></script>
-<script src="js/firebase-db.js?v=1"></script>
-<script src="js/config.js?v=1"></script>
-<script src="js/diagnostics.js?v=1"></script>
-<script src="js/ui.js?v=1"></script>
-<script src="js/main.js?v=1"></script>
+    <!-- ================= 3. نافذة إعداد مفتاح الذكاء الاصطناعي السريعة (AI Key Settings Modal) ================= -->
+    <div id="ai-key-modal" class="app-modal" style="display: none;">
+        <div class="modal-inner" style="max-width: 580px; background: #0b1322; border: 2px solid var(--primary-gold); padding: 25px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div style="color: var(--primary-gold); font-weight: bold; font-size: 1.15em; display: flex; align-items: center; gap: 8px;">
+                    <span>⚙️</span> تفعيل محرك الذكاء الاصطناعي (Gemini AI Key)
+                </div>
+                <button type="button" onclick="closeAiKeySettingsModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.6em; cursor: pointer;">&times;</button>
+            </div>
+
+            <div style="background: rgba(15, 23, 42, 0.9); padding: 14px 16px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.25); margin-bottom: 18px; font-size: 0.88em; color: #cbd5e1; line-height: 1.6;">
+                💡 <strong>لتفعيل الطبيب الافتراضي الحقيقي المتفاعل بنسبة 100%:</strong> الصق مفتاح API الخاص بـ Google Gemini أدناه واضغط على (حفظ واختبار). سيتم حفظ المفتاح محلياً في متصفحك بأمان.
+                <div style="margin-top: 6px;">
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--primary-gold); font-weight: bold; text-decoration: underline;">🔗 اضغط هنا للحصول على مفتاح Gemini مجاناً من Google AI Studio</a>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 18px;">
+                <label style="display: block; color: #e2e8f0; font-size: 0.88em; margin-bottom: 8px; font-weight: bold;">مفتاح Google Gemini API:</label>
+                <div style="position: relative;">
+                    <input type="password" id="modal-gemini-key-input" placeholder="الصق مفتاح Gemini هنا (يبدأ بـ AIzaSy...)" style="width: 100%; background: #080c14; border: 1.5px solid rgba(16, 185, 129, 0.6); padding: 12px 44px 12px 14px; border-radius: 8px; color: #fff; font-size: 0.9em; box-sizing: border-box; font-family: monospace;">
+                    <button type="button" onclick="toggleModalKeyVisibility()" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1.2em;" title="إظهار / إخفاء">👁️</button>
+                </div>
+            </div>
+
+            <div id="modal-ai-test-status" style="display: none; padding: 10px 14px; border-radius: 8px; font-size: 0.88em; margin-bottom: 16px; font-weight: bold;"></div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap;">
+                <button type="button" onclick="saveAndTestModalApiKey()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; border: none; padding: 11px 22px; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    💾 حفظ وتفعيل الذكاء الاصطناعي
+                </button>
+                <button type="button" onclick="closeAiKeySettingsModal()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 11px 18px; border-radius: 8px; cursor: pointer;">
+                    إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- دوال تسجيل الدخول والباب الخلفي السري -->
+    <script>
+        function openAiKeySettingsModal() {
+            const modal = document.getElementById('ai-key-modal');
+            const input = document.getElementById('modal-gemini-key-input');
+            const statusEl = document.getElementById('modal-ai-test-status');
+            if (statusEl) statusEl.style.display = 'none';
+            if (input && typeof WADA3AN_AI_CONFIG !== 'undefined') {
+                input.value = WADA3AN_AI_CONFIG.getApiKey() || '';
+            }
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeAiKeySettingsModal() {
+            const modal = document.getElementById('ai-key-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function toggleModalKeyVisibility() {
+            const input = document.getElementById('modal-gemini-key-input');
+            if (!input) return;
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        async function saveAndTestModalApiKey() {
+            const input = document.getElementById('modal-gemini-key-input');
+            const key = input ? input.value.trim() : '';
+            const statusEl = document.getElementById('modal-ai-test-status');
+
+            if (!key) {
+                if (typeof showToast === 'function') showToast('يرجى لصق المفتاح أولاً', 'error');
+                return;
+            }
+
+            if (statusEl) {
+                statusEl.style.display = 'block';
+                statusEl.style.background = 'rgba(56, 189, 248, 0.2)';
+                statusEl.style.border = '1px solid #38bdf8';
+                statusEl.style.color = '#7dd3fc';
+                statusEl.innerHTML = '⏳ جاري اختبار المفتاح والاتصال بمحرك Google Gemini...';
+            }
+
+            if (typeof WADA3AN_AI_CONFIG !== 'undefined') {
+                WADA3AN_AI_CONFIG.setApiKey(key);
+            }
+
+            if (typeof Wada3anAiEngine !== 'undefined' && typeof Wada3anAiEngine.testConnection === 'function') {
+                const res = await Wada3anAiEngine.testConnection(key);
+                if (statusEl) {
+                    if (res.success) {
+                        statusEl.style.background = 'rgba(16, 185, 129, 0.25)';
+                        statusEl.style.border = '1px solid #10b981';
+                        statusEl.style.color = '#6ee7b7';
+                        statusEl.innerHTML = `✅ ${res.message} - المحرك الذكي جاهز ومفعل 100%!`;
+                        setTimeout(() => { closeAiKeySettingsModal(); }, 1800);
+                    } else {
+                        statusEl.style.background = 'rgba(239, 68, 68, 0.25)';
+                        statusEl.style.border = '1px solid #ef4444';
+                        statusEl.style.color = '#fca5a5';
+                        statusEl.innerHTML = `❌ ${res.message}`;
+                    }
+                }
+            } else {
+                if (typeof showToast === 'function') showToast('✅ تم حفظ المفتاح بنجاح!', 'success');
+                setTimeout(() => { closeAiKeySettingsModal(); }, 1000);
+            }
+        }
+
+        // آلية النقر المتعدد السري على الشعار لفتح الباب الخلفي
+        let secretClickCount = 0;
+        let secretClickTimer = null;
+
+        function handleSecretBackdoorClick() {
+            secretClickCount++;
+            clearTimeout(secretClickTimer);
+            secretClickTimer = setTimeout(() => {
+                secretClickCount = 0;
+            }, 1600);
+
+            if (secretClickCount >= 4) {
+                secretClickCount = 0;
+                openSecretBackdoorModal();
+            }
+        }
+
+        // اختصار لوحة المفاتيح السري (Ctrl + Shift + A أو Alt + A)
+        window.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) || 
+                (e.altKey && (e.key === 'A' || e.key === 'a'))) {
+                e.preventDefault();
+                openSecretBackdoorModal();
+            }
+        });
+
+        function openSecretBackdoorModal() {
+            const modal = document.getElementById('secret-admin-backdoor-modal');
+            if (modal) {
+                // إذا كان مسجل دخول مسبقاً في نفس الجلسة
+                if (sessionStorage.getItem('secret_admin_authed') === 'true') {
+                    document.getElementById('backdoor-auth-stage').style.display = 'none';
+                    document.getElementById('backdoor-menu-stage').style.display = 'block';
+                } else {
+                    document.getElementById('backdoor-auth-stage').style.display = 'block';
+                    document.getElementById('backdoor-menu-stage').style.display = 'none';
+                    const pinInput = document.getElementById('backdoor-pin-input');
+                    if (pinInput) {
+                        pinInput.value = '';
+                        setTimeout(() => pinInput.focus(), 200);
+                    }
+                }
+                modal.style.display = 'flex';
+            }
+        }
+
+        function closeSecretBackdoorModal() {
+            const modal = document.getElementById('secret-admin-backdoor-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function verifyBackdoorPIN() {
+            const pin = document.getElementById('backdoor-pin-input')?.value.trim();
+            // الرمز الافتراضي السري: 3030 (أو 1234 أو admin)
+            if (pin === '3030' || pin === '1234' || pin === 'admin') {
+                sessionStorage.setItem('secret_admin_authed', 'true');
+                document.getElementById('backdoor-auth-stage').style.display = 'none';
+                document.getElementById('backdoor-menu-stage').style.display = 'block';
+                if (typeof showToast === 'function') {
+                    showToast('🔓 تم فتح الصلاحيات الإدارية بنجاح!', 'success');
+                }
+            } else {
+                if (typeof showToast === 'function') {
+                    showToast('❌ رمز المرور غير صحيح!', 'error');
+                } else {
+                    alert('❌ رمز المرور غير صحيح!');
+                }
+                const pinInput = document.getElementById('backdoor-pin-input');
+                if (pinInput) {
+                    pinInput.value = '';
+                    pinInput.focus();
+                }
+            }
+        }
+
+        function lockSecretBackdoor() {
+            sessionStorage.removeItem('secret_admin_authed');
+            closeSecretBackdoorModal();
+            if (typeof showToast === 'function') {
+                showToast('🔒 تم قفل الباب السري بنجاح', 'info');
+            }
+        }
+
+        function openPatientLoginModal() {
+            document.getElementById('patient-login-modal').style.display = 'flex';
+        }
+
+        async function handlePatientLogin() {
+            const query = document.getElementById('login-patient-id').value.trim();
+            if (!query) {
+                showToast('يرجى إدخال رقم الملف أو الجوال', 'error');
+                return;
+            }
+
+            const patients = await SmartDB.getAllPatients();
+            const matched = patients.find(p => p.patientId === query || p.phone === query || (p.phone && p.phone.includes(query)));
+
+            if (matched) {
+                SmartDB.setCurrentSessionPatientId(matched.patientId);
+                document.getElementById('patient-login-modal').style.display = 'none';
+                showToast(`مرحباً بعودتك ${matched.name}`, 'success');
+                loadPatientRecoveryDashboard(matched.patientId);
+            } else {
+                showToast('لم يتم العثور على مريض مسجل بهذا الرقم', 'error');
+            }
+        }
+
+        async function forceAppUpdateAndClearCache() {
+            try {
+                sessionStorage.setItem('just_refreshed_toast', 'true');
+                if (typeof showToast === 'function') {
+                    showToast('🔄 جاري تنشيط التطبيق وتحديث البيانات...', 'info');
+                }
+                if ('caches' in window) {
+                    const keys = await caches.keys();
+                    await Promise.all(keys.map(k => caches.delete(k)));
+                }
+                if ('serviceWorker' in navigator) {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    for (let r of regs) {
+                        await r.unregister();
+                    }
+                }
+            } catch (e) {
+                console.log('Cache clear error:', e);
+            }
+            window.location.reload(true);
+        }
+    </script>
+
+    <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
+    <script src="js/database.js?v=12.8"></script>
+    <script src="js/exercise-image-studio.js?v=12.8"></script>
+    <script src="js/exercises-db.js?v=12.8"></script>
+    <script src="js/diagnostic-engine.js?v=12.8"></script>
+    <script src="js/audio-pacer.js?v=12.8"></script>
+    <script src="js/patient-flow.js?v=12.8"></script>
+    <script src="js/admin-engine.js?v=12.8"></script>
+    <script src="js/ai-config.js?v=12.8"></script>
+    <script src="js/ai-engine.js?v=12.8"></script>
+    <script src="js/app.js?v=12.8"></script>
+    <script src="js/text-editor.js?v=12.8"></script>
 </body>
 </html>

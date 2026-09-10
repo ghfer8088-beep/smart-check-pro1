@@ -1,3 +1,16 @@
+// ============================================
+// الإعدادات العامة للنظام - Application Config
+// ============================================
+const APP_CONFIG = {
+    appName: 'Smart Check Pro',
+    version: '2.0.0',
+    clinicName: 'وداعاً للألم',
+    whatsappPhone: '962790360440', // رقم الواتساب الرسمي
+    defaultSessionIntervalHours: 24,
+    recoveryPlanDays: 7,
+    supportEmail: 'support@smartcheckpro.com'
+};
+
 // إحداثيات النقاط
 const frontPoints = {
     'front-shoulder-r': { name: 'الكتف الأيمن', top: '21.939%', left: '35.6595%' },

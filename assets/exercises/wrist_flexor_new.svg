@@ -1,0 +1,36 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 215" width="320" height="215">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#090e17"/><stop offset="100%" style="stop-color:#131d2e"/></linearGradient>
+    <linearGradient id="skin" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#e8b89a"/><stop offset="100%" style="stop-color:#c8906a"/></linearGradient>
+    <linearGradient id="suit" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#1e293b"/><stop offset="100%" style="stop-color:#0f172a"/></linearGradient>
+  </defs>
+  <rect width="320" height="215" fill="url(#bg)"/>
+  <rect x="60" y="178" width="200" height="3" rx="1.5" fill="rgba(212,175,55,0.2)"/>
+  <!-- Torso -->
+  <rect x="148" y="98" width="38" height="55" rx="8" fill="url(#suit)"/>
+  <line x1="148" y1="105" x2="186" y2="105" stroke="#d4af37" stroke-width="1" opacity="0.5"/>
+  <rect x="154" y="148" width="12" height="30" rx="5" fill="url(#suit)"/>
+  <rect x="170" y="148" width="12" height="30" rx="5" fill="url(#suit)"/>
+  <ellipse cx="160" cy="179" rx="10" ry="4" fill="#1e293b"/>
+  <ellipse cx="176" cy="179" rx="10" ry="4" fill="#1e293b"/>
+  <ellipse cx="167" cy="80" rx="19" ry="21" fill="#e8b89a"/>
+  <ellipse cx="167" cy="62" rx="19" ry="11" fill="#2d1810"/>
+  <rect x="161" y="91" width="12" height="10" rx="5" fill="#e8b89a"/>
+  <!-- Arm extended, wrist extended back, fingers up (carpal tunnel relief) -->
+  <path d="M186 110 Q210 108 235 106" stroke="url(#suit)" stroke-width="13" fill="none" stroke-linecap="round"/>
+  <!-- Palm facing forward, fingers up -->
+  <ellipse cx="242" cy="104" rx="10" ry="14" fill="#e8b89a" transform="rotate(5 242 104)"/>
+  <!-- Fingers -->
+  <rect x="237" y="88" width="5" height="16" rx="2.5" fill="#e8b89a"/>
+  <rect x="244" y="87" width="5" height="17" rx="2.5" fill="#e8b89a"/>
+  <rect x="250" y="90" width="4" height="14" rx="2" fill="#e8b89a"/>
+  <!-- Other hand pulling fingers back -->
+  <path d="M148 115 Q120 112 100 108" stroke="url(#suit)" stroke-width="11" fill="none" stroke-linecap="round"/>
+  <ellipse cx="96" cy="107" rx="12" ry="7" fill="#e8b89a"/>
+  <!-- Stretch arrow going back -->
+  <path d="M252 90 Q265 80 268 70" stroke="#d4af37" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <polygon points="263,68 272,64 268,75" fill="#d4af37"/>
+  <text x="275" y="68" font-family="Arial" font-size="8" fill="#d4af37">مد</text>
+  <text x="160" y="200" font-family="Arial" font-size="10.5" fill="#38bdf8" text-anchor="middle" font-weight="bold">إطالة أوتار الرسغ وتفريغ النفق</text>
+  <text x="160" y="212" font-family="Arial" font-size="9" fill="rgba(212,175,55,0.7)" text-anchor="middle">Wrist Flexor / Carpal Tunnel Stretch</text>
+</svg>

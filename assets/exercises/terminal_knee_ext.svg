@@ -1,0 +1,44 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 215" width="320" height="215">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#090e17"/><stop offset="100%" style="stop-color:#131d2e"/></linearGradient>
+    <linearGradient id="skin" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#e8b89a"/><stop offset="100%" style="stop-color:#c8906a"/></linearGradient>
+    <linearGradient id="suit" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#1e293b"/><stop offset="100%" style="stop-color:#0f172a"/></linearGradient>
+  </defs>
+  <rect width="320" height="215" fill="url(#bg)"/>
+  <!-- Floor -->
+  <rect x="50" y="180" width="220" height="3" rx="1.5" fill="rgba(212,175,55,0.2)"/>
+  <!-- Wall anchor for band -->
+  <rect x="46" y="100" width="10" height="60" rx="3" fill="#1e293b" stroke="#d4af37" stroke-width="1"/>
+  <!-- Resistance band (from wall to knee) -->
+  <path d="M56 130 Q100 132 138 138" stroke="#38bdf8" stroke-width="3" fill="none" opacity="0.8"/>
+  <!-- Standing figure - one knee slightly bent, extending -->
+  <!-- Torso -->
+  <rect x="148" y="85" width="38" height="55" rx="8" fill="url(#suit)"/>
+  <line x1="148" y1="92" x2="186" y2="92" stroke="#d4af37" stroke-width="1" opacity="0.5"/>
+  <!-- Head -->
+  <ellipse cx="167" cy="68" rx="19" ry="21" fill="#e8b89a"/>
+  <ellipse cx="167" cy="50" rx="19" ry="11" fill="#2d1810"/>
+  <rect x="161" y="80" width="12" height="8" rx="4" fill="#e8b89a"/>
+  <!-- Arms at sides -->
+  <rect x="130" y="88" width="12" height="36" rx="6" fill="url(#suit)"/>
+  <rect x="186" y="88" width="12" height="36" rx="6" fill="url(#suit)"/>
+  <ellipse cx="136" cy="126" rx="7" ry="5" fill="#e8b89a"/>
+  <ellipse cx="192" cy="126" rx="7" ry="5" fill="#e8b89a"/>
+  <!-- Right leg - straight (support) -->
+  <rect x="166" y="138" width="14" height="42" rx="6" fill="url(#suit)"/>
+  <ellipse cx="173" cy="181" rx="11" ry="4" fill="#1e293b"/>
+  <!-- Left leg - knee slightly bent then extending -->
+  <path d="M148 138 L144 160 Q142 168 148 180" stroke="url(#suit)" stroke-width="16" fill="none" stroke-linecap="round"/>
+  <ellipse cx="148" cy="181" rx="11" ry="4" fill="#1e293b"/>
+  <!-- Knee circle highlight (where band is) -->
+  <circle cx="143" cy="158" r="12" stroke="#d4af37" stroke-width="2" fill="none" stroke-dasharray="4,3"/>
+  <!-- Extension arrow (from bent to straight) -->
+  <path d="M140 170 Q135 162 140 152" stroke="#d4af37" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <polygon points="136,153 140,143 145,152" fill="#d4af37"/>
+  <text x="118" y="150" font-family="Arial" font-size="8" fill="#d4af37">مد</text>
+  <text x="118" y="160" font-family="Arial" font-size="8" fill="#d4af37">الركبة</text>
+  <text x="50" y="122" font-family="Arial" font-size="7" fill="#38bdf8">شريط</text>
+  <text x="50" y="132" font-family="Arial" font-size="7" fill="#38bdf8">مقاومة</text>
+  <text x="160" y="200" font-family="Arial" font-size="10.5" fill="#38bdf8" text-anchor="middle" font-weight="bold">فرد الركبة النهائي (TKE)</text>
+  <text x="160" y="212" font-family="Arial" font-size="9" fill="rgba(212,175,55,0.7)" text-anchor="middle">Terminal Knee Extension</text>
+</svg>

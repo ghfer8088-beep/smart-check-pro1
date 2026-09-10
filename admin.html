@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة الإدارة السريرية - وداعاً للألم</title>
+    <link rel="icon" type="image/png" href="assets/logo.png">
+    <link rel="shortcut icon" href="assets/logo.png">
+    <link rel="apple-touch-icon" href="assets/logo.png">
+    <link rel="stylesheet" href="css/style.css?v=10.4">
+    <style>
+        body {
+            background-color: #080c14;
+            padding: 25px;
+        }
+        .admin-page-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            background: #0f172a;
+            border: 1px solid var(--primary-gold);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+        }
+        @keyframes pulseRed {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        @keyframes pulseGold {
+            0% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.4); }
+            50% { box-shadow: 0 0 16px rgba(212, 175, 55, 0.8); }
+            100% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.4); }
+        }
+        .notif-card {
+            transition: all 0.25s ease;
+        }
+        .notif-card:hover {
+            transform: translateY(-2px);
+        }
+        .notif-card.unread {
+            border-right-width: 5px !important;
+        }
+        .notif-card-plan {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.12), rgba(15, 23, 42, 0.9));
+            border: 1px solid rgba(212, 175, 55, 0.5);
+            animation: pulseGold 3s infinite;
+        }
+        .notif-card-flag {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.14), rgba(15, 23, 42, 0.9));
+            border: 1px solid rgba(239, 68, 68, 0.6);
+        }
+        .notif-card-new {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(15, 23, 42, 0.9));
+            border: 1px solid rgba(56, 189, 248, 0.4);
+        }
+        .notif-card-session {
+            background: rgba(17, 24, 39, 0.85);
+            border: 1px solid rgba(51, 65, 85, 0.6);
+        }
+        .notif-filter-btn.active {
+            background: var(--primary-gold) !important;
+            color: #0a0e14 !important;
+            font-weight: bold;
+            border-color: var(--primary-gold) !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="admin-page-container">
+        <!-- هيدر لوحة الإدارة -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary-gold); padding-bottom: 20px; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <img src="assets/logo.png" alt="شعار وداعاً للألم" style="height: 60px; width: 60px; border-radius: 50%; border: 2px solid var(--primary-gold);">
+                <div>
+                    <h1 style="color: var(--primary-gold); margin: 0; font-size: 1.55em;">لوحة الإدارة السريرية الشاملة</h1>
+                    <div style="color: #94a3b8; font-size: 0.92em;">وداعاً للألم (تقنية الكايروبراكتيك) - مركز الإشعارات ومتابعة المرضى</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <button type="button" onclick="if(typeof ExerciseImageStudio !== 'undefined') ExerciseImageStudio.openGalleryManagerModal();" class="btn-header" style="background: rgba(212, 175, 55, 0.2); border-color: var(--primary-gold); color: var(--primary-gold); font-weight: bold; padding: 10px 16px;">🖼️ استوديو صور التمارين</button>
+                <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 10px 16px;">⚡ تحديث الكاش (v10.1)</button>
+                <a href="index.html" class="btn-header" style="background: #1e293b; color: #fff; padding: 10px 20px; font-size: 0.95em;">🌐 فتح واجهة المراجعين</a>
+            </div>
+        </div>
+
+        <!-- شاشة تسجيل الدخول للإدارة -->
+        <div id="admin-login-box" style="max-width: 440px; margin: 50px auto; background: #111827; border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 14px; padding: 35px; text-align: center;">
+            <div style="font-size: 3.5em; margin-bottom: 10px;">🔐</div>
+            <h2 style="color: #fff; margin-bottom: 15px; font-size: 1.35em;">تسجيل دخول المعالج</h2>
+            <input type="password" id="admin-pass-input" value="123456" onkeyup="if(event.key==='Enter') verifyAdminLogin()" placeholder="كلمة المرور الافتراضية: 123456" style="width: 100%; background: #0b111e; border: 1px solid #334155; padding: 14px; border-radius: 8px; color: #fff; text-align: center; font-size: 1.15em; margin-bottom: 18px;">
+            <button type="button" onclick="verifyAdminLogin()" style="width: 100%; background: var(--primary-gold); color: #0a0e14; border: none; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 1.1em; cursor: pointer;">
+                دخول فوري إلى لوحة التحكم (123456)
+            </button>
+        </div>
+
+        <!-- محتوى الإدارة الكامل بعد تسجيل الدخول -->
+        <div id="admin-main-content" style="display: none;">
+            
+            <!-- بطاقة استوديو إدارة وتكييف صور التمارين -->
+            <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div style="font-size: 2.3em; background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); border-radius: 12px; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                        🖼️
+                    </div>
+                    <div>
+                        <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.25em;">استوديو تخصيص وتكييف صور كروت التمارين (Auto-Fit Studio)</h3>
+                        <div style="color: #cbd5e1; font-size: 0.88em; margin-top: 4px;">إضافة وتغيير وتكييف صور الـ 42 تمريناً يدوياً لتملأ كامل الكادر المخصص للتمرين آلياً مع التصدير والاستيراد</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <button type="button" onclick="if(typeof ExerciseImageStudio !== 'undefined') ExerciseImageStudio.openGalleryManagerModal();" style="background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; border: none; padding: 11px 22px; border-radius: 8px; font-weight: bold; font-size: 0.95em; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);">
+                        🚀 فتح استوديو ومدير الصور
+                    </button>
+                    <button type="button" onclick="if(typeof ExerciseImageStudio !== 'undefined') ExerciseImageStudio.exportImagesJSON();" class="btn-header" style="background: #1e293b; color: #cbd5e1; padding: 10px 16px; font-size: 0.88em;">
+                        💾 تصدير نسخة احتياطية
+                    </button>
+                </div>
+            </div>
+
+            <!-- مركز الإشعارات والتنبيهات الحية للإدارة -->
+            <div id="admin-notifications-card" style="background: #111827; border: 1px solid var(--primary-gold); border-radius: 14px; padding: 22px; margin-bottom: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid rgba(212, 175, 55, 0.25); padding-bottom: 15px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="position: relative; font-size: 1.7em;">
+                            🔔
+                            <span id="notif-badge-dot" style="display: none; position: absolute; top: 0; right: 0; width: 12px; height: 12px; background: #ef4444; border-radius: 50%; border: 2px solid #111827; animation: pulseRed 1.5s infinite;"></span>
+                        </div>
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.25em;">مركز الإشعارات والتنبيهات الحية (Live Alerts)</h3>
+                                <span id="notif-unread-count" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid #ef4444; padding: 2px 10px; border-radius: 20px; font-size: 0.82em; font-weight: bold;">0 جديد</span>
+                            </div>
+                            <div style="color: #94a3b8; font-size: 0.86em; margin-top: 2px;">تنبيهات فورية عند تسجيل مشترك جديد، إتمام خطة الـ 7 أيام، رصد علامات حمراء طارئة، وتسجيل الجلسات اليومية</div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <button type="button" id="btn-toggle-sound" onclick="toggleNotificationSound()" class="btn-header" style="background: rgba(59, 130, 246, 0.15); border-color: #3b82f6; color: #93c5fd; font-size: 0.85em; padding: 7px 14px;">
+                            🔊 صوت التنبيه: مفعل
+                        </button>
+                        <button type="button" onclick="handleMarkAllNotifsRead()" class="btn-header" style="background: rgba(16, 185, 129, 0.15); border-color: #10b981; color: #6ee7b7; font-size: 0.85em; padding: 7px 14px;">
+                            ✓ قراءة الكل
+                        </button>
+                        <button type="button" onclick="handleClearAllNotifs()" class="btn-header" style="background: rgba(239, 68, 68, 0.15); border-color: #ef4444; color: #fca5a5; font-size: 0.85em; padding: 7px 14px;">
+                            🗑️ تفريغ الإشعارات
+                        </button>
+                    </div>
+                </div>
+
+                <!-- أزرار تصفية الإشعارات -->
+                <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+                    <button type="button" class="notif-filter-btn active" onclick="setNotifFilter('all', this)" style="background: var(--primary-gold); color: #0a0e14; border: 1px solid var(--primary-gold); padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 0.88em; cursor: pointer;">
+                        🌟 الكل (<span id="count-filter-all">0</span>)
+                    </button>
+                    <button type="button" class="notif-filter-btn" onclick="setNotifFilter('new_registration', this)" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 6px 14px; border-radius: 20px; font-size: 0.88em; cursor: pointer;">
+                        👤 مشتركين جدد (<span id="count-filter-new">0</span>)
+                    </button>
+                    <button type="button" class="notif-filter-btn" onclick="setNotifFilter('plan_completed', this)" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 6px 14px; border-radius: 20px; font-size: 0.88em; cursor: pointer;">
+                        🏆 أتموا الـ 7 أيام (<span id="count-filter-plan">0</span>)
+                    </button>
+                    <button type="button" class="notif-filter-btn" onclick="setNotifFilter('red_flag', this)" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 6px 14px; border-radius: 20px; font-size: 0.88em; cursor: pointer;">
+                        🚨 حالات طارئة (<span id="count-filter-flags">0</span>)
+                    </button>
+                    <button type="button" class="notif-filter-btn" onclick="setNotifFilter('session_done', this)" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 6px 14px; border-radius: 20px; font-size: 0.88em; cursor: pointer;">
+                        📝 جلسات منجزة (<span id="count-filter-sessions">0</span>)
+                    </button>
+                </div>
+
+                <!-- قائمة الإشعارات المتدفقة -->
+                <div id="admin-notifications-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 380px; overflow-y: auto; padding-right: 4px;">
+                    <!-- يتم توليد البطاقات ديناميكياً -->
+                </div>
+            </div>
+
+            <!-- بطاقات الإحصائيات -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin-bottom: 25px;">
+                <div style="background: #111827; padding: 20px; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.3); text-align: center;">
+                    <div id="stat-patients-count" style="font-size: 2.4em; font-weight: bold; color: var(--primary-gold);">0</div>
+                    <div style="color: #94a3b8; font-size: 0.92em;">إجمالي المراجعين المسجلين</div>
+                </div>
+                <div style="background: #111827; padding: 20px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); text-align: center;">
+                    <div id="stat-sessions-count" style="font-size: 2.4em; font-weight: bold; color: #10b981;">0</div>
+                    <div style="color: #94a3b8; font-size: 0.92em;">إجمالي الجلسات المنجزة</div>
+                </div>
+                <div style="background: #111827; padding: 20px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3); text-align: center;">
+                    <div id="stat-recovery-avg" style="font-size: 2.4em; font-weight: bold; color: #38bdf8;">0%</div>
+                    <div style="color: #94a3b8; font-size: 0.92em;">متوسط نسبة التعافي</div>
+                </div>
+            </div>
+
+            <!-- بطاقة إعدادات وربط محرك الذكاء الاصطناعي (Gemini Clinical AI) -->
+            <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(6, 78, 59, 0.35) 100%); padding: 22px 24px; border-radius: 14px; border: 1.5px solid #10b981; margin-bottom: 25px; box-shadow: 0 6px 25px rgba(0,0,0,0.6);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 1.8em; filter: drop-shadow(0 2px 6px rgba(16,185,129,0.5));">🤖</span>
+                        <div>
+                            <h3 style="margin: 0 0 4px 0; color: #6ee7b7; font-size: 1.22em; font-weight: 800;">إعدادات وربط محرك الذكاء الاصطناعي السريري (Google Gemini)</h3>
+                            <div style="color: #94a3b8; font-size: 0.85em;">تفعيل التحليل السريري الذكي المخصص لتقارير المراجعين في «وداعاً للألم» بأمان تام</div>
+                        </div>
+                    </div>
+                    <div id="ai-admin-status-pill" style="background: rgba(100, 116, 139, 0.2); border: 1px solid #64748b; color: #cbd5e1; padding: 5px 14px; border-radius: 20px; font-size: 0.85em; font-weight: bold; transition: all 0.3s ease;">
+                        ⚪ غير مفعل حالياً
+                    </div>
+                </div>
+
+                <div style="background: rgba(8, 12, 20, 0.6); padding: 14px 16px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.2); margin-bottom: 14px; font-size: 0.88em; color: #cbd5e1; line-height: 1.6;">
+                    💡 <strong>كيف تفعل المحرك؟</strong> الصق مفتاح API المجاني الذي حصلت عليه من <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--primary-gold); font-weight: bold; text-decoration: underline;">Google AI Studio</a> في الخانة أدناه واضغط <strong>(حفظ وتفعيل)</strong>. سيتم تشفيره وحفظه في جهازك محلياً ليعمل في كامل النظام فوراً.
+                </div>
+
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <div style="position: relative; flex: 1; min-width: 280px;">
+                        <input type="password" id="gemini-api-key-input" placeholder="الصق مفتاح Gemini هنا (يبدأ بـ AIzaSy...)" style="width: 100%; background: #080c14; border: 1.5px solid rgba(16, 185, 129, 0.5); padding: 11px 44px 11px 14px; border-radius: 8px; color: #fff; font-size: 0.9em; box-sizing: border-box; font-family: monospace; letter-spacing: 0.5px;">
+                        <button type="button" onclick="toggleApiKeyVisibility('gemini-api-key-input')" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1.2em;" title="إظهار / إخفاء">👁️</button>
+                    </div>
+                    <button type="button" onclick="saveGeminiApiKey()" class="btn-header" style="background: #10b981; color: #fff; border-color: #10b981; font-weight: bold; padding: 11px 20px;">
+                        💾 حفظ وتفعيل Gemini
+                    </button>
+                    <button type="button" onclick="testGeminiApiConnection()" class="btn-header" style="background: rgba(56, 189, 248, 0.2); border-color: #38bdf8; color: #7dd3fc; font-weight: bold; padding: 11px 16px;">
+                        ⚡ اختبار الاتصال
+                    </button>
+                    <button type="button" onclick="clearGeminiApiKey()" class="btn-header" style="background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #fca5a5; padding: 11px 14px;">
+                        🗑️ حذف
+                    </button>
+                </div>
+
+                <!-- نظام الصوت البشري المجاني المبتكر (التبديل والتنويع الذكي بين الأصوات) -->
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed rgba(16, 185, 129, 0.3);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                        <div style="font-size: 0.95em; color: #6ee7b7; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                            <span>🎙️ نظام الصوت البشري الذكي (مجانـي 100% غير محدود):</span>
+                        </div>
+                        <span id="system-voices-count-badge" style="font-size: 0.8em; color: #10b981; font-weight: bold; background: rgba(16, 185, 129, 0.15); padding: 4px 12px; border-radius: 12px; border: 1px solid #10b981;">
+                            ⏳ جاري فحص الأصوات في جهازك...
+                        </span>
+                    </div>
+
+                    <div style="background: rgba(15, 23, 42, 0.9); border: 1.5px solid #10b981; border-radius: 12px; padding: 18px;">
+                        <!-- بطاقات اختيار نمط التشغيل (عشوائي vs تثبيت) -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 16px;">
+                            <!-- نمط التبديل العشوائي -->
+                            <div id="voice-mode-card-random" onclick="selectVoiceMode('random')" style="border: 2px solid #10b981; background: rgba(16, 185, 129, 0.15); border-radius: 10px; padding: 14px; cursor: pointer; transition: 0.2s;">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                                    <input type="radio" id="radio-voice-random" name="voice_mode_radio" value="random" checked style="width: 18px; height: 18px; cursor: pointer;">
+                                    <strong style="color: #6ee7b7; font-size: 1.02em;">🎲 1. تبديل عشوائي ذكي (مستحسن)</strong>
+                                </div>
+                                <div style="color: #cbd5e1; font-size: 0.82em; line-height: 1.6; margin-right: 28px;">
+                                    تقوم الأداة بالتنويع التلقائي بين كافة الأصوات المتاحة (سلمى، هدى، نايف، شاكر...) لكل مراجع لكسر الرتابة ومحاكاة كادر طبي متكامل.
+                                </div>
+                            </div>
+
+                            <!-- نمط تثبيت صوت محدد -->
+                            <div id="voice-mode-card-fixed" onclick="selectVoiceMode('fixed')" style="border: 1px solid #334155; background: rgba(15, 23, 42, 0.6); border-radius: 10px; padding: 14px; cursor: pointer; transition: 0.2s;">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                                    <input type="radio" id="radio-voice-fixed" name="voice_mode_radio" value="fixed" style="width: 18px; height: 18px; cursor: pointer;">
+                                    <strong style="color: #cbd5e1; font-size: 1.02em;">🎯 2. تثبيت صوت محدد دائماً</strong>
+                                </div>
+                                <div style="color: #94a3b8; font-size: 0.82em; line-height: 1.6; margin-right: 28px;">
+                                    اختيار صوت بشري مفضل واحد من القائمة أدناه واعتماده لقراءة التقارير لكافة المراجعين بشكل دائم.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- قسم اختيار واختبار الأصوات المتاحة -->
+                        <div style="background: #080c14; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 14px; margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                                <label style="color: #f8fafc; font-size: 0.88em; font-weight: bold;">
+                                    🎙️ قائمة الأصوات المتوفرة على هذا الجهاز:
+                                </label>
+                                <button type="button" onclick="populateAvailableSystemVoices(true)" style="background: none; border: 1px solid #64748b; color: #94a3b8; font-size: 0.78em; padding: 3px 10px; border-radius: 6px; cursor: pointer;">
+                                    🔄 إعادة فحص الأصوات
+                                </button>
+                            </div>
+
+                            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                <select id="system-available-voices-select" onchange="onVoiceDropdownChange(this.value)" style="flex: 1; min-width: 260px; background: #111827; border: 1.5px solid #38bdf8; color: #fff; padding: 10px 12px; border-radius: 8px; font-size: 0.92em;">
+                                    <option value="">⏳ جاري اكتشاف الأصوات المتاحة في جهازك...</option>
+                                </select>
+
+                                <button type="button" id="btn-save-fixed-voice" onclick="confirmAndSaveFixedVoice()" class="btn-header" style="background: #3b82f6; color: #fff; border: none; font-weight: bold; padding: 10px 16px; font-size: 0.88em; display: none;">
+                                    💾 اعتماد وتثبيت هذا الصوت
+                                </button>
+
+                                <button type="button" onclick="testCurrentSystemVoice()" class="btn-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; border: none; font-weight: bold; padding: 10px 18px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+                                    🔊 استمع لهذا الصوت الآن
+                                </button>
+
+                                <button type="button" onclick="testRandomVoiceSample()" class="btn-header" style="background: rgba(212, 175, 55, 0.2); color: var(--primary-gold); border-color: var(--primary-gold); font-size: 0.85em; padding: 10px 14px;">
+                                    🎲 جرب صوتاً عشوائياً آخر
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="color: #94a3b8; font-size: 0.8em; line-height: 1.6; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px;">
+                            💡 <strong>ملاحظة تقنية:</strong> هذه الأصوات تعمل محلياً وفورياً عبر تقنية Web Speech API، مع تطبيق <strong>التشكيل الفونيمي المخفي</strong> للنطق الطبي للمصطلحات (مثل: الظَّهْر، عِرْق النَّسَا، الكُمَّثْرِيَّة) مجاناً بالكامل دون أي رصيد أو اشتراكات.
+                        </div>
+                    </div>
+                </div>
+
+                <div id="ai-test-result-msg" style="display: none; margin-top: 12px; padding: 10px 14px; border-radius: 8px; font-size: 0.88em; font-weight: bold;"></div>
+            </div>
+
+            <!-- بطاقة مدير فيديوهات وتوثيق قصص النجاح السريرية -->
+            <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 58, 138, 0.25) 100%); padding: 22px 24px; border-radius: 14px; border: 1.5px solid rgba(59, 130, 246, 0.5); margin-bottom: 25px; box-shadow: 0 6px 25px rgba(0,0,0,0.6);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 1.8em; filter: drop-shadow(0 2px 6px rgba(59,130,246,0.5));">🎬</span>
+                        <div>
+                            <h3 style="margin: 0 0 4px 0; color: #60a5fa; font-size: 1.22em; font-weight: 800;">مدير فيديوهات وتوثيق قصص النجاح السريرية</h3>
+                            <div style="color: #94a3b8; font-size: 0.85em;">إدارة وإضافة حالات التعافي الموثقة بالفيديو (يوتيوب أو MP4 مباشر) لتظهر فوراً في واجهة المراجعين بدون تسجيل دخول فيسبوك</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button type="button" onclick="openAddVideoModal()" class="btn-header" style="background: #2563eb; color: #fff; border-color: #2563eb; font-weight: bold; padding: 10px 18px; box-shadow: 0 4px 15px rgba(37,99,235,0.35);">
+                            ➕ إضافة فيديو حالة جديدة
+                        </button>
+                        <button type="button" onclick="resetVideosToDefault()" class="btn-header" style="background: rgba(148, 163, 184, 0.15); border-color: #64748b; color: #cbd5e1; padding: 10px 14px;" title="استعادة القائمة الافتراضية">
+                            🔄 استعادة الافتراضي
+                        </button>
+                    </div>
+                </div>
+
+                <div id="admin-videos-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
+                    <!-- يتم توليد البطاقات برمجياً -->
+                </div>
+            </div>
+
+            <!-- شريط الأدوات والبحث والتحكم الزمني العام -->
+            <div style="background: #111827; padding: 18px; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.2); margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="text" id="search-patients" oninput="filterPatients()" placeholder="🔍 ابحث بالاسم أو الجوال أو رقم الملف..." style="background: #0b111e; border: 1px solid #334155; padding: 11px 16px; border-radius: 8px; color: #fff; width: 300px; font-size: 0.95em;">
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <button type="button" onclick="handleSeedDemoPatients()" class="btn-header" style="background: rgba(212, 175, 55, 0.15); border-color: var(--primary-gold); color: var(--primary-gold);">✨ توليد حالات تجريبية</button>
+                    <button type="button" id="btn-toggle-dev" onclick="toggleDevMode()" class="btn-header">🔧 وضع المطور: معطل</button>
+                    <button type="button" onclick="exportData()" class="btn-header" style="background: #10b981; color: #fff; border-color: #10b981;">📥 تصدير JSON</button>
+                    <button type="button" onclick="handleClearAllRecords()" class="btn-header" style="background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #fca5a5;">🗑️ تفريغ السجلات</button>
+                </div>
+            </div>
+
+            <!-- جدول إدارة المرضى مرتبين الأحدث في القمة -->
+            <div style="background: #111827; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.2); overflow-x: auto; margin-bottom: 25px;">
+                <table style="width: 100%; border-collapse: collapse; text-align: right; font-size: 0.92em;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--primary-gold); color: var(--primary-gold); background: #0b111e;">
+                            <th style="padding: 14px;">رقم الملف</th>
+                            <th style="padding: 14px;">اسم المريض</th>
+                            <th style="padding: 14px;">الجوال</th>
+                            <th style="padding: 14px;">موضع الشكوى</th>
+                            <th style="padding: 14px;">التشخيص السريري</th>
+                            <th style="padding: 14px;">الجلسة الحالية</th>
+                            <th style="padding: 14px;">مؤشر التعافي</th>
+                            <th style="padding: 14px; text-align: center;">التحكم اليدوي بالتوقيت</th>
+                            <th style="padding: 14px; text-align: center;">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="patients-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة تعديل التوقيت اليدوي الدقيق (ساعات، دقائق، ثواني) لكل مريض -->
+    <div id="patient-timing-modal" class="app-modal">
+        <div class="modal-inner" style="max-width: 520px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 12px; margin-bottom: 18px;">
+                <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.25em;">⏱️ ضبط توقيت جلسة المريض بدقة</h3>
+                <button type="button" onclick="document.getElementById('patient-timing-modal').style.display='none'" style="background: none; border: none; color: #94a3b8; font-size: 1.5em; cursor: pointer;">&times;</button>
+            </div>
+            
+            <div id="timing-modal-content">
+                <input type="hidden" id="target-patient-id">
+                <p id="timing-patient-name" style="color: #fff; font-weight: bold; margin-bottom: 15px; font-size: 1.05em;"></p>
+
+                <!-- خيار الفتح الفوري -->
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 8px; padding: 12px; margin-bottom: 15px; text-align: center;">
+                    <button type="button" onclick="quickUnlockSessionNow()" style="background: #10b981; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%;">
+                        ⚡ فتح الجلسة فوراً للمريض الآن (تصفير العداد)
+                    </button>
+                </div>
+
+                <div style="color: #94a3b8; font-size: 0.85em; text-align: center; margin-bottom: 15px;">- أو حدد وقتاً مخصصاً للجلسة القادمة -</div>
+
+                <!-- التحكم الدقيق بالساعات والدقائق والثواني -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                    <div>
+                        <label style="color: #cbd5e1; font-size: 0.85em; display: block; margin-bottom: 6px;">الساعات:</label>
+                        <input type="number" id="timing-hours" min="0" max="72" value="24" style="width: 100%; background: #0b111e; border: 1px solid #334155; padding: 10px; border-radius: 8px; color: #fff; text-align: center; font-weight: bold;">
+                    </div>
+                    <div>
+                        <label style="color: #cbd5e1; font-size: 0.85em; display: block; margin-bottom: 6px;">الدقائق:</label>
+                        <input type="number" id="timing-mins" min="0" max="59" value="0" style="width: 100%; background: #0b111e; border: 1px solid #334155; padding: 10px; border-radius: 8px; color: #fff; text-align: center; font-weight: bold;">
+                    </div>
+                    <div>
+                        <label style="color: #cbd5e1; font-size: 0.85em; display: block; margin-bottom: 6px;">الثواني:</label>
+                        <input type="number" id="timing-secs" min="0" max="59" value="0" style="width: 100%; background: #0b111e; border: 1px solid #334155; padding: 10px; border-radius: 8px; color: #fff; text-align: center; font-weight: bold;">
+                    </div>
+                </div>
+
+                <button type="button" onclick="saveCustomTimingValues()" style="width: 100%; background: var(--primary-gold); color: #0a0e14; border: none; padding: 13px; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer;">
+                    حفظ وتطبيق التوقيت المخصص
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة إضافة وتعديل فيديو قصة نجاح -->
+    <div id="admin-video-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; padding: 15px;">
+        <div class="modal-inner" style="background: #0f172a; border: 1.5px solid #3b82f6; border-radius: 14px; max-width: 550px; width: 100%; padding: 22px; box-shadow: 0 10px 35px rgba(0,0,0,0.8); box-sizing: border-box;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(59, 130, 246, 0.3); padding-bottom: 12px; margin-bottom: 16px;">
+                <h3 id="admin-video-modal-title" style="color: #60a5fa; margin: 0; font-size: 1.2em;">➕ إضافة فيديو حالة موثقة</h3>
+                <button type="button" onclick="closeAdminVideoModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.5em; cursor: pointer;">&times;</button>
+            </div>
+            
+            <form id="admin-video-form" onsubmit="handleSaveVideoStory(event)" style="display: flex; flex-direction: column; gap: 12px;">
+                <input type="hidden" id="admin-video-id">
+                
+                <div>
+                    <label style="color: #cbd5e1; font-size: 0.85em; display: block; margin-bottom: 4px; font-weight: bold;">عنوان الحالة أو الفيديو:</label>
+                    <input type="text" id="admin-video-title-input" required placeholder="مثال: تعافي ديسك قطني وعرق النسا الحاد" style="width: 100%; background: #080c14; border: 1px solid #334155; padding: 10px 12px; border-radius: 8px; color: #fff; font-size: 0.92em; box-sizing: border-box;">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="color: #cbd5e1; font-size: 0.85em; display: block; margin-bottom: 4px; font-weight: bold;">التصنيف / القسم:</label>
+                        <select id="admin-video-category-input" style="width: 100%; background: #080c14; border: 1px solid #334155; padding: 10px 12px; border-radius: 8px; color: #fff; font-size: 0.9em; box-sizing: border-box;">
+                            <option value="⚡ أسفل الظهر وعرق النسا">⚡ أسفل الظهر وعرق النسا</option>
+                            <option value="⚡ الرقبة والأبهر">⚡ الرقبة والأبهر</option>
+                            <option value="⚡ مفصل الركبة والصابونة">⚡ مفصل الركبة والصابونة</option>
+                            <option value="⚡ الجنف والعمود الفقري">⚡ الجنف والعمود الفقري</option>
+                            <option value="⚡ الكتف وتجمد المفصل">⚡ الكتف وتجمد المفصل</option>
+                            <option value="⚡ الحوض والعضلة الكمثرية">⚡ الحوض والعضلة الكمثرية</option>
+                            <option value="⚡ الصداع والفقرات العنقية">⚡ الصداع والفقرات العنقية</option>
+                            <option value="⚡ حالات سريرية عامة">⚡ حالات سريرية عامة</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="color: #cbd5e1; font-size: 0.85em; display: block; margin-bottom: 4px; font-weight: bold;">رابط يوتيوب أو MP4 مباشر:</label>
+                        <input type="text" id="admin-video-url-input" required placeholder="https://youtu.be/... أو MP4" style="width: 100%; background: #080c14; border: 1px solid #334155; padding: 10px 12px; border-radius: 8px; color: #fff; font-size: 0.88em; box-sizing: border-box;" dir="ltr">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="color: #cbd5e1; font-size: 0.85em; display: block; margin-bottom: 4px; font-weight: bold;">رابط صفحة العيادة أو فيسبوك (اختياري):</label>
+                    <input type="text" id="admin-video-direct-input" placeholder="https://www.facebook.com/Wada3an.Al.Alam" style="width: 100%; background: #080c14; border: 1px solid #334155; padding: 10px 12px; border-radius: 8px; color: #fff; font-size: 0.88em; box-sizing: border-box;" dir="ltr">
+                </div>
+
+                <div>
+                    <label style="color: #cbd5e1; font-size: 0.85em; display: block; margin-bottom: 4px; font-weight: bold;">وصف موجز للحالة والتحسن السريري:</label>
+                    <textarea id="admin-video-desc-input" rows="3" required placeholder="اكتب نبذة عن شكوى المريض وكيف تم التعافي بدون جراحة..." style="width: 100%; background: #080c14; border: 1px solid #334155; padding: 10px 12px; border-radius: 8px; color: #fff; font-size: 0.88em; box-sizing: border-box; resize: vertical;"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 8px;">
+                    <button type="submit" style="flex: 1; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 0.95em; cursor: pointer;">
+                        💾 حفظ بيانات الفيديو
+                    </button>
+                    <button type="button" onclick="closeAdminVideoModal()" style="background: rgba(148, 163, 184, 0.15); border: 1px solid #475569; color: #cbd5e1; padding: 12px 18px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                        إلغاء
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- نافذة معاينة تشغيل الفيديو في لوحة التحكم -->
+    <div id="admin-video-preview-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10000; align-items: center; justify-content: center; padding: 15px;">
+        <div class="modal-inner" style="background: #0f172a; border: 1.5px solid #2563eb; border-radius: 14px; max-width: 640px; width: 100%; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.9); box-sizing: border-box;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <h4 id="admin-preview-title" style="color: #60a5fa; margin: 0; font-size: 1.1em;">معاينة الفيديو المباشر</h4>
+                <button type="button" onclick="closeAdminVideoPreview()" style="background: none; border: none; color: #94a3b8; font-size: 1.5em; cursor: pointer;">&times;</button>
+            </div>
+            <div id="admin-preview-frame-wrap" style="position: relative; width: 100%; padding-top: 56.25%; background: #000; border-radius: 8px; overflow: hidden;">
+            </div>
+        </div>
+    </div>
+
+    <!-- اسكربتات إدارة قاعدة البيانات والذكاء الاصطناعي واستوديو الصور -->
+    <script src="js/database.js?v=10.1"></script>
+    <script src="js/exercise-image-studio.js?v=10.1"></script>
+    <script src="js/exercises-db.js?v=10.1"></script>
+    <script src="js/diagnostic-engine.js?v=10.1"></script>
+    <script src="js/patient-flow.js?v=10.1"></script>
+    <script src="js/admin-engine.js?v=10.1"></script>
+    <script src="js/ai-config.js?v=12.8"></script>
+    <script src="js/ai-engine.js?v=12.8"></script>
+
+    <script>
+        let allPatientsList = [];
+        let allNotificationsList = [];
+        let activeNotifFilter = 'all';
+        let isSoundAlertEnabled = localStorage.getItem('smart_admin_sound_enabled') !== 'false';
+        let lastKnownNotifCount = 0;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await SmartDB.openDB();
+            const isDev = await SmartDB.getSetting('isDeveloperMode', false);
+            const btn = document.getElementById('btn-toggle-dev');
+            if (btn) {
+                btn.textContent = isDev ? '🔧 وضع المطور: مفعل (بدون قفل زمني)' : '🔧 وضع المطور: معطل';
+                btn.style.background = isDev ? '#10b981' : '#1e293b';
+            }
+
+            updateSoundBtnUI();
+            initAiAdminStatus();
+            populateAvailableSystemVoices();
+            renderAdminVideosGrid();
+            if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                window.speechSynthesis.onvoiceschanged = () => populateAvailableSystemVoices();
+                setTimeout(() => populateAvailableSystemVoices(), 150);
+                setTimeout(() => populateAvailableSystemVoices(), 500);
+                setTimeout(() => populateAvailableSystemVoices(), 1200);
+            }
+
+            // الاستماع للتحديثات الحية من التبويبات الأخرى فورياً
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'smart_last_notif_time' || e.key === 'smart_admin_notifications') {
+                    loadNotificationsData(true);
+                    loadAdminData(false);
+                }
+                if (e.key === 'wada3an_success_stories_videos') {
+                    renderAdminVideosGrid();
+                }
+            });
+        });
+
+        // ==========================================================================
+        // دوال إدارة وتوثيق قصص النجاح بالفيديو (Success Stories Video Manager)
+        // ==========================================================================
+        const DEFAULT_ADMIN_VIDEOS = [
+            {
+                id: 'vid_lumbar_sciatica',
+                title: 'تعافي ديسك قطني وانضغاط العصب الوركي',
+                category: '⚡ أسفل الظهر وعرق النسا',
+                url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                directUrl: 'https://www.facebook.com/Wada3an.Al.Alam',
+                description: 'مراجع عانى لأشهر من ألم حاد نازل للساق مع عرج وصعوبة بالنوم. استعاد المشي الطبيعي بعد تفريغ الضغط يدوياً.'
+            },
+            {
+                id: 'vid_cervical_arm',
+                title: 'علاج انضغاط ديسك الرقبة وتنميل اليد والصداع',
+                category: '⚡ الرقبة والأبهر',
+                url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                directUrl: 'https://www.facebook.com/Wada3an.Al.Alam',
+                description: 'تحرير الجذور العصبية C5-C7 وفك تشنجات الأبهر المزمنة وعودة كامل القوة العضلية لليد والراحة التامة.'
+            },
+            {
+                id: 'vid_knee_patella',
+                title: 'احتكاك صابونة الركبة واستعادة الثني والصلاة',
+                category: '⚡ مفصل الركبة والصابونة',
+                url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                directUrl: 'https://www.facebook.com/Wada3an.Al.Alam',
+                description: 'إعادة التوازن الميكانيكي ومسار انزلاق الصابونة أنهى الطقطقة والألم ومكن المريض من ثني الركبة والصلاة براحة.'
+            },
+            {
+                id: 'vid_scoliosis_posture',
+                title: 'تعديل انحراف الجذع والجنف واستقامة القوام',
+                category: '⚡ الجنف والعمود الفقري',
+                url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                directUrl: 'https://www.facebook.com/Wada3an.Al.Alam',
+                description: 'استعادة استقامة القفص الصدري وزوال ضيق التنفس والألم المستمر بين لوحي الكتف بدون جراحة.'
+            }
+        ];
+
+        function getAdminStoredVideos() {
+            try {
+                const stored = localStorage.getItem('wada3an_success_stories_videos');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                }
+            } catch (e) {}
+            return DEFAULT_ADMIN_VIDEOS;
+        }
+
+        function saveAdminStoredVideos(list) {
+            localStorage.setItem('wada3an_success_stories_videos', JSON.stringify(list));
+            renderAdminVideosGrid();
+        }
+
+        function renderAdminVideosGrid() {
+            const grid = document.getElementById('admin-videos-grid');
+            if (!grid) return;
+
+            const list = getAdminStoredVideos();
+            if (list.length === 0) {
+                grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: #94a3b8; padding: 25px;">لا توجد فيديوهات مضافة حالياً. اضغط "إضافة فيديو حالة جديدة" بالزر أعلاه.</div>`;
+                return;
+            }
+
+            grid.innerHTML = list.map(item => {
+                const titleSafe = (item.title || '').replace(/"/g, '&quot;');
+                const urlSafe = (item.url || '').replace(/"/g, '&quot;');
+                const descSafe = (item.description || '').replace(/"/g, '&quot;');
+                const catSafe = item.category || '⚡ حالة سريرية';
+
+                return `
+                    <div style="background: #080c14; border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <span style="color: var(--primary-gold); font-size: 0.8em; font-weight: bold;">${catSafe}</span>
+                                <span style="background: rgba(37,99,235,0.2); color: #60a5fa; font-size: 0.72em; padding: 2px 6px; border-radius: 4px;">فيديو موثق</span>
+                            </div>
+                            <h4 style="color: #fff; margin: 0 0 6px 0; font-size: 0.98em; line-height: 1.4;">${item.title}</h4>
+                            <p style="color: #94a3b8; font-size: 0.82em; line-height: 1.5; margin: 0 0 10px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${item.description}</p>
+                            <div style="font-family: monospace; font-size: 0.75em; color: #38bdf8; background: #0f172a; padding: 4px 8px; border-radius: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 12px;" dir="ltr">
+                                ${item.url}
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <button type="button" onclick="previewAdminVideo('${urlSafe}', '${titleSafe}')" style="flex: 1; min-width: 70px; background: #2563eb; color: #fff; border: none; padding: 7px 10px; border-radius: 6px; font-size: 0.8em; font-weight: bold; cursor: pointer;">
+                                ▶️ معاينة
+                            </button>
+                            <button type="button" onclick="openEditVideoModal('${item.id}')" style="background: rgba(212, 175, 55, 0.2); color: var(--primary-gold); border: 1px solid var(--primary-gold); padding: 7px 10px; border-radius: 6px; font-size: 0.8em; font-weight: bold; cursor: pointer;">
+                                ✏️ تعديل
+                            </button>
+                            <button type="button" onclick="deleteVideoStory('${item.id}')" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid #ef4444; padding: 7px 10px; border-radius: 6px; font-size: 0.8em; cursor: pointer;">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openAddVideoModal() {
+            document.getElementById('admin-video-id').value = '';
+            document.getElementById('admin-video-title-input').value = '';
+            document.getElementById('admin-video-category-input').value = '⚡ أسفل الظهر وعرق النسا';
+            document.getElementById('admin-video-url-input').value = '';
+            document.getElementById('admin-video-direct-input').value = '';
+            document.getElementById('admin-video-desc-input').value = '';
+            document.getElementById('admin-video-modal-title').textContent = '➕ إضافة فيديو حالة موثقة';
+            document.getElementById('admin-video-modal').style.display = 'flex';
+        }
+
+        function openEditVideoModal(id) {
+            const list = getAdminStoredVideos();
+            const item = list.find(v => v.id === id);
+            if (!item) return;
+
+            document.getElementById('admin-video-id').value = item.id;
+            document.getElementById('admin-video-title-input').value = item.title || '';
+            document.getElementById('admin-video-category-input').value = item.category || '⚡ أسفل الظهر وعرق النسا';
+            document.getElementById('admin-video-url-input').value = item.url || '';
+            document.getElementById('admin-video-direct-input').value = item.directUrl || '';
+            document.getElementById('admin-video-desc-input').value = item.description || '';
+            document.getElementById('admin-video-modal-title').textContent = '✏️ تعديل بيانات الفيديو';
+            document.getElementById('admin-video-modal').style.display = 'flex';
+        }
+
+        function closeAdminVideoModal() {
+            document.getElementById('admin-video-modal').style.display = 'none';
+        }
+
+        function handleSaveVideoStory(e) {
+            e.preventDefault();
+            const id = document.getElementById('admin-video-id').value;
+            const title = document.getElementById('admin-video-title-input').value.trim();
+            const category = document.getElementById('admin-video-category-input').value;
+            const url = document.getElementById('admin-video-url-input').value.trim();
+            const directUrl = document.getElementById('admin-video-direct-input').value.trim();
+            const description = document.getElementById('admin-video-desc-input').value.trim();
+
+            if (!title || !url) {
+                alert('يرجى كتابة عنوان الفيديو ورابطه على الأقل');
+                return;
+            }
+
+            const list = getAdminStoredVideos();
+            if (id) {
+                const idx = list.findIndex(v => v.id === id);
+                if (idx !== -1) {
+                    list[idx] = { ...list[idx], title, category, url, directUrl, description };
+                }
+            } else {
+                const newId = 'vid_' + Date.now();
+                list.unshift({ id: newId, title, category, url, directUrl, description });
+            }
+
+            saveAdminStoredVideos(list);
+            closeAdminVideoModal();
+            alert('✅ تم حفظ بيانات الفيديو بنجاح وستظهر فوراً في واجهة المراجعين!');
+        }
+
+        function deleteVideoStory(id) {
+            if (!confirm('هل تريد حذف هذا الفيديو من قائمة قصص النجاح؟')) return;
+            let list = getAdminStoredVideos();
+            list = list.filter(v => v.id !== id);
+            saveAdminStoredVideos(list);
+        }
+
+        function resetVideosToDefault() {
+            if (!confirm('هل تريد استعادة الفيديوهات المبدئية الأربعة الافتراضية؟ سيتم مسح أي تعديلات يدوية.')) return;
+            saveAdminStoredVideos(DEFAULT_ADMIN_VIDEOS);
+            alert('✅ تم استعادة الفيديوهات الافتراضية بنجاح!');
+        }
+
+        function previewAdminVideo(url, title) {
+            const modal = document.getElementById('admin-video-preview-modal');
+            const wrap = document.getElementById('admin-preview-frame-wrap');
+            const titleEl = document.getElementById('admin-preview-title');
+            if (!modal || !wrap) return;
+
+            if (titleEl) titleEl.textContent = title || 'معاينة الفيديو';
+
+            if (url.includes('.mp4') || url.includes('.webm')) {
+                wrap.innerHTML = `<video controls autoplay playsinline style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain;"><source src="${url}" type="video/mp4"></video>`;
+            } else {
+                let embedUrl = url;
+                if (embedUrl.includes('watch?v=')) {
+                    embedUrl = embedUrl.replace('watch?v=', 'embed/');
+                } else if (embedUrl.includes('youtu.be/')) {
+                    const vidId = embedUrl.split('youtu.be/')[1]?.split('?')[0];
+                    embedUrl = `https://www.youtube.com/embed/${vidId}`;
+                }
+                wrap.innerHTML = `<iframe src="${embedUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"></iframe>`;
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function closeAdminVideoPreview() {
+            const modal = document.getElementById('admin-video-preview-modal');
+            const wrap = document.getElementById('admin-preview-frame-wrap');
+            if (wrap) wrap.innerHTML = '';
+            if (modal) modal.style.display = 'none';
+        }
+
+        // دوال التحكم بمحرك الذكاء الاصطناعي (Gemini AI Admin Controls)
+        function initAiAdminStatus() {
+            const isConfigured = typeof WADA3AN_AI_CONFIG !== 'undefined' && WADA3AN_AI_CONFIG.isConfigured();
+            const pill = document.getElementById('ai-admin-status-pill');
+            const input = document.getElementById('gemini-api-key-input');
+
+            if (pill) {
+                if (isConfigured) {
+                    pill.innerHTML = '🟢 الذكاء مفعّل + 🎙️ د. سارة (Aoede)';
+                } else {
+                    pill.innerHTML = '⚪ غير مفعّل حالياً';
+                }
+                pill.style.background = isConfigured ? 'rgba(16, 185, 129, 0.2)' : 'rgba(100, 116, 139, 0.2)';
+                pill.style.borderColor = isConfigured ? '#10b981' : '#64748b';
+                pill.style.color = isConfigured ? '#6ee7b7' : '#cbd5e1';
+            }
+
+            if (input && typeof WADA3AN_AI_CONFIG !== 'undefined') {
+                const savedKey = WADA3AN_AI_CONFIG.getApiKey();
+                if (savedKey) {
+                    input.value = savedKey;
+                }
+            }
+        }
+
+        function selectVoiceMode(mode) {
+            localStorage.setItem('wada3an_voice_rotation_mode', mode);
+            updateVoiceModeUI(mode);
+
+            const msgEl = document.getElementById('ai-test-result-msg');
+            if (msgEl) {
+                msgEl.style.display = 'block';
+                msgEl.style.background = 'rgba(16, 185, 129, 0.2)';
+                msgEl.style.border = '1px solid #10b981';
+                msgEl.style.color = '#6ee7b7';
+                msgEl.innerHTML = mode === 'random' 
+                    ? '✅ تم تفعيل (التبديل العشوائي الذكي)! كل مراجع سيستمع إلى صوت بشري مختلف ومميز مجاناً.'
+                    : '✅ تم تفعيل نمط (تثبيت صوت محدد). اختر الصوت المفضل واضغط "اعتماد وتثبيت هذا الصوت".';
+                setTimeout(() => { msgEl.style.display = 'none'; }, 4500);
+            }
+        }
+
+        function updateVoiceModeUI(mode) {
+            const cardRandom = document.getElementById('voice-mode-card-random');
+            const cardFixed = document.getElementById('voice-mode-card-fixed');
+            const radioRandom = document.getElementById('radio-voice-random');
+            const radioFixed = document.getElementById('radio-voice-fixed');
+            const btnSaveFixed = document.getElementById('btn-save-fixed-voice');
+
+            if (mode === 'random') {
+                if (radioRandom) radioRandom.checked = true;
+                if (cardRandom) {
+                    cardRandom.style.border = '2px solid #10b981';
+                    cardRandom.style.background = 'rgba(16, 185, 129, 0.15)';
+                }
+                if (cardFixed) {
+                    cardFixed.style.border = '1px solid #334155';
+                    cardFixed.style.background = 'rgba(15, 23, 42, 0.6)';
+                }
+                if (btnSaveFixed) btnSaveFixed.style.display = 'none';
+            } else {
+                if (radioFixed) radioFixed.checked = true;
+                if (cardFixed) {
+                    cardFixed.style.border = '2px solid #38bdf8';
+                    cardFixed.style.background = 'rgba(56, 189, 248, 0.15)';
+                }
+                if (cardRandom) {
+                    cardRandom.style.border = '1px solid #334155';
+                    cardRandom.style.background = 'rgba(15, 23, 42, 0.6)';
+                }
+                if (btnSaveFixed) btnSaveFixed.style.display = 'inline-block';
+            }
+        }
+
+        function onVoiceDropdownChange(voiceName) {
+            if (!voiceName) return;
+            const currentMode = localStorage.getItem('wada3an_voice_rotation_mode') || 'random';
+            if (currentMode === 'fixed') {
+                savePreferredVoice(voiceName);
+            }
+        }
+
+        function confirmAndSaveFixedVoice() {
+            const select = document.getElementById('system-available-voices-select');
+            const voiceName = select ? select.value : '';
+            if (voiceName) {
+                selectVoiceMode('fixed');
+                savePreferredVoice(voiceName);
+            }
+        }
+
+        function populateAvailableSystemVoices(isManual = false) {
+            if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+                const select = document.getElementById('system-available-voices-select');
+                if (select) select.innerHTML = '<option value="">⚠️ متصفحك لا يدعم محرك النطق Web Speech API</option>';
+                return;
+            }
+
+            const select = document.getElementById('system-available-voices-select');
+            const countBadge = document.getElementById('system-voices-count-badge');
+            if (!select) return;
+
+            const voices = window.speechSynthesis.getVoices();
+            if (!voices || voices.length === 0) {
+                if (!window._voiceRetryCount) window._voiceRetryCount = 0;
+                if (window._voiceRetryCount < 8) {
+                    window._voiceRetryCount++;
+                    setTimeout(() => populateAvailableSystemVoices(isManual), 350);
+                }
+                return;
+            }
+
+            window._voiceRetryCount = 0;
+
+            // تصفية الأصوات العربية بدقة
+            const arabicVoices = voices.filter(v => {
+                const l = (v.lang || '').toLowerCase();
+                const n = (v.name || '').toLowerCase();
+                return l.startsWith('ar') || /arabic|عربي|hoda|naayf|salma|shakir|zariyah|laila|maged|tarik/i.test(n);
+            });
+
+            const savedPreferred = localStorage.getItem('wada3an_preferred_voice_name') || 'gemini:Aoede';
+            const geminiVoices = [
+                { id: 'gemini:Aoede', name: '✨ 👩 صوت د. سارة (Aoede) - استوديو بشري دافئ فائق النقاء', voice: 'Aoede' },
+                { id: 'gemini:Kore', name: '✨ 👩 صوت د. مريم (Kore) - استوديو بشري هادئ ومريح', voice: 'Kore' },
+                { id: 'gemini:Puck', name: '✨ 👨 صوت د. عمر (Puck) - استوديو بشري طبيعي وواثق', voice: 'Puck' },
+                { id: 'gemini:Fenrir', name: '✨ 👨 صوت د. خالد (Fenrir) - استوديو بشري وقور ورصين', voice: 'Fenrir' },
+                { id: 'gemini:Charon', name: '✨ 👨 صوت د. جمال (Charon) - استوديو بشري استشاري عميق', voice: 'Charon' }
+            ];
+
+            if (countBadge) {
+                countBadge.innerHTML = `🌟 أصوات استوديو الذكاء الاصطناعي (Gemini Human Studio) مفعلة 100% مجاناً`;
+                countBadge.style.background = 'rgba(16, 185, 129, 0.15)';
+                countBadge.style.borderColor = '#10b981';
+                countBadge.style.color = '#6ee7b7';
+            }
+
+            let html = `<optgroup label="🌟 أصوات استوديو الذكاء الاصطناعي البشري (Gemini Neural Studio - مجانية 100%)">`;
+            html += geminiVoices.map(g => {
+                const isSelected = (savedPreferred === g.id || savedPreferred === g.voice) ? 'selected' : '';
+                return `<option value="${g.id}" ${isSelected}>${g.name}</option>`;
+            }).join('');
+            html += `</optgroup>`;
+
+            select.innerHTML = html;
+
+            const currentMode = localStorage.getItem('wada3an_voice_rotation_mode') || 'random';
+            updateVoiceModeUI(currentMode);
+
+            if (isManual) {
+                const msgEl = document.getElementById('ai-test-result-msg');
+                if (msgEl) {
+                    msgEl.style.display = 'block';
+                    msgEl.style.background = 'rgba(56, 189, 248, 0.2)';
+                    msgEl.style.border = '1px solid #38bdf8';
+                    msgEl.style.color = '#7dd3fc';
+                    msgEl.innerHTML = `🔄 تم تحديث قائمة الأصوات بنجاح! أصوات الاستوديو البشرية (د. سارة) جاهزة ومثبتة.`;
+                    setTimeout(() => { msgEl.style.display = 'none'; }, 3500);
+                }
+            }
+        }
+
+        function savePreferredVoice(voiceName) {
+            if (!voiceName) return;
+            localStorage.setItem('wada3an_preferred_voice_name', voiceName);
+            if (voiceName.startsWith('gemini:')) {
+                localStorage.setItem('wada3an_gemini_voice_name', voiceName.replace('gemini:', ''));
+            }
+            const msgEl = document.getElementById('ai-test-result-msg');
+            if (msgEl) {
+                msgEl.style.display = 'block';
+                msgEl.style.background = 'rgba(16, 185, 129, 0.2)';
+                msgEl.style.border = '1px solid #10b981';
+                msgEl.style.color = '#6ee7b7';
+                msgEl.innerHTML = `✅ تم حفظ وتثبيت نبرة صوت د. سارة بنجاح!`;
+                setTimeout(() => { msgEl.style.display = 'none'; }, 3500);
+            }
+        }
+
+        async function testCurrentSystemVoice() {
+            const select = document.getElementById('system-available-voices-select');
+            const chosenVal = select ? select.value : 'gemini:Aoede';
+            const testText = "أهلاً بك في «وداعاً للألم» للكايروبراكتيك. أنا د. سارة، الفحص السريري يوضح أن ألم أسفل الظهر ناتج عن ضغط غضروفي خفيف وتهيج في عرق النسا وتشنج في العضلة الكمثرية. خطتنا العلاجية ستساعدك فوراً.";
+
+            if (typeof Wada3anAiEngine === 'undefined') return;
+            Wada3anAiEngine.stopSpeaking();
+
+            const msgEl = document.getElementById('ai-test-result-msg');
+
+            const vName = chosenVal.replace('gemini:', '') || 'Aoede';
+            localStorage.setItem('wada3an_gemini_voice_name', vName);
+            if (msgEl) {
+                msgEl.style.display = 'block';
+                msgEl.style.background = 'rgba(56, 189, 248, 0.2)';
+                msgEl.style.border = '1px solid #38bdf8';
+                msgEl.style.color = '#7dd3fc';
+                msgEl.innerHTML = `⏳ جاري استدعاء صوت الاستوديو البشري (${vName}) فائق النقاء... استمع الآن!`;
+            }
+            const result = await Wada3anAiEngine.generateGeminiNeuralAudioDirect(testText, vName, true);
+            if (result && result.audioUrl) {
+                if (msgEl) {
+                    msgEl.style.background = 'rgba(16, 185, 129, 0.2)';
+                    msgEl.style.border = '1px solid #10b981';
+                    msgEl.style.color = '#6ee7b7';
+                    msgEl.innerHTML = `🔊 يعمل الآن: صوت د. سارة (${vName}) - مجاناً 100%!`;
+                }
+                Wada3anAiEngine.playHumanAudio(result.audioUrl);
+            } else {
+                if (msgEl) {
+                    msgEl.style.background = 'rgba(239, 68, 68, 0.2)';
+                    msgEl.style.border = '1px solid #ef4444';
+                    msgEl.style.color = '#fca5a5';
+                    msgEl.innerHTML = `⚠️ تعذر توليد الصوت: ${result?.error || 'يرجى فحص الاتصال بالإنترنت'}.`;
+                }
+            }
+        }
+
+        async function testRandomVoiceSample() {
+            const studioVoices = [
+                { id: 'gemini:Aoede', voice: 'Aoede', name: 'د. سارة (Aoede)' },
+                { id: 'gemini:Kore', voice: 'Kore', name: 'د. مريم (Kore)' },
+                { id: 'gemini:Puck', voice: 'Puck', name: 'د. عمر (Puck)' },
+                { id: 'gemini:Fenrir', voice: 'Fenrir', name: 'د. خالد (Fenrir)' },
+                { id: 'gemini:Charon', voice: 'Charon', name: 'د. جمال (Charon)' }
+            ];
+            const rand = studioVoices[Math.floor(Math.random() * studioVoices.length)];
+            const select = document.getElementById('system-available-voices-select');
+            if (select) select.value = rand.id;
+
+            const testText = "أهلاً بك في «وداعاً للألم» للكايروبراكتيك. تم فحص وتأهيل العمود الفقري والمفاصل مجاناً بالكامل وبأحدث الطرق السريرية.";
+            if (typeof Wada3anAiEngine === 'undefined') return;
+            Wada3anAiEngine.stopSpeaking();
+
+            const msgEl = document.getElementById('ai-test-result-msg');
+            if (msgEl) {
+                msgEl.style.display = 'block';
+                msgEl.style.background = 'rgba(212, 175, 55, 0.2)';
+                msgEl.style.border = '1px solid var(--primary-gold)';
+                msgEl.style.color = 'var(--primary-gold)';
+                msgEl.innerHTML = `🎲 استدعاء صوت استوديو عشوائي جديد: "${rand.name}"... استمع للنبرة البشرية!`;
+            }
+
+            const result = await Wada3anAiEngine.generateGeminiNeuralAudioDirect(testText, rand.voice, true);
+            if (result && result.audioUrl) {
+                Wada3anAiEngine.playHumanAudio(result.audioUrl);
+            }
+        }
+
+        async function testGeminiNeuralVoice() {
+            const select = document.getElementById('gemini-voice-select');
+            const voiceName = select ? select.value : 'Aoede';
+            localStorage.setItem('wada3an_gemini_voice_name', voiceName);
+
+            const msgEl = document.getElementById('ai-test-result-msg');
+            if (msgEl) {
+                msgEl.style.display = 'block';
+                msgEl.style.background = 'rgba(56, 189, 248, 0.15)';
+                msgEl.style.border = '1px solid #38bdf8';
+                msgEl.style.color = '#7dd3fc';
+                msgEl.innerHTML = `⏳ جاري استدعاء نبرة الصوت البشري المجاني (${voiceName}) بنظام التشكيل الفونيمي...`;
+            }
+
+            try {
+                const sampleText = "أهلاً بك في «وداعاً للألم» للكايروبراكتيك. الفحص السريري يوضح أن ألم أسفل الظهر ناتج عن ضغط غضروفي خفيف وتهيج في عرق النسا وتشنج في العضلة الكمثرية. خطة الاستطالة المخصصة ستساعدك فوراً.";
+                if (typeof Wada3anAiEngine === 'undefined') {
+                    throw new Error('محرك الذكاء غير متاح');
+                }
+
+                // نختبر الصوت مباشرة عبر الدالة العصبية لـ Gemini
+                const result = await Wada3anAiEngine.generateGeminiNeuralAudioDirect(sampleText, voiceName, true);
+                if (result && result.audioUrl) {
+                    if (msgEl) {
+                        msgEl.style.background = 'rgba(16, 185, 129, 0.2)';
+                        msgEl.style.border = '1px solid #10b981';
+                        msgEl.style.color = '#6ee7b7';
+                        msgEl.innerHTML = `🔊 نجح التوليد الصوتي المجاني (${voiceName})! جاري تشغيل الصوت البشري المباشر الآن... استمع!`;
+                    }
+                    const audio = new Audio(result.audioUrl);
+                    audio.play().catch(e => console.warn('Audio play error:', e));
+                } else {
+                    const errDetail = result && result.error ? result.error : 'استجابة فارغة من النموذج';
+                    throw new Error(errDetail);
+                }
+            } catch (err) {
+                if (msgEl) {
+                    msgEl.style.background = 'rgba(239, 68, 68, 0.2)';
+                    msgEl.style.border = '1px solid #ef4444';
+                    msgEl.style.color = '#fca5a5';
+                    msgEl.innerHTML = `❌ خطأ توليد الصوت: ${err.message}`;
+                }
+            }
+        }
+
+        function saveGeminiApiKey() {
+            const input = document.getElementById('gemini-api-key-input');
+            const key = input ? input.value.trim() : '';
+            if (!key) {
+                alert('يرجى لصق المفتاح أولاً');
+                return;
+            }
+
+            WADA3AN_AI_CONFIG.setApiKey(key);
+            initAiAdminStatus();
+            
+            const msgEl = document.getElementById('ai-test-result-msg');
+            if (msgEl) {
+                msgEl.style.display = 'block';
+                msgEl.style.background = 'rgba(16, 185, 129, 0.2)';
+                msgEl.style.border = '1px solid #10b981';
+                msgEl.style.color = '#6ee7b7';
+                msgEl.innerHTML = '✅ تم حفظ مفتاح Gemini بنجاح محلياً في جهازك! محرك الذكاء الاصطناعي يعمل الآن.';
+                setTimeout(() => { msgEl.style.display = 'none'; }, 5000);
+            }
+        }
+
+        async function testGeminiApiConnection() {
+            const input = document.getElementById('gemini-api-key-input');
+            const key = input ? input.value.trim() : '';
+            const msgEl = document.getElementById('ai-test-result-msg');
+
+            if (!key) {
+                alert('يرجى إدخال المفتاح لاختبار الاتصال');
+                return;
+            }
+
+            if (msgEl) {
+                msgEl.style.display = 'block';
+                msgEl.style.background = 'rgba(56, 189, 248, 0.15)';
+                msgEl.style.border = '1px solid #38bdf8';
+                msgEl.style.color = '#7dd3fc';
+                msgEl.innerHTML = '⏳ جاري اختبار الاتصال بسيرفرات Google Gemini...';
+            }
+
+            const result = await Wada3anAiEngine.testConnection(key);
+
+            if (msgEl) {
+                if (result.success) {
+                    msgEl.style.background = 'rgba(16, 185, 129, 0.2)';
+                    msgEl.style.border = '1px solid #10b981';
+                    msgEl.style.color = '#6ee7b7';
+                    msgEl.innerHTML = `✅ ${result.message}`;
+                } else {
+                    msgEl.style.background = 'rgba(239, 68, 68, 0.2)';
+                    msgEl.style.border = '1px solid #ef4444';
+                    msgEl.style.color = '#fca5a5';
+                    msgEl.innerHTML = `❌ ${result.message}`;
+                }
+            }
+        }
+
+        function clearGeminiApiKey() {
+            if (!confirm('هل تريد حذف مفتاح الذكاء الاصطناعي؟')) return;
+            WADA3AN_AI_CONFIG.setApiKey('');
+            const input = document.getElementById('gemini-api-key-input');
+            if (input) input.value = '';
+            initAiAdminStatus();
+            const msgEl = document.getElementById('ai-test-result-msg');
+            if (msgEl) {
+                msgEl.style.display = 'block';
+                msgEl.style.background = 'rgba(239, 68, 68, 0.15)';
+                msgEl.style.border = '1px solid #ef4444';
+                msgEl.style.color = '#fca5a5';
+                msgEl.innerHTML = 'تم حذف المفتاح.';
+                setTimeout(() => { msgEl.style.display = 'none'; }, 3000);
+            }
+        }
+
+        function toggleApiKeyVisibility(inputId = 'gemini-api-key-input') {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        function updateSoundBtnUI() {
+            const btn = document.getElementById('btn-toggle-sound');
+            if (!btn) return;
+            if (isSoundAlertEnabled) {
+                btn.innerHTML = '🔊 صوت التنبيه: مفعل';
+                btn.style.background = 'rgba(59, 130, 246, 0.15)';
+                btn.style.borderColor = '#3b82f6';
+                btn.style.color = '#93c5fd';
+            } else {
+                btn.innerHTML = '🔇 صوت التنبيه: صامت';
+                btn.style.background = 'rgba(100, 116, 139, 0.2)';
+                btn.style.borderColor = '#64748b';
+                btn.style.color = '#94a3b8';
+            }
+        }
+
+        function toggleNotificationSound() {
+            isSoundAlertEnabled = !isSoundAlertEnabled;
+            localStorage.setItem('smart_admin_sound_enabled', isSoundAlertEnabled.toString());
+            updateSoundBtnUI();
+            if (isSoundAlertEnabled) playNotificationChime();
+        }
+
+        // نغمة تنبيه طبية رقيقة عبر Web Audio API
+        function playNotificationChime() {
+            if (!isSoundAlertEnabled) return;
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.type = 'sine';
+                const now = ctx.currentTime;
+                osc.frequency.setValueAtTime(587.33, now); // D5
+                osc.frequency.setValueAtTime(880, now + 0.08); // A5
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+                osc.start(now);
+                osc.stop(now + 0.45);
+            } catch(e) {}
+        }
+
+        async function verifyAdminLogin() {
+            const pass = document.getElementById('admin-pass-input').value;
+            const valid = await AdminEngine.verifyPassword(pass);
+            if (valid) {
+                document.getElementById('admin-login-box').style.display = 'none';
+                document.getElementById('admin-main-content').style.display = 'block';
+                await loadAdminData();
+                await loadNotificationsData();
+            } else {
+                alert('كلمة المرور غير صحيحة');
+            }
+        }
+
+        async function loadAdminData(refreshDemoIfEmpty = true) {
+            allPatientsList = await AdminEngine.loadPatientsOverview();
+
+            if (allPatientsList.length === 0 && refreshDemoIfEmpty) {
+                await AdminEngine.seedDemoPatients();
+                allPatientsList = await AdminEngine.loadPatientsOverview();
+            }
+
+            document.getElementById('stat-patients-count').textContent = allPatientsList.length;
+            const totalLogs = allPatientsList.reduce((acc, p) => acc + p.logsCount, 0);
+            document.getElementById('stat-sessions-count').textContent = totalLogs;
+            const avgRec = allPatientsList.length > 0 ? Math.round(allPatientsList.reduce((acc, p) => acc + p.recoveryScore, 0) / allPatientsList.length) : 0;
+            document.getElementById('stat-recovery-avg').textContent = avgRec + '%';
+
+            renderTable(allPatientsList);
+        }
+
+        function loadNotificationsData(playSoundIfNew = false) {
+            allNotificationsList = SmartDB.getAdminNotifications();
+
+            // فحص إذا وصل إشعار جديد لتشغيل النغمة
+            const unreadCount = allNotificationsList.filter(n => !n.read).length;
+            if (playSoundIfNew && allNotificationsList.length > lastKnownNotifCount) {
+                playNotificationChime();
+            }
+            lastKnownNotifCount = allNotificationsList.length;
+
+            updateNotificationCounts();
+            renderNotifications();
+        }
+
+        function updateNotificationCounts() {
+            const unreadCount = allNotificationsList.filter(n => !n.read).length;
+            const badgeEl = document.getElementById('notif-unread-count');
+            const dotEl = document.getElementById('notif-badge-dot');
+
+            if (badgeEl) {
+                badgeEl.textContent = `${unreadCount} غير مقروء`;
+                badgeEl.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+            }
+            if (dotEl) {
+                dotEl.style.display = unreadCount > 0 ? 'block' : 'none';
+            }
+
+            const countAll = allNotificationsList.length;
+            const countNew = allNotificationsList.filter(n => n.type === 'new_registration').length;
+            const countPlan = allNotificationsList.filter(n => n.type === 'plan_completed').length;
+            const countFlags = allNotificationsList.filter(n => n.type === 'red_flag').length;
+            const countSessions = allNotificationsList.filter(n => n.type === 'session_done').length;
+
+            if (document.getElementById('count-filter-all')) document.getElementById('count-filter-all').textContent = countAll;
+            if (document.getElementById('count-filter-new')) document.getElementById('count-filter-new').textContent = countNew;
+            if (document.getElementById('count-filter-plan')) document.getElementById('count-filter-plan').textContent = countPlan;
+            if (document.getElementById('count-filter-flags')) document.getElementById('count-filter-flags').textContent = countFlags;
+            if (document.getElementById('count-filter-sessions')) document.getElementById('count-filter-sessions').textContent = countSessions;
+        }
+
+        function setNotifFilter(filterType, btnEl) {
+            activeNotifFilter = filterType;
+            document.querySelectorAll('.notif-filter-btn').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = '#1e293b';
+                b.style.color = '#cbd5e1';
+                b.style.borderColor = '#334155';
+            });
+            if (btnEl) {
+                btnEl.classList.add('active');
+                btnEl.style.background = 'var(--primary-gold)';
+                btnEl.style.color = '#0a0e14';
+                btnEl.style.borderColor = 'var(--primary-gold)';
+            }
+            renderNotifications();
+        }
+
+        function renderNotifications() {
+            const container = document.getElementById('admin-notifications-list');
+            if (!container) return;
+
+            let filtered = allNotificationsList;
+            if (activeNotifFilter !== 'all') {
+                filtered = allNotificationsList.filter(n => n.type === activeNotifFilter);
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 25px; color: #64748b; font-size: 0.95em;">
+                        📭 لا توجد إشعارات في هذا القسم حالياً.
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(n => {
+                const isUnread = !n.read;
+                const cleanPhone = (n.patientPhone || '').replace(/[^0-9]/g, '');
+                
+                let cardClass = 'notif-card-session';
+                let typeBadge = '<span style="background: rgba(148, 163, 184, 0.2); color: #cbd5e1; padding: 2px 8px; border-radius: 4px; font-size: 0.78em;">معلومات</span>';
+                
+                if (n.type === 'plan_completed') {
+                    cardClass = 'notif-card-plan';
+                    typeBadge = '<span style="background: rgba(212, 175, 55, 0.25); color: var(--primary-gold); border: 1px solid var(--primary-gold); padding: 2px 8px; border-radius: 4px; font-size: 0.78em; font-weight: bold;">🏆 إتمام الـ 7 أيام - مؤهل للتقويم اليدوي</span>';
+                } else if (n.type === 'red_flag') {
+                    cardClass = 'notif-card-flag';
+                    typeBadge = '<span style="background: rgba(239, 68, 68, 0.25); color: #fca5a5; border: 1px solid #ef4444; padding: 2px 8px; border-radius: 4px; font-size: 0.78em; font-weight: bold;">🚨 حالة طارئة</span>';
+                } else if (n.type === 'new_registration') {
+                    cardClass = 'notif-card-new';
+                    typeBadge = '<span style="background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border: 1px solid #38bdf8; padding: 2px 8px; border-radius: 4px; font-size: 0.78em;">👤 مشترك جديد</span>';
+                } else if (n.type === 'session_done') {
+                    typeBadge = '<span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid #10b981; padding: 2px 8px; border-radius: 4px; font-size: 0.78em;">📝 جلسة يومية</span>';
+                }
+
+                const timeStr = formatNotificationTime(n.time);
+                const waMessage = encodeURIComponent(getNotificationWhatsAppText(n));
+
+                return `
+                <div class="notif-card ${cardClass} ${isUnread ? 'unread' : ''}" style="border-radius: 10px; padding: 14px 16px; border-right-color: ${isUnread ? 'var(--primary-gold)' : 'transparent'}; position: relative;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px;">
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <span style="font-weight: bold; color: #fff; font-size: 0.98em;">${n.title}</span>
+                            ${typeBadge}
+                            ${isUnread ? '<span style="background: #ef4444; color: #fff; font-size: 0.7em; padding: 1px 6px; border-radius: 10px; font-weight: bold;">جديد</span>' : ''}
+                        </div>
+                        <span style="color: #64748b; font-size: 0.8em; white-space: nowrap;">${timeStr}</span>
+                    </div>
+
+                    <div style="color: #cbd5e1; font-size: 0.88em; line-height: 1.5; margin-bottom: 10px;">
+                        ${n.message}
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;">
+                        <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                            ${cleanPhone ? `
+                                <a href="https://wa.me/${cleanPhone}?text=${waMessage}" target="_blank" style="display: inline-flex; align-items: center; gap: 4px; background: #25d366; color: #fff; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-size: 0.82em; font-weight: bold;">
+                                    💬 تواصل واتساب
+                                </a>
+                                <a href="tel:${cleanPhone}" style="display: inline-flex; align-items: center; gap: 4px; background: #1e293b; color: #93c5fd; border: 1px solid #3b82f6; text-decoration: none; padding: 5px 10px; border-radius: 6px; font-size: 0.82em;">
+                                    📞 اتصال
+                                </a>
+                            ` : ''}
+                            ${n.patientId ? `
+                                <button type="button" onclick="loginAsPatient('${n.patientId}')" style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid #10b981; padding: 5px 10px; border-radius: 6px; font-size: 0.82em; cursor: pointer;">
+                                    🔍 فتح الملف
+                                </button>
+                            ` : ''}
+                        </div>
+
+                        <div style="display: flex; gap: 6px; align-items: center;">
+                            ${isUnread ? `
+                                <button type="button" onclick="handleMarkNotifRead('${n.id}')" title="تحديد كمقروء" style="background: none; border: 1px solid #475569; color: #94a3b8; padding: 4px 8px; border-radius: 6px; font-size: 0.78em; cursor: pointer;">
+                                    ✓ تم الاطلاع
+                                </button>
+                            ` : ''}
+                            <button type="button" onclick="handleDeleteNotif('${n.id}')" title="حذف الإشعار" style="background: none; border: none; color: #ef4444; font-size: 1.1em; cursor: pointer; padding: 0 4px;">
+                                &times;
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function getNotificationWhatsAppText(notif) {
+            const name = notif.patientName || 'عزيزي المراجع';
+            if (notif.type === 'plan_completed') {
+                return `مرحباً ${name}، نبارك لك من «وداعاً للألم» إتمام خطة الـ 7 أيام للتعافي المنزلي بنجاح! 🏆\nيسعدنا حجز موعد لجلسة تقييم سريري وتقويم يدوي للعمود الفقري (Chiropractic) مع المعالج جمال لتثبيت نتائجك واستكمال الشفاء.`;
+            } else if (notif.type === 'red_flag') {
+                return `مرحباً ${name}، بخصوص الفحص السريري الذي تم إجراؤه في نظام «وداعاً للألم»، نود الاطمئنان على حالتكم وننصح بالتواصل العاجل مع المعالج جمال لفحص الفقرات بدقة.`;
+            } else if (notif.type === 'new_registration') {
+                return `مرحباً ${name}، أهلاً بك في برنامج «وداعاً للألم» للراحة الحركية والكايروبراكتيك. نتمنى لك رحلة تعافي مريحة، والمعالج جمال متواجد لمساعدتك في أي استفسار.`;
+            } else {
+                return `مرحباً ${name}، نتابع تقدمك في جلسات التعافي المنزلي في «وداعاً للألم»، أحسنت بالالتزام ونتمنى لك دوام الصحة والعافية.`;
+            }
+        }
+
+        function formatNotificationTime(isoStr) {
+            if (!isoStr) return '';
+            try {
+                const d = new Date(isoStr);
+                const diffMs = Date.now() - d.getTime();
+                const diffMins = Math.floor(diffMs / 60000);
+                const diffHours = Math.floor(diffMs / 3600000);
+                const diffDays = Math.floor(diffMs / 86400000);
+
+                if (diffMins < 1) return 'الآن';
+                if (diffMins < 60) return `منذ ${diffMins} دقيقة`;
+                if (diffHours < 24) return `منذ ${diffHours} ساعة`;
+                if (diffDays === 1) return 'أمس';
+                return `${d.toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' })} ${d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}`;
+            } catch(e) {
+                return '';
+            }
+        }
+
+        function handleMarkNotifRead(id) {
+            SmartDB.markNotificationAsRead(id);
+            loadNotificationsData();
+        }
+
+        function handleDeleteNotif(id) {
+            SmartDB.deleteNotification(id);
+            loadNotificationsData();
+        }
+
+        function handleMarkAllNotifsRead() {
+            SmartDB.markAllNotificationsAsRead();
+            loadNotificationsData();
+        }
+
+        function handleClearAllNotifs() {
+            if (confirm('هل أنت متأكد من تفريغ كافة الإشعارات؟')) {
+                SmartDB.clearAllNotifications();
+                loadNotificationsData();
+            }
+        }
+
+        async function handleSeedDemoPatients() {
+            await AdminEngine.seedDemoPatients();
+            await loadAdminData();
+            loadNotificationsData();
+            alert('✅ تم توليد 3 حالات سريرية تجريبية وإشعارات حية بنجاح!');
+        }
+
+        async function handleClearAllRecords() {
+            if (confirm('هل أنت متأكد من رغبتك في مسح كافة السجلات؟')) {
+                await AdminEngine.clearAllPatients();
+                allPatientsList = [];
+                renderTable([]);
+                document.getElementById('stat-patients-count').textContent = '0';
+                document.getElementById('stat-sessions-count').textContent = '0';
+                document.getElementById('stat-recovery-avg').textContent = '0%';
+                alert('تم تفريغ السجلات بنجاح');
+            }
+        }
+
+        function renderTable(list) {
+            const tbody = document.getElementById('patients-table-body');
+            if (!list || list.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 35px; color: #94a3b8; font-size: 1.05em;">
+                            📂 لا يوجد مراجعين مسجلين حالياً.<br>
+                            <button type="button" onclick="handleSeedDemoPatients()" style="margin-top: 12px; background: var(--primary-gold); color: #0a0e14; border: none; padding: 10px 22px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                                ✨ توليد 3 حالات سريرية تجريبية لفحص اللوحة
+                            </button>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = list.map(item => {
+                const cleanPhone = (item.patient.phone || '').replace(/[^0-9]/g, '');
+                return `
+                <tr style="border-bottom: 1px solid #1e293b; color: #e2e8f0;">
+                    <td style="padding: 14px; font-weight: bold; color: var(--primary-gold);">${item.patient.patientId}</td>
+                    <td style="padding: 14px; font-weight: bold;">${item.patient.name}</td>
+                    <td style="padding: 14px;">${item.patient.phone || '-'}</td>
+                    <td style="padding: 14px;">${item.painArea}</td>
+                    <td style="padding: 14px;">${item.latestDiagnosis}</td>
+                    <td style="padding: 14px;">اليوم ${Math.min(7, item.logsCount + 1)} من 7</td>
+                    <td style="padding: 14px; color: #10b981; font-weight: bold;">${item.recoveryScore}%</td>
+                    <td style="padding: 14px; text-align: center;">
+                        <button onclick="openPatientTimingModal('${item.patient.patientId}', '${item.patient.name}', ${item.logsCount + 1})" style="background: #3b82f6; color: #fff; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 0.88em; font-weight: bold;">⏱️ تعديل التوقيت</button>
+                    </td>
+                    <td style="padding: 14px; text-align: center; white-space: nowrap;">
+                        ${cleanPhone ? `<a href="https://wa.me/${cleanPhone}" target="_blank" style="display: inline-block; background: #25d366; color: #fff; text-decoration: none; padding: 7px 10px; border-radius: 6px; font-size: 0.88em; font-weight: bold; margin-left: 4px;">💬 واتساب</a>` : ''}
+                        <button onclick="loginAsPatient('${item.patient.patientId}')" style="background: #10b981; color: #fff; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 0.88em;">عرض</button>
+                        <button onclick="deletePatientRecord('${item.patient.patientId}')" style="background: #ef4444; color: #fff; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 0.88em; margin-right: 4px;">حذف</button>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        function filterPatients() {
+            const q = document.getElementById('search-patients').value.trim().toLowerCase();
+            if (!q) {
+                renderTable(allPatientsList);
+                return;
+            }
+            const filtered = allPatientsList.filter(item => 
+                (item.patient.name && item.patient.name.toLowerCase().includes(q)) ||
+                (item.patient.patientId && item.patient.patientId.toLowerCase().includes(q)) ||
+                (item.patient.phone && item.patient.phone.includes(q))
+            );
+            renderTable(filtered);
+        }
+
+        let activeTargetSessionNum = 1;
+        function openPatientTimingModal(patientId, patientName, sessionNum = 1) {
+            activeTargetSessionNum = sessionNum;
+            document.getElementById('target-patient-id').value = patientId;
+            document.getElementById('timing-patient-name').textContent = `المريض: ${patientName} (الجلسة #${sessionNum})`;
+            document.getElementById('patient-timing-modal').style.display = 'flex';
+        }
+
+        function quickUnlockSessionNow() {
+            const patientId = document.getElementById('target-patient-id').value;
+            AdminEngine.setPatientSessionTiming(patientId, activeTargetSessionNum, 0, 0, 0);
+            document.getElementById('patient-timing-modal').style.display = 'none';
+            alert('✅ تم فتح الجلسة فورياً للمريض!');
+            loadAdminData();
+        }
+
+        function saveCustomTimingValues() {
+            const patientId = document.getElementById('target-patient-id').value;
+            const h = document.getElementById('timing-hours').value;
+            const m = document.getElementById('timing-mins').value;
+            const s = document.getElementById('timing-secs').value;
+
+            AdminEngine.setPatientSessionTiming(patientId, activeTargetSessionNum, h, m, s);
+            document.getElementById('patient-timing-modal').style.display = 'none';
+            alert(`✅ تم ضبط توقيت الجلسة بنجاح (${h} ساعة و ${m} دقيقة و ${s} ثانية)!`);
+            loadAdminData();
+        }
+
+        async function toggleDevMode() {
+            const btn = document.getElementById('btn-toggle-dev');
+            const curr = await SmartDB.getSetting('isDeveloperMode', false);
+            const next = !curr;
+            await SmartDB.setSetting('isDeveloperMode', next);
+            btn.textContent = next ? '🔧 وضع المطور: مفعل (بدون قفل زمني)' : '🔧 وضع المطور: معطل';
+            btn.style.background = next ? '#10b981' : '#1e293b';
+        }
+
+        async function exportData() {
+            const jsonStr = await AdminEngine.exportAllData();
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `PainClinic_Backup_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function loginAsPatient(patientId) {
+            SmartDB.setCurrentSessionPatientId(patientId);
+            window.open('index.html', '_blank');
+        }
+
+        async function deletePatientRecord(patientId) {
+            if (confirm('هل أنت متأكد من رغبتك في حذف هذا المريض نهائياً؟')) {
+                await SmartDB.deletePatient(patientId);
+                loadAdminData();
+            }
+        }
+
+        async function forceAppUpdateAndClearCache() {
+            try {
+                if ('caches' in window) {
+                    const keys = await caches.keys();
+                    await Promise.all(keys.map(k => caches.delete(k)));
+                }
+                if ('serviceWorker' in navigator) {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    for (let r of regs) {
+                        await r.unregister();
+                    }
+                }
+            } catch (e) {
+                console.log('Cache clear error:', e);
+            }
+            window.location.reload(true);
+        }
+    </script>
+</body>
+</html>

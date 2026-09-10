@@ -1,0 +1,40 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 215" width="320" height="215">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#090e17"/><stop offset="100%" style="stop-color:#131d2e"/></linearGradient>
+    <linearGradient id="skin" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#e8b89a"/><stop offset="100%" style="stop-color:#c8906a"/></linearGradient>
+    <linearGradient id="suit" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#1e293b"/><stop offset="100%" style="stop-color:#0f172a"/></linearGradient>
+  </defs>
+  <rect width="320" height="215" fill="url(#bg)"/>
+  <!-- Floor -->
+  <rect x="40" y="178" width="240" height="3" rx="1.5" fill="rgba(212,175,55,0.2)"/>
+  <!-- Slant board / wall -->
+  <rect x="42" y="80" width="12" height="98" rx="3" fill="#1e293b" stroke="#d4af37" stroke-width="1"/>
+  <polygon points="54,178 130,178 130,168 54,168" fill="#1e293b" stroke="#d4af37" stroke-width="1"/>
+  <!-- Incline board surface -->
+  <polygon points="54,80 130,168 130,178 54,90" fill="#162238" stroke="#d4af37" stroke-width="1.5" opacity="0.9"/>
+  <!-- Figure standing on slant (leaning forward) -->
+  <!-- Feet on board (dorsiflexion) -->
+  <ellipse cx="95" cy="172" rx="18" ry="6" fill="#1e293b"/>
+  <!-- Legs on board -->
+  <path d="M88 172 Q90 150 95 125" stroke="url(#suit)" stroke-width="18" fill="none" stroke-linecap="round"/>
+  <path d="M100 172 Q102 150 108 125" stroke="url(#suit)" stroke-width="18" fill="none" stroke-linecap="round"/>
+  <!-- Torso leaning forward toward wall -->
+  <path d="M95 125 Q100 108 85 90" stroke="url(#suit)" stroke-width="28" fill="none" stroke-linecap="round"/>
+  <!-- Arms on wall -->
+  <path d="M85 105 Q60 96 54 90" stroke="url(#suit)" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <ellipse cx="52" cy="89" rx="9" ry="6" fill="#e8b89a"/>
+  <!-- Head -->
+  <ellipse cx="85" cy="72" rx="19" ry="21" fill="#e8b89a"/>
+  <ellipse cx="85" cy="54" rx="19" ry="11" fill="#2d1810"/>
+  <!-- Dorsiflexion angle arc -->
+  <path d="M115 172 Q118 158 112 148" stroke="#d4af37" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <polygon points="108,149 112,139 118,148" fill="#d4af37"/>
+  <!-- Calf stretch indicator -->
+  <text x="140" y="162" font-family="Arial" font-size="8.5" fill="#d4af37">شد</text>
+  <text x="140" y="173" font-family="Arial" font-size="8.5" fill="#d4af37">أكيليس</text>
+  <!-- Angle label -->
+  <path d="M130 178 Q155 155 165 130" stroke="#38bdf8" stroke-width="1.5" fill="none" stroke-dasharray="4,3"/>
+  <text x="170" y="128" font-family="Arial" font-size="8" fill="#38bdf8">مائل</text>
+  <text x="160" y="200" font-family="Arial" font-size="10" fill="#38bdf8" text-anchor="middle" font-weight="bold">إطالة اللفافة الأخمصية على لوح مائل</text>
+  <text x="160" y="212" font-family="Arial" font-size="9" fill="rgba(212,175,55,0.7)" text-anchor="middle">Slant Board Plantar Fascia Stretch</text>
+</svg>

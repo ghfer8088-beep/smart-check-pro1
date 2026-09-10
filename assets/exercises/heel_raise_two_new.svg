@@ -1,0 +1,41 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 215" width="320" height="215">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#090e17"/><stop offset="100%" style="stop-color:#131d2e"/></linearGradient>
+    <linearGradient id="skin" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#e8b89a"/><stop offset="100%" style="stop-color:#c8906a"/></linearGradient>
+    <linearGradient id="suit" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#1e293b"/><stop offset="100%" style="stop-color:#0f172a"/></linearGradient>
+  </defs>
+  <rect width="320" height="215" fill="url(#bg)"/>
+  <rect x="50" y="178" width="220" height="3" rx="1.5" fill="rgba(212,175,55,0.2)"/>
+  <!-- Wall for balance -->
+  <rect x="268" y="60" width="10" height="118" rx="3" fill="#1e293b" stroke="#d4af37" stroke-width="1"/>
+  <!-- Torso -->
+  <rect x="142" y="82" width="38" height="55" rx="8" fill="url(#suit)"/>
+  <line x1="142" y1="89" x2="180" y2="89" stroke="#d4af37" stroke-width="1" opacity="0.5"/>
+  <!-- Head -->
+  <ellipse cx="161" cy="65" rx="19" ry="21" fill="#e8b89a"/>
+  <ellipse cx="161" cy="47" rx="19" ry="11" fill="#2d1810"/>
+  <rect x="155" y="77" width="12" height="8" rx="4" fill="#e8b89a"/>
+  <!-- Hand touching wall for balance -->
+  <path d="M180 100 Q230 100 265 108" stroke="url(#suit)" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <ellipse cx="266" cy="110" rx="9" ry="6" fill="#e8b89a"/>
+  <!-- Other arm -->
+  <rect x="124" y="86" width="12" height="36" rx="6" fill="url(#suit)"/>
+  <ellipse cx="130" cy="124" rx="7" ry="5" fill="#e8b89a"/>
+  <!-- Legs - on tip toes (raised) -->
+  <rect x="148" y="134" width="13" height="40" rx="6" fill="url(#suit)"/>
+  <rect x="163" y="134" width="13" height="40" rx="6" fill="url(#suit)"/>
+  <!-- Feet on tip-toe -->
+  <ellipse cx="154" cy="176" rx="8" ry="4" fill="#e8b89a" transform="rotate(-30 154 176)"/>
+  <ellipse cx="170" cy="176" rx="8" ry="4" fill="#e8b89a" transform="rotate(-30 170 176)"/>
+  <!-- Calf muscle bulge -->
+  <ellipse cx="154" cy="155" rx="9" ry="18" fill="#1e293b" opacity="0.5"/>
+  <!-- Upward arrows -->
+  <path d="M122 150 L122 128" stroke="#d4af37" stroke-width="3" stroke-linecap="round"/>
+  <polygon points="117,130 122,118 127,130" fill="#d4af37"/>
+  <path d="M200 150 L200 128" stroke="#d4af37" stroke-width="3" stroke-linecap="round"/>
+  <polygon points="195,130 200,118 205,130" fill="#d4af37"/>
+  <text x="107" y="140" font-family="Arial" font-size="8" fill="#d4af37">رفع</text>
+  <text x="107" y="150" font-family="Arial" font-size="8" fill="#d4af37">الكعب</text>
+  <text x="160" y="200" font-family="Arial" font-size="10.5" fill="#38bdf8" text-anchor="middle" font-weight="bold">رفع الكعبين لتقوية وتر أكيليس</text>
+  <text x="160" y="212" font-family="Arial" font-size="9" fill="rgba(212,175,55,0.7)" text-anchor="middle">Bilateral Heel Raise - Achilles</text>
+</svg>

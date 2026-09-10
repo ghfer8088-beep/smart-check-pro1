@@ -1,0 +1,40 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 215" width="320" height="215">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#090e17"/><stop offset="100%" style="stop-color:#131d2e"/></linearGradient>
+    <linearGradient id="skin" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#e8b89a"/><stop offset="100%" style="stop-color:#c8906a"/></linearGradient>
+    <linearGradient id="suit" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#1e293b"/><stop offset="100%" style="stop-color:#0f172a"/></linearGradient>
+  </defs>
+  <rect width="320" height="215" fill="url(#bg)"/>
+  <rect x="50" y="178" width="220" height="3" rx="1.5" fill="rgba(212,175,55,0.2)"/>
+  <!-- Torso -->
+  <rect x="145" y="85" width="38" height="55" rx="8" fill="url(#suit)"/>
+  <line x1="145" y1="92" x2="183" y2="92" stroke="#d4af37" stroke-width="1" opacity="0.5"/>
+  <!-- Head -->
+  <ellipse cx="164" cy="67" rx="19" ry="22" fill="#e8b89a"/>
+  <ellipse cx="164" cy="48" rx="19" ry="11" fill="#2d1810"/>
+  <ellipse cx="159" cy="64" rx="2" ry="2.5" fill="#333"/>
+  <ellipse cx="169" cy="64" rx="2" ry="2.5" fill="#333"/>
+  <rect x="158" y="78" width="12" height="8" rx="4" fill="#e8b89a"/>
+  <!-- Arms out to sides for balance -->
+  <path d="M145 100 Q120 100 100 102" stroke="url(#suit)" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <ellipse cx="97" cy="103" rx="9" ry="5" fill="#e8b89a"/>
+  <path d="M183 100 Q208 100 228 102" stroke="url(#suit)" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <ellipse cx="231" cy="103" rx="9" ry="5" fill="#e8b89a"/>
+  <!-- Standing leg (right, straight) -->
+  <rect x="158" y="138" width="14" height="40" rx="6" fill="url(#suit)"/>
+  <ellipse cx="165" cy="179" rx="12" ry="4" fill="#1e293b"/>
+  <!-- Raised leg (left, knee bent up - stork pose) -->
+  <path d="M152 145 Q145 155 138 165" stroke="url(#suit)" stroke-width="14" fill="none" stroke-linecap="round"/>
+  <path d="M138 165 Q135 170 132 175" stroke="url(#suit)" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <ellipse cx="131" cy="176" rx="9" ry="4" fill="#e8b89a" opacity="0.7"/>
+  <!-- Balance wobble indicator arrows -->
+  <path d="M100 105 Q95 112 100 118" stroke="#38bdf8" stroke-width="2" fill="none" stroke-dasharray="3,3"/>
+  <path d="M228 105 Q233 112 228 118" stroke="#38bdf8" stroke-width="2" fill="none" stroke-dasharray="3,3"/>
+  <!-- Balance circle on ground -->
+  <circle cx="165" cy="178" r="18" stroke="#d4af37" stroke-width="1.5" fill="none" opacity="0.4" stroke-dasharray="4,4"/>
+  <!-- Label arrows for arms -->
+  <text x="75" y="100" font-family="Arial" font-size="8" fill="#38bdf8">توازن</text>
+  <text x="232" y="100" font-family="Arial" font-size="8" fill="#38bdf8">توازن</text>
+  <text x="160" y="200" font-family="Arial" font-size="10.5" fill="#38bdf8" text-anchor="middle" font-weight="bold">تمرين التوازن على ساق واحدة</text>
+  <text x="160" y="212" font-family="Arial" font-size="9" fill="rgba(212,175,55,0.7)" text-anchor="middle">Stork Balance Exercise</text>
+</svg>
