@@ -3164,15 +3164,19 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         <div style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 12px 16px; margin-bottom: 22px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
                 <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.95em;">📅 جدول جلسات المتابعة (الأيام 2 إلى 7):</div>
-                <span style="color: #94a3b8; font-size: 0.78em;">اضغط على أي جلسة لاستعراض تمارينها وتقييمها</span>
+                <span style="color: #94a3b8; font-size: 0.78em;">اختر أي جلسة منجزة أو حالية لمراجعتها</span>
             </div>
             <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; overflow-x: auto;">
                 ${[2, 3, 4, 5, 6, 7].map(d => {
                     const isCurrentActive = (d === activeDay);
                     const isCompleted = (d < sessionData.currentSessionDay);
+                    const isFutureLocked = (d > sessionData.currentSessionDay);
+
                     let bg = '#1e293b';
                     let border = '1px solid #334155';
                     let color = '#cbd5e1';
+                    let clickAction = `renderStep5SessionsDashboard('${patientId}', ${d})`;
+
                     if (isCurrentActive) {
                         bg = 'linear-gradient(135deg, rgba(212, 175, 55, 0.35) 0%, rgba(180, 130, 20, 0.25) 100%)';
                         border = '2px solid var(--primary-gold)';
@@ -3181,11 +3185,17 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                         bg = 'rgba(16, 185, 129, 0.15)';
                         border = '1px solid #10b981';
                         color = '#6ee7b7';
+                    } else if (isFutureLocked) {
+                        bg = 'rgba(15, 23, 42, 0.6)';
+                        border = '1px dashed #475569';
+                        color = '#64748b';
+                        clickAction = `showFutureSessionLockedPopup(${sessionData.currentSessionDay}, ${d})`;
                     }
+
                     return `
-                        <button type="button" onclick="renderStep5SessionsDashboard('${patientId}', ${d})" style="background: ${bg}; border: ${border}; color: ${color}; padding: 10px 6px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: 0.2s; min-width: 65px;">
+                        <button type="button" onclick="${clickAction}" style="background: ${bg}; border: ${border}; color: ${color}; padding: 10px 6px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: 0.2s; min-width: 65px;">
                             <span>الجلسة ${d}</span>
-                            <span style="font-size: 0.75em; opacity: 0.85;">${isCompleted ? '✓ منجزة' : isCurrentActive ? '🟢 الحالية' : '⏳ قادمة'}</span>
+                            <span style="font-size: 0.75em; opacity: 0.85;">${isCompleted ? '✓ منجزة' : isCurrentActive ? '🟢 الحالية' : '🔒 مقفلة'}</span>
                         </button>
                     `;
                 }).join('')}
@@ -3222,7 +3232,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
 
             <p style="color: #cbd5e1; font-size: 0.85em; margin: 0; line-height: 1.6;">
                 ${lockStatus.isLocked 
-                    ? '⏳ يجري احتساب فترة استشفاء الأنسجة (24 ساعة). التقييم والتمارين متاحان لك أدناه لتوثيق حالتك وقتما تشاء.' 
+                    ? '⏳ يجري احتساب فترة استشفاء الأنسجة (24 ساعة). التزم بالتمارين المقررة أدناه واسترح حتى اكتمال العداد لتوثيق الجلسة.' 
                     : '💡 الفاصل الزمني الموصى به بين كل جلسة وتالية هو 24 ساعة للسماح للألياف العضلية والغضاريف بإعادة البناء الذاتي.'}
             </p>
         </div>
@@ -3240,6 +3250,40 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         `;
     } else {
         chartSectionHTML = sessionData.painTrendHTML || '';
+    }
+
+    // قسم توثيق وإنجاز الجلسة المشروط بانتهاء مؤقت الـ 24 ساعة
+    let sessionCompletionSectionHTML = '';
+    if (activeDay < sessionData.currentSessionDay) {
+        sessionCompletionSectionHTML = `
+            <div style="background: rgba(16, 185, 129, 0.1); border: 1.5px solid #10b981; border-radius: 12px; padding: 16px; text-align: center; color: #6ee7b7; font-weight: bold; margin-top: 25px;">
+                ✓ تم إنجاز الجلسة (#${activeDay}) بنجاح مسبقاً وهي موثقة في سجلك الطبي للتعافي.
+            </div>
+        `;
+    } else if (activeDay === sessionData.currentSessionDay) {
+        if (lockStatus.isLocked) {
+            sessionCompletionSectionHTML = `
+                <div id="session-completion-control-wrapper" style="background: rgba(15, 23, 42, 0.85); border: 1.5px dashed rgba(212, 175, 55, 0.45); border-radius: 14px; padding: 22px; text-align: center; margin-top: 25px;">
+                    <div style="color: var(--primary-gold); font-size: 1.1em; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span>⏳</span> فترة استشفاء الأنسجة جارية (الفاصل البيولوجي 24 ساعة)
+                    </div>
+                    <p style="color: #cbd5e1; font-size: 0.88em; margin: 0 0 16px 0; line-height: 1.6; max-width: 620px; margin-left: auto; margin-right: auto;">
+                        وفق البروتوكول السريري، لا يمكن توثيق الجلسة إلا بعد مرور الـ 24 ساعة لاكتمال استشفاء الألياف العضلية وتجنب الإجهاد. بمجرد انتهاء الوقت سيتفعل زر حفظ التقييم والانتقال للجلسة التالية.
+                    </p>
+                    <button type="button" disabled style="background: #1e293b; color: #64748b; border: 1px solid #334155; padding: 13px 25px; border-radius: 8px; font-weight: bold; font-size: 0.95em; cursor: not-allowed; width: 100%; max-width: 580px; box-shadow: none;">
+                        🔒 زر حفظ تسجيل الجلسة (#${activeDay}) يتفعل بعد مرور الـ 24 ساعة
+                    </button>
+                </div>
+            `;
+        } else {
+            sessionCompletionSectionHTML = `
+                <div id="session-completion-control-wrapper" style="text-align: center; margin-top: 25px;">
+                    <button type="button" onclick="openSessionAssessmentModal('${patientId}', ${activeDay})" class="btn-plan-royal-card" style="margin: 0 auto; max-width: 620px; width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 2px solid #34d399; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.45); display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.05em; cursor: pointer;">
+                        <span>💾</span> حفظ تسجيل الجلسة (#${activeDay}) وتوثيق التقييم والانتقال للجلسة التالية 🚀
+                    </button>
+                </div>
+            `;
+        }
     }
 
     container.innerHTML = `
@@ -3319,131 +3363,8 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             <!-- الرسم البياني لمسار تراجع الألم (مستثنى في الجلسة 2، ومتاح في 3-7) -->
             ${chartSectionHTML}
 
-            <!-- بطاقة التحليل السلوكي المستمر -->
+            <!-- بطاقة التحليل السلوكي المستمر من الجلسة السابقة -->
             ${behavioralReportHTML}
-
-            <!-- نموذج التقييم السريري اليومي (متاح دائماً في كل جلسة من 2 إلى 7) -->
-            <div style="background: #0f172a; border: 1.5px solid #10b981; border-radius: 14px; padding: 25px; margin-bottom: 25px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 8px;">
-                    <h3 style="color: #10b981; margin: 0; font-size: 1.25em;">📝 تقييم ومتابعة تقدم الجلسة (#${activeDay}) - ${sessionData.latestAssessment?.painAreaTitle || ''}</h3>
-                    <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 3px 10px; border-radius: 15px; font-size: 0.8em; font-weight: bold;">متاح لتوثيق الجلسة</span>
-                </div>
-                
-                <!-- 1. مستوى الألم -->
-                <div style="margin-bottom: 20px; background: #111827; padding: 15px; border-radius: 10px; border: 1px solid #334155;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <label style="color: #e2e8f0; font-size: 0.95em; font-weight: bold;">1. مستوى شدة الألم الحالي (من 1 إلى 10):</label>
-                        <span id="daily-pain-val" style="color: var(--primary-gold); font-weight: bold; font-size: 1.15em;">3 / 10</span>
-                    </div>
-                    <div style="text-align: center; margin: 4px 0 8px 0;">
-                        <div class="slider-drag-hint-animated">
-                            <span class="pulse-arrow-hand-left">👈</span>
-                            <span>اسحب المؤشر لتحديد درجة ألمك الفعلية</span>
-                            <span class="pulse-arrow-hand-right">👉</span>
-                        </div>
-                    </div>
-                    <input type="range" id="daily-pain-input" min="1" max="10" value="3" oninput="document.getElementById('daily-pain-val').textContent = this.value + ' / 10'" style="width: 100%; accent-color: var(--primary-gold);">
-                </div>
-
-                <!-- 2. تقييم المدى الحركي المنسجم مع نقطة الألم -->
-                <div style="margin-bottom: 20px; background: #111827; padding: 15px; border-radius: 10px; border: 1px solid rgba(56, 189, 248, 0.3);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <label style="color: #38bdf8; font-size: 0.95em; font-weight: bold;">
-                            ${anatomicalConfig ? anatomicalConfig.mobilityQuestion : '2. نسبة استعادة المدى الحركي والمرونة اليوم:'}
-                        </label>
-                        <span id="daily-mobility-val" style="color: #38bdf8; font-weight: bold; font-size: 1.15em;">70 %</span>
-                    </div>
-                    <div style="text-align: center; margin: 4px 0 8px 0;">
-                        <div class="slider-drag-hint-animated">
-                            <span class="pulse-arrow-hand-left">👈</span>
-                            <span>اسحب المؤشر لتحديد نسبة حركتك اليوم</span>
-                            <span class="pulse-arrow-hand-right">👉</span>
-                        </div>
-                    </div>
-                    <input type="range" id="daily-mobility-slider" min="10" max="100" value="70" oninput="document.getElementById('daily-mobility-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #38bdf8; margin-bottom: 12px;">
-                    
-                    <div style="color: #94a3b8; font-size: 0.82em; margin-bottom: 8px;">اختر كل ما ينطبق على حركتك اليوم (اختيار متعدد):</div>
-                    <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
-                        ${(anatomicalConfig ? anatomicalConfig.mobilityOptions : [
-                            { val: 95, text: "حرية حركة ممتازة دون تيبس أو إعاقة" },
-                            { val: 75, text: "تحسن ملحوظ في الحركة مع انزعاج طفيف عند أقصى المدى" },
-                            { val: 45, text: "حركة مقيدة جزئياً مع تيبس يستغرق وقتاً ليلين" },
-                            { val: 20, text: "صعوبة وتيبس شديد ومحدودية حركية واضحة" }
-                        ]).map((opt) => `
-                            <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="checkbox" name="daily_mobility_check" value="${opt.val}" style="accent-color: #38bdf8; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
-                            </label>
-                        `).join('')}
-                    </div>
-                </div>
-
-                <!-- 3. تقييم جودة النوم المنسجم مع نقطة الألم -->
-                <div style="margin-bottom: 20px; background: #111827; padding: 15px; border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.3);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <label style="color: #10b981; font-size: 0.95em; font-weight: bold;">
-                            ${anatomicalConfig ? anatomicalConfig.sleepQuestion : '3. نسبة جودة وعمق النوم والراحة الليلة الماضية:'}
-                        </label>
-                        <span id="daily-sleep-val" style="color: #10b981; font-weight: bold; font-size: 1.15em;">70 %</span>
-                    </div>
-                    <div style="text-align: center; margin: 4px 0 8px 0;">
-                        <div class="slider-drag-hint-animated">
-                            <span class="pulse-arrow-hand-left">👈</span>
-                            <span>اسحب المؤشر لتحديد جودة نومك الليلة الماضية</span>
-                            <span class="pulse-arrow-hand-right">👉</span>
-                        </div>
-                    </div>
-                    <input type="range" id="daily-sleep-slider" min="10" max="100" value="70" oninput="document.getElementById('daily-sleep-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #10b981; margin-bottom: 12px;">
-
-                    <div style="color: #94a3b8; font-size: 0.82em; margin-bottom: 8px;">اختر كل ما ينطبق على نومك (اختيار متعدد):</div>
-                    <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
-                        ${(anatomicalConfig ? anatomicalConfig.sleepOptions : [
-                            { val: 95, text: "نوم عميق ومريح ومتواصل طوال الليل دون ألم" },
-                            { val: 75, text: "نوم جيد مع استيقاظ عابر عند التقلب دون ألم حاد" },
-                            { val: 45, text: "نوم متقطع وصعوبة في إيجاد وضعية مريحة للمفصل" },
-                            { val: 20, text: "أرق شديد واستيقاظ متكرر بسبب نوبات الألم" }
-                        ]).map((opt) => `
-                            <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="checkbox" name="daily_sleep_check" value="${opt.val}" style="accent-color: #10b981; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
-                            </label>
-                        `).join('')}
-                    </div>
-                </div>
-
-                <!-- 4. السلوكيات الإيجابية والسلبية المنسجمة مع نقطة الألم -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px;">
-                    <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); padding: 15px; border-radius: 10px;">
-                        <div style="color: #10b981; font-weight: bold; font-size: 0.95em; margin-bottom: 10px;">✨ السلوكيات الإيجابية المنجزة اليوم:</div>
-                        ${(anatomicalConfig ? anatomicalConfig.positiveBehaviors : [
-                            { id: "beh-exercise", text: "نفذت التمارين التأهيلية بانتظام" },
-                            { id: "beh-posture", text: "حافظت على وضعية جلوس ووقوف مستقيمة" },
-                            { id: "beh-walk", text: "قمت بالمشي الخفيف وتنشيط الدورة الدموية" },
-                            { id: "beh-heat", text: "استخدمت الكمادات الدافئة / الراحة الكافية" }
-                        ]).map((beh) => `
-                            <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer;">
-                                <input type="checkbox" id="${beh.id}" style="accent-color: #10b981; width: 16px; height: 16px;"> ${beh.text}
-                            </label>
-                        `).join('')}
-                    </div>
-
-                    <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); padding: 15px; border-radius: 10px;">
-                        <div style="color: #ef4444; font-weight: bold; font-size: 0.95em; margin-bottom: 10px;">⚠️ سلوكيات سلبية حدثت اليوم (للتصحيح):</div>
-                        ${(anatomicalConfig ? anatomicalConfig.negativeBehaviors : [
-                            { id: "neg-sitting", text: "جلوس طويل متواصل لأكثر من ساعة" },
-                            { id: "neg-lifting", text: "حمل أوزان ثقيلة أو انحناء مفاجئ للظهر" },
-                            { id: "neg-phone", text: "استخدام طويل للهاتف مع انحناء الرقبة" },
-                            { id: "neg-sleep", text: "نوم غير مريح أو على وسادة مرتفعة" }
-                        ]).map(neg => `
-                            <label style="color: #fca5a5; font-size: 0.88em; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer;">
-                                <input type="checkbox" id="${neg.id}" style="accent-color: #ef4444; width: 16px; height: 16px;"> ${neg.text}
-                            </label>
-                        `).join('')}
-                    </div>
-                </div>
-
-                <button type="button" onclick="submitComprehensiveDailyLog('${patientId}', ${activeDay})" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; padding: 14px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1em; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); width: 100%;">
-                    💾 حفظ تسجيل الجلسة (#${activeDay}) وتحديث مؤشرات التعافي
-                </button>
-            </div>
 
             <!-- عرض التمارين اليومية المقررة للجلسة المختارة -->
             <div style="margin-bottom: 25px;">
@@ -3453,7 +3374,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                         <div class="clinical-exercise-card" style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
                             <div>
                                 ${generateExerciseIllustration(ex.visualType, ex.id, { name: ex.name })}
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-margin: 10px 0 6px 0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                                     <span style="color: var(--primary-gold); font-size: 0.78em; font-weight: bold;">تمرين #${idx+1} (الجلسة ${activeDay})</span>
                                     <span style="color: #10b981; font-size: 0.78em;">⏱️ ${ex.duration}</span>
                                 </div>
@@ -3485,8 +3406,11 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 </div>
             </div>
 
+            <!-- بطاقة توثيق وإنجاز الجلسة المشروطة بمرور الـ 24 ساعة -->
+            ${sessionCompletionSectionHTML}
+
             <!-- كرت ترويجي: خدمة الزيارات المنزلية واستشارة المعالج -->
-            <div class="no-print">
+            <div class="no-print" style="margin-top: 25px;">
                 ${getHomeVisitCardHTML()}
             </div>
         </div>
@@ -3499,7 +3423,17 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             minutes: document.getElementById('countdown-mins'),
             seconds: document.getElementById('countdown-secs')
         }, () => {
-            showToast('🎉 اكتملت الـ 24 ساعة! تهانينا على استشفاء الأنسجة', 'success');
+            showToast('🎉 اكتملت الـ 24 ساعة! تهانينا على استشفاء الأنسجة، زر حفظ التقييم متاح الآن 🚀', 'success');
+            const wrapper = document.getElementById('session-completion-control-wrapper');
+            if (wrapper) {
+                wrapper.innerHTML = `
+                    <div style="text-align: center;">
+                        <button type="button" onclick="openSessionAssessmentModal('${patientId}', ${activeDay})" class="btn-plan-royal-card" style="margin: 0 auto; max-width: 620px; width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 2px solid #34d399; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.45); display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.05em; cursor: pointer;">
+                            <span>💾</span> حفظ تسجيل الجلسة (#${activeDay}) وتوثيق التقييم والانتقال للجلسة التالية 🚀
+                        </button>
+                    </div>
+                `;
+            }
             if (typeof triggerSessionReadyNotification === 'function') {
                 triggerSessionReadyNotification(activePatient?.name);
             }
@@ -3717,24 +3651,233 @@ window.renderStep4IndependentDay1 = renderStep4IndependentDay1;
 window.renderStep5SessionsDashboard = renderStep5SessionsDashboard;
 window.renderStep6Completion = renderStep6Completion;
 
+// نافذة تنبيه ملكية منبثقة لثانيتين عند الضغط على أي جلسة مستقبلية مقفلة
+function showFutureSessionLockedPopup(currentDay, targetDay) {
+    const existing = document.getElementById('future-session-locked-modal');
+    if (existing) existing.remove();
+
+    const popup = document.createElement('div');
+    popup.id = 'future-session-locked-modal';
+    popup.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(10, 14, 20, 0.82);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999999;
+        animation: fadeIn 0.2s ease-out;
+        padding: 20px;
+        box-sizing: border-box;
+    `;
+
+    popup.innerHTML = `
+        <div style="background: linear-gradient(145deg, #111827 0%, #0b0f19 100%); border: 2px solid var(--primary-gold); border-radius: 18px; padding: 25px 30px; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,0.85), 0 0 25px rgba(212, 175, 55, 0.3); animation: scaleIn 0.2s ease-out;">
+            <div style="width: 58px; height: 58px; margin: 0 auto 14px auto; background: rgba(212, 175, 55, 0.15); border: 2px solid var(--primary-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.7em;">
+                ⏳
+            </div>
+            <h3 style="color: var(--primary-gold); margin: 0 0 8px 0; font-size: 1.25em; font-weight: bold;">
+                تنبيه سريري: الجلسة #${targetDay} مقفلة
+            </h3>
+            <p style="color: #f1f5f9; font-size: 0.98em; line-height: 1.6; margin: 0 0 12px 0;">
+                أنت لم تكمل الجلسة الحالية (<strong style="color: var(--primary-gold);">#${currentDay}</strong>) بعد!
+            </p>
+            <div style="background: rgba(15, 23, 42, 0.9); border: 1px dashed rgba(212, 175, 55, 0.4); border-radius: 10px; padding: 10px 14px; color: #94a3b8; font-size: 0.84em; line-height: 1.6;">
+                💡 يرجى إتمام تمارين الجلسة الحالية وانتظار انقضاء فترة الاستشفاء البيولوجي (24 ساعة) لفتح الجلسة القادمة.
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(popup);
+
+    setTimeout(() => {
+        popup.style.transition = 'opacity 0.25s ease-out, transform 0.25s ease-out';
+        popup.style.opacity = '0';
+        popup.style.transform = 'scale(0.95)';
+        setTimeout(() => popup.remove(), 260);
+    }, 2000);
+}
+window.showFutureSessionLockedPopup = showFutureSessionLockedPopup;
+
+// فتح نافذة التقييم الكبرى المستقلة للجلسة المنتهية
+async function openSessionAssessmentModal(patientId, sessionNumber) {
+    const sessionData = await PatientFlow.initPatientSession(patientId);
+    if (!sessionData) return;
+
+    const modal = document.getElementById('session-assessment-modal');
+    const content = document.getElementById('session-assessment-modal-content');
+    if (!modal || !content) return;
+
+    const pointKey = sessionData.latestAssessment?.pointId || sessionData.latestAssessment?.pointKey || sessionData.patient.painArea || sessionData.patient.painPointId || 'lumbar_spine';
+    const anatomicalConfig = typeof getAnatomicalDailyAssessmentConfig === 'function' ? getAnatomicalDailyAssessmentConfig(pointKey) : null;
+    const areaTitle = sessionData.latestAssessment?.painAreaTitle || 'المنطقة المصابة';
+
+    content.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(16, 185, 129, 0.3); padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h3 style="color: #10b981; margin: 0 0 4px 0; font-size: 1.35em; display: flex; align-items: center; gap: 8px;">
+                    <span>📝</span> تقييم ومتابعة تقدم الجلسة (#${sessionNumber}) - ${areaTitle}
+                </h3>
+                <div style="color: #94a3b8; font-size: 0.85em;">متاح لتوثيق الجلسة المنتهية واعتماد مؤشرات التعافي</div>
+            </div>
+            <button type="button" onclick="closeSessionAssessmentModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.8em; cursor: pointer; padding: 0 5px;">&times;</button>
+        </div>
+
+        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 10px; padding: 10px 14px; margin-bottom: 20px; color: #6ee7b7; font-size: 0.88em; line-height: 1.6;">
+            💡 <strong>مرحباً ${sessionData.patient.name}:</strong> يرجى توثيق استجابتك الحقيقية لتمارين الجلسة وفترة الاستشفاء السابقة. إجاباتك تُحدّث فوراً مؤشرات الشفاء والرسم البياني للجلسة التالية.
+        </div>
+
+        <!-- 1. مستوى شدة الألم الحالي -->
+        <div style="margin-bottom: 20px; background: #111827; padding: 16px; border-radius: 12px; border: 1px solid #334155;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label style="color: #e2e8f0; font-size: 0.95em; font-weight: bold;">1. مستوى شدة الألم الحالي (من 1 إلى 10):</label>
+                <span id="modal-pain-val" style="color: var(--primary-gold); font-weight: bold; font-size: 1.2em;">3 / 10</span>
+            </div>
+            <div style="text-align: center; margin: 4px 0 8px 0;">
+                <div class="slider-drag-hint-animated">
+                    <span class="pulse-arrow-hand-left">👈</span>
+                    <span>اسحب المؤشر لتحديد درجة ألمك الفعلية</span>
+                    <span class="pulse-arrow-hand-right">👉</span>
+                </div>
+            </div>
+            <input type="range" id="modal-pain-input" min="1" max="10" value="3" oninput="document.getElementById('modal-pain-val').textContent = this.value + ' / 10'" style="width: 100%; accent-color: var(--primary-gold); cursor: pointer;">
+        </div>
+
+        <!-- 2. نسبة استعادة حرية الحركة وقوة المفصل -->
+        <div style="margin-bottom: 20px; background: #111827; padding: 16px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <label style="color: #38bdf8; font-size: 0.95em; font-weight: bold;">
+                    ${anatomicalConfig ? anatomicalConfig.mobilityQuestion : '2. نسبة استعادة حرية الحركة وقوة المفصل اليوم:'}
+                </label>
+                <span id="modal-mobility-val" style="color: #38bdf8; font-weight: bold; font-size: 1.2em;">70 %</span>
+            </div>
+            <div style="text-align: center; margin: 4px 0 8px 0;">
+                <div class="slider-drag-hint-animated">
+                    <span class="pulse-arrow-hand-left">👈</span>
+                    <span>اسحب المؤشر لتحديد نسبة حركتك اليوم</span>
+                    <span class="pulse-arrow-hand-right">👉</span>
+                </div>
+            </div>
+            <input type="range" id="modal-mobility-slider" min="10" max="100" value="70" oninput="document.getElementById('modal-mobility-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #38bdf8; margin-bottom: 12px; cursor: pointer;">
+            
+            <div style="color: #94a3b8; font-size: 0.84em; margin-bottom: 8px;">اختر كل ما ينطبق على حركتك اليوم (اختيار متعدد):</div>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
+                ${(anatomicalConfig ? anatomicalConfig.mobilityOptions : [
+                    { val: 95, text: "حرية حركة ممتازة دون تيبس أو إعاقة" },
+                    { val: 75, text: "تحسن ملحوظ في الحركة مع انزعاج طفيف عند أقصى المدى" },
+                    { val: 45, text: "حركة مقيدة جزئياً مع تيبس يستغرق وقتاً ليلين" },
+                    { val: 20, text: "صعوبة وتيبس شديد ومحدودية حركية واضحة" }
+                ]).map((opt) => `
+                    <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" name="modal_mobility_check" value="${opt.val}" style="accent-color: #38bdf8; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
+                    </label>
+                `).join('')}
+            </div>
+        </div>
+
+        <!-- 3. جودة النوم مع الأعراض الليلية -->
+        <div style="margin-bottom: 20px; background: #111827; padding: 16px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <label style="color: #10b981; font-size: 0.95em; font-weight: bold;">
+                    ${anatomicalConfig ? anatomicalConfig.sleepQuestion : '3. جودة النوم والراحة الليلة الماضية:'}
+                </label>
+                <span id="modal-sleep-val" style="color: #10b981; font-weight: bold; font-size: 1.2em;">70 %</span>
+            </div>
+            <div style="text-align: center; margin: 4px 0 8px 0;">
+                <div class="slider-drag-hint-animated">
+                    <span class="pulse-arrow-hand-left">👈</span>
+                    <span>اسحب المؤشر لتحديد جودة نومك الليلة الماضية</span>
+                    <span class="pulse-arrow-hand-right">👉</span>
+                </div>
+            </div>
+            <input type="range" id="modal-sleep-slider" min="10" max="100" value="70" oninput="document.getElementById('modal-sleep-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #10b981; margin-bottom: 12px; cursor: pointer;">
+
+            <div style="color: #94a3b8; font-size: 0.84em; margin-bottom: 8px;">اختر كل ما ينطبق على نومك (اختيار متعدد):</div>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
+                ${(anatomicalConfig ? anatomicalConfig.sleepOptions : [
+                    { val: 95, text: "نوم عميق ومريح ومتواصل طوال الليل دون ألم" },
+                    { val: 75, text: "نوم جيد مع استيقاظ عابر عند التقلب دون ألم حاد" },
+                    { val: 45, text: "نوم متقطع وصعوبة في إيجاد وضعية مريحة للمفصل" },
+                    { val: 20, text: "أرق شديد واستيقاظ متكرر بسبب نوبات الألم" }
+                ]).map((opt) => `
+                    <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" name="modal_sleep_check" value="${opt.val}" style="accent-color: #10b981; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
+                    </label>
+                `).join('')}
+            </div>
+        </div>
+
+        <!-- 4. السلوكيات الإيجابية والسلبية المنجزة -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 25px;">
+            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); padding: 16px; border-radius: 12px;">
+                <div style="color: #10b981; font-weight: bold; font-size: 0.95em; margin-bottom: 10px;">✨ السلوكيات الإيجابية المنجزة اليوم:</div>
+                ${(anatomicalConfig ? anatomicalConfig.positiveBehaviors : [
+                    { id: "beh-exercise", text: "نفذت التمارين التأهيلية بانتظام" },
+                    { id: "beh-posture", text: "حافظت على وضعية جلوس ووقوف مستقيمة" },
+                    { id: "beh-walk", text: "قمت بالمشي الخفيف وتنشيط الدورة الدموية" },
+                    { id: "beh-heat", text: "استخدمت الكمادات الدافئة / الراحة الكافية" }
+                ]).map((beh) => `
+                    <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;">
+                        <input type="checkbox" id="modal-${beh.id}" style="accent-color: #10b981; width: 16px; height: 16px;"> ${beh.text}
+                    </label>
+                `).join('')}
+            </div>
+
+            <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); padding: 16px; border-radius: 12px;">
+                <div style="color: #ef4444; font-weight: bold; font-size: 0.95em; margin-bottom: 10px;">⚠️ سلوكيات سلبية حدثت اليوم (للتصحيح):</div>
+                ${(anatomicalConfig ? anatomicalConfig.negativeBehaviors : [
+                    { id: "neg-sitting", text: "جلوس طويل متواصل لأكثر من ساعة" },
+                    { id: "neg-lifting", text: "حمل أوزان ثقيلة أو انحناء مفاجئ للظهر" },
+                    { id: "neg-phone", text: "استخدام طويل للهاتف مع انحناء الرقبة" },
+                    { id: "neg-sleep", text: "نوم غير مريح أو على وسادة مرتفعة" }
+                ]).map(neg => `
+                    <label style="color: #fca5a5; font-size: 0.88em; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;">
+                        <input type="checkbox" id="modal-${neg.id}" style="accent-color: #ef4444; width: 16px; height: 16px;"> ${neg.text}
+                    </label>
+                `).join('')}
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
+            <button type="button" onclick="closeSessionAssessmentModal()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                إلغاء والعودة للتمارين
+            </button>
+            <button type="button" onclick="submitComprehensiveDailyLog('${patientId}', ${sessionNumber})" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; padding: 14px 32px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.05em; box-shadow: 0 4px 18px rgba(16, 185, 129, 0.4); flex-grow: 1; max-width: 450px;">
+                ✅ اعتماد التقييم والانتقال للجلسة التالية 🚀
+            </button>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+}
+window.openSessionAssessmentModal = openSessionAssessmentModal;
+
+function closeSessionAssessmentModal() {
+    const modal = document.getElementById('session-assessment-modal');
+    if (modal) modal.style.display = 'none';
+}
+window.closeSessionAssessmentModal = closeSessionAssessmentModal;
+
 // حفظ التسجيل اليومي الشامل
 async function submitComprehensiveDailyLog(patientId, sessionNumber) {
-    const painScore = parseInt(document.getElementById('daily-pain-input')?.value || 3);
-    const mobilityRate = parseInt(document.getElementById('daily-mobility-slider')?.value || document.querySelector('input[name="daily_mobility_check"]:checked')?.value || 75);
-    const sleepRate = parseInt(document.getElementById('daily-sleep-slider')?.value || document.querySelector('input[name="daily_sleep_check"]:checked')?.value || 75);
+    const painScore = parseInt(document.getElementById('modal-pain-input')?.value || document.getElementById('daily-pain-input')?.value || 3);
+    const mobilityRate = parseInt(document.getElementById('modal-mobility-slider')?.value || document.querySelector('input[name="modal_mobility_check"]:checked')?.value || document.getElementById('daily-mobility-slider')?.value || 70);
+    const sleepRate = parseInt(document.getElementById('modal-sleep-slider')?.value || document.querySelector('input[name="modal_sleep_check"]:checked')?.value || document.getElementById('daily-sleep-slider')?.value || 70);
 
-    const mobilitySelected = Array.from(document.querySelectorAll('input[name="daily_mobility_check"]:checked')).map(el => el.value);
-    const sleepSelected = Array.from(document.querySelectorAll('input[name="daily_sleep_check"]:checked')).map(el => el.value);
+    const exercisesDone = (document.getElementById('modal-beh-exercise') || document.getElementById('beh-exercise'))?.checked || false;
+    const goodPosture = (document.getElementById('modal-beh-posture') || document.getElementById('beh-posture'))?.checked || false;
+    const walkingDone = (document.getElementById('modal-beh-walk') || document.getElementById('beh-walk'))?.checked || false;
+    const heatDone = (document.getElementById('modal-beh-heat') || document.getElementById('beh-heat'))?.checked || false;
 
-    const exercisesDone = document.getElementById('beh-exercise')?.checked || false;
-    const goodPosture = document.getElementById('beh-posture')?.checked || false;
-    const walkingDone = document.getElementById('beh-walk')?.checked || false;
-    const heatDone = document.getElementById('beh-heat')?.checked || false;
-
-    const longSitting = document.getElementById('neg-sitting')?.checked || false;
-    const heavyLifting = document.getElementById('neg-lifting')?.checked || false;
-    const phoneUsage = document.getElementById('neg-phone')?.checked || false;
-    const poorSleep = document.getElementById('neg-sleep')?.checked || false;
+    const longSitting = (document.getElementById('modal-neg-sitting') || document.getElementById('neg-sitting'))?.checked || false;
+    const heavyLifting = (document.getElementById('modal-neg-lifting') || document.getElementById('neg-lifting'))?.checked || false;
+    const phoneUsage = (document.getElementById('modal-neg-phone') || document.getElementById('neg-phone'))?.checked || false;
+    const poorSleep = (document.getElementById('modal-neg-sleep') || document.getElementById('neg-sleep'))?.checked || false;
 
     const logEntry = {
         patientId,
@@ -3751,6 +3894,9 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
     };
 
     await SmartDB.saveDailyLog(logEntry);
+
+    // إغلاق نافذة التقييم
+    closeSessionAssessmentModal();
 
     const allLogs = await SmartDB.getPatientDailyLogs(patientId);
     const pInfo = await SmartDB.getPatient(patientId);
@@ -3772,25 +3918,28 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
                 totalLogs: allLogs.length
             }
         });
-    } else {
-        SmartDB.addAdminNotification({
-            type: 'session_done',
-            title: `📝 إنجاز الجلسة #${sessionNumber}: ${pName}`,
-            message: `سجل المريض ${pName} تقييم الجلسة #${sessionNumber} بنجاح. مستوى الألم الحالي: ${painScore}/10، مرونة الحركة: ${mobilityRate}%`,
-            patientId,
-            patientName: pName,
-            patientPhone: pPhone,
-            meta: { sessionNumber, painScore, mobilityRate, sleepRate }
-        });
+        showToast('🏆 تهانينا الحارة! أتممت برنامج الـ 7 أيام بنجاح باهر', 'success');
+        await renderStep6Completion(patientId);
+        return;
     }
+
+    SmartDB.addAdminNotification({
+        type: 'session_done',
+        title: `📝 إنجاز الجلسة #${sessionNumber}: ${pName}`,
+        message: `سجل المريض ${pName} تقييم الجلسة #${sessionNumber} بنجاح. مستوى الألم الحالي: ${painScore}/10، مرونة الحركة: ${mobilityRate}%`,
+        patientId,
+        patientName: pName,
+        patientPhone: pPhone,
+        meta: { sessionNumber, painScore, mobilityRate, sleepRate }
+    });
 
     if (longSitting || heavyLifting || phoneUsage || poorSleep) {
-        showToast('⚠️ تم حفظ الجلسة بنجاح، لكن انتبه للسلوكيات السلبية المجهدة للفقرات!', 'error');
+        showToast(`⚠️ تم توثيق الجلسة #${sessionNumber} بنجاح وبدأت فترة استشفاء الجلسة التالية (24 ساعة). انتبه للسلوكيات السلبية!`, 'error');
     } else {
-        showToast('🎉 أحسنت! التزام رائع بالسلوكيات الإيجابية، تم تفعيل تقدمك بنجاح!', 'success');
+        showToast(`🎉 أحسنت! تم حفظ تقييم الجلسة #${sessionNumber} بنجاح وبدأت فترة استشفاء الجلسة التالية (24 ساعة).`, 'success');
     }
 
-    loadPatientRecoveryDashboard(patientId);
+    await loadPatientRecoveryDashboard(patientId, sessionNumber + 1);
 }
 
 // فتح مكتبة التمارين
@@ -4132,11 +4281,41 @@ function goToStep(stepNum) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// تشغيل التوجيه الصوتي لدكتورة سارة مباشرة بنقرة واحدة
+function playWelcomeAudioDirectly() {
+    const playBtn = document.getElementById('btn-play-welcome-audio');
+    const audioText = document.getElementById('welcome-audio-text');
+
+    if (currentActiveStationAudio && !currentActiveStationAudio.paused) {
+        stopAllActiveAudio();
+        if (playBtn) playBtn.innerHTML = '<span>🔊</span> استمع للشرح';
+        if (audioText) audioText.textContent = 'د. سارة ترشدك للبدء.. استمع لتحديد موضع ألمك بدقة';
+        return;
+    }
+
+    if (typeof Wada3anAiEngine !== 'undefined') {
+        Wada3anAiEngine.unlockAudio();
+    }
+
+    if (playBtn) playBtn.innerHTML = '<span>⏳</span> جاري التشغيل...';
+    if (audioText) audioText.textContent = '🔊 د. سارة تشرح الآن: استمع لتحديد موضع ألمك بدقة...';
+
+    playStationAudio('welcome', () => {
+        sessionStorage.setItem('scp_welcome_audio_played', 'true');
+        const guidanceBar = document.getElementById('welcome-audio-guidance-bar');
+        if (guidanceBar) guidanceBar.style.display = 'none';
+    });
+}
+window.playWelcomeAudioDirectly = playWelcomeAudioDirectly;
+
 // تخطي الصوت الترحيبي في الخطوة 1 وإتاحة النقاط فوراً
 function skipWelcomeAudioAndUnlockPoints() {
+    sessionStorage.setItem('scp_welcome_audio_played', 'true');
+    window.introPlayedOrAttempted = true;
     stopAllActiveAudio();
     showToast('تم تخطي التوجيه الصوتي، انقر على مكان الألم على المجسم مباشرة 🎯', 'info');
 }
+window.skipWelcomeAudioAndUnlockPoints = skipWelcomeAudioAndUnlockPoints;
 
 // اختيار الطبيب الاستشاري المفضل للحوار (د. سارة / د. جمال / د. عمر)
 function selectConsultantDoctor(voiceKey) {
@@ -4700,13 +4879,18 @@ function triggerAutoWelcomeAudio() {
         if (sessionStorage.getItem('scp_welcome_audio_played') === 'true') {
             return;
         }
-        sessionStorage.setItem('scp_welcome_audio_played', 'true');
-        window.introPlayedOrAttempted = true;
 
         if (typeof Wada3anAiEngine !== 'undefined') {
             Wada3anAiEngine.unlockAudio();
-            Wada3anAiEngine.playIntroAudioGuide();
         }
+
+        const guidanceBar = document.getElementById('welcome-audio-guidance-bar');
+        if (guidanceBar) guidanceBar.style.display = 'flex';
+
+        playStationAudio('welcome', () => {
+            sessionStorage.setItem('scp_welcome_audio_played', 'true');
+            if (guidanceBar) guidanceBar.style.display = 'none';
+        });
     } catch (e) {
         console.warn('Auto welcome audio notice:', e);
     }
@@ -5201,7 +5385,26 @@ function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
         if (!isCancelled) {
             const pWav = wavAudio.play();
             if (pWav) {
-                pWav.catch(() => {
+                pWav.then(() => {
+                    if (stationKey === 'welcome') {
+                        sessionStorage.setItem('scp_welcome_audio_played', 'true');
+                        window.introPlayedOrAttempted = true;
+                        const guidanceBar = document.getElementById('welcome-audio-guidance-bar');
+                        if (guidanceBar) guidanceBar.style.display = 'flex';
+                        const playBtn = document.getElementById('btn-play-welcome-audio');
+                        if (playBtn) playBtn.innerHTML = '<span>⏸️</span> إيقاف الشرح';
+                        const audioText = document.getElementById('welcome-audio-text');
+                        if (audioText) audioText.textContent = '🔊 د. سارة تشرح الآن: استمع لتحديد موضع ألمك بدقة...';
+                    }
+                }).catch(() => {
+                    if (stationKey === 'welcome') {
+                        const guidanceBar = document.getElementById('welcome-audio-guidance-bar');
+                        if (guidanceBar) guidanceBar.style.display = 'flex';
+                        const playBtn = document.getElementById('btn-play-welcome-audio');
+                        if (playBtn) playBtn.innerHTML = '<span>🔊</span> استمع للشرح';
+                        const audioText = document.getElementById('welcome-audio-text');
+                        if (audioText) audioText.textContent = 'د. سارة ترشدك للبدء.. استمع لتحديد موضع ألمك بدقة';
+                    }
                     if (!isCancelled) triggerComplete();
                 });
             }
@@ -5211,7 +5414,26 @@ function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
     audio.src = mp3Path;
     const playPromise = audio.play();
     if (playPromise) {
-        playPromise.catch(() => {
+        playPromise.then(() => {
+            if (stationKey === 'welcome') {
+                sessionStorage.setItem('scp_welcome_audio_played', 'true');
+                window.introPlayedOrAttempted = true;
+                const guidanceBar = document.getElementById('welcome-audio-guidance-bar');
+                if (guidanceBar) guidanceBar.style.display = 'flex';
+                const playBtn = document.getElementById('btn-play-welcome-audio');
+                if (playBtn) playBtn.innerHTML = '<span>⏸️</span> إيقاف الشرح';
+                const audioText = document.getElementById('welcome-audio-text');
+                if (audioText) audioText.textContent = '🔊 د. سارة تشرح الآن: استمع لتحديد موضع ألمك بدقة...';
+            }
+        }).catch(() => {
+            if (stationKey === 'welcome') {
+                const guidanceBar = document.getElementById('welcome-audio-guidance-bar');
+                if (guidanceBar) guidanceBar.style.display = 'flex';
+                const playBtn = document.getElementById('btn-play-welcome-audio');
+                if (playBtn) playBtn.innerHTML = '<span>🔊</span> استمع للشرح';
+                const audioText = document.getElementById('welcome-audio-text');
+                if (audioText) audioText.textContent = 'د. سارة ترشدك للبدء.. استمع لتحديد موضع ألمك بدقة';
+            }
             if (!isCancelled) triggerComplete();
         });
     }

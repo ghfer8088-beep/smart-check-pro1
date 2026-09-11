@@ -288,14 +288,19 @@
             <div class="anatomy-card">
                 <!-- قسم المجسم التفاعلي ونقاط الألم الشاملة عالية الوضوح -->
                 <div class="skeleton-column">
-                    <div id="welcome-audio-guidance-bar" style="display: none; width: 100%; box-sizing: border-box; background: linear-gradient(135deg, rgba(56, 189, 248, 0.22) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #38bdf8; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; align-items: center; justify-content: space-between; gap: 10px;">
+                    <div id="welcome-audio-guidance-bar" style="display: none; width: 100%; box-sizing: border-box; background: linear-gradient(135deg, rgba(56, 189, 248, 0.22) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #38bdf8; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <span style="font-size: 1.2em;">🎙️</span>
-                            <span style="color: #f1f5f9; font-size: 0.84em; font-weight: bold;">د. سارة ترشدك للبدء.. استمع لتحديد موضع ألمك بدقة</span>
+                            <span id="welcome-audio-icon" style="font-size: 1.2em;">🎙️</span>
+                            <span id="welcome-audio-text" style="color: #f1f5f9; font-size: 0.84em; font-weight: bold;">د. سارة ترشدك للبدء.. استمع لتحديد موضع ألمك بدقة</span>
                         </div>
-                        <button type="button" onclick="skipWelcomeAudioAndUnlockPoints()" style="background: rgba(212, 175, 55, 0.25); border: 1px solid var(--primary-gold); color: #fef08a; padding: 5px 12px; border-radius: 6px; font-size: 0.78em; font-weight: bold; cursor: pointer; white-space: nowrap;">
-                            تخطي التوجيه الصوتي ⏭️
-                        </button>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button type="button" id="btn-play-welcome-audio" onclick="playWelcomeAudioDirectly()" style="background: rgba(56, 189, 248, 0.25); border: 1px solid #38bdf8; color: #ffffff; padding: 5px 12px; border-radius: 6px; font-size: 0.78em; font-weight: bold; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;">
+                                <span>🔊</span> استمع للشرح
+                            </button>
+                            <button type="button" onclick="skipWelcomeAudioAndUnlockPoints()" style="background: rgba(212, 175, 55, 0.25); border: 1px solid var(--primary-gold); color: #fef08a; padding: 5px 12px; border-radius: 6px; font-size: 0.78em; font-weight: bold; cursor: pointer; white-space: nowrap;">
+                                تخطي التوجيه الصوتي ⏭️
+                            </button>
+                        </div>
                     </div>
                     <div class="view-controls">
                         <button type="button" id="btn-view-front" class="btn-view-toggle active" onclick="switchAnatomyView('front')">👤 المنظر الأمامي</button>
@@ -1214,6 +1219,15 @@
                 <button type="button" onclick="closeDoctorSummaryModal()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 12px 20px; border-radius: 8px; cursor: pointer;">
                     إغلاق
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= نافذة التقييم السريري الكبرى المستقلة للجلسة المنتهية (Session Assessment Modal) ================= -->
+    <div id="session-assessment-modal" class="app-modal" style="display: none; z-index: 100050;">
+        <div class="modal-inner" style="max-width: 760px; width: 95%; max-height: 90vh; overflow-y: auto; background: #0b1322; border: 2px solid #10b981; padding: 25px 28px; border-radius: 18px; box-shadow: 0 15px 50px rgba(0,0,0,0.9), 0 0 30px rgba(16, 185, 129, 0.25);">
+            <div id="session-assessment-modal-content">
+                <!-- يُملأ ديناميكياً عبر openSessionAssessmentModal -->
             </div>
         </div>
     </div>
