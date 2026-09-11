@@ -564,20 +564,33 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
 
         let lastError = null;
         const pool = WADA3AN_AI_CONFIG.getPoolKeys();
-        const totalPoolKeys = pool.length || 1;
-        const maxKeyRotations = Math.min(6, totalPoolKeys);
+        const now = Date.now();
 
-        for (let keyAttempt = 0; keyAttempt < maxKeyRotations; keyAttempt++) {
-            const key = pool[keyAttempt % pool.length] || WADA3AN_AI_CONFIG.getApiKey();
-            if (!key) throw new Error('No API Key');
+        // إنشاء قائمة المفاتيح المتاحة (غير المستنفدة) بدءاً من المؤشر الحالي
+        const startIdx = WADA3AN_AI_CONFIG._currentPoolIndex;
+        const availableKeys = [];
+        for (let i = 0; i < pool.length; i++) {
+            const idx = (startIdx + i) % pool.length;
+            const k = pool[idx];
+            if (!k) continue;
+            const cd = WADA3AN_AI_CONFIG._exhaustedKeys.get(k);
+            if (!cd || now > cd) availableKeys.push({ key: k, idx });
+        }
 
-            let hitQuotaLimit = false;
+        // إذا لم تتوفر مفاتيح، نحاول بأفضل مفتاح متاح (أقرب وقت انتهاء cooldown)
+        if (availableKeys.length === 0) {
+            const bestKey = WADA3AN_AI_CONFIG.getApiKey();
+            if (bestKey) availableKeys.push({ key: bestKey, idx: WADA3AN_AI_CONFIG._currentPoolIndex });
+        }
 
+        console.log(`[AI] المفاتيح المتاحة: ${availableKeys.length}/${pool.length}`);
+
+        for (const { key, idx } of availableKeys) {
             for (const model of uniqueModels) {
                 try {
                     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 7500); // مهلة 7.5 ثانية
+                    const timeoutId = setTimeout(() => controller.abort(), 6000); // مهلة 6 ثوانٍ
 
                     const response = await fetch(url, {
                         method: 'POST',
@@ -592,35 +605,29 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                         const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
                         if (reply && reply.trim()) {
                             localStorage.setItem('wada3an_active_ai_model', model);
-                            localStorage.setItem('wada3an_active_ai_version', 'v1beta');
+                            WADA3AN_AI_CONFIG._currentPoolIndex = idx;
+                            console.log(`[AI] ✅ نجح المفتاح [${idx}] مع ${model}`);
                             return reply;
                         }
                     } else {
                         const errData = await response.json().catch(() => ({}));
-                        console.warn(`Gemini model ${model} (Key attempt ${keyAttempt + 1}) returned:`, response.status, errData);
-                        lastError = new Error(`Status ${response.status}: ${JSON.stringify(errData)}`);
-
-                        // عند حدوث خطأ 429 (نفاد حصة المفتاح) يتم فوراً تدوير المفتاح وتجربة المفتاح التالي من الحوض
+                        lastError = new Error(`Status ${response.status}`);
                         if (response.status === 429) {
                             WADA3AN_AI_CONFIG.rotateKey(key);
-                            hitQuotaLimit = true;
-                            break; // الانتقال للمفتاح التالي في الحوض
+                            console.warn(`[AI] 429 على المفتاح [${idx}] - انتقال للتالي`);
+                            break; // الانتقال للمفتاح التالي
                         }
                     }
                 } catch (err) {
-                    console.warn(`Gemini call error on ${model}:`, err.message);
                     lastError = err;
+                    if (err.name === 'AbortError') break; // timeout - جرب المفتاح التالي
                 }
-            }
-
-            // إذا لم يكن خطأ حصة، ولكن فشلت كل النماذج لهذا المفتاح، تدوير للمفتاح التالي
-            if (!hitQuotaLimit && keyAttempt < maxKeyRotations - 1) {
-                WADA3AN_AI_CONFIG.rotateKey(key);
             }
         }
 
-        throw lastError || new Error('All candidate models and API keys failed');
+        throw lastError || new Error('All API keys failed');
     },
+
 
     // ردود تفاعلية سريرية ذكية تستجيب لمحتوى كلام المراجع الفعلي بمرونة إنسانية عالية
     generateFallbackDialogueStep(context) {
@@ -1796,7 +1803,7 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
         console.info('[TTS] تعذر توليد الصوت البشري - إكمال بصمت');
     },
 
-    // نطق رد الطبيب بالصوت البشري الاستوديو أو الصوت العربي الطبيعي الفوري بضمان عدم الصمت التام
+    // نطق رد الطبيب بالصوت البشري - أول جملة فقط لضمان السرعة القصوى
     async speakDoctorResponse(text, expectedToken, onEndCallback) {
         if (!text) {
             if (onEndCallback) onEndCallback();
@@ -1807,17 +1814,33 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
         }
 
         this.unlockAudio();
-
-        // 1. فحص كاش الصوت الاستوديو المولد مسبقاً (للاستجابة الفورية 0ms)
         const voiceName = this.getStudioVoiceForSession();
-        const cleanSanitized = this.sanitizeSpeechArabicText(text);
-        const cacheKey = `${voiceName}_${cleanSanitized}`;
+
+        // استخراج أول جملة قصيرة فقط (أسرع وأكثر استجابةً)
+        const fullClean = this.sanitizeSpeechArabicText(text);
+
+        // تقطيع النص إلى أول جملة (بحد أقصى 20 كلمة)
+        const extractFirstSentence = (t) => {
+            if (!t) return '';
+            // انهاءات الجمل: . ! ? ؟ ؛ أو سطر جديد
+            const sentenceEnd = t.search(/[.!?؟؛\n]/);
+            let first = sentenceEnd > 0 ? t.substring(0, sentenceEnd + 1) : t;
+            // إذا كانت الجملة طويلة جداً (>25 كلمة) نقطعها عند الكلمة 20
+            const words = first.split(/\s+/);
+            if (words.length > 25) first = words.slice(0, 20).join(' ') + '...';
+            return first.trim();
+        };
+
+        const textToSynthesize = extractFirstSentence(fullClean) || fullClean.substring(0, 150);
+        const cacheKey = `${voiceName}_${textToSynthesize}`;
+
+        // 1. فحص الكاش - استجابة فورية
         if (this._audioCache && this._audioCache[cacheKey]) {
             this.playHumanAudio(this._audioCache[cacheKey], onEndCallback);
             return;
         }
 
-        // فحص وجود تسجيلات استوديو مسبقة التوليد للترحيب
+        // 2. فحص وجود ملف صوتي مسجل مسبقاً للترحيب
         if (/أهلاً\s*بك\s*في\s*«?وداعاً\s*للألم»?/i.test(text) && /يسعدني\s*أولاً\s*التعرف/i.test(text)) {
             const preStationFile = (voiceName === 'Charon' || voiceName === 'Puck')
                 ? 'assets/audio/station_chat_welcome_jamal.mp3'
@@ -1826,16 +1849,11 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
             return;
         }
 
-        // 2. تجهيز النص الصوتي: استخدام أول جملتين لضمان سرعة فائقة في التوليد الصوتي
-        let textToSynthesize = text.trim();
-        const sentences = textToSynthesize.split(/(?<=[.!?؛؟\n])\s+/);
-        if (sentences.length > 1 && textToSynthesize.split(/\s+/).length > 28) {
-            textToSynthesize = sentences.slice(0, 2).join(' ');
-        }
-
+        // 3. توليد صوت Gemini TTS مع timeout 8 ثوانٍ كحد أقصى للانتظار
         try {
-            // توليد الصوت البشري الاستوديو الحقيقي عبر Google Gemini المباشر
-            const audioUrl = await this.generateHumanVoiceAudio(textToSynthesize);
+            const ttsPromise = this.generateHumanVoiceAudio(textToSynthesize);
+            const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(null), 8000));
+            const audioUrl = await Promise.race([ttsPromise, timeoutPromise]);
 
             if (expectedToken !== undefined && expectedToken !== null && expectedToken !== this._speechSessionToken) {
                 this.hideLiveAudioPill();
@@ -1847,21 +1865,16 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
                 return;
             }
         } catch (e) {
-            console.warn('Studio human voice generation notice:', e);
+            console.warn('[TTS] خطأ في توليد الصوت:', e);
         }
 
-        // في حال استنفاد كل المفاتيح: لا نستخدم الصوت الآلي - فقط نكمل بصمت
-        // (الصوت الآلي رديء وأسوأ من الصمت للمريض)
-        if (expectedToken === undefined || expectedToken === null || expectedToken === this._speechSessionToken) {
-            console.info('[TTS] كل مفاتيح الصوت البشري مستنفدة مؤقتاً - إكمال بصمت');
-            this.hideLiveAudioPill();
-            if (onEndCallback) onEndCallback();
-            return;
-        }
-
+        // 4. إذا فشل TTS: إكمال بصمت - لا صوت آلي أبداً
+        console.info('[TTS] مفاتيح مستنفدة أو فشل - إكمال بصمت');
         this.hideLiveAudioPill();
         if (onEndCallback) onEndCallback();
     },
+
+
 
     // تشغيل الصوت العربي الطبيعي الفوري
     speakWithSystemVoice(text, onEndCallback) {

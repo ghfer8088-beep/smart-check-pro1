@@ -3456,16 +3456,11 @@ function goToStep(stepNum) {
         }
     }
 
-    // إذا دخل المراجع الخطوة 1 (المجسم)، تشغيل صوت التوجيه والإرشاد الترحيبي مع إظهار شريط التوجيه وزر التخطي
+    // إذا دخل المراجع الخطوة 1 (المجسم)، إظهار شريط التوجيه فقط بدون تشغيل صوت مكرر
     if (stepNum === 1) {
         const guidanceBar = document.getElementById('welcome-audio-guidance-bar');
         if (guidanceBar) guidanceBar.style.display = 'flex';
-
-        if (typeof playStationAudio === 'function') {
-            playStationAudio('welcome', () => {
-                if (guidanceBar) guidanceBar.style.display = 'none';
-            });
-        }
+        // ملاحظة: الصوت الترحيبي يُشغَّل مرة واحدة فقط من منطق بدء التطبيق (introPlayedOrAttempted guard)
     } else {
         // إيقاف أي صوت ترحيبي أو سابق فور مغادرة الخطوة 1
         stopAllActiveAudio();
@@ -4885,8 +4880,16 @@ async function sendChatMessage() {
             finishChatIntakeAndGenerateReport();
         };
 
-        // تشغيل صوت محطة الانتقال الاستوديو العامة، ثم الانتقال فور انتهاء الصوت
-        playStationAudio('transition', doTransition);
+        // تشغيل صوت الإغلاق بالتوازي مع عداد ضمان الانتقال
+        const responseToken = ++Wada3anAiEngine._speechSessionToken;
+        Wada3anAiEngine.speakDoctorResponse(closingMsg, responseToken);
+
+        // ضمان الانتقال خلال 3 ثوانٍ على الأكثر بغض النظر عن الصوت
+        const transitionGuard = setTimeout(doTransition, 3000);
+        playStationAudio('transition', () => {
+            clearTimeout(transitionGuard);
+            doTransition();
+        });
         return;
     }
 
