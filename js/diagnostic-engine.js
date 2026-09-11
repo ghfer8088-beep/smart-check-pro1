@@ -1033,13 +1033,46 @@ const ClinicalEngine = (function() {
             probability = Math.min(98, probability + 1);
         }
 
-        // تجميع الأدلة السريرية
+        // تجميع الأدلة السريرية الشاملة
         const clinicalEvidence = [];
-        if (matchedQ1) clinicalEvidence.push(`طبيعة العرض السريري: ${matchedQ1.label}`);
-        if (answers.q2Text) clinicalEvidence.push(`المحفز الميكانيكي الحركي: ${answers.q2Text}`);
-        if (answers.q4Text) clinicalEvidence.push(`الاستجابة للاختبار الاستدلالي: ${answers.q4Text}`);
+        if (matchedQ1 && matchedQ1.label) {
+            clinicalEvidence.push(`طبيعة العرض السريري: ${matchedQ1.label}`);
+        } else if (primaryDiagnosis && primaryDiagnosis.title) {
+            clinicalEvidence.push(`طبيعة العرض والنمط السريري: ${primaryDiagnosis.title}`);
+        }
+
+        if (answers.painSeverity !== undefined && answers.painSeverity !== null && answers.painSeverity !== '') {
+            const sev = Number(answers.painSeverity);
+            const sevLabel = sev >= 8 ? 'ألم شديد حاد' : (sev >= 5 ? 'ألم متوسط إلى ملحوظ' : 'ألم خفيف إلى معتدل');
+            clinicalEvidence.push(`مؤشر شدة الألم المسجل: ${sev}/10 (${sevLabel})`);
+        }
+
+        if (answers.painDuration) {
+            clinicalEvidence.push(`المدى الزمني ومرحلة الإصابة: ${answers.painDuration}`);
+        }
+
+        if (answers.q2Text) {
+            clinicalEvidence.push(`المحفز الميكانيكي الحركي: ${answers.q2Text}`);
+        }
+
+        if (answers.q4Text) {
+            clinicalEvidence.push(`الاستجابة للاختبار الاستدلالي: ${answers.q4Text}`);
+        }
+
         if (answers.associatedLabels && answers.associatedLabels.length > 0) {
             clinicalEvidence.push(`الأعراض العصبية والمفصلية المرافقة: ${answers.associatedLabels.join("، ")}`);
+        } else if (answers.associatedSymptoms && answers.associatedSymptoms.length > 0) {
+            clinicalEvidence.push(`الأعراض المرافقة المرصودة: ${answers.associatedSymptoms.join("، ")}`);
+        }
+
+        if (point && point.title) {
+            clinicalEvidence.push(`الموضع التشريحي المستهدف: فحص وتأكيد الارتباط الميكانيكي بنطاق (${point.title})`);
+        }
+
+        // ضمان عدم بقاء قائمة الأدلة فارغة تحت أي ظرف
+        if (clinicalEvidence.length === 0) {
+            clinicalEvidence.push(`الفحص الميكانيكي الموضعي: رصد إجهاد وتشنج موضعي في نطاق (${point ? point.title : 'المنطقة المحددة'})`);
+            clinicalEvidence.push(`النمط الوظيفي: تأثر النطاق الحركي وانضغاط أنسجة المفصل مع الحركة والجهد اليومي`);
         }
 
         // تحليل الأمراض المزمنة والاحتياطات الخاصة

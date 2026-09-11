@@ -436,15 +436,10 @@
                             <option value="⚡ حالات سريرية عامة">⚡ حالات سريرية عامة</option>
                         </select>
                     </div>
-                    <div>
-                        <label style="color: #cbd5e1; font-size: 0.85em; display: block; margin-bottom: 4px; font-weight: bold;">رابط يوتيوب أو MP4 مباشر:</label>
-                        <input type="text" id="admin-video-url-input" required placeholder="https://youtu.be/... أو MP4" style="width: 100%; background: #080c14; border: 1px solid #334155; padding: 10px 12px; border-radius: 8px; color: #fff; font-size: 0.88em; box-sizing: border-box;" dir="ltr">
+                    <div style="grid-column: 1 / -1;">
+                        <label style="color: #cbd5e1; font-size: 0.85em; display: block; margin-bottom: 4px; font-weight: bold;">رابط فيديو الحالة على فيسبوك (أو MP4 مباشر):</label>
+                        <input type="text" id="admin-video-url-input" required placeholder="https://www.facebook.com/.../videos/... أو /reel/..." style="width: 100%; background: #080c14; border: 1px solid #334155; padding: 10px 12px; border-radius: 8px; color: #fff; font-size: 0.88em; box-sizing: border-box;" dir="ltr">
                     </div>
-                </div>
-
-                <div>
-                    <label style="color: #cbd5e1; font-size: 0.85em; display: block; margin-bottom: 4px; font-weight: bold;">رابط صفحة العيادة أو فيسبوك (اختياري):</label>
-                    <input type="text" id="admin-video-direct-input" placeholder="https://www.facebook.com/Wada3an.Al.Alam" style="width: 100%; background: #080c14; border: 1px solid #334155; padding: 10px 12px; border-radius: 8px; color: #fff; font-size: 0.88em; box-sizing: border-box;" dir="ltr">
                 </div>
 
                 <div>
@@ -533,32 +528,28 @@
                 id: 'vid_lumbar_sciatica',
                 title: 'تعافي ديسك قطني وانضغاط العصب الوركي',
                 category: '⚡ أسفل الظهر وعرق النسا',
-                url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-                directUrl: 'https://www.facebook.com/Wada3an.Al.Alam',
+                url: 'https://www.facebook.com/30minutes30/videos',
                 description: 'مراجع عانى لأشهر من ألم حاد نازل للساق مع عرج وصعوبة بالنوم. استعاد المشي الطبيعي بعد تفريغ الضغط يدوياً.'
             },
             {
                 id: 'vid_cervical_arm',
                 title: 'علاج انضغاط ديسك الرقبة وتنميل اليد والصداع',
                 category: '⚡ الرقبة والأبهر',
-                url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-                directUrl: 'https://www.facebook.com/Wada3an.Al.Alam',
+                url: 'https://www.facebook.com/30minutes30/videos',
                 description: 'تحرير الجذور العصبية C5-C7 وفك تشنجات الأبهر المزمنة وعودة كامل القوة العضلية لليد والراحة التامة.'
             },
             {
                 id: 'vid_knee_patella',
                 title: 'احتكاك صابونة الركبة واستعادة الثني والصلاة',
                 category: '⚡ مفصل الركبة والصابونة',
-                url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-                directUrl: 'https://www.facebook.com/Wada3an.Al.Alam',
+                url: 'https://www.facebook.com/30minutes30/videos',
                 description: 'إعادة التوازن الميكانيكي ومسار انزلاق الصابونة أنهى الطقطقة والألم ومكن المريض من ثني الركبة والصلاة براحة.'
             },
             {
                 id: 'vid_scoliosis_posture',
                 title: 'تعديل انحراف الجذع والجنف واستقامة القوام',
                 category: '⚡ الجنف والعمود الفقري',
-                url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-                directUrl: 'https://www.facebook.com/Wada3an.Al.Alam',
+                url: 'https://www.facebook.com/30minutes30/videos',
                 description: 'استعادة استقامة القفص الصدري وزوال ضيق التنفس والألم المستمر بين لوحي الكتف بدون جراحة.'
             }
         ];
@@ -629,7 +620,6 @@
             document.getElementById('admin-video-title-input').value = '';
             document.getElementById('admin-video-category-input').value = '⚡ أسفل الظهر وعرق النسا';
             document.getElementById('admin-video-url-input').value = '';
-            document.getElementById('admin-video-direct-input').value = '';
             document.getElementById('admin-video-desc-input').value = '';
             document.getElementById('admin-video-modal-title').textContent = '➕ إضافة فيديو حالة موثقة';
             document.getElementById('admin-video-modal').style.display = 'flex';
@@ -644,7 +634,6 @@
             document.getElementById('admin-video-title-input').value = item.title || '';
             document.getElementById('admin-video-category-input').value = item.category || '⚡ أسفل الظهر وعرق النسا';
             document.getElementById('admin-video-url-input').value = item.url || '';
-            document.getElementById('admin-video-direct-input').value = item.directUrl || '';
             document.getElementById('admin-video-desc-input').value = item.description || '';
             document.getElementById('admin-video-modal-title').textContent = '✏️ تعديل بيانات الفيديو';
             document.getElementById('admin-video-modal').style.display = 'flex';
@@ -660,7 +649,6 @@
             const title = document.getElementById('admin-video-title-input').value.trim();
             const category = document.getElementById('admin-video-category-input').value;
             const url = document.getElementById('admin-video-url-input').value.trim();
-            const directUrl = document.getElementById('admin-video-direct-input').value.trim();
             const description = document.getElementById('admin-video-desc-input').value.trim();
 
             if (!title || !url) {
@@ -672,11 +660,11 @@
             if (id) {
                 const idx = list.findIndex(v => v.id === id);
                 if (idx !== -1) {
-                    list[idx] = { ...list[idx], title, category, url, directUrl, description };
+                    list[idx] = { ...list[idx], title, category, url, description };
                 }
             } else {
                 const newId = 'vid_' + Date.now();
-                list.unshift({ id: newId, title, category, url, directUrl, description });
+                list.unshift({ id: newId, title, category, url, description });
             }
 
             saveAdminStoredVideos(list);
@@ -698,27 +686,19 @@
         }
 
         function previewAdminVideo(url, title) {
-            const modal = document.getElementById('admin-video-preview-modal');
-            const wrap = document.getElementById('admin-preview-frame-wrap');
-            const titleEl = document.getElementById('admin-preview-title');
-            if (!modal || !wrap) return;
-
-            if (titleEl) titleEl.textContent = title || 'معاينة الفيديو';
-
+            if (!url) return;
             if (url.includes('.mp4') || url.includes('.webm')) {
+                const modal = document.getElementById('admin-video-preview-modal');
+                const wrap = document.getElementById('admin-preview-frame-wrap');
+                const titleEl = document.getElementById('admin-preview-title');
+                if (!modal || !wrap) return;
+                if (titleEl) titleEl.textContent = title || 'معاينة الفيديو';
                 wrap.innerHTML = `<video controls autoplay playsinline style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain;"><source src="${url}" type="video/mp4"></video>`;
+                modal.style.display = 'flex';
             } else {
-                let embedUrl = url;
-                if (embedUrl.includes('watch?v=')) {
-                    embedUrl = embedUrl.replace('watch?v=', 'embed/');
-                } else if (embedUrl.includes('youtu.be/')) {
-                    const vidId = embedUrl.split('youtu.be/')[1]?.split('?')[0];
-                    embedUrl = `https://www.youtube.com/embed/${vidId}`;
-                }
-                wrap.innerHTML = `<iframe src="${embedUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"></iframe>`;
+                // فتح رابط فيسبوك مباشرة في تبويب جديد
+                window.open(url, '_blank');
             }
-
-            modal.style.display = 'flex';
         }
 
         function closeAdminVideoPreview() {

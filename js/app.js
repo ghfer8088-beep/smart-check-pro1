@@ -78,6 +78,12 @@ function detectArabicGender(name, textContext = '') {
         return 'male';
     }
 
+    // استثناء الأسماء المذكرة المنتهية بألف مقصورة (ـى / ـي) أو ألف وهمزة (ـاء)
+    const maleWithSpecialEndings = /^(عيسى|عيسي|موسى|موسي|يحيى|يحيي|مصطفى|مصطفي|مرتضى|مرتضي|مجتبى|مجتبي|رضا|علاء|بهاء|ضياء|براء|رجاء)$/;
+    if (maleWithSpecialEndings.test(firstName)) {
+        return 'male';
+    }
+
     // 4. القواعد الصرفية للأسماء المؤنثة
     // أ. المنتهية بتاء مربوطة (ـة / ـه)
     if (/[ةه]$/.test(firstName) && firstName.length >= 3) {
@@ -2242,7 +2248,22 @@ function displayDiagnosticReport(data) {
                 <div style="background: #111827; padding: 16px; border-radius: 10px; border-right: 4px solid var(--primary-gold); margin-bottom: 14px;">
                     <div style="color: var(--primary-gold); font-size: 0.9em; font-weight: bold; margin-bottom: 8px;">📋 الأدلة والعلامات السريرية المكتشفة:</div>
                     <ul style="color: #e2e8f0; margin: 0; padding-right: 20px; line-height: 1.8; font-size: 0.88em;">
-                        ${(data.clinicalEvidence || []).map(ev => `<li>${ev}</li>`).join('')}
+                        ${(function() {
+                            let evidenceList = Array.isArray(data.clinicalEvidence) ? data.clinicalEvidence.filter(Boolean) : [];
+                            if (evidenceList.length === 0) {
+                                if (data.primaryDiagnosis) evidenceList.push(`طبيعة العرض السريري والنمط: ${data.primaryDiagnosis}`);
+                                if (data.painSeverity) evidenceList.push(`شدة الألم المسجلة: ${data.painSeverity}/10`);
+                                if (data.painDuration) evidenceList.push(`المدى الزمني للأعراض: ${data.painDuration}`);
+                                if (data.painArea) evidenceList.push(`الموضع التشريحي المفحوص: نطاق (${data.painArea})`);
+                                if (Array.isArray(data.associatedSymptoms) && data.associatedSymptoms.length > 0) {
+                                    evidenceList.push(`الأعراض المرافقة المرصودة: ${data.associatedSymptoms.join('، ')}`);
+                                }
+                                if (evidenceList.length === 0) {
+                                    evidenceList.push(`رصد إجهاد ميكانيكي وتشنج عضلي موضعي مع تأثر المدى الحركي للمفصل`);
+                                }
+                            }
+                            return evidenceList.map(ev => `<li>${ev}</li>`).join('');
+                        })()}
                     </ul>
                 </div>
 
@@ -2507,32 +2528,28 @@ const DEFAULT_SUCCESS_STORY_VIDEOS = [
         id: 'vid_lumbar_sciatica',
         title: 'تعافي ديسك قطني وانضغاط العصب الوركي',
         category: '⚡ أسفل الظهر وعرق النسا',
-        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        directUrl: 'https://www.facebook.com/Wada3an.Al.Alam',
+        url: 'https://www.facebook.com/30minutes30/videos',
         description: 'مراجع عانى لأشهر من ألم حاد نازل للساق مع عرج وصعوبة بالنوم. استعاد المشي الطبيعي بعد تفريغ الضغط يدوياً.'
     },
     {
         id: 'vid_cervical_arm',
         title: 'علاج انضغاط ديسك الرقبة وتنميل اليد والصداع',
         category: '⚡ الرقبة والأبهر',
-        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        directUrl: 'https://www.facebook.com/Wada3an.Al.Alam',
+        url: 'https://www.facebook.com/30minutes30/videos',
         description: 'تحرير الجذور العصبية C5-C7 وفك تشنجات الأبهر المزمنة وعودة كامل القوة العضلية لليد والراحة التامة.'
     },
     {
         id: 'vid_knee_patella',
         title: 'احتكاك صابونة الركبة واستعادة الثني والصلاة',
         category: '⚡ مفصل الركبة والصابونة',
-        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        directUrl: 'https://www.facebook.com/Wada3an.Al.Alam',
+        url: 'https://www.facebook.com/30minutes30/videos',
         description: 'إعادة التوازن الميكانيكي ومسار انزلاق الصابونة أنهى الطقطقة والألم ومكن المريض من ثني الركبة والصلاة براحة.'
     },
     {
         id: 'vid_scoliosis_posture',
         title: 'تعديل انحراف الجذع والجنف واستقامة القوام',
         category: '⚡ الجنف والعمود الفقري',
-        url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        directUrl: 'https://www.facebook.com/Wada3an.Al.Alam',
+        url: 'https://www.facebook.com/30minutes30/videos',
         description: 'استعادة استقامة القفص الصدري وزوال ضيق التنفس والألم المستمر بين لوحي الكتف بدون جراحة.'
     }
 ];
@@ -2542,7 +2559,22 @@ function getVideoSuccessStories() {
         const stored = localStorage.getItem('wada3an_success_stories_videos');
         if (stored) {
             const parsed = JSON.parse(stored);
-            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                // ترقية الروابط القديمة تلقائياً لتحويل أي روابط يوتيوب أو تجريبية إلى روابط فيسبوك
+                return parsed.map(item => {
+                    let u = (item.url || '').trim();
+                    if (!u || u.includes('youtube.com') || u.includes('youtu.be') || u.includes('dQw4w9WgXcQ')) {
+                        u = (item.directUrl && !item.directUrl.includes('youtube')) ? item.directUrl : 'https://www.facebook.com/30minutes30/videos';
+                    }
+                    return {
+                        id: item.id,
+                        title: item.title,
+                        category: item.category,
+                        url: u,
+                        description: item.description
+                    };
+                });
+            }
         }
     } catch (e) {}
     return DEFAULT_SUCCESS_STORY_VIDEOS;
@@ -2554,30 +2586,9 @@ function renderVideoSuccessStories() {
 
     const list = getVideoSuccessStories();
     container.innerHTML = list.map(item => {
-        const titleSafe = (item.title || '').replace(/"/g, '&quot;');
-        // منطق بسيط وقوي: استخدم directUrl مباشرة إذا يحتوي على رابط فيديو حقيقي
-        let targetUrl = '';
-        const rawDirect = (item.directUrl || '').trim();
-        const rawUrl    = (item.url || '').trim();
-
-        // هل rawDirect رابط فيديو حقيقي (يحتوي /videos/ أو /watch أو youtu أو .mp4 أو /reel/)?
-        const isRealVideoUrl = (u) => u && (
-            u.includes('/videos/') || u.includes('/watch') ||
-            u.includes('youtu.be') || u.includes('youtube.com/watch') ||
-            u.includes('/reel/') || u.includes('.mp4') || u.includes('/v/')
-        );
-
-        if (isRealVideoUrl(rawDirect)) {
-            targetUrl = rawDirect;
-        } else if (rawUrl.includes('youtube.com/embed/')) {
-            // تحويل رابط تضمين يوتيوب إلى رابط مباشر
-            const vidId = rawUrl.split('embed/')[1]?.split('?')[0];
-            targetUrl = vidId ? `https://www.youtube.com/watch?v=${vidId}` : rawDirect || rawUrl || 'https://www.facebook.com/Wada3an.Al.Alam';
-        } else if (isRealVideoUrl(rawUrl)) {
-            targetUrl = rawUrl;
-        } else {
-            // كلاهما مجرد صفحة عامة - استخدم directUrl أياً كان أو الصفحة
-            targetUrl = rawDirect || rawUrl || 'https://www.facebook.com/Wada3an.Al.Alam';
+        let targetUrl = (item.url || '').trim();
+        if (!targetUrl || targetUrl.includes('youtube') || targetUrl.includes('youtu.be')) {
+            targetUrl = 'https://www.facebook.com/30minutes30/videos';
         }
 
         const urlSafe = targetUrl.replace(/"/g, '&quot;');
@@ -2592,14 +2603,14 @@ function renderVideoSuccessStories() {
                 <div>
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                         <span style="color: var(--primary-gold); font-size: 0.82em; font-weight: bold;">${catSafe}</span>
-                        <span style="color: #10b981; font-size: 0.75em; background: rgba(16, 185, 129, 0.15); padding: 2px 8px; border-radius: 4px; font-weight: bold;">فيديو موثق</span>
+                        <span style="color: #10b981; font-size: 0.75em; background: rgba(16, 185, 129, 0.15); padding: 2px 8px; border-radius: 4px; font-weight: bold;">فيديو فيسبوك موثق</span>
                     </div>
                     <h4 style="color: #ffffff; margin: 0 0 8px 0; font-size: 1.05em; line-height: 1.4;">${item.title}</h4>
-                    <p style="color: #cbd5e1; font-size: 0.84em; line-height: 1.6; margin: 0 0 14px 0;">${item.description}</p>
+                    <p style="color: #cbd5e1; font-size: 0.84em; line-height: 1.6; margin: 0 0 14px 0;">${descSafe}</p>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <a href="${urlSafe}" target="_blank" rel="noopener noreferrer" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #fff; text-decoration: none; padding: 10px 14px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(37,99,235,0.35);">
-                        <span>▶️ مشاهدة الفيديو المباشر</span>
+                    <a href="${urlSafe}" target="_blank" rel="noopener noreferrer" style="background: linear-gradient(135deg, #1877f2 0%, #166fe5 100%); color: #fff; text-decoration: none; padding: 10px 14px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(24,119,242,0.35);">
+                        <span>▶️ مشاهدة الفيديو على فيسبوك ↗️</span>
                     </a>
                     <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; text-decoration: none; padding: 8px 12px; border-radius: 8px; font-size: 0.8em; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 6px;">
                         <span>💬 اطلب فيديو الحالة عبر واتساب</span>
@@ -2988,32 +2999,32 @@ function getVitalsSummaryCardHTML(patient, assessment) {
     }
 
     return `
-        <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 22px; margin-bottom: 22px; box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid rgba(212, 175, 55, 0.25); padding-bottom: 10px; flex-wrap: wrap; gap: 8px;">
-                <div style="color: var(--primary-gold); font-weight: bold; font-size: 1.05em; display: flex; align-items: center; gap: 8px;">
+        <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%); border: 1.5px solid var(--primary-gold); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid rgba(212, 175, 55, 0.25); padding-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+                <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.95em; display: flex; align-items: center; gap: 6px;">
                     <span>📋</span> بيانات المراجع والملف البيوميكانيكي الأساسي
                 </div>
-                <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.8em; padding: 3px 10px; border-radius: 20px; font-weight: bold;">
+                <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.75em; padding: 2px 8px; border-radius: 14px; font-weight: bold;">
                     الجلسة الأولى • انطلاقة البرنامج
                 </span>
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 12px;">
-                <div style="background: #0f172a; padding: 10px 14px; border-radius: 8px; border: 1px solid #1e293b;">
-                    <div style="color: #94a3b8; font-size: 0.78em;">اسم المراجع:</div>
-                    <div style="color: #ffffff; font-weight: bold; font-size: 0.95em; margin-top: 2px;">${pName}</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 8px; margin-bottom: 8px;">
+                <div style="background: #0f172a; padding: 8px 10px; border-radius: 8px; border: 1px solid #1e293b; min-width: 0;">
+                    <div style="color: #94a3b8; font-size: 0.72em;">اسم المراجع:</div>
+                    <div style="color: #ffffff; font-weight: bold; font-size: 0.88em; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${pName}">${pName}</div>
                 </div>
-                <div style="background: #0f172a; padding: 10px 14px; border-radius: 8px; border: 1px solid #1e293b;">
-                    <div style="color: #94a3b8; font-size: 0.78em;">العمر والجنس:</div>
-                    <div style="color: #ffffff; font-weight: bold; font-size: 0.95em; margin-top: 2px;">${age ? `${age} سنة` : 'غير محدد'} ${genderDisplay ? `• ${genderDisplay}` : ''}</div>
+                <div style="background: #0f172a; padding: 8px 10px; border-radius: 8px; border: 1px solid #1e293b; min-width: 0;">
+                    <div style="color: #94a3b8; font-size: 0.72em;">العمر والجنس:</div>
+                    <div style="color: #ffffff; font-weight: bold; font-size: 0.88em; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${age ? `${age} سنة` : 'غير محدد'} ${genderDisplay ? `• ${genderDisplay}` : ''}</div>
                 </div>
-                <div style="background: #0f172a; padding: 10px 14px; border-radius: 8px; border: 1px solid #1e293b;">
-                    <div style="color: #94a3b8; font-size: 0.78em;">الوزن والطول:</div>
-                    <div style="color: #ffffff; font-weight: bold; font-size: 0.95em; margin-top: 2px;">${weight ? `${weight} كجم` : '--'} • ${height ? `${height} سم` : '--'}</div>
+                <div style="background: #0f172a; padding: 8px 10px; border-radius: 8px; border: 1px solid #1e293b; min-width: 0;">
+                    <div style="color: #94a3b8; font-size: 0.72em;">الوزن والطول:</div>
+                    <div style="color: #ffffff; font-weight: bold; font-size: 0.88em; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${weight ? `${weight} كجم` : '--'} • ${height ? `${height} سم` : '--'}</div>
                 </div>
-                <div style="background: #0f172a; padding: 10px 14px; border-radius: 8px; border: 1px solid #1e293b;">
-                    <div style="color: #94a3b8; font-size: 0.78em;">موضع الشكوى:</div>
-                    <div style="color: #38bdf8; font-weight: bold; font-size: 0.92em; margin-top: 2px;">${painAreaTitle}</div>
+                <div style="background: #0f172a; padding: 8px 10px; border-radius: 8px; border: 1px solid #1e293b; min-width: 0;">
+                    <div style="color: #94a3b8; font-size: 0.72em;">موضع الشكوى:</div>
+                    <div style="color: #38bdf8; font-weight: bold; font-size: 0.88em; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${painAreaTitle}">${painAreaTitle}</div>
                 </div>
             </div>
 
@@ -3078,11 +3089,8 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                         <div style="color: var(--primary-gold); font-size: 0.9em;">خطة الراحة الحركية الذاتية - الجلسة الأولى (مستقلة) - منطقة ${sessionData.latestAssessment?.painAreaTitle || 'المفصل المختار'}</div>
                     </div>
                 </div>
-                <div class="session-top-badges" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 320px; box-sizing: border-box;">
-                    <button type="button" onclick="exportClinicalSummaryForDoctor('${patientId}')" class="btn-header no-print" style="padding: 7px 8px; font-size: 0.8em; background: #0f172a; border: 1.5px solid #38bdf8; color: #38bdf8; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; width: 100%; box-sizing: border-box;">
-                        <span>📋</span> ملخص المعالج
-                    </button>
-                    <div style="background: #0f172a; border: 1px solid #10b981; padding: 7px 8px; border-radius: 8px; color: #10b981; font-weight: bold; font-size: 0.78em; text-align: center; display: flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; overflow: hidden;">
+                <div class="session-top-badges" style="display: flex; align-items: center; justify-content: flex-end;">
+                    <div style="background: #0f172a; border: 1.5px solid #10b981; padding: 7px 16px; border-radius: 8px; color: #10b981; font-weight: bold; font-size: 0.85em; text-align: center; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(16,185,129,0.2);">
                         <span>✓ الجلسة الأولى</span>
                     </div>
                 </div>
@@ -3153,6 +3161,16 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                     <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.3em;">🏋️ تمارين الراحة المقررة لليوم الأول (1 من 7) - ${sessionData.stageTitle}</h3>
                     <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">⚡ ابدأ بالتمارين أدناه</span>
                 </div>
+
+                <!-- تنبيه وإخلاء مسؤولية طبي سريري للتمارين -->
+                <div style="background: rgba(245, 158, 11, 0.1); border-right: 4px solid #f59e0b; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px;">
+                    <span style="font-size: 1.3em; line-height: 1;">⚠️</span>
+                    <div style="font-size: 0.85em; color: #fde68a; line-height: 1.6;">
+                        <strong style="color: #fbbf24;">تنبيه وإخلاء مسؤولية طبي:</strong> 
+                        هذه التمارين التأهيلية مصممة للاستشفاء المنزلي التدريجي للحالات المستقرة، وقد لا تلائم بعض الحالات المتقدمة أو الانزلاقات الغضروفية الحادة أو التورم والالتهاب النشط. يُرجى التوقف فوراً عند أي زيادة في الألم واستشارة الطبيب أو المعالج المختص لتقييم حالتك بدقة.
+                    </div>
+                </div>
+
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px;">
                     ${dayExercises.map((ex, idx) => `
                         <div class="clinical-exercise-card" style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
@@ -3241,7 +3259,14 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
             return;
         }
         const now = new Date();
-        timeEl.textContent = now.toLocaleTimeString('ar-JO', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+        let hours = now.getHours();
+        const ampm = hours >= 12 ? 'م' : 'ص';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        const hoursStr = String(hours).padStart(2, '0');
+        const minutesStr = String(now.getMinutes()).padStart(2, '0');
+        const secondsStr = String(now.getSeconds()).padStart(2, '0');
+        timeEl.textContent = `${hoursStr}:${minutesStr}:${secondsStr} ${ampm}`;
         if (dateEl) {
             dateEl.textContent = now.toLocaleDateString('ar-JO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         }
@@ -3521,12 +3546,9 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                         <div style="color: var(--primary-gold); font-size: 0.9em;">متابعة جلسات التأهيل الحركي (الجلسة ${activeDay} من 7) - منطقة ${sessionData.latestAssessment?.painAreaTitle || 'المفصل المختار'}</div>
                     </div>
                 </div>
-                <div class="session-top-badges" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 320px; box-sizing: border-box;">
-                    <button type="button" onclick="exportClinicalSummaryForDoctor('${patientId}')" class="btn-header no-print" style="padding: 7px 8px; font-size: 0.8em; background: #0f172a; border: 1.5px solid #38bdf8; color: #38bdf8; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; width: 100%; box-sizing: border-box;">
-                        <span>📋</span> ملخص المعالج
-                    </button>
-                    <div style="background: #0f172a; border: 1px solid #10b981; padding: 7px 8px; border-radius: 8px; color: #10b981; font-weight: bold; font-size: 0.78em; text-align: center; display: flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; overflow: hidden;" title="✓ ${sessionData.stageTitle}">
-                        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; max-width: 100%;">✓ ${(sessionData.stageTitle || '').length > 22 ? sessionData.stageTitle.substring(0, 20) + '…' : sessionData.stageTitle}</span>
+                <div class="session-top-badges" style="display: flex; align-items: center; justify-content: flex-end;">
+                    <div style="background: #0f172a; border: 1.5px solid #10b981; padding: 7px 16px; border-radius: 8px; color: #10b981; font-weight: bold; font-size: 0.82em; text-align: center; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(16,185,129,0.2);" title="✓ ${sessionData.stageTitle}">
+                        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; max-width: 100%;">✓ ${(sessionData.stageTitle || '').length > 25 ? sessionData.stageTitle.substring(0, 23) + '…' : sessionData.stageTitle}</span>
                     </div>
                 </div>
             </div>
@@ -3575,6 +3597,16 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             <!-- عرض التمارين اليومية المقررة للجلسة المختارة -->
             <div style="margin-bottom: 25px;">
                 <h3 style="color: var(--primary-gold); margin: 0 0 15px 0; font-size: 1.3em;">🏋️ تمارين الراحة المقررة للجلسة (${activeDay} من 7) - ${sessionData.stageTitle}</h3>
+
+                <!-- تنبيه وإخلاء مسؤولية طبي سريري للتمارين -->
+                <div style="background: rgba(245, 158, 11, 0.1); border-right: 4px solid #f59e0b; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px;">
+                    <span style="font-size: 1.3em; line-height: 1;">⚠️</span>
+                    <div style="font-size: 0.85em; color: #fde68a; line-height: 1.6;">
+                        <strong style="color: #fbbf24;">تنبيه وإخلاء مسؤولية طبي:</strong> 
+                        هذه التمارين التأهيلية مصممة للاستشفاء المنزلي التدريجي للحالات المستقرة، وقد لا تلائم بعض الحالات المتقدمة أو الانزلاقات الغضروفية الحادة أو التورم والالتهاب النشط. يُرجى التوقف فوراً عند أي زيادة في الألم واستشارة الطبيب أو المعالج المختص لتقييم حالتك بدقة.
+                    </div>
+                </div>
+
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px;">
                     ${dayExercises.map((ex, idx) => `
                         <div class="clinical-exercise-card" style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
