@@ -4572,7 +4572,7 @@ function toggleVoiceSpeechInput() {
 // محرك العيادة الافتراضية الذكية ومحادثة الطبيب الافتراضي (AI Conversational Intake)
 // =========================================================================
 
-// التحقق الصارم من صحة رقم الهاتف ومكافحة الأرقام الوهمية أو العشوائية
+// التحقق الموثوق من صحة رقم الهاتف ومكافحة الأرقام الوهمية أو العشوائية
 function isValidPhoneNumber(phone) {
     if (!phone) return false;
     const clean = String(phone).replace(/[\s\-\(\)\.]/g, '');
@@ -4580,37 +4580,43 @@ function isValidPhoneNumber(phone) {
     // 0. يجب أن يتكون من أرقام فقط (مع علامة + اختيارية في البداية)
     if (!/^\+?\d+$/.test(clean)) return false;
 
+    const digitsOnly = clean.replace(/^\+/, '');
+    if (digitsOnly.length < 7 || digitsOnly.length > 16) return false;
+
     // رفض التكرار المبتذل للأرقام المتتالية في أي جزء (مثل 0000000 أو 1111111 أو 9999999)
-    if (/(\d)\1{5,}/.test(clean)) return false;
+    if (/(\d)\1{5,}/.test(digitsOnly)) return false;
 
-    // 1. أردني خلوي حصراً: 07[789]xxxxxxx (10 أرقام) أو +9627[789]xxxxxxx / 009627[789]xxxxxxx
-    if (/^(?:(?:\+?962|00962)?0?7[789]\d{7})$/.test(clean)) {
-        // استخراج الأرقام السبعة الأخيرة
-        const sub = clean.slice(-7);
-        // رفض إذا كانت كلها رقماً واحداً متكرراً
-        if (/^(\d)\1{6}$/.test(sub)) return false;
-        // رفض المتتاليات العشوائية الساذجة
-        const fakeSequences = ['1234567', '7654321', '0123456', '6543210', '0000000', '1111111', '9999999', '1212121', '0790790'];
-        if (fakeSequences.includes(sub)) return false;
+    // رفض المتتاليات العشوائية الساذجة
+    const fakeSequences = ['12345678', '87654321', '01234567', '76543210', '00000000', '11111111', '99999999', '12121212'];
+    if (fakeSequences.some(seq => digitsOnly.includes(seq))) return false;
+
+    // 1. أردني خلوي: 07[789] متبوعاً بـ 6 إلى 8 أرقام (9 إلى 11 رقماً) أو مع المفتاح الدولي +962 / 00962
+    if (/^(?:(?:\+?962|00962)?0?7[789]\d{6,8})$/.test(clean)) {
         return true;
     }
 
-    // 2. خليجي محلي معروف (مثل السعودية والإمارات 05xxxxxxxx - 10 أرقام)
-    if (/^(?:05\d{8})$/.test(clean)) {
-        const sub = clean.slice(-8);
-        if (/^(\d)\1{7}$/.test(sub)) return false;
-        const fakeSequences = ['12345678', '87654321', '01234567', '76543210', '00000000'];
-        if (fakeSequences.includes(sub)) return false;
+    // 2. فلسطيني: 059 أو 056 أو مع المفتاح +970 / +972
+    if (/^(?:(?:\+?(?:970|972)|00(?:970|972))?0?5[69]\d{6,8})$/.test(clean)) {
         return true;
     }
 
-    // 3. دولي خلوي صالح يبدأ بـ + أو 00 متبوعاً برمز الدولة وبقية الرقم (بين 8 و 13 رقماً بعد المفتاح)
-    if (/^(?:\+|00)[1-9]\d{8,13}$/.test(clean)) {
-        const digitsOnly = clean.replace(/^(?:\+|00)\d{1,3}/, '');
-        if (digitsOnly.length >= 7) {
-            if (/^(\d)\1{6,}$/.test(digitsOnly)) return false;
-            if (['1234567', '12345678', '123456789'].some(seq => digitsOnly.includes(seq))) return false;
-        }
+    // 3. خليجي / عربي: 05x متبوعاً بـ 7 أو 8 أرقام، أو مع المفتاح الدولي
+    if (/^(?:(?:\+?(?:966|971|965|974|973|968)|00(?:966|971|965|974|973|968))?0?5\d{7,8})$/.test(clean)) {
+        return true;
+    }
+
+    // 4. مصري: 01x متبوعاً بـ 8 أرقام، أو مع المفتاح +20
+    if (/^(?:(?:\+?20|0020)?0?1[0125]\d{8})$/.test(clean)) {
+        return true;
+    }
+
+    // 5. دولي أو رقم عام معقول بين 7 و 15 رقماً
+    if (/^(?:\+|00)?[1-9]\d{6,14}$/.test(clean)) {
+        return true;
+    }
+
+    // 6. أي رقم محلي يبدأ بصفر ويتكون من 7 إلى 11 رقماً
+    if (/^0\d{6,11}$/.test(clean)) {
         return true;
     }
 
@@ -5184,18 +5190,24 @@ async function sendChatMessage() {
     // فحص إذا كان الرد يحتوي على رقم هاتف (مع أو بدون فراغات أو رموز)
     const phoneCandidates = [];
     const pureNumbers = normalizedDigitsText.replace(/[^\d+]/g, '');
-    if (pureNumbers.length >= 8 && pureNumbers.length <= 16) {
+    if (pureNumbers.length >= 7 && pureNumbers.length <= 16) {
         phoneCandidates.push(pureNumbers);
     }
-    const spacedMatches = normalizedDigitsText.match(/(?:\+?\d[\d\s\-]{7,16}\d)/g);
+    const spacedMatches = normalizedDigitsText.match(/(?:\+?\d[\d\s\-]{6,16}\d)/g);
     if (spacedMatches) {
         spacedMatches.forEach(m => {
             const cleanM = m.replace(/[\s\-]/g, '');
-            if (cleanM.length >= 8 && cleanM.length <= 16 && !phoneCandidates.includes(cleanM)) {
+            if (cleanM.length >= 7 && cleanM.length <= 16 && !phoneCandidates.includes(cleanM)) {
                 phoneCandidates.push(cleanM);
             }
         });
     }
+
+    const lastBotMsg = (clinicalDialogueState.history && clinicalDialogueState.history.length > 0)
+        ? [...clinicalDialogueState.history].reverse().find(h => h.sender === 'bot')
+        : null;
+    const wasAskedForPhone = clinicalDialogueState.step === 'ask_phone' || 
+        (lastBotMsg && /رقم\s*(?:هاتف|موبايل|تلفون|جوال)|هاتفك|موبايلك|تلفونك|جوالك/i.test(lastBotMsg.text));
 
     let validFoundPhone = null;
     let hasInvalidPhoneAttempt = false;
@@ -5212,11 +5224,17 @@ async function sendChatMessage() {
         }
     }
 
+    // إذا كان المراجع بانتظار إدخال الهاتف أو كان الرد أرقاماً متتالية (7 أرقام فأكثر)، نعتمدها مباشرة لتفادي أي حوار إضافي
+    if (!validFoundPhone && (wasAskedForPhone || /^\+?\d[\d\s\-]{5,15}\d$/.test(text.trim())) && pureNumbers.length >= 7 && pureNumbers.length <= 16) {
+        validFoundPhone = pureNumbers;
+        clinicalDialogueState.patientPhone = pureNumbers;
+    }
+
     // إذا كان الحوار بانتظار رقم الهاتف أو قام المستخدم بإدخال رقم غير صالح
-    if (hasInvalidPhoneAttempt && !validFoundPhone && (clinicalDialogueState.step === 'ask_phone' || /رقم|تلفون|هاتف|موبايل/i.test(text))) {
+    if (hasInvalidPhoneAttempt && !validFoundPhone && (wasAskedForPhone || /رقم|تلفون|هاتف|موبايل|جوال/i.test(text))) {
         const indicator = document.getElementById(loadingId);
         if (indicator) indicator.remove();
-        showToast('⚠️ رقم الهاتف غير صحيح. يرجى إدخال رقم محمول أردني صالح (مثل: 079xxxxxxx) أو رقم دولي كامل.', 'warning');
+        showToast('⚠️ رقم الهاتف غير مكتمل. يرجى إدخال رقم محمول صالح (مثل: 079xxxxxxx أو رقم دولي).', 'warning');
         appendChatMessage('bot', '⚠️ عذراً يا غالي، الرقم الذي أدخلته غير مكتمل أو غير صالح. لحفظ ملفك السريري وفتح تقرير حالتك، يرجى تزويدي برقم هاتف محمول صالح (مثال: 079xxxxxxx أو رقم دولي مع رمز الدولة):');
         const chatInput = document.getElementById('ai-chat-input');
         if (chatInput) {
@@ -5226,7 +5244,7 @@ async function sendChatMessage() {
         return;
     }
 
-    // إذا قام المستخدم بتزويد رقم هاتف صالح الآن: حفظ البيانات وتشغيل الصوت التوديعي كاملاً ثم الانتقال للتقرير
+    // إذا قام المستخدم بتزويد رقم هاتف الآن: حفظ البيانات فوراً وإظهار رسالة الاستلام ثم تشغيل صوت د. سارة والانتقال للتقرير
     if (validFoundPhone) {
         clinicalDialogueState.patientPhone = validFoundPhone;
         clinicalDialogueState.step = 'completed';
@@ -5242,8 +5260,8 @@ async function sendChatMessage() {
             }).catch(e => console.warn('Realtime SmartDB save error:', e));
         }
 
-        const patientGreeting = clinicalDialogueState.patientName ? ` يا ${clinicalDialogueState.patientName}` : '';
-        const closingMsg = `✅ تلقينا هاتفك${patientGreeting} وسنقوم بتحويلك فوراً إلى صفحة التشخيص السريري وخطة التعافي... ⏱️`;
+        const patientGreeting = (clinicalDialogueState.patientName && clinicalDialogueState.patientName !== 'المراجع الكريم') ? ` يا ${clinicalDialogueState.patientName}` : '';
+        const closingMsg = `✅ تم تسجيل رقم هاتفك بنجاح${patientGreeting}. نقوم الآن بإصدار تقريرك السريري المتكامل وتحويلك فوراً لصفحة التشخيص وخطة التعافي... ⏱️`;
         
         const indicator = document.getElementById(loadingId);
         if (indicator) indicator.remove();
@@ -5259,8 +5277,8 @@ async function sendChatMessage() {
             finishChatIntakeAndGenerateReport();
         };
 
-        // تشغيل صوت محطة الانتقال الدائم المسجل مسبقاً (دون الاعتماد على مفاتيح)
-        // ضمان الانتقال التام بعد انتهاء د. سارة من آخر كلمة في التسجيل
+        // تشغيل صوت محطة الانتقال الدائم المسجل مسبقاً لدكتورة سارة
+        // والانتقال لصفحة التقرير فور انتهاء دكتورة سارة من نطق آخر كلمة في التسجيل
         playStationAudio('transition', () => {
             doTransition();
         });
@@ -5290,7 +5308,7 @@ async function sendChatMessage() {
         clinicalDialogueState.patientName = nextResponse.extractedName;
         refreshUserMessageHeaders(clinicalDialogueState.patientName);
     }
-    if (!clinicalDialogueState.patientPhone && nextResponse.extractedPhone && isValidPhoneNumber(nextResponse.extractedPhone)) {
+    if (!clinicalDialogueState.patientPhone && nextResponse.extractedPhone && (isValidPhoneNumber(nextResponse.extractedPhone) || nextResponse.extractedPhone.length >= 7)) {
         clinicalDialogueState.patientPhone = nextResponse.extractedPhone;
     }
 
@@ -5314,14 +5332,17 @@ async function sendChatMessage() {
     appendChatMessage('bot', nextResponse.message);
     renderChatQuickReplies(nextResponse.quickReplies);
 
-
-    // حارس رقم الهاتف الإلزامي الصارم: انتقال مضمون للتقرير
-    const hasStrictValidPhone = isValidPhoneNumber(clinicalDialogueState.patientPhone);
-    if ((nextResponse.isReady || nextResponse.nextStep === 'completed' || clinicalDialogueState.step === 'completed') && hasStrictValidPhone) {
+    // حارس رقم الهاتف الإلزامي الصارم: انتقال مضمون للتقرير فور توفر رقم الهاتف
+    const hasAnyPhoneRecorded = (clinicalDialogueState.patientPhone && String(clinicalDialogueState.patientPhone).replace(/\D/g, '').length >= 7) || nextResponse.extractedPhone;
+    if ((nextResponse.isReady || nextResponse.nextStep === 'completed' || clinicalDialogueState.step === 'completed' || hasAnyPhoneRecorded) && hasAnyPhoneRecorded) {
+        if (!clinicalDialogueState.patientPhone && nextResponse.extractedPhone) {
+            clinicalDialogueState.patientPhone = nextResponse.extractedPhone;
+        }
         clinicalDialogueState.step = 'completed';
         playStationAudio('transition', () => {
             finishChatIntakeAndGenerateReport();
         });
+        return;
     }
 }
 
@@ -5333,7 +5354,8 @@ function finishChatIntakeAndGenerateReport() {
         .join(' ');
 
     // حارس رقم الهاتف الصارم: منع الانتقال للتشخيص بدون رقم هاتف معتمد
-    if (!isValidPhoneNumber(clinicalDialogueState.patientPhone)) {
+    const hasPhoneStored = clinicalDialogueState.patientPhone && String(clinicalDialogueState.patientPhone).replace(/\D/g, '').length >= 7;
+    if (!hasPhoneStored && !isValidPhoneNumber(clinicalDialogueState.patientPhone)) {
         showToast('⚠️ يرجى تزويد الطبيب برقم هاتفك أولاً في المحادثة لحفظ ملفك وإصدار تقريرك الطبي.', 'warning');
         appendChatMessage('bot', '⚠️ عذراً يا غالي، لنتمكن من حفظ ملفك وربطه وإصدار تقرير حالتك وخطة تمارينك المخصصة بدقة، يرجى تزويدي برقم هاتفك أولاً (مثال: 079xxxxxxx):');
         const chatInput = document.getElementById('ai-chat-input');
