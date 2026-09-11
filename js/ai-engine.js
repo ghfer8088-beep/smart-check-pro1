@@ -552,8 +552,15 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
 
         const payload = {
             contents: [{ parts: [{ text: promptText }] }],
-            generationConfig: { temperature, maxOutputTokens: Math.min(maxTokens, 450) }
+            generationConfig: {
+                temperature,
+                maxOutputTokens: 1200,
+                thinkingConfig: {
+                    thinkingBudget: 0
+                }
+            }
         };
+
 
         let lastError = null;
         const pool = WADA3AN_AI_CONFIG.getPoolKeys();

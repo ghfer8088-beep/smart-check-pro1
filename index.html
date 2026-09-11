@@ -29,23 +29,24 @@
                         return Promise.all(keys.map(k => caches.delete(k)));
                     }).then(function() {
                         localStorage.setItem('smart_app_version', APP_TARGET_VER);
-                        if ('serviceWorker' in navigator) {
+                        if (window.location.protocol.startsWith('http') && 'serviceWorker' in navigator) {
                             navigator.serviceWorker.getRegistrations().then(function(regs) {
                                 for (let r of regs) { r.unregister(); }
-                            });
+                            }).catch(function() {});
                         }
                     }).catch(function() {});
                 } else {
                     localStorage.setItem('smart_app_version', APP_TARGET_VER);
                 }
             }
-            if ('serviceWorker' in navigator) {
+            if (window.location.protocol.startsWith('http') && 'serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(function(registrations) {
                     for (let registration of registrations) {
                         registration.update();
                     }
-                });
+                }).catch(function() {});
             }
+
         })();
     </script>
 </head>
@@ -1418,12 +1419,13 @@
                     const keys = await caches.keys();
                     await Promise.all(keys.map(k => caches.delete(k)));
                 }
-                if ('serviceWorker' in navigator) {
+                if (window.location.protocol.startsWith('http') && 'serviceWorker' in navigator) {
                     const regs = await navigator.serviceWorker.getRegistrations();
                     for (let r of regs) {
                         await r.unregister();
                     }
                 }
+
             } catch (e) {
                 console.log('Cache clear error:', e);
             }

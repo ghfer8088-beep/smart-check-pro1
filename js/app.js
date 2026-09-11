@@ -4057,9 +4057,10 @@ function acceptMedicalDisclaimer() {
 document.addEventListener('DOMContentLoaded', async () => {
     await SmartDB.openDB();
 
-    if ('serviceWorker' in navigator) {
+    if (window.location.protocol.startsWith('http') && 'serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').catch(() => {});
     }
+
 
     setupPwaInstallListener();
 
@@ -4132,10 +4133,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // تفعيل فوري مع أول لمسة أو نقرة على شاشة الهاتف لفك قيود المتصفحات (iOS Safari / Chrome Mobile)
     const mobileFirstTouchUnlock = () => {
         Wada3anAiEngine.unlockAudio();
-        if (!introPlayedOrAttempted && !currentSelectedPoint && currentStep === 1) {
+        if (!introPlayedOrAttempted && (typeof currentSelectedPoint === 'undefined' || !currentSelectedPoint)) {
             introPlayedOrAttempted = true;
             triggerAutoIntro();
         }
+
         window.removeEventListener('pointerdown', mobileFirstTouchUnlock);
         window.removeEventListener('touchstart', mobileFirstTouchUnlock);
         window.removeEventListener('click', mobileFirstTouchUnlock);
