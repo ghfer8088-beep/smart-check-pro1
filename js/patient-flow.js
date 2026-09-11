@@ -113,51 +113,55 @@ const PatientFlow = (function() {
         const latestLog = dailyLogs.length > 0 ? dailyLogs[dailyLogs.length - 1] : null;
         const currentPain = latestLog && typeof latestLog.painScore === 'number' ? latestLog.painScore : (baselinePain || 0);
 
-        // 1. مؤشر انخفاض وتلاشي الألم (محسوب مباشرة من مقارنة ألم اليوم الأول بألم آخر جلسة)
+        // 1. مؤشر انخفاض وتلاشي الألم (محسوب مباشرة من مقارنة ألم البداية بألم آخر جلسة مسجلة)
         let painReductionRate = 0;
         if (dailyLogs.length > 0 && baselinePain !== null && baselinePain > 0) {
             painReductionRate = Math.max(0, Math.min(100, Math.round(((baselinePain - currentPain) / baselinePain) * 100)));
+            if (currentPain < baselinePain && painReductionRate === 0) {
+                painReductionRate = Math.max(10, Math.round(((baselinePain - currentPain) / baselinePain) * 100));
+            }
         } else if (dailyLogs.length > 0 && currentPain === 0) {
             painReductionRate = 100;
         } else {
-            painReductionRate = 0; // بداية البرنامج قبل أي جلسة
+            painReductionRate = 0; // قبل تسجيل أي جلسة
         }
         
-        // 2. مؤشر تحسن المدى الحركي (محسوب مباشرة من تقييم المريض الحركي المسجل في الجلسة اليومية)
-        let mobilityScore = 0; // 0 قبل تسجيل أي جلسة
+        // 2. مؤشر استعادة المدى الحركي (محسوب مباشرة من مدخلات تقييم المريض في الجلسات)
+        let mobilityScore = 70; // قيمة افتراضية أولى
         if (dailyLogs.length > 0) {
             if (latestLog && typeof latestLog.mobilityRate === 'number') {
                 mobilityScore = latestLog.mobilityRate;
+            } else if (latestLog && typeof latestLog.movementScore === 'number') {
+                mobilityScore = latestLog.movementScore;
             } else {
-                // متوسط الحساب الحركي من مدخلات الجلسات
                 let mobAcc = 0;
                 dailyLogs.forEach(l => {
-                    let dayMob = 50;
-                    if (l.exercisesDone) dayMob += 20;
-                    if (l.walkingDone) dayMob += 15;
-                    if (l.goodPosture) dayMob += 10;
-                    mobAcc += Math.min(100, dayMob);
+                    let m = (typeof l.mobilityRate === 'number') ? l.mobilityRate : (typeof l.movementScore === 'number' ? l.movementScore : 70);
+                    mobAcc += m;
                 });
                 mobilityScore = Math.round(mobAcc / dailyLogs.length);
             }
+        } else {
+            mobilityScore = 0;
         }
 
         // 3. مؤشر جودة وعمق النوم والراحة (محسوب مباشرة من تقييم جودة النوم اليومي)
-        let sleepScore = 0; // 0 قبل تسجيل أي جلسة
+        let sleepScore = 70; // قيمة افتراضية أولى
         if (dailyLogs.length > 0) {
             if (latestLog && typeof latestLog.sleepRate === 'number') {
                 sleepScore = latestLog.sleepRate;
+            } else if (latestLog && typeof latestLog.sleepQuality === 'number') {
+                sleepScore = latestLog.sleepQuality;
             } else {
                 let sleepAcc = 0;
                 dailyLogs.forEach(l => {
-                    let s = 50;
-                    if (l.painScore <= 3) s += 30;
-                    else if (l.painScore <= 5) s += 15;
-                    if (l.heatDone) s += 10;
-                    sleepAcc += Math.min(100, s);
+                    let s = (typeof l.sleepRate === 'number') ? l.sleepRate : (typeof l.sleepQuality === 'number' ? l.sleepQuality : 70);
+                    sleepAcc += s;
                 });
                 sleepScore = Math.round(sleepAcc / dailyLogs.length);
             }
+        } else {
+            sleepScore = 0;
         }
 
         // المرحلة العلاجية الحالية المنسجمة تشريحياً 100% مع موضع الشكوى

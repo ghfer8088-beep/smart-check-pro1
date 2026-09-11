@@ -205,8 +205,37 @@
             <!-- وسام الريادة العالمية: المنظومة السريرية الذكية الأولى والوحيدة في العالم (تصميم عصري رشيق للهاتف والكمبيوتر) -->
             <div class="prestige-compact-showcase no-print" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.16) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 14px 20px; margin-bottom: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
                 <div style="display: flex; align-items: center; gap: 14px;">
-                    <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #d4af37 0%, #854d0e 100%); display: flex; align-items: center; justify-content: center; font-size: 1.6em; box-shadow: 0 0 15px rgba(212, 175, 55, 0.5); flex-shrink: 0; border: 1.5px solid #fff59d;">
-                        👑
+                    <div style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fef08a 0%, #d4af37 45%, #854d0e 85%, #451a03 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(212, 175, 55, 0.65), inset 0 2px 4px rgba(255,255,255,0.7); flex-shrink: 0; border: 2px solid #fff59d; position: relative;">
+                        <!-- وسام التميز السريري الملكي فائق الفخامة والريادة -->
+                        <svg width="34" height="34" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
+                            <defs>
+                                <linearGradient id="goldGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#FFF59D"/>
+                                    <stop offset="40%" stop-color="#D4AF37"/>
+                                    <stop offset="85%" stop-color="#996515"/>
+                                    <stop offset="100%" stop-color="#5B3A04"/>
+                                </linearGradient>
+                                <linearGradient id="ribbonGradBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#38BDF8"/>
+                                    <stop offset="50%" stop-color="#1E40AF"/>
+                                    <stop offset="100%" stop-color="#0F172A"/>
+                                </linearGradient>
+                            </defs>
+                            <!-- أشرطة الوسام المتدلية الفاخرة -->
+                            <path d="M22 36 L15 58 L24 53 L29 58 L27 36 Z" fill="url(#ribbonGradBlue)" stroke="#D4AF37" stroke-width="1.2" stroke-linejoin="round"/>
+                            <path d="M42 36 L49 58 L40 53 L35 58 L37 36 Z" fill="url(#ribbonGradBlue)" stroke="#D4AF37" stroke-width="1.2" stroke-linejoin="round"/>
+                            <!-- خط الزخرفة الذهبي في الشريط -->
+                            <path d="M20 38 L18 54 L24 51" stroke="#FDE047" stroke-width="1" fill="none"/>
+                            <path d="M44 38 L46 54 L40 51" stroke="#FDE047" stroke-width="1" fill="none"/>
+                            <!-- قرص الوسام الذهبي الرئيسي المسنن بأشعة التميز -->
+                            <circle cx="32" cy="26" r="21" fill="url(#goldGrad1)" stroke="#FFF9C4" stroke-width="1.8"/>
+                            <circle cx="32" cy="26" r="17.5" fill="#0A0F1D" stroke="#D4AF37" stroke-width="1.2"/>
+                            <!-- إكليل الغار المحيط بنجمة التميز -->
+                            <path d="M19 28 C18 21 24 16 32 16 C40 16 46 21 45 28 C45 34 39 38 32 38 C25 38 19 34 19 28 Z" fill="none" stroke="rgba(212, 175, 55, 0.4)" stroke-width="1" stroke-dasharray="2 2"/>
+                            <!-- نجمة التميز السريري الثمانية المتبلورة (8-Point Distinction Star) -->
+                            <polygon points="32,13 34.5,21.5 43,21.5 36,26.5 38.5,35 32,30 25.5,35 28,26.5 21,21.5 29.5,21.5" fill="url(#goldGrad1)" stroke="#FFFFFF" stroke-width="0.8"/>
+                            <circle cx="32" cy="25" r="2.8" fill="#FFFFFF" opacity="0.95"/>
+                        </svg>
                     </div>
                     <div>
                         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 2px;">
@@ -221,9 +250,6 @@
                     </div>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                    <button type="button" onclick="playStep1AudioGuide()" class="btn-header btn-header-emerald" id="btn-play-intro-audio" style="font-weight: bold; border-radius: 20px; padding: 6px 14px; font-size: 0.84em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        <span>🔊</span> استمع لدليل د. سارة الصوتي
-                    </button>
                     <span style="background: rgba(16, 185, 129, 0.18); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.82em; font-weight: bold; padding: 5px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px;">
                         <span>✓</span> فحص مجاني متاح للجميع 100%
                     </span>
@@ -326,23 +352,11 @@
                         <div style="font-size: 0.85em; color: var(--primary-gold); font-weight: bold;">الخطوة الأولى:</div>
                     </div>
                     <h2 style="color: #ffffff; margin: 0 0 8px 0; font-size: 1.45em;">تحديد موضع الشكوى والألم</h2>
-                    <p style="color: #94a3b8; font-size: 0.9em; line-height: 1.5; margin-bottom: 16px;">انقر مباشرة على النقطة التشريحية الحمراء المضيئة على المجسم، أو ابحث باسم العرض أدناه:</p>
-
-                    <!-- شريط البحث الذكي الفوري عن موضع الشكوى -->
-                    <div style="position: relative; margin-bottom: 18px;">
-                        <input type="text" id="smart-pain-search-input" oninput="handleSmartPainSearch(this.value)" placeholder="🔍 اكتب مكان الألم (مثال: ديسك أسفل الظهر، طقطقة فك، مسمار كعب، ألم كتف)..." style="width: 100%; background: #0b111e; border: 1.5px solid var(--primary-gold); border-radius: 8px; color: #ffffff; padding: 12px 16px; font-size: 0.92em; outline: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-                        <div id="search-pain-results" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: #0f172a; border: 1px solid var(--primary-gold); border-radius: 0 0 8px 8px; max-height: 220px; overflow-y: auto; z-index: 100; box-shadow: 0 8px 24px rgba(0,0,0,0.8);"></div>
-                    </div>
+                    <p style="color: #94a3b8; font-size: 0.92em; line-height: 1.5; margin-bottom: 16px;">انقر مباشرة على النقطة التشريحية الحمراء المضيئة على المجسم لتحديد موضع ألمك بدقة:</p>
 
                     <div style="background: #0f172a; padding: 14px 16px; border-radius: 10px; border-right: 3px solid var(--primary-gold); margin-bottom: 20px;">
                         <div style="color: #94a3b8; font-size: 0.82em;">المنطقة المحددة حالياً:</div>
                         <div id="selected-point-label" style="color: #d4af37; font-weight: bold; font-size: 1.1em; margin-top: 4px;">انقر على مكان الألم على المجسم</div>
-                    </div>
-
-                    <!-- مربع نصي موحد لوصف الحالة -->
-                    <div style="margin-bottom: 20px;">
-                        <label style="color: #cbd5e1; font-size: 0.9em; font-weight: bold; display: block; margin-bottom: 8px;">📝 صف ما تشعر به بإيجاز (اختياري):</label>
-                        <textarea id="patient-condition-notes" rows="3" placeholder="مثال: ألم يزداد عند الجلوس ويمتد إلى الكتف الأيمن مع تنميل..." style="width: 100%; background: #0b111e; border: 1px solid #334155; border-radius: 8px; color: #ffffff; padding: 12px; font-size: 0.92em; outline: none; resize: vertical;"></textarea>
                     </div>
 
                     <!-- بطاقة زرع الأمل والأمان السريري -->

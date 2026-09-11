@@ -395,7 +395,8 @@ function selectPointFromSearch(pointId, view) {
     if (pt) {
         selectAnatomyPoint(pt);
         showToast(`تم تحديد ${pt.title} بنجاح`, 'success');
-        document.getElementById('smart-pain-search-input').value = pt.title;
+        const searchInput = document.getElementById('smart-pain-search-input');
+        if (searchInput) searchInput.value = pt.title;
     }
 }
 
@@ -2087,12 +2088,6 @@ function displayDiagnosticReport(data) {
                         <div style="color: #94a3b8; font-size: 0.88em; font-weight: bold;">🩺 ${data.isPreliminary ? 'التقييم الاسترشادي الأولي:' : 'خلاصة التشخيص السريري المباشر:'}</div>
                         <h2 style="color: ${data.isPreliminary ? '#7dd3fc' : 'var(--primary-gold)'}; margin: 6px 0 2px 0; font-size: 1.45em; font-weight: 900;">${formattedDiag}</h2>
                         ${formattedRoot ? `<div style="color: #38bdf8; font-size: 0.88em; font-weight: bold; margin-top: 4px;">🎯 المستوى التشريحي المستهدف: ${formattedRoot}</div>` : ''}
-                        <div style="margin-top: 10px;">
-                            <span class="free-plan-highlight-badge">
-                                <span>🎁</span>
-                                <span>مشمول بالكامل في برنامج الـ 7 أيام المجاني للراحة الحركية والاستشفاء الذاتي</span>
-                            </span>
-                        </div>
                     </div>
                     <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
                         <span style="background: ${data.isPreliminary ? 'rgba(56, 189, 248, 0.2)' : 'rgba(16, 185, 129, 0.2)'}; border: 1.5px solid ${data.isPreliminary ? '#38bdf8' : '#10b981'}; color: ${data.isPreliminary ? '#7dd3fc' : '#6ee7b7'}; padding: 8px 18px; border-radius: 25px; font-weight: 800; font-size: 1em; letter-spacing: 0.5px;">
@@ -3505,19 +3500,19 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3); text-align: center;">
                     <div style="font-size: 2em; font-weight: bold; color: #ef4444;">${sessionData.indicators.painReduction}%</div>
                     <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر انخفاض وتلاشي الألم</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${sessionData.currentSessionDay === 2 ? 'بانتظار تقييمك لجلسة اليوم' : (sessionData.baselinePain ? `مقارنة بألم البداية (${sessionData.baselinePain}/10)` : 'مقارنة بالتقييم السريري المبدئي')}</div>
+                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${sessionData.dailyLogs && sessionData.dailyLogs.length > 0 ? (sessionData.baselinePain ? `مقارنة بألم البداية (${sessionData.baselinePain}/10)` : 'مقارنة بالتقييم السريري المبدئي') : 'بانتظار تقييمك للجلسة الأولى'}</div>
                 </div>
 
                 <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3); text-align: center;">
                     <div style="font-size: 2em; font-weight: bold; color: #38bdf8;">${sessionData.indicators.mobility}%</div>
                     <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر استعادة المدى الحركي</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${sessionData.currentSessionDay === 2 ? 'بانتظار تقييمك لجلسة اليوم' : 'بناءً على التقييم الحركي الفعلي المسجل'}</div>
+                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${sessionData.dailyLogs && sessionData.dailyLogs.length > 0 ? 'بناءً على التقييم الحركي الفعلي المسجل' : 'بانتظار تقييمك للجلسة الأولى'}</div>
                 </div>
 
                 <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); text-align: center;">
                     <div style="font-size: 2em; font-weight: bold; color: #10b981;">${sessionData.indicators.sleepQuality}%</div>
                     <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر جودة وعمق النوم</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${sessionData.currentSessionDay === 2 ? 'بانتظار تقييمك لجلسة اليوم' : 'بناءً على تقييم النوم والراحة الفعلي المسجل'}</div>
+                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${sessionData.dailyLogs && sessionData.dailyLogs.length > 0 ? 'بناءً على تقييم النوم والراحة الفعلي المسجل' : 'بانتظار تقييمك للجلسة الأولى'}</div>
                 </div>
             </div>
 
@@ -4613,6 +4608,14 @@ function resetToInitialState() {
     switchAnatomyView('front');
     goToStep(1);
     showToast('تمت إعادة التهيئة لبدء فحص جديد', 'info');
+
+    // تشغيل صوت د. سارة الترحيبي تلقائياً عند بدء فحص جديد
+    sessionStorage.removeItem('scp_welcome_audio_played');
+    setTimeout(() => {
+        if (typeof playWelcomeAudioDirectly === 'function') {
+            playWelcomeAudioDirectly();
+        }
+    }, 250);
 }
 
 // تبديل منظر المجسم
@@ -5191,15 +5194,31 @@ function acceptMedicalDisclaimer() {
     acceptWelcomeTourModal();
 }
 
-// تشغيل ترحيب د. سارة الصوتي فور أول لمسة أو نقرة للمستخدم في الخطوة 1 إذا لم يكن قد عُزف بعد
-document.addEventListener('pointerdown', function onFirstUserInteraction() {
+// تشغيل ترحيب د. سارة الصوتي تلقائياً فور الدخول أو أول تفاعل للمستخدم
+function autoPlayWelcomeAudioIfEligible() {
     if (sessionStorage.getItem('scp_welcome_audio_played') !== 'true') {
-        const step1 = document.getElementById('step-1');
-        if (step1 && step1.classList.contains('active')) {
-            playWelcomeAudioDirectly();
+        const step1 = document.getElementById('step-section-1');
+        if (step1 && step1.style.display !== 'none') {
+            if (typeof Wada3anAiEngine !== 'undefined') {
+                Wada3anAiEngine.unlockAudio();
+            }
+            if (typeof playWelcomeAudioDirectly === 'function') {
+                playWelcomeAudioDirectly();
+            }
         }
     }
-}, { once: true });
+}
+
+// محاولة التشغيل المباشر عند أول لمسة/تفاعل لتجاوز قيود المتصفحات
+const onFirstUserGestureWelcome = () => {
+    autoPlayWelcomeAudioIfEligible();
+    window.removeEventListener('pointerdown', onFirstUserGestureWelcome);
+    window.removeEventListener('click', onFirstUserGestureWelcome);
+    window.removeEventListener('touchstart', onFirstUserGestureWelcome);
+};
+window.addEventListener('pointerdown', onFirstUserGestureWelcome, { passive: true });
+window.addEventListener('click', onFirstUserGestureWelcome, { passive: true });
+window.addEventListener('touchstart', onFirstUserGestureWelcome, { passive: true });
 
 // تهيئة التطبيق والـ PWA
 document.addEventListener('DOMContentLoaded', async () => {

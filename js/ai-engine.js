@@ -338,27 +338,27 @@ ${greetingInstruction}
         const secInfo = patientData.secondaryDiagnosis ? `<div style="color: #cbd5e1; font-size: 0.85em; margin-top: 4px;">• <strong>التشخيص التفريقي المصاحب:</strong> ${patientData.secondaryDiagnosis}</div>` : '';
 
         return `
-            <div class="ai-insight-formatted-content" style="line-height: 1.85; color: #e2e8f0; font-size: 0.95em; direction: rtl; text-align: justify; text-justify: inter-word; text-align-last: right;">
-                <p class="ai-report-paragraph" style="margin-bottom: 12px;">
+            <div class="ai-insight-formatted-content" style="line-height: 1.8; color: #e2e8f0; font-size: 0.95em; direction: rtl; text-align: right; word-spacing: normal; letter-spacing: normal;">
+                <p class="ai-report-paragraph" style="margin-bottom: 12px; text-align: right; line-height: 1.8;">
                     ${greetingText} بناءً على الفحص السريري المباشر لموضع <strong style="color: var(--primary-gold);">${painArea}</strong> وتفاصيل استشارتك ومؤشراتك الحيوية، فإن حالتك مصنفة سريرياً كـ: <strong style="color: #38bdf8;">${condition}</strong>.
                 </p>
                 ${rootInfo}
                 ${secInfo}
                 ${userNotes}
-                <div style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 10px; padding: 14px 18px; margin: 14px 0; text-align: justify; text-justify: inter-word; text-align-last: right;">
-                    <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.98em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; text-align: right; text-align-last: right;">
+                <div style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 10px; padding: 14px 18px; margin: 14px 0; text-align: right;">
+                    <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.98em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; text-align: right;">
                         <span>🔬</span> التفسير الميكانيكي والتشريحي لأصل المشكلة:
                     </div>
-                    <div style="color: #cbd5e1; font-size: 0.92em; line-height: 1.75; text-align: justify; text-justify: inter-word; text-align-last: right;">
+                    <div style="color: #cbd5e1; font-size: 0.92em; line-height: 1.75; text-align: right; word-spacing: normal;">
                         ${mechanism}
                     </div>
                 </div>
 
-                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 14px 18px; margin: 14px 0; text-align: justify; text-justify: inter-word; text-align-last: right;">
-                    <div style="color: #6ee7b7; font-weight: bold; font-size: 0.98em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; text-align: right; text-align-last: right;">
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 14px 18px; margin: 14px 0; text-align: right;">
+                    <div style="color: #6ee7b7; font-weight: bold; font-size: 0.98em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; text-align: right;">
                         <span>⚡</span> دور الكايروبراكتيك في الحل الجذري والنهائي:
                     </div>
-                    <div style="color: #cbd5e1; font-size: 0.9em; line-height: 1.75; text-align: justify; text-justify: inter-word; text-align-last: right;">
+                    <div style="color: #cbd5e1; font-size: 0.9em; line-height: 1.75; text-align: right; word-spacing: normal;">
                         ${patientData.chiropracticProtocol ? patientData.chiropracticProtocol + ' ' : ''}الحل الجذري يكمن في جلسات تقويم الكايروبراكتيك وتفريغ الضغط اليدوي <span class="medical-latin-badge" dir="ltr">(Manual Decompression)</span> في «وداعاً للألم»، حيث يتم إعادة الفقرات والمفاصل لمحاذاتها التشريحية الصحيحة لتحرير جذور الأعصاب بأمان تام 100% وبدون مسكنات كيميائية أو جراحة. ونود إعلامك بتوفر <strong>خدمة زيارات منزلية</strong> داخل الأردن، و<strong>استشارات مرئية وقراءة رنين عن بُعد</strong> لجميع مراجعينا المغتربين حول العالم.
                     </div>
                 </div>
@@ -480,17 +480,17 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
 7. ممنوع منعاً باتاً تدريب المريض على التمارين داخل الشات:
    - الشات مخصص فقط لأخذ السيرة المرضية والأعراض وطلب رقم الهاتف. التمارين مكانها تقرير الحالة وخطة التأهيل في الخطوة التالية.
 
-8. الاستجواب السريري العميق والتدقيق الطبي التام قبل طلب رقم الهاتف (شرط أساسي حاسم):
-   - مراحل الحوار السريري الإلزامية بالترتيب:
+8. الاستجواب السريري العميق والتدقيق الطبي التام (لا تحصر نفسك بـ 3 أسئلة أبداً - اسأل بحرية وتعمق حتى التشخيص اليقيني):
+   - مراحل الحوار السريري بالترتيب:
      * المرحلة 1: استلام وتأكيد البيانات الحيوية (الاسم، العمر، الوزن، الطول):
-       إذا زوّدك المريض ببياناته الحيوية أو اسمه (مثل: "رمزي 34 77 178"):
+       إذا زوّدك المريض ببياناته الحيوية أو اسمه:
        - رحب بالمراجع باسمه فوراً وأكد تسجيل بياناته الحيوية بدفء (العمر والوزن والطول).
-       - اطرح فوراً أسئلة الاستقصاء السريرية التشخيصية الموجهة لموضع الألم المختار:
-         1. كيف يتصرف الألم مع الحركة (الثني، البسط، التحميل ورفع الأشياء، المشي، الجلوس)؟
-         2. هل يوجد خدر أو تنميل أو ألم ممتد كلسعة الكهرباء في الأطراف أو الأصابع؟
-         3. ما هي مدة الشكوى ومدى تأثيرها على الراحة والنوم؟
-       - ممنوع منعاً باتاً طلب رقم الهاتف في هذه المرحلة! يجب أولاً استقصاء تفاصيل وأسباب الألم!
-     * المرحلة 2: بعد إجابة المراجع على أسئلة الاستقصاء وتشكل الصورة السريرية المتكاملة:
+       - ابدأ فوراً الاستقصاء السريري التشخيصي المعمق لموضع الألم المختار:
+         * اسأل بحرية طبية كاملة ودون التقيد بعدد محدد من الأسئلة؛ هدفك الوصول إلى تشخيص دقيق ويقيني لأصل الخلل البيوميكانيكي.
+         * تفاعل مع كل إجابة يقدمها المريض واطرح أسئلة متابعة متخصصة: (كيف يتصرف الألم مع أوضاع الجلوس، المشي، الانحناء أو حمل الأوزان؟ هل تشعر بأي خدر، تنميل، حرارة أو لسعات كهربائية تمتد للأطراف؟ هل الألم ثابت أم متقطع؟ متى يشتد ومتى يخف؟ كيف يؤثر على نومك وطبيعة عملك وحركتك؟).
+         * إذا كانت إجابات المريض مقتضبة، تعمق في السؤال واستوضح منه تفاصيل الأعراض.
+         * ممنوع منعاً باتاً استعجال طلب رقم الهاتف قبل استيفاء الفحص السريري وتحديد طبيعة الإصابة يقيناً!
+     * المرحلة 2: بعد استيفاء الاستقصاء السريري وتشكل الصورة التشخيصية المتكاملة:
        - لخص له سبب الألم البيوميكانيكي باختصار شديد ومريح في سطرين فقط دون تفاصيل مطولة.
        - اطلب رقم هاتفه بوضوح واطمئنان:
          "اكتمل الآن تقييمك السريري الشامل وتحددت طبيعة المشكلة بدقة! أدخل رقم هاتفك لفتح التقرير السريري الخاص بك ولربط ملفك بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:"

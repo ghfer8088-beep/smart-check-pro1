@@ -336,32 +336,48 @@ async function getLatestAssessment(patientId) {
 // ============================================
 
 // إنشاء سجل يومي
-async function createDailyLog(patientId, logData) {
-    const logId = `log_${Date.now()}`;
-    const today = new Date().toISOString().split('T')[0];
-    
+async function createDailyLog(patientIdOrLog, maybeLogData) {
+    let patientId = patientIdOrLog;
+    let logData = maybeLogData || {};
+
+    if (typeof patientIdOrLog === 'object' && patientIdOrLog !== null && !maybeLogData) {
+        logData = patientIdOrLog;
+        patientId = patientIdOrLog.patientId;
+    }
+
+    const logId = logData.logId || `log_${Date.now()}`;
+    const today = logData.date || new Date().toISOString().split('T')[0];
 
     const log = {
+        ...logData,
         logId: logId,
-        patientId: patientId,
+        patientId: String(patientId),
         date: today,
-        painScore: logData.painScore || 0,
-        movementScore: logData.movementScore || 0,
-        painRadiation: logData.painRadiation || false,
-        exerciseCompleted: logData.exerciseCompleted || false,
+        sessionNumber: typeof logData.sessionNumber === 'number' ? logData.sessionNumber : 1,
+        painScore: typeof logData.painScore === 'number' ? logData.painScore : (logData.painScore ? parseInt(logData.painScore) : 0),
+        mobilityRate: typeof logData.mobilityRate === 'number' ? logData.mobilityRate : (logData.movementScore || 70),
+        sleepRate: typeof logData.sleepRate === 'number' ? logData.sleepRate : (logData.sleepQuality || 70),
+        movementScore: typeof logData.mobilityRate === 'number' ? logData.mobilityRate : (logData.movementScore || 70),
+        sleepQuality: typeof logData.sleepRate === 'number' ? logData.sleepRate : (logData.sleepQuality || 70),
+        positiveHabitsList: Array.isArray(logData.positiveHabitsList) ? logData.positiveHabitsList : [],
+        negativeHabitsList: Array.isArray(logData.negativeHabitsList) ? logData.negativeHabitsList : [],
+        positiveHabitsIds: logData.positiveHabitsIds || {},
+        negativeHabitsIds: logData.negativeHabitsIds || {},
+        negativeHabits: logData.negativeHabits || {},
+        exercisesDone: logData.exercisesDone !== undefined ? logData.exercisesDone : true,
+        exerciseCompleted: logData.exercisesDone !== undefined ? logData.exercisesDone : true,
         walkingMinutes: logData.walkingMinutes || 0,
-        sleepQuality: logData.sleepQuality || 0,
         notes: logData.notes || '',
-        createdAt: new Date().toISOString()
+        createdAt: logData.createdAt || new Date().toISOString()
     };
-    
+
     await addData(STORES.dailyLogs, log);
     return log;
 }
 
 // حفظ سجل يومي (اسم مستعار لـ createDailyLog)
-async function saveDailyLog(patientId, logData) {
-    return await createDailyLog(patientId, logData);
+async function saveDailyLog(patientIdOrLog, maybeLogData) {
+    return await createDailyLog(patientIdOrLog, maybeLogData);
 }
 
 // الحصول على سجلات مريض

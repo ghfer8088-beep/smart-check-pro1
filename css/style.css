@@ -1928,7 +1928,7 @@ body {
         display: none !important;
     }
 
-    /* محاذاة متقنة للنصوص السريرية تمنع أي بعثرة أو توسط على شاشات الهواتف */
+    /* محاذاة طبيعية مريحة للنصوص السريرية تمنع أي تباعد أو تمزق للكلمات على شاشات الهواتف */
     .clinical-report-printable,
     #ai-clinical-insight-card,
     #ai-insight-content-area,
@@ -1938,10 +1938,13 @@ body {
     #patient-recovery-dashboard p,
     .ai-clinical-card p,
     .chat-message p {
-        text-align: justify !important;
-        text-justify: inter-word !important;
+        text-align: right !important;
+        text-justify: none !important;
         text-align-last: right !important;
         direction: rtl !important;
+        word-spacing: normal !important;
+        letter-spacing: normal !important;
+        line-height: 1.75 !important;
     }
 
     .clinical-report-printable h1,
@@ -1954,6 +1957,8 @@ body {
         text-align: right !important;
         text-align-last: right !important;
         direction: rtl !important;
+        word-spacing: normal !important;
+        letter-spacing: normal !important;
     }
 
     /* مسافة أمان سفلية لحماية التقرير من تغطية أزرار الواتساب والاتصال العائمة */
@@ -2014,10 +2019,12 @@ body {
 
     .clinical-exercise-card p,
     .clinical-exercise-card div {
-        text-align: justify !important;
-        text-justify: inter-word !important;
+        text-align: right !important;
+        text-justify: none !important;
         text-align-last: right !important;
         direction: rtl !important;
+        word-spacing: normal !important;
+        letter-spacing: normal !important;
     }
 }
 
@@ -2054,23 +2061,25 @@ body {
 .ai-insight-formatted-content {
     color: #e2e8f0;
     font-size: 0.95em;
-    line-height: 1.85;
+    line-height: 1.8;
     direction: rtl !important;
-    text-align: justify !important;
-    text-justify: inter-word !important;
-    text-align-last: right !important;
+    text-align: right !important;
+    text-justify: none !important;
+    word-spacing: normal !important;
+    letter-spacing: normal !important;
 }
 
 .ai-report-paragraph {
     color: #cbd5e1;
     font-size: 0.94em;
-    line-height: 1.85;
+    line-height: 1.8;
     margin: 0 0 12px 0;
     direction: rtl !important;
-    text-align: justify !important;
-    text-justify: inter-word !important;
-    text-align-last: right !important;
-    word-break: break-word;
+    text-align: right !important;
+    text-justify: none !important;
+    word-spacing: normal !important;
+    letter-spacing: normal !important;
+    word-break: normal;
 }
 
 .ai-report-mainheading {
@@ -2106,9 +2115,10 @@ body {
     padding-right: 24px;
     padding-left: 0;
     direction: rtl !important;
-    text-align: justify !important;
-    text-justify: inter-word !important;
-    text-align-last: right !important;
+    text-align: right !important;
+    text-justify: none !important;
+    word-spacing: normal !important;
+    letter-spacing: normal !important;
 }
 
 .ai-styled-list li,
@@ -2117,9 +2127,10 @@ body {
     color: #e2e8f0;
     line-height: 1.75;
     font-size: 0.93em;
-    text-align: justify !important;
-    text-justify: inter-word !important;
-    text-align-last: right !important;
+    text-align: right !important;
+    text-justify: none !important;
+    word-spacing: normal !important;
+    letter-spacing: normal !important;
 }
 
 .ai-styled-list li::marker {
