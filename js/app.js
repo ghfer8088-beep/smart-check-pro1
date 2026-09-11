@@ -4563,12 +4563,11 @@ async function initAiClinicalChat() {
         appendChatMessage('bot', instantWelcomeMsg);
         renderChatQuickReplies([]);
 
-        // تشغيل صوت الطبيب الترحيبي فوراً مع ضمان عدم الصمت إطلاقاً (سواء Gemini استوديو أو صوت عربي فوري)
-        const welcomeToken = ++Wada3anAiEngine._speechSessionToken;
-        Wada3anAiEngine.speakDoctorResponse(instantWelcomeMsg, welcomeToken);
+        // الحوار نصي فائق السرعة
         if (typeof clinicalDialogueState !== 'undefined') {
             clinicalDialogueState.isStarting = false;
         }
+
     }, 850);
 }
 
@@ -4627,11 +4626,7 @@ function appendChatMessage(sender, text, options = {}) {
     const msgId = 'chat-msg-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
     msgEl.id = msgId;
 
-    let audioReplayBtnHtml = isBot ? `
-        <button type="button" class="btn-chat-replay-audio" title="استمع لحديث الطبيب بصوته" style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #38bdf8; border-radius: 12px; padding: 2px 8px; font-size: 0.76em; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s ease;">
-            <span>🔊</span> <span>استمع</span>
-        </button>
-    ` : '';
+    let audioReplayBtnHtml = '';
 
     let html = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 8px;">
@@ -4880,12 +4875,9 @@ async function sendChatMessage() {
             finishChatIntakeAndGenerateReport();
         };
 
-        // تشغيل صوت الإغلاق بالتوازي مع عداد ضمان الانتقال
-        const responseToken = ++Wada3anAiEngine._speechSessionToken;
-        Wada3anAiEngine.speakDoctorResponse(closingMsg, responseToken);
-
-        // ضمان الانتقال خلال 3 ثوانٍ على الأكثر بغض النظر عن الصوت
-        const transitionGuard = setTimeout(doTransition, 3000);
+        // تشغيل صوت محطة الانتقال الدائم المسجل مسبقاً (دون الاعتماد على مفاتيح)
+        // ضمان الانتقال خلال ثانيتين على الأكثر
+        const transitionGuard = setTimeout(doTransition, 2500);
         playStationAudio('transition', () => {
             clearTimeout(transitionGuard);
             doTransition();
@@ -4895,13 +4887,13 @@ async function sendChatMessage() {
 
     // تجميع الأعراض السريرية الحقيقية فقط واستبعاد التحيات والأسئلة العامة ومواضيع التصميم والدردشة
     const isGreetingOrChitchat = /^(صباح|مساء|مرحبا|أهلا|اهلا|السلام عليكم|سلام|هاي|هلا|شكرا|تسلم|تمام|اوك|أوك|مين انت|شو تخصصك|كم عمرك|بتعرف|وين عيادتكم|وين موقعكم|كيفك|كيف الحال)/i.test(text.trim());
-    const hasClinicalKeywords = /ألم|وجع|خدر|تنميل|حرارة|حرقان|لسعة|كهربا|شد|تشنج|عصب|ديسك|فقرات|ظهر|رقبة|ركبة|كتف|ساق|رجل|صداع|ورك|حوض|ردف|عصعص|أبهر|انزلاق|عرق النسا|مايل|مفتول|مشلول|صعوبة|حركة|عضل|مفصل|ثقل|تيبس|عظم/i.test(text);
+    const hasClinicalKeywords = /ألم|الم|وجع|خدر|تنميل|حرارة|حرقان|لسعة|كهربا|شد|تشنج|عصب|ديسك|فقرات|ظهر|رقبة|ركبة|كتف|ساق|رجل|صداع|ورك|حوض|ردف|عصعص|أبهر|انزلاق|عرق النسا|مايل|مفتول|مشلول|صعوبة|حركة|عضل|مفصل|ثقل|تيبس|عظم/i.test(text);
 
     if (hasClinicalKeywords && (!isGreetingOrChitchat || text.length > 30)) {
         clinicalDialogueState.collectedSymptoms.push(text.trim());
     }
 
-    // الانتقال للخطوة التالية في الحوار
+    // الانتقال للخطوة التالية في الحوار (نصي فقط وفائق السرعة)
     const nextResponse = await Wada3anAiEngine.advanceClinicalDialogue({
         currentStep: clinicalDialogueState.step,
         history: clinicalDialogueState.history,
@@ -4933,16 +4925,13 @@ async function sendChatMessage() {
 
     clinicalDialogueState.step = nextResponse.nextStep;
 
-    const responseToken = ++Wada3anAiEngine._speechSessionToken;
     const indicator = document.getElementById(loadingId);
     if (indicator) indicator.remove();
 
-    // 1. عرض رد الطبيب في الشات فوراً دون أي تأخير للمراجع
+    // عرض رد الطبيب في الشات فوراً وبشكل نصي سريع
     appendChatMessage('bot', nextResponse.message);
     renderChatQuickReplies(nextResponse.quickReplies);
 
-    // 2. انطلاق صوت الطبيب فوراً بضمان عدم الصمت التام (Zero-Silence Guarantee)
-    Wada3anAiEngine.speakDoctorResponse(nextResponse.message, responseToken);
 
     // حارس رقم الهاتف الإلزامي الصارم: انتقال مضمون للتقرير
     const hasStrictValidPhone = isValidPhoneNumber(clinicalDialogueState.patientPhone);
@@ -5320,8 +5309,6 @@ async function stopAndSendVoiceNote() {
 
         renderChatQuickReplies(result.quickReplies);
 
-        const responseToken = ++Wada3anAiEngine._speechSessionToken;
-        Wada3anAiEngine.speakDoctorResponse(result.message, responseToken);
 
         // حارس رقم الهاتف الإلزامي: يمنع التحويل للتشخيص في الرسائل الصوتية دون رقم هاتف صحيح
         if (clinicalDialogueState.step === 'completed' && isValidPhoneNumber(clinicalDialogueState.patientPhone)) {
@@ -5362,41 +5349,37 @@ function togglePlayAiInsightAudio() {
     const btn = document.getElementById('btn-listen-ai-insight');
     const icon = document.getElementById('ai-audio-icon');
     const text = document.getElementById('ai-audio-text');
-    const contentArea = document.getElementById('ai-insight-content-area');
 
-    if (Wada3anAiEngine.isSpeaking) {
-        Wada3anAiEngine.stopSpeaking();
+    if (currentActiveStationAudio || (typeof Wada3anAiEngine !== 'undefined' && Wada3anAiEngine.isSpeaking)) {
+        stopAllActiveAudio();
         if (icon) icon.textContent = '🔊';
-        if (text) text.textContent = 'استمع لصوت الطبيب الافتراضي';
+        if (text) text.textContent = 'استمع للإرشاد الصوتي للتقرير السريري';
         if (btn) {
             btn.style.background = 'rgba(56, 189, 248, 0.15)';
             btn.style.color = '#38bdf8';
         }
-        showToast('تم إيقاف القراءة الصوتية', 'info');
+        showToast('تم إيقاف الصوت', 'info');
         return;
     }
-
-    if (!contentArea) return;
-    const fullText = contentArea.innerText || contentArea.textContent;
-    if (!fullText) return;
 
     if (btn) {
         btn.style.background = 'rgba(16, 185, 129, 0.25)';
         btn.style.color = '#6ee7b7';
     }
     if (icon) icon.textContent = '⏸️';
-    if (text) text.textContent = 'جاري القراءة الصوتية... اضغط للإيقاف';
+    if (text) text.textContent = 'جاري الاستماع للإرشاد... اضغط للإيقاف';
 
-    showToast('جاري قراءة التقرير بصوت الطبيب الافتراضي 🔊', 'info');
+    showToast('جاري تشغيل الإرشاد الصوتي للتقرير السريري 🔊', 'info');
 
-    Wada3anAiEngine.speakText(fullText, () => {
+    playStationAudio('diagnosis_guide', () => {
         if (icon) icon.textContent = '🔊';
-        if (text) text.textContent = 'استمع لصوت الطبيب الافتراضي';
+        if (text) text.textContent = 'استمع للإرشاد الصوتي للتقرير السريري';
         if (btn) {
             btn.style.background = 'rgba(56, 189, 248, 0.15)';
             btn.style.color = '#38bdf8';
         }
     });
 }
+
 
 

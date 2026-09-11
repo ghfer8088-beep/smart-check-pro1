@@ -546,21 +546,19 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             savedModel = null;
         }
 
-        // ترتيب النماذج بدءاً من النماذج المعتمدة والنشطة في Google Cloud
+        // حصر النماذج في النماذج الفعالة فائقة السرعة فقط
         const candidateModels = [
-            savedModel,
             'gemini-2.5-flash',
-            'gemini-2.5-flash-lite',
-            'gemini-3.5-flash',
-            'gemini-flash-latest'
-        ].filter(Boolean);
+            'gemini-2.5-flash-lite'
+        ];
 
         const uniqueModels = [...new Set(candidateModels)];
 
         const payload = {
             contents: [{ parts: [{ text: promptText }] }],
-            generationConfig: { temperature, maxOutputTokens: maxTokens }
+            generationConfig: { temperature, maxOutputTokens: Math.min(maxTokens, 350) }
         };
+
 
         let lastError = null;
         const pool = WADA3AN_AI_CONFIG.getPoolKeys();
@@ -821,64 +819,94 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             };
         }
 
-        // 12. في حال كان المريض يتحدث بأي موضوع عام أو استفسارات متتالية
-        const userMessages = (history || []).filter(h => h.sender === 'user').map(m => m.text).join(' ');
-        const hasDescribedPain = /ألم|وجع|خدر|تنميل|حرارة|حرقان|لسعة|كهربا|شد|تشنج|عصب|ديسك|فقرات|ظهر|رقبة|ركبة|كتف|ساق|رجل|ردف|مايل|مفتول/i.test(userMessages);
+        // 12. معالجة الردود المتقدمة والسريعة (نعم / لا / تفاصيل إضافية) وضمان عدم تكرار أي سؤال سابق إطلاقاً
+        const norm = (s) => (s || '')
+            .replace(/[أإآ]/g, 'ا')
+            .replace(/ة/g, 'ه')
+            .replace(/[ى]/g, 'ي')
+            .replace(/[\u064B-\u0652]/g, '')
+            .trim();
 
-        if (!hasDescribedPain) {
-            const dynamicResponses = [
-                `أهلاً بك${nameSuffix}. يسرني الإجابة عن أي تساؤل، وصحتك وراحتك هي غايتنا. صف لي ما هو الشعور المزعج أو الألم الذي تشعر به في **${title}**؟`,
-                `أستمع إليك بكل اهتمام${nameSuffix}. كطبيبك السريري، أود معرفة: هل بدأ هذا الانزعاج في **${title}** بشكل مفاجئ أم تدريجياً؟`,
-                `يسعدني حوارك والتواصل معك${nameSuffix}. ما هي أكثر حركة أو وضعية تشعرك بزيادة الألم في **${title}**؟`
-            ];
-            const chosenMsg = dynamicResponses[userTurnCount % dynamicResponses.length];
+        const userTextNorm = norm(userText);
+        const userMessagesNorm = norm((history || []).filter(h => h.sender === 'user').map(m => m.text).join(' '));
+
+        const isAffirmative = /^(?:نعم|ايوه|اي|اه|صحيح|بالضبط|اكيد|مضبوط|تمام|طبعا|فعلا|صح|بصير|بحس)$/i.test(userTextNorm);
+        const isSimpleNegative = /^(?:لا|كلا|ما في|ما عندي|ابدا|مش موجود|مو موجود|ما بحس)$/i.test(userTextNorm);
+
+        // إذا كان المراجع يجيب بنعم
+        if (isAffirmative) {
+            if (userTurnCount <= 2) {
+                return {
+                    message: `فهمتك تماماً${nameSuffix}. طالما أن الحركة تزيد الألم، فهل يمتد هذا الشعور في **${title}** على شكل خدر أو تنميل أو لسعة كهربائية نحو الأصابع أو الأطراف؟`,
+                    quickReplies: [],
+                    nextStep: 'chatting'
+                };
+            } else if (userTurnCount <= 4) {
+                return {
+                    message: `واضح ومهم جداً${nameSuffix}. هذا التأثر يؤكد وجود إجهاد ميكانيكي وضغط على مسار الحركة. كم المدة التقريبية التي تعاني منها من هذه المشكلة، وهل يوقظك الألم من النوم؟`,
+                    quickReplies: [],
+                    nextStep: 'chatting'
+                };
+            } else {
+                return {
+                    message: `اكتمل الآن تقييمك السريري الشامل لحالتك وتحددت ميكانيكية الخلل في **${title}** بدقة${nameSuffix || ' يا غالي'}!\n\nأدخل رقم هاتفك لفتح التقرير السريري الخاص بك ولربط ملفك بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:`,
+                    quickReplies: [],
+                    nextStep: 'ask_phone',
+                    isPhonePrompt: true,
+                    isReady: false
+                };
+            }
+        }
+
+        // إذا كان المراجع يجيب بلا
+        if (isSimpleNegative) {
+            if (userTurnCount <= 2) {
+                return {
+                    message: `ممتاز، استبعاد الخدر والتنميل مؤشر سريري طيب يؤكد أن المشكلة تتركز في مفاصل وأوتار **${title}**. أخبرني، ما هي الحركات أو الوضعيات التي تجد فيها صعوبة أكبر؟`,
+                    quickReplies: [],
+                    nextStep: 'chatting'
+                };
+            } else if (userTurnCount <= 4) {
+                return {
+                    message: `سلامتك ألف سلامة${nameSuffix}. منذ متى بدأت هذه المشكلة معك تحديداً، وهل تؤثر على أدائك اليومي أو عملك؟`,
+                    quickReplies: [],
+                    nextStep: 'chatting'
+                };
+            } else {
+                return {
+                    message: `اكتمل الآن تقييمك السريري الشامل لحالتك وتحددت ميكانيكية الخلل في **${title}** بدقة${nameSuffix || ' يا غالي'}!\n\nأدخل رقم هاتفك لفتح التقرير السريري الخاص بك ولربط ملفك بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:`,
+                    quickReplies: [],
+                    nextStep: 'ask_phone',
+                    isPhonePrompt: true,
+                    isReady: false
+                };
+            }
+        }
+
+        // استجواب متسلسل للأمام دائماً يمنع الرجوع لنقطة الصفر إطلاقاً
+        if (userTurnCount <= 2) {
             return {
-                message: chosenMsg,
+                message: `فهمت وصفك بدقة${nameSuffix}. كطبيبك السريري، هل تشعر بأن هذا الألم في **${title}** يمتد كخدر أو لسعة نحو الأصابع أو الأطراف، أم هو محصور موضعياً في المفصل؟`,
                 quickReplies: [],
                 nextStep: 'chatting'
             };
-        }
-
-        // 12. استجواب سريري متسلسل ومتعمق قبل الانتقال لطلب الهاتف:
-        // أ) التحقق من امتداد الألم أو انتشاره (Radiation & Nerve involvement)
-        const mentionsRadiation = /يمتد|نازل|بينزل|ينزل|واصل|يوصل|للفخذ|للساق|للقدم|للركبة|للذراع|للساعد|لليد|للأصابع|للكتف|للرقبة|عرق النسا/i.test(userMessages);
-        if (!mentionsRadiation && userTurnCount < 4) {
+        } else if (userTurnCount <= 4) {
             return {
-                message: `واضح ودقيق${nameSuffix}. كطبيبك السريري، من الضروري جداً معرفة مسار العصب: هل هذا الألم محصور وموضعي في **${title}** فقط، أم تشعر بأنه يمتد أو ينزل إلى الأطراف (مثل الفخذ أو الساق أو الذراع)؟`,
+                message: `سلامتك وراحتك هي غايتنا${nameSuffix}. منذ متى بدأت تشعر بهذه الشكوى في **${title}**؟ وهل يوقظك الألم من النوم أثناء الليل أو يمنعك من الحركة الطبيعية؟`,
                 quickReplies: [],
                 nextStep: 'chatting'
             };
-        }
-
-        // ب) التحقق من المحفزات الميكانيكية والاتجاهية (Triggers & Aggravating Factors)
-        const mentionsTriggers = /جلسة|جلوس|مشي|وقوف|نوم|انحناء|حمل|درج|صلاة|سعال|عطاس|كمبيوتر|سيارة|مكتب/i.test(userMessages);
-        if (!mentionsTriggers && userTurnCount < 5) {
+        } else {
             return {
-                message: `فهمتك تماماً${nameSuffix}. ما هي أكثر حركة أو وضعية يومية تشعر بأنها تزيد هذا الألم أو تثيره؟ (مثل الجلوس الطويل، الانحناء للأمام، أو الوقوف والمشي؟) وهل تجد راحة عند الاستلقاء؟`,
+                message: `اكتمل الآن تقييمك السريري الشامل لحالتك وتحددت ميكانيكية الخلل في **${title}** بدقة${nameSuffix || ' يا غالي'}!\n\nأدخل رقم هاتفك لفتح التقرير السريري الخاص بك ولربط ملفك بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:`,
                 quickReplies: [],
-                nextStep: 'chatting'
+                nextStep: 'ask_phone',
+                isPhonePrompt: true,
+                isReady: false
             };
         }
-
-        // ج) التحقق من مدة الألم وتأثيره على النوم والحركة اليومية (Duration & Sleep Impact)
-        const mentionsDurationOrSleep = /شهر|أسبوع|اسبوع|سنة|سنه|أيام|ايام|نوم|بصحى|بنام|فراش|تخت|مستمر|مزمن/i.test(userMessages);
-        if (!mentionsDurationOrSleep && userTurnCount < 6) {
-            return {
-                message: `سلامتك وراحتك هي غايتنا${nameSuffix}. منذ متى بدأت تشعر بهذه الشكوى في **${title}**؟ وهل يوقظك الألم من النوم أثناء الليل أو يمنعك من النوم بوضع مريح؟`,
-                quickReplies: [],
-                nextStep: 'chatting'
-            };
-        }
-
-        // د) فقط وفقط عند استكمال أركان الفحص السريري وتوفر صورة سريرية ناضجة (بعد عدة جولات استجواب حقيقية)
-        return {
-            message: `اكتمل الآن تقييمك السريري الشامل لحالتك وتحددت ميكانيكية الخلل في **${title}** بدقة${nameSuffix || ' يا غالي'}!\n\nأدخل رقم هاتفك لفتح التقرير السريري الخاص بك ولربط ملفك بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:`,
-            quickReplies: [],
-            nextStep: 'ask_phone',
-            isPhonePrompt: true,
-            isReady: false
-        };
     },
+
 
     // =========================================================================
     // محرك الصوت البشري الحقيقي 100% وتحليل التسجيلات الصوتية (Neural Voice AI Engine)
@@ -1803,76 +1831,12 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
         console.info('[TTS] تعذر توليد الصوت البشري - إكمال بصمت');
     },
 
-    // نطق رد الطبيب بالصوت البشري - أول جملة فقط لضمان السرعة القصوى
+    // تم إيقاف التوليد الصوتي التفاعلي في الشات تماماً للاكتفاء بحوار نصي فائق السرعة
     async speakDoctorResponse(text, expectedToken, onEndCallback) {
-        if (!text) {
-            if (onEndCallback) onEndCallback();
-            return;
-        }
-        if (expectedToken !== undefined && expectedToken !== null && expectedToken !== this._speechSessionToken) {
-            return;
-        }
-
-        this.unlockAudio();
-        const voiceName = this.getStudioVoiceForSession();
-
-        // استخراج أول جملة قصيرة فقط (أسرع وأكثر استجابةً)
-        const fullClean = this.sanitizeSpeechArabicText(text);
-
-        // تقطيع النص إلى أول جملة (بحد أقصى 20 كلمة)
-        const extractFirstSentence = (t) => {
-            if (!t) return '';
-            // انهاءات الجمل: . ! ? ؟ ؛ أو سطر جديد
-            const sentenceEnd = t.search(/[.!?؟؛\n]/);
-            let first = sentenceEnd > 0 ? t.substring(0, sentenceEnd + 1) : t;
-            // إذا كانت الجملة طويلة جداً (>25 كلمة) نقطعها عند الكلمة 20
-            const words = first.split(/\s+/);
-            if (words.length > 25) first = words.slice(0, 20).join(' ') + '...';
-            return first.trim();
-        };
-
-        const textToSynthesize = extractFirstSentence(fullClean) || fullClean.substring(0, 150);
-        const cacheKey = `${voiceName}_${textToSynthesize}`;
-
-        // 1. فحص الكاش - استجابة فورية
-        if (this._audioCache && this._audioCache[cacheKey]) {
-            this.playHumanAudio(this._audioCache[cacheKey], onEndCallback);
-            return;
-        }
-
-        // 2. فحص وجود ملف صوتي مسجل مسبقاً للترحيب
-        if (/أهلاً\s*بك\s*في\s*«?وداعاً\s*للألم»?/i.test(text) && /يسعدني\s*أولاً\s*التعرف/i.test(text)) {
-            const preStationFile = (voiceName === 'Charon' || voiceName === 'Puck')
-                ? 'assets/audio/station_chat_welcome_jamal.mp3'
-                : 'assets/audio/station_chat_welcome_sarah.mp3';
-            this.playHumanAudio(preStationFile, onEndCallback);
-            return;
-        }
-
-        // 3. توليد صوت Gemini TTS مع timeout 8 ثوانٍ كحد أقصى للانتظار
-        try {
-            const ttsPromise = this.generateHumanVoiceAudio(textToSynthesize);
-            const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(null), 8000));
-            const audioUrl = await Promise.race([ttsPromise, timeoutPromise]);
-
-            if (expectedToken !== undefined && expectedToken !== null && expectedToken !== this._speechSessionToken) {
-                this.hideLiveAudioPill();
-                return;
-            }
-
-            if (audioUrl) {
-                this.playHumanAudio(audioUrl, onEndCallback);
-                return;
-            }
-        } catch (e) {
-            console.warn('[TTS] خطأ في توليد الصوت:', e);
-        }
-
-        // 4. إذا فشل TTS: إكمال بصمت - لا صوت آلي أبداً
-        console.info('[TTS] مفاتيح مستنفدة أو فشل - إكمال بصمت');
-        this.hideLiveAudioPill();
         if (onEndCallback) onEndCallback();
+        return;
     },
+
 
 
 
