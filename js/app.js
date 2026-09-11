@@ -169,7 +169,7 @@ window.stopAllActiveAudio = stopAllActiveAudio;
 // اختيار نقطة الألم
 function selectAnatomyPoint(point, element) {
     // إيقاف الصوت التوجيهي الترحيبي فوراً عند اختيار نقطة الألم لمنع أي تداخل نهائياً
-    introPlayedOrAttempted = true;
+    window.introPlayedOrAttempted = true;
     stopAllActiveAudio();
 
     document.querySelectorAll('.anatomy-hotspot').forEach(p => p.classList.remove('active'));
@@ -1912,8 +1912,7 @@ function displayDiagnosticReport(data) {
             <!-- شريط التنقل السريع التفاعلي في التقرير (مريح وسلس للهواتف) -->
             <div class="no-print report-quick-nav-bar" style="display: flex; gap: 6px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 6px; -webkit-overflow-scrolling: touch;">
                 <button type="button" onclick="document.getElementById('report-section-diagnosis')?.scrollIntoView({behavior: 'smooth'})" class="btn-header btn-header-gold" style="font-size: 0.8em; padding: 6px 12px; border-radius: 16px; flex-shrink: 0; white-space: nowrap;">🩺 التشخيص</button>
-                <button type="button" onclick="document.getElementById('report-section-exercises')?.scrollIntoView({behavior: 'smooth'})" class="btn-header btn-header-gold" style="font-size: 0.8em; padding: 6px 12px; border-radius: 16px; flex-shrink: 0; white-space: nowrap;">🏋️ التمارين</button>
-                <button type="button" onclick="document.getElementById('recovery-plan-master-card')?.scrollIntoView({behavior: 'smooth'})" class="btn-header btn-header-emerald" style="font-size: 0.8em; padding: 6px 12px; border-radius: 16px; flex-shrink: 0; white-space: nowrap;">🎁 خطة 7 أيام</button>
+                <button type="button" onclick="document.getElementById('recovery-plan-master-card')?.scrollIntoView({behavior: 'smooth'})" class="btn-header btn-header-emerald" style="font-size: 0.8em; padding: 6px 12px; border-radius: 16px; flex-shrink: 0; white-space: nowrap;">🎁 تفعيل الخطة المجانية</button>
                 <button type="button" onclick="document.getElementById('permanent-bottom-section')?.scrollIntoView({behavior: 'smooth'})" class="btn-header btn-header-emerald-soft" style="font-size: 0.8em; padding: 6px 12px; border-radius: 16px; flex-shrink: 0; white-space: nowrap;">💬 تواصل للمعالج</button>
             </div>
 
@@ -1934,6 +1933,12 @@ function displayDiagnosticReport(data) {
                         <div style="color: #94a3b8; font-size: 0.88em; font-weight: bold;">🩺 ${data.isPreliminary ? 'التقييم الاسترشادي الأولي:' : 'خلاصة التشخيص السريري المباشر:'}</div>
                         <h2 style="color: ${data.isPreliminary ? '#7dd3fc' : 'var(--primary-gold)'}; margin: 6px 0 2px 0; font-size: 1.45em; font-weight: 900;">${formattedDiag}</h2>
                         ${formattedRoot ? `<div style="color: #38bdf8; font-size: 0.88em; font-weight: bold; margin-top: 4px;">🎯 المستوى التشريحي المستهدف: ${formattedRoot}</div>` : ''}
+                        <div style="margin-top: 10px;">
+                            <span class="free-plan-highlight-badge">
+                                <span>🎁</span>
+                                <span>مشمول بالكامل في برنامج الـ 7 أيام المجاني للراحة الحركية والاستشفاء الذاتي</span>
+                            </span>
+                        </div>
                     </div>
                     <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
                         <span style="background: ${data.isPreliminary ? 'rgba(56, 189, 248, 0.2)' : 'rgba(16, 185, 129, 0.2)'}; border: 1.5px solid ${data.isPreliminary ? '#38bdf8' : '#10b981'}; color: ${data.isPreliminary ? '#7dd3fc' : '#6ee7b7'}; padding: 8px 18px; border-radius: 25px; font-weight: 800; font-size: 1em; letter-spacing: 0.5px;">
@@ -1959,7 +1964,7 @@ function displayDiagnosticReport(data) {
                         <span style="font-size: 1.8em; filter: drop-shadow(0 2px 6px rgba(16,185,129,0.5));">👨‍⚕️</span>
                         <div>
                             <h3 style="color: #6ee7b7; margin: 0; font-size: 1.18em; font-weight: 800;">تقرير وتفسير الطبيب الافتراضي للحالة</h3>
-                            <div style="color: #94a3b8; font-size: 0.8em;">تحليل سريري مباشر لأصل الخلل الحركي ومسار العصب في «وداعاً للألم»</div>
+                            <div style="color: #94a3b8; font-size: 0.8em;">تحليل سريري لأصل الخلل الحركي • <strong style="color: #fef08a;">برنامج الـ 7 أيام المجاني متاح لك فورياً</strong></div>
                         </div>
                     </div>
                     <div class="ai-card-header-actions" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 320px; box-sizing: border-box;">
@@ -2122,7 +2127,7 @@ function displayDiagnosticReport(data) {
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-top: 10px;">
                     <div style="background: rgba(17, 24, 39, 0.7); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 14px;">
                         <div style="color: #10b981; font-weight: bold; font-size: 0.92em; margin-bottom: 6px;">🎁 أولاً: خطة الـ 7 أيام المنزلية (مجاناً بالكامل)</div>
-                        <div style="color: #cbd5e1; font-size: 0.85em; line-height: 1.6;">تمارين استطالة وتليين حركي مدروسة صُممت خصيصاً لتسكين آلامك فورياً مجاناً بالكامل، وتجدها مفصلة أدناه.</div>
+                        <div style="color: #cbd5e1; font-size: 0.85em; line-height: 1.6;">تمارين استطالة وتليين حركي مدروسة صُممت خصيصاً لتسكين آلامك فورياً ومجاناً بالكامل عبر الخطوة التالية فور تفعيل خطتك أدناه.</div>
                     </div>
                     <div style="background: rgba(17, 24, 39, 0.7); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 10px; padding: 14px;">
                         <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.92em; margin-bottom: 6px;">👐 ثانياً: الحل الجذري النهائي (الكايروبراكتيك)</div>
@@ -2131,51 +2136,6 @@ function displayDiagnosticReport(data) {
                 </div>
             </div>
 
-            <!-- ================= 8. التمارين التأهيلية المخصصة للحالة ================= -->
-            <div id="report-section-exercises" style="margin-bottom: 25px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
-                    <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.3em;">🏋️ تمارين الراحة والاسترخاء الحركي المقترحة (${data.painAreaTitle})</h3>
-                    <button type="button" onclick="toggleAudioMuteStatus(this)" class="btn-header no-print" style="padding: 6px 14px; font-size: 0.82em;">
-                        🔊 التوجيه الصوتي: مفعل
-                    </button>
-                </div>
-
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px;">
-                    ${(data.recommendedExercises || []).map((ex, idx) => `
-                        <div class="clinical-exercise-card" style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
-                            <div>
-                                ${generateExerciseIllustration(ex.visualType, ex.id, { name: ex.name })}
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0 6px 0;">
-                                    <span style="color: var(--primary-gold); font-size: 0.78em; font-weight: bold;">تمرين #${idx+1} (اليوم 1)</span>
-                                    <span style="color: #10b981; font-size: 0.78em;">⏱️ ${ex.duration}</span>
-                                </div>
-                                <h4 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.15em;">${ex.name}</h4>
-                                <p style="color: #cbd5e1; font-size: 0.86em; margin: 0 0 12px 0;">${ex.description}</p>
-                                
-                                <div style="background: #111827; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85em; color: #e2e8f0; line-height: 1.7; border-right: 3px solid var(--primary-gold);">
-                                    <strong>طريقة الأداء السريري:</strong><br>${ex.instructions}
-                                </div>
-
-                                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
-                                    <span style="background: #1e293b; color: #d4af37; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">🔁 ${ex.reps}</span>
-                                    <span style="background: #1e293b; color: #f59e0b; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">📦 ${ex.sets}</span>
-                                </div>
-
-                                <!-- دليل التكنيك السليم والأخطاء الشائعة -->
-                                ${typeof getExerciseFormGuideHTML === 'function' ? getExerciseFormGuideHTML(ex) : ''}
-                            </div>
-                            <div>
-                                <div style="background: #1e2633; height: 5px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
-                                    <div class="timer-progress-fill" style="background: linear-gradient(90deg, #d4af37 0%, #10b981 100%); height: 100%; width: 0%; transition: width 1s linear;"></div>
-                                </div>
-                                <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="width: 100%; background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.92em;">
-                                    ⏱️ ابدأ مؤقت التمرين (${ex.duration})
-                                </button>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
 
             <!-- ================= 6. حاسبة التوفير المالي والأمان الصحي ================= -->
             <div class="no-print">
@@ -3016,6 +2976,23 @@ async function loadPatientRecoveryDashboard(patientId) {
                     </div>
                 </div>
 
+                <!-- الساعة الرقمية الحية لجلسة اليوم الأول (شرط أساسي) -->
+                <div id="live-session-clock-card" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.8) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 16px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5em;">
+                            ⏱️
+                        </div>
+                        <div>
+                            <div style="color: var(--primary-gold); font-size: 0.88em; font-weight: bold; letter-spacing: 0.5px;">توقيت الجلسة الحركية المباشرة (اليوم الأول):</div>
+                            <div id="live-session-date-display" style="color: #94a3b8; font-size: 0.84em; margin-top: 2px;">--</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; background: rgba(0, 0, 0, 0.5); border: 1.5px solid #10b981; padding: 8px 18px; border-radius: 10px;">
+                        <span style="color: #10b981; font-size: 0.95em; animation: pulse 1.5s infinite;">🟢 جلسة نشطة الآن:</span>
+                        <div id="live-session-time-display" style="color: #6ee7b7; font-size: 1.45em; font-weight: 900; letter-spacing: 1px; font-family: monospace;" dir="ltr">--:--:--</div>
+                    </div>
+                </div>
+
                 <!-- عرض تمارين اليوم الأول في الصدارة مباشرة -->
                 <div style="margin-bottom: 25px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 8px;">
@@ -3077,7 +3054,7 @@ async function loadPatientRecoveryDashboard(patientId) {
                                 <span class="royal-icon-emoji">✅</span>
                             </div>
                             <div class="royal-text-col">
-                                <div class="royal-cta-headline">أتممت أداء تمارين اليوم الأول بنجاح</div>
+                                <div class="royal-cta-headline">✅ أتممت أداء تمارين اليوم الأول بنجاح</div>
                                 <div class="royal-cta-subline">بدء فترة الاستشفاء الحيوي للأنسجة (24 ساعة) ⏳</div>
                             </div>
                             <div class="royal-arrow-box">
@@ -3145,6 +3122,13 @@ async function loadPatientRecoveryDashboard(patientId) {
                                 <label style="color: #e2e8f0; font-size: 0.95em; font-weight: bold;">1. مستوى شدة الألم الحالي (من 1 إلى 10):</label>
                                 <span id="daily-pain-val" style="color: var(--primary-gold); font-weight: bold; font-size: 1.15em;">3 / 10</span>
                             </div>
+                            <div style="text-align: center; margin: 4px 0 8px 0;">
+                                <div class="slider-drag-hint-animated">
+                                    <span class="pulse-arrow-hand-left">👈</span>
+                                    <span>اسحب المؤشر لتحديد درجة ألمك الفعلية</span>
+                                    <span class="pulse-arrow-hand-right">👉</span>
+                                </div>
+                            </div>
                             <input type="range" id="daily-pain-input" min="1" max="10" value="3" oninput="document.getElementById('daily-pain-val').textContent = this.value + ' / 10'" style="width: 100%; accent-color: var(--primary-gold);">
                         </div>
 
@@ -3155,6 +3139,13 @@ async function loadPatientRecoveryDashboard(patientId) {
                                     ${anatomicalConfig ? anatomicalConfig.mobilityQuestion : '2. نسبة استعادة المدى الحركي والمرونة اليوم:'}
                                 </label>
                                 <span id="daily-mobility-val" style="color: #38bdf8; font-weight: bold; font-size: 1.15em;">70 %</span>
+                            </div>
+                            <div style="text-align: center; margin: 4px 0 8px 0;">
+                                <div class="slider-drag-hint-animated">
+                                    <span class="pulse-arrow-hand-left">👈</span>
+                                    <span>اسحب المؤشر لتحديد نسبة حركتك اليوم</span>
+                                    <span class="pulse-arrow-hand-right">👉</span>
+                                </div>
                             </div>
                             <input type="range" id="daily-mobility-slider" min="10" max="100" value="70" oninput="document.getElementById('daily-mobility-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #38bdf8; margin-bottom: 12px;">
                             
@@ -3180,6 +3171,13 @@ async function loadPatientRecoveryDashboard(patientId) {
                                     ${anatomicalConfig ? anatomicalConfig.sleepQuestion : '3. نسبة جودة وعمق النوم والراحة الليلة الماضية:'}
                                 </label>
                                 <span id="daily-sleep-val" style="color: #10b981; font-weight: bold; font-size: 1.15em;">70 %</span>
+                            </div>
+                            <div style="text-align: center; margin: 4px 0 8px 0;">
+                                <div class="slider-drag-hint-animated">
+                                    <span class="pulse-arrow-hand-left">👈</span>
+                                    <span>اسحب المؤشر لتحديد جودة نومك الليلة الماضية</span>
+                                    <span class="pulse-arrow-hand-right">👉</span>
+                                </div>
                             </div>
                             <input type="range" id="daily-sleep-slider" min="10" max="100" value="70" oninput="document.getElementById('daily-sleep-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #10b981; margin-bottom: 12px;">
 
@@ -3283,6 +3281,32 @@ async function loadPatientRecoveryDashboard(patientId) {
         </div>
     `;
 
+    // تشغيل وتحديث الساعة الحية لجلسة اليوم الأول
+    if (isDay1Initial) {
+        if (window.liveSessionClockInterval) {
+            clearInterval(window.liveSessionClockInterval);
+            window.liveSessionClockInterval = null;
+        }
+        const updateLiveClock = () => {
+            const timeEl = document.getElementById('live-session-time-display');
+            const dateEl = document.getElementById('live-session-date-display');
+            if (!timeEl) {
+                if (window.liveSessionClockInterval) {
+                    clearInterval(window.liveSessionClockInterval);
+                    window.liveSessionClockInterval = null;
+                }
+                return;
+            }
+            const now = new Date();
+            timeEl.textContent = now.toLocaleTimeString('ar-JO', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+            if (dateEl) {
+                dateEl.textContent = now.toLocaleDateString('ar-JO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            }
+        };
+        updateLiveClock();
+        window.liveSessionClockInterval = setInterval(updateLiveClock, 1000);
+    }
+
     if (lockStatus.isLocked && lockStatus.targetTime) {
         PatientFlow.startCountdownTimer(lockStatus.targetTime, {
             hours: document.getElementById('countdown-hours'),
@@ -3300,6 +3324,10 @@ async function loadPatientRecoveryDashboard(patientId) {
 
 // إتمام تمارين اليوم الأول والانتقال لفترة الاستشفاء (24 ساعة)
 async function completeDay1InitialExercises(patientId) {
+    if (window.liveSessionClockInterval) {
+        clearInterval(window.liveSessionClockInterval);
+        window.liveSessionClockInterval = null;
+    }
     const pInfo = await SmartDB.getPatient(patientId);
     const assessments = await SmartDB.getPatientAssessments(patientId);
     const latestAssessment = assessments.length > 0 ? assessments[assessments.length - 1] : null;
@@ -4403,10 +4431,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     goToStep(1);
 
     // تشغيل الترحيب الصوتي للطبيب الافتراضي تلقائياً عند فتح الأداة
-    let introPlayedOrAttempted = false;
+    window.introPlayedOrAttempted = false;
     const triggerAutoIntro = () => {
-        if (introPlayedOrAttempted) return;
-        introPlayedOrAttempted = true;
+        if (window.introPlayedOrAttempted) return;
+        window.introPlayedOrAttempted = true;
         Wada3anAiEngine.unlockAudio();
         Wada3anAiEngine.playIntroAudioGuide();
     };
@@ -4415,18 +4443,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     setTimeout(() => {
         Wada3anAiEngine.unlockAudio();
         Wada3anAiEngine.playIntroAudioGuide().then(res => {
-            if (res) introPlayedOrAttempted = true;
+            if (res) window.introPlayedOrAttempted = true;
         }).catch(() => {});
     }, 700);
 
-    // تفعيل فوري مع أول لمسة أو نقرة على شاشة الهاتف لفك قيود المتصفحات (iOS Safari / Chrome Mobile)
+    // تفعيل فوري مع أول لمسة لفك قيود المتصفحات (AudioContext Unlock) دون تشغيل الصوت قسراً
     const mobileFirstTouchUnlock = () => {
         Wada3anAiEngine.unlockAudio();
-        if (!introPlayedOrAttempted && (typeof currentSelectedPoint === 'undefined' || !currentSelectedPoint)) {
-            introPlayedOrAttempted = true;
-            triggerAutoIntro();
-        }
-
         window.removeEventListener('pointerdown', mobileFirstTouchUnlock);
         window.removeEventListener('touchstart', mobileFirstTouchUnlock);
         window.removeEventListener('click', mobileFirstTouchUnlock);
@@ -4581,7 +4604,7 @@ function isValidPhoneNumber(phone) {
     if (!/^\+?\d+$/.test(clean)) return false;
 
     const digitsOnly = clean.replace(/^\+/, '');
-    if (digitsOnly.length < 7 || digitsOnly.length > 16) return false;
+    if (digitsOnly.length < 8 || digitsOnly.length > 16) return false;
 
     // رفض التكرار المبتذل للأرقام المتتالية في أي جزء (مثل 0000000 أو 1111111 أو 9999999)
     if (/(\d)\1{5,}/.test(digitsOnly)) return false;
@@ -4590,33 +4613,37 @@ function isValidPhoneNumber(phone) {
     const fakeSequences = ['12345678', '87654321', '01234567', '76543210', '00000000', '11111111', '99999999', '12121212'];
     if (fakeSequences.some(seq => digitsOnly.includes(seq))) return false;
 
-    // 1. أردني خلوي: 07[789] متبوعاً بـ 6 إلى 8 أرقام (9 إلى 11 رقماً) أو مع المفتاح الدولي +962 / 00962
-    if (/^(?:(?:\+?962|00962)?0?7[789]\d{6,8})$/.test(clean)) {
+    // 1. أردني خلوي: يجب أن يكون 10 أرقام حصراً 07[789]xxxxxxx (أو دولي +9627[789]xxxxxxx / 009627[789]xxxxxxx)
+    if (/^07[789]\d{7}$/.test(clean)) {
+        return true;
+    }
+    if (/^(?:(?:\+?962|00962)0?7[789]\d{7})$/.test(clean)) {
         return true;
     }
 
-    // 2. فلسطيني: 059 أو 056 أو مع المفتاح +970 / +972
-    if (/^(?:(?:\+?(?:970|972)|00(?:970|972))?0?5[69]\d{6,8})$/.test(clean)) {
+    // 2. فلسطيني: 059 أو 056 (10 أرقام) أو مع المفتاح الدولي
+    if (/^05[69]\d{7}$/.test(clean)) {
+        return true;
+    }
+    if (/^(?:(?:\+?(?:970|972)|00(?:970|972))0?5[69]\d{7})$/.test(clean)) {
         return true;
     }
 
-    // 3. خليجي / عربي: 05x متبوعاً بـ 7 أو 8 أرقام، أو مع المفتاح الدولي
-    if (/^(?:(?:\+?(?:966|971|965|974|973|968)|00(?:966|971|965|974|973|968))?0?5\d{7,8})$/.test(clean)) {
+    // 3. خليجي / عربي: 05x متبوعاً بـ 8 أرقام (10 أرقام) أو مع المفتاح الدولي
+    if (/^05\d{8}$/.test(clean)) {
+        return true;
+    }
+    if (/^(?:(?:\+?(?:966|971|965|974|973|968)|00(?:966|971|965|974|973|968))0?5\d{8})$/.test(clean)) {
         return true;
     }
 
-    // 4. مصري: 01x متبوعاً بـ 8 أرقام، أو مع المفتاح +20
-    if (/^(?:(?:\+?20|0020)?0?1[0125]\d{8})$/.test(clean)) {
+    // 4. مصري: 01x متبوعاً بـ 8 أرقام (11 رقماً)
+    if (/^01[0125]\d{8}$/.test(clean) || /^(?:(?:\+?20|0020)0?1[0125]\d{8})$/.test(clean)) {
         return true;
     }
 
-    // 5. دولي أو رقم عام معقول بين 7 و 15 رقماً
-    if (/^(?:\+|00)?[1-9]\d{6,14}$/.test(clean)) {
-        return true;
-    }
-
-    // 6. أي رقم محلي يبدأ بصفر ويتكون من 7 إلى 11 رقماً
-    if (/^0\d{6,11}$/.test(clean)) {
+    // 5. دولي كامل يبدأ بـ + أو 00 (بين 9 و 15 رقماً)
+    if (/^(?:\+|00)[1-9]\d{8,14}$/.test(clean)) {
         return true;
     }
 
@@ -5187,102 +5214,121 @@ async function sendChatMessage() {
         }
     }
 
-    // فحص إذا كان الرد يحتوي على رقم هاتف (مع أو بدون فراغات أو رموز)
-    const phoneCandidates = [];
-    const pureNumbers = normalizedDigitsText.replace(/[^\d+]/g, '');
-    if (pureNumbers.length >= 7 && pureNumbers.length <= 16) {
-        phoneCandidates.push(pureNumbers);
-    }
-    const spacedMatches = normalizedDigitsText.match(/(?:\+?\d[\d\s\-]{6,16}\d)/g);
-    if (spacedMatches) {
-        spacedMatches.forEach(m => {
-            const cleanM = m.replace(/[\s\-]/g, '');
-            if (cleanM.length >= 7 && cleanM.length <= 16 && !phoneCandidates.includes(cleanM)) {
-                phoneCandidates.push(cleanM);
-            }
-        });
-    }
-
+    // فحص إذا كان الحوار بانتظار رقم هاتف أو قام المستخدم بذكر كلمة الهاتف صراحة
     const lastBotMsg = (clinicalDialogueState.history && clinicalDialogueState.history.length > 0)
         ? [...clinicalDialogueState.history].reverse().find(h => h.sender === 'bot')
         : null;
     const wasAskedForPhone = clinicalDialogueState.step === 'ask_phone' || 
         (lastBotMsg && /رقم\s*(?:هاتف|موبايل|تلفون|جوال)|هاتفك|موبايلك|تلفونك|جوالك/i.test(lastBotMsg.text));
+    const userMentionsPhoneExplicitly = /(?:هاتفي|تلفوني|موبايلي|جوالي|رقمي|رقم\s*الهاتف|رقم\s*المحمول)/i.test(text);
+    const isExpectingPhone = (clinicalDialogueState.step === 'ask_phone' || wasAskedForPhone || userMentionsPhoneExplicitly) && clinicalDialogueState.step !== 'vitals' && clinicalDialogueState.step !== 'init';
 
-    let validFoundPhone = null;
-    let hasInvalidPhoneAttempt = false;
+    if (isExpectingPhone) {
+        const phoneCandidates = [];
+        const pureNumbers = normalizedDigitsText.replace(/[^\d+]/g, '');
+        if (pureNumbers.length >= 7 && pureNumbers.length <= 16) {
+            phoneCandidates.push(pureNumbers);
+        }
+        const spacedMatches = normalizedDigitsText.match(/(?:\+?\d[\d\s\-]{6,16}\d)/g);
+        if (spacedMatches) {
+            spacedMatches.forEach(m => {
+                const cleanM = m.replace(/[\s\-]/g, '');
+                if (cleanM.length >= 7 && cleanM.length <= 16 && !phoneCandidates.includes(cleanM)) {
+                    phoneCandidates.push(cleanM);
+                }
+            });
+        }
 
-    if (phoneCandidates.length > 0) {
+        // 1. تدقيق صارم للأرقام الأردنية: يجب أن يتكون الرقم المحلي من 10 أرقام حصراً (07xxxxxxx)
+        const cleanNoPlus = pureNumbers.replace(/^\+/, '');
+        const isJordanianFormat = cleanNoPlus.startsWith('07') || cleanNoPlus.startsWith('79') || cleanNoPlus.startsWith('78') || cleanNoPlus.startsWith('77') || cleanNoPlus.startsWith('9627');
+        if (isJordanianFormat) {
+            let jordanDigits = cleanNoPlus;
+            if (jordanDigits.startsWith('962')) jordanDigits = '0' + jordanDigits.slice(3);
+            else if (!jordanDigits.startsWith('0')) jordanDigits = '0' + jordanDigits;
+
+            if (jordanDigits.length !== 10) {
+                const indicator = document.getElementById(loadingId);
+                if (indicator) indicator.remove();
+                const pName = clinicalDialogueState.patientName ? ` يا ${clinicalDialogueState.patientName}` : '';
+                const diffMsg = jordanDigits.length < 10 ? `ناقصاً (${10 - jordanDigits.length} أرقام)` : `زائداً بمقدار (${jordanDigits.length - 10} أرقام)`;
+                appendChatMessage('bot', `⚠️ عفواً${pName}، الرقم الذي أدخلته يتكون من (${jordanDigits.length}) أرقام وهو ${diffMsg}. يجب أن يتكون رقم الهاتف الخلوي الأردني من 10 أرقام حصراً (مثال: 079xxxxxxx أو 078xxxxxxx أو 077xxxxxxx) أو رقم دولي مع رمز الدولة لربط ملفك الطبي السريري بدقة. يرجى إعادة إدخال الرقم كاملاً:`);
+                showToast(`⚠️ رقم الهاتف الأردني يجب أن يتكون من 10 أرقام حصراً (${jordanDigits.length} أرقام حالياً)`, 'warning');
+                const chatInput = document.getElementById('ai-chat-input');
+                if (chatInput) {
+                    chatInput.placeholder = 'أدخل رقم هاتفك الخلوي (10 أرقام: 079xxxxxxx)...';
+                    chatInput.focus();
+                }
+                return;
+            }
+        }
+
+        let validFoundPhone = null;
         for (const cand of phoneCandidates) {
             if (isValidPhoneNumber(cand)) {
                 validFoundPhone = cand;
-                clinicalDialogueState.patientPhone = cand;
                 break;
-            } else {
-                hasInvalidPhoneAttempt = true;
             }
         }
-    }
 
-    // إذا كان المراجع بانتظار إدخال الهاتف أو كان الرد أرقاماً متتالية (7 أرقام فأكثر)، نعتمدها مباشرة لتفادي أي حوار إضافي
-    if (!validFoundPhone && (wasAskedForPhone || /^\+?\d[\d\s\-]{5,15}\d$/.test(text.trim())) && pureNumbers.length >= 7 && pureNumbers.length <= 16) {
-        validFoundPhone = pureNumbers;
-        clinicalDialogueState.patientPhone = pureNumbers;
-    }
+        // إذا قام المستخدم بتزويد رقم هاتف صالح الآن: حفظ البيانات فوراً وإظهار رسالة الاستلام ثم تشغيل صوت د. سارة والانتقال للتقرير
+        if (validFoundPhone) {
+            clinicalDialogueState.patientPhone = validFoundPhone;
+            clinicalDialogueState.step = 'completed';
 
-    // إذا كان الحوار بانتظار رقم الهاتف أو قام المستخدم بإدخال رقم غير صالح
-    if (hasInvalidPhoneAttempt && !validFoundPhone && (wasAskedForPhone || /رقم|تلفون|هاتف|موبايل|جوال/i.test(text))) {
-        const indicator = document.getElementById(loadingId);
-        if (indicator) indicator.remove();
-        showToast('⚠️ رقم الهاتف غير مكتمل. يرجى إدخال رقم محمول صالح (مثل: 079xxxxxxx أو رقم دولي).', 'warning');
-        appendChatMessage('bot', '⚠️ عذراً يا غالي، الرقم الذي أدخلته غير مكتمل أو غير صالح. لحفظ ملفك السريري وفتح تقرير حالتك، يرجى تزويدي برقم هاتف محمول صالح (مثال: 079xxxxxxx أو رقم دولي مع رمز الدولة):');
-        const chatInput = document.getElementById('ai-chat-input');
-        if (chatInput) {
-            chatInput.placeholder = 'أدخل رقم هاتفك المحمول هنا (مثال: 079xxxxxxx)...';
-            chatInput.focus();
+            // حفظ ملف المريض بشكل فوري ولحظي في قاعدة بيانات العيادة
+            if (window.SmartDB && typeof SmartDB.savePatient === 'function') {
+                SmartDB.savePatient({
+                    name: clinicalDialogueState.patientName || 'مريض غير محدد',
+                    phone: clinicalDialogueState.patientPhone,
+                    status: 'in_progress',
+                    condition: (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.title : 'فحص ألم عام',
+                    notes: 'تم توثيق رقم الهاتف في الشات السريري'
+                }).catch(e => console.warn('Realtime SmartDB save error:', e));
+            }
+
+            const patientGreeting = (clinicalDialogueState.patientName && clinicalDialogueState.patientName !== 'المراجع الكريم') ? ` يا ${clinicalDialogueState.patientName}` : '';
+            const closingMsg = `✅ تم تسجيل رقم هاتفك بنجاح${patientGreeting}. نقوم الآن بإصدار تقريرك السريري المتكامل وتحويلك فوراً لصفحة التشخيص وخطة التعافي... ⏱️`;
+            
+            const indicator = document.getElementById(loadingId);
+            if (indicator) indicator.remove();
+
+            appendChatMessage('bot', closingMsg);
+            renderChatQuickReplies([]);
+
+            let transitioned = false;
+            const doTransition = () => {
+                if (transitioned) return;
+                transitioned = true;
+                if (typeof Wada3anAiEngine !== 'undefined') Wada3anAiEngine.stopSpeaking();
+                finishChatIntakeAndGenerateReport();
+            };
+
+            // تشغيل صوت محطة الانتقال الدائم المسجل مسبقاً لدكتورة سارة
+            // والانتقال لصفحة التقرير فور انتهاء دكتورة سارة من نطق آخر كلمة في التسجيل
+            playStationAudio('transition', () => {
+                doTransition();
+            });
+            return;
+        } else {
+            // الرقم غير صالح أو غير مكتمل
+            const indicator = document.getElementById(loadingId);
+            if (indicator) indicator.remove();
+            const pName = clinicalDialogueState.patientName ? ` يا ${clinicalDialogueState.patientName}` : '';
+            appendChatMessage('bot', `⚠️ عفواً${pName}، الرقم الذي أدخلته غير صحيح أو غير مكتمل. لربط ملفك الطبي وإصدار تقريرك السريري، يرجى تزويدي برقم هاتف محمول صالح (10 أرقام في الأردن مثل: 079xxxxxxx أو رقم دولي مع رمز الدولة):`);
+            showToast('⚠️ يرجى إدخال رقم هاتف محمول صالح ومكتمل', 'warning');
+            const chatInput = document.getElementById('ai-chat-input');
+            if (chatInput) {
+                chatInput.placeholder = 'أدخل رقم هاتفك المحمول (مثال: 079xxxxxxx)...';
+                chatInput.focus();
+            }
+            return;
         }
-        return;
     }
 
-    // إذا قام المستخدم بتزويد رقم هاتف الآن: حفظ البيانات فوراً وإظهار رسالة الاستلام ثم تشغيل صوت د. سارة والانتقال للتقرير
-    if (validFoundPhone) {
-        clinicalDialogueState.patientPhone = validFoundPhone;
-        clinicalDialogueState.step = 'completed';
-
-        // حفظ ملف المريض بشكل فوري ولحظي في قاعدة بيانات العيادة
-        if (window.SmartDB && typeof SmartDB.savePatient === 'function') {
-            SmartDB.savePatient({
-                name: clinicalDialogueState.patientName || 'مريض غير محدد',
-                phone: clinicalDialogueState.patientPhone,
-                status: 'in_progress',
-                condition: (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.title : 'فحص ألم عام',
-                notes: 'تم توثيق رقم الهاتف في الشات السريري'
-            }).catch(e => console.warn('Realtime SmartDB save error:', e));
-        }
-
-        const patientGreeting = (clinicalDialogueState.patientName && clinicalDialogueState.patientName !== 'المراجع الكريم') ? ` يا ${clinicalDialogueState.patientName}` : '';
-        const closingMsg = `✅ تم تسجيل رقم هاتفك بنجاح${patientGreeting}. نقوم الآن بإصدار تقريرك السريري المتكامل وتحويلك فوراً لصفحة التشخيص وخطة التعافي... ⏱️`;
-        
-        const indicator = document.getElementById(loadingId);
-        if (indicator) indicator.remove();
-
-        appendChatMessage('bot', closingMsg);
-        renderChatQuickReplies([]);
-
-        let transitioned = false;
-        const doTransition = () => {
-            if (transitioned) return;
-            transitioned = true;
-            if (typeof Wada3anAiEngine !== 'undefined') Wada3anAiEngine.stopSpeaking();
-            finishChatIntakeAndGenerateReport();
-        };
-
-        // تشغيل صوت محطة الانتقال الدائم المسجل مسبقاً لدكتورة سارة
-        // والانتقال لصفحة التقرير فور انتهاء دكتورة سارة من نطق آخر كلمة في التسجيل
-        playStationAudio('transition', () => {
-            doTransition();
-        });
-        return;
+    // إذا تم استلام المؤشرات الحيوية في البداية ننتقل لأسئلة الاستقصاء السريري
+    if (clinicalDialogueState.step === 'vitals' || clinicalDialogueState.step === 'init') {
+        clinicalDialogueState.step = 'clinical_questions';
     }
 
     // تجميع الأعراض السريرية الحقيقية فقط واستبعاد التحيات والأسئلة العامة ومواضيع التصميم والدردشة

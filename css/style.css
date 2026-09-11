@@ -161,6 +161,69 @@ body {
     letter-spacing: 0.3px;
 }
 
+/* مؤشر السهم المتحرك لسحب شرائح التقييم */
+.slider-drag-hint-animated {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    padding: 5px 14px;
+    border-radius: 20px;
+    color: #38bdf8;
+    font-size: 0.82em;
+    font-weight: bold;
+    margin-bottom: 8px;
+    animation: slideHintPulse 2s ease-in-out infinite;
+}
+
+.pulse-arrow-hand-left {
+    display: inline-block;
+    animation: arrowNudgeLeft 1.2s ease-in-out infinite alternate;
+}
+
+.pulse-arrow-hand-right {
+    display: inline-block;
+    animation: arrowNudgeRight 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes slideHintPulse {
+    0%, 100% { box-shadow: 0 0 6px rgba(56, 189, 248, 0.2); }
+    50% { box-shadow: 0 0 16px rgba(56, 189, 248, 0.5); background: rgba(56, 189, 248, 0.18); }
+}
+
+@keyframes arrowNudgeLeft {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-6px); }
+}
+
+@keyframes arrowNudgeRight {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(6px); }
+}
+
+/* شارة إبراز الخطة المجانية في التقرير */
+.free-plan-highlight-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(212, 175, 55, 0.22) 100%);
+    border: 1.5px solid var(--primary-gold);
+    color: #fef08a;
+    padding: 7px 16px;
+    border-radius: 22px;
+    font-size: 0.88em;
+    font-weight: 800;
+    box-shadow: 0 0 16px rgba(212, 175, 55, 0.35);
+    animation: freeBadgeGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes freeBadgeGlow {
+    0%, 100% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.25); border-color: var(--primary-gold); }
+    50% { box-shadow: 0 0 22px rgba(16, 185, 129, 0.55); border-color: #10b981; }
+}
+
 .btn-header {
     background: #1e293b;
     color: #e2e8f0;
