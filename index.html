@@ -17,11 +17,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=15.5">
+    <link rel="stylesheet" href="css/style.css?v=15.6">
     <script>
-        // التحقق من تحديثات Service Worker وتفريغ الكاش القديم فوراً عند الترقية للإصدار 15.5
+        // التحقق من تحديثات Service Worker وتفريغ الكاش القديم فوراً عند الترقية للإصدار 15.6
         (function() {
-            const APP_TARGET_VER = '15.5';
+            const APP_TARGET_VER = '15.6';
             const currentVer = localStorage.getItem('smart_app_version');
             if (currentVer !== APP_TARGET_VER) {
                 if ('caches' in window) {
@@ -769,10 +769,15 @@
                         <div style="color: #94a3b8; font-size: 0.82em;">توثيق سريري مرئي لمرضى استعادوا حياتهم الطبيعية في «وداعاً للألم»</div>
                     </div>
                 </div>
-                <button type="button" onclick="closeVideoSuccessStoriesModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.8em; cursor: pointer; line-height: 1;">&times;</button>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button type="button" onclick="refreshMobileVideosList()" title="تحديث وتنشيط قائمة الفيديوهات" style="background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6; color: #60a5fa; padding: 5px 12px; border-radius: 6px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                        <span>🔄</span> تحديث الفيديوهات
+                    </button>
+                    <button type="button" onclick="closeVideoSuccessStoriesModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.8em; cursor: pointer; line-height: 1;">&times;</button>
+                </div>
             </div>
 
-            <p style="color: #cbd5e1; font-size: 0.9em; line-height: 1.7; margin: 0 0 18px 0; text-align: justify;">
+            <p style="color: #cbd5e1; font-size: 0.9em; line-height: 1.7; margin: 0 0 18px 0; text-align: right;">
                 شاهد تجارب مصورة لمرضى ومراجعين تخلصوا من آلام الديسك، عرق النسا، احتكاك المفاصل، وتيبس الفقرات، واستعادة التوازن الحركي عبر تقنية الكايروبراكتيك اليدوية بدون أدوية أو جراحة:
             </p>
 
@@ -1494,16 +1499,16 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/database.js?v=15.5"></script>
-    <script src="js/exercise-image-studio.js?v=15.5"></script>
-    <script src="js/exercises-db.js?v=15.5"></script>
-    <script src="js/diagnostic-engine.js?v=15.5"></script>
-    <script src="js/audio-pacer.js?v=15.5"></script>
-    <script src="js/patient-flow.js?v=15.5"></script>
-    <script src="js/admin-engine.js?v=15.5"></script>
-    <script src="js/ai-config.js?v=15.5"></script>
-    <script src="js/ai-engine.js?v=15.5"></script>
-    <script src="js/app.js?v=15.5"></script>
-    <script src="js/text-editor.js?v=15.5"></script>
+    <script src="js/database.js?v=15.6"></script>
+    <script src="js/exercise-image-studio.js?v=15.6"></script>
+    <script src="js/exercises-db.js?v=15.6"></script>
+    <script src="js/diagnostic-engine.js?v=15.6"></script>
+    <script src="js/audio-pacer.js?v=15.6"></script>
+    <script src="js/patient-flow.js?v=15.6"></script>
+    <script src="js/admin-engine.js?v=15.6"></script>
+    <script src="js/ai-config.js?v=15.6"></script>
+    <script src="js/ai-engine.js?v=15.6"></script>
+    <script src="js/app.js?v=15.6"></script>
+    <script src="js/text-editor.js?v=15.6"></script>
 </body>
 </html>

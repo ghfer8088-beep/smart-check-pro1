@@ -957,6 +957,27 @@ body {
     color: #ffffff;
 }
 
+.stepper-node.completed .node-label {
+    color: #6ee7b7;
+}
+
+.stepper-node.completed,
+.stepper-node.active,
+.stepper-node.unlocked {
+    cursor: pointer !important;
+}
+
+.stepper-node.completed:hover .node-circle,
+.stepper-node.unlocked:hover .node-circle {
+    transform: scale(1.1);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+}
+
+.stepper-node.locked {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
 /* Expansive Full-Width Layout */
 .main-wrapper {
     max-width: 1250px;

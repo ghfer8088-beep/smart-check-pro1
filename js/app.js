@@ -334,6 +334,12 @@ function selectAnatomyPoint(point, element) {
     }
 
     currentSelectedPoint = point;
+    try {
+        localStorage.setItem('smart_current_point', JSON.stringify(point));
+        const curMax = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
+        localStorage.setItem('smart_max_reached_step', String(Math.max(curMax, 2)));
+        if (typeof updateStepperVisuals === 'function') updateStepperVisuals(1);
+    } catch (e) {}
     
     const statusText = document.getElementById('selected-point-label');
     if (statusText) {
@@ -421,77 +427,225 @@ function playStep1AudioGuide() {
     });
 }
 
-// التحكم الذكي في التنقل عبر شريط الخطوات الست (Stepper Click Handler)
+// =========================================================================
+// نظام حفظ واستعادة حالة الجلسة والتنقل العكسي الحر (State Persistence & Free Stage Navigation)
+// =========================================================================
+
+// حساب أعلى خطوة تم فتحها للمراجع (من 1 إلى 6)
+async function getMaxUnlockedStep() {
+    let maxStep = 1;
+    try {
+        const storedMax = parseInt(localStorage.getItem('smart_max_reached_step'), 10);
+        if (!isNaN(storedMax) && storedMax >= 1 && storedMax <= 6) {
+            maxStep = Math.max(maxStep, storedMax);
+        }
+
+        const savedPatientId = (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : null) || activePatient?.patientId;
+        if (savedPatientId) {
+            const logs = await SmartDB.getPatientDailyLogs(savedPatientId);
+            if (logs && logs.length >= 7) {
+                maxStep = Math.max(maxStep, 6);
+            } else if (logs && logs.length >= 1) {
+                maxStep = Math.max(maxStep, 5);
+            } else if (localStorage.getItem('smart_plan_activated') === 'true') {
+                maxStep = Math.max(maxStep, 4);
+            } else {
+                maxStep = Math.max(maxStep, 3);
+            }
+        }
+
+        if (currentAssessmentData || localStorage.getItem('smart_current_assessment')) {
+            maxStep = Math.max(maxStep, 3);
+        }
+
+        if (currentSelectedPoint || localStorage.getItem('smart_current_point')) {
+            maxStep = Math.max(maxStep, 2);
+        }
+
+        localStorage.setItem('smart_max_reached_step', String(maxStep));
+    } catch (e) {
+        console.warn('Error calculating max unlocked step:', e);
+    }
+    return maxStep;
+}
+window.getMaxUnlockedStep = getMaxUnlockedStep;
+
+function getMaxUnlockedStepSync() {
+    try {
+        const stored = parseInt(localStorage.getItem('smart_max_reached_step'), 10);
+        if (!isNaN(stored) && stored >= 1 && stored <= 6) return stored;
+    } catch (e) {}
+    return 1;
+}
+window.getMaxUnlockedStepSync = getMaxUnlockedStepSync;
+
+// تحديث شريط الخطوات الذكي مع إبقاء جميع الخطوات المنجزة مفتوحة للنقر
+function updateStepperVisuals(activeStep) {
+    const maxUnlocked = Math.max(activeStep, getMaxUnlockedStepSync());
+    for (let i = 1; i <= 6; i++) {
+        const node = document.getElementById(`stepper-node-${i}`);
+        if (!node) continue;
+        node.classList.remove('active', 'completed', 'unlocked', 'locked');
+        if (i === activeStep) {
+            node.classList.add('active');
+            node.style.cursor = 'pointer';
+            node.style.opacity = '1';
+        } else if (i <= maxUnlocked) {
+            node.classList.add('completed', 'unlocked');
+            node.style.cursor = 'pointer';
+            node.style.opacity = '1';
+        } else {
+            node.classList.add('locked');
+            node.style.cursor = 'not-allowed';
+            node.style.opacity = '0.55';
+        }
+    }
+}
+window.updateStepperVisuals = updateStepperVisuals;
+
+// استعادة بيانات الجلسة النشطة بالكامل عند تحديث المتصفح (F5 / Refresh)
+async function restoreActiveSessionState() {
+    const savedPatientId = (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : null);
+    if (savedPatientId && !activePatient) {
+        try {
+            activePatient = await SmartDB.getPatient(savedPatientId);
+        } catch (e) {}
+    }
+
+    if (!currentAssessmentData) {
+        try {
+            const storedAss = localStorage.getItem('smart_current_assessment');
+            if (storedAss) {
+                currentAssessmentData = JSON.parse(storedAss);
+            } else if (savedPatientId) {
+                const assessments = await SmartDB.getPatientAssessments(savedPatientId);
+                if (assessments && assessments.length > 0) {
+                    currentAssessmentData = assessments[assessments.length - 1];
+                    localStorage.setItem('smart_current_assessment', JSON.stringify(currentAssessmentData));
+                }
+            }
+        } catch (e) {}
+    }
+
+    if (!currentSelectedPoint) {
+        try {
+            const storedPt = localStorage.getItem('smart_current_point');
+            if (storedPt) {
+                currentSelectedPoint = JSON.parse(storedPt);
+            } else if (currentAssessmentData && currentAssessmentData.pointId) {
+                const allPts = (typeof ANATOMY_POINTS !== 'undefined') ? (ANATOMY_POINTS.front.concat(ANATOMY_POINTS.back)) : [];
+                currentSelectedPoint = allPts.find(p => p.id === currentAssessmentData.pointId) || {
+                    id: currentAssessmentData.pointId,
+                    title: currentAssessmentData.painAreaTitle || 'المفصل المحدد',
+                    region: currentAssessmentData.painArea || 'spine'
+                };
+                localStorage.setItem('smart_current_point', JSON.stringify(currentSelectedPoint));
+            } else if (activePatient && (activePatient.painPointId || activePatient.painArea)) {
+                const ptId = activePatient.painPointId || activePatient.painArea;
+                const allPts = (typeof ANATOMY_POINTS !== 'undefined') ? (ANATOMY_POINTS.front.concat(ANATOMY_POINTS.back)) : [];
+                currentSelectedPoint = allPts.find(p => p.id === ptId) || {
+                    id: ptId,
+                    title: activePatient.painAreaTitle || activePatient.painArea || 'المفصل المحدد',
+                    region: 'spine'
+                };
+                localStorage.setItem('smart_current_point', JSON.stringify(currentSelectedPoint));
+            }
+        } catch (e) {}
+    }
+
+    if (currentSelectedPoint) {
+        const found = document.querySelector(`.anatomy-hotspot[data-point-id="${currentSelectedPoint.id}"]`);
+        if (found) found.classList.add('active');
+        const statusText = document.getElementById('selected-point-label');
+        if (statusText) {
+            statusText.textContent = `🎯 تم تحديد: ${currentSelectedPoint.title}`;
+            statusText.style.color = '#10b981';
+        }
+        const proceedBtn = document.getElementById('btn-goto-step2');
+        if (proceedBtn) {
+            proceedBtn.disabled = false;
+            proceedBtn.style.opacity = '1';
+        }
+    }
+
+    await getMaxUnlockedStep();
+}
+window.restoreActiveSessionState = restoreActiveSessionState;
+
+// التحكم الذكي في التنقل عبر شريط الخطوات الست مع دعم العودة لأي مرحلة سابقة
 async function handleStepperClick(stepNum) {
+    await restoreActiveSessionState();
+    const maxUnlocked = await getMaxUnlockedStep();
+
+    // التحقق من الصلاحية: هل المرحلة منجزة أو مفتوحة للمستخدم؟
+    if (stepNum > maxUnlocked) {
+        if (stepNum === 2) {
+            showToast('يرجى تحديد مكان الألم على المجسم أولاً للانتقال إلى التقييم السريري', 'info');
+            goToStep(1);
+        } else if (stepNum === 3) {
+            showToast('يرجى إكمال التقييم السريري الذكي أولاً لصدور التقرير الطبي', 'info');
+            if (currentSelectedPoint) goToStep(2);
+            else goToStep(1);
+        } else if (stepNum === 4) {
+            showToast('يرجى تفعيل خطة التعافي المجانية أولاً من التقرير الطبي لبدء الجلسة الأولى', 'info');
+            if (currentAssessmentData) goToStep(3);
+            else if (currentSelectedPoint) goToStep(2);
+            else goToStep(1);
+        } else if (stepNum === 5) {
+            showToast('🔒 جدول متابعة الجلسات يتفعل بعد توثيق وإنجاز الجلسة الأولى (اليوم 1)', 'info');
+            const savedPatientId = SmartDB.getCurrentSessionPatientId() || activePatient?.patientId;
+            if (savedPatientId) renderStep4IndependentDay1(savedPatientId);
+            else goToStep(3);
+        } else if (stepNum === 6) {
+            showToast('🔒 وثيقة التعافي والإنهاء تتفعل تلقائياً بعد إتمام جميع جلسات خطة التعافي السبع (7 أيام)', 'warning');
+            const savedPatientId = SmartDB.getCurrentSessionPatientId() || activePatient?.patientId;
+            if (savedPatientId) {
+                const logs = await SmartDB.getPatientDailyLogs(savedPatientId);
+                if (logs && logs.length >= 1) renderStep5SessionsDashboard(savedPatientId);
+                else renderStep4IndependentDay1(savedPatientId);
+            } else {
+                goToStep(3);
+            }
+        }
+        return;
+    }
+
+    // السماح الفوري والانتقال لأي مرحلة منجزة أو سابقة بكل سلاسة
+    const savedPatientId = (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : null) || activePatient?.patientId;
+
     if (stepNum === 1) {
         goToStep(1);
     } else if (stepNum === 2) {
-        if (!currentSelectedPoint) {
-            showToast('يرجى تحديد مكان الألم على المجسم أولاً', 'error');
-            goToStep(1);
-            return;
+        if (currentSelectedPoint) {
+            renderAdaptiveQuestions(currentSelectedPoint.id);
         }
         goToStep(2);
     } else if (stepNum === 3) {
-        if (!currentAssessmentData) {
-            showToast('يرجى إكمال التقييم السريري أولاً لتوليد التقرير', 'error');
-            if (currentSelectedPoint) goToStep(2);
-            else goToStep(1);
-            return;
+        if (currentAssessmentData) {
+            displayDiagnosticReport(currentAssessmentData);
         }
-        displayDiagnosticReport(currentAssessmentData);
         goToStep(3);
     } else if (stepNum === 4) {
-        const savedPatientId = SmartDB.getCurrentSessionPatientId() || activePatient?.patientId;
-        if (!savedPatientId) {
-            showToast('يرجى تفعيل خطة التعافي أولاً من التقرير الطبي', 'info');
-            if (currentAssessmentData) goToStep(3);
-            else if (currentSelectedPoint) goToStep(2);
-            else goToStep(1);
-            return;
+        if (savedPatientId) {
+            await renderStep4IndependentDay1(savedPatientId);
+        } else {
+            goToStep(4);
         }
-        renderStep4IndependentDay1(savedPatientId);
     } else if (stepNum === 5) {
-        const savedPatientId = SmartDB.getCurrentSessionPatientId() || activePatient?.patientId;
-        if (!savedPatientId) {
-            showToast('يرجى تفعيل خطة التعافي أولاً من التقرير الطبي', 'info');
-            if (currentAssessmentData) goToStep(3);
-            else if (currentSelectedPoint) goToStep(2);
-            else goToStep(1);
-            return;
+        if (savedPatientId) {
+            await renderStep5SessionsDashboard(savedPatientId);
+        } else {
+            goToStep(5);
         }
-        // التحقق من إنجاز الجلسة الأولى على الأقل قبل الانتقال لجدول المتابعة 2-7
-        const logs = await SmartDB.getPatientDailyLogs(savedPatientId);
-        if (!logs || logs.length === 0) {
-            showToast('🔒 يرجى إكمال وتقييم الجلسة الأولى (اليوم 1) أولاً للانتقال إلى جدول متابعة الجلسات', 'info');
-            renderStep4IndependentDay1(savedPatientId);
-            return;
-        }
-        renderStep5SessionsDashboard(savedPatientId);
     } else if (stepNum === 6) {
-        const savedPatientId = SmartDB.getCurrentSessionPatientId() || activePatient?.patientId;
-        if (!savedPatientId) {
-            showToast('يرجى تفعيل خطة التعافي أولاً من التقرير الطبي', 'info');
-            if (currentAssessmentData) goToStep(3);
-            else if (currentSelectedPoint) goToStep(2);
-            else goToStep(1);
-            return;
+        if (savedPatientId) {
+            await renderStep6Completion(savedPatientId);
+        } else {
+            goToStep(6);
         }
-        // التحقق الصارم من إتمام جميع جلسات خطة التعافي السبع (7 أيام)
-        const logs = await SmartDB.getPatientDailyLogs(savedPatientId);
-        const completedDays = logs ? logs.length : 0;
-        if (completedDays < 7) {
-            showToast(`🔒 وثيقة التعافي والإنهاء مقفلة: تتفعل تلقائياً فقط بعد إتمام جميع جلسات التعافي السبع (7 أيام)! أنت حالياً في اليوم (${completedDays + 1} من 7).`, 'warning');
-            if (completedDays === 0) {
-                renderStep4IndependentDay1(savedPatientId);
-            } else {
-                renderStep5SessionsDashboard(savedPatientId);
-            }
-            return;
-        }
-        renderStep6Completion(savedPatientId);
     }
 }
+window.handleStepperClick = handleStepperClick;
 
 // توليد الأسئلة السريرية التكيفية متعددة الطبقات
 function renderAdaptiveQuestions(pointId) {
@@ -760,6 +914,13 @@ async function runDiagnosticAnalysis() {
             recommendedExercises: Array.isArray(day1Exercises) ? day1Exercises.filter(Boolean) : [],
             date: new Date().toISOString()
         };
+
+        try {
+            localStorage.setItem('smart_current_assessment', JSON.stringify(currentAssessmentData));
+            const curMax = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
+            localStorage.setItem('smart_max_reached_step', String(Math.max(curMax, 3)));
+            if (typeof updateStepperVisuals === 'function') updateStepperVisuals(2);
+        } catch (e) {}
 
         const painDisplayStr = hasExplicitPain ? `${explicitPain}/10` : 'مستند للأعراض السريرية';
 
@@ -2068,6 +2229,17 @@ function displayDiagnosticReport(data) {
     reportContainer.innerHTML = `
         <div class="clinical-report-printable" style="background: linear-gradient(135deg, #0d1522 0%, #152238 100%); border-radius: 16px; padding: 32px; border: 1.5px solid var(--primary-gold); box-shadow: 0 12px 40px rgba(0,0,0,0.6); margin-bottom: 30px;">
             
+            <!-- بنر العودة السريعة للجلسات إذا كانت الخطة مفعلة مسبقاً -->
+            ${(localStorage.getItem('smart_plan_activated') === 'true' || (typeof SmartDB !== 'undefined' && SmartDB.getCurrentSessionPatientId())) ? `
+            <div class="no-print" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="color: #6ee7b7; font-size: 0.92em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                    <span>🟢</span> أنت تراجع التقرير الطبي - خطتك العلاجية مفعلة وجلساتك الحركية جارية.
+                </div>
+                <button type="button" onclick="handleStepperClick(getMaxUnlockedStepSync() >= 5 ? 5 : 4)" class="btn-header btn-header-emerald" style="padding: 7px 16px; font-size: 0.85em; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <span>🏋️</span> متابعة تمارينك الحالية ⬅️
+                </button>
+            </div>` : ''}
+
             <!-- ================= 1. الترويسة الطبية الملكية ================= -->
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary-gold); padding-bottom: 22px; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
                 <div style="display: flex; align-items: center; gap: 16px;">
@@ -2685,6 +2857,50 @@ window.closeVideoSuccessStoriesModal = closeVideoSuccessStoriesModal;
 window.openInAppVideoPlayer = openInAppVideoPlayer;
 window.closeInAppVideoPlayer = closeInAppVideoPlayer;
 
+// فحص وتطبيق مزامنة الفيديوهات من الرابط المباشر أو رمز QR (?sync_videos=)
+function checkAndApplyVideoSyncFromUrl() {
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const syncVideosParam = urlParams.get('sync_videos');
+        if (syncVideosParam) {
+            let parsed = null;
+            try {
+                parsed = JSON.parse(decodeURIComponent(syncVideosParam));
+            } catch (e1) {
+                try {
+                    parsed = JSON.parse(syncVideosParam);
+                } catch (e2) {}
+            }
+
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                localStorage.setItem('wada3an_success_stories_videos', JSON.stringify(parsed));
+                
+                // تنظيف الرابط في شريط المتصفح ليبقى العنوان نظيفاً
+                const cleanUrl = window.location.origin + window.location.pathname;
+                window.history.replaceState({}, document.title, cleanUrl);
+
+                setTimeout(() => {
+                    if (typeof showToast === 'function') {
+                        showToast('🎉 تم تحديث وتثبيت فيديوهات قصص النجاح بنجاح على هذا الهاتف!', 'success');
+                    }
+                    renderVideoSuccessStories();
+                }, 400);
+            }
+        }
+    } catch (err) {
+        console.warn('Sync videos error:', err);
+    }
+}
+window.checkAndApplyVideoSyncFromUrl = checkAndApplyVideoSyncFromUrl;
+
+function refreshMobileVideosList() {
+    renderVideoSuccessStories();
+    if (typeof showToast === 'function') {
+        showToast('🔄 تم تنشيط وتحديث قائمة الفيديوهات بنجاح!', 'success');
+    }
+}
+window.refreshMobileVideosList = refreshMobileVideosList;
+
 // كتم / تفعيل الصوت
 function toggleAudioMuteStatus(btn) {
     if (typeof ClinicalAudioPacer !== 'undefined') {
@@ -2784,6 +3000,11 @@ async function activateRecoveryPlanInstantly() {
 
         SmartDB.setCurrentSessionPatientId(patientId);
         activePatient = patientObj;
+        try {
+            localStorage.setItem('smart_plan_activated', 'true');
+            const curMax = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
+            localStorage.setItem('smart_max_reached_step', String(Math.max(curMax, 4)));
+        } catch (e) {}
 
         SmartDB.addAdminNotification({
             type: 'new_registration',
@@ -2880,6 +3101,11 @@ async function submitPatientRegistrationAndStart() {
 
     SmartDB.setCurrentSessionPatientId(patientId);
     activePatient = patientObj;
+    try {
+        localStorage.setItem('smart_plan_activated', 'true');
+        const curMax = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
+        localStorage.setItem('smart_max_reached_step', String(Math.max(curMax, 4)));
+    } catch (e) {}
 
     // تسجيل إشعار فوري حي للإدارة
     SmartDB.addAdminNotification({
@@ -3063,6 +3289,17 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
     container.innerHTML = `
         <div style="background: #111827; border: 1px solid var(--primary-gold); border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
             
+            <!-- شريط التنقل السريع بين المراحل السابقة والمتابعة -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px dashed rgba(212, 175, 55, 0.3);">
+                <button type="button" onclick="handleStepperClick(3)" class="btn-header" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; padding: 7px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <span>📋</span> العودة لمراجعة التقرير الطبي وخطة العلاج (الخطوة 3)
+                </button>
+                ${(sessionData && sessionData.dailyLogs && sessionData.dailyLogs.length >= 1) ? `
+                <button type="button" onclick="handleStepperClick(5)" class="btn-header btn-header-emerald" style="padding: 7px 14px; font-size: 0.85em; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <span>📅</span> متابعة الجلسات (2 إلى 7) ⬅️
+                </button>` : ''}
+            </div>
+
             <!-- إهداء الصدقة الجارية -->
             <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 9px 14px; margin-bottom: 16px; text-align: center; color: #6ee7b7; font-size: 0.88em;">
                 🌿 هذا البرنامج العلاجي والمنزلي متاح مجاناً كصدقة جارية عن روح المرحوم والد المعالج جمال قبها مطور هذه الأداة - نسألكم له صالح الدعاء بالرحمة والمغفرة وعلو الدرجات في الجنة.
@@ -3390,14 +3627,21 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         `;
     }
 
-    // توليد أزرار الجلسات 2 إلى 7
+    // توليد أزرار الجلسات الكاملة (الجلسة 1 المستقلة + الجلسات 2 إلى 7)
     const sessionTabsHTML = `
         <div style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 12px 16px; margin-bottom: 22px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
-                <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.95em;">📅 جدول جلسات المتابعة (الأيام 2 إلى 7):</div>
-                <span style="color: #94a3b8; font-size: 0.78em;">اختر أي جلسة منجزة أو حالية لمراجعتها</span>
+                <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.95em;">📅 جدول جلسات برنامج التعافي (الأيام 1 إلى 7):</div>
+                <button type="button" onclick="handleStepperClick(3)" style="background: rgba(212, 175, 55, 0.12); border: 1px solid var(--primary-gold); color: #fef08a; padding: 5px 12px; border-radius: 6px; font-size: 0.78em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                    <span>📋</span> مراجعة التقرير الطبي (الخطوة 3)
+                </button>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; overflow-x: auto;">
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; overflow-x: auto;">
+                <!-- زر الجلسة الأولى المستقلة -->
+                <button type="button" onclick="renderStep4IndependentDay1('${patientId}')" title="مراجعة تمارين الجلسة الأولى" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 10px 4px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: 0.2s; min-width: 60px;">
+                    <span>الجلسة 1</span>
+                    <span style="font-size: 0.75em; opacity: 0.9;">✓ منجزة</span>
+                </button>
                 ${[2, 3, 4, 5, 6, 7].map(d => {
                     const isCurrentActive = (d === activeDay);
                     const isCompleted = (d < sessionData.currentSessionDay);
@@ -3424,7 +3668,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                     }
 
                     return `
-                        <button type="button" onclick="${clickAction}" style="background: ${bg}; border: ${border}; color: ${color}; padding: 10px 6px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: 0.2s; min-width: 65px;">
+                        <button type="button" onclick="${clickAction}" style="background: ${bg}; border: ${border}; color: ${color}; padding: 10px 4px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: 0.2s; min-width: 60px;">
                             <span>الجلسة ${d}</span>
                             <span style="font-size: 0.75em; opacity: 0.85;">${isCompleted ? '✓ منجزة' : isCurrentActive ? '🟢 الحالية' : '🔒 مقفلة'}</span>
                         </button>
@@ -3520,6 +3764,16 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
     container.innerHTML = `
         <div style="background: #111827; border: 1px solid var(--primary-gold); border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
             
+            <!-- شريط التنقل السريع بين المراحل السابقة -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px dashed rgba(212, 175, 55, 0.3);">
+                <button type="button" onclick="handleStepperClick(3)" class="btn-header" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; padding: 7px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <span>📋</span> العودة لمراجعة التقرير الطبي وخطة العلاج (الخطوة 3)
+                </button>
+                <button type="button" onclick="renderStep4IndependentDay1('${patientId}')" class="btn-header" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 7px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <span>🏋️</span> مراجعة تمارين الجلسة الأولى (اليوم 1)
+                </button>
+            </div>
+
             <!-- إهداء الصدقة الجارية -->
             <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 9px 14px; margin-bottom: 16px; text-align: center; color: #6ee7b7; font-size: 0.88em;">
                 🌿 هذا البرنامج العلاجي والمنزلي متاح مجاناً كصدقة جارية عن روح المرحوم والد المعالج جمال قبها مطور هذه الأداة - نسألكم له صالح الدعاء بالرحمة والمغفرة وعلو الدرجات في الجنة.
@@ -4554,19 +4808,13 @@ function goToStep(stepNum) {
     }
 
     document.querySelectorAll('.app-step-section').forEach(s => s.style.display = 'none');
-    document.querySelectorAll('.stepper-node').forEach(n => n.classList.remove('active', 'completed'));
 
     // إظهار قسم الخطوة المحددة بدقة (الخطوات 1 إلى 6 أصبحت مستقلة تماماً)
     const targetSection = document.getElementById(`step-section-${stepNum}`);
     if (targetSection) targetSection.style.display = 'block';
 
-    for (let i = 1; i <= 6; i++) {
-        const node = document.getElementById(`stepper-node-${i}`);
-        if (node) {
-            if (i < stepNum) node.classList.add('completed');
-            if (i === stepNum) node.classList.add('active');
-        }
-    }
+    // تحديث مؤشرات شريط الخطوات الذكي مع المحافظة على جميع الخطوات المنجزة
+    updateStepperVisuals(stepNum);
 
     // إذا دخل المراجع الخطوة 1 (المجسم)، إظهار شريط التوجيه فقط بدون تشغيل صوت مكرر
     if (stepNum === 1) {
@@ -4675,6 +4923,12 @@ function resetToInitialState() {
     activePatient = null;
     currentSelectedPoint = null;
     currentAssessmentData = null;
+    try {
+        localStorage.removeItem('smart_current_point');
+        localStorage.removeItem('smart_current_assessment');
+        localStorage.removeItem('smart_plan_activated');
+        localStorage.removeItem('smart_max_reached_step');
+    } catch (e) {}
 
     document.querySelectorAll('.anatomy-hotspot').forEach(p => p.classList.remove('active'));
     const statusText = document.getElementById('selected-point-label');
@@ -5368,13 +5622,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         bottomContainer.innerHTML = getPromotionalContactHubHTML();
     }
 
+    // استعادة حالة الجلسة بالكامل وحساب أعلى مرحلة تم إنجازها
+    await restoreActiveSessionState();
+    const maxUnlocked = await getMaxUnlockedStep();
+
+    // فحص وتطبيق أي مزامنة فيديوهات قادمة عبر الرابط ?sync_videos=
+    if (typeof checkAndApplyVideoSyncFromUrl === 'function') {
+        checkAndApplyVideoSyncFromUrl();
+    }
+
     const savedPatientId = SmartDB.getCurrentSessionPatientId();
     if (savedPatientId) {
         const p = await SmartDB.getPatient(savedPatientId);
         if (p) {
-            loadPatientRecoveryDashboard(savedPatientId);
-            return;
+            const isPlanActive = localStorage.getItem('smart_plan_activated') === 'true';
+            const logs = await SmartDB.getPatientDailyLogs(savedPatientId);
+            if (isPlanActive || (logs && logs.length > 0) || maxUnlocked >= 4) {
+                await loadPatientRecoveryDashboard(savedPatientId);
+                return;
+            } else if (currentAssessmentData) {
+                displayDiagnosticReport(currentAssessmentData);
+                goToStep(3);
+                return;
+            }
         }
+    }
+
+    if (currentAssessmentData && maxUnlocked >= 3) {
+        displayDiagnosticReport(currentAssessmentData);
+        goToStep(3);
+        return;
+    } else if (currentSelectedPoint && maxUnlocked >= 2) {
+        renderAdaptiveQuestions(currentSelectedPoint.id);
+        goToStep(2);
+        return;
     }
 
     goToStep(1);

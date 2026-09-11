@@ -322,6 +322,43 @@
                     </div>
                 </div>
 
+                <!-- قسم المزامنة الفورية مع الموبايل ونسخ الكود الدائم -->
+                <div style="background: rgba(15, 23, 42, 0.95); border: 1.5px solid #3b82f6; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1.4em;">📲</span>
+                            <div>
+                                <strong style="color: #60a5fa; font-size: 1.05em;">مزامنة الفيديوهات مع الموبايل لتعمل فوراً على أي هاتف:</strong>
+                                <div style="color: #94a3b8; font-size: 0.82em;">بما أن متصفح الهاتف يمتلك ذاكرة مستقلة، استخدم إحدى الطرق السريعة التالية لتثبيت فيديوهاتك على الموبايل فوراً:</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px;">
+                        <button type="button" onclick="copyMobileSyncUrl()" class="btn-header" style="background: #2563eb; color: #fff; border: none; font-weight: bold; padding: 9px 16px; font-size: 0.88em; display: inline-flex; align-items: center; gap: 6px;">
+                            <span>🔗</span> نسخ رابط المزامنة للموبايل
+                        </button>
+                        <button type="button" onclick="sendSyncUrlToWhatsApp()" class="btn-header" style="background: #10b981; color: #fff; border: none; font-weight: bold; padding: 9px 16px; font-size: 0.88em; display: inline-flex; align-items: center; gap: 6px;">
+                            <span>💬</span> إرسال الرابط إلى واتساب
+                        </button>
+                        <button type="button" onclick="toggleMobileSyncQR()" class="btn-header" style="background: rgba(212, 175, 55, 0.2); color: var(--primary-gold); border: 1px solid var(--primary-gold); font-weight: bold; padding: 9px 16px; font-size: 0.88em; display: inline-flex; align-items: center; gap: 6px;">
+                            <span>📷</span> مسح رمز QR بكاميرا الهاتف
+                        </button>
+                        <button type="button" onclick="copyPermanentVideoCode()" class="btn-header" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; font-size: 0.85em; padding: 9px 14px; display: inline-flex; align-items: center; gap: 6px;">
+                            <span>📋</span> نسخ كود JavaScript الدائم
+                        </button>
+                    </div>
+
+                    <!-- صندوق رمز QR المباشر (مخفي افتراضياً) -->
+                    <div id="admin-videos-qr-box" style="display: none; background: #080c14; border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 10px; padding: 16px; margin-top: 10px; text-align: center;">
+                        <div style="color: #93c5fd; font-size: 0.9em; font-weight: bold; margin-bottom: 10px;">📷 وجّه كاميرا هاتفك المحمول نحو الرمز أدناه ليتم فتح الأداة ومزامنة الفيديوهات فوراً:</div>
+                        <div style="display: inline-block; padding: 8px; background: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                            <img id="admin-videos-qr-img" src="" alt="QR Code" style="width: 170px; height: 170px; display: block;">
+                        </div>
+                        <div style="margin-top: 8px; color: #64748b; font-size: 0.78em;">بمجرد فتح الرابط على هاتفك، ستُحفظ الفيديوهات المعدلة وتظهر تلقائياً لجميع مراجعي الهاتف.</div>
+                    </div>
+                </div>
+
                 <div id="admin-videos-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
                     <!-- يتم توليد البطاقات برمجياً -->
                 </div>
@@ -706,6 +743,62 @@
             const wrap = document.getElementById('admin-preview-frame-wrap');
             if (wrap) wrap.innerHTML = '';
             if (modal) modal.style.display = 'none';
+        }
+
+        // دوال مزامنة الفيديوهات مع الموبايل (Mobile Sync Helpers)
+        function getMobileSyncUrl() {
+            const list = getAdminStoredVideos();
+            const jsonStr = JSON.stringify(list);
+            const encoded = encodeURIComponent(jsonStr);
+            const baseUrl = window.location.href.replace(/admin\.html.*$/, 'index.html');
+            return baseUrl + '?sync_videos=' + encoded;
+        }
+
+        function copyMobileSyncUrl() {
+            const syncUrl = getMobileSyncUrl();
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(syncUrl).then(() => {
+                    alert('✅ تم نسخ رابط المزامنة بنجاح!\nافتح هذا الرابط على أي هاتف لتحديث وتثبيت الفيديوهات فوراً.');
+                }).catch(() => {
+                    prompt('انسخ رابط المزامنة التالي:', syncUrl);
+                });
+            } else {
+                prompt('انسخ رابط المزامنة التالي:', syncUrl);
+            }
+        }
+
+        function sendSyncUrlToWhatsApp() {
+            const syncUrl = getMobileSyncUrl();
+            const text = encodeURIComponent('🎬 تحديث فيديوهات قصص النجاح في وداعاً للألم: ' + syncUrl);
+            window.open('https://api.whatsapp.com/send?text=' + text, '_blank');
+        }
+
+        function toggleMobileSyncQR() {
+            const box = document.getElementById('admin-videos-qr-box');
+            const img = document.getElementById('admin-videos-qr-img');
+            if (!box || !img) return;
+
+            if (box.style.display === 'none' || !box.style.display) {
+                const syncUrl = getMobileSyncUrl();
+                img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(syncUrl);
+                box.style.display = 'block';
+            } else {
+                box.style.display = 'none';
+            }
+        }
+
+        function copyPermanentVideoCode() {
+            const list = getAdminStoredVideos();
+            const code = 'const DEFAULT_SUCCESS_STORY_VIDEOS = ' + JSON.stringify(list, null, 4) + ';';
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(() => {
+                    alert('📋 تم نسخ كود التحديث البرمجي الدائم!\nيمكنك لصقه في ملف js/app.js أو إرساله للمطور لتثبيته لجميع الزوار.');
+                }).catch(() => {
+                    prompt('انسخ كود JavaScript التالي:', code);
+                });
+            } else {
+                prompt('انسخ كود JavaScript التالي:', code);
+            }
         }
 
         // دوال التحكم بمحرك الذكاء الاصطناعي (Gemini AI Admin Controls)
