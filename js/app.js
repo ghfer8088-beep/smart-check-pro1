@@ -2343,19 +2343,31 @@ function renderVideoSuccessStories() {
     const list = getVideoSuccessStories();
     container.innerHTML = list.map(item => {
         const titleSafe = (item.title || '').replace(/"/g, '&quot;');
-        const GENERIC_FB_PAGE = 'https://www.facebook.com/Wada3an.Al.Alam';
-        // استخدام الرابط المباشر إذا كان محدداً وليس الصفحة العامة، وإلا استخدام رابط url
-        let targetUrl = item.directUrl || '';
-        const isGenericPage = !targetUrl || targetUrl.trim() === GENERIC_FB_PAGE || targetUrl.trim() === 'https://www.facebook.com/Wada3an.Al.Alam/';
-        if (isGenericPage) {
-            // تحويل رابط تضمين يوتيوب إلى رابط مباشر إذا أمكن
-            let altUrl = item.url || '';
-            if (altUrl.includes('youtube.com/embed/')) {
-                const vidId = altUrl.split('embed/')[1]?.split('?')[0];
-                if (vidId) altUrl = `https://www.youtube.com/watch?v=${vidId}`;
-            }
-            targetUrl = altUrl || GENERIC_FB_PAGE;
+        // منطق بسيط وقوي: استخدم directUrl مباشرة إذا يحتوي على رابط فيديو حقيقي
+        let targetUrl = '';
+        const rawDirect = (item.directUrl || '').trim();
+        const rawUrl    = (item.url || '').trim();
+
+        // هل rawDirect رابط فيديو حقيقي (يحتوي /videos/ أو /watch أو youtu أو .mp4 أو /reel/)?
+        const isRealVideoUrl = (u) => u && (
+            u.includes('/videos/') || u.includes('/watch') ||
+            u.includes('youtu.be') || u.includes('youtube.com/watch') ||
+            u.includes('/reel/') || u.includes('.mp4') || u.includes('/v/')
+        );
+
+        if (isRealVideoUrl(rawDirect)) {
+            targetUrl = rawDirect;
+        } else if (rawUrl.includes('youtube.com/embed/')) {
+            // تحويل رابط تضمين يوتيوب إلى رابط مباشر
+            const vidId = rawUrl.split('embed/')[1]?.split('?')[0];
+            targetUrl = vidId ? `https://www.youtube.com/watch?v=${vidId}` : rawDirect || rawUrl || 'https://www.facebook.com/Wada3an.Al.Alam';
+        } else if (isRealVideoUrl(rawUrl)) {
+            targetUrl = rawUrl;
+        } else {
+            // كلاهما مجرد صفحة عامة - استخدم directUrl أياً كان أو الصفحة
+            targetUrl = rawDirect || rawUrl || 'https://www.facebook.com/Wada3an.Al.Alam';
         }
+
         const urlSafe = targetUrl.replace(/"/g, '&quot;');
         const descSafe = (item.description || '').replace(/"/g, '&quot;');
         const catSafe = item.category || '⚡ حالة سريرية موثقة';

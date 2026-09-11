@@ -1106,88 +1106,132 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             return returnDetails ? { audioUrl: this._audioCache[cacheKey], error: null } : this._audioCache[cacheKey];
         }
 
-        // نموذج Gemini الرسمي المعتمد للتوليد الصوتي البشري (Aoede / Charon / Puck)
-        const audioModels = [
-            'gemini-2.5-flash-preview-tts',
-            'gemini-3.1-flash-tts-preview'
-        ];
+        // النموذج الرئيسي المؤكد العمل - نجرب المفاتيح بالترتيب من المؤشر الحالي
+        // النموذج الثاني كاحتياطي فقط عند فشل الأول بخطأ غير 429
+        const primaryModel   = 'gemini-2.5-flash-preview-tts';
+        const secondaryModel = 'gemini-2.5-pro-preview-tts'; // احتياطي
 
         const pool = WADA3AN_AI_CONFIG.getPoolKeys();
         let lastErrorMsg = '';
+        const now = Date.now();
 
-        // المرور على كل مفاتيح الحوض بالترتيب، تخطي المستنفدة
-        for (let attempt = 0; attempt < pool.length; attempt++) {
-            const startIdx = WADA3AN_AI_CONFIG._currentPoolIndex;
-            const idx = (startIdx + attempt) % pool.length;
-            const activeKey = pool[idx];
-            if (!activeKey) continue;
-
-            // تخطي المفتاح إذا كان في فترة التهدئة (مستنفد)
-            const coolDown = WADA3AN_AI_CONFIG._exhaustedKeys.get(activeKey);
-            if (coolDown && Date.now() < coolDown) continue;
-
-            for (let modelName of audioModels) {
-                try {
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${activeKey}`;
-                    const payload = {
-                        contents: [{
-                            parts: [{ text: cleanText }]
-                        }],
-                        generationConfig: {
-                            responseModalities: ["AUDIO"],
-                            speechConfig: {
-                                voiceConfig: {
-                                    prebuiltVoiceConfig: {
-                                        voiceName: voiceName || "Aoede"
-                                    }
-                                }
-                            }
-                        }
-                    };
-
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 9000);
-
-                    const res = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload),
-                        signal: controller.signal
-                    });
-                    clearTimeout(timeoutId);
-
-                    if (res.ok) {
-                        const data = await res.json();
-                        const part = data?.candidates?.[0]?.content?.parts?.[0];
-                        if (part && part.inlineData && part.inlineData.data) {
-                            const wavBlob = this.pcmToWavBlob(part.inlineData.data, 24000);
-                            if (wavBlob) {
-                                const blobUrl = URL.createObjectURL(wavBlob);
-                                if (!this._audioCache) this._audioCache = {};
-                                this._audioCache[cacheKey] = blobUrl;
-                                // تحديث المؤشر للبدء من هذا المفتاح الناجح في المرة القادمة
-                                WADA3AN_AI_CONFIG._currentPoolIndex = idx;
-                                return returnDetails ? { audioUrl: blobUrl, error: null } : blobUrl;
-                            }
-                        }
-                    } else if (res.status === 429) {
-                        WADA3AN_AI_CONFIG.rotateKey(activeKey);
-                        lastErrorMsg = 'تم تدوير المفتاح بسبب بلوغ الحصة';
-                        break; // الانتقال للمفتاح التالي في الحوض فوراً
-                    } else {
-                        const errObj = await res.json().catch(() => ({}));
-                        lastErrorMsg = errObj?.error?.message || `كود ${res.status} من ${modelName}`;
-                        console.warn(`Gemini audio model ${modelName} error:`, lastErrorMsg);
-                    }
-                } catch (e) {
-                    lastErrorMsg = e.message;
-                    console.warn(`Gemini audio model ${modelName} attempt notice:`, e);
-                }
+        // إنشاء قائمة المفاتيح المتاحة (غير المستنفدة) بدءاً من المؤشر الحالي
+        const startIdx = WADA3AN_AI_CONFIG._currentPoolIndex;
+        const availableKeys = [];
+        for (let i = 0; i < pool.length; i++) {
+            const idx = (startIdx + i) % pool.length;
+            const key = pool[idx];
+            if (!key) continue;
+            const cd = WADA3AN_AI_CONFIG._exhaustedKeys.get(key);
+            if (!cd || now > cd) {
+                availableKeys.push({ key, idx });
             }
         }
 
+        console.log(`[TTS] المفاتيح المتاحة: ${availableKeys.length} من ${pool.length} - الطلب: ${cleanText.substring(0, 30)}...`);
+
+        // دالة مساعدة لإرسال طلب TTS لمفتاح ونموذج محددين
+        const tryTtsRequest = async (apiKey, modelName) => {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: cleanText }] }],
+                generationConfig: {
+                    responseModalities: ['AUDIO'],
+                    speechConfig: {
+                        voiceConfig: {
+                            prebuiltVoiceConfig: { voiceName: voiceName || 'Aoede' }
+                        }
+                    }
+                }
+            };
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4000);
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                return res;
+            } catch (e) {
+                clearTimeout(timeoutId);
+                throw e;
+            }
+        };
+
+        // المرور على المفاتيح المتاحة بالترتيب
+        for (const { key: activeKey, idx } of availableKeys) {
+            console.log(`[TTS] جاري تجربة المفتاح [${idx}]...`);
+            try {
+                // جرب النموذج الأساسي أولاً
+                const res = await tryTtsRequest(activeKey, primaryModel);
+
+                if (res.ok) {
+                    const data = await res.json();
+                    const part = data?.candidates?.[0]?.content?.parts?.[0];
+                    if (part?.inlineData?.data) {
+                        const wavBlob = this.pcmToWavBlob(part.inlineData.data, 24000);
+                        if (wavBlob) {
+                            const blobUrl = URL.createObjectURL(wavBlob);
+                            if (!this._audioCache) this._audioCache = {};
+                            this._audioCache[cacheKey] = blobUrl;
+                            // تحديث المؤشر للبدء من هذا المفتاح الناجح في المرة القادمة
+                            WADA3AN_AI_CONFIG._currentPoolIndex = idx;
+                            console.log(`[TTS] ✅ نجح المفتاح [${idx}] مع ${primaryModel}`);
+                            return returnDetails ? { audioUrl: blobUrl, error: null } : blobUrl;
+                        }
+                    }
+                    // استجابة ناجحة لكن بدون بيانات صوتية - جرب النموذج الاحتياطي
+                    lastErrorMsg = 'لا توجد بيانات صوتية في الاستجابة';
+                } else if (res.status === 429) {
+                    // مفتاح مستنفد - سجّله وانتقل للتالي
+                    WADA3AN_AI_CONFIG.rotateKey(activeKey);
+                    lastErrorMsg = `429 - مفتاح [${idx}] مستنفد`;
+                    console.warn(`[TTS] 429 على المفتاح [${idx}] - انتقال للتالي`);
+                    continue; // الانتقال للمفتاح التالي
+                } else if (res.status === 404) {
+                    // النموذج غير موجود - جرب الاحتياطي
+                    lastErrorMsg = `404 - ${primaryModel} غير متاح`;
+                    try {
+                        const res2 = await tryTtsRequest(activeKey, secondaryModel);
+                        if (res2.ok) {
+                            const data2 = await res2.json();
+                            const part2 = data2?.candidates?.[0]?.content?.parts?.[0];
+                            if (part2?.inlineData?.data) {
+                                const wavBlob2 = this.pcmToWavBlob(part2.inlineData.data, 24000);
+                                if (wavBlob2) {
+                                    const blobUrl2 = URL.createObjectURL(wavBlob2);
+                                    if (!this._audioCache) this._audioCache = {};
+                                    this._audioCache[cacheKey] = blobUrl2;
+                                    WADA3AN_AI_CONFIG._currentPoolIndex = idx;
+                                    console.log(`[TTS] ✅ نجح المفتاح [${idx}] مع ${secondaryModel}`);
+                                    return returnDetails ? { audioUrl: blobUrl2, error: null } : blobUrl2;
+                                }
+                            }
+                        } else if (res2.status === 429) {
+                            WADA3AN_AI_CONFIG.rotateKey(activeKey);
+                            continue;
+                        }
+                    } catch (e2) {
+                        lastErrorMsg = e2.message;
+                    }
+                } else {
+                    const errObj = await res.json().catch(() => ({}));
+                    lastErrorMsg = errObj?.error?.message || `كود ${res.status}`;
+                    console.warn(`[TTS] خطأ ${res.status} على المفتاح [${idx}]:`, lastErrorMsg);
+                }
+            } catch (e) {
+                lastErrorMsg = e.name === 'AbortError' ? 'timeout 4s' : e.message;
+                console.warn(`[TTS] استثناء على المفتاح [${idx}]:`, lastErrorMsg);
+            }
+        }
+
+        console.warn(`[TTS] ❌ فشلت كل المفاتيح المتاحة. السبب: ${lastErrorMsg}`);
         return returnDetails ? { audioUrl: null, error: lastErrorMsg || 'تعذر توليد الصوت البشري' } : null;
     },
+
 
     _globalAudio: null,
     _audioUnlocked: false,
@@ -1718,8 +1762,11 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
             console.warn('Gemini studio neural voice notice:', e);
         }
 
-        // شبكة أمان فورية لتقرير الحالة: تشغيل الصوت المباشر دون أي صمت
-        this.speakWithNaturalSystemVoice(text, onEndCallback);
+        // إذا فشل TTS البشري: إكمال بصمت - لا صوت آلي
+        console.info('[TTS] تعذر توليد الصوت البشري - إكمال بصمت');
+        this.isSpeaking = false;
+        this.hideLiveAudioPill();
+        if (onEndCallback) onEndCallback();
     },
 
     // تشغيل نطق رسالة الشات بصوت الاستوديو الطبيعي
@@ -1744,11 +1791,9 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
             console.warn('Speak message notice:', e);
         }
 
-        // شبكة أمان فورية: تشغيل الصوت العربي الطبيعي
-        if (btnEl) btnEl.textContent = '⏹️';
-        this.speakWithNaturalSystemVoice(text, () => {
-            if (btnEl) btnEl.textContent = '▶️';
-        });
+        // إذا فشل TTS البشري: إكمال بصمت - لا صوت آلي
+        if (btnEl) btnEl.textContent = '▶️';
+        console.info('[TTS] تعذر توليد الصوت البشري - إكمال بصمت');
     },
 
     // نطق رد الطبيب بالصوت البشري الاستوديو أو الصوت العربي الطبيعي الفوري بضمان عدم الصمت التام
@@ -1805,9 +1850,12 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
             console.warn('Studio human voice generation notice:', e);
         }
 
-        // في حال استنفاد الحصة السحابية أو انقطاع النت: استخدام الصوت العربي الفوري (Zero-Silence Guarantee)
+        // في حال استنفاد كل المفاتيح: لا نستخدم الصوت الآلي - فقط نكمل بصمت
+        // (الصوت الآلي رديء وأسوأ من الصمت للمريض)
         if (expectedToken === undefined || expectedToken === null || expectedToken === this._speechSessionToken) {
-            this.speakWithNaturalSystemVoice(textToSynthesize, onEndCallback);
+            console.info('[TTS] كل مفاتيح الصوت البشري مستنفدة مؤقتاً - إكمال بصمت');
+            this.hideLiveAudioPill();
+            if (onEndCallback) onEndCallback();
             return;
         }
 

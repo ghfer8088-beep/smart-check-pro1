@@ -66,7 +66,31 @@ const WADA3AN_AI_CONFIG = {
                 localStorage.setItem('wada3an_voice_rotation_mode', 'random');
             }
         } catch (e) {}
+        // استعادة سجل المفاتيح المستنفدة من الجلسة السابقة لتسريع بدء التشغيل
+        this.loadExhaustedKeysFromStorage();
     },
+
+    // تحميل المفاتيح المستنفدة من localStorage (تستمر عبر إعادة تحميل الصفحة)
+    loadExhaustedKeysFromStorage: function() {
+        try {
+            const saved = JSON.parse(localStorage.getItem('wada3an_exhausted_keys') || '{}');
+            const now = Date.now();
+            Object.entries(saved).forEach(([k, t]) => {
+                if (t > now) this._exhaustedKeys.set(k, t);
+            });
+            // بعد تحميل السجل، اضبط _currentPoolIndex على أول مفتاح غير مستنفد
+            const pool = this.getPoolKeys();
+            for (let i = 0; i < pool.length; i++) {
+                const cd = this._exhaustedKeys.get(pool[i]);
+                if (!cd || now > cd) {
+                    this._currentPoolIndex = i;
+                    break;
+                }
+            }
+        } catch (e) {}
+    },
+
+
 
     // استرجاع المفتاح النشط مع التبديل الذكي وتخطي المفاتيح المستنفدة
     getApiKey: function() {
@@ -116,9 +140,16 @@ const WADA3AN_AI_CONFIG = {
     // تبديل تلقائي للمفتاح التالي في الحوض عند حدوث خطأ 429 (استنفاد الحصة)
     rotateKey: function(failedKey) {
         if (failedKey) {
-            // فترة تهدئة ذكية دقيقة واحدة (60 ثانية) لتجدد حصة الطلبات في الدقيقة (RPM)
-            this._exhaustedKeys.set(failedKey, Date.now() + 60000);
-            console.warn(`🔄 [حوض المفاتيح]: تم تحويل المفتاح المستنفد لفترة راحة قصيرة والتبديل للمفتاح التالي.`);
+            // فترة تهدئة ذكية: ساعة كاملة (3600 ثانية) لتجنب إعادة تجربة المفاتيح اليومية المستنفدة
+            const coolUntil = Date.now() + 3600000;
+            this._exhaustedKeys.set(failedKey, coolUntil);
+            // حفظ السجل في localStorage ليستمر عبر إعادة تحميل الصفحة
+            try {
+                const toSave = {};
+                this._exhaustedKeys.forEach((t, k) => { toSave[k] = t; });
+                localStorage.setItem('wada3an_exhausted_keys', JSON.stringify(toSave));
+            } catch(e) {}
+            console.warn(`🔄 [حوض المفاتيح]: مفتاح مستنفد محفوظ لساعة، والتبديل للمفتاح التالي.`);
         }
         const pool = this.getPoolKeys();
         if (pool.length > 0) {
