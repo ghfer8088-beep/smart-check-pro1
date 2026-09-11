@@ -127,6 +127,14 @@ function renderAnatomyPoints(containerId, points) {
             pointEl.classList.add('active');
         }
 
+        pointEl.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
+            stopAllActiveAudio();
+        });
+        pointEl.addEventListener('touchstart', (e) => {
+            e.stopPropagation();
+            stopAllActiveAudio();
+        }, { passive: true });
         pointEl.addEventListener('click', (e) => {
             e.stopPropagation();
             selectAnatomyPoint(pt, pointEl);
@@ -148,13 +156,21 @@ function isUserAdmin() {
 }
 window.isUserAdmin = isUserAdmin;
 
-// إيقاف كافة الأصوات النشطة فوراً ومنع أي تداخل بين المحطات
+// إيقاف كافة الأصوات النشطة فوراً ومنع أي تداخل بين المحطات أو إعادة تشغيل نهائياً
 function stopAllActiveAudio() {
     if (typeof currentActiveStationAudio !== 'undefined' && currentActiveStationAudio) {
         try {
+            if (typeof currentActiveStationAudio._cancelPlayback === 'function') {
+                currentActiveStationAudio._cancelPlayback();
+            }
+            currentActiveStationAudio.onended = null;
+            currentActiveStationAudio.onerror = null;
+            currentActiveStationAudio.onloadedmetadata = null;
+            currentActiveStationAudio.onplay = null;
             currentActiveStationAudio.pause();
             currentActiveStationAudio.currentTime = 0;
-            currentActiveStationAudio.src = '';
+            currentActiveStationAudio.removeAttribute('src');
+            currentActiveStationAudio.load();
         } catch (e) {}
         currentActiveStationAudio = null;
     }
@@ -174,6 +190,13 @@ function selectAnatomyPoint(point, element) {
     } catch (e) {}
     window.introPlayedOrAttempted = true;
     stopAllActiveAudio();
+
+    if (window.handleFirstUserInteractionForAudio) {
+        window.removeEventListener('pointerdown', window.handleFirstUserInteractionForAudio);
+        window.removeEventListener('touchstart', window.handleFirstUserInteractionForAudio);
+        window.removeEventListener('click', window.handleFirstUserInteractionForAudio);
+        window.handleFirstUserInteractionForAudio = null;
+    }
 
     document.querySelectorAll('.anatomy-hotspot').forEach(p => p.classList.remove('active'));
     if (element) {
@@ -290,7 +313,7 @@ function handleStepperClick(stepNum) {
         }
         displayDiagnosticReport(currentAssessmentData);
         goToStep(3);
-    } else if (stepNum >= 4) {
+    } else if (stepNum === 4) {
         const savedPatientId = SmartDB.getCurrentSessionPatientId() || activePatient?.patientId;
         if (!savedPatientId) {
             showToast('يرجى تفعيل خطة التعافي أولاً من التقرير الطبي', 'info');
@@ -299,7 +322,27 @@ function handleStepperClick(stepNum) {
             else goToStep(1);
             return;
         }
-        loadPatientRecoveryDashboard(savedPatientId);
+        renderStep4IndependentDay1(savedPatientId);
+    } else if (stepNum === 5) {
+        const savedPatientId = SmartDB.getCurrentSessionPatientId() || activePatient?.patientId;
+        if (!savedPatientId) {
+            showToast('يرجى تفعيل خطة التعافي أولاً من التقرير الطبي', 'info');
+            if (currentAssessmentData) goToStep(3);
+            else if (currentSelectedPoint) goToStep(2);
+            else goToStep(1);
+            return;
+        }
+        renderStep5SessionsDashboard(savedPatientId);
+    } else if (stepNum === 6) {
+        const savedPatientId = SmartDB.getCurrentSessionPatientId() || activePatient?.patientId;
+        if (!savedPatientId) {
+            showToast('يرجى تفعيل خطة التعافي أولاً من التقرير الطبي', 'info');
+            if (currentAssessmentData) goToStep(3);
+            else if (currentSelectedPoint) goToStep(2);
+            else goToStep(1);
+            return;
+        }
+        renderStep6Completion(savedPatientId);
     }
 }
 
@@ -2698,9 +2741,346 @@ async function submitPatientRegistrationAndStart() {
     loadPatientRecoveryDashboard(patientId);
 }
 
-// تحميل لوحة متابعة المريض (الخطوة 4) مع المؤشرات الثلاثة والرسم البياني
-async function loadPatientRecoveryDashboard(patientId) {
-    const sessionData = await PatientFlow.initPatientSession(patientId);
+// // توليد بطاقة البيانات الحيوية والملف البيوميكانيكي للمراجع (البيانات)
+function getVitalsSummaryCardHTML(patient, assessment) {
+    const pName = patient?.name || 'المراجع الكريم';
+    const vitals = assessment?.patientVitals || (typeof clinicalDialogueState !== 'undefined' ? clinicalDialogueState?.patientVitals : {}) || {};
+    const age = vitals.age || patient?.age || assessment?.age || null;
+    const gender = vitals.gender || patient?.gender || null;
+    const weight = vitals.weight || patient?.weight || null;
+    const height = vitals.height || patient?.height || null;
+    const painAreaTitle = assessment?.painAreaTitle || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint ? currentSelectedPoint.title : (patient?.painAreaTitle || 'الموضع المحدد'));
+
+    let bmiHTML = '';
+    if (weight && height && height > 0) {
+        const hM = height / 100;
+        const bmi = parseFloat((weight / (hM * hM)).toFixed(1));
+        const minHealthyW = parseFloat((18.5 * hM * hM).toFixed(1));
+        const maxHealthyW = parseFloat((24.9 * hM * hM).toFixed(1));
+
+        let status = 'وزن طبيعي متوازن';
+        let color = '#10b981';
+        let deltaText = `✅ وزنك مثالي (المدى الصحي لطولك: ${minHealthyW} - ${maxHealthyW} كجم)`;
+        let impact = 'ثبات ميكانيكي ممتاز ولا توجد حمولة ضغط إضافية على الغضاريف والمفاصل.';
+
+        if (bmi < 18.5) {
+            const deficitKg = parseFloat((minHealthyW - weight).toFixed(1));
+            status = 'نحافة / نقص كتلة';
+            color = '#38bdf8';
+            deltaText = `⚠️ نقص في الوزن بمقدار -${deficitKg} كجم عن الحد الأدنى للوزن الصحي (${minHealthyW} كجم)`;
+            impact = 'نقص الكتلة العضلية يقلل من الثبات الميكانيكي للمفاصل ويجعل الفقرات عرضة للإجهاد السريع.';
+        } else if (bmi >= 25 && bmi < 30) {
+            const excessKg = parseFloat((weight - maxHealthyW).toFixed(1));
+            const addedLoad = parseFloat((excessKg * 4).toFixed(1));
+            status = 'زيادة وزن';
+            color = '#f59e0b';
+            deltaText = `⚠️ وزن زائد بمقدار +${excessKg} كجم عن الحد الصحي`;
+            impact = `يضيف حوالي +${addedLoad} كجم حمولة ضغط ميكانيكية إضافية على المفاصل وأسفل الظهر أثناء الحركة.`;
+        } else if (bmi >= 30) {
+            const excessKg = parseFloat((weight - maxHealthyW).toFixed(1));
+            const addedLoad = parseFloat((excessKg * 4).toFixed(1));
+            status = 'سمنة مفرطة';
+            color = '#ef4444';
+            deltaText = `🚨 وزن زائد حرج بمقدار +${excessKg} كجم`;
+            impact = `يضاعف الضغط الانضغاطي على الديسك ويشكل حمولة +${addedLoad} كجم على المفاصل.`;
+        }
+
+        bmiHTML = `
+            <div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid ${color}; border-radius: 10px; padding: 14px; margin-top: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+                    <div style="color: #ffffff; font-weight: bold; font-size: 0.92em;">⚖️ مؤشر كتلة الجسم (BMI):</div>
+                    <span style="background: ${color}22; border: 1px solid ${color}; color: ${color}; font-weight: bold; font-size: 0.88em; padding: 2px 8px; border-radius: 6px;">
+                        ${bmi} kg/m² (${status})
+                    </span>
+                </div>
+                <div style="color: ${color}; font-weight: bold; font-size: 0.82em; margin-bottom: 4px;">${deltaText}</div>
+                <div style="color: #cbd5e1; font-size: 0.82em; line-height: 1.5;">💡 <strong>الأثر السريري:</strong> ${impact}</div>
+            </div>
+        `;
+    }
+
+    return `
+        <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 22px; margin-bottom: 22px; box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid rgba(212, 175, 55, 0.25); padding-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                <div style="color: var(--primary-gold); font-weight: bold; font-size: 1.05em; display: flex; align-items: center; gap: 8px;">
+                    <span>📋</span> بيانات المراجع والملف البيوميكانيكي الأساسي
+                </div>
+                <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.8em; padding: 3px 10px; border-radius: 20px; font-weight: bold;">
+                    الجلسة الأولى • انطلاقة البرنامج
+                </span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 12px;">
+                <div style="background: #0f172a; padding: 10px 14px; border-radius: 8px; border: 1px solid #1e293b;">
+                    <div style="color: #94a3b8; font-size: 0.78em;">اسم المراجع:</div>
+                    <div style="color: #ffffff; font-weight: bold; font-size: 0.95em; margin-top: 2px;">${pName}</div>
+                </div>
+                <div style="background: #0f172a; padding: 10px 14px; border-radius: 8px; border: 1px solid #1e293b;">
+                    <div style="color: #94a3b8; font-size: 0.78em;">العمر والجنس:</div>
+                    <div style="color: #ffffff; font-weight: bold; font-size: 0.95em; margin-top: 2px;">${age ? `${age} سنة` : 'غير محدد'} ${gender ? `• ${gender === 'female' ? 'أنثى' : 'ذكر'}` : ''}</div>
+                </div>
+                <div style="background: #0f172a; padding: 10px 14px; border-radius: 8px; border: 1px solid #1e293b;">
+                    <div style="color: #94a3b8; font-size: 0.78em;">الوزن والطول:</div>
+                    <div style="color: #ffffff; font-weight: bold; font-size: 0.95em; margin-top: 2px;">${weight ? `${weight} كجم` : '--'} • ${height ? `${height} سم` : '--'}</div>
+                </div>
+                <div style="background: #0f172a; padding: 10px 14px; border-radius: 8px; border: 1px solid #1e293b;">
+                    <div style="color: #94a3b8; font-size: 0.78em;">موضع الشكوى:</div>
+                    <div style="color: #38bdf8; font-weight: bold; font-size: 0.92em; margin-top: 2px;">${painAreaTitle}</div>
+                </div>
+            </div>
+
+            ${bmiHTML}
+        </div>
+    `;
+}
+
+// =========================================================================
+// الخطوة 4: الجلسة الأولى (مستقلة تماماً)
+// تشمل: التعليمات + البيانات + الساعة الحية + التمارين + زر إنجاز اليوم الأول
+// خالية تماماً وبشكل قاطع من أي أسئلة أو مؤشرات مئوية أو رسوم بيانية
+// =========================================================================
+async function renderStep4IndependentDay1(patientId, sessionData = null) {
+    if (!sessionData) {
+        sessionData = await PatientFlow.initPatientSession(patientId);
+    }
+    if (!sessionData || !sessionData.patient) {
+        resetToInitialState();
+        return;
+    }
+
+    activePatient = sessionData.patient;
+    goToStep(4);
+
+    const container = document.getElementById('step4-day1-container') || document.getElementById('patient-recovery-dashboard');
+    if (!container) return;
+
+    const pointKey = sessionData.latestAssessment?.pointId || sessionData.latestAssessment?.pointKey || sessionData.patient.painArea || sessionData.patient.painPointId || 'lumbar_spine';
+    const dayExercises = getExercisesForPoint(pointKey, 1, {
+        primaryDiagnosisKey: sessionData.latestAssessment?.primaryDiagnosisKey || "",
+        answers: sessionData.latestAssessment?.answers || {},
+        userNotes: sessionData.latestAssessment?.userNotes || ""
+    });
+
+    container.innerHTML = `
+        <div style="background: #111827; border: 1px solid var(--primary-gold); border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
+            
+            <!-- إهداء الصدقة الجارية -->
+            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 9px 14px; margin-bottom: 16px; text-align: center; color: #6ee7b7; font-size: 0.88em;">
+                🌿 هذا البرنامج العلاجي والمنزلي متاح مجاناً كصدقة جارية عن روح المرحوم والد المعالج جمال قبها مطور هذه الأداة - نسألكم له صالح الدعاء بالرحمة والمغفرة وعلو الدرجات في الجنة.
+            </div>
+
+            <!-- بنر علوي للاستشارة المباشرة مع المعالج -->
+            <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(15, 23, 42, 0.9) 100%); border: 1px solid var(--primary-gold); border-radius: 10px; padding: 12px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="color: #fef08a; font-size: 0.9em; display: flex; align-items: center; gap: 8px;">
+                    <span>👨‍⚕️</span> <strong>استشارة المعالج:</strong> تشعر بألم حاد أو ترغب بتسريع الشفاء عبر جلسة تقويم يدوي مباشرة؟
+                </div>
+                <a href="${CLINIC_WHATSAPP}" target="_blank" style="background: #25d366; color: #fff; text-decoration: none; padding: 6px 14px; border-radius: 6px; font-size: 0.85em; font-weight: bold; display: inline-flex; align-items: center; gap: 6px;">
+                    💬 محادثة المعالج واتساب
+                </a>
+            </div>
+
+            <!-- بنر التذكير اليومي الذكي للجلسات -->
+            ${getNotificationReminderBannerHTML(patientId)}
+
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <img src="assets/logo.png" alt="شعار وداعاً للألم" style="height: 55px; width: 55px; border-radius: 50%; border: 1.5px solid var(--primary-gold);">
+                    <div>
+                        <h2 style="color: #ffffff; margin: 0 0 4px 0; font-size: 1.35em;">مرحباً ${sessionData.patient.name} 👋</h2>
+                        <div style="color: var(--primary-gold); font-size: 0.9em;">خطة الراحة الحركية الذاتية - الجلسة الأولى (مستقلة) - منطقة ${sessionData.latestAssessment?.painAreaTitle || 'المفصل المختار'}</div>
+                    </div>
+                </div>
+                <div class="session-top-badges" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 320px; box-sizing: border-box;">
+                    <button type="button" onclick="exportClinicalSummaryForDoctor('${patientId}')" class="btn-header no-print" style="padding: 7px 8px; font-size: 0.8em; background: #0f172a; border: 1.5px solid #38bdf8; color: #38bdf8; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; width: 100%; box-sizing: border-box;">
+                        <span>📋</span> ملخص المعالج
+                    </button>
+                    <div style="background: #0f172a; border: 1px solid #10b981; padding: 7px 8px; border-radius: 8px; color: #10b981; font-weight: bold; font-size: 0.78em; text-align: center; display: flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; overflow: hidden;">
+                        <span>✓ الجلسة الأولى</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- عبارة تشجيعية ديناميكية مع تحفيز د. سارة -->
+            <div style="background: rgba(16, 185, 129, 0.1); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; color: #6ee7b7; font-weight: 500; font-size: 0.92em; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="flex: 1 1 220px; line-height: 1.6;">${sessionData.motivation || '🌟 أهلاً بك في انطلاقة برنامجك التأهيلي! جلسة اليوم مخصصة لتفريغ الضغط الميكانيكي وتهيئة المفاصل بأمان تام.'}</div>
+                <button type="button" onclick="playStationAudio('motivation')" class="btn-header btn-header-emerald" style="padding: 7px 14px; font-size: 0.8em; border-radius: 20px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; font-weight: bold; white-space: nowrap;">
+                    <span>🎙️</span> تحفيز د. سارة
+                </button>
+            </div>
+
+            <!-- 1. التعليمات: بطاقة بروتوكول وتوصيات المعالج السريري لجلسة اليوم الأول (إرشادات البدء الآمن) -->
+            <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 22px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                    <span style="font-size: 1.6em;">🩺</span>
+                    <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.15em; font-weight: bold;">
+                        بروتوكول المعالج السريري لجلسة اليوم الأول (إرشادات البدء الآمن)
+                    </h3>
+                </div>
+                <div style="color: #cbd5e1; font-size: 0.9em; line-height: 1.8; margin-bottom: 15px;">
+                    أهلاً بك في بداية برنامجك التأهيلي! الهدف من جلسة اليوم هو <strong>تفريغ الضغط الميكانيكي الأولي</strong> عن مفصل (${sessionData.latestAssessment?.painAreaTitle || 'المنطقة المحددة'}) والأنسجة المحيطة، وتنشيط تدفق السائل الزلالي بلطف وأمان تام دون أي إجهاد.
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
+                    <div style="background: #0f172a; border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 10px; padding: 12px 14px;">
+                        <div style="color: #10b981; font-weight: bold; font-size: 0.9em; margin-bottom: 4px;">🫁 1. التنفس المنتظم والهدوء:</div>
+                        <div style="color: #94a3b8; font-size: 0.83em; line-height: 1.6;">تنفس بعمق وزفير هادئ مع كل حركة. لا تكتم نَفَسَك أثناء الشد أو الاستطالة.</div>
+                    </div>
+                    <div style="background: #0f172a; border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 10px; padding: 12px 14px;">
+                        <div style="color: #38bdf8; font-weight: bold; font-size: 0.9em; margin-bottom: 4px;">🎯 2. التدرج وتجنب القوة:</div>
+                        <div style="color: #94a3b8; font-size: 0.83em; line-height: 1.6;">ابدأ الحركة بنصف المدى وزده تدريجياً. الهدف هو تليين الأنسجة وتفريغ الحمل وليس التحدي العضلي.</div>
+                    </div>
+                    <div style="background: #0f172a; border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 10px; padding: 12px 14px;">
+                        <div style="color: #ef4444; font-weight: bold; font-size: 0.9em; margin-bottom: 4px;">🛑 3. ضابط الأمان السريري:</div>
+                        <div style="color: #fca5a5; font-size: 0.83em; line-height: 1.6;">الشعور بشد خفيف طبيعي ومطلوب، ولكن توقف فوراً إذا شعرت بوخز حاد أو ألم كهربائي مفاجئ.</div>
+                    </div>
+                    <div style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 10px; padding: 12px 14px;">
+                        <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.9em; margin-bottom: 4px;">💧 4. ما بعد التمارين:</div>
+                        <div style="color: #94a3b8; font-size: 0.83em; line-height: 1.6;">اشرب كوب ماء دافئ، ويمكن وضع كمادة دافئة لمدة 10 دقائق بعد الانتهاء لاسترخاء الأنسجة وتسكين التوتر.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. البيانات: بطاقة بيانات المراجع الحيوية والميكانيكية -->
+            ${getVitalsSummaryCardHTML(sessionData.patient, sessionData.latestAssessment)}
+
+            <!-- 3. الساعة الرقمية الحية لجلسة اليوم الأول -->
+            <div id="live-session-clock-card" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.8) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 16px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5em;">
+                        ⏱️
+                    </div>
+                    <div>
+                        <div style="color: var(--primary-gold); font-size: 0.88em; font-weight: bold; letter-spacing: 0.5px;">توقيت الجلسة الحركية المباشرة (اليوم الأول):</div>
+                        <div id="live-session-date-display" style="color: #94a3b8; font-size: 0.84em; margin-top: 2px;">--</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px; background: rgba(0, 0, 0, 0.5); border: 1.5px solid #10b981; padding: 8px 18px; border-radius: 10px;">
+                    <span style="color: #10b981; font-size: 0.95em; animation: pulse 1.5s infinite;">🟢 جلسة نشطة الآن:</span>
+                    <div id="live-session-time-display" style="color: #6ee7b7; font-size: 1.45em; font-weight: 900; letter-spacing: 1px; font-family: monospace;" dir="ltr">--:--:--</div>
+                </div>
+            </div>
+
+            <!-- 4. التمارين: عرض تمارين اليوم الأول المقررة في الصدارة مباشرة -->
+            <div style="margin-bottom: 25px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 8px;">
+                    <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.3em;">🏋️ تمارين الراحة المقررة لليوم الأول (1 من 7) - ${sessionData.stageTitle}</h3>
+                    <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">⚡ ابدأ بالتمارين أدناه</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px;">
+                    ${dayExercises.map((ex, idx) => `
+                        <div class="clinical-exercise-card" style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                ${generateExerciseIllustration(ex.visualType, ex.id, { name: ex.name })}
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0 6px 0;">
+                                    <span style="color: var(--primary-gold); font-size: 0.78em; font-weight: bold;">تمرين #${idx+1} (اليوم 1)</span>
+                                    <span style="color: #10b981; font-size: 0.78em;">⏱️ ${ex.duration}</span>
+                                </div>
+                                <h4 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.15em;">${ex.name}</h4>
+                                <p style="color: #cbd5e1; font-size: 0.86em; margin: 0 0 12px 0;">${ex.description}</p>
+                                
+                                <div style="background: #111827; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85em; color: #e2e8f0; line-height: 1.7; border-right: 3px solid var(--primary-gold);">
+                                    <strong>طريقة الأداء:</strong><br>${ex.instructions}
+                                </div>
+
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                                    <span style="background: #1e293b; color: #d4af37; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">🔁 ${ex.reps}</span>
+                                    <span style="background: #1e293b; color: #f59e0b; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">📦 ${ex.sets}</span>
+                                </div>
+
+                                <!-- دليل التكنيك السليم والأخطاء الشائعة -->
+                                ${typeof getExerciseFormGuideHTML === 'function' ? getExerciseFormGuideHTML(ex) : ''}
+                            </div>
+                            <div>
+                                <div style="background: #1e2633; height: 5px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
+                                    <div class="timer-progress-fill" style="background: linear-gradient(90deg, #d4af37 0%, #10b981 100%); height: 100%; width: 0%; transition: width 1s linear;"></div>
+                                </div>
+                                <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="width: 100%; background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.92em;">
+                                    ⏱️ ابدأ مؤقت التمرين (${ex.duration})
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            <!-- 5. زر توثيق إنجاز تمارين اليوم الأول وبدء فترة الاستشفاء (24 ساعة) والانتقال للخطوة 5 -->
+            <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%); border: 2px solid #10b981; border-radius: 14px; padding: 24px; text-align: center; margin: 25px 0; box-shadow: 0 8px 30px rgba(16, 185, 129, 0.25);">
+                <div style="color: #6ee7b7; font-size: 1.15em; font-weight: bold; margin-bottom: 8px;">🎯 خطوتك التالية بعد إتمام التمارين أعلاه:</div>
+                <div style="color: #cbd5e1; font-size: 0.9em; margin-bottom: 20px; line-height: 1.7; max-width: 600px; margin-left: auto; margin-right: auto;">
+                    بعد انتهائك من أداء تمارين اليوم الأول، انقر على الزر أدناه لتوثيق إنجاز الجلسة الأولى وبدء فترة الاستشفاء الحيوي للأنسجة (24 ساعة). ستنتقل بعدها مباشرة لمتابعة باقي الجلسات (2 إلى 7) مع التقييم اليومي المعتمد.
+                </div>
+                <button type="button" onclick="completeDay1InitialExercises('${patientId}')" class="btn-plan-royal-card" style="margin: 0 auto; max-width: 620px; width: 100%;">
+                    <div class="royal-card-halo"></div>
+                    <div class="royal-card-shimmer"></div>
+                    <div class="royal-badge-pill">
+                        <span class="royal-badge-dot"></span>
+                        <span>✨ توثيق إنجاز الجلسة الأولى</span>
+                    </div>
+                    <div class="royal-main-content">
+                        <div class="royal-icon-box">
+                            <span class="royal-icon-emoji">✅</span>
+                        </div>
+                        <div class="royal-text-col">
+                            <div class="royal-cta-headline">✅ أتممت أداء تمارين اليوم الأول بنجاح</div>
+                            <div class="royal-cta-subline">بدء فترة الاستشفاء الحيوي للأنسجة (24 ساعة) ⏳</div>
+                        </div>
+                        <div class="royal-arrow-box">
+                            <span class="royal-arrow-anim">⬅️</span>
+                        </div>
+                    </div>
+                </button>
+            </div>
+
+            <!-- خدمة الزيارات المنزلية واستشارة المعالج -->
+            <div class="no-print">
+                ${getHomeVisitCardHTML()}
+            </div>
+        </div>
+    `;
+
+    // تنشيط الساعة الحية لليوم الأول
+    if (window.liveSessionClockInterval) {
+        clearInterval(window.liveSessionClockInterval);
+        window.liveSessionClockInterval = null;
+    }
+    const updateLiveClock = () => {
+        const timeEl = document.getElementById('live-session-time-display');
+        const dateEl = document.getElementById('live-session-date-display');
+        if (!timeEl) {
+            if (window.liveSessionClockInterval) {
+                clearInterval(window.liveSessionClockInterval);
+                window.liveSessionClockInterval = null;
+            }
+            return;
+        }
+        const now = new Date();
+        timeEl.textContent = now.toLocaleTimeString('ar-JO', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+        if (dateEl) {
+            dateEl.textContent = now.toLocaleDateString('ar-JO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        }
+    };
+    updateLiveClock();
+    window.liveSessionClockInterval = setInterval(updateLiveClock, 1000);
+}
+
+// =========================================================================
+// الخطوة 5: التمارين ومتابعة الجلسات (2 إلى 7)
+// تشمل:
+// 1. أزرار التنقل بين الجلسات من 2 إلى 7
+// 2. ساعة التوقيت الـ 24 ساعة المعتمدة (في كل الجلسات 2-7)
+// 3. مؤشرات التحسن الثلاثة (% الألم، % المدى الحركي، % جودة النوم)
+// 4. الرسم البياني: الجلسة 2 بدون رسم بياني، وباقي الجلسات 3-7 بالإضافة للرسم البياني
+// 5. أسئلة التقييم السريري (متاحة دائماً في كل جلسة من 2 إلى 7)
+// 6. تمارين الجلسة المقررة مع المؤقتات ودليل التكنيك
+// =========================================================================
+async function renderStep5SessionsDashboard(patientId, targetDay = null, sessionData = null) {
+    if (window.liveSessionClockInterval) {
+        clearInterval(window.liveSessionClockInterval);
+        window.liveSessionClockInterval = null;
+    }
+
+    if (!sessionData) {
+        sessionData = await PatientFlow.initPatientSession(patientId);
+    }
     if (!sessionData || !sessionData.patient) {
         resetToInitialState();
         return;
@@ -2709,149 +3089,32 @@ async function loadPatientRecoveryDashboard(patientId) {
     activePatient = sessionData.patient;
     const lockStatus = await PatientFlow.getSessionLockStatus(patientId);
 
-    // تحديد المرحلة الدقيقة على شريط الخطوات (المرحلة 4 لليوم الأول، المرحلة 5 لمتابعة الجلسات 2-7، المرحلة 6 لشهادة الاكتمال)
+    // إذا كان المريض أنجز كل الـ 7 جلسات، الانتقال لشاشة الإنهاء
     if (sessionData.isPlanCompleted) {
-        goToStep(6);
-    } else if (sessionData.currentSessionDay === 1 && sessionData.dailyLogs.length === 0 && !lockStatus.isLocked) {
-        goToStep(4);
-    } else {
-        goToStep(5);
+        renderStep6Completion(patientId, sessionData);
+        return;
     }
 
-    const dashboardContainer = document.getElementById('patient-recovery-dashboard');
-    if (!dashboardContainer) return;
+    goToStep(5);
+
+    const container = document.getElementById('step5-sessions-container');
+    if (!container) return;
+
+    // تحديد اليوم المعروض حالياً: بين 2 و 7 (الافتراضي هو اليوم الحالي لمسار المريض)
+    const activeDay = Math.max(2, Math.min(7, targetDay || sessionData.currentSessionDay || 2));
 
     const pointKey = sessionData.latestAssessment?.pointId || sessionData.latestAssessment?.pointKey || sessionData.patient.painArea || sessionData.patient.painPointId || 'lumbar_spine';
-    const dayExercises = getExercisesForPoint(pointKey, sessionData.currentSessionDay, {
+    const dayExercises = getExercisesForPoint(pointKey, activeDay, {
         primaryDiagnosisKey: sessionData.latestAssessment?.primaryDiagnosisKey || "",
         answers: sessionData.latestAssessment?.answers || {},
         userNotes: sessionData.latestAssessment?.userNotes || ""
     });
 
-    // تشغيل محطات الصوت المناسبة بدقة (تهنئة إتمام، عداد 24 ساعة، أو تحفيز اليوم المحدد)
-    setTimeout(() => {
-        if (typeof playStationAudio === 'function') {
-            if (sessionData.isPlanCompleted) {
-                playStationAudio('plan_complete', () => {}, 'motivation');
-            } else if (lockStatus && lockStatus.isLocked) {
-                playStationAudio('session_cooldown', () => {}, 'motivation');
-            } else {
-                const dayAudioKey = `motivation_day${sessionData.currentSessionDay}`;
-                playStationAudio(dayAudioKey, () => {}, 'motivation');
-            }
-        }
-    }, 400);
-
-    // إذا أكمل الـ 7 أيام بالكامل: شاشة التخرج والشفاء الصادقة
-    if (sessionData.isPlanCompleted) {
-        const basePain = sessionData.baselinePain || 7;
-        const endPain = sessionData.currentPain || 0;
-        const painDrop = sessionData.indicators.painReduction;
-        const residualPain = 100 - painDrop;
-
-        // مواءمة التقييم السريري تشريحياً مع العضو المصاب بدقة (رسغ، ركبة، كتف، ظهر، رقبة...)
-        const pKey = (pointKey || '').toLowerCase();
-        const areaName = sessionData.latestAssessment?.painAreaTitle || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint ? currentSelectedPoint.title : 'المنطقة المصابة');
-        
-        let anatomicalEvaluationText = '';
-        let anatomicalProtectionText = '';
-
-        if (pKey.includes('wrist') || pKey.includes('hand') || pKey.includes('carpal') || areaName.includes('رسغ') || areaName.includes('يد') || areaName.includes('أصابع')) {
-            anatomicalEvaluationText = `💡 تم تحقيق تحسن حركي ممتاز بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى انحراف ميكانيكي دقيق في عظيمات ومفصل الرسغ أو إجهاد وتوتر في الأوتار والمسار العصبي للنفق الرسغي <span dir="ltr">(Carpal Tunnel)</span>، ويتطلب جلسة تقويم يدوي وتفريغ ضغط مع المعالج المختص في (وداعاً للألم) لتحريرها نهائياً.`;
-            anatomicalProtectionText = `🛡️ لحماية مفصل الرسغ واليد من الانتكاس واستعادة كفاءة القبضة الحركية كاملة، يحدد المعالج المختص الخطة الوقائية المناسبة.`;
-        } else if (pKey.includes('elbow') || areaName.includes('كوع') || areaName.includes('مرفق')) {
-            anatomicalEvaluationText = `💡 تم تحقيق تحسن حركي ممتاز بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى شد وإجهاد في أوتار المرفق أو احتكاك ميكانيكي طفيف في مفصل الكوع، ويتطلب تقويماً يدوياً وتفريغ ضغط للأوتار مع المعالج المختص في (وداعاً للألم).`;
-            anatomicalProtectionText = `🛡️ لحماية مفصل الكوع والساعد من إجهاد الحركة المتكررة، يحدد المعالج المختص التوجيهات السريرية اللازمة.`;
-        } else if (pKey.includes('shoulder') || areaName.includes('كتف') || areaName.includes('أبهر')) {
-            anatomicalEvaluationText = `💡 تم تحقيق تحسن حركي ممتاز بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى شد عميق بأوتار الكفة المدورة <span dir="ltr">(Rotator Cuff)</span> أو عُقد ليفية وتشنج حول لوح الكتف، تتطلب جلسة تقويم يدوي وتفريغ ضغط في (وداعاً للألم) لإعادة المدى الحركي الكامل.`;
-            anatomicalProtectionText = `🛡️ لحماية مفصل الكتف وحركته الدورانية من أي تيبس مستقبلي، يحدد المعالج المختص الخطة الوقائية.`;
-        } else if (pKey.includes('knee') || areaName.includes('ركب') || areaName.includes('صابون')) {
-            anatomicalEvaluationText = `💡 تم تحقيق تحسن حركي ممتاز بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى احتكاك ميكانيكي في مسار صابونة الركبة أو تشنج في الأربطة والأوتار الداعمة، ويتطلب تقويماً وموازنة للأحمال الحركية في (وداعاً للألم).`;
-            anatomicalProtectionText = `🛡️ لحماية غضاريف الركبة من الخشونة والانتكاس المستقبلي، يحدد المعالج المختص النصائح الحركية المناسبة.`;
-        } else if (pKey.includes('ankle') || pKey.includes('foot') || pKey.includes('plantar') || areaName.includes('كاحل') || areaName.includes('قدم') || areaName.includes('كعب')) {
-            anatomicalEvaluationText = `💡 تم تحقيق تحسن كبير بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود إلى إجهاد ميكانيكي في اللفافة الأخمصية أو أربطة الكاحل، ويتطلب جلسة تقويم وتفريغ ضغط في (وداعاً للألم).`;
-            anatomicalProtectionText = `🛡️ لحماية قوس القدم ومفصل الكاحل من عودة الألم، يحدد المعالج المختص التمارين الحركية الوقائية.`;
-        } else if (pKey.includes('hip') || pKey.includes('sacroiliac') || areaName.includes('ورك') || areaName.includes('حوض') || areaName.includes('عرق النسا')) {
-            anatomicalEvaluationText = `💡 تم تحقيق تحسن كبير بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى تشنج في العضلة الكمثرية يضغط على مسار العصب الوركي أو اختلال ميكانيكي في مفصل الحوض، ويتطلب تقويماً يدوياً وتفريغ ضغط في (وداعاً للألم).`;
-            anatomicalProtectionText = `🛡️ لحماية مفصل الحوض ومسار العصب الوركي من الانتكاس، يحدد المعالج المختص الخطة الوقائية.`;
-        } else {
-            anatomicalEvaluationText = `💡 تم تحقيق تحسن كبير بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى انحراف ميكانيكي طفيف بمفاصل الفقرات أو شد عضلي وتيبس يتطلب جلسة كايروبراكتيك وتفريغ للضغط <span dir="ltr">(Manual Decompression)</span> مع المعالج المختص في (وداعاً للألم) لإزالته نهائياً.`;
-            anatomicalProtectionText = `🛡️ لحماية عمودك الفقري ومفاصلك من الانتكاس المستقبلي، يحدد المعالج المختص الخطة الوقائية المناسبة لحالتك.`;
-        }
-
-        const hasExplicitBasePain = !!(sessionData.latestAssessment?.hasExplicitPain && sessionData.baselinePain);
-        const painTrackSummary = hasExplicitBasePain
-            ? `📊 مسار الألم الفعلي: من مستوى <strong>${basePain} / 10</strong> في اليوم الأول ⬅️ إلى <strong>${endPain} / 10</strong> في اليوم السابع`
-            : `📊 مسار التعافي الفعلي: تراجع ملحوظ في شدة الألم وتلاشي الأعراض بنسبة <strong>${painDrop}%</strong> بين اليوم الأول واليوم السابع`;
-
-        dashboardContainer.innerHTML = `
-            <div style="background: linear-gradient(135deg, #0b1f17 0%, #153e2e 100%); border: 2px solid #10b981; border-radius: 16px; padding: 35px; color: #ffffff; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.6); margin-bottom: 25px;">
-                <div style="font-size: 4em; margin-bottom: 10px;">🏆</div>
-                <h2 style="font-size: 2em; margin: 0 0 10px 0; color: #6ee7b7;">تهانينا القلبية ${sessionData.patient.name}!</h2>
-                <div style="font-size: 1.15em; margin-bottom: 20px; color: #d1fae5;">لقد أتممت بنجاح برنامج الراحة والتأهيل الحركي (7 أيام كاملة) لمنطقة ${sessionData.latestAssessment?.painAreaTitle || 'المفصل'}</div>
-                
-                <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 15px; margin-bottom: 25px; display: inline-block;">
-                    <div style="color: #cbd5e1; font-size: 0.95em;">
-                        ${painTrackSummary}
-                    </div>
-                </div>
-
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; max-width: 700px; margin: 0 auto 25px auto;">
-                    <div style="background: rgba(0,0,0,0.35); padding: 15px; border-radius: 10px; border: 1px solid #10b981;">
-                        <div style="font-size: 2.2em; font-weight: bold; color: #10b981;">${sessionData.indicators.painReduction}%</div>
-                        <div style="font-size: 0.85em; color: #e2e8f0;">نسبة انخفاض وتلاشي الألم الفعلية</div>
-                    </div>
-                    <div style="background: rgba(0,0,0,0.35); padding: 15px; border-radius: 10px; border: 1px solid #38bdf8;">
-                        <div style="font-size: 2.2em; font-weight: bold; color: #38bdf8;">${sessionData.indicators.mobility}%</div>
-                        <div style="font-size: 0.85em; color: #e2e8f0;">نسبة استعادة المدى الحركي</div>
-                    </div>
-                    <div style="background: rgba(0,0,0,0.35); padding: 15px; border-radius: 10px; border: 1px solid #f59e0b;">
-                        <div style="font-size: 2.2em; font-weight: bold; color: #fef08a;">${sessionData.indicators.sleepQuality}%</div>
-                        <div style="font-size: 0.85em; color: #e2e8f0;">مؤشر جودة وعمق النوم</div>
-                    </div>
-                </div>
-
-                <!-- رسم بياني مسار تراجع الألم -->
-                ${sessionData.painTrendHTML || ''}
-
-                <div style="background: rgba(15, 23, 42, 0.9); border-radius: 12px; padding: 20px; text-align: right; max-width: 700px; margin: 0 auto 25px auto; border-right: 4px solid var(--primary-gold);">
-                    <h4 style="color: var(--primary-gold); margin: 0 0 8px 0; font-size: 1.1em;">🔍 التقييم السريري والتوجيه الطبي النهائي:</h4>
-                    <p style="color: #cbd5e1; font-size: 0.92em; line-height: 1.7; margin: 0 0 10px 0;">
-                        ${endPain === 0 ? '✨ استجابة ممتازة جداً واختفاء تام للألم بفضل الله ثم التزامك بالبروتوكول.' : anatomicalEvaluationText}
-                    </p>
-                    <div style="color: #6ee7b7; font-size: 0.88em;">${anatomicalProtectionText}</div>
-                </div>
-
-                <div class="completion-action-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 650px; margin: 0 auto 12px auto; width: 100%; box-sizing: border-box;">
-                    <button type="button" onclick="openCompletionCertificateModal('${patientId}')" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #0a0e14; border: none; padding: 12px 8px; border-radius: 8px; font-weight: 800; font-size: 0.88em; cursor: pointer; box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4); display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; width: 100%; box-sizing: border-box;">
-                        🏆 وسام الانتصار والوثيقة
-                    </button>
-                    <button type="button" onclick="exportClinicalSummaryForDoctor('${patientId}')" style="background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); color: #0a0e14; border: none; padding: 12px 8px; border-radius: 8px; font-weight: 800; font-size: 0.88em; cursor: pointer; box-shadow: 0 4px 20px rgba(56, 189, 248, 0.35); display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; width: 100%; box-sizing: border-box;">
-                        📋 ملخص الحالة للمعالج
-                    </button>
-                </div>
-
-                <div class="completion-action-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 650px; margin: 0 auto; width: 100%; box-sizing: border-box;">
-                    <a href="${CLINIC_WHATSAPP}" target="_blank" style="background: linear-gradient(135deg, var(--primary-gold) 0%, var(--primary-gold-dark) 100%); color: #0a0e14; padding: 12px 8px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.88em; box-shadow: 0 4px 20px rgba(212, 175, 55, 0.4); display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; width: 100%; box-sizing: border-box;">
-                        💬 حجز جلسة كايروبراكتيك
-                    </a>
-                    <button type="button" onclick="resetToInitialState()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 12px 8px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.88em; display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; width: 100%; box-sizing: border-box;">
-                        🔄 فحص منطقة أخرى
-                    </button>
-                </div>
-            </div>
-        `;
-        return;
-    }
-
-    // جلب التهيئات السلوكية والحركية المخصصة تشريحياً لنقطة الألم
     const anatomicalConfig = typeof getAnatomicalDailyAssessmentConfig === 'function' ? getAnatomicalDailyAssessmentConfig(pointKey) : null;
-    const isDay1Initial = (sessionData.currentSessionDay === 1 && sessionData.dailyLogs.length === 0 && !lockStatus.isLocked);
 
-    // بطاقة التحليل السلوكي المستمر بناءً على آخر تسجيل للمريض
+    // بطاقة التحليل السلوكي المستمر بناءً على آخر تسجيل
     const lastDailyLog = sessionData.dailyLogs.length > 0 ? sessionData.dailyLogs[sessionData.dailyLogs.length - 1] : null;
     let behavioralReportHTML = '';
-
     if (lastDailyLog) {
         const posHabits = [];
         if (lastDailyLog.exercisesDone) posHabits.push("✓ أداء التمارين: تنشيط تدفق السائل الزلالي وحماية الغضروف من التصلب.");
@@ -2896,7 +3159,90 @@ async function loadPatientRecoveryDashboard(patientId) {
         `;
     }
 
-    dashboardContainer.innerHTML = `
+    // توليد أزرار الجلسات 2 إلى 7
+    const sessionTabsHTML = `
+        <div style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 12px 16px; margin-bottom: 22px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.95em;">📅 جدول جلسات المتابعة (الأيام 2 إلى 7):</div>
+                <span style="color: #94a3b8; font-size: 0.78em;">اضغط على أي جلسة لاستعراض تمارينها وتقييمها</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; overflow-x: auto;">
+                ${[2, 3, 4, 5, 6, 7].map(d => {
+                    const isCurrentActive = (d === activeDay);
+                    const isCompleted = (d < sessionData.currentSessionDay);
+                    let bg = '#1e293b';
+                    let border = '1px solid #334155';
+                    let color = '#cbd5e1';
+                    if (isCurrentActive) {
+                        bg = 'linear-gradient(135deg, rgba(212, 175, 55, 0.35) 0%, rgba(180, 130, 20, 0.25) 100%)';
+                        border = '2px solid var(--primary-gold)';
+                        color = '#ffffff';
+                    } else if (isCompleted) {
+                        bg = 'rgba(16, 185, 129, 0.15)';
+                        border = '1px solid #10b981';
+                        color = '#6ee7b7';
+                    }
+                    return `
+                        <button type="button" onclick="renderStep5SessionsDashboard('${patientId}', ${d})" style="background: ${bg}; border: ${border}; color: ${color}; padding: 10px 6px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: 0.2s; min-width: 65px;">
+                            <span>الجلسة ${d}</span>
+                            <span style="font-size: 0.75em; opacity: 0.85;">${isCompleted ? '✓ منجزة' : isCurrentActive ? '🟢 الحالية' : '⏳ قادمة'}</span>
+                        </button>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+    `;
+
+    // ساعة التوقيت الـ 24 ساعة المعتمدة (في كل الجلسات 2-7)
+    const clock24HTML = `
+        <div style="background: linear-gradient(135deg, #0b101b 0%, #172033 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                <div style="color: var(--primary-gold); font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                    <span>⏱️</span> ساعة التوقيت المعتمدة (الفاصل البيولوجي 24 ساعة بين الجلسات)
+                </div>
+                <span style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
+                    الجلسة ${activeDay} من 7
+                </span>
+            </div>
+            
+            <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 12px;">
+                <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
+                    <div id="countdown-hours" style="font-size: 2.2em; font-weight: bold; color: #ffffff; font-family: monospace;">${lockStatus.isLocked ? '00' : '24'}</div>
+                    <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">ساعة</div>
+                </div>
+                <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
+                    <div id="countdown-mins" style="font-size: 2.2em; font-weight: bold; color: #ffffff; font-family: monospace;">00</div>
+                    <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">دقيقة</div>
+                </div>
+                <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
+                    <div id="countdown-secs" style="font-size: 2.2em; font-weight: bold; color: var(--primary-gold); font-family: monospace;">00</div>
+                    <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">ثانية</div>
+                </div>
+            </div>
+
+            <p style="color: #cbd5e1; font-size: 0.85em; margin: 0; line-height: 1.6;">
+                ${lockStatus.isLocked 
+                    ? '⏳ يجري احتساب فترة استشفاء الأنسجة (24 ساعة). التقييم والتمارين متاحان لك أدناه لتوثيق حالتك وقتما تشاء.' 
+                    : '💡 الفاصل الزمني الموصى به بين كل جلسة وتالية هو 24 ساعة للسماح للألياف العضلية والغضاريف بإعادة البناء الذاتي.'}
+            </p>
+        </div>
+    `;
+
+    // الرسم البياني لمسار تراجع الألم:
+    // الجلسة 2: بدون رسم بياني
+    // باقي الجلسات (3 إلى 7): فيها كل شيء بالإضافة للرسم البياني
+    let chartSectionHTML = '';
+    if (activeDay === 2) {
+        chartSectionHTML = `
+            <div style="background: rgba(15, 23, 42, 0.7); border: 1px dashed rgba(212, 175, 55, 0.4); border-radius: 10px; padding: 12px 16px; text-align: center; color: #94a3b8; font-size: 0.85em; margin-bottom: 20px;">
+                📊 <strong>الرسم البياني لمسار تراجع الألم:</strong> ينطلق تلقائياً بدءاً من الجلسة 3 عند توفر قراءتين مقارنتين لتوثيق منحنى الاستشفاء والشفاء بدقة.
+            </div>
+        `;
+    } else {
+        chartSectionHTML = sessionData.painTrendHTML || '';
+    }
+
+    container.innerHTML = `
         <div style="background: #111827; border: 1px solid var(--primary-gold); border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
             
             <!-- إهداء الصدقة الجارية -->
@@ -2922,7 +3268,7 @@ async function loadPatientRecoveryDashboard(patientId) {
                     <img src="assets/logo.png" alt="شعار وداعاً للألم" style="height: 55px; width: 55px; border-radius: 50%; border: 1.5px solid var(--primary-gold);">
                     <div>
                         <h2 style="color: #ffffff; margin: 0 0 4px 0; font-size: 1.35em;">مرحباً ${sessionData.patient.name} 👋</h2>
-                        <div style="color: var(--primary-gold); font-size: 0.9em;">خطة الراحة الحركية الذاتية (اليوم ${sessionData.currentSessionDay} من 7) - منطقة ${sessionData.latestAssessment?.painAreaTitle || 'المفصل المختار'}</div>
+                        <div style="color: var(--primary-gold); font-size: 0.9em;">متابعة جلسات التأهيل الحركي (الجلسة ${activeDay} من 7) - منطقة ${sessionData.latestAssessment?.painAreaTitle || 'المفصل المختار'}</div>
                     </div>
                 </div>
                 <div class="session-top-badges" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 320px; box-sizing: border-box;">
@@ -2935,7 +3281,7 @@ async function loadPatientRecoveryDashboard(patientId) {
                 </div>
             </div>
 
-            <!-- عبارة تشجيعية ديناميكية مع زر استماع لصوت د. سارة الاستوديو المجاني للأبد -->
+            <!-- عبارة تشجيعية ديناميكية مع تحفيز د. سارة -->
             <div style="background: rgba(16, 185, 129, 0.1); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; color: #6ee7b7; font-weight: 500; font-size: 0.92em; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div style="flex: 1 1 220px; line-height: 1.6;">${sessionData.motivation}</div>
                 <button type="button" onclick="playStationAudio('motivation')" class="btn-header btn-header-emerald" style="padding: 7px 14px; font-size: 0.8em; border-radius: 20px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; font-weight: bold; white-space: nowrap;">
@@ -2943,381 +3289,374 @@ async function loadPatientRecoveryDashboard(patientId) {
                 </button>
             </div>
 
-            ${isDay1Initial ? `
-                <!-- بطاقة بروتوكول وتوصيات المعالج السريري لجلسة اليوم الأول (إرشادات البدء الآمن) -->
-                <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 22px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-                        <span style="font-size: 1.6em;">🩺</span>
-                        <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.15em; font-weight: bold;">
-                            بروتوكول المعالج السريري لجلسة اليوم الأول (إرشادات البدء الآمن)
-                        </h3>
-                    </div>
-                    <div style="color: #cbd5e1; font-size: 0.9em; line-height: 1.8; margin-bottom: 15px;">
-                        أهلاً بك في بداية برنامجك التأهيلي! الهدف من جلسة اليوم هو <strong>تفريغ الضغط الميكانيكي الأولي</strong> عن مفصل (${sessionData.latestAssessment?.painAreaTitle || 'المنطقة المحددة'}) والأنسجة المحيطة، وتنشيط تدفق السائل الزلالي بلطف وأمان تام دون أي إجهاد.
-                    </div>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
-                        <div style="background: #0f172a; border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 10px; padding: 12px 14px;">
-                            <div style="color: #10b981; font-weight: bold; font-size: 0.9em; margin-bottom: 4px;">🫁 1. التنفس المنتظم والهدوء:</div>
-                            <div style="color: #94a3b8; font-size: 0.83em; line-height: 1.6;">تنفس بعمق وزفير هادئ مع كل حركة. لا تكتم نَفَسَك أثناء الشد أو الاستطالة.</div>
-                        </div>
-                        <div style="background: #0f172a; border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 10px; padding: 12px 14px;">
-                            <div style="color: #38bdf8; font-weight: bold; font-size: 0.9em; margin-bottom: 4px;">🎯 2. التدرج وتجنب القوة:</div>
-                            <div style="color: #94a3b8; font-size: 0.83em; line-height: 1.6;">ابدأ الحركة بنصف المدى وزده تدريجياً. الهدف هو تليين الأنسجة وتفريغ الحمل وليس التحدي العضلي.</div>
-                        </div>
-                        <div style="background: #0f172a; border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 10px; padding: 12px 14px;">
-                            <div style="color: #ef4444; font-weight: bold; font-size: 0.9em; margin-bottom: 4px;">🛑 3. ضابط الأمان السريري:</div>
-                            <div style="color: #fca5a5; font-size: 0.83em; line-height: 1.6;">الشعور بشد خفيف طبيعي ومطلوب، ولكن توقف فوراً إذا شعرت بوخز حاد أو ألم كهربائي مفاجئ.</div>
-                        </div>
-                        <div style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 10px; padding: 12px 14px;">
-                            <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.9em; margin-bottom: 4px;">💧 4. ما بعد التمارين:</div>
-                            <div style="color: #94a3b8; font-size: 0.83em; line-height: 1.6;">اشرب كوب ماء دافئ، ويمكن وضع كمادة دافئة لمدة 10 دقائق بعد الانتهاء لاسترخاء الأنسجة وتسكين التوتر.</div>
-                        </div>
-                    </div>
+            <!-- أزرار اختيار الجلسة (2 إلى 7) -->
+            ${sessionTabsHTML}
+
+            <!-- ساعة التوقيت الـ 24 ساعة المعتمدة (في كل الجلسات 2-7) -->
+            ${clock24HTML}
+
+            <!-- مؤشرات التحسن الثلاثة -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3); text-align: center;">
+                    <div style="font-size: 2em; font-weight: bold; color: #ef4444;">${sessionData.indicators.painReduction}%</div>
+                    <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر انخفاض وتلاشي الألم</div>
+                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${sessionData.currentSessionDay === 2 ? 'بانتظار تقييمك لجلسة اليوم' : (sessionData.baselinePain ? `مقارنة بألم البداية (${sessionData.baselinePain}/10)` : 'مقارنة بالتقييم السريري المبدئي')}</div>
                 </div>
 
-                <!-- الساعة الرقمية الحية لجلسة اليوم الأول (شرط أساسي) -->
-                <div id="live-session-clock-card" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.8) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 16px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5em;">
-                            ⏱️
-                        </div>
-                        <div>
-                            <div style="color: var(--primary-gold); font-size: 0.88em; font-weight: bold; letter-spacing: 0.5px;">توقيت الجلسة الحركية المباشرة (اليوم الأول):</div>
-                            <div id="live-session-date-display" style="color: #94a3b8; font-size: 0.84em; margin-top: 2px;">--</div>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 10px; background: rgba(0, 0, 0, 0.5); border: 1.5px solid #10b981; padding: 8px 18px; border-radius: 10px;">
-                        <span style="color: #10b981; font-size: 0.95em; animation: pulse 1.5s infinite;">🟢 جلسة نشطة الآن:</span>
-                        <div id="live-session-time-display" style="color: #6ee7b7; font-size: 1.45em; font-weight: 900; letter-spacing: 1px; font-family: monospace;" dir="ltr">--:--:--</div>
-                    </div>
+                <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3); text-align: center;">
+                    <div style="font-size: 2em; font-weight: bold; color: #38bdf8;">${sessionData.indicators.mobility}%</div>
+                    <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر استعادة المدى الحركي</div>
+                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${sessionData.currentSessionDay === 2 ? 'بانتظار تقييمك لجلسة اليوم' : 'بناءً على التقييم الحركي الفعلي المسجل'}</div>
                 </div>
 
-                <!-- عرض تمارين اليوم الأول في الصدارة مباشرة -->
-                <div style="margin-bottom: 25px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 8px;">
-                        <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.3em;">🏋️ تمارين الراحة المقررة لليوم الأول (1 من 7) - ${sessionData.stageTitle}</h3>
-                        <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">⚡ ابدأ بالتمارين أدناه</span>
+                <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); text-align: center;">
+                    <div style="font-size: 2em; font-weight: bold; color: #10b981;">${sessionData.indicators.sleepQuality}%</div>
+                    <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر جودة وعمق النوم</div>
+                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${sessionData.currentSessionDay === 2 ? 'بانتظار تقييمك لجلسة اليوم' : 'بناءً على تقييم النوم والراحة الفعلي المسجل'}</div>
+                </div>
+            </div>
+
+            <!-- الرسم البياني لمسار تراجع الألم (مستثنى في الجلسة 2، ومتاح في 3-7) -->
+            ${chartSectionHTML}
+
+            <!-- بطاقة التحليل السلوكي المستمر -->
+            ${behavioralReportHTML}
+
+            <!-- نموذج التقييم السريري اليومي (متاح دائماً في كل جلسة من 2 إلى 7) -->
+            <div style="background: #0f172a; border: 1.5px solid #10b981; border-radius: 14px; padding: 25px; margin-bottom: 25px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 8px;">
+                    <h3 style="color: #10b981; margin: 0; font-size: 1.25em;">📝 تقييم ومتابعة تقدم الجلسة (#${activeDay}) - ${sessionData.latestAssessment?.painAreaTitle || ''}</h3>
+                    <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 3px 10px; border-radius: 15px; font-size: 0.8em; font-weight: bold;">متاح لتوثيق الجلسة</span>
+                </div>
+                
+                <!-- 1. مستوى الألم -->
+                <div style="margin-bottom: 20px; background: #111827; padding: 15px; border-radius: 10px; border: 1px solid #334155;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label style="color: #e2e8f0; font-size: 0.95em; font-weight: bold;">1. مستوى شدة الألم الحالي (من 1 إلى 10):</label>
+                        <span id="daily-pain-val" style="color: var(--primary-gold); font-weight: bold; font-size: 1.15em;">3 / 10</span>
                     </div>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px;">
-                        ${dayExercises.map((ex, idx) => `
-                            <div class="clinical-exercise-card" style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
-                                <div>
-                                    ${generateExerciseIllustration(ex.visualType, ex.id, { name: ex.name })}
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0 6px 0;">
-                                        <span style="color: var(--primary-gold); font-size: 0.78em; font-weight: bold;">تمرين #${idx+1} (اليوم 1)</span>
-                                        <span style="color: #10b981; font-size: 0.78em;">⏱️ ${ex.duration}</span>
-                                    </div>
-                                    <h4 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.15em;">${ex.name}</h4>
-                                    <p style="color: #cbd5e1; font-size: 0.86em; margin: 0 0 12px 0;">${ex.description}</p>
-                                    
-                                    <div style="background: #111827; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85em; color: #e2e8f0; line-height: 1.7; border-right: 3px solid var(--primary-gold);">
-                                        <strong>طريقة الأداء:</strong><br>${ex.instructions}
-                                    </div>
+                    <div style="text-align: center; margin: 4px 0 8px 0;">
+                        <div class="slider-drag-hint-animated">
+                            <span class="pulse-arrow-hand-left">👈</span>
+                            <span>اسحب المؤشر لتحديد درجة ألمك الفعلية</span>
+                            <span class="pulse-arrow-hand-right">👉</span>
+                        </div>
+                    </div>
+                    <input type="range" id="daily-pain-input" min="1" max="10" value="3" oninput="document.getElementById('daily-pain-val').textContent = this.value + ' / 10'" style="width: 100%; accent-color: var(--primary-gold);">
+                </div>
 
-                                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
-                                        <span style="background: #1e293b; color: #d4af37; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">🔁 ${ex.reps}</span>
-                                        <span style="background: #1e293b; color: #f59e0b; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">📦 ${ex.sets}</span>
-                                    </div>
-
-                                    <!-- دليل التكنيك السليم والأخطاء الشائعة -->
-                                    ${typeof getExerciseFormGuideHTML === 'function' ? getExerciseFormGuideHTML(ex) : ''}
-                                </div>
-                                <div>
-                                    <div style="background: #1e2633; height: 5px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
-                                        <div class="timer-progress-fill" style="background: linear-gradient(90deg, #d4af37 0%, #10b981 100%); height: 100%; width: 0%; transition: width 1s linear;"></div>
-                                    </div>
-                                    <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="width: 100%; background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.92em;">
-                                        ⏱️ ابدأ مؤقت التمرين (${ex.duration})
-                                    </button>
-                                </div>
-                            </div>
+                <!-- 2. تقييم المدى الحركي المنسجم مع نقطة الألم -->
+                <div style="margin-bottom: 20px; background: #111827; padding: 15px; border-radius: 10px; border: 1px solid rgba(56, 189, 248, 0.3);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label style="color: #38bdf8; font-size: 0.95em; font-weight: bold;">
+                            ${anatomicalConfig ? anatomicalConfig.mobilityQuestion : '2. نسبة استعادة المدى الحركي والمرونة اليوم:'}
+                        </label>
+                        <span id="daily-mobility-val" style="color: #38bdf8; font-weight: bold; font-size: 1.15em;">70 %</span>
+                    </div>
+                    <div style="text-align: center; margin: 4px 0 8px 0;">
+                        <div class="slider-drag-hint-animated">
+                            <span class="pulse-arrow-hand-left">👈</span>
+                            <span>اسحب المؤشر لتحديد نسبة حركتك اليوم</span>
+                            <span class="pulse-arrow-hand-right">👉</span>
+                        </div>
+                    </div>
+                    <input type="range" id="daily-mobility-slider" min="10" max="100" value="70" oninput="document.getElementById('daily-mobility-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #38bdf8; margin-bottom: 12px;">
+                    
+                    <div style="color: #94a3b8; font-size: 0.82em; margin-bottom: 8px;">اختر كل ما ينطبق على حركتك اليوم (اختيار متعدد):</div>
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
+                        ${(anatomicalConfig ? anatomicalConfig.mobilityOptions : [
+                            { val: 95, text: "حرية حركة ممتازة دون تيبس أو إعاقة" },
+                            { val: 75, text: "تحسن ملحوظ في الحركة مع انزعاج طفيف عند أقصى المدى" },
+                            { val: 45, text: "حركة مقيدة جزئياً مع تيبس يستغرق وقتاً ليلين" },
+                            { val: 20, text: "صعوبة وتيبس شديد ومحدودية حركية واضحة" }
+                        ]).map((opt) => `
+                            <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" name="daily_mobility_check" value="${opt.val}" style="accent-color: #38bdf8; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
+                            </label>
                         `).join('')}
                     </div>
                 </div>
 
-                <!-- بطاقة وزر توثيق إنجاز تمارين اليوم الأول وبدء فترة الاستشفاء (24 ساعة) -->
-                <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%); border: 2px solid #10b981; border-radius: 14px; padding: 24px; text-align: center; margin: 25px 0; box-shadow: 0 8px 30px rgba(16, 185, 129, 0.25);">
-                    <div style="color: #6ee7b7; font-size: 1.15em; font-weight: bold; margin-bottom: 8px;">🎯 خطوتك التالية بعد إتمام التمارين أعلاه:</div>
-                    <div style="color: #cbd5e1; font-size: 0.9em; margin-bottom: 20px; line-height: 1.7; max-width: 600px; margin-left: auto; margin-right: auto;">
-                        بعد انتهائك من أداء تمارين اليوم الأول، انقر على الزر أدناه لتوثيق إنجاز الجلسة الأولى وبدء فترة الاستشفاء الحيوي للأنسجة (24 ساعة). ستفتح لك غداً أسئلة التقييم المقارن لمتابعة تراجع الألم واستعادة الحركة.
+                <!-- 3. تقييم جودة النوم المنسجم مع نقطة الألم -->
+                <div style="margin-bottom: 20px; background: #111827; padding: 15px; border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label style="color: #10b981; font-size: 0.95em; font-weight: bold;">
+                            ${anatomicalConfig ? anatomicalConfig.sleepQuestion : '3. نسبة جودة وعمق النوم والراحة الليلة الماضية:'}
+                        </label>
+                        <span id="daily-sleep-val" style="color: #10b981; font-weight: bold; font-size: 1.15em;">70 %</span>
                     </div>
-                    <button type="button" onclick="completeDay1InitialExercises('${patientId}')" class="btn-plan-royal-card" style="margin: 0 auto; max-width: 620px; width: 100%;">
-                        <div class="royal-card-halo"></div>
-                        <div class="royal-card-shimmer"></div>
-                        <div class="royal-badge-pill">
-                            <span class="royal-badge-dot"></span>
-                            <span>✨ توثيق إنجاز الجلسة الأولى</span>
+                    <div style="text-align: center; margin: 4px 0 8px 0;">
+                        <div class="slider-drag-hint-animated">
+                            <span class="pulse-arrow-hand-left">👈</span>
+                            <span>اسحب المؤشر لتحديد جودة نومك الليلة الماضية</span>
+                            <span class="pulse-arrow-hand-right">👉</span>
                         </div>
-                        <div class="royal-main-content">
-                            <div class="royal-icon-box">
-                                <span class="royal-icon-emoji">✅</span>
-                            </div>
-                            <div class="royal-text-col">
-                                <div class="royal-cta-headline">✅ أتممت أداء تمارين اليوم الأول بنجاح</div>
-                                <div class="royal-cta-subline">بدء فترة الاستشفاء الحيوي للأنسجة (24 ساعة) ⏳</div>
-                            </div>
-                            <div class="royal-arrow-box">
-                                <span class="royal-arrow-anim">⬅️</span>
-                            </div>
-                        </div>
-                    </button>
-                </div>
-            ` : `
-                <!-- مؤشرات التحسن الثلاثة المحسوبة ديناميكياً من إجابات المريض الفعلية في الأيام من 2 إلى 7 -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px;">
-                    <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3); text-align: center;">
-                        <div style="font-size: 2em; font-weight: bold; color: #ef4444;">${sessionData.indicators.painReduction}%</div>
-                        <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر انخفاض وتلاشي الألم</div>
-                        <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${sessionData.currentSessionDay === 2 ? 'بانتظار تقييمك لجلسة اليوم' : (sessionData.baselinePain ? `مقارنة بألم البداية (${sessionData.baselinePain}/10)` : 'مقارنة بالتقييم السريري المبدئي')}</div>
                     </div>
+                    <input type="range" id="daily-sleep-slider" min="10" max="100" value="70" oninput="document.getElementById('daily-sleep-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #10b981; margin-bottom: 12px;">
 
-                    <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3); text-align: center;">
-                        <div style="font-size: 2em; font-weight: bold; color: #38bdf8;">${sessionData.indicators.mobility}%</div>
-                        <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر استعادة المدى الحركي</div>
-                        <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${sessionData.currentSessionDay === 2 ? 'بانتظار تقييمك لجلسة اليوم' : 'بناءً على التقييم الحركي الفعلي المسجل'}</div>
-                    </div>
-
-                    <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); text-align: center;">
-                        <div style="font-size: 2em; font-weight: bold; color: #10b981;">${sessionData.indicators.sleepQuality}%</div>
-                        <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر جودة وعمق النوم</div>
-                        <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${sessionData.currentSessionDay === 2 ? 'بانتظار تقييمك لجلسة اليوم' : 'بناءً على تقييم النوم والراحة الفعلي المسجل'}</div>
-                    </div>
-                </div>
-
-                <!-- رسم بياني مسار تراجع الألم -->
-                ${sessionData.painTrendHTML || ''}
-
-                <!-- بطاقة التحليل السلوكي المستمر -->
-                ${behavioralReportHTML}
-
-                <!-- العداد التنازلي أو نموذج التسجيل السلوكي -->
-                ${lockStatus.isLocked ? `
-                    <div style="background: linear-gradient(135deg, #0b101b 0%, #172033 100%); border: 1px solid var(--primary-gold); border-radius: 14px; padding: 25px; text-align: center; margin-bottom: 25px;">
-                        <div style="color: var(--primary-gold); font-size: 1.2em; font-weight: bold; margin-bottom: 15px;">⏳ الوقت المتبقي لفتح الجلسة القادمة (اليوم ${Math.min(7, sessionData.currentSessionDay + 1)} من 7)</div>
-                        <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
-                            <div style="background: #0f172a; padding: 15px 20px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.3); min-width: 80px;">
-                                <div id="countdown-hours" style="font-size: 2.5em; font-weight: bold; color: #ffffff;">00</div>
-                                <div style="color: #94a3b8; font-size: 0.8em;">ساعة</div>
-                            </div>
-                            <div style="background: #0f172a; padding: 15px 20px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.3); min-width: 80px;">
-                                <div id="countdown-mins" style="font-size: 2.5em; font-weight: bold; color: #ffffff;">00</div>
-                                <div style="color: #94a3b8; font-size: 0.8em;">دقيقة</div>
-                            </div>
-                            <div style="background: #0f172a; padding: 15px 20px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.3); min-width: 80px;">
-                                <div id="countdown-secs" style="font-size: 2.5em; font-weight: bold; color: var(--primary-gold);">00</div>
-                                <div style="color: #94a3b8; font-size: 0.8em;">ثانية</div>
-                            </div>
-                        </div>
-                        <p style="color: #94a3b8; font-size: 0.9em; margin: 0;">💡 التزم بتمارين اليوم وسيتفعل تقييم الجلسة التالية تلقائياً عند انتهاء الوقت.</p>
-                    </div>
-                ` : `
-                    <!-- نموذج التقييم اليومي المطور ذو الأسئلة المنسجمة مع نقطة الألم (للأيام 2 إلى 7) -->
-                    <div style="background: #0f172a; border: 1.5px solid #10b981; border-radius: 14px; padding: 25px; margin-bottom: 25px;">
-                        <h3 style="color: #10b981; margin: 0 0 15px 0; font-size: 1.25em;">📝 تقييم ومتابعة تقدم الجلسة اليومية (#${sessionData.currentSessionDay}) - ${sessionData.latestAssessment?.painAreaTitle || ''}</h3>
-                        
-                        <!-- 1. مستوى الألم -->
-                        <div style="margin-bottom: 20px; background: #111827; padding: 15px; border-radius: 10px; border: 1px solid #334155;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                <label style="color: #e2e8f0; font-size: 0.95em; font-weight: bold;">1. مستوى شدة الألم الحالي (من 1 إلى 10):</label>
-                                <span id="daily-pain-val" style="color: var(--primary-gold); font-weight: bold; font-size: 1.15em;">3 / 10</span>
-                            </div>
-                            <div style="text-align: center; margin: 4px 0 8px 0;">
-                                <div class="slider-drag-hint-animated">
-                                    <span class="pulse-arrow-hand-left">👈</span>
-                                    <span>اسحب المؤشر لتحديد درجة ألمك الفعلية</span>
-                                    <span class="pulse-arrow-hand-right">👉</span>
-                                </div>
-                            </div>
-                            <input type="range" id="daily-pain-input" min="1" max="10" value="3" oninput="document.getElementById('daily-pain-val').textContent = this.value + ' / 10'" style="width: 100%; accent-color: var(--primary-gold);">
-                        </div>
-
-                        <!-- 2. تقييم المدى الحركي المنسجم مع نقطة الألم -->
-                        <div style="margin-bottom: 20px; background: #111827; padding: 15px; border-radius: 10px; border: 1px solid rgba(56, 189, 248, 0.3);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <label style="color: #38bdf8; font-size: 0.95em; font-weight: bold;">
-                                    ${anatomicalConfig ? anatomicalConfig.mobilityQuestion : '2. نسبة استعادة المدى الحركي والمرونة اليوم:'}
-                                </label>
-                                <span id="daily-mobility-val" style="color: #38bdf8; font-weight: bold; font-size: 1.15em;">70 %</span>
-                            </div>
-                            <div style="text-align: center; margin: 4px 0 8px 0;">
-                                <div class="slider-drag-hint-animated">
-                                    <span class="pulse-arrow-hand-left">👈</span>
-                                    <span>اسحب المؤشر لتحديد نسبة حركتك اليوم</span>
-                                    <span class="pulse-arrow-hand-right">👉</span>
-                                </div>
-                            </div>
-                            <input type="range" id="daily-mobility-slider" min="10" max="100" value="70" oninput="document.getElementById('daily-mobility-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #38bdf8; margin-bottom: 12px;">
-                            
-                            <div style="color: #94a3b8; font-size: 0.82em; margin-bottom: 8px;">اختر كل ما ينطبق على حركتك اليوم (اختيار متعدد):</div>
-                            <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
-                                ${(anatomicalConfig ? anatomicalConfig.mobilityOptions : [
-                                    { val: 95, text: "حرية حركة ممتازة دون تيبس أو إعاقة" },
-                                    { val: 75, text: "تحسن ملحوظ في الحركة مع انزعاج طفيف عند أقصى المدى" },
-                                    { val: 45, text: "حركة مقيدة جزئياً مع تيبس يستغرق وقتاً ليلين" },
-                                    { val: 20, text: "صعوبة وتيبس شديد ومحدودية حركية واضحة" }
-                                ]).map((opt) => `
-                                    <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                        <input type="checkbox" name="daily_mobility_check" value="${opt.val}" style="accent-color: #38bdf8; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
-                                    </label>
-                                `).join('')}
-                            </div>
-                        </div>
-
-                        <!-- 3. تقييم جودة النوم المنسجم مع نقطة الألم -->
-                        <div style="margin-bottom: 20px; background: #111827; padding: 15px; border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.3);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <label style="color: #10b981; font-size: 0.95em; font-weight: bold;">
-                                    ${anatomicalConfig ? anatomicalConfig.sleepQuestion : '3. نسبة جودة وعمق النوم والراحة الليلة الماضية:'}
-                                </label>
-                                <span id="daily-sleep-val" style="color: #10b981; font-weight: bold; font-size: 1.15em;">70 %</span>
-                            </div>
-                            <div style="text-align: center; margin: 4px 0 8px 0;">
-                                <div class="slider-drag-hint-animated">
-                                    <span class="pulse-arrow-hand-left">👈</span>
-                                    <span>اسحب المؤشر لتحديد جودة نومك الليلة الماضية</span>
-                                    <span class="pulse-arrow-hand-right">👉</span>
-                                </div>
-                            </div>
-                            <input type="range" id="daily-sleep-slider" min="10" max="100" value="70" oninput="document.getElementById('daily-sleep-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #10b981; margin-bottom: 12px;">
-
-                            <div style="color: #94a3b8; font-size: 0.82em; margin-bottom: 8px;">اختر كل ما ينطبق على نومك (اختيار متعدد):</div>
-                            <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
-                                ${(anatomicalConfig ? anatomicalConfig.sleepOptions : [
-                                    { val: 95, text: "نوم عميق ومريح ومتواصل طوال الليل دون ألم" },
-                                    { val: 75, text: "نوم جيد مع استيقاظ عابر عند التقلب دون ألم حاد" },
-                                    { val: 45, text: "نوم متقطع وصعوبة في إيجاد وضعية مريحة للمفصل" },
-                                    { val: 20, text: "أرق شديد واستيقاظ متكرر بسبب نوبات الألم" }
-                                ]).map((opt) => `
-                                    <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                        <input type="checkbox" name="daily_sleep_check" value="${opt.val}" style="accent-color: #10b981; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
-                                    </label>
-                                `).join('')}
-                            </div>
-                        </div>
-
-                        <!-- 4. السلوكيات الإيجابية والسلبية المنسجمة مع نقطة الألم -->
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px;">
-                            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); padding: 15px; border-radius: 10px;">
-                                <div style="color: #10b981; font-weight: bold; font-size: 0.95em; margin-bottom: 10px;">✨ السلوكيات الإيجابية المنجزة اليوم:</div>
-                                ${(anatomicalConfig ? anatomicalConfig.positiveBehaviors : [
-                                    { id: "beh-exercise", text: "نفذت التمارين التأهيلية بانتظام" },
-                                    { id: "beh-posture", text: "حافظت على وضعية جلوس ووقوف مستقيمة" },
-                                    { id: "beh-walk", text: "قمت بالمشي الخفيف وتنشيط الدورة الدموية" },
-                                    { id: "beh-heat", text: "استخدمت الكمادات الدافئة / الراحة الكافية" }
-                                ]).map((beh) => `
-                                    <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer;">
-                                        <input type="checkbox" id="${beh.id}" style="accent-color: #10b981; width: 16px; height: 16px;"> ${beh.text}
-                                    </label>
-                                `).join('')}
-                            </div>
-
-                            <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); padding: 15px; border-radius: 10px;">
-                                <div style="color: #ef4444; font-weight: bold; font-size: 0.95em; margin-bottom: 10px;">⚠️ سلوكيات سلبية حدثت اليوم (للتصحيح):</div>
-                                ${(anatomicalConfig ? anatomicalConfig.negativeBehaviors : [
-                                    { id: "neg-sitting", text: "جلوس طويل متواصل لأكثر من ساعة" },
-                                    { id: "neg-lifting", text: "حمل أوزان ثقيلة أو انحناء مفاجئ للظهر" },
-                                    { id: "neg-phone", text: "استخدام طويل للهاتف مع انحناء الرقبة" },
-                                    { id: "neg-sleep", text: "نوم غير مريح أو على وسادة مرتفعة" }
-                                ]).map(neg => `
-                                    <label style="color: #fca5a5; font-size: 0.88em; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer;">
-                                        <input type="checkbox" id="${neg.id}" style="accent-color: #ef4444; width: 16px; height: 16px;"> ${neg.text}
-                                    </label>
-                                `).join('')}
-                            </div>
-                        </div>
-
-                        <button type="button" onclick="submitComprehensiveDailyLog('${patientId}', ${sessionData.currentSessionDay})" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; padding: 14px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1em; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
-                            💾 حفظ تسجيل اليوم وتحديث التمارين للجلسة التالية
-                        </button>
-                    </div>
-                `}
-
-                <!-- عرض التمارين اليومية لليوم الحالي (للأيام 2 إلى 7) -->
-                <div style="margin-bottom: 25px;">
-                    <h3 style="color: var(--primary-gold); margin: 0 0 15px 0; font-size: 1.3em;">🏋️ تمارين الراحة المقررة لليوم (${sessionData.currentSessionDay} من 7) - ${sessionData.stageTitle}</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px;">
-                        ${dayExercises.map((ex, idx) => `
-                            <div class="clinical-exercise-card" style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
-                                <div>
-                                    ${generateExerciseIllustration(ex.visualType, ex.id, { name: ex.name })}
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0 6px 0;">
-                                        <span style="color: var(--primary-gold); font-size: 0.78em; font-weight: bold;">تمرين #${idx+1} (اليوم ${sessionData.currentSessionDay})</span>
-                                        <span style="color: #10b981; font-size: 0.78em;">⏱️ ${ex.duration}</span>
-                                    </div>
-                                    <h4 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.15em;">${ex.name}</h4>
-                                    <p style="color: #cbd5e1; font-size: 0.86em; margin: 0 0 12px 0;">${ex.description}</p>
-                                    
-                                    <div style="background: #111827; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85em; color: #e2e8f0; line-height: 1.7; border-right: 3px solid var(--primary-gold);">
-                                        <strong>طريقة الأداء:</strong><br>${ex.instructions}
-                                    </div>
-
-                                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
-                                        <span style="background: #1e293b; color: #d4af37; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">🔁 ${ex.reps}</span>
-                                        <span style="background: #1e293b; color: #f59e0b; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">📦 ${ex.sets}</span>
-                                    </div>
-
-                                    <!-- دليل التكنيك السليم والأخطاء الشائعة -->
-                                    ${typeof getExerciseFormGuideHTML === 'function' ? getExerciseFormGuideHTML(ex) : ''}
-                                </div>
-                                <div>
-                                    <div style="background: #1e2633; height: 5px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
-                                        <div class="timer-progress-fill" style="background: linear-gradient(90deg, #d4af37 0%, #10b981 100%); height: 100%; width: 0%; transition: width 1s linear;"></div>
-                                    </div>
-                                    <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="width: 100%; background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.92em;">
-                                        ⏱️ ابدأ مؤقت التمرين (${ex.duration})
-                                    </button>
-                                </div>
-                            </div>
+                    <div style="color: #94a3b8; font-size: 0.82em; margin-bottom: 8px;">اختر كل ما ينطبق على نومك (اختيار متعدد):</div>
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
+                        ${(anatomicalConfig ? anatomicalConfig.sleepOptions : [
+                            { val: 95, text: "نوم عميق ومريح ومتواصل طوال الليل دون ألم" },
+                            { val: 75, text: "نوم جيد مع استيقاظ عابر عند التقلب دون ألم حاد" },
+                            { val: 45, text: "نوم متقطع وصعوبة في إيجاد وضعية مريحة للمفصل" },
+                            { val: 20, text: "أرق شديد واستيقاظ متكرر بسبب نوبات الألم" }
+                        ]).map((opt) => `
+                            <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" name="daily_sleep_check" value="${opt.val}" style="accent-color: #10b981; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
+                            </label>
                         `).join('')}
                     </div>
                 </div>
-            `}
 
-            <!-- كرت ترويجي ذكي داخل الخطوة 4: خدمة الزيارات المنزلية واستشارة المعالج -->
+                <!-- 4. السلوكيات الإيجابية والسلبية المنسجمة مع نقطة الألم -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); padding: 15px; border-radius: 10px;">
+                        <div style="color: #10b981; font-weight: bold; font-size: 0.95em; margin-bottom: 10px;">✨ السلوكيات الإيجابية المنجزة اليوم:</div>
+                        ${(anatomicalConfig ? anatomicalConfig.positiveBehaviors : [
+                            { id: "beh-exercise", text: "نفذت التمارين التأهيلية بانتظام" },
+                            { id: "beh-posture", text: "حافظت على وضعية جلوس ووقوف مستقيمة" },
+                            { id: "beh-walk", text: "قمت بالمشي الخفيف وتنشيط الدورة الدموية" },
+                            { id: "beh-heat", text: "استخدمت الكمادات الدافئة / الراحة الكافية" }
+                        ]).map((beh) => `
+                            <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer;">
+                                <input type="checkbox" id="${beh.id}" style="accent-color: #10b981; width: 16px; height: 16px;"> ${beh.text}
+                            </label>
+                        `).join('')}
+                    </div>
+
+                    <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); padding: 15px; border-radius: 10px;">
+                        <div style="color: #ef4444; font-weight: bold; font-size: 0.95em; margin-bottom: 10px;">⚠️ سلوكيات سلبية حدثت اليوم (للتصحيح):</div>
+                        ${(anatomicalConfig ? anatomicalConfig.negativeBehaviors : [
+                            { id: "neg-sitting", text: "جلوس طويل متواصل لأكثر من ساعة" },
+                            { id: "neg-lifting", text: "حمل أوزان ثقيلة أو انحناء مفاجئ للظهر" },
+                            { id: "neg-phone", text: "استخدام طويل للهاتف مع انحناء الرقبة" },
+                            { id: "neg-sleep", text: "نوم غير مريح أو على وسادة مرتفعة" }
+                        ]).map(neg => `
+                            <label style="color: #fca5a5; font-size: 0.88em; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer;">
+                                <input type="checkbox" id="${neg.id}" style="accent-color: #ef4444; width: 16px; height: 16px;"> ${neg.text}
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <button type="button" onclick="submitComprehensiveDailyLog('${patientId}', ${activeDay})" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; padding: 14px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1em; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); width: 100%;">
+                    💾 حفظ تسجيل الجلسة (#${activeDay}) وتحديث مؤشرات التعافي
+                </button>
+            </div>
+
+            <!-- عرض التمارين اليومية المقررة للجلسة المختارة -->
+            <div style="margin-bottom: 25px;">
+                <h3 style="color: var(--primary-gold); margin: 0 0 15px 0; font-size: 1.3em;">🏋️ تمارين الراحة المقررة للجلسة (${activeDay} من 7) - ${sessionData.stageTitle}</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px;">
+                    ${dayExercises.map((ex, idx) => `
+                        <div class="clinical-exercise-card" style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                ${generateExerciseIllustration(ex.visualType, ex.id, { name: ex.name })}
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-margin: 10px 0 6px 0;">
+                                    <span style="color: var(--primary-gold); font-size: 0.78em; font-weight: bold;">تمرين #${idx+1} (الجلسة ${activeDay})</span>
+                                    <span style="color: #10b981; font-size: 0.78em;">⏱️ ${ex.duration}</span>
+                                </div>
+                                <h4 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.15em;">${ex.name}</h4>
+                                <p style="color: #cbd5e1; font-size: 0.86em; margin: 0 0 12px 0;">${ex.description}</p>
+                                
+                                <div style="background: #111827; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85em; color: #e2e8f0; line-height: 1.7; border-right: 3px solid var(--primary-gold);">
+                                    <strong>طريقة الأداء:</strong><br>${ex.instructions}
+                                </div>
+
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                                    <span style="background: #1e293b; color: #d4af37; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">🔁 ${ex.reps}</span>
+                                    <span style="background: #1e293b; color: #f59e0b; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">📦 ${ex.sets}</span>
+                                </div>
+
+                                <!-- دليل التكنيك السليم والأخطاء الشائعة -->
+                                ${typeof getExerciseFormGuideHTML === 'function' ? getExerciseFormGuideHTML(ex) : ''}
+                            </div>
+                            <div>
+                                <div style="background: #1e2633; height: 5px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
+                                    <div class="timer-progress-fill" style="background: linear-gradient(90deg, #d4af37 0%, #10b981 100%); height: 100%; width: 0%; transition: width 1s linear;"></div>
+                                </div>
+                                <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="width: 100%; background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.92em;">
+                                    ⏱️ ابدأ مؤقت التمرين (${ex.duration})
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            <!-- كرت ترويجي: خدمة الزيارات المنزلية واستشارة المعالج -->
             <div class="no-print">
                 ${getHomeVisitCardHTML()}
             </div>
         </div>
     `;
 
-    // تشغيل وتحديث الساعة الحية لجلسة اليوم الأول
-    if (isDay1Initial) {
-        if (window.liveSessionClockInterval) {
-            clearInterval(window.liveSessionClockInterval);
-            window.liveSessionClockInterval = null;
-        }
-        const updateLiveClock = () => {
-            const timeEl = document.getElementById('live-session-time-display');
-            const dateEl = document.getElementById('live-session-date-display');
-            if (!timeEl) {
-                if (window.liveSessionClockInterval) {
-                    clearInterval(window.liveSessionClockInterval);
-                    window.liveSessionClockInterval = null;
-                }
-                return;
-            }
-            const now = new Date();
-            timeEl.textContent = now.toLocaleTimeString('ar-JO', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-            if (dateEl) {
-                dateEl.textContent = now.toLocaleDateString('ar-JO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            }
-        };
-        updateLiveClock();
-        window.liveSessionClockInterval = setInterval(updateLiveClock, 1000);
-    }
-
+    // تشغيل العداد التنازلي لساعة الـ 24 ساعة إن كان هناك قفل زمني
     if (lockStatus.isLocked && lockStatus.targetTime) {
         PatientFlow.startCountdownTimer(lockStatus.targetTime, {
             hours: document.getElementById('countdown-hours'),
             minutes: document.getElementById('countdown-mins'),
             seconds: document.getElementById('countdown-secs')
         }, () => {
-            showToast('🎉 حان وقت الجلسة الجديدة! تم فتح التقييم اليومي', 'success');
+            showToast('🎉 اكتملت الـ 24 ساعة! تهانينا على استشفاء الأنسجة', 'success');
             if (typeof triggerSessionReadyNotification === 'function') {
                 triggerSessionReadyNotification(activePatient?.name);
             }
-            loadPatientRecoveryDashboard(patientId);
         });
+    }
+}
+
+// =========================================================================
+// الخطوة 6: وثيقة التعافي والإنهاء (التخرج بعد 7 أيام)
+// =========================================================================
+async function renderStep6Completion(patientId, sessionData = null) {
+    if (window.liveSessionClockInterval) {
+        clearInterval(window.liveSessionClockInterval);
+        window.liveSessionClockInterval = null;
+    }
+
+    if (!sessionData) {
+        sessionData = await PatientFlow.initPatientSession(patientId);
+    }
+    if (!sessionData || !sessionData.patient) {
+        resetToInitialState();
+        return;
+    }
+
+    activePatient = sessionData.patient;
+    goToStep(6);
+
+    const container = document.getElementById('step6-completion-container') || document.getElementById('patient-recovery-dashboard');
+    if (!container) return;
+
+    const basePain = sessionData.baselinePain || 7;
+    const endPain = sessionData.currentPain || 0;
+    const painDrop = sessionData.indicators.painReduction;
+    const residualPain = 100 - painDrop;
+
+    const pointKey = sessionData.latestAssessment?.pointId || sessionData.latestAssessment?.pointKey || sessionData.patient.painArea || sessionData.patient.painPointId || 'lumbar_spine';
+    const pKey = (pointKey || '').toLowerCase();
+    const areaName = sessionData.latestAssessment?.painAreaTitle || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint ? currentSelectedPoint.title : 'المنطقة المصابة');
+    
+    let anatomicalEvaluationText = '';
+    let anatomicalProtectionText = '';
+
+    if (pKey.includes('wrist') || pKey.includes('hand') || pKey.includes('carpal') || areaName.includes('رسغ') || areaName.includes('يد') || areaName.includes('أصابع')) {
+        anatomicalEvaluationText = `💡 تم تحقيق تحسن حركي ممتاز بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى انحراف ميكانيكي دقيق في عظيمات ومفصل الرسغ أو إجهاد وتوتر في الأوتار والمسار العصبي للنفق الرسغي <span dir="ltr">(Carpal Tunnel)</span>، ويتطلب جلسة تقويم يدوي وتفريغ ضغط مع المعالج المختص في (وداعاً للألم) لتحريرها نهائياً.`;
+        anatomicalProtectionText = `🛡️ لحماية مفصل الرسغ واليد من الانتكاس واستعادة كفاءة القبضة الحركية كاملة، يحدد المعالج المختص الخطة الوقائية المناسبة.`;
+    } else if (pKey.includes('elbow') || areaName.includes('كوع') || areaName.includes('مرفق')) {
+        anatomicalEvaluationText = `💡 تم تحقيق تحسن حركي ممتاز بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى شد وإجهاد في أوتار المرفق أو احتكاك ميكانيكي طفيف في مفصل الكوع، ويتطلب تقويماً يدوياً وتفريغ ضغط للأوتار مع المعالج المختص في (وداعاً للألم).`;
+        anatomicalProtectionText = `🛡️ لحماية مفصل الكوع والساعد من إجهاد الحركة المتكررة، يحدد المعالج المختص التوجيهات السريرية اللازمة.`;
+    } else if (pKey.includes('shoulder') || areaName.includes('كتف') || areaName.includes('أبهر')) {
+        anatomicalEvaluationText = `💡 تم تحقيق تحسن حركي ممتاز بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى شد عميق بأوتار الكفة المدورة <span dir="ltr">(Rotator Cuff)</span> أو عُقد ليفية وتشنج حول لوح الكتف، تتطلب جلسة تقويم يدوي وتفريغ ضغط في (وداعاً للألم) لإعادة المدى الحركي الكامل.`;
+        anatomicalProtectionText = `🛡️ لحماية مفصل الكتف وحركته الدورانية من أي تيبس مستقبلي، يحدد المعالج المختص الخطة الوقائية.`;
+    } else if (pKey.includes('knee') || areaName.includes('ركب') || areaName.includes('صابون')) {
+        anatomicalEvaluationText = `💡 تم تحقيق تحسن حركي ممتاز بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى احتكاك ميكانيكي في مسار صابونة الركبة أو تشنج في الأربطة والأوتار الداعمة، ويتطلب تقويماً وموازنة للأحمال الحركية في (وداعاً للألم).`;
+        anatomicalProtectionText = `🛡️ لحماية غضاريف الركبة من الخشونة والانتكاس المستقبلي، يحدد المعالج المختص النصائح الحركية المناسبة.`;
+    } else if (pKey.includes('ankle') || pKey.includes('foot') || pKey.includes('plantar') || areaName.includes('كاحل') || areaName.includes('قدم') || areaName.includes('كعب')) {
+        anatomicalEvaluationText = `💡 تم تحقيق تحسن كبير بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود إلى إجهاد ميكانيكي في اللفافة الأخمصية أو أربطة الكاحل، ويتطلب جلسة تقويم وتفريغ ضغط في (وداعاً للألم).`;
+        anatomicalProtectionText = `🛡️ لحماية قوس القدم ومفصل الكاحل من عودة الألم، يحدد المعالج المختص التمارين الحركية الوقائية.`;
+    } else if (pKey.includes('hip') || pKey.includes('sacroiliac') || areaName.includes('ورك') || areaName.includes('حوض') || areaName.includes('عرق النسا')) {
+        anatomicalEvaluationText = `💡 تم تحقيق تحسن كبير بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى تشنج في العضلة الكمثرية يضغط على مسار العصب الوركي أو اختلال ميكانيكي في مفصل الحوض، ويتطلب تقويماً يدوياً وتفريغ ضغط في (وداعاً للألم).`;
+        anatomicalProtectionText = `🛡️ لحماية مفصل الحوض ومسار العصب الوركي من الانتكاس، يحدد المعالج المختص الخطة الوقائية.`;
+    } else {
+        anatomicalEvaluationText = `💡 تم تحقيق تحسن كبير بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى انحراف ميكانيكي طفيف بمفاصل الفقرات أو شد عضلي وتيبس يتطلب جلسة كايروبراكتيك وتفريغ للضغط <span dir="ltr">(Manual Decompression)</span> مع المعالج المختص في (وداعاً للألم) لإزالته نهائياً.`;
+        anatomicalProtectionText = `🛡️ لحماية عمودك الفقري ومفاصلك من الانتكاس المستقبلي، يحدد المعالج المختص الخطة الوقائية المناسبة لحالتك.`;
+    }
+
+    const hasExplicitBasePain = !!(sessionData.latestAssessment?.hasExplicitPain && sessionData.baselinePain);
+    const painTrackSummary = hasExplicitBasePain
+        ? `📊 مسار الألم الفعلي: من مستوى <strong>${basePain} / 10</strong> في اليوم الأول ⬅️ إلى <strong>${endPain} / 10</strong> في اليوم السابع`
+        : `📊 مسار التعافي الفعلي: تراجع ملحوظ في شدة الألم وتلاشي الأعراض بنسبة <strong>${painDrop}%</strong> بين اليوم الأول واليوم السابع`;
+
+    container.innerHTML = `
+        <div style="background: linear-gradient(135deg, #0b1f17 0%, #153e2e 100%); border: 2px solid #10b981; border-radius: 16px; padding: 35px; color: #ffffff; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.6); margin-bottom: 25px;">
+            <div style="font-size: 4em; margin-bottom: 10px;">🏆</div>
+            <h2 style="font-size: 2em; margin: 0 0 10px 0; color: #6ee7b7;">تهانينا القلبية ${sessionData.patient.name}!</h2>
+            <div style="font-size: 1.15em; margin-bottom: 20px; color: #d1fae5;">لقد أتممت بنجاح برنامج الراحة والتأهيل الحركي (7 أيام كاملة) لمنطقة ${sessionData.latestAssessment?.painAreaTitle || 'المفصل'}</div>
+            
+            <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 15px; margin-bottom: 25px; display: inline-block;">
+                <div style="color: #cbd5e1; font-size: 0.95em;">
+                    ${painTrackSummary}
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; max-width: 700px; margin: 0 auto 25px auto;">
+                <div style="background: rgba(0,0,0,0.35); padding: 15px; border-radius: 10px; border: 1px solid #10b981;">
+                    <div style="font-size: 2.2em; font-weight: bold; color: #10b981;">${sessionData.indicators.painReduction}%</div>
+                    <div style="font-size: 0.85em; color: #e2e8f0;">نسبة انخفاض وتلاشي الألم الفعلية</div>
+                </div>
+                <div style="background: rgba(0,0,0,0.35); padding: 15px; border-radius: 10px; border: 1px solid #38bdf8;">
+                    <div style="font-size: 2.2em; font-weight: bold; color: #38bdf8;">${sessionData.indicators.mobility}%</div>
+                    <div style="font-size: 0.85em; color: #e2e8f0;">نسبة استعادة المدى الحركي</div>
+                </div>
+                <div style="background: rgba(0,0,0,0.35); padding: 15px; border-radius: 10px; border: 1px solid #f59e0b;">
+                    <div style="font-size: 2.2em; font-weight: bold; color: #fef08a;">${sessionData.indicators.sleepQuality}%</div>
+                    <div style="font-size: 0.85em; color: #e2e8f0;">مؤشر جودة وعمق النوم</div>
+                </div>
+            </div>
+
+            <!-- رسم بياني مسار تراجع الألم التراكمي الشامل -->
+            ${sessionData.painTrendHTML || ''}
+
+            <div style="background: rgba(15, 23, 42, 0.9); border-radius: 12px; padding: 20px; text-align: right; max-width: 700px; margin: 0 auto 25px auto; border-right: 4px solid var(--primary-gold);">
+                <h4 style="color: var(--primary-gold); margin: 0 0 8px 0; font-size: 1.1em;">🔍 التقييم السريري والتوجيه الطبي النهائي:</h4>
+                <p style="color: #cbd5e1; font-size: 0.92em; line-height: 1.7; margin: 0 0 10px 0;">
+                    ${endPain === 0 ? '✨ استجابة ممتازة جداً واختفاء تام للألم بفضل الله ثم التزامك بالبروتوكول.' : anatomicalEvaluationText}
+                </p>
+                <div style="color: #6ee7b7; font-size: 0.88em;">${anatomicalProtectionText}</div>
+            </div>
+
+            <div class="completion-action-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 650px; margin: 0 auto 12px auto; width: 100%; box-sizing: border-box;">
+                <button type="button" onclick="openCompletionCertificateModal('${patientId}')" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #0a0e14; border: none; padding: 12px 8px; border-radius: 8px; font-weight: 800; font-size: 0.88em; cursor: pointer; box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4); display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; width: 100%; box-sizing: border-box;">
+                    🏆 وسام الانتصار والوثيقة
+                </button>
+                <button type="button" onclick="exportClinicalSummaryForDoctor('${patientId}')" style="background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); color: #0a0e14; border: none; padding: 12px 8px; border-radius: 8px; font-weight: 800; font-size: 0.88em; cursor: pointer; box-shadow: 0 4px 20px rgba(56, 189, 248, 0.35); display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; width: 100%; box-sizing: border-box;">
+                    📋 ملخص الحالة للمعالج
+                </button>
+            </div>
+
+            <div class="completion-action-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 650px; margin: 0 auto; width: 100%; box-sizing: border-box;">
+                <a href="${CLINIC_WHATSAPP}" target="_blank" style="background: linear-gradient(135deg, var(--primary-gold) 0%, var(--primary-gold-dark) 100%); color: #0a0e14; padding: 12px 8px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.88em; box-shadow: 0 4px 20px rgba(212, 175, 55, 0.4); display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; width: 100%; box-sizing: border-box;">
+                    💬 حجز جلسة كايروبراكتيك
+                </a>
+                <button type="button" onclick="resetToInitialState()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 12px 8px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.88em; display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; width: 100%; box-sizing: border-box;">
+                    🔄 فحص منطقة أخرى
+                </button>
+            </div>
+        </div>
+    `;
+
+    setTimeout(() => {
+        if (typeof playStationAudio === 'function') {
+            playStationAudio('plan_complete', () => {}, 'motivation');
+        }
+    }, 400);
+}
+
+// توجيه ذكي للمرحلة المناسبة في خطة التعافي
+async function loadPatientRecoveryDashboard(patientId, targetDay = null) {
+    const sessionData = await PatientFlow.initPatientSession(patientId);
+    if (!sessionData || !sessionData.patient) {
+        resetToInitialState();
+        return;
+    }
+
+    activePatient = sessionData.patient;
+    const lockStatus = await PatientFlow.getSessionLockStatus(patientId);
+
+    // إذا اكتمل البرنامج (7 جلسات): وثيقة التعافي والإنهاء (الخطوة 6)
+    if (sessionData.isPlanCompleted) {
+        await renderStep6Completion(patientId, sessionData);
+    } 
+    // إذا كان في اليوم الأول ولم يوثق إنجاز اليوم الأول بعد: الجلسة الأولى المستقلة (الخطوة 4)
+    else if (sessionData.currentSessionDay === 1 && sessionData.dailyLogs.length === 0 && !lockStatus.isLocked) {
+        await renderStep4IndependentDay1(patientId, sessionData);
+    } 
+    // إذا أنجز اليوم الأول (الأيام 2 إلى 7): متابعة الجلسات (الخطوة 5)
+    else {
+        await renderStep5SessionsDashboard(patientId, targetDay || sessionData.currentSessionDay, sessionData);
     }
 }
 
@@ -3371,8 +3710,12 @@ async function completeDay1InitialExercises(patientId) {
         playStationAudio('session_cooldown', () => {}, 'motivation');
     }
 
-    await loadPatientRecoveryDashboard(patientId);
+    await loadPatientRecoveryDashboard(patientId, 2);
 }
+
+window.renderStep4IndependentDay1 = renderStep4IndependentDay1;
+window.renderStep5SessionsDashboard = renderStep5SessionsDashboard;
+window.renderStep6Completion = renderStep6Completion;
 
 // حفظ التسجيل اليومي الشامل
 async function submitComprehensiveDailyLog(patientId, sessionNumber) {
@@ -3754,9 +4097,8 @@ function goToStep(stepNum) {
     document.querySelectorAll('.app-step-section').forEach(s => s.style.display = 'none');
     document.querySelectorAll('.stepper-node').forEach(n => n.classList.remove('active', 'completed'));
 
-    // ربط الخطوات 4 و5 و6 بقسم خطة التعافي ومتابعة الجلسات (#step-section-4)
-    const targetSectionId = (stepNum >= 4) ? 'step-section-4' : `step-section-${stepNum}`;
-    const targetSection = document.getElementById(targetSectionId);
+    // إظهار قسم الخطوة المحددة بدقة (الخطوات 1 إلى 6 أصبحت مستقلة تماماً)
+    const targetSection = document.getElementById(`step-section-${stepNum}`);
     if (targetSection) targetSection.style.display = 'block';
 
     for (let i = 1; i <= 6; i++) {
@@ -4464,10 +4806,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // استماع لأول تفاعل لفك قيود المتصفحات وتشغيل الترحيب تلقائياً لمرة واحدة في حال حظره المتصفح
-    const handleFirstUserInteractionForAudio = (e) => {
-        window.removeEventListener('pointerdown', handleFirstUserInteractionForAudio);
-        window.removeEventListener('touchstart', handleFirstUserInteractionForAudio);
-        window.removeEventListener('click', handleFirstUserInteractionForAudio);
+    window.handleFirstUserInteractionForAudio = (e) => {
+        if (window.handleFirstUserInteractionForAudio) {
+            window.removeEventListener('pointerdown', window.handleFirstUserInteractionForAudio);
+            window.removeEventListener('touchstart', window.handleFirstUserInteractionForAudio);
+            window.removeEventListener('click', window.handleFirstUserInteractionForAudio);
+            window.handleFirstUserInteractionForAudio = null;
+        }
 
         if (typeof Wada3anAiEngine !== 'undefined') {
             Wada3anAiEngine.unlockAudio();
@@ -4488,9 +4833,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             triggerAutoWelcomeAudio();
         }
     };
-    window.addEventListener('pointerdown', handleFirstUserInteractionForAudio, { once: true, passive: true });
-    window.addEventListener('touchstart', handleFirstUserInteractionForAudio, { once: true, passive: true });
-    window.addEventListener('click', handleFirstUserInteractionForAudio, { once: true, passive: true });
+    window.addEventListener('pointerdown', window.handleFirstUserInteractionForAudio, { once: true, passive: true });
+    window.addEventListener('touchstart', window.handleFirstUserInteractionForAudio, { once: true, passive: true });
+    window.addEventListener('click', window.handleFirstUserInteractionForAudio, { once: true, passive: true });
 });
 
 // وظيفة الإدخال الصوتي التفاعلي (Web Speech-to-Text API)
@@ -4747,8 +5092,16 @@ function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
     }
     if (currentActiveStationAudio) {
         try {
+            if (typeof currentActiveStationAudio._cancelPlayback === 'function') {
+                currentActiveStationAudio._cancelPlayback();
+            }
+            currentActiveStationAudio.onended = null;
+            currentActiveStationAudio.onerror = null;
+            currentActiveStationAudio.onloadedmetadata = null;
             currentActiveStationAudio.pause();
             currentActiveStationAudio.currentTime = 0;
+            currentActiveStationAudio.removeAttribute('src');
+            currentActiveStationAudio.load();
         } catch (e) {}
         currentActiveStationAudio = null;
     }
@@ -4758,8 +5111,10 @@ function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
     
     let safetyTimeoutId = null;
     let finished = false;
+    let isCancelled = false;
+
     const triggerComplete = () => {
-        if (finished) return;
+        if (finished || isCancelled) return;
         finished = true;
         if (safetyTimeoutId) {
             clearTimeout(safetyTimeoutId);
@@ -4780,7 +5135,7 @@ function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
             ? Math.max(20000, Math.ceil(durationSec + 5) * 1000) 
             : 45000;
         safetyTimeoutId = setTimeout(() => {
-            if (!finished) {
+            if (!finished && !isCancelled) {
                 console.log(`ℹ️ انتهاء صمام الأمان الزمني لمحطة الصوت [${stationKey}].`);
                 triggerComplete();
             }
@@ -4793,6 +5148,15 @@ function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
     const audio = new Audio();
     currentActiveStationAudio = audio;
 
+    audio._cancelPlayback = () => {
+        isCancelled = true;
+        finished = true;
+        if (safetyTimeoutId) {
+            clearTimeout(safetyTimeoutId);
+            safetyTimeoutId = null;
+        }
+    };
+
     audio.onloadedmetadata = () => {
         if (audio.duration && !isNaN(audio.duration)) {
             scheduleSafetyTimeout(audio.duration);
@@ -4800,22 +5164,32 @@ function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
     };
 
     audio.onended = () => {
-        triggerComplete();
+        if (!isCancelled) triggerComplete();
     };
 
     audio.onerror = () => {
-        // فحص وجود صيغة wav البديلة
+        if (finished || isCancelled) return;
+        // فحص وجود صيغة wav البديلة حصراً في حال لم يتم إلغاء الصوت
         const wavAudio = new Audio(wavPath);
         currentActiveStationAudio = wavAudio;
+        wavAudio._cancelPlayback = () => {
+            isCancelled = true;
+            finished = true;
+            if (safetyTimeoutId) {
+                clearTimeout(safetyTimeoutId);
+                safetyTimeoutId = null;
+            }
+        };
         wavAudio.onloadedmetadata = () => {
             if (wavAudio.duration && !isNaN(wavAudio.duration)) {
                 scheduleSafetyTimeout(wavAudio.duration);
             }
         };
         wavAudio.onended = () => {
-            triggerComplete();
+            if (!isCancelled) triggerComplete();
         };
         wavAudio.onerror = () => {
+            if (finished || isCancelled) return;
             console.log(`ℹ️ ملف محطة الصوت [${stationKey}] غير موجود محلياً.`);
             if (fallbackStationKey && fallbackStationKey !== stationKey) {
                 console.log(`🔄 تشغيل المحطة الصوتية البديلة: [${fallbackStationKey}]...`);
@@ -4824,9 +5198,13 @@ function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
                 playClinicalAudioFallback(stationKey, triggerComplete);
             }
         };
-        const pWav = wavAudio.play();
-        if (pWav) {
-            pWav.catch(() => triggerComplete());
+        if (!isCancelled) {
+            const pWav = wavAudio.play();
+            if (pWav) {
+                pWav.catch(() => {
+                    if (!isCancelled) triggerComplete();
+                });
+            }
         }
     };
 
@@ -4834,8 +5212,7 @@ function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
     const playPromise = audio.play();
     if (playPromise) {
         playPromise.catch(() => {
-            // قيود التشغيل التلقائي من المتصفح قبل أول تفاعل
-            triggerComplete();
+            if (!isCancelled) triggerComplete();
         });
     }
 }

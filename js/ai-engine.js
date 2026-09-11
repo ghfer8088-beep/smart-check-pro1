@@ -1724,9 +1724,38 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
             if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
             }
+            if (this.currentAudio) {
+                try {
+                    this.currentAudio.onended = null;
+                    this.currentAudio.onerror = null;
+                    this.currentAudio.pause();
+                    this.currentAudio.currentTime = 0;
+                    this.currentAudio.removeAttribute('src');
+                } catch (e) {}
+                this.currentAudio = null;
+            }
+            if (this._globalAudio) {
+                try {
+                    this._globalAudio.pause();
+                    this._globalAudio.currentTime = 0;
+                    this._globalAudio.removeAttribute('src');
+                } catch (e) {}
+            }
+            this.isSpeaking = false;
+            if (typeof this.hideLiveAudioPill === 'function') {
+                this.hideLiveAudioPill();
+            }
             if (typeof currentActiveStationAudio !== 'undefined' && currentActiveStationAudio) {
-                currentActiveStationAudio.pause();
-                currentActiveStationAudio.currentTime = 0;
+                try {
+                    if (typeof currentActiveStationAudio._cancelPlayback === 'function') {
+                        currentActiveStationAudio._cancelPlayback();
+                    }
+                    currentActiveStationAudio.onended = null;
+                    currentActiveStationAudio.onerror = null;
+                    currentActiveStationAudio.pause();
+                    currentActiveStationAudio.currentTime = 0;
+                    currentActiveStationAudio.removeAttribute('src');
+                } catch (e) {}
                 currentActiveStationAudio = null;
             }
         } catch (e) {}
