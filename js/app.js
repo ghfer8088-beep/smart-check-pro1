@@ -416,7 +416,7 @@ function playStep1AudioGuide() {
 }
 
 // التحكم الذكي في التنقل عبر شريط الخطوات الست (Stepper Click Handler)
-function handleStepperClick(stepNum) {
+async function handleStepperClick(stepNum) {
     if (stepNum === 1) {
         goToStep(1);
     } else if (stepNum === 2) {
@@ -454,6 +454,13 @@ function handleStepperClick(stepNum) {
             else goToStep(1);
             return;
         }
+        // التحقق من إنجاز الجلسة الأولى على الأقل قبل الانتقال لجدول المتابعة 2-7
+        const logs = await SmartDB.getPatientDailyLogs(savedPatientId);
+        if (!logs || logs.length === 0) {
+            showToast('🔒 يرجى إكمال وتقييم الجلسة الأولى (اليوم 1) أولاً للانتقال إلى جدول متابعة الجلسات', 'info');
+            renderStep4IndependentDay1(savedPatientId);
+            return;
+        }
         renderStep5SessionsDashboard(savedPatientId);
     } else if (stepNum === 6) {
         const savedPatientId = SmartDB.getCurrentSessionPatientId() || activePatient?.patientId;
@@ -462,6 +469,18 @@ function handleStepperClick(stepNum) {
             if (currentAssessmentData) goToStep(3);
             else if (currentSelectedPoint) goToStep(2);
             else goToStep(1);
+            return;
+        }
+        // التحقق الصارم من إتمام جميع جلسات خطة التعافي السبع (7 أيام)
+        const logs = await SmartDB.getPatientDailyLogs(savedPatientId);
+        const completedDays = logs ? logs.length : 0;
+        if (completedDays < 7) {
+            showToast(`🔒 وثيقة التعافي والإنهاء مقفلة: تتفعل تلقائياً فقط بعد إتمام جميع جلسات التعافي السبع (7 أيام)! أنت حالياً في اليوم (${completedDays + 1} من 7).`, 'warning');
+            if (completedDays === 0) {
+                renderStep4IndependentDay1(savedPatientId);
+            } else {
+                renderStep5SessionsDashboard(savedPatientId);
+            }
             return;
         }
         renderStep6Completion(savedPatientId);
@@ -2768,10 +2787,8 @@ async function activateRecoveryPlanInstantly() {
             }
         });
 
-        showToast(`🌿 جاري تفعيل خطتك المجانية (صدقة جارية عن روح المرحوم والد المعالج جمال قبها)... نسألكم خالص الدعاء له بالرحمة والمغفرة 🤲`, 'success');
-        playStationAudio('recovery', () => {
-            loadPatientRecoveryDashboard(patientId);
-        });
+        // إظهار نافذة الإهداء والدعاء الملكي لضمان قراءتها والتأمين عليها
+        showRoyalDuaaModal(patientId);
         return;
     }
 
@@ -2867,9 +2884,42 @@ async function submitPatientRegistrationAndStart() {
         }
     });
 
-    showToast('🎉 تم تفعيل خطة التعافي بنجاح (اليوم 1 من 7)!', 'success');
-    loadPatientRecoveryDashboard(patientId);
+    // إظهار نافذة الإهداء والدعاء الملكي لضمان قراءتها والتأمين عليها
+    showRoyalDuaaModal(patientId);
 }
+
+// التحكم بنافذة الدعاء الملكي والصدقة الجارية
+let pendingDuaaPatientId = null;
+
+function showRoyalDuaaModal(patientId) {
+    pendingDuaaPatientId = patientId;
+    const modal = document.getElementById('royal-duaa-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        const inner = modal.querySelector('.modal-inner');
+        if (inner) inner.scrollTop = 0;
+    } else {
+        loadPatientRecoveryDashboard(patientId);
+    }
+}
+window.showRoyalDuaaModal = showRoyalDuaaModal;
+
+function confirmRoyalDuaaAndProceed() {
+    const modal = document.getElementById('royal-duaa-modal');
+    if (modal) modal.style.display = 'none';
+    const pId = pendingDuaaPatientId || SmartDB.getCurrentSessionPatientId() || activePatient?.patientId;
+    if (pId) {
+        showToast('🌿 تقبّل الله دعاءكم وبارك في صحتكم وعافيتكم.. بدء خطة التعافي (اليوم الأول)', 'success');
+        if (typeof playStationAudio === 'function') {
+            playStationAudio('recovery', () => {
+                loadPatientRecoveryDashboard(pId);
+            });
+        } else {
+            loadPatientRecoveryDashboard(pId);
+        }
+    }
+}
+window.confirmRoyalDuaaAndProceed = confirmRoyalDuaaAndProceed;
 
 // // توليد بطاقة البيانات الحيوية والملف البيوميكانيكي للمراجع (البيانات)
 function getVitalsSummaryCardHTML(patient, assessment) {
@@ -3611,6 +3661,18 @@ async function renderStep6Completion(patientId, sessionData = null) {
     }
     if (!sessionData || !sessionData.patient) {
         resetToInitialState();
+        return;
+    }
+
+    // التحقق المانع: عدم السماح بالوصول لوثيقة التخرج إلا بعد إتمام كامل الأيام السبعة
+    const completedDays = sessionData.dailyLogs ? sessionData.dailyLogs.length : 0;
+    if (!sessionData.isPlanCompleted && completedDays < 7) {
+        showToast(`🔒 وثيقة التعافي والإنهاء مقفلة: تتفعل تلقائياً فقط بعد إتمام جميع جلسات خطة التعافي السبع (7 أيام)! أنت حالياً في اليوم (${completedDays + 1} من 7).`, 'warning');
+        if (completedDays === 0) {
+            renderStep4IndependentDay1(patientId);
+        } else {
+            renderStep5SessionsDashboard(patientId);
+        }
         return;
     }
 
@@ -4690,6 +4752,11 @@ async function openCompletionCertificateModal(patientId) {
         let dailyLogs = [];
         if (targetId && typeof SmartDB !== 'undefined' && SmartDB.getPatientDailyLogs) {
             dailyLogs = await SmartDB.getPatientDailyLogs(targetId) || [];
+        }
+
+        if (dailyLogs.length < 7) {
+            showToast(`🔒 وسام التعافي والإنهاء مقفل: يتفعل تلقائياً فقط بعد إتمام كافة جلسات التعافي السبع (7 أيام)! أنت حالياً في اليوم (${dailyLogs.length + 1} من 7).`, 'warning');
+            return;
         }
 
         let assessment = null;

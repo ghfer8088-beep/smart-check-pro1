@@ -266,7 +266,7 @@ const PatientFlow = (function() {
             baselinePain,
             currentPain,
             painTrendHTML: (currentSessionDay >= 3 && dailyLogs.length >= 1) ? generatePainTrendChartSVG(dailyLogs, baselinePain) : '',
-            indicators: (currentSessionDay <= 2) ? {
+            indicators: (dailyLogs.length === 0) ? {
                 painReduction: 0,
                 mobility: 0,
                 sleepQuality: 0

@@ -59,118 +59,263 @@ const SmartDB = (function() {
 
     // دوال إدارة المرضى
     async function savePatient(patient) {
-        const db = await openDB();
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction('patients', 'readwrite');
-            const store = tx.objectStore('patients');
-            const req = store.put(patient);
-            req.onsuccess = () => resolve(patient);
-            req.onerror = (e) => reject(e);
-        });
+        if (!patient) return null;
+        try {
+            if (patient.patientId) {
+                localStorage.setItem('smart_patient_' + patient.patientId, JSON.stringify(patient));
+                const allPts = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
+                const idx = allPts.findIndex(p => p.patientId === patient.patientId);
+                if (idx >= 0) allPts[idx] = { ...allPts[idx], ...patient };
+                else allPts.push(patient);
+                localStorage.setItem('smart_all_patients', JSON.stringify(allPts));
+            }
+        } catch(e) {}
+
+        try {
+            const db = await openDB();
+            return new Promise((resolve) => {
+                const tx = db.transaction('patients', 'readwrite');
+                const store = tx.objectStore('patients');
+                const req = store.put(patient);
+                req.onsuccess = () => resolve(patient);
+                req.onerror = () => resolve(patient);
+            });
+        } catch(e) {
+            return patient;
+        }
     }
 
     async function getPatient(patientId) {
-        const db = await openDB();
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction('patients', 'readonly');
-            const store = tx.objectStore('patients');
-            const req = store.get(patientId);
-            req.onsuccess = () => resolve(req.result || null);
-            req.onerror = (e) => reject(e);
-        });
+        if (!patientId) return null;
+        let lsPatient = null;
+        try {
+            const raw = localStorage.getItem('smart_patient_' + patientId);
+            if (raw) lsPatient = JSON.parse(raw);
+        } catch(e) {}
+
+        try {
+            const db = await openDB();
+            return new Promise((resolve) => {
+                const tx = db.transaction('patients', 'readonly');
+                const store = tx.objectStore('patients');
+                const req = store.get(patientId);
+                req.onsuccess = () => resolve(req.result || lsPatient);
+                req.onerror = () => resolve(lsPatient);
+            });
+        } catch(e) {
+            return lsPatient;
+        }
     }
 
     async function getAllPatients() {
-        const db = await openDB();
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction('patients', 'readonly');
-            const store = tx.objectStore('patients');
-            const req = store.getAll();
-            req.onsuccess = () => resolve(req.result || []);
-            req.onerror = (e) => reject(e);
-        });
+        let lsPatients = [];
+        try {
+            lsPatients = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
+        } catch(e) {}
+
+        try {
+            const db = await openDB();
+            return new Promise((resolve) => {
+                const tx = db.transaction('patients', 'readonly');
+                const store = tx.objectStore('patients');
+                const req = store.getAll();
+                req.onsuccess = () => {
+                    const dbList = req.result || [];
+                    const map = new Map();
+                    dbList.forEach(p => map.set(p.patientId, p));
+                    lsPatients.forEach(p => {
+                        if (!map.has(p.patientId)) map.set(p.patientId, p);
+                    });
+                    resolve(Array.from(map.values()));
+                };
+                req.onerror = () => resolve(lsPatients);
+            });
+        } catch(e) {
+            return lsPatients;
+        }
     }
 
     async function deletePatient(patientId) {
-        const db = await openDB();
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction(['patients', 'assessments', 'dailyLogs'], 'readwrite');
-            tx.objectStore('patients').delete(patientId);
-            
-            // حذف سجلات المريض المرتبطة
-            const assessIndex = tx.objectStore('assessments').index('patientId');
-            const assessReq = assessIndex.openCursor(IDBKeyRange.only(patientId));
-            assessReq.onsuccess = (e) => {
-                const cursor = e.target.result;
-                if (cursor) {
-                    cursor.delete();
-                    cursor.continue();
-                }
-            };
+        try {
+            localStorage.removeItem('smart_patient_' + patientId);
+            localStorage.removeItem('smart_daily_logs_' + patientId);
+            localStorage.removeItem('smart_assessments_' + patientId);
+            const allPts = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
+            localStorage.setItem('smart_all_patients', JSON.stringify(allPts.filter(p => p.patientId !== patientId)));
+        } catch(e) {}
 
-            const logIndex = tx.objectStore('dailyLogs').index('patientId');
-            const logReq = logIndex.openCursor(IDBKeyRange.only(patientId));
-            logReq.onsuccess = (e) => {
-                const cursor = e.target.result;
-                if (cursor) {
-                    cursor.delete();
-                    cursor.continue();
-                }
-            };
+        try {
+            const db = await openDB();
+            return new Promise((resolve) => {
+                const tx = db.transaction(['patients', 'assessments', 'dailyLogs'], 'readwrite');
+                tx.objectStore('patients').delete(patientId);
+                
+                // حذف سجلات المريض المرتبطة
+                const assessIndex = tx.objectStore('assessments').index('patientId');
+                const assessReq = assessIndex.openCursor(IDBKeyRange.only(patientId));
+                assessReq.onsuccess = (e) => {
+                    const cursor = e.target.result;
+                    if (cursor) {
+                        cursor.delete();
+                        cursor.continue();
+                    }
+                };
 
-            tx.oncomplete = () => resolve(true);
-            tx.onerror = (e) => reject(e);
-        });
+                const logIndex = tx.objectStore('dailyLogs').index('patientId');
+                const logReq = logIndex.openCursor(IDBKeyRange.only(patientId));
+                logReq.onsuccess = (e) => {
+                    const cursor = e.target.result;
+                    if (cursor) {
+                        cursor.delete();
+                        cursor.continue();
+                    }
+                };
+
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(true);
+            });
+        } catch(e) {
+            return true;
+        }
     }
 
     // دوال التقييمات
     async function saveAssessment(assessment) {
-        const db = await openDB();
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction('assessments', 'readwrite');
-            const store = tx.objectStore('assessments');
-            const req = store.put(assessment);
-            req.onsuccess = () => resolve(req.result);
-            req.onerror = (e) => reject(e);
-        });
+        if (!assessment) return null;
+        try {
+            if (assessment.patientId) {
+                const lsKey = 'smart_assessments_' + assessment.patientId;
+                const existing = JSON.parse(localStorage.getItem(lsKey) || '[]');
+                existing.push(assessment);
+                localStorage.setItem(lsKey, JSON.stringify(existing));
+            }
+        } catch(e) {}
+
+        try {
+            const db = await openDB();
+            return new Promise((resolve) => {
+                const tx = db.transaction('assessments', 'readwrite');
+                const store = tx.objectStore('assessments');
+                const req = store.put(assessment);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => resolve(true);
+            });
+        } catch(e) {
+            return true;
+        }
     }
 
     async function getPatientAssessments(patientId) {
-        const db = await openDB();
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction('assessments', 'readonly');
-            const index = tx.objectStore('assessments').index('patientId');
-            const req = index.getAll(patientId);
-            req.onsuccess = () => resolve(req.result || []);
-            req.onerror = (e) => reject(e);
-        });
+        let lsAssessments = [];
+        try {
+            if (patientId) {
+                const lsKey = 'smart_assessments_' + patientId;
+                lsAssessments = JSON.parse(localStorage.getItem(lsKey) || '[]');
+            }
+        } catch(e) {}
+
+        try {
+            const db = await openDB();
+            return new Promise((resolve) => {
+                const tx = db.transaction('assessments', 'readonly');
+                const index = tx.objectStore('assessments').index('patientId');
+                const req = index.getAll(patientId);
+                req.onsuccess = () => {
+                    const dbAssessments = req.result || [];
+                    if (dbAssessments.length > 0) return resolve(dbAssessments);
+                    resolve(lsAssessments);
+                };
+                req.onerror = () => resolve(lsAssessments);
+            });
+        } catch(e) {
+            return lsAssessments;
+        }
     }
 
     // دوال المتابعة اليومية
     async function saveDailyLog(log) {
-        const db = await openDB();
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction('dailyLogs', 'readwrite');
-            const store = tx.objectStore('dailyLogs');
-            const req = store.put(log);
-            req.onsuccess = () => resolve(req.result);
-            req.onerror = (e) => reject(e);
-        });
+        if (!log) return null;
+        if (!log.logId) {
+            log.logId = 'log_' + (log.patientId || 'pt') + '_' + (log.sessionNumber || 1) + '_' + Date.now();
+        }
+
+        // حفظ متزامن وفوري في LocalStorage
+        try {
+            if (log.patientId) {
+                const lsKey = 'smart_daily_logs_' + log.patientId;
+                const existing = JSON.parse(localStorage.getItem(lsKey) || '[]');
+                const idx = existing.findIndex(item => 
+                    (item.logId && item.logId === log.logId) || 
+                    (item.sessionNumber && item.sessionNumber === log.sessionNumber)
+                );
+                if (idx >= 0) {
+                    existing[idx] = { ...existing[idx], ...log };
+                } else {
+                    existing.push(log);
+                }
+                existing.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
+                localStorage.setItem(lsKey, JSON.stringify(existing));
+            }
+        } catch(e) {
+            console.warn('LocalStorage saveDailyLog warning:', e);
+        }
+
+        try {
+            const db = await openDB();
+            return new Promise((resolve) => {
+                const tx = db.transaction('dailyLogs', 'readwrite');
+                const store = tx.objectStore('dailyLogs');
+                const req = store.put(log);
+                req.onsuccess = () => resolve(req.result || log.logId);
+                req.onerror = (e) => {
+                    console.warn('IndexedDB saveDailyLog error, fallback used:', e);
+                    resolve(log.logId);
+                };
+            });
+        } catch(e) {
+            return log.logId;
+        }
     }
 
     async function getPatientDailyLogs(patientId) {
-        const db = await openDB();
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction('dailyLogs', 'readonly');
-            const index = tx.objectStore('dailyLogs').index('patientId');
-            const req = index.getAll(patientId);
-            req.onsuccess = () => {
-                const logs = req.result || [];
-                logs.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
-                resolve(logs);
-            };
-            req.onerror = (e) => reject(e);
-        });
+        let lsLogs = [];
+        try {
+            if (patientId) {
+                const lsKey = 'smart_daily_logs_' + patientId;
+                lsLogs = JSON.parse(localStorage.getItem(lsKey) || '[]');
+            }
+        } catch(e) {}
+
+        try {
+            const db = await openDB();
+            return new Promise((resolve) => {
+                const tx = db.transaction('dailyLogs', 'readonly');
+                const index = tx.objectStore('dailyLogs').index('patientId');
+                const req = index.getAll(patientId);
+                req.onsuccess = () => {
+                    const dbLogs = req.result || [];
+                    const mergedMap = new Map();
+                    lsLogs.forEach(l => {
+                        const key = (typeof l.sessionNumber === 'number') ? `sess_${l.sessionNumber}` : (l.logId || `date_${l.date}`);
+                        mergedMap.set(key, l);
+                    });
+                    dbLogs.forEach(l => {
+                        const key = (typeof l.sessionNumber === 'number') ? `sess_${l.sessionNumber}` : (l.logId || `date_${l.date}`);
+                        mergedMap.set(key, { ...(mergedMap.get(key) || {}), ...l });
+                    });
+                    const mergedLogs = Array.from(mergedMap.values());
+                    mergedLogs.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
+                    resolve(mergedLogs);
+                };
+                req.onerror = () => {
+                    lsLogs.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
+                    resolve(lsLogs);
+                };
+            });
+        } catch(e) {
+            lsLogs.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
+            return lsLogs;
+        }
     }
 
     // دوال إعدادات النظام

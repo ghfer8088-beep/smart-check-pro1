@@ -17,11 +17,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=15.3">
+    <link rel="stylesheet" href="css/style.css?v=15.4">
     <script>
-        // التحقق من تحديثات Service Worker وتفريغ الكاش القديم فوراً عند الترقية للإصدار 15.3
+        // التحقق من تحديثات Service Worker وتفريغ الكاش القديم فوراً عند الترقية للإصدار 15.4
         (function() {
-            const APP_TARGET_VER = '15.3';
+            const APP_TARGET_VER = '15.4';
             const currentVer = localStorage.getItem('smart_app_version');
             if (currentVer !== APP_TARGET_VER) {
                 if ('caches' in window) {
@@ -1121,7 +1121,7 @@
                     <h1 style="color: #ffffff; margin: 6px 0; font-size: 1.85em; font-weight: 900; text-shadow: 0 2px 12px rgba(212,175,55,0.45);">
                         وسام الانتصار على الألم والتعافي الحركي
                     </h1>
-                    <div style="color: #10b981; font-weight: bold; font-size: 0.95em;">وفق بروتوكولات تفريغ الضغط وتقويم الحركة المعتمدة</div>
+                    <div style="color: #10b981; font-weight: bold; font-size: 0.95em;">وفق بروتوكلات العلاج اليدوي " الكايروبراكتيك"</div>
                 </div>
 
                 <!-- نص التكريم والتتويج السريري -->
@@ -1188,7 +1188,6 @@
                         <div style="background: #ffffff; color: #000; padding: 3px 8px; border-radius: 4px; font-family: monospace; font-size: 0.8em; font-weight: bold; display: inline-block;">
                             ||||| | |||| ||| ||
                         </div>
-                        <div style="color: #10b981; font-size: 0.76em; margin-top: 4px;">✓ معتمد وموثق رقمياً</div>
                     </div>
                 </div>
             </div>
@@ -1243,6 +1242,37 @@
             <div id="session-assessment-modal-content">
                 <!-- يُملأ ديناميكياً عبر openSessionAssessmentModal -->
             </div>
+        </div>
+    </div>
+
+    <!-- ================= نافذة الإهداء والدعاء الملكي عند تفعيل الخطة المجانية ================= -->
+    <div id="royal-duaa-modal" class="app-modal" style="display: none; z-index: 100060;">
+        <div class="modal-inner" style="max-width: 620px; width: 95%; background: linear-gradient(135deg, #0b1322 0%, #0f1c30 100%); border: 2.5px solid var(--primary-gold); padding: 30px 24px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.95), 0 0 35px rgba(212, 175, 55, 0.35); text-align: center; margin: auto;">
+            <div style="font-size: 3.2em; margin-bottom: 8px; filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.6));">🤲</div>
+            
+            <div style="color: var(--primary-gold); font-size: 0.85em; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px;">
+                إهداء سريري مبارك وصدقة جارية
+            </div>
+            
+            <h2 style="color: #ffffff; font-size: 1.6em; font-weight: 900; margin: 0 0 16px 0; text-shadow: 0 2px 10px rgba(212,175,55,0.4);">
+                صدقة جارية عن روح المرحوم
+            </h2>
+            
+            <div style="background: rgba(212, 175, 55, 0.12); border: 1.5px solid var(--primary-gold); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;">
+                <div style="color: #cbd5e1; font-size: 0.9em; margin-bottom: 4px;">نسألكم خالص الدعاء بالرحمة والمغفرة لـ:</div>
+                <div style="color: var(--primary-gold-light); font-size: 1.5em; font-weight: 900; letter-spacing: 0.5px;">
+                    والد المعالج جمال قبها
+                </div>
+                <div style="color: #94a3b8; font-size: 0.82em; margin-top: 4px;">(رحمه الله تعالى وجعل مأواه الفردوس الأعلى من الجنة)</div>
+            </div>
+
+            <p style="color: #e2e8f0; font-size: 1.02em; line-height: 1.9; margin: 0 auto 22px auto; max-width: 520px; background: rgba(15, 23, 42, 0.6); padding: 14px; border-radius: 10px; border: 1px dashed rgba(212, 175, 55, 0.3);">
+                « اللهم اغفر له وارحمه، وعافه واعفُ عنه، وأكرم نزله ووسّع مدخله، واجعل قبره روضةً من رياض الجنة، واجعل هذا العمل صدقة جارية في ميزان حسناته، وسبباً لشفاء وعافية كل مراجع ومبتلى »
+            </p>
+
+            <button type="button" id="btn-confirm-duaa" onclick="confirmRoyalDuaaAndProceed()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; padding: 15px 36px; border-radius: 10px; font-weight: 900; font-size: 1.1em; cursor: pointer; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.45); display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; max-width: 440px; transition: transform 0.2s;">
+                <span>🤲 آمين يارب العالمين.. بدء خطة التعافي (اليوم الأول)</span>
+            </button>
         </div>
     </div>
 
@@ -1484,16 +1514,16 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/database.js?v=15.3"></script>
-    <script src="js/exercise-image-studio.js?v=15.3"></script>
-    <script src="js/exercises-db.js?v=15.3"></script>
-    <script src="js/diagnostic-engine.js?v=15.3"></script>
-    <script src="js/audio-pacer.js?v=15.3"></script>
-    <script src="js/patient-flow.js?v=15.3"></script>
-    <script src="js/admin-engine.js?v=15.3"></script>
-    <script src="js/ai-config.js?v=15.3"></script>
-    <script src="js/ai-engine.js?v=15.3"></script>
-    <script src="js/app.js?v=15.3"></script>
-    <script src="js/text-editor.js?v=15.3"></script>
+    <script src="js/database.js?v=15.4"></script>
+    <script src="js/exercise-image-studio.js?v=15.4"></script>
+    <script src="js/exercises-db.js?v=15.4"></script>
+    <script src="js/diagnostic-engine.js?v=15.4"></script>
+    <script src="js/audio-pacer.js?v=15.4"></script>
+    <script src="js/patient-flow.js?v=15.4"></script>
+    <script src="js/admin-engine.js?v=15.4"></script>
+    <script src="js/ai-config.js?v=15.4"></script>
+    <script src="js/ai-engine.js?v=15.4"></script>
+    <script src="js/app.js?v=15.4"></script>
+    <script src="js/text-editor.js?v=15.4"></script>
 </body>
 </html>
