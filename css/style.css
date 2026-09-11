@@ -96,8 +96,9 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    justify-content: flex-end;
+    justify-content: center;
     flex: 1;
+    margin: 0 auto;
     min-width: 0;
 }
 
@@ -138,9 +139,26 @@ body {
     display: flex;
     gap: 6px;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
     flex-wrap: wrap;
-    max-width: 920px;
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+/* شارة تمييز الخطة المجانية المضيئة */
+.free-plan-highlight-badge {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(212, 175, 55, 0.2) 100%);
+    border: 1.5px solid #10b981;
+    color: #6ee7b7;
+    font-weight: 800;
+    padding: 3px 12px;
+    border-radius: 8px;
+    box-shadow: 0 0 14px rgba(16, 185, 129, 0.35);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    vertical-align: middle;
+    letter-spacing: 0.3px;
 }
 
 .btn-header {

@@ -1814,6 +1814,63 @@ function displayDiagnosticReport(data) {
 
     const reportId = "SCP-" + Math.floor(100000 + Math.random() * 900000);
     const currentDate = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    // استكمال واحتساب مؤشر كتلة الجسم والحمولة الميكانيكية تلقائياً من المحادثة أو المدخلات
+    if (!data.bmiInfo) {
+        const vitals = (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState?.patientVitals) 
+            ? clinicalDialogueState.patientVitals 
+            : (data.patientVitals || {});
+        const w = vitals.weight || parseFloat(document.getElementById('patient-weight')?.value);
+        const h = vitals.height || parseFloat(document.getElementById('patient-height')?.value);
+        if (w && h && h > 0) {
+            const hM = h / 100;
+            const bmiVal = parseFloat((w / (hM * hM)).toFixed(1));
+            const minHealthyW = parseFloat((18.5 * hM * hM).toFixed(1));
+            const maxHealthyW = parseFloat((24.9 * hM * hM).toFixed(1));
+            const idealW = parseFloat((22.0 * hM * hM).toFixed(1));
+
+            let bmiStatus = "وزن طبيعي متوازن";
+            let bmiColor = "#10b981";
+            let deltaText = `✅ وزنك ضمن النطاق الصحي المثالي (${minHealthyW} - ${maxHealthyW} كجم)`;
+            let impact = "وزنك متناسق ولا يشكل حمولة ضغط إضافية على الغضاريف والفقرات.";
+
+            if (bmiVal < 18.5) {
+                const deltaKg = parseFloat((minHealthyW - w).toFixed(1));
+                bmiStatus = "نحافة / نقص في الكتلة العضلية";
+                bmiColor = "#38bdf8";
+                deltaText = `⚠️ نقص في الوزن بمقدار -${deltaKg} كجم عن الحد الأدنى للوزن الصحي (${minHealthyW} كجم)`;
+                impact = "نقص الكتلة العضلية يقلل من الثبات الميكانيكي للمفاصل ويجعل الفقرات عرضة للإجهاد السريع.";
+            } else if (bmiVal >= 25 && bmiVal < 30) {
+                const deltaKg = parseFloat((w - maxHealthyW).toFixed(1));
+                const excessVsIdeal = parseFloat((w - idealW).toFixed(1));
+                const addedLoad = parseFloat((deltaKg * 4).toFixed(1));
+                bmiStatus = "زيادة وزن (Overweight)";
+                bmiColor = "#f59e0b";
+                deltaText = `⚠️ وزن زائد بمقدار +${deltaKg} كجم عن الحد الصحي (+${excessVsIdeal} كجم عن الوزن المثالي)`;
+                impact = `يضيف حوالي +${addedLoad} كجم حمولة ضغط إضافية على الركبتين وأسفل الظهر أثناء الحركة.`;
+            } else if (bmiVal >= 30) {
+                const deltaKg = parseFloat((w - maxHealthyW).toFixed(1));
+                const excessVsIdeal = parseFloat((w - idealW).toFixed(1));
+                const addedLoad = parseFloat((deltaKg * 4).toFixed(1));
+                bmiStatus = "سمنة مفرطة / حمولة ميكانيكية حرجة";
+                bmiColor = "#ef4444";
+                deltaText = `🚨 وزن زائد حرج بمقدار +${deltaKg} كجم (+${excessVsIdeal} كجم عن الوزن المثالي)`;
+                impact = `كل 1 كجم زيادة يضاعف الحمل 4 أضعاف، مما يشكل حمولة ضغط فائقة تصل إلى +${addedLoad} كجم على مفاصلك وفقراتك.`;
+            }
+
+            data.bmiInfo = {
+                value: bmiVal,
+                status: bmiStatus,
+                color: bmiColor,
+                minHealthyW,
+                maxHealthyW,
+                idealW,
+                deltaText,
+                impact
+            };
+        }
+    }
+
     const formattedDiag = formatBidiMedicalText(data.primaryDiagnosis);
     const formattedRoot = formatBidiMedicalText(data.rootLevel);
     const formattedSec = formatBidiMedicalText(data.secondaryDiagnosis);
@@ -1970,8 +2027,8 @@ function displayDiagnosticReport(data) {
                         <div style="background: rgba(17, 24, 39, 0.8); border: 1.5px solid #3b82f6; border-radius: 10px; padding: 15px;">
                             <div style="color: #ffffff; font-weight: bold; font-size: 0.95em; margin-bottom: 6px;">⚖️ مؤشر كتلة الجسم (BMI) والحمولة:</div>
                             <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-                                <input type="number" id="inline-report-weight" placeholder="الوزن (كجم)" style="width: 95px; background: #0f172a; border: 1px solid #334155; padding: 6px 8px; border-radius: 6px; color: #fff; font-size: 0.85em;">
-                                <input type="number" id="inline-report-height" placeholder="الطول (سم)" style="width: 95px; background: #0f172a; border: 1px solid #334155; padding: 6px 8px; border-radius: 6px; color: #fff; font-size: 0.85em;">
+                                <input type="number" id="inline-report-weight" placeholder="الوزن (كجم)" value="${clinicalDialogueState?.patientVitals?.weight || data?.patientVitals?.weight || ''}" style="width: 95px; background: #0f172a; border: 1px solid #334155; padding: 6px 8px; border-radius: 6px; color: #fff; font-size: 0.85em;">
+                                <input type="number" id="inline-report-height" placeholder="الطول (سم)" value="${clinicalDialogueState?.patientVitals?.height || data?.patientVitals?.height || ''}" style="width: 95px; background: #0f172a; border: 1px solid #334155; padding: 6px 8px; border-radius: 6px; color: #fff; font-size: 0.85em;">
                                 <button type="button" onclick="calculateInlineReportBMI()" style="background: #3b82f6; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.84em; font-weight: bold; cursor: pointer;">احسب</button>
                             </div>
                             <div id="inline-bmi-result" style="margin-top: 6px;"></div>
@@ -2244,8 +2301,14 @@ function displayDiagnosticReport(data) {
         </div>
     `;
 
-    // تفعيل وتوليد التحليل السريري المخصص بالذكاء الاصطناعي فوراً
+    // تفعيل وتوليد التحليل السريري المخصص بالذكاء الاصطناعي واحتساب الـ BMI فوراً
     setTimeout(() => {
+        const wInput = document.getElementById('inline-report-weight');
+        const hInput = document.getElementById('inline-report-height');
+        if (wInput && hInput && wInput.value && hInput.value) {
+            calculateInlineReportBMI();
+        }
+
         if (typeof Wada3anAiEngine !== 'undefined') {
             const statusBadge = document.getElementById('ai-status-badge');
             const contentArea = document.getElementById('ai-insight-content-area');
@@ -2824,6 +2887,7 @@ async function loadPatientRecoveryDashboard(patientId) {
 
     // جلب التهيئات السلوكية والحركية المخصصة تشريحياً لنقطة الألم
     const anatomicalConfig = typeof getAnatomicalDailyAssessmentConfig === 'function' ? getAnatomicalDailyAssessmentConfig(pointKey) : null;
+    const isDay1Initial = (sessionData.currentSessionDay === 1 && sessionData.dailyLogs.length === 0 && !lockStatus.isLocked);
 
     // بطاقة التحليل السلوكي المستمر بناءً على آخر تسجيل للمريض
     const lastDailyLog = sessionData.dailyLogs.length > 0 ? sessionData.dailyLogs[sessionData.dailyLogs.length - 1] : null;
@@ -2912,30 +2976,6 @@ async function loadPatientRecoveryDashboard(patientId) {
                 </div>
             </div>
 
-            <!-- مؤشرات التحسن الثلاثة المحسوبة ديناميكياً من إجابات المريض الفعلية -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px;">
-                <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3); text-align: center;">
-                    <div style="font-size: 2em; font-weight: bold; color: #ef4444;">${sessionData.indicators.painReduction}%</div>
-                    <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر انخفاض وتلاشي الألم</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${sessionData.dailyLogs.length === 0 ? 'بانتظار تقييمك للجلسة الأولى' : (sessionData.baselinePain ? `مقارنة بألم البداية (${sessionData.baselinePain}/10)` : 'مقارنة بالتقييم السريري المبدئي')}</div>
-                </div>
-
-                <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3); text-align: center;">
-                    <div style="font-size: 2em; font-weight: bold; color: #38bdf8;">${sessionData.indicators.mobility}%</div>
-                    <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر استعادة المدى الحركي</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${sessionData.dailyLogs.length === 0 ? 'بانتظار تقييمك للجلسة الأولى' : 'بناءً على التقييم الحركي الفعلي المسجل'}</div>
-                </div>
-
-                <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); text-align: center;">
-                    <div style="font-size: 2em; font-weight: bold; color: #10b981;">${sessionData.indicators.sleepQuality}%</div>
-                    <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر جودة وعمق النوم</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${sessionData.dailyLogs.length === 0 ? 'بانتظار تقييمك للجلسة الأولى' : 'بناءً على تقييم النوم والراحة الفعلي المسجل'}</div>
-                </div>
-            </div>
-
-            <!-- رسم بياني مسار تراجع الألم -->
-            ${sessionData.painTrendHTML || ''}
-
             <!-- عبارة تشجيعية ديناميكية مع زر استماع لصوت د. سارة الاستوديو المجاني للأبد -->
             <div style="background: rgba(16, 185, 129, 0.1); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; color: #6ee7b7; font-weight: 500; font-size: 0.92em; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div style="flex: 1 1 220px; line-height: 1.6;">${sessionData.motivation}</div>
@@ -2944,169 +2984,297 @@ async function loadPatientRecoveryDashboard(patientId) {
                 </button>
             </div>
 
-            <!-- بطاقة التحليل السلوكي المستمر -->
-            ${behavioralReportHTML}
-
-            <!-- العداد التنازلي أو نموذج التسجيل السلوكي -->
-            ${lockStatus.isLocked ? `
-                <div style="background: linear-gradient(135deg, #0b101b 0%, #172033 100%); border: 1px solid var(--primary-gold); border-radius: 14px; padding: 25px; text-align: center; margin-bottom: 25px;">
-                    <div style="color: var(--primary-gold); font-size: 1.2em; font-weight: bold; margin-bottom: 15px;">⏳ الوقت المتبقي لفتح الجلسة القادمة (اليوم ${Math.min(7, sessionData.currentSessionDay + 1)} من 7)</div>
-                    <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
-                        <div style="background: #0f172a; padding: 15px 20px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.3); min-width: 80px;">
-                            <div id="countdown-hours" style="font-size: 2.5em; font-weight: bold; color: #ffffff;">00</div>
-                            <div style="color: #94a3b8; font-size: 0.8em;">ساعة</div>
+            ${isDay1Initial ? `
+                <!-- بطاقة بروتوكول وتوصيات المعالج السريري لجلسة اليوم الأول (إرشادات البدء الآمن) -->
+                <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 22px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                        <span style="font-size: 1.6em;">🩺</span>
+                        <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.15em; font-weight: bold;">
+                            بروتوكول المعالج السريري لجلسة اليوم الأول (إرشادات البدء الآمن)
+                        </h3>
+                    </div>
+                    <div style="color: #cbd5e1; font-size: 0.9em; line-height: 1.8; margin-bottom: 15px;">
+                        أهلاً بك في بداية برنامجك التأهيلي! الهدف من جلسة اليوم هو <strong>تفريغ الضغط الميكانيكي الأولي</strong> عن مفصل (${sessionData.latestAssessment?.painAreaTitle || 'المنطقة المحددة'}) والأنسجة المحيطة، وتنشيط تدفق السائل الزلالي بلطف وأمان تام دون أي إجهاد.
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
+                        <div style="background: #0f172a; border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 10px; padding: 12px 14px;">
+                            <div style="color: #10b981; font-weight: bold; font-size: 0.9em; margin-bottom: 4px;">🫁 1. التنفس المنتظم والهدوء:</div>
+                            <div style="color: #94a3b8; font-size: 0.83em; line-height: 1.6;">تنفس بعمق وزفير هادئ مع كل حركة. لا تكتم نَفَسَك أثناء الشد أو الاستطالة.</div>
                         </div>
-                        <div style="background: #0f172a; padding: 15px 20px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.3); min-width: 80px;">
-                            <div id="countdown-mins" style="font-size: 2.5em; font-weight: bold; color: #ffffff;">00</div>
-                            <div style="color: #94a3b8; font-size: 0.8em;">دقيقة</div>
+                        <div style="background: #0f172a; border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 10px; padding: 12px 14px;">
+                            <div style="color: #38bdf8; font-weight: bold; font-size: 0.9em; margin-bottom: 4px;">🎯 2. التدرج وتجنب القوة:</div>
+                            <div style="color: #94a3b8; font-size: 0.83em; line-height: 1.6;">ابدأ الحركة بنصف المدى وزده تدريجياً. الهدف هو تليين الأنسجة وتفريغ الحمل وليس التحدي العضلي.</div>
                         </div>
-                        <div style="background: #0f172a; padding: 15px 20px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.3); min-width: 80px;">
-                            <div id="countdown-secs" style="font-size: 2.5em; font-weight: bold; color: var(--primary-gold);">00</div>
-                            <div style="color: #94a3b8; font-size: 0.8em;">ثانية</div>
+                        <div style="background: #0f172a; border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 10px; padding: 12px 14px;">
+                            <div style="color: #ef4444; font-weight: bold; font-size: 0.9em; margin-bottom: 4px;">🛑 3. ضابط الأمان السريري:</div>
+                            <div style="color: #fca5a5; font-size: 0.83em; line-height: 1.6;">الشعور بشد خفيف طبيعي ومطلوب، ولكن توقف فوراً إذا شعرت بوخز حاد أو ألم كهربائي مفاجئ.</div>
+                        </div>
+                        <div style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 10px; padding: 12px 14px;">
+                            <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.9em; margin-bottom: 4px;">💧 4. ما بعد التمارين:</div>
+                            <div style="color: #94a3b8; font-size: 0.83em; line-height: 1.6;">اشرب كوب ماء دافئ، ويمكن وضع كمادة دافئة لمدة 10 دقائق بعد الانتهاء لاسترخاء الأنسجة وتسكين التوتر.</div>
                         </div>
                     </div>
-                    <p style="color: #94a3b8; font-size: 0.9em; margin: 0;">💡 التزم بتمارين اليوم وسيتفعل تقييم الجلسة التالية تلقائياً عند انتهاء الوقت.</p>
                 </div>
-            ` : `
-                <!-- نموذج التقييم اليومي المطور ذو الأسئلة المنسجمة مع نقطة الألم -->
-                <div style="background: #0f172a; border: 1.5px solid #10b981; border-radius: 14px; padding: 25px; margin-bottom: 25px;">
-                    <h3 style="color: #10b981; margin: 0 0 15px 0; font-size: 1.25em;">📝 تقييم ومتابعة تقدم الجلسة اليومية (#${sessionData.currentSessionDay}) - ${sessionData.latestAssessment?.painAreaTitle || ''}</h3>
-                    
-                    <!-- 1. مستوى الألم -->
-                    <div style="margin-bottom: 20px; background: #111827; padding: 15px; border-radius: 10px; border: 1px solid #334155;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <label style="color: #e2e8f0; font-size: 0.95em; font-weight: bold;">1. مستوى شدة الألم الحالي (من 1 إلى 10):</label>
-                            <span id="daily-pain-val" style="color: var(--primary-gold); font-weight: bold; font-size: 1.15em;">3 / 10</span>
-                        </div>
-                        <input type="range" id="daily-pain-input" min="1" max="10" value="3" oninput="document.getElementById('daily-pain-val').textContent = this.value + ' / 10'" style="width: 100%; accent-color: var(--primary-gold);">
+
+                <!-- عرض تمارين اليوم الأول في الصدارة مباشرة -->
+                <div style="margin-bottom: 25px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 8px;">
+                        <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.3em;">🏋️ تمارين الراحة المقررة لليوم الأول (1 من 7) - ${sessionData.stageTitle}</h3>
+                        <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">⚡ ابدأ بالتمارين أدناه</span>
                     </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px;">
+                        ${dayExercises.map((ex, idx) => `
+                            <div class="clinical-exercise-card" style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+                                <div>
+                                    ${generateExerciseIllustration(ex.visualType, ex.id, { name: ex.name })}
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0 6px 0;">
+                                        <span style="color: var(--primary-gold); font-size: 0.78em; font-weight: bold;">تمرين #${idx+1} (اليوم 1)</span>
+                                        <span style="color: #10b981; font-size: 0.78em;">⏱️ ${ex.duration}</span>
+                                    </div>
+                                    <h4 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.15em;">${ex.name}</h4>
+                                    <p style="color: #cbd5e1; font-size: 0.86em; margin: 0 0 12px 0;">${ex.description}</p>
+                                    
+                                    <div style="background: #111827; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85em; color: #e2e8f0; line-height: 1.7; border-right: 3px solid var(--primary-gold);">
+                                        <strong>طريقة الأداء:</strong><br>${ex.instructions}
+                                    </div>
 
-                    <!-- 2. تقييم المدى الحركي المنسجم مع نقطة الألم -->
-                    <div style="margin-bottom: 20px; background: #111827; padding: 15px; border-radius: 10px; border: 1px solid rgba(56, 189, 248, 0.3);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <label style="color: #38bdf8; font-size: 0.95em; font-weight: bold;">
-                                ${anatomicalConfig ? anatomicalConfig.mobilityQuestion : '2. نسبة استعادة المدى الحركي والمرونة اليوم:'}
-                            </label>
-                            <span id="daily-mobility-val" style="color: #38bdf8; font-weight: bold; font-size: 1.15em;">70 %</span>
-                        </div>
-                        <input type="range" id="daily-mobility-slider" min="10" max="100" value="70" oninput="document.getElementById('daily-mobility-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #38bdf8; margin-bottom: 12px;">
-                        
-                        <div style="color: #94a3b8; font-size: 0.82em; margin-bottom: 8px;">اختر كل ما ينطبق على حركتك اليوم (اختيار متعدد):</div>
-                        <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
-                            ${(anatomicalConfig ? anatomicalConfig.mobilityOptions : [
-                                { val: 95, text: "حرية حركة ممتازة دون تيبس أو إعاقة" },
-                                { val: 75, text: "تحسن ملحوظ في الحركة مع انزعاج طفيف عند أقصى المدى" },
-                                { val: 45, text: "حركة مقيدة جزئياً مع تيبس يستغرق وقتاً ليلين" },
-                                { val: 20, text: "صعوبة وتيبس شديد ومحدودية حركية واضحة" }
-                            ]).map((opt) => `
-                                <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                    <input type="checkbox" name="daily_mobility_check" value="${opt.val}" style="accent-color: #38bdf8; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
-                                </label>
-                            `).join('')}
-                        </div>
+                                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                                        <span style="background: #1e293b; color: #d4af37; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">🔁 ${ex.reps}</span>
+                                        <span style="background: #1e293b; color: #f59e0b; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">📦 ${ex.sets}</span>
+                                    </div>
+
+                                    <!-- دليل التكنيك السليم والأخطاء الشائعة -->
+                                    ${typeof getExerciseFormGuideHTML === 'function' ? getExerciseFormGuideHTML(ex) : ''}
+                                </div>
+                                <div>
+                                    <div style="background: #1e2633; height: 5px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
+                                        <div class="timer-progress-fill" style="background: linear-gradient(90deg, #d4af37 0%, #10b981 100%); height: 100%; width: 0%; transition: width 1s linear;"></div>
+                                    </div>
+                                    <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="width: 100%; background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.92em;">
+                                        ⏱️ ابدأ مؤقت التمرين (${ex.duration})
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
                     </div>
+                </div>
 
-                    <!-- 3. تقييم جودة النوم المنسجم مع نقطة الألم -->
-                    <div style="margin-bottom: 20px; background: #111827; padding: 15px; border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.3);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <label style="color: #10b981; font-size: 0.95em; font-weight: bold;">
-                                ${anatomicalConfig ? anatomicalConfig.sleepQuestion : '3. نسبة جودة وعمق النوم والراحة الليلة الماضية:'}
-                            </label>
-                            <span id="daily-sleep-val" style="color: #10b981; font-weight: bold; font-size: 1.15em;">70 %</span>
-                        </div>
-                        <input type="range" id="daily-sleep-slider" min="10" max="100" value="70" oninput="document.getElementById('daily-sleep-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #10b981; margin-bottom: 12px;">
-
-                        <div style="color: #94a3b8; font-size: 0.82em; margin-bottom: 8px;">اختر كل ما ينطبق على نومك (اختيار متعدد):</div>
-                        <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
-                            ${(anatomicalConfig ? anatomicalConfig.sleepOptions : [
-                                { val: 95, text: "نوم عميق ومريح ومتواصل طوال الليل دون ألم" },
-                                { val: 75, text: "نوم جيد مع استيقاظ عابر عند التقلب دون ألم حاد" },
-                                { val: 45, text: "نوم متقطع وصعوبة في إيجاد وضعية مريحة للمفصل" },
-                                { val: 20, text: "أرق شديد واستيقاظ متكرر بسبب نوبات الألم" }
-                            ]).map((opt) => `
-                                <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                    <input type="checkbox" name="daily_sleep_check" value="${opt.val}" style="accent-color: #10b981; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
-                                </label>
-                            `).join('')}
-                        </div>
+                <!-- بطاقة وزر توثيق إنجاز تمارين اليوم الأول وبدء فترة الاستشفاء (24 ساعة) -->
+                <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%); border: 2px solid #10b981; border-radius: 14px; padding: 24px; text-align: center; margin: 25px 0; box-shadow: 0 8px 30px rgba(16, 185, 129, 0.25);">
+                    <div style="color: #6ee7b7; font-size: 1.15em; font-weight: bold; margin-bottom: 8px;">🎯 خطوتك التالية بعد إتمام التمارين أعلاه:</div>
+                    <div style="color: #cbd5e1; font-size: 0.9em; margin-bottom: 20px; line-height: 1.7; max-width: 600px; margin-left: auto; margin-right: auto;">
+                        بعد انتهائك من أداء تمارين اليوم الأول، انقر على الزر أدناه لتوثيق إنجاز الجلسة الأولى وبدء فترة الاستشفاء الحيوي للأنسجة (24 ساعة). ستفتح لك غداً أسئلة التقييم المقارن لمتابعة تراجع الألم واستعادة الحركة.
                     </div>
-
-                    <!-- 4. السلوكيات الإيجابية والسلبية المنسجمة مع نقطة الألم -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px;">
-                        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); padding: 15px; border-radius: 10px;">
-                            <div style="color: #10b981; font-weight: bold; font-size: 0.95em; margin-bottom: 10px;">✨ السلوكيات الإيجابية المنجزة اليوم:</div>
-                            ${(anatomicalConfig ? anatomicalConfig.positiveBehaviors : [
-                                { id: "beh-exercise", text: "نفذت التمارين التأهيلية بانتظام" },
-                                { id: "beh-posture", text: "حافظت على وضعية جلوس ووقوف مستقيمة" },
-                                { id: "beh-walk", text: "قمت بالمشي الخفيف وتنشيط الدورة الدموية" },
-                                { id: "beh-heat", text: "استخدمت الكمادات الدافئة / الراحة الكافية" }
-                            ]).map((beh) => `
-                                <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer;">
-                                    <input type="checkbox" id="${beh.id}" style="accent-color: #10b981; width: 16px; height: 16px;"> ${beh.text}
-                                </label>
-                            `).join('')}
+                    <button type="button" onclick="completeDay1InitialExercises('${patientId}')" class="btn-plan-royal-card" style="margin: 0 auto; max-width: 620px; width: 100%;">
+                        <div class="royal-card-halo"></div>
+                        <div class="royal-card-shimmer"></div>
+                        <div class="royal-badge-pill">
+                            <span class="royal-badge-dot"></span>
+                            <span>✨ توثيق إنجاز الجلسة الأولى</span>
                         </div>
-
-                        <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); padding: 15px; border-radius: 10px;">
-                            <div style="color: #ef4444; font-weight: bold; font-size: 0.95em; margin-bottom: 10px;">⚠️ سلوكيات سلبية حدثت اليوم (للتصحيح):</div>
-                            ${(anatomicalConfig ? anatomicalConfig.negativeBehaviors : [
-                                { id: "neg-sitting", text: "جلوس طويل متواصل لأكثر من ساعة" },
-                                { id: "neg-lifting", text: "حمل أوزان ثقيلة أو انحناء مفاجئ للظهر" },
-                                { id: "neg-phone", text: "استخدام طويل للهاتف مع انحناء الرقبة" },
-                                { id: "neg-sleep", text: "نوم غير مريح أو على وسادة مرتفعة" }
-                            ]).map(neg => `
-                                <label style="color: #fca5a5; font-size: 0.88em; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer;">
-                                    <input type="checkbox" id="${neg.id}" style="accent-color: #ef4444; width: 16px; height: 16px;"> ${neg.text}
-                                </label>
-                            `).join('')}
+                        <div class="royal-main-content">
+                            <div class="royal-icon-box">
+                                <span class="royal-icon-emoji">✅</span>
+                            </div>
+                            <div class="royal-text-col">
+                                <div class="royal-cta-headline">أتممت أداء تمارين اليوم الأول بنجاح</div>
+                                <div class="royal-cta-subline">بدء فترة الاستشفاء الحيوي للأنسجة (24 ساعة) ⏳</div>
+                            </div>
+                            <div class="royal-arrow-box">
+                                <span class="royal-arrow-anim">⬅️</span>
+                            </div>
                         </div>
-                    </div>
-
-                    <button type="button" onclick="submitComprehensiveDailyLog('${patientId}', ${sessionData.currentSessionDay})" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; padding: 14px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1em; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
-                        💾 حفظ تسجيل اليوم وتحديث التمارين للجلسة التالية
                     </button>
                 </div>
-            `}
+            ` : `
+                <!-- مؤشرات التحسن الثلاثة المحسوبة ديناميكياً من إجابات المريض الفعلية في الأيام من 2 إلى 7 -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3); text-align: center;">
+                        <div style="font-size: 2em; font-weight: bold; color: #ef4444;">${sessionData.indicators.painReduction}%</div>
+                        <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر انخفاض وتلاشي الألم</div>
+                        <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${sessionData.baselinePain ? `مقارنة بألم البداية (${sessionData.baselinePain}/10)` : 'مقارنة بالتقييم السريري المبدئي'}</div>
+                    </div>
 
-            <!-- عرض التمارين اليومية لليوم الحالي -->
-            <div style="margin-bottom: 25px;">
-                <h3 style="color: var(--primary-gold); margin: 0 0 15px 0; font-size: 1.3em;">🏋️ تمارين الراحة المقررة لليوم (${sessionData.currentSessionDay} من 7) - ${sessionData.stageTitle}</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px;">
-                    ${dayExercises.map((ex, idx) => `
-                        <div class="clinical-exercise-card" style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
-                            <div>
-                                ${generateExerciseIllustration(ex.visualType, ex.id, { name: ex.name })}
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0 6px 0;">
-                                    <span style="color: var(--primary-gold); font-size: 0.78em; font-weight: bold;">تمرين #${idx+1} (اليوم ${sessionData.currentSessionDay})</span>
-                                    <span style="color: #10b981; font-size: 0.78em;">⏱️ ${ex.duration}</span>
-                                </div>
-                                <h4 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.15em;">${ex.name}</h4>
-                                <p style="color: #cbd5e1; font-size: 0.86em; margin: 0 0 12px 0;">${ex.description}</p>
-                                
-                                <div style="background: #111827; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85em; color: #e2e8f0; line-height: 1.7; border-right: 3px solid var(--primary-gold);">
-                                    <strong>طريقة الأداء:</strong><br>${ex.instructions}
-                                </div>
+                    <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3); text-align: center;">
+                        <div style="font-size: 2em; font-weight: bold; color: #38bdf8;">${sessionData.indicators.mobility}%</div>
+                        <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر استعادة المدى الحركي</div>
+                        <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">بناءً على التقييم الحركي الفعلي المسجل</div>
+                    </div>
 
-                                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
-                                    <span style="background: #1e293b; color: #d4af37; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">🔁 ${ex.reps}</span>
-                                    <span style="background: #1e293b; color: #f59e0b; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">📦 ${ex.sets}</span>
-                                </div>
+                    <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); text-align: center;">
+                        <div style="font-size: 2em; font-weight: bold; color: #10b981;">${sessionData.indicators.sleepQuality}%</div>
+                        <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر جودة وعمق النوم</div>
+                        <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">بناءً على تقييم النوم والراحة الفعلي المسجل</div>
+                    </div>
+                </div>
 
-                                <!-- دليل التكنيك السليم والأخطاء الشائعة -->
-                                ${typeof getExerciseFormGuideHTML === 'function' ? getExerciseFormGuideHTML(ex) : ''}
+                <!-- رسم بياني مسار تراجع الألم -->
+                ${sessionData.painTrendHTML || ''}
+
+                <!-- بطاقة التحليل السلوكي المستمر -->
+                ${behavioralReportHTML}
+
+                <!-- العداد التنازلي أو نموذج التسجيل السلوكي -->
+                ${lockStatus.isLocked ? `
+                    <div style="background: linear-gradient(135deg, #0b101b 0%, #172033 100%); border: 1px solid var(--primary-gold); border-radius: 14px; padding: 25px; text-align: center; margin-bottom: 25px;">
+                        <div style="color: var(--primary-gold); font-size: 1.2em; font-weight: bold; margin-bottom: 15px;">⏳ الوقت المتبقي لفتح الجلسة القادمة (اليوم ${Math.min(7, sessionData.currentSessionDay + 1)} من 7)</div>
+                        <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
+                            <div style="background: #0f172a; padding: 15px 20px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.3); min-width: 80px;">
+                                <div id="countdown-hours" style="font-size: 2.5em; font-weight: bold; color: #ffffff;">00</div>
+                                <div style="color: #94a3b8; font-size: 0.8em;">ساعة</div>
                             </div>
-                            <div>
-                                <div style="background: #1e2633; height: 5px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
-                                    <div class="timer-progress-fill" style="background: linear-gradient(90deg, #d4af37 0%, #10b981 100%); height: 100%; width: 0%; transition: width 1s linear;"></div>
-                                </div>
-                                <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="width: 100%; background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.92em;">
-                                    ⏱️ ابدأ مؤقت التمرين (${ex.duration})
-                                </button>
+                            <div style="background: #0f172a; padding: 15px 20px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.3); min-width: 80px;">
+                                <div id="countdown-mins" style="font-size: 2.5em; font-weight: bold; color: #ffffff;">00</div>
+                                <div style="color: #94a3b8; font-size: 0.8em;">دقيقة</div>
+                            </div>
+                            <div style="background: #0f172a; padding: 15px 20px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.3); min-width: 80px;">
+                                <div id="countdown-secs" style="font-size: 2.5em; font-weight: bold; color: var(--primary-gold);">00</div>
+                                <div style="color: #94a3b8; font-size: 0.8em;">ثانية</div>
                             </div>
                         </div>
-                    `).join('')}
+                        <p style="color: #94a3b8; font-size: 0.9em; margin: 0;">💡 التزم بتمارين اليوم وسيتفعل تقييم الجلسة التالية تلقائياً عند انتهاء الوقت.</p>
+                    </div>
+                ` : `
+                    <!-- نموذج التقييم اليومي المطور ذو الأسئلة المنسجمة مع نقطة الألم (للأيام 2 إلى 7) -->
+                    <div style="background: #0f172a; border: 1.5px solid #10b981; border-radius: 14px; padding: 25px; margin-bottom: 25px;">
+                        <h3 style="color: #10b981; margin: 0 0 15px 0; font-size: 1.25em;">📝 تقييم ومتابعة تقدم الجلسة اليومية (#${sessionData.currentSessionDay}) - ${sessionData.latestAssessment?.painAreaTitle || ''}</h3>
+                        
+                        <!-- 1. مستوى الألم -->
+                        <div style="margin-bottom: 20px; background: #111827; padding: 15px; border-radius: 10px; border: 1px solid #334155;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <label style="color: #e2e8f0; font-size: 0.95em; font-weight: bold;">1. مستوى شدة الألم الحالي (من 1 إلى 10):</label>
+                                <span id="daily-pain-val" style="color: var(--primary-gold); font-weight: bold; font-size: 1.15em;">3 / 10</span>
+                            </div>
+                            <input type="range" id="daily-pain-input" min="1" max="10" value="3" oninput="document.getElementById('daily-pain-val').textContent = this.value + ' / 10'" style="width: 100%; accent-color: var(--primary-gold);">
+                        </div>
+
+                        <!-- 2. تقييم المدى الحركي المنسجم مع نقطة الألم -->
+                        <div style="margin-bottom: 20px; background: #111827; padding: 15px; border-radius: 10px; border: 1px solid rgba(56, 189, 248, 0.3);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <label style="color: #38bdf8; font-size: 0.95em; font-weight: bold;">
+                                    ${anatomicalConfig ? anatomicalConfig.mobilityQuestion : '2. نسبة استعادة المدى الحركي والمرونة اليوم:'}
+                                </label>
+                                <span id="daily-mobility-val" style="color: #38bdf8; font-weight: bold; font-size: 1.15em;">70 %</span>
+                            </div>
+                            <input type="range" id="daily-mobility-slider" min="10" max="100" value="70" oninput="document.getElementById('daily-mobility-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #38bdf8; margin-bottom: 12px;">
+                            
+                            <div style="color: #94a3b8; font-size: 0.82em; margin-bottom: 8px;">اختر كل ما ينطبق على حركتك اليوم (اختيار متعدد):</div>
+                            <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
+                                ${(anatomicalConfig ? anatomicalConfig.mobilityOptions : [
+                                    { val: 95, text: "حرية حركة ممتازة دون تيبس أو إعاقة" },
+                                    { val: 75, text: "تحسن ملحوظ في الحركة مع انزعاج طفيف عند أقصى المدى" },
+                                    { val: 45, text: "حركة مقيدة جزئياً مع تيبس يستغرق وقتاً ليلين" },
+                                    { val: 20, text: "صعوبة وتيبس شديد ومحدودية حركية واضحة" }
+                                ]).map((opt) => `
+                                    <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                        <input type="checkbox" name="daily_mobility_check" value="${opt.val}" style="accent-color: #38bdf8; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
+                                    </label>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- 3. تقييم جودة النوم المنسجم مع نقطة الألم -->
+                        <div style="margin-bottom: 20px; background: #111827; padding: 15px; border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <label style="color: #10b981; font-size: 0.95em; font-weight: bold;">
+                                    ${anatomicalConfig ? anatomicalConfig.sleepQuestion : '3. نسبة جودة وعمق النوم والراحة الليلة الماضية:'}
+                                </label>
+                                <span id="daily-sleep-val" style="color: #10b981; font-weight: bold; font-size: 1.15em;">70 %</span>
+                            </div>
+                            <input type="range" id="daily-sleep-slider" min="10" max="100" value="70" oninput="document.getElementById('daily-sleep-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #10b981; margin-bottom: 12px;">
+
+                            <div style="color: #94a3b8; font-size: 0.82em; margin-bottom: 8px;">اختر كل ما ينطبق على نومك (اختيار متعدد):</div>
+                            <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
+                                ${(anatomicalConfig ? anatomicalConfig.sleepOptions : [
+                                    { val: 95, text: "نوم عميق ومريح ومتواصل طوال الليل دون ألم" },
+                                    { val: 75, text: "نوم جيد مع استيقاظ عابر عند التقلب دون ألم حاد" },
+                                    { val: 45, text: "نوم متقطع وصعوبة في إيجاد وضعية مريحة للمفصل" },
+                                    { val: 20, text: "أرق شديد واستيقاظ متكرر بسبب نوبات الألم" }
+                                ]).map((opt) => `
+                                    <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                        <input type="checkbox" name="daily_sleep_check" value="${opt.val}" style="accent-color: #10b981; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
+                                    </label>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- 4. السلوكيات الإيجابية والسلبية المنسجمة مع نقطة الألم -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); padding: 15px; border-radius: 10px;">
+                                <div style="color: #10b981; font-weight: bold; font-size: 0.95em; margin-bottom: 10px;">✨ السلوكيات الإيجابية المنجزة اليوم:</div>
+                                ${(anatomicalConfig ? anatomicalConfig.positiveBehaviors : [
+                                    { id: "beh-exercise", text: "نفذت التمارين التأهيلية بانتظام" },
+                                    { id: "beh-posture", text: "حافظت على وضعية جلوس ووقوف مستقيمة" },
+                                    { id: "beh-walk", text: "قمت بالمشي الخفيف وتنشيط الدورة الدموية" },
+                                    { id: "beh-heat", text: "استخدمت الكمادات الدافئة / الراحة الكافية" }
+                                ]).map((beh) => `
+                                    <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer;">
+                                        <input type="checkbox" id="${beh.id}" style="accent-color: #10b981; width: 16px; height: 16px;"> ${beh.text}
+                                    </label>
+                                `).join('')}
+                            </div>
+
+                            <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); padding: 15px; border-radius: 10px;">
+                                <div style="color: #ef4444; font-weight: bold; font-size: 0.95em; margin-bottom: 10px;">⚠️ سلوكيات سلبية حدثت اليوم (للتصحيح):</div>
+                                ${(anatomicalConfig ? anatomicalConfig.negativeBehaviors : [
+                                    { id: "neg-sitting", text: "جلوس طويل متواصل لأكثر من ساعة" },
+                                    { id: "neg-lifting", text: "حمل أوزان ثقيلة أو انحناء مفاجئ للظهر" },
+                                    { id: "neg-phone", text: "استخدام طويل للهاتف مع انحناء الرقبة" },
+                                    { id: "neg-sleep", text: "نوم غير مريح أو على وسادة مرتفعة" }
+                                ]).map(neg => `
+                                    <label style="color: #fca5a5; font-size: 0.88em; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer;">
+                                        <input type="checkbox" id="${neg.id}" style="accent-color: #ef4444; width: 16px; height: 16px;"> ${neg.text}
+                                    </label>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <button type="button" onclick="submitComprehensiveDailyLog('${patientId}', ${sessionData.currentSessionDay})" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; padding: 14px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1em; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+                            💾 حفظ تسجيل اليوم وتحديث التمارين للجلسة التالية
+                        </button>
+                    </div>
+                `}
+
+                <!-- عرض التمارين اليومية لليوم الحالي (للأيام 2 إلى 7) -->
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: var(--primary-gold); margin: 0 0 15px 0; font-size: 1.3em;">🏋️ تمارين الراحة المقررة لليوم (${sessionData.currentSessionDay} من 7) - ${sessionData.stageTitle}</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px;">
+                        ${dayExercises.map((ex, idx) => `
+                            <div class="clinical-exercise-card" style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+                                <div>
+                                    ${generateExerciseIllustration(ex.visualType, ex.id, { name: ex.name })}
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0 6px 0;">
+                                        <span style="color: var(--primary-gold); font-size: 0.78em; font-weight: bold;">تمرين #${idx+1} (اليوم ${sessionData.currentSessionDay})</span>
+                                        <span style="color: #10b981; font-size: 0.78em;">⏱️ ${ex.duration}</span>
+                                    </div>
+                                    <h4 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.15em;">${ex.name}</h4>
+                                    <p style="color: #cbd5e1; font-size: 0.86em; margin: 0 0 12px 0;">${ex.description}</p>
+                                    
+                                    <div style="background: #111827; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85em; color: #e2e8f0; line-height: 1.7; border-right: 3px solid var(--primary-gold);">
+                                        <strong>طريقة الأداء:</strong><br>${ex.instructions}
+                                    </div>
+
+                                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                                        <span style="background: #1e293b; color: #d4af37; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">🔁 ${ex.reps}</span>
+                                        <span style="background: #1e293b; color: #f59e0b; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">📦 ${ex.sets}</span>
+                                    </div>
+
+                                    <!-- دليل التكنيك السليم والأخطاء الشائعة -->
+                                    ${typeof getExerciseFormGuideHTML === 'function' ? getExerciseFormGuideHTML(ex) : ''}
+                                </div>
+                                <div>
+                                    <div style="background: #1e2633; height: 5px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
+                                        <div class="timer-progress-fill" style="background: linear-gradient(90deg, #d4af37 0%, #10b981 100%); height: 100%; width: 0%; transition: width 1s linear;"></div>
+                                    </div>
+                                    <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="width: 100%; background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.92em;">
+                                        ⏱️ ابدأ مؤقت التمرين (${ex.duration})
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
-            </div>
+            `}
 
             <!-- كرت ترويجي ذكي داخل الخطوة 4: خدمة الزيارات المنزلية واستشارة المعالج -->
             <div class="no-print">
@@ -3128,6 +3296,55 @@ async function loadPatientRecoveryDashboard(patientId) {
             loadPatientRecoveryDashboard(patientId);
         });
     }
+}
+
+// إتمام تمارين اليوم الأول والانتقال لفترة الاستشفاء (24 ساعة)
+async function completeDay1InitialExercises(patientId) {
+    const pInfo = await SmartDB.getPatient(patientId);
+    const assessments = await SmartDB.getPatientAssessments(patientId);
+    const latestAssessment = assessments.length > 0 ? assessments[assessments.length - 1] : null;
+    const baselinePain = (latestAssessment && typeof latestAssessment.painSeverity === 'number' && !isNaN(latestAssessment.painSeverity) && latestAssessment.painSeverity > 0)
+        ? latestAssessment.painSeverity
+        : (pInfo && typeof pInfo.painLevel === 'number' && !isNaN(pInfo.painLevel) && pInfo.painLevel > 0)
+            ? pInfo.painLevel
+            : 7;
+
+    const logEntry = {
+        patientId,
+        sessionNumber: 1,
+        painScore: baselinePain,
+        mobilityRate: 70,
+        sleepRate: 70,
+        exercisesDone: true,
+        goodPosture: true,
+        walkingDone: false,
+        heatDone: true,
+        negativeHabits: { longSitting: false, heavyLifting: false, phoneUsage: false, poorSleep: false },
+        isDay1InitialCompletion: true,
+        date: new Date().toISOString()
+    };
+
+    await SmartDB.saveDailyLog(logEntry);
+
+    const pName = pInfo?.name || activePatient?.name || 'المراجع الكريم';
+    const pPhone = pInfo?.phone || activePatient?.phone || '';
+
+    SmartDB.addAdminNotification({
+        type: 'session_completed',
+        title: `🏋️ إتمام تمارين اليوم الأول: ${pName}`,
+        message: `أتم المريض ${pName} تمارين الجلسة الأولى بنجاح وبدأت فترة الاستشفاء لمدة 24 ساعة.`,
+        patientId,
+        patientName: pName,
+        patientPhone: pPhone
+    });
+
+    showToast('🎉 أحسنت! تم توثيق إنجاز تمارين اليوم الأول وبدأت فترة الاستشفاء لمدة 24 ساعة', 'success');
+
+    if (typeof playStationAudio === 'function') {
+        playStationAudio('session_cooldown', () => {}, 'motivation');
+    }
+
+    await loadPatientRecoveryDashboard(patientId);
 }
 
 // حفظ التسجيل اليومي الشامل
@@ -4112,6 +4329,13 @@ function acceptWelcomeTourModal() {
     localStorage.setItem('smart_disclaimer_accepted', 'true');
     const modal = document.getElementById('welcome-tour-modal') || document.getElementById('disclaimer-modal');
     if (modal) modal.style.display = 'none';
+
+    try {
+        if (typeof Wada3anAiEngine !== 'undefined') {
+            Wada3anAiEngine.unlockAudio();
+            Wada3anAiEngine.playIntroAudioGuide();
+        }
+    } catch (e) {}
 }
 
 function acceptMedicalDisclaimer() {
@@ -4530,7 +4754,7 @@ function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
                 console.log(`🔄 تشغيل المحطة الصوتية البديلة: [${fallbackStationKey}]...`);
                 playStationAudio(fallbackStationKey, onComplete);
             } else {
-                triggerComplete();
+                playClinicalAudioFallback(stationKey, triggerComplete);
             }
         };
         const pWav = wavAudio.play();
@@ -4547,6 +4771,67 @@ function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
             triggerComplete();
         });
     }
+}
+
+// نظام النغمات التفاعلية والتوجيه الصوتي البديل في حال غياب تسجيل الاستوديو
+function playClinicalAudioFallback(stationKey, onDone) {
+    try {
+        const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtxClass) {
+            const ctx = new AudioCtxClass();
+            if (stationKey === 'exercise_start') {
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.15);
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                osc.start(now);
+                osc.stop(now + 0.35);
+                setTimeout(() => { if (onDone) onDone(); }, 400);
+                return;
+            } else if (stationKey === 'exercise_finish') {
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.setValueAtTime(659.25, now + 0.12);
+                osc.frequency.setValueAtTime(783.99, now + 0.24);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+                osc.start(now);
+                osc.stop(now + 0.55);
+                setTimeout(() => { if (onDone) onDone(); }, 600);
+                return;
+            }
+        }
+    } catch (e) {}
+
+    // نطق سريري فوري باللغة العربية إن كان متاحاً
+    if ('speechSynthesis' in window) {
+        let msg = '';
+        if (stationKey === 'exercise_start') msg = 'ابدأ التمرين بهدوء وتنفس بانتظام';
+        else if (stationKey === 'exercise_finish') msg = 'أحسنت! أتممت التمرين بنجاح';
+        else if (stationKey === 'session_cooldown') msg = 'أحسنت! تبدأ الآن فترة الاستشفاء لمدة 24 ساعة';
+        else if (stationKey === 'plan_complete') msg = 'مبارك! أتممت برنامج التعافي المنزلي بنجاح';
+
+        if (msg) {
+            const ut = new SpeechSynthesisUtterance(msg);
+            ut.lang = 'ar-SA';
+            ut.rate = 0.95;
+            ut.onend = () => { if (onDone) onDone(); };
+            ut.onerror = () => { if (onDone) onDone(); };
+            window.speechSynthesis.speak(ut);
+            return;
+        }
+    }
+
+    if (onDone) onDone();
 }
 
 // بدء جلسة الطبيب الافتراضي
@@ -4852,28 +5137,49 @@ async function sendChatMessage() {
         }
     }
 
+    // 0. تحويل الأرقام العربية الهندية (٠١٢٣٤٥٦٧٨٩) إلى أرقام عادية (0123456789)
+    const normalizedDigitsText = text.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+
     // استخراج المؤشرات الحيوية (العمر، الوزن، الطول) لحساب الإجهاد البيوميكانيكي
     if (!clinicalDialogueState.patientVitals) {
         clinicalDialogueState.patientVitals = {};
     }
-    // 1. استخراج العمر
-    const ageMatch = text.match(/(?:عمري|عمر|سن|سنة|سنه)\s*[:=]?\s*(\d{1,2})/i);
+    // 1. استخراج العمر بالكلمات المفتاحية
+    const ageMatch = normalizedDigitsText.match(/(?:عمري|عمر|سن|سنة|سنه)\s*[:=]?\s*(\d{1,2})/i);
     if (ageMatch && parseInt(ageMatch[1], 10) >= 10 && parseInt(ageMatch[1], 10) <= 99) {
         clinicalDialogueState.patientVitals.age = parseInt(ageMatch[1], 10);
     }
-    // 2. استخراج الوزن
-    const weightMatch = text.match(/(?:وزني|وزن|كيلو|كغم|كغ)\s*[:=]?\s*(\d{2,3})/i);
+    // 2. استخراج الوزن بالكلمات المفتاحية
+    const weightMatch = normalizedDigitsText.match(/(?:وزني|وزن|كيلو|كغم|كغ)\s*[:=]?\s*(\d{2,3})/i);
     if (weightMatch && parseInt(weightMatch[1], 10) >= 30 && parseInt(weightMatch[1], 10) <= 250) {
         clinicalDialogueState.patientVitals.weight = parseInt(weightMatch[1], 10);
     }
-    // 3. استخراج الطول
-    const heightMatch = text.match(/(?:طولي|طول|سم)\s*[:=]?\s*(\d{2,3})/i);
+    // 3. استخراج الطول بالكلمات المفتاحية
+    const heightMatch = normalizedDigitsText.match(/(?:طولي|طول|سم)\s*[:=]?\s*(\d{2,3})/i);
     if (heightMatch && parseInt(heightMatch[1], 10) >= 120 && parseInt(heightMatch[1], 10) <= 220) {
         clinicalDialogueState.patientVitals.height = parseInt(heightMatch[1], 10);
     }
 
-    // 0. تحويل الأرقام العربية الهندية (٠١٢٣٤٥٦٧٨٩) إلى أرقام عادية (0123456789)
-    const normalizedDigitsText = text.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+    // 4. استخراج ذكي متقدم للأرقام المتتالية المجردة بدون كلمات مفتاحية (مثل: "يونس 34 77 183" أو "34 77 183")
+    const standaloneNumbers = (normalizedDigitsText.match(/\b\d{2,3}\b/g) || []).map(n => parseInt(n, 10));
+    const candidateVitals = standaloneNumbers.filter(n => n >= 12 && n <= 230);
+    if (candidateVitals.length > 0) {
+        // أ. استخراج الطول (المدى الطبيعي 120 - 220 سم)
+        if (!clinicalDialogueState.patientVitals.height) {
+            const hCand = candidateVitals.find(n => n >= 120 && n <= 220);
+            if (hCand) clinicalDialogueState.patientVitals.height = hCand;
+        }
+        // ب. استخراج الوزن (المدى الطبيعي 35 - 180 كجم) بشرط ألا يكون هو الطول نفسه
+        if (!clinicalDialogueState.patientVitals.weight) {
+            const wCand = candidateVitals.find(n => n >= 35 && n <= 180 && n !== clinicalDialogueState.patientVitals.height);
+            if (wCand) clinicalDialogueState.patientVitals.weight = wCand;
+        }
+        // ج. استخراج العمر (المدى الطبيعي 12 - 95 سنة) بشرط ألا يكون هو الطول أو الوزن
+        if (!clinicalDialogueState.patientVitals.age) {
+            const aCand = candidateVitals.find(n => n >= 12 && n <= 95 && n !== clinicalDialogueState.patientVitals.height && n !== clinicalDialogueState.patientVitals.weight);
+            if (aCand) clinicalDialogueState.patientVitals.age = aCand;
+        }
+    }
 
     // فحص إذا كان الرد يحتوي على رقم هاتف (مع أو بدون فراغات أو رموز)
     const phoneCandidates = [];

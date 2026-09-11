@@ -280,7 +280,10 @@ ${greetingInstruction}
         if (inUl) formattedLines.push('</ul>');
         if (inOl) formattedLines.push('</ol>');
 
-        return `<div class="ai-insight-formatted-content">${formattedLines.join('\n')}</div>`;
+        let finalHtml = `<div class="ai-insight-formatted-content">${formattedLines.join('\n')}</div>`;
+        // تمييز ذكر الخطة المجانية وبرنامج الـ 7 أيام بشارة مضيئة فاخرة
+        finalHtml = finalHtml.replace(/(الخطة المجانية|خطة الـ\s*7\s*أيام المجانية|برنامج الـ\s*7\s*أيام المجاني|خطة الراحة الحركية المجانية|البرنامج التأهيلي المجاني)/g, '<span class="free-plan-highlight-badge">✨ $1</span>');
+        return finalHtml;
     },
 
     // التفسير السريري والبيوميكانيكي الاحتياطي الفوري في حال عدم توفر النت
