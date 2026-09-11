@@ -451,13 +451,17 @@ async function runDiagnosticAnalysis() {
             }
         } else {
             const sliderEl = document.getElementById('pain-severity-slider');
-            if (sliderEl) {
-                explicitPain = parseInt(sliderEl.value) || 7;
-                hasExplicitPain = true;
+            if (sliderEl && sliderEl.dataset.userInteracted === 'true') {
+                const val = parseInt(sliderEl.value);
+                if (!isNaN(val)) {
+                    explicitPain = val;
+                    hasExplicitPain = true;
+                }
             }
         }
 
-        const painSeverity = explicitPain !== null ? explicitPain : 7;
+        const internalPainScore = explicitPain !== null ? explicitPain : 6;
+        const painSeverity = explicitPain; // null if not explicitly entered
         const painDuration = document.getElementById('pain-duration-select')?.value || '1_week';
         const userNotes = document.getElementById('patient-condition-notes')?.value?.trim() || '';
 
@@ -509,7 +513,7 @@ async function runDiagnosticAnalysis() {
         const assessmentResult = ClinicalEngine.analyzeAssessment({
             pointId: currentSelectedPoint.id,
             painArea: currentSelectedPoint.region,
-            painSeverity,
+            painSeverity: internalPainScore,
             painDuration,
             answers: { 
                 q1: q1Val, 
@@ -2157,10 +2161,26 @@ function displayDiagnosticReport(data) {
                     </div>
                 </div>
 
-                <div id="plan-activation-btn-wrapper" style="text-align: center;">
-                    <button type="button" onclick="activateRecoveryPlanInstantly()" class="btn-plan-shimmer" style="background: linear-gradient(135deg, #059669 0%, #10b981 40%, #d4af37 100%); color: #ffffff; border: 2.5px solid #fef08a; padding: 18px 36px; border-radius: 16px; font-size: 1.18em; font-weight: 900; cursor: pointer; box-shadow: 0 0 25px rgba(16, 185, 129, 0.6), 0 0 15px rgba(212, 175, 55, 0.5); transition: all 0.3s ease; width: 100%; max-width: 540px; letter-spacing: 0.5px; display: inline-flex; align-items: center; justify-content: center; gap: 10px;">
-                        <span style="font-size: 1.25em;">🚀</span>
-                        <span>تفعيل الخطة المجانية للراحة والتعافي المنزلي (7 أيام مجاناً)</span>
+                <div id="plan-activation-btn-wrapper" style="text-align: center; margin: 24px auto 12px auto; max-width: 640px;">
+                    <button type="button" onclick="activateRecoveryPlanInstantly()" class="btn-plan-royal-card" id="btn-activate-plan-royal" aria-label="تفعيل الخطة المجانية">
+                        <div class="royal-card-halo"></div>
+                        <div class="royal-card-shimmer"></div>
+                        <div class="royal-badge-pill">
+                            <span class="royal-badge-dot"></span>
+                            <span>✨ برنامج استشفاء وتأهيل مجاني 100% • بدون أي رسوم</span>
+                        </div>
+                        <div class="royal-main-content">
+                            <div class="royal-icon-box">
+                                <span class="royal-icon-emoji">🚀</span>
+                            </div>
+                            <div class="royal-text-col">
+                                <div class="royal-cta-headline">تفعيل الخطة التأهيلية المنزلية الشاملة</div>
+                                <div class="royal-cta-subline">برنامج 7 أيام مخصص لحالتك • مؤقتات حركية ذكية • توجيه صوتي متقدم</div>
+                            </div>
+                            <div class="royal-arrow-box">
+                                <span class="royal-arrow-anim">⬅️</span>
+                            </div>
+                        </div>
                     </button>
                     
                     <!-- شريط الإهداء والصدقة الجارية تحت زر التفعيل مباشرة -->
@@ -2247,7 +2267,8 @@ function displayDiagnosticReport(data) {
                 pointId: data.pointId || data.painAreaKey,
                 probability: data.probability || 85,
                 region: data.region || 'الظهر',
-                painSeverity: data.painSeverity || 7,
+                painSeverity: (data.hasExplicitPain && data.painSeverity !== null && data.painSeverity !== undefined) ? data.painSeverity : null,
+                hasExplicitPain: !!data.hasExplicitPain,
                 painDurationText: durationText,
                 userNotes: data.userNotes || '',
                 allSymptoms: data.allSelectedSymptoms || [],
@@ -2673,11 +2694,6 @@ async function loadPatientRecoveryDashboard(patientId) {
 
     activePatient = sessionData.patient;
     goToStep(4);
-    setTimeout(() => {
-        if (typeof playStationAudio === 'function') {
-            playStationAudio('motivation');
-        }
-    }, 400);
 
     const lockStatus = await PatientFlow.getSessionLockStatus(patientId);
     const dashboardContainer = document.getElementById('patient-recovery-dashboard');
@@ -2690,12 +2706,61 @@ async function loadPatientRecoveryDashboard(patientId) {
         userNotes: sessionData.latestAssessment?.userNotes || ""
     });
 
+    // تشغيل محطات الصوت المناسبة بدقة (تهنئة إتمام، عداد 24 ساعة، أو تحفيز اليوم المحدد)
+    setTimeout(() => {
+        if (typeof playStationAudio === 'function') {
+            if (sessionData.isPlanCompleted) {
+                playStationAudio('plan_complete', () => {}, 'motivation');
+            } else if (lockStatus && lockStatus.isLocked) {
+                playStationAudio('session_cooldown', () => {}, 'motivation');
+            } else {
+                const dayAudioKey = `motivation_day${sessionData.currentSessionDay}`;
+                playStationAudio(dayAudioKey, () => {}, 'motivation');
+            }
+        }
+    }, 400);
+
     // إذا أكمل الـ 7 أيام بالكامل: شاشة التخرج والشفاء الصادقة
     if (sessionData.isPlanCompleted) {
         const basePain = sessionData.baselinePain || 7;
         const endPain = sessionData.currentPain || 0;
         const painDrop = sessionData.indicators.painReduction;
         const residualPain = 100 - painDrop;
+
+        // مواءمة التقييم السريري تشريحياً مع العضو المصاب بدقة (رسغ، ركبة، كتف، ظهر، رقبة...)
+        const pKey = (pointKey || '').toLowerCase();
+        const areaName = sessionData.latestAssessment?.painAreaTitle || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint ? currentSelectedPoint.title : 'المنطقة المصابة');
+        
+        let anatomicalEvaluationText = '';
+        let anatomicalProtectionText = '';
+
+        if (pKey.includes('wrist') || pKey.includes('hand') || pKey.includes('carpal') || areaName.includes('رسغ') || areaName.includes('يد') || areaName.includes('أصابع')) {
+            anatomicalEvaluationText = `💡 تم تحقيق تحسن حركي ممتاز بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى انحراف ميكانيكي دقيق في عظيمات ومفصل الرسغ أو إجهاد وتوتر في الأوتار والمسار العصبي للنفق الرسغي <span dir="ltr">(Carpal Tunnel)</span>، ويتطلب جلسة تقويم يدوي وتفريغ ضغط مع المعالج المختص في (وداعاً للألم) لتحريرها نهائياً.`;
+            anatomicalProtectionText = `🛡️ لحماية مفصل الرسغ واليد من الانتكاس واستعادة كفاءة القبضة الحركية كاملة، يحدد المعالج المختص الخطة الوقائية المناسبة.`;
+        } else if (pKey.includes('elbow') || areaName.includes('كوع') || areaName.includes('مرفق')) {
+            anatomicalEvaluationText = `💡 تم تحقيق تحسن حركي ممتاز بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى شد وإجهاد في أوتار المرفق أو احتكاك ميكانيكي طفيف في مفصل الكوع، ويتطلب تقويماً يدوياً وتفريغ ضغط للأوتار مع المعالج المختص في (وداعاً للألم).`;
+            anatomicalProtectionText = `🛡️ لحماية مفصل الكوع والساعد من إجهاد الحركة المتكررة، يحدد المعالج المختص التوجيهات السريرية اللازمة.`;
+        } else if (pKey.includes('shoulder') || areaName.includes('كتف') || areaName.includes('أبهر')) {
+            anatomicalEvaluationText = `💡 تم تحقيق تحسن حركي ممتاز بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى شد عميق بأوتار الكفة المدورة <span dir="ltr">(Rotator Cuff)</span> أو عُقد ليفية وتشنج حول لوح الكتف، تتطلب جلسة تقويم يدوي وتفريغ ضغط في (وداعاً للألم) لإعادة المدى الحركي الكامل.`;
+            anatomicalProtectionText = `🛡️ لحماية مفصل الكتف وحركته الدورانية من أي تيبس مستقبلي، يحدد المعالج المختص الخطة الوقائية.`;
+        } else if (pKey.includes('knee') || areaName.includes('ركب') || areaName.includes('صابون')) {
+            anatomicalEvaluationText = `💡 تم تحقيق تحسن حركي ممتاز بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى احتكاك ميكانيكي في مسار صابونة الركبة أو تشنج في الأربطة والأوتار الداعمة، ويتطلب تقويماً وموازنة للأحمال الحركية في (وداعاً للألم).`;
+            anatomicalProtectionText = `🛡️ لحماية غضاريف الركبة من الخشونة والانتكاس المستقبلي، يحدد المعالج المختص النصائح الحركية المناسبة.`;
+        } else if (pKey.includes('ankle') || pKey.includes('foot') || pKey.includes('plantar') || areaName.includes('كاحل') || areaName.includes('قدم') || areaName.includes('كعب')) {
+            anatomicalEvaluationText = `💡 تم تحقيق تحسن كبير بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود إلى إجهاد ميكانيكي في اللفافة الأخمصية أو أربطة الكاحل، ويتطلب جلسة تقويم وتفريغ ضغط في (وداعاً للألم).`;
+            anatomicalProtectionText = `🛡️ لحماية قوس القدم ومفصل الكاحل من عودة الألم، يحدد المعالج المختص التمارين الحركية الوقائية.`;
+        } else if (pKey.includes('hip') || pKey.includes('sacroiliac') || areaName.includes('ورك') || areaName.includes('حوض') || areaName.includes('عرق النسا')) {
+            anatomicalEvaluationText = `💡 تم تحقيق تحسن كبير بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى تشنج في العضلة الكمثرية يضغط على مسار العصب الوركي أو اختلال ميكانيكي في مفصل الحوض، ويتطلب تقويماً يدوياً وتفريغ ضغط في (وداعاً للألم).`;
+            anatomicalProtectionText = `🛡️ لحماية مفصل الحوض ومسار العصب الوركي من الانتكاس، يحدد المعالج المختص الخطة الوقائية.`;
+        } else {
+            anatomicalEvaluationText = `💡 تم تحقيق تحسن كبير بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى انحراف ميكانيكي طفيف بمفاصل الفقرات أو شد عضلي وتيبس يتطلب جلسة كايروبراكتيك وتفريغ للضغط <span dir="ltr">(Manual Decompression)</span> مع المعالج المختص في (وداعاً للألم) لإزالته نهائياً.`;
+            anatomicalProtectionText = `🛡️ لحماية عمودك الفقري ومفاصلك من الانتكاس المستقبلي، يحدد المعالج المختص الخطة الوقائية المناسبة لحالتك.`;
+        }
+
+        const hasExplicitBasePain = !!(sessionData.latestAssessment?.hasExplicitPain && sessionData.baselinePain);
+        const painTrackSummary = hasExplicitBasePain
+            ? `📊 مسار الألم الفعلي: من مستوى <strong>${basePain} / 10</strong> في اليوم الأول ⬅️ إلى <strong>${endPain} / 10</strong> في اليوم السابع`
+            : `📊 مسار التعافي الفعلي: تراجع ملحوظ في شدة الألم وتلاشي الأعراض بنسبة <strong>${painDrop}%</strong> بين اليوم الأول واليوم السابع`;
 
         dashboardContainer.innerHTML = `
             <div style="background: linear-gradient(135deg, #0b1f17 0%, #153e2e 100%); border: 2px solid #10b981; border-radius: 16px; padding: 35px; color: #ffffff; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.6); margin-bottom: 25px;">
@@ -2705,7 +2770,7 @@ async function loadPatientRecoveryDashboard(patientId) {
                 
                 <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 15px; margin-bottom: 25px; display: inline-block;">
                     <div style="color: #cbd5e1; font-size: 0.95em;">
-                        📊 مسار الألم الفعلي: من مستوى <strong>${basePain} / 10</strong> في اليوم الأول ⬅️ إلى <strong>${endPain} / 10</strong> في اليوم السابع
+                        ${painTrackSummary}
                     </div>
                 </div>
 
@@ -2730,9 +2795,9 @@ async function loadPatientRecoveryDashboard(patientId) {
                 <div style="background: rgba(15, 23, 42, 0.9); border-radius: 12px; padding: 20px; text-align: right; max-width: 700px; margin: 0 auto 25px auto; border-right: 4px solid var(--primary-gold);">
                     <h4 style="color: var(--primary-gold); margin: 0 0 8px 0; font-size: 1.1em;">🔍 التقييم السريري والتوجيه الطبي النهائي:</h4>
                     <p style="color: #cbd5e1; font-size: 0.92em; line-height: 1.7; margin: 0 0 10px 0;">
-                        ${endPain === 0 ? '✨ استجابة ممتازة جداً واختفاء تام للألم بفضل الله ثم التزامك بالبروتوكول.' : `💡 تم تحقيق تحسن كبير بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى انحراف ميكانيكي طفيف بمفاصل الفقرات أو التصاقات غضروفية عميقة تتطلب جلسة كايروبراكتيك وتفريغ للضغط مع المعالج المختص في (وداعاً للألم) لإزالتها نهائياً.`}
+                        ${endPain === 0 ? '✨ استجابة ممتازة جداً واختفاء تام للألم بفضل الله ثم التزامك بالبروتوكول.' : anatomicalEvaluationText}
                     </p>
-                    <div style="color: #6ee7b7; font-size: 0.88em;">🛡️ لحماية عمودك الفقري من الانتكاس المستقبلي، يحدد المعالج المختص الخطة الوقائية المناسبة لحالتك.</div>
+                    <div style="color: #6ee7b7; font-size: 0.88em;">${anatomicalProtectionText}</div>
                 </div>
 
                 <div class="completion-action-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 650px; margin: 0 auto 12px auto; width: 100%; box-sizing: border-box;">
@@ -4385,7 +4450,7 @@ function switchIntakeMode(mode) {
 // محطات صوتية استوديو فائقة الجودة والنقاء (0 حرف من الرصيد، 0 ثانية تأخير، وتكلفة 0 للأبد)
 let currentActiveStationAudio = null;
 
-function playStationAudio(stationKey, onComplete) {
+function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
     if (typeof Wada3anAiEngine !== 'undefined') {
         Wada3anAiEngine.stopSpeaking();
     }
@@ -4460,8 +4525,13 @@ function playStationAudio(stationKey, onComplete) {
             triggerComplete();
         };
         wavAudio.onerror = () => {
-            console.log(`ℹ️ ملف محطة الصوت [${stationKey}] غير موجود محلياً بعد، المتابعة الفورية.`);
-            triggerComplete();
+            console.log(`ℹ️ ملف محطة الصوت [${stationKey}] غير موجود محلياً.`);
+            if (fallbackStationKey && fallbackStationKey !== stationKey) {
+                console.log(`🔄 تشغيل المحطة الصوتية البديلة: [${fallbackStationKey}]...`);
+                playStationAudio(fallbackStationKey, onComplete);
+            } else {
+                triggerComplete();
+            }
         };
         const pWav = wavAudio.play();
         if (pWav) {
@@ -4884,10 +4954,8 @@ async function sendChatMessage() {
         };
 
         // تشغيل صوت محطة الانتقال الدائم المسجل مسبقاً (دون الاعتماد على مفاتيح)
-        // ضمان الانتقال خلال ثانيتين على الأكثر
-        const transitionGuard = setTimeout(doTransition, 2500);
+        // ضمان الانتقال التام بعد انتهاء د. سارة من آخر كلمة في التسجيل
         playStationAudio('transition', () => {
-            clearTimeout(transitionGuard);
             doTransition();
         });
         return;

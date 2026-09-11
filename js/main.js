@@ -209,6 +209,10 @@ function toggleExerciseTimer(btn, defaultSeconds = 30) {
     btn.style.background = 'linear-gradient(135deg, #eab308 0%, #ca8a04 100%)';
     btn.style.color = '#0a0e14';
 
+    if (typeof playStationAudio === 'function') {
+        playStationAudio('exercise_start');
+    }
+
     clearInterval(activeExerciseTimer);
     activeExerciseTimer = setInterval(() => {
         remaining--;
@@ -230,6 +234,9 @@ function toggleExerciseTimer(btn, defaultSeconds = 30) {
             btn.style.color = '#ffffff';
             if (timerProgress) timerProgress.style.width = '100%';
             
+            if (typeof playStationAudio === 'function') {
+                playStationAudio('exercise_finish');
+            }
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         }
     }, 1000);

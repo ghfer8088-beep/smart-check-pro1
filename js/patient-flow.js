@@ -381,7 +381,9 @@ const PatientFlow = (function() {
         buttonEl.style.background = 'linear-gradient(135deg, #eab308 0%, #ca8a04 100%)';
 
         // تشغيل صوت بدء التمرين
-        if (typeof ClinicalAudioPacer !== 'undefined') {
+        if (typeof playStationAudio === 'function') {
+            playStationAudio('exercise_start');
+        } else if (typeof ClinicalAudioPacer !== 'undefined') {
             ClinicalAudioPacer.playStartChime();
         }
 
@@ -421,7 +423,9 @@ const PatientFlow = (function() {
                 buttonEl.style.color = '#ffffff';
                 if (progressBar) progressBar.style.width = '100%';
 
-                if (typeof ClinicalAudioPacer !== 'undefined') {
+                if (typeof playStationAudio === 'function') {
+                    playStationAudio('exercise_finish');
+                } else if (typeof ClinicalAudioPacer !== 'undefined') {
                     ClinicalAudioPacer.playCompleteChime();
                 }
 
