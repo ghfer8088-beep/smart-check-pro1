@@ -168,7 +168,10 @@ window.stopAllActiveAudio = stopAllActiveAudio;
 
 // اختيار نقطة الألم
 function selectAnatomyPoint(point, element) {
-    // إيقاف الصوت التوجيهي الترحيبي فوراً عند اختيار نقطة الألم لمنع أي تداخل نهائياً
+    // قفل تشغيل الصوت الترحيبي نهائياً لهذه الزيارة وإيقاف أي صوت نشط فوراً
+    try {
+        sessionStorage.setItem('scp_welcome_audio_played', 'true');
+    } catch (e) {}
     window.introPlayedOrAttempted = true;
     stopAllActiveAudio();
 
@@ -1868,7 +1871,6 @@ function displayDiagnosticReport(data) {
                 impact
             };
         }
-    }
 
     const formattedDiag = formatBidiMedicalText(data.primaryDiagnosis);
     const formattedRoot = formatBidiMedicalText(data.rootLevel);
@@ -4350,6 +4352,24 @@ function openWelcomeTourModal() {
     if (modal) modal.style.display = 'flex';
 }
 
+// تشغيل الترحيب الصوتي تلقائياً لمرة واحدة فقط لكل زيارة أو استخدام جديد
+function triggerAutoWelcomeAudio() {
+    try {
+        if (sessionStorage.getItem('scp_welcome_audio_played') === 'true') {
+            return;
+        }
+        sessionStorage.setItem('scp_welcome_audio_played', 'true');
+        window.introPlayedOrAttempted = true;
+
+        if (typeof Wada3anAiEngine !== 'undefined') {
+            Wada3anAiEngine.unlockAudio();
+            Wada3anAiEngine.playIntroAudioGuide();
+        }
+    } catch (e) {
+        console.warn('Auto welcome audio notice:', e);
+    }
+}
+
 // إقرار الترحيب والتنبيه الطبي للمشترك الجديد
 function acceptWelcomeTourModal() {
     localStorage.setItem('smart_welcome_tour_accepted', 'true');
@@ -4360,6 +4380,9 @@ function acceptWelcomeTourModal() {
     try {
         if (typeof Wada3anAiEngine !== 'undefined') {
             Wada3anAiEngine.unlockAudio();
+        }
+        if (sessionStorage.getItem('scp_welcome_audio_played') !== 'true') {
+            triggerAutoWelcomeAudio();
         }
     } catch (e) {}
 }
@@ -4428,19 +4451,46 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     goToStep(1);
 
-    // تجهيز الصوت الترحيبي للاستماع عند طلب المراجع حصراً عبر زر الاستماع
-    window.introPlayedOrAttempted = true;
+    // تشغيل الصوت الترحيبي تلقائياً لمرة واحدة فقط لكل زيارة أو استخدام جديد
+    if (sessionStorage.getItem('scp_welcome_audio_played') !== 'true') {
+        const isModalOpen = (localStorage.getItem('smart_welcome_tour_accepted') !== 'true' && localStorage.getItem('smart_disclaimer_accepted') !== 'true');
+        if (!isModalOpen) {
+            setTimeout(() => {
+                if (sessionStorage.getItem('scp_welcome_audio_played') !== 'true') {
+                    triggerAutoWelcomeAudio();
+                }
+            }, 600);
+        }
+    }
 
-    // تفعيل فوري مع أول لمسة لفك قيود المتصفحات (AudioContext Unlock) دون تشغيل الصوت قسراً
-    const mobileFirstTouchUnlock = () => {
-        Wada3anAiEngine.unlockAudio();
-        window.removeEventListener('pointerdown', mobileFirstTouchUnlock);
-        window.removeEventListener('touchstart', mobileFirstTouchUnlock);
-        window.removeEventListener('click', mobileFirstTouchUnlock);
+    // استماع لأول تفاعل لفك قيود المتصفحات وتشغيل الترحيب تلقائياً لمرة واحدة في حال حظره المتصفح
+    const handleFirstUserInteractionForAudio = (e) => {
+        window.removeEventListener('pointerdown', handleFirstUserInteractionForAudio);
+        window.removeEventListener('touchstart', handleFirstUserInteractionForAudio);
+        window.removeEventListener('click', handleFirstUserInteractionForAudio);
+
+        if (typeof Wada3anAiEngine !== 'undefined') {
+            Wada3anAiEngine.unlockAudio();
+        }
+
+        // إذا كانت النقرة على نقطة ألم أو داخل مجسم الجسم، يُحظر تشغيل الصوت الترحيبي قطعياً!
+        if (e && e.target && (e.target.closest('.anatomy-hotspot') || e.target.closest('#anatomy-container') || e.target.closest('.btn-pain-point'))) {
+            try {
+                sessionStorage.setItem('scp_welcome_audio_played', 'true');
+            } catch (err) {}
+            window.introPlayedOrAttempted = true;
+            stopAllActiveAudio();
+            return;
+        }
+
+        // تشغيل الترحيب تلقائياً لمرة واحدة فقط إذا لم يكن قد عمل مسبقاً
+        if (sessionStorage.getItem('scp_welcome_audio_played') !== 'true') {
+            triggerAutoWelcomeAudio();
+        }
     };
-    window.addEventListener('pointerdown', mobileFirstTouchUnlock, { once: true, passive: true });
-    window.addEventListener('touchstart', mobileFirstTouchUnlock, { once: true, passive: true });
-    window.addEventListener('click', mobileFirstTouchUnlock, { once: true, passive: true });
+    window.addEventListener('pointerdown', handleFirstUserInteractionForAudio, { once: true, passive: true });
+    window.addEventListener('touchstart', handleFirstUserInteractionForAudio, { once: true, passive: true });
+    window.addEventListener('click', handleFirstUserInteractionForAudio, { once: true, passive: true });
 });
 
 // وظيفة الإدخال الصوتي التفاعلي (Web Speech-to-Text API)
