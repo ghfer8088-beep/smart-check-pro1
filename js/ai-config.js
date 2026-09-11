@@ -6,12 +6,13 @@
 const WADA3AN_AI_CONFIG = {
     STORAGE_KEY: 'wada3an_gemini_api_key',
     CANDIDATE_MODELS: [
-        'gemini-2.5-flash',
-        'gemini-2.5-flash-lite',
+        'gemini-3-flash-preview',
+        'gemini-3.6-flash',
         'gemini-3.5-flash',
         'gemini-flash-latest'
     ],
-    DEFAULT_MODEL: 'gemini-2.5-flash',
+    DEFAULT_MODEL: 'gemini-3-flash-preview',
+
     BASE_URL: 'https://generativelanguage.googleapis.com/',
 
     // المفتاح المدمج الافتراضي لـ «وداعاً للألم»
@@ -59,6 +60,10 @@ const WADA3AN_AI_CONFIG = {
             localStorage.removeItem('wada3an_elevenlabs_api_key');
             localStorage.removeItem('wada3an_elevenlabs_voice_id');
             localStorage.removeItem('wada3an_voice_provider');
+            const actModel = localStorage.getItem('wada3an_active_ai_model');
+            if (actModel && (actModel.includes('2.5') || actModel.includes('1.5') || actModel.includes('gemini-pro'))) {
+                localStorage.removeItem('wada3an_active_ai_model');
+            }
             if (!localStorage.getItem('wada3an_gemini_voice_name')) {
                 localStorage.setItem('wada3an_gemini_voice_name', 'Aoede');
             }
@@ -69,6 +74,7 @@ const WADA3AN_AI_CONFIG = {
         // استعادة سجل المفاتيح المستنفدة من الجلسة السابقة لتسريع بدء التشغيل
         this.loadExhaustedKeysFromStorage();
     },
+
 
     // تحميل المفاتيح المستنفدة من localStorage (تستمر عبر إعادة تحميل الصفحة)
     loadExhaustedKeysFromStorage: function() {

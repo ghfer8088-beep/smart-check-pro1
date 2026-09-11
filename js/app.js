@@ -4563,12 +4563,18 @@ async function initAiClinicalChat() {
         appendChatMessage('bot', instantWelcomeMsg);
         renderChatQuickReplies([]);
 
-        // الحوار نصي فائق السرعة
+        // تشغيل التسجيل البشري الاستوديو الفوري للترحيب (د. سارة / د. جمال)
+        if (typeof Wada3anAiEngine !== 'undefined') {
+            const personaName = (persona && persona.gender === 'male') ? 'jamal' : 'sarah';
+            const welcomeAudioFile = `assets/audio/station_chat_welcome_${personaName}.mp3`;
+            Wada3anAiEngine.playHumanAudio(welcomeAudioFile);
+        }
+
         if (typeof clinicalDialogueState !== 'undefined') {
             clinicalDialogueState.isStarting = false;
         }
-
     }, 850);
+
 }
 
 // تحديث اسم المريض في كافة الفقاعات السابقة عند التعرف عليه

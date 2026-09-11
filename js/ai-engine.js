@@ -540,25 +540,20 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
     async callRawGemini(promptText, options = {}) {
         const { maxTokens = 1024, temperature = 0.6 } = options;
 
-        // تفريغ أي نماذج قديمة أو محجوبة
-        let savedModel = localStorage.getItem('wada3an_active_ai_model');
-        if (savedModel && (savedModel.includes('1.5') || savedModel.includes('gemini-pro') || savedModel.includes('3.6') || savedModel.includes('3.1'))) {
-            savedModel = null;
-        }
-
-        // حصر النماذج في النماذج الفعالة فائقة السرعة فقط
+        // النماذج المعتمدة والنشطة حالياً في Google Generative Language API
         const candidateModels = [
-            'gemini-2.5-flash',
-            'gemini-2.5-flash-lite'
+            'gemini-3-flash-preview',
+            'gemini-3.6-flash',
+            'gemini-3.5-flash',
+            'gemini-flash-latest'
         ];
 
         const uniqueModels = [...new Set(candidateModels)];
 
         const payload = {
             contents: [{ parts: [{ text: promptText }] }],
-            generationConfig: { temperature, maxOutputTokens: Math.min(maxTokens, 350) }
+            generationConfig: { temperature, maxOutputTokens: Math.min(maxTokens, 450) }
         };
-
 
         let lastError = null;
         const pool = WADA3AN_AI_CONFIG.getPoolKeys();
@@ -588,7 +583,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                 try {
                     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 6000); // مهلة 6 ثوانٍ
+                    const timeoutId = setTimeout(() => controller.abort(), 7000); // مهلة 7 ثوانٍ
 
                     const response = await fetch(url, {
                         method: 'POST',
@@ -607,25 +602,29 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                             console.log(`[AI] ✅ نجح المفتاح [${idx}] مع ${model}`);
                             return reply;
                         }
+                    } else if (response.status === 404) {
+                        console.warn(`[AI] نموذج ${model} غير متاح للمفتاح [${idx}] (404)`);
+                        continue; // تجربة النموذج التالي فوراً
+                    } else if (response.status === 429) {
+                        WADA3AN_AI_CONFIG.rotateKey(key);
+                        console.warn(`[AI] 429 على المفتاح [${idx}] - انتقال للتالي`);
+                        break; // الانتقال للمفتاح التالي
                     } else {
                         const errData = await response.json().catch(() => ({}));
                         lastError = new Error(`Status ${response.status}`);
-                        if (response.status === 429) {
-                            WADA3AN_AI_CONFIG.rotateKey(key);
-                            console.warn(`[AI] 429 على المفتاح [${idx}] - انتقال للتالي`);
-                            break; // الانتقال للمفتاح التالي
-                        }
                     }
                 } catch (err) {
                     lastError = err;
-                    if (err.name === 'AbortError') break; // timeout - جرب المفتاح التالي
+                    if (err.name === 'AbortError') {
+                        console.warn(`[AI] انتهاء مهلة النموذج ${model} على المفتاح [${idx}]`);
+                        continue;
+                    }
                 }
             }
         }
 
         throw lastError || new Error('All API keys failed');
     },
-
 
     // ردود تفاعلية سريرية ذكية تستجيب لمحتوى كلام المراجع الفعلي بمرونة إنسانية عالية
     generateFallbackDialogueStep(context) {
@@ -657,21 +656,22 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             const ageInfo = patientVitals?.age ? ` (العمر: ${patientVitals.age} سنة)` : '';
             const weightInfo = patientVitals?.weight ? ` (الوزن: ${patientVitals.weight} كغم)` : '';
             return {
-                message: `أهلاً بك${nameSuffix}، تم تسجيل بياناتك الحيوية بنجاح${ageInfo}${weightInfo}. هذه المؤشرات بالغة الأهمية لمعايرة الأحمال البيوميكانيكية على المفاصل بدقة وأمان.\n\nطمني الآن: كيف تصف ألمك في **${title}**؟ هل هو شد وتشنج عضلي، أم لسعة كهرباء وخدر يمتد للأطراف؟`,
+                message: `أهلاً بك${nameSuffix}، تم تسجيل بياناتك الحيوية بنجاح${ageInfo}${weightInfo}. هذه المؤشرات بالغة الأهمية لمعايرة الأحمال البيوميكانيكية على المفاصل بدقة وأمان.\n\nطمني الآن: كيف تصف ألمك في **${title}**؟ هل هو شد وتشنج، أم لسعة وخدر يمتد للأطراف، أم ألم موضعي في المفصل؟`,
                 quickReplies: [],
                 nextStep: 'chatting'
             };
         }
 
         // 0.1 التحقق من نفي أو تصحيح المراجع للطبيب (مثل: "ما حكيتلك عندي خدر"، "ما عندي كهربا")
-        const isNegating = /(?:ما\s*(?:عندي|في|حكيت|قلت|ذكرت|أعاني)|مش|مو|لا\s*(?:يوجد|أعاني|اشعر)|ما\s*حكيتلك)/i.test(userText);
-        if (isNegating) {
+        const isExplicitCorrection = /(?:ما\s*(?:عندي|حكيت|قلت|ذكرت|أعاني)|ما\s*حكيتلك|مش\s*(?:هيك|صحيح)|أنا\s*قلت|انا\s*حكيت)/i.test(userText);
+        if (isExplicitCorrection) {
             return {
-                message: `أعتذر منك${nameSuffix}، وشكراً جزيلاً على تصحيحي وتوضيحك الدقيق؛ فهذا يساعدنا تماماً على استبعاد أي تشخيص خاطئ.\n\nبما أنه لا يوجد خدر أو لسعة كهرباء، طمني أكثر: كيف تصف طبيعة الألم في **${title}**؟ هل هو تشنج وثقل، أم عوجاج وصعوبة في المشي والاستقامة؟`,
+                message: `أعتذر منك${nameSuffix}، وشكراً جزيلاً على توضيحك وتصحيحي الدقيق، فهذا يوجهنا للمسار السريري الصحيح تماماً.\n\nطالما أن الألم موضعي وبدون خدر، أخبرني: هل تزداد حدة الألم عند حركة معينة في **${title}**، وهل تشعر بضعف في قوة القبضة أو الحركة؟`,
                 quickReplies: [],
                 nextStep: 'chatting'
             };
         }
+
 
         // 0.1 أعراض قد ترتبط أسبابها باختصاصنا السريري (دوخة، طنين، ألم صدر وضيق تنفس، تأهيل جلطات، صعوبة حركة)
         const isRelatedOutScope = /دوخة|دوار|طنين|أذن|صدر|قفص\s*صدري|جلطة|جلطه|شلل|تأهيل\s*حركي|صعوبة\s*مشي|توازن/i.test(userText);
