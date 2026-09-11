@@ -240,13 +240,17 @@ async function deleteData(storeName, key) {
 
 // إنشاء ملف مريض جديد
 async function createPatientProfile(patientId, name = '', age = null, gender = null, weight = null, height = null, countryCode = 'jo') {
+    let finalGender = gender;
+    if (!finalGender && typeof detectArabicGender === 'function' && name) {
+        finalGender = detectArabicGender(name);
+    }
     const patient = {
         patientId: patientId,
         name: name,
         phone: patientId.split('_')[1], // استخراج رقم الهاتف من المعرف
         countryCode: countryCode,
         age: age,
-        gender: gender || 'male', // القيمة الافتراضية ذكر
+        gender: finalGender || 'male',
         weight: weight,
         height: height,
         acceptedRecoveryPlan: false,

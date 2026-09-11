@@ -19,6 +19,127 @@ function shareApplication() {
     openAppInstallShareModal();
 }
 
+// ==========================================================================
+// نظام الكشف الذكي المتقدم عن جنس المراجع من الاسم العربي والسياق السريري
+// ==========================================================================
+function detectArabicGender(name, textContext = '') {
+    if (!name && !textContext) return 'male';
+    
+    const cleanName = (name || '').trim();
+    const context = `${textContext || ''} ${cleanName}`;
+
+    // 1. فحص الكلمات الصريحة الدالة على الأنوثة في السياق السريري
+    if (/(?:^|\s)(?:أنثى|انثى|سيدة|سيده|امرأة|امراة|آنسة|انسه|فتاة|بنت|حامل|حمل|ولادة|ولاده|مرضعة|مرضعه|أخت|اخت|أم|ام|ابنة|ابنه|زوجة|زوجه)(?:\s|$)/i.test(context)) {
+        return 'female';
+    }
+
+    // استخراج الكلمة الأولى المجردة (الاسم الأول للمراجع)
+    const firstName = cleanName.split(/\s+/)[0].replace(/[^\u0621-\u064A]/g, '');
+    if (!firstName) return 'male';
+
+    // 2. معجم الأسماء المؤنثة العربية الشامل والدقيق (متضمناً نسرين وكافة الأسماء)
+    const femaleNamesSet = new Set([
+        'نسرين', 'سارة', 'ساره', 'مريم', 'فاطمة', 'فاطمه', 'عائشة', 'عائشه', 'خديجة', 'خديجه',
+        'زينب', 'رقية', 'رقيه', 'إسراء', 'اسراء', 'إيمان', 'ايمان', 'آية', 'ايه', 'دعاء',
+        'شيماء', 'شيمه', 'هبة', 'هبه', 'شروق', 'هدير', 'ياسمين', 'رانيا', 'رانيه', 'ريم',
+        'ريما', 'رنا', 'رشا', 'ريهام', 'رهام', 'دينا', 'داليا', 'داليه', 'دانا', 'دانة',
+        'ديمة', 'ديما', 'لمى', 'ليلى', 'ليلي', 'لبنى', 'لمياء', 'نجلاء', 'هيفاء', 'وفاء',
+        'هناء', 'رجاء', 'ولاء', 'صفاء', 'سناء', 'حسناء', 'زهراء', 'عفراء', 'حوراء', 'أسماء',
+        'اسماء', 'أمل', 'امل', 'منى', 'منه', 'منة', 'نهى', 'سهى', 'هدى', 'ندى', 'جنى',
+        'رؤى', 'ضحى', 'فدوى', 'سلمى', 'تقى', 'ذكرى', 'بشرى', 'علياء', 'شذى', 'نجوى',
+        'روان', 'رزان', 'بيان', 'جيهان', 'سوزان', 'شيرين', 'نيفين', 'نرمين', 'حنان', 'إحسان',
+        'احسان', 'فاتن', 'ماجدة', 'ماجده', 'سحر', 'سمر', 'سمية', 'سميه', 'سهام', 'إلهام',
+        'الهام', 'ابتسام', 'إبتسام', 'انتصار', 'أماني', 'اماني', 'تهاني', 'أريج', 'اريج',
+        'أزهار', 'ازهار', 'أنوار', 'انوار', 'إنعام', 'انعام', 'تغريد', 'ميس', 'ميساء',
+        'مياس', 'رغد', 'شهد', 'حنين', 'لارا', 'تالا', 'تيا', 'تالين', 'تولين', 'سيرين',
+        'لارين', 'سيلين', 'دارين', 'كارين', 'روز', 'جوري', 'جود', 'جودي', 'فرح', 'مرح',
+        'نغم', 'ملك', 'ملاك', 'قمر', 'شمس', 'رهف', 'رفيف', 'ريتاج', 'رناد', 'رند',
+        'رندة', 'رنده', 'مروة', 'مروه', 'صفوة', 'هالة', 'هاله', 'بسمة', 'بسمه', 'نسمة',
+        'نسمه', 'نادية', 'ناديه', 'نادين', 'سامية', 'ساميه', 'عالية', 'عاليه', 'غالية',
+        'غاليه', 'فادية', 'فاديه', 'منال', 'مها', 'منار', 'مي', 'ميا', 'مايا', 'لانا',
+        'لينا', 'لين', 'ماسة', 'ماسه', 'يارا', 'جنات', 'تسنيم', 'كوثر', 'فردوس', 'هاجر',
+        'آسيا', 'اسيا', 'بلقيس', 'جمانة', 'جمانه', 'ميرال', 'كندا', 'كندة', 'لمار', 'بثينة',
+        'بثينه', 'جوزاء', 'شادية', 'شاديه', 'نجاح', 'صباح', 'فايزة', 'فايزه', 'جميلة',
+        'جميله', 'لطيفة', 'لطيفه', 'كريمة', 'كريمه', 'حميدة', 'حميده', 'فريدة', 'فريده',
+        'سعاد', 'نهاد', 'وداد', 'وفاق', 'وصال', 'وجدان', 'غيداء', 'خلود', 'بدور', 'نور',
+        'نورا', 'نوره', 'نوران', 'أفنان', 'افنان', 'أحلام', 'احلام', 'إكرام', 'اكرام',
+        'إشراق', 'اشراق', 'أروى', 'اروى', 'أثير', 'اثير', 'أسيل', 'اسيل', 'ألحان', 'الحان',
+        'أصالة', 'اصاله', 'تمارا', 'إنجي', 'انجي', 'وسن', 'حور', 'جواهر', 'لجين', 'ابتهاج',
+        'سما', 'سماء', 'صفا', 'تقوى', 'ميسون', 'فاطين', 'علا'
+    ]);
+
+    if (femaleNamesSet.has(firstName)) {
+        return 'female';
+    }
+
+    // 3. استثناء الأسماء المذكرة المشهورة المنتهية بتاء مربوطة
+    const maleWithTaaMarbuta = /^(حمزة|حمزه|أسامة|اسامة|اسامه|معاوية|معاويه|طلحة|طلحه|عنترة|عنتره|قتادة|قتاده|عبيدة|عبيده|حذيفة|حذيفه|عكرمة|عكرمه|ميسرة|ميسره|ربيعة|ربيعه|سلامة|سلامه|طرفة|طرفه|جمعة|جمعه|عطية|عطيه|شحتة|شحته|طلبة|طلبه)$/;
+    if (maleWithTaaMarbuta.test(firstName)) {
+        return 'male';
+    }
+
+    // 4. القواعد الصرفية للأسماء المؤنثة
+    // أ. المنتهية بتاء مربوطة (ـة / ـه)
+    if (/[ةه]$/.test(firstName) && firstName.length >= 3) {
+        return 'female';
+    }
+    // ب. المنتهية بألف ممدودة وهمزة (ـاء)
+    if (/اء$/.test(firstName) && firstName.length >= 4) {
+        return 'female';
+    }
+    // ج. المنتهية بألف مقصورة (ـى)
+    if (/ى$/.test(firstName) && firstName.length >= 3) {
+        return 'female';
+    }
+    // د. الأسماء المؤنثة المنتهية بـ (ـين)
+    if (/(?:رين|مين|لين|نين|تين|سين)$/.test(firstName) && firstName.length >= 4) {
+        return 'female';
+    }
+
+    return 'male';
+}
+window.detectArabicGender = detectArabicGender;
+
+// ==========================================================================
+// نصوص وتوجيهات د. سارة الصوتية اليومية المخصصة لكل جلسة (1 إلى 7)
+// ==========================================================================
+function getDailyMotivationScript(dayNumber, patientName = '') {
+    const isFemale = (typeof detectArabicGender === 'function') ? (detectArabicGender(patientName) === 'female') : false;
+    const namePart = (patientName && patientName !== 'المراجع الكريم') ? `يا ${patientName}` : (isFemale ? 'عزيزتي' : 'عزيزي');
+    const genderGreeting = isFemale ? 'عزيزتي' : 'عزيزي';
+    const genderContinue = isFemale ? 'واصلي' : 'واصل';
+    const genderLook = isFemale ? 'راقبي' : 'راقب';
+
+    const scripts = {
+        1: `أهلاً بك ${namePart} في اليوم الأول من خطة التعافي. بداية موفقة جداً! تذكر أن التزامك بالتمارين في هذه المرحلة الأولى يخفف التشنج العضلي ويبدأ بتهدئة الإشارات العصبية المؤلمة. خذ قسطاً كافياً من الراحة الآن، ودع أنسجتك تستفيد من فترة الاستشفاء.`,
+        2: `مرحباً بك مجدداً ${namePart} في الجلسة الثانية. استجابة جسمك للحركة بدأت تتشكل! ركز اليوم على الانسيابية في أداء التمرين، وتجنب الجلوس المتواصل لتعزيز تدفق السائل الزلالي داخل المفاصل وتغذية الغضاريف.`,
+        3: `أحسنت الاستمرار ${namePart}! وصولك للجلسة الثالثة يعني أن مرحلة التخفيف الأولي للألم بدأت تؤتي ثمارها الحقيقية. مفاصلك الآن في طور استعادة التوازن البيوميكانيكي، ${genderContinue} بنفس العزيمة و${genderLook} التراجع التدريجي للألم.`,
+        4: `${genderGreeting} ${namePart}، نحن اليوم في منتصف رحلة التعافي تماماً مع الجلسة الرابعة. هذه هي مرحلة ترميم المدى الحركي وإعادة مرونة الأنسجة. التزامك بوضعية القوام السليمة يمنحك ثباتاً ميكانيكياً ممتازاً.`,
+        5: `خطوة ممتازة ورائعة ${namePart} في الجلسة الخامسة! لقد انتقلنا لمرحلة تعزيز القوة وتثبيت الأربطة والمفاصل. كل تمرين تنجزه اليوم يبني درع حماية عضلي يمنع تكرار نوبات الألم مستقبلاً.`,
+        6: `أنت قريب جداً من خط النهاية ${namePart}! الجلسة السادسة تؤكد صلابة تقدمك وانحسار التيبس الصباحي. ${genderContinue} بكل ثقة، فلم يتبقَ سوى خطوة واحدة لإتمام كامل خطة التعافي بنجاح باهر.`,
+        7: `مبارك وصولك للجلسة السابعة والختامية ${namePart}! لقد حققت إنجازاً سريرياً نفخر به جميعاً باستعادة توازنك الحركي وتسكين الألم. اجعل هذه العادات الحركية والتمارين الصحية نمط حياة دائم لصحة مفاصلك وعمودك الفقري.`
+    };
+
+    return scripts[dayNumber] || scripts[1];
+}
+
+function playDailyMotivationAudio(dayNumber, patientName = '', onEndCallback = null) {
+    if (typeof stopAllActiveAudio === 'function') {
+        stopAllActiveAudio();
+    }
+    const scriptText = getDailyMotivationScript(dayNumber, patientName);
+    
+    if (typeof Wada3anAiEngine !== 'undefined' && typeof Wada3anAiEngine.speakText === 'function') {
+        Wada3anAiEngine.speakText(scriptText, onEndCallback);
+    } else if (typeof playStationAudio === 'function') {
+        playStationAudio('motivation', onEndCallback);
+    } else if (typeof onEndCallback === 'function') {
+        onEndCallback();
+    }
+}
+window.playDailyMotivationAudio = playDailyMotivationAudio;
+window.getDailyMotivationScript = getDailyMotivationScript;
+
 // شبكة نقاط الألم التشريحية الافتراضية المحدثة والمعتمدة
 const DEFAULT_FRONT_POINTS = [
     { id: "shoulder_right_f", region: "shoulder", title: "مفصل الكتف الأيمن", keywords: "كتف يمين, كفة مدورة, تجمد كتف, رفع ذراع", x: 27, y: 22.5 },
@@ -470,23 +591,22 @@ async function runDiagnosticAnalysis() {
         const weight = chatVitals.weight || parseFloat(document.getElementById('patient-weight')?.value) || null;
         const height = chatVitals.height || parseFloat(document.getElementById('patient-height')?.value) || null;
 
-        // استخراج الجنس: من الشات أولاً، ثم من النموذج، ثم التخمين من اسم المريض
+        // استخراج رسائل المراجع النصية لتحليل السياق السريري
+        const userChatMessages = (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState?.history)
+            ? clinicalDialogueState.history.filter(h => h.sender === 'user').map(h => h.text).join(' ')
+            : '';
+
+        // استخراج الجنس: من الشات أولاً، ثم من النموذج، ثم التخمين المتقدم من اسم المراجع والسياق
         let gender = chatVitals.gender || document.querySelector('input[name="patient_gender"]:checked')?.value || '';
-        if (!gender || gender === 'ذكر') {
-            // محاولة استنتاج الجنس من الاسم العربي
-            const femaleNamePattern = /^(ميس|سارة|لينا|منى|رنا|هند|نور|ريم|دنيا|إيمان|ايمان|فاطمة|زينب|مريم|يسرى|رنده|رندة|ديما|لارا|لمى|لمياء|علا|عبير|غادة|وفاء|سمر|سمية|رغد|أميرة|أريج|ربى|إيناس|ناديا|ليلى|هيفاء|سوزان|رويدا|روان|إنعام|بيان|شيرين|مها|دلال|أسيل|نادين|إيمان|تقى|تقوى|داليا|يارا|ياسمين|جنى|أمل|حلا|عبير|إسراء|اسراء|إيمان|تمارا|رانيا|ريهام|نجلاء|ولاء|وئام|بسمة|بسمه|حنين|نادية|سعاد|لجين|ابتسام|شذى|أمنية|نوف|ألاء|الاء|مياء|دانا|زهراء|صبا|منال|حياة|هناء|إنجي|إنجى|بثينة|حمدة|صفاء|صفى|وسن|عفراء|حور|جواهر|شهد|شهده)/i;
-            if (femaleNamePattern.test(chatName.trim())) {
-                gender = 'أنثى';
-            } else if (!gender) {
-                gender = 'ذكر';
-            }
+        const detectedGender = detectArabicGender(chatName, userChatMessages);
+        if (detectedGender === 'female') {
+            gender = 'أنثى';
+        } else if (!gender) {
+            gender = 'ذكر';
         }
 
         let explicitPain = null;
         let hasExplicitPain = false;
-        const userChatMessages = (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState?.history)
-            ? clinicalDialogueState.history.filter(h => h.sender === 'user').map(h => h.text).join(' ')
-            : '';
 
         if (typeof currentIntakeMode !== 'undefined' && currentIntakeMode === 'chat') {
             const painMatch = userChatMessages.match(/(?:ألم|وجع|شدة)?\s*(?:بنسبة|بمقدار|حوالي|درجة)?\s*([1-9]|10)\s*(?:من|\/)\s*10/i) ||
@@ -2612,10 +2732,15 @@ async function activateRecoveryPlanInstantly() {
         const patientId = activePatient?.patientId || ('P-' + Date.now().toString().slice(-6));
         const resolvedPainTitle = resolvePainAreaTitle(null, currentAssessmentData, currentSelectedPoint);
 
+        const patientGender = (clinicalDialogueState?.patientVitals?.gender) || detectArabicGender(existingName);
         const patientObj = {
             patientId,
             name: existingName,
             phone: existingPhone,
+            gender: patientGender,
+            age: clinicalDialogueState?.patientVitals?.age || null,
+            weight: clinicalDialogueState?.patientVitals?.weight || null,
+            height: clinicalDialogueState?.patientVitals?.height || null,
             painArea: currentAssessmentData?.pointId || (currentSelectedPoint ? currentSelectedPoint.id : 'lumbar_spine'),
             painAreaTitle: resolvedPainTitle,
             createdAt: activePatient?.createdAt || new Date().toISOString()
@@ -2700,10 +2825,20 @@ async function submitPatientRegistrationAndStart() {
     const patientId = 'P-' + Date.now().toString().slice(-6);
     const resolvedPainTitle = resolvePainAreaTitle(null, currentAssessmentData, currentSelectedPoint);
 
+    const selectedGender = document.querySelector('input[name="patient_gender"]:checked')?.value;
+    const patientGender = (selectedGender && selectedGender !== 'ذكر') ? selectedGender : detectArabicGender(name);
+    const ageVal = parseInt(document.getElementById('patient-age')?.value) || (typeof currentAssessmentData !== 'undefined' ? currentAssessmentData?.patientVitals?.age : null);
+    const weightVal = parseFloat(document.getElementById('patient-weight')?.value) || (typeof currentAssessmentData !== 'undefined' ? currentAssessmentData?.patientVitals?.weight : null);
+    const heightVal = parseFloat(document.getElementById('patient-height')?.value) || (typeof currentAssessmentData !== 'undefined' ? currentAssessmentData?.patientVitals?.height : null);
+
     const patientObj = {
         patientId,
         name,
         phone: fullPhone,
+        gender: patientGender,
+        age: ageVal,
+        weight: weightVal,
+        height: heightVal,
         painArea: currentAssessmentData?.pointId || (currentSelectedPoint ? currentSelectedPoint.id : 'lumbar_spine'),
         painAreaTitle: resolvedPainTitle,
         createdAt: new Date().toISOString()
@@ -2746,7 +2881,15 @@ function getVitalsSummaryCardHTML(patient, assessment) {
     const pName = patient?.name || 'المراجع الكريم';
     const vitals = assessment?.patientVitals || (typeof clinicalDialogueState !== 'undefined' ? clinicalDialogueState?.patientVitals : {}) || {};
     const age = vitals.age || patient?.age || assessment?.age || null;
-    const gender = vitals.gender || patient?.gender || null;
+    let gender = vitals.gender || patient?.gender || assessment?.gender || null;
+    const detectedFromPName = detectArabicGender(pName);
+    if (!gender || gender === 'male' || gender === 'ذكر') {
+        if (detectedFromPName === 'female') {
+            gender = 'female';
+        }
+    }
+    const isFemale = (gender === 'female' || gender === 'أنثى' || detectedFromPName === 'female');
+    const genderDisplay = isFemale ? 'أنثى' : 'ذكر';
     const weight = vitals.weight || patient?.weight || null;
     const height = vitals.height || patient?.height || null;
     const painAreaTitle = assessment?.painAreaTitle || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint ? currentSelectedPoint.title : (patient?.painAreaTitle || 'الموضع المحدد'));
@@ -2817,7 +2960,7 @@ function getVitalsSummaryCardHTML(patient, assessment) {
                 </div>
                 <div style="background: #0f172a; padding: 10px 14px; border-radius: 8px; border: 1px solid #1e293b;">
                     <div style="color: #94a3b8; font-size: 0.78em;">العمر والجنس:</div>
-                    <div style="color: #ffffff; font-weight: bold; font-size: 0.95em; margin-top: 2px;">${age ? `${age} سنة` : 'غير محدد'} ${gender ? `• ${gender === 'female' ? 'أنثى' : 'ذكر'}` : ''}</div>
+                    <div style="color: #ffffff; font-weight: bold; font-size: 0.95em; margin-top: 2px;">${age ? `${age} سنة` : 'غير محدد'} ${genderDisplay ? `• ${genderDisplay}` : ''}</div>
                 </div>
                 <div style="background: #0f172a; padding: 10px 14px; border-radius: 8px; border: 1px solid #1e293b;">
                     <div style="color: #94a3b8; font-size: 0.78em;">الوزن والطول:</div>
@@ -2903,8 +3046,8 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
             <!-- عبارة تشجيعية ديناميكية مع تحفيز د. سارة -->
             <div style="background: rgba(16, 185, 129, 0.1); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; color: #6ee7b7; font-weight: 500; font-size: 0.92em; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div style="flex: 1 1 220px; line-height: 1.6;">${sessionData.motivation || '🌟 أهلاً بك في انطلاقة برنامجك التأهيلي! جلسة اليوم مخصصة لتفريغ الضغط الميكانيكي وتهيئة المفاصل بأمان تام.'}</div>
-                <button type="button" onclick="playStationAudio('motivation')" class="btn-header btn-header-emerald" style="padding: 7px 14px; font-size: 0.8em; border-radius: 20px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; font-weight: bold; white-space: nowrap;">
-                    <span>🎙️</span> تحفيز د. سارة
+                <button type="button" onclick="playDailyMotivationAudio(1, '${(sessionData.patient?.name || '').replace(/'/g, "\\'")}')" class="btn-header btn-header-emerald" style="padding: 7px 14px; font-size: 0.8em; border-radius: 20px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; font-weight: bold; white-space: nowrap;">
+                    <span>🎙️</span> نصيحة د. سارة (اليوم الأول)
                 </button>
             </div>
 
@@ -3008,7 +3151,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                 <div style="color: #cbd5e1; font-size: 0.9em; margin-bottom: 20px; line-height: 1.7; max-width: 600px; margin-left: auto; margin-right: auto;">
                     بعد انتهائك من أداء تمارين اليوم الأول، انقر على الزر أدناه لتوثيق إنجاز الجلسة الأولى وبدء فترة الاستشفاء الحيوي للأنسجة (24 ساعة). ستنتقل بعدها مباشرة لمتابعة باقي الجلسات (2 إلى 7) مع التقييم اليومي المعتمد.
                 </div>
-                <button type="button" onclick="completeDay1InitialExercises('${patientId}')" class="btn-plan-royal-card" style="margin: 0 auto; max-width: 620px; width: 100%;">
+                <button type="button" onclick="openSessionAssessmentModal('${patientId}', 1)" class="btn-plan-royal-card" style="margin: 0 auto; max-width: 620px; width: 100%;">
                     <div class="royal-card-halo"></div>
                     <div class="royal-card-shimmer"></div>
                     <div class="royal-badge-pill">
@@ -3117,17 +3260,35 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
     let behavioralReportHTML = '';
     if (lastDailyLog) {
         const posHabits = [];
-        if (lastDailyLog.exercisesDone) posHabits.push("✓ أداء التمارين: تنشيط تدفق السائل الزلالي وحماية الغضروف من التصلب.");
-        if (lastDailyLog.goodPosture) posHabits.push("✓ استقامة الوضعية: تخفيف 60% من الحمل الانضغاطي على الفقرات.");
-        if (lastDailyLog.walkingDone) posHabits.push("✓ المشي والتنشيط: تنشيط التروية الدموية وتغذية الأنسجة العميقة.");
-        if (lastDailyLog.heatDone) posHabits.push("✓ الكمادات والراحة: تفكيك التشنج العضلي وتسكين نقاط الإجهاد.");
+        if (lastDailyLog.positiveHabitsList && Array.isArray(lastDailyLog.positiveHabitsList) && lastDailyLog.positiveHabitsList.length > 0) {
+            lastDailyLog.positiveHabitsList.forEach(item => {
+                const text = String(item).trim();
+                if (text) {
+                    posHabits.push(text.startsWith('✓') ? text : `✓ ${text}`);
+                }
+            });
+        } else {
+            if (lastDailyLog.exercisesDone) posHabits.push("✓ أداء التمارين: تنشيط تدفق السائل الزلالي وحماية الغضروف من التصلب.");
+            if (lastDailyLog.goodPosture) posHabits.push("✓ استقامة الوضعية: تخفيف 60% من الحمل الانضغاطي على الفقرات والمفاصل.");
+            if (lastDailyLog.walkingDone) posHabits.push("✓ المشي والتنشيط: تنشيط التروية الدموية وتغذية الأنسجة العميقة.");
+            if (lastDailyLog.heatDone) posHabits.push("✓ الكمادات والراحة: تفكيك التشنج العضلي وتسكين نقاط الإجهاد.");
+        }
 
         const negHabits = [];
-        const neg = lastDailyLog.negativeHabits || {};
-        if (neg.longSitting) negHabits.push("⚠️ الجلوس المتواصل: يضاعف الضغط الهيدروليكي على ديسك أسفل الظهر.");
-        if (neg.heavyLifting) negHabits.push("⚠️ انحناء خاطئ أو حمل وزن: يسبب إجهاداً حاداً للأربطة الشوكية.");
-        if (neg.phoneUsage) negHabits.push("⚠️ إمالة الرقبة للشاشات: يضيف حمولة زائدة على الفقرات العنقية.");
-        if (neg.poorSleep) negHabits.push("⚠️ نوم غير مريح: يمنع عضلات العمود الفقري من الاسترخاء وتجديد الخلايا.");
+        if (lastDailyLog.negativeHabitsList && Array.isArray(lastDailyLog.negativeHabitsList) && lastDailyLog.negativeHabitsList.length > 0) {
+            lastDailyLog.negativeHabitsList.forEach(item => {
+                const text = String(item).trim();
+                if (text) {
+                    negHabits.push(text.startsWith('⚠️') ? text : `⚠️ ${text}`);
+                }
+            });
+        } else {
+            const neg = lastDailyLog.negativeHabits || {};
+            if (neg.longSitting) negHabits.push("⚠️ الجلوس المتواصل: يضاعف الضغط الهيدروليكي على ديسك أسفل الظهر.");
+            if (neg.heavyLifting) negHabits.push("⚠️ انحناء خاطئ أو حمل وزن: يسبب إجهاداً حاداً للأربطة الشوكية.");
+            if (neg.phoneUsage) negHabits.push("⚠️ إمالة الرقبة للشاشات: يضيف حمولة زائدة على الفقرات العنقية.");
+            if (neg.poorSleep) negHabits.push("⚠️ نوم غير مريح: يمنع عضلات العمود الفقري من الاسترخاء وتجديد الخلايا.");
+        }
 
         behavioralReportHTML = `
             <div style="background: #0f172a; border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px; margin-bottom: 22px;">
@@ -3328,8 +3489,8 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             <!-- عبارة تشجيعية ديناميكية مع تحفيز د. سارة -->
             <div style="background: rgba(16, 185, 129, 0.1); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; color: #6ee7b7; font-weight: 500; font-size: 0.92em; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div style="flex: 1 1 220px; line-height: 1.6;">${sessionData.motivation}</div>
-                <button type="button" onclick="playStationAudio('motivation')" class="btn-header btn-header-emerald" style="padding: 7px 14px; font-size: 0.8em; border-radius: 20px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; font-weight: bold; white-space: nowrap;">
-                    <span>🎙️</span> تحفيز د. سارة
+                <button type="button" onclick="playDailyMotivationAudio(${activeDay}, '${(sessionData.patient?.name || '').replace(/'/g, "\\'")}')" class="btn-header btn-header-emerald" style="padding: 7px 14px; font-size: 0.8em; border-radius: 20px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; font-weight: bold; white-space: nowrap;">
+                    <span>🎙️</span> نصيحة د. سارة (الجلسة #${activeDay})
                 </button>
             </div>
 
@@ -3721,9 +3882,9 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(16, 185, 129, 0.3); padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
             <div>
                 <h3 style="color: #10b981; margin: 0 0 4px 0; font-size: 1.35em; display: flex; align-items: center; gap: 8px;">
-                    <span>📝</span> تقييم ومتابعة تقدم الجلسة (#${sessionNumber}) - ${areaTitle}
+                    <span>📝</span> تقييم ومتابعة تقدم الجلسة (${sessionNumber === 1 ? 'الأولى #1' : `#${sessionNumber}`}) - ${areaTitle}
                 </h3>
-                <div style="color: #94a3b8; font-size: 0.85em;">متاح لتوثيق الجلسة المنتهية واعتماد مؤشرات التعافي</div>
+                <div style="color: #94a3b8; font-size: 0.85em;">${sessionNumber === 1 ? 'توثيق إنجاز تمارين اليوم الأول وبدء فترة الاستشفاء (24 ساعة)' : 'متاح لتوثيق الجلسة المنتهية واعتماد مؤشرات التعافي'}</div>
             </div>
             <button type="button" onclick="closeSessionAssessmentModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.8em; cursor: pointer; padding: 0 5px;">&times;</button>
         </div>
@@ -3823,7 +3984,8 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                     { id: "beh-heat", text: "استخدمت الكمادات الدافئة / الراحة الكافية" }
                 ]).map((beh) => `
                     <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;">
-                        <input type="checkbox" id="modal-${beh.id}" style="accent-color: #10b981; width: 16px; height: 16px;"> ${beh.text}
+                        <input type="checkbox" id="modal-${beh.id}" class="modal-pos-habit-checkbox" data-text="${beh.text}" data-id="${beh.id}" style="accent-color: #10b981; width: 16px; height: 16px;">
+                        <span>${beh.text}</span>
                     </label>
                 `).join('')}
             </div>
@@ -3837,7 +3999,8 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                     { id: "neg-sleep", text: "نوم غير مريح أو على وسادة مرتفعة" }
                 ]).map(neg => `
                     <label style="color: #fca5a5; font-size: 0.88em; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;">
-                        <input type="checkbox" id="modal-${neg.id}" style="accent-color: #ef4444; width: 16px; height: 16px;"> ${neg.text}
+                        <input type="checkbox" id="modal-${neg.id}" class="modal-neg-habit-checkbox" data-text="${neg.text}" data-id="${neg.id}" style="accent-color: #ef4444; width: 16px; height: 16px;">
+                        <span>${neg.text}</span>
                     </label>
                 `).join('')}
             </div>
@@ -3848,7 +4011,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                 إلغاء والعودة للتمارين
             </button>
             <button type="button" onclick="submitComprehensiveDailyLog('${patientId}', ${sessionNumber})" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; padding: 14px 32px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.05em; box-shadow: 0 4px 18px rgba(16, 185, 129, 0.4); flex-grow: 1; max-width: 450px;">
-                ✅ اعتماد التقييم والانتقال للجلسة التالية 🚀
+                ✅ ${sessionNumber === 1 ? 'اعتماد تمارين اليوم الأول وبدء فترة الاستشفاء (24 ساعة) 🚀' : 'اعتماد التقييم والانتقال للجلسة التالية 🚀'}
             </button>
         </div>
     `;
@@ -3869,15 +4032,36 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
     const mobilityRate = parseInt(document.getElementById('modal-mobility-slider')?.value || document.querySelector('input[name="modal_mobility_check"]:checked')?.value || document.getElementById('daily-mobility-slider')?.value || 70);
     const sleepRate = parseInt(document.getElementById('modal-sleep-slider')?.value || document.querySelector('input[name="modal_sleep_check"]:checked')?.value || document.getElementById('daily-sleep-slider')?.value || 70);
 
-    const exercisesDone = (document.getElementById('modal-beh-exercise') || document.getElementById('beh-exercise'))?.checked || false;
-    const goodPosture = (document.getElementById('modal-beh-posture') || document.getElementById('beh-posture'))?.checked || false;
-    const walkingDone = (document.getElementById('modal-beh-walk') || document.getElementById('beh-walk'))?.checked || false;
-    const heatDone = (document.getElementById('modal-beh-heat') || document.getElementById('beh-heat'))?.checked || false;
+    // استخراج السلوكيات الإيجابية المحددة من النافذة
+    const positiveHabitsList = [];
+    const positiveHabitsIds = {};
+    document.querySelectorAll('.modal-pos-habit-checkbox:checked').forEach(cb => {
+        const text = cb.getAttribute('data-text') || cb.parentElement?.textContent?.trim() || '';
+        const id = cb.getAttribute('data-id') || cb.id;
+        if (text) positiveHabitsList.push(text);
+        if (id) positiveHabitsIds[id] = true;
+    });
 
-    const longSitting = (document.getElementById('modal-neg-sitting') || document.getElementById('neg-sitting'))?.checked || false;
-    const heavyLifting = (document.getElementById('modal-neg-lifting') || document.getElementById('neg-lifting'))?.checked || false;
-    const phoneUsage = (document.getElementById('modal-neg-phone') || document.getElementById('neg-phone'))?.checked || false;
-    const poorSleep = (document.getElementById('modal-neg-sleep') || document.getElementById('neg-sleep'))?.checked || false;
+    // استخراج السلوكيات السلبية المحددة من النافذة
+    const negativeHabitsList = [];
+    const negativeHabitsIds = {};
+    document.querySelectorAll('.modal-neg-habit-checkbox:checked').forEach(cb => {
+        const text = cb.getAttribute('data-text') || cb.parentElement?.textContent?.trim() || '';
+        const id = cb.getAttribute('data-id') || cb.id;
+        if (text) negativeHabitsList.push(text);
+        if (id) negativeHabitsIds[id] = true;
+    });
+
+    // التوافقية العكسية مع السجلات القديمة
+    const exercisesDone = positiveHabitsIds['beh-exercise'] || positiveHabitsIds['modal-beh-exercise'] || (positiveHabitsList.length > 0) || (sessionNumber === 1);
+    const goodPosture = positiveHabitsIds['beh-posture'] || positiveHabitsIds['modal-beh-posture'] || false;
+    const walkingDone = positiveHabitsIds['beh-walk'] || positiveHabitsIds['modal-beh-walk'] || false;
+    const heatDone = positiveHabitsIds['beh-heat'] || positiveHabitsIds['modal-beh-heat'] || false;
+
+    const longSitting = negativeHabitsIds['neg-sitting'] || negativeHabitsIds['modal-neg-sitting'] || false;
+    const heavyLifting = negativeHabitsIds['neg-lifting'] || negativeHabitsIds['modal-neg-lifting'] || false;
+    const phoneUsage = negativeHabitsIds['neg-phone'] || negativeHabitsIds['modal-neg-phone'] || false;
+    const poorSleep = negativeHabitsIds['neg-sleep'] || negativeHabitsIds['modal-neg-sleep'] || false;
 
     const logEntry = {
         patientId,
@@ -3885,11 +4069,22 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
         painScore,
         mobilityRate,
         sleepRate,
+        positiveHabitsList,
+        negativeHabitsList,
+        positiveHabitsIds,
+        negativeHabitsIds,
         exercisesDone,
         goodPosture,
         walkingDone,
         heatDone,
-        negativeHabits: { longSitting, heavyLifting, phoneUsage, poorSleep },
+        negativeHabits: {
+            longSitting,
+            heavyLifting,
+            phoneUsage,
+            poorSleep,
+            ...negativeHabitsIds
+        },
+        isDay1InitialCompletion: sessionNumber === 1,
         date: new Date().toISOString()
     };
 
@@ -3902,6 +4097,11 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
     const pInfo = await SmartDB.getPatient(patientId);
     const pName = pInfo?.name || activePatient?.name || patientId;
     const pPhone = pInfo?.phone || activePatient?.phone || '';
+
+    // تشغيل توجيه د. سارة الصوتي المخصص للجلسة الحالية
+    if (typeof playDailyMotivationAudio === 'function') {
+        playDailyMotivationAudio(sessionNumber, pName);
+    }
 
     if (allLogs.length >= 7 || sessionNumber >= 7) {
         SmartDB.addAdminNotification({
@@ -3923,6 +4123,27 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
         return;
     }
 
+    if (sessionNumber === 1) {
+        SmartDB.addAdminNotification({
+            type: 'session_completed',
+            title: `🏋️ إتمام تمارين وتقييم اليوم الأول: ${pName}`,
+            message: `أتم المريض ${pName} تمارين وتقييم الجلسة الأولى بنجاح (الألم: ${painScore}/10، الحركة: ${mobilityRate}%) وبدأت فترة الاستشفاء لمدة 24 ساعة.`,
+            patientId,
+            patientName: pName,
+            patientPhone: pPhone,
+            meta: { sessionNumber: 1, painScore, mobilityRate, sleepRate }
+        });
+
+        if (negativeHabitsList.length > 0) {
+            showToast('⚠️ تم توثيق إنجاز تمارين اليوم الأول بنجاح وبدأت فترة استشفاء الجلسة التالية (24 ساعة). انتبه للسلوكيات السلبية!', 'warning');
+        } else {
+            showToast('🎉 أحسنت! تم توثيق إنجاز تمارين اليوم الأول بنجاح وبدأت فترة الاستشفاء الحيوي للأنسجة (24 ساعة).', 'success');
+        }
+
+        await loadPatientRecoveryDashboard(patientId, 2);
+        return;
+    }
+
     SmartDB.addAdminNotification({
         type: 'session_done',
         title: `📝 إنجاز الجلسة #${sessionNumber}: ${pName}`,
@@ -3933,7 +4154,7 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
         meta: { sessionNumber, painScore, mobilityRate, sleepRate }
     });
 
-    if (longSitting || heavyLifting || phoneUsage || poorSleep) {
+    if (negativeHabitsList.length > 0 || longSitting || heavyLifting || phoneUsage || poorSleep) {
         showToast(`⚠️ تم توثيق الجلسة #${sessionNumber} بنجاح وبدأت فترة استشفاء الجلسة التالية (24 ساعة). انتبه للسلوكيات السلبية!`, 'error');
     } else {
         showToast(`🎉 أحسنت! تم حفظ تقييم الجلسة #${sessionNumber} بنجاح وبدأت فترة استشفاء الجلسة التالية (24 ساعة).`, 'success');
@@ -4641,7 +4862,20 @@ async function exportClinicalSummaryForDoctor(patientId) {
         const rootLevel = assessment.rootLevel || '';
         const redFlags = assessment.isRedFlag ? '⚠️ تم رصد مؤشرات حذر سريرية' : '✅ آمن تماماً للتقويم اليدوي بالكايروبراكتيك (Cleared)';
 
-        // استخراج العمر والجنس من مصادر متعددة
+        // استخراج الوزن والطول ومؤشر كتلة الجسم
+        const patientWeight = patient.weight || assessment.patientVitals?.weight ||
+            (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.patientVitals?.weight) ||
+            (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState?.patientVitals?.weight) || null;
+        const patientHeight = patient.height || assessment.patientVitals?.height ||
+            (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.patientVitals?.height) ||
+            (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState?.patientVitals?.height) || null;
+        let bmiDisplay = '--';
+        if (patientWeight && patientHeight && patientHeight > 0) {
+            const hM = patientHeight / 100;
+            bmiDisplay = `${(patientWeight / (hM * hM)).toFixed(1)} kg/m²`;
+        }
+
+        // استخراج العمر والجنس من مصادر متعددة وتدقيق الاسم
         const patientAge = patient.age || assessment.age ||
             (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.age) ||
             (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState?.patientVitals?.age) ||
@@ -4651,24 +4885,37 @@ async function exportClinicalSummaryForDoctor(patientId) {
             (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.gender) ||
             (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState?.patientVitals?.gender) ||
             '';
-        // تطبيع قيمة الجنس
+        
+        const detectedGender = detectArabicGender(patient.name || '');
         let patientGenderDisplay;
-        if (patientGenderRaw === 'female' || patientGenderRaw === 'أنثى' || patientGenderRaw === 'انثى') {
+        if (patientGenderRaw === 'female' || patientGenderRaw === 'أنثى' || patientGenderRaw === 'انثى' || detectedGender === 'female') {
             patientGenderDisplay = 'أنثى';
         } else if (patientGenderRaw === 'male' || patientGenderRaw === 'ذكر') {
-            patientGenderDisplay = 'ذكر';
+            patientGenderDisplay = (detectedGender === 'female') ? 'أنثى' : 'ذكر';
         } else {
-            // محاولة استنتاج الجنس من الاسم
-            const pName = patient.name || '';
-            const femaleNames = /^(ميس|سارة|لينا|منى|رنا|هند|نور|ريم|دنيا|إيمان|ايمان|فاطمة|زينب|مريم|يسرى|رنده|رندة|ديما|لارا|لمى|لمياء|علا|عبير|غادة|وفاء|سمر|سمية|رغد|أميرة|أريج|ربى|ناديا|ليلى|هيفاء|سوزان|روان|بيان|شيرين|مها|دلال|نادين|تقى|يارا|ياسمين|جنى|أمل|حلا|إسراء|رانيا|ريهام|ولاء|وئام|بسمة|حنين|نادية|سعاد|لجين|شذى|نوف|ألاء|دانا|زهراء|منال|هناء|شهد)/i;
-            patientGenderDisplay = femaleNames.test(pName.trim()) ? 'أنثى' : (pName ? 'ذكر' : 'غير محدد');
+            patientGenderDisplay = detectedGender === 'female' ? 'أنثى' : (patient.name ? 'ذكر' : 'غير محدد');
         }
+
+        // تجميع السلوكيات الحركية والبيوميكانيكية المرصودة عبر الجلسات
+        const recordedPosHabits = [];
+        const recordedNegHabits = [];
+        dailyLogs.forEach(l => {
+            if (l.positiveHabitsList && Array.isArray(l.positiveHabitsList)) {
+                l.positiveHabitsList.forEach(item => { if (!recordedPosHabits.includes(item)) recordedPosHabits.push(item); });
+            }
+            if (l.negativeHabitsList && Array.isArray(l.negativeHabitsList)) {
+                l.negativeHabitsList.forEach(item => { if (!recordedNegHabits.includes(item)) recordedNegHabits.push(item); });
+            }
+        });
 
         activeDoctorSummaryData = {
             patientName: patient.name,
             patientPhone: patient.phone,
             patientAge: patientAge || 'غير محدد',
             patientGender: patientGenderDisplay,
+            patientWeight,
+            patientHeight,
+            bmiDisplay,
             painArea,
             diagTitle,
             rootLevel,
@@ -4679,6 +4926,8 @@ async function exportClinicalSummaryForDoctor(patientId) {
             completedDays: dailyLogs.length,
             logsSummary,
             dailyLogs,
+            recordedPosHabits,
+            recordedNegHabits,
             createdDate: new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
         };
 
@@ -4702,6 +4951,7 @@ async function exportClinicalSummaryForDoctor(patientId) {
                 <div><span style="color: #94a3b8; font-size: 0.82em;">الاسم الكامل:</span> <div style="color: #ffffff; font-weight: bold;">${patient.name}</div></div>
                 <div><span style="color: #94a3b8; font-size: 0.82em;">رقم الهاتف:</span> <div style="color: #ffffff; font-weight: bold; font-family: monospace;">${patient.phone}</div></div>
                 <div><span style="color: #94a3b8; font-size: 0.82em;">العمر / الجنس:</span> <div style="color: #ffffff; font-weight: bold;">${activeDoctorSummaryData.patientAge} سنة | ${activeDoctorSummaryData.patientGender}</div></div>
+                <div><span style="color: #94a3b8; font-size: 0.82em;">الوزن / الطول / BMI:</span> <div style="color: #38bdf8; font-weight: bold;">${patientWeight ? `${patientWeight} كجم` : '--'} | ${patientHeight ? `${patientHeight} سم` : '--'} | ${bmiDisplay}</div></div>
                 <div><span style="color: #94a3b8; font-size: 0.82em;">موضع الشكوى:</span> <div style="color: var(--primary-gold); font-weight: bold;">${painArea}</div></div>
             </div>
 
@@ -4726,6 +4976,31 @@ async function exportClinicalSummaryForDoctor(patientId) {
                     <div style="color: #94a3b8; font-size: 0.72em;">التزام تأهيلي مستمر</div>
                 </div>
             </div>
+
+            <!-- تقرير السلوكيات الحركية والبيوميكانيكية المرصودة للمريض -->
+            ${(recordedPosHabits.length > 0 || recordedNegHabits.length > 0) ? `
+                <div style="background: #111827; padding: 14px; border-radius: 10px; margin-bottom: 16px; border: 1px solid #334155;">
+                    <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.92em; margin-bottom: 8px;">🧬 السلوكيات الحركية والبيوميكانيكية الموثقة من جلسات المراجع:</div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px;">
+                        ${recordedPosHabits.length > 0 ? `
+                            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 10px;">
+                                <div style="color: #10b981; font-weight: bold; font-size: 0.82em; margin-bottom: 4px;">✨ إنجازات إيجابية:</div>
+                                <ul style="color: #6ee7b7; margin: 0; padding-right: 16px; font-size: 0.8em; line-height: 1.6;">
+                                    ${recordedPosHabits.map(h => `<li>${h}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                        ${recordedNegHabits.length > 0 ? `
+                            <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px; padding: 10px;">
+                                <div style="color: #ef4444; font-weight: bold; font-size: 0.82em; margin-bottom: 4px;">⚠️ إجهادات رُصدت للتصحيح:</div>
+                                <ul style="color: #fca5a5; margin: 0; padding-right: 16px; font-size: 0.8em; line-height: 1.6;">
+                                    ${recordedNegHabits.map(h => `<li>${h}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            ` : ''}
 
             <!-- سجل متابعة الأيام السبعة التفصيلي -->
             <div style="background: #111827; padding: 14px; border-radius: 10px; margin-bottom: 16px;">
@@ -4772,6 +5047,7 @@ function sendDoctorSummaryWhatsApp() {
         `• الاسم: ${d.patientName}\n` +
         `• الهاتف: ${d.patientPhone}\n` +
         `• العمر/الجنس: ${d.patientAge} سنة | ${d.patientGender}\n` +
+        (d.bmiDisplay && d.bmiDisplay !== '--' ? `• القياسات الحيوية: الوزن ${d.patientWeight || '--'} كجم | الطول ${d.patientHeight || '--'} سم | BMI: ${d.bmiDisplay}\n` : '') +
         `• موضع الشكوى: ${d.painArea}\n\n` +
         `🔬 *التشخيص السريري الأرجح:*\n` +
         `• التشخيص: ${d.diagTitle}\n` +
@@ -4907,15 +5183,23 @@ function acceptWelcomeTourModal() {
         if (typeof Wada3anAiEngine !== 'undefined') {
             Wada3anAiEngine.unlockAudio();
         }
-        if (sessionStorage.getItem('scp_welcome_audio_played') !== 'true') {
-            triggerAutoWelcomeAudio();
-        }
+        playWelcomeAudioDirectly();
     } catch (e) {}
 }
 
 function acceptMedicalDisclaimer() {
     acceptWelcomeTourModal();
 }
+
+// تشغيل ترحيب د. سارة الصوتي فور أول لمسة أو نقرة للمستخدم في الخطوة 1 إذا لم يكن قد عُزف بعد
+document.addEventListener('pointerdown', function onFirstUserInteraction() {
+    if (sessionStorage.getItem('scp_welcome_audio_played') !== 'true') {
+        const step1 = document.getElementById('step-1');
+        if (step1 && step1.classList.contains('active')) {
+            playWelcomeAudioDirectly();
+        }
+    }
+}, { once: true });
 
 // تهيئة التطبيق والـ PWA
 document.addEventListener('DOMContentLoaded', async () => {
