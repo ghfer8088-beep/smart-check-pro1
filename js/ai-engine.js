@@ -1718,6 +1718,20 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
         return null;
     },
 
+    // إيقاف فوري لأي نطق صوتي نشط
+    stopSpeaking() {
+        try {
+            if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            if (typeof currentActiveStationAudio !== 'undefined' && currentActiveStationAudio) {
+                currentActiveStationAudio.pause();
+                currentActiveStationAudio.currentTime = 0;
+                currentActiveStationAudio = null;
+            }
+        } catch (e) {}
+    },
+
     // نطق نص تقرير الطبيب بصوت استوديو بشري حقيقي فائق النقاء
     // استرجاع أفضل صوت عربي طبيعي متوفر في المتصفح مع تفضيل الأصوات البشرية السلسة
     getBestArabicVoice(isFemale) {

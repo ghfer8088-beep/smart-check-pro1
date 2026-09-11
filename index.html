@@ -17,11 +17,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=12.9">
+    <link rel="stylesheet" href="css/style.css?v=15.3">
     <script>
-        // التحقق من تحديثات Service Worker وتفريغ الكاش القديم فوراً عند الترقية للإصدار 12.9
+        // التحقق من تحديثات Service Worker وتفريغ الكاش القديم فوراً عند الترقية للإصدار 15.3
         (function() {
-            const APP_TARGET_VER = '12.9';
+            const APP_TARGET_VER = '15.3';
             const currentVer = localStorage.getItem('smart_app_version');
             if (currentVer !== APP_TARGET_VER) {
                 if ('caches' in window) {
@@ -168,23 +168,31 @@
     </header>
     <div id="mobile-menu-backdrop" class="mobile-backdrop" onclick="closeMobileMenu()"></div>
 
-    <!-- شريط تتبع الخطوات المنطقي القابل للنقر للتنقل الحر -->
+    <!-- شريط تتبع الخطوات المنطقي القابل للنقر للتنقل الحر (6 مراحل سريرية معيارية) -->
     <div class="stepper-container no-print">
-        <div class="stepper-node active" id="stepper-node-1" onclick="handleStepperClick(1)" style="cursor: pointer;" title="الانتقال للخطوة 1: موضع الألم">
+        <div class="stepper-node active" id="stepper-node-1" onclick="handleStepperClick(1)" style="cursor: pointer;" title="المرحلة 1: موضع الألم">
             <div class="node-circle">1</div>
             <div class="node-label">موضع الألم</div>
         </div>
-        <div class="stepper-node" id="stepper-node-2" onclick="handleStepperClick(2)" style="cursor: pointer;" title="الانتقال للخطوة 2: التقييم السريري">
+        <div class="stepper-node" id="stepper-node-2" onclick="handleStepperClick(2)" style="cursor: pointer;" title="المرحلة 2: التقييم السريري">
             <div class="node-circle">2</div>
             <div class="node-label">التقييم السريري</div>
         </div>
-        <div class="stepper-node" id="stepper-node-3" onclick="handleStepperClick(3)" style="cursor: pointer;" title="الانتقال للخطوة 3: التقرير الطبي">
+        <div class="stepper-node" id="stepper-node-3" onclick="handleStepperClick(3)" style="cursor: pointer;" title="المرحلة 3: التقرير الطبي">
             <div class="node-circle">3</div>
             <div class="node-label">التقرير الطبي</div>
         </div>
-        <div class="stepper-node" id="stepper-node-4" onclick="handleStepperClick(4)" style="cursor: pointer;" title="الانتقال للخطوة 4: خطة التعافي">
+        <div class="stepper-node" id="stepper-node-4" onclick="handleStepperClick(4)" style="cursor: pointer;" title="المرحلة 4: خطة التعافي (الجلسة الأولى)">
             <div class="node-circle">4</div>
-            <div class="node-label">خطة التعافي (7 أيام)</div>
+            <div class="node-label">خطة التعافي (الجلسة 1)</div>
+        </div>
+        <div class="stepper-node" id="stepper-node-5" onclick="handleStepperClick(5)" style="cursor: pointer;" title="المرحلة 5: الجلسات (متابعة الجلسات 2-7)">
+            <div class="node-circle">5</div>
+            <div class="node-label">الجلسات (متابعة 2-7)</div>
+        </div>
+        <div class="stepper-node" id="stepper-node-6" onclick="handleStepperClick(6)" style="cursor: pointer;" title="المرحلة 6: الاكتمال (وثيقة التعافي والإنهاء)">
+            <div class="node-circle">6</div>
+            <div class="node-label">وثيقة التعافي والإنهاء</div>
         </div>
     </div>
 
@@ -1437,16 +1445,16 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/database.js?v=12.9"></script>
-    <script src="js/exercise-image-studio.js?v=12.9"></script>
-    <script src="js/exercises-db.js?v=12.9"></script>
-    <script src="js/diagnostic-engine.js?v=12.9"></script>
-    <script src="js/audio-pacer.js?v=12.9"></script>
-    <script src="js/patient-flow.js?v=12.9"></script>
-    <script src="js/admin-engine.js?v=12.9"></script>
-    <script src="js/ai-config.js?v=12.9"></script>
-    <script src="js/ai-engine.js?v=12.9"></script>
-    <script src="js/app.js?v=12.9"></script>
-    <script src="js/text-editor.js?v=12.9"></script>
+    <script src="js/database.js?v=15.3"></script>
+    <script src="js/exercise-image-studio.js?v=15.3"></script>
+    <script src="js/exercises-db.js?v=15.3"></script>
+    <script src="js/diagnostic-engine.js?v=15.3"></script>
+    <script src="js/audio-pacer.js?v=15.3"></script>
+    <script src="js/patient-flow.js?v=15.3"></script>
+    <script src="js/admin-engine.js?v=15.3"></script>
+    <script src="js/ai-config.js?v=15.3"></script>
+    <script src="js/ai-engine.js?v=15.3"></script>
+    <script src="js/app.js?v=15.3"></script>
+    <script src="js/text-editor.js?v=15.3"></script>
 </body>
 </html>

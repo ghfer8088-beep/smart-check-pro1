@@ -840,24 +840,28 @@ body {
 
 @media (max-width: 600px) {
     .stepper-container {
-        padding: 0 6px;
-        margin: 12px auto 8px auto;
+        padding: 0 4px;
+        margin: 10px auto 6px auto;
     }
 
     .stepper-container::before {
-        left: 22px;
-        right: 22px;
-        top: 17px;
+        left: 16px;
+        right: 16px;
+        top: 14px;
     }
 
     .node-circle {
-        width: 34px;
-        height: 34px;
-        font-size: 0.85em;
+        width: 28px;
+        height: 28px;
+        font-size: 0.76em;
     }
 
     .node-label {
-        font-size: 0.72em;
+        font-size: 0.62em;
+        text-align: center;
+        max-width: 52px;
+        line-height: 1.25;
+        word-break: normal;
     }
 
     #completion-certificate-modal .modal-inner {

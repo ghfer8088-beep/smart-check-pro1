@@ -267,7 +267,7 @@ function playStep1AudioGuide() {
     });
 }
 
-// التحكم الذكي في التنقل عبر شريط الخطوات (Stepper Click Handler)
+// التحكم الذكي في التنقل عبر شريط الخطوات الست (Stepper Click Handler)
 function handleStepperClick(stepNum) {
     if (stepNum === 1) {
         goToStep(1);
@@ -287,7 +287,7 @@ function handleStepperClick(stepNum) {
         }
         displayDiagnosticReport(currentAssessmentData);
         goToStep(3);
-    } else if (stepNum === 4) {
+    } else if (stepNum >= 4) {
         const savedPatientId = SmartDB.getCurrentSessionPatientId() || activePatient?.patientId;
         if (!savedPatientId) {
             showToast('يرجى تفعيل خطة التعافي أولاً من التقرير الطبي', 'info');
@@ -1816,13 +1816,12 @@ function displayDiagnosticReport(data) {
     const currentDate = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
 
     // استكمال واحتساب مؤشر كتلة الجسم والحمولة الميكانيكية تلقائياً من المحادثة أو المدخلات
-    if (!data.bmiInfo) {
-        const vitals = (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState?.patientVitals) 
-            ? clinicalDialogueState.patientVitals 
-            : (data.patientVitals || {});
-        const w = vitals.weight || parseFloat(document.getElementById('patient-weight')?.value);
-        const h = vitals.height || parseFloat(document.getElementById('patient-height')?.value);
-        if (w && h && h > 0) {
+    const vitals = (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState?.patientVitals) 
+        ? clinicalDialogueState.patientVitals 
+        : (data.patientVitals || {});
+    const w = vitals.weight || parseFloat(document.getElementById('patient-weight')?.value);
+    const h = vitals.height || parseFloat(document.getElementById('patient-height')?.value);
+    if (w && h && h > 0) {
             const hM = h / 100;
             const bmiVal = parseFloat((w / (hM * hM)).toFixed(1));
             const minHealthyW = parseFloat((18.5 * hM * hM).toFixed(1));
@@ -1918,16 +1917,6 @@ function displayDiagnosticReport(data) {
 
             <!-- ================= 2. النتيجة التشخيصية الكبرى المباشرة ================= -->
             <div id="report-section-diagnosis" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.9) 100%); border-radius: 14px; padding: 24px; border: 2px solid ${data.isPreliminary ? '#38bdf8' : 'var(--primary-gold)'}; margin-bottom: 22px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
-                ${data.isPreliminary ? `
-                <div style="background: rgba(56, 189, 248, 0.12); border: 1.5px solid #38bdf8; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-                    <div style="color: #bae6fd; font-size: 0.9em; line-height: 1.5;">
-                        💡 <strong>تنويه سريري:</strong> هذا تقرير وتوجيه تأهيلي أولي لنقطة الألم المحددة. لتأكيد التشخيص بدقة عالية واكتشاف أي ضغط عصبي أو انزلاق غضروفي، يُرجى إكمال الفحص السريع أو محاورة الطبيب الافتراضي.
-                    </div>
-                    <button type="button" onclick="goToStep(2)" style="background: #0284c7; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.85em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        <span>📝</span> فتح أسئلة الفحص السريري الدقيق
-                    </button>
-                </div>
-                ` : ''}
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
                     <div>
                         <div style="color: #94a3b8; font-size: 0.88em; font-weight: bold;">🩺 ${data.isPreliminary ? 'التقييم الاسترشادي الأولي:' : 'خلاصة التشخيص السريري المباشر:'}</div>
@@ -2716,9 +2705,17 @@ async function loadPatientRecoveryDashboard(patientId) {
     }
 
     activePatient = sessionData.patient;
-    goToStep(4);
-
     const lockStatus = await PatientFlow.getSessionLockStatus(patientId);
+
+    // تحديد المرحلة الدقيقة على شريط الخطوات (المرحلة 4 لليوم الأول، المرحلة 5 لمتابعة الجلسات 2-7، المرحلة 6 لشهادة الاكتمال)
+    if (sessionData.isPlanCompleted) {
+        goToStep(6);
+    } else if (sessionData.currentSessionDay === 1 && sessionData.dailyLogs.length === 0 && !lockStatus.isLocked) {
+        goToStep(4);
+    } else {
+        goToStep(5);
+    }
+
     const dashboardContainer = document.getElementById('patient-recovery-dashboard');
     if (!dashboardContainer) return;
 
@@ -3069,19 +3066,19 @@ async function loadPatientRecoveryDashboard(patientId) {
                     <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3); text-align: center;">
                         <div style="font-size: 2em; font-weight: bold; color: #ef4444;">${sessionData.indicators.painReduction}%</div>
                         <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر انخفاض وتلاشي الألم</div>
-                        <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${sessionData.baselinePain ? `مقارنة بألم البداية (${sessionData.baselinePain}/10)` : 'مقارنة بالتقييم السريري المبدئي'}</div>
+                        <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${sessionData.currentSessionDay === 2 ? 'بانتظار تقييمك لجلسة اليوم' : (sessionData.baselinePain ? `مقارنة بألم البداية (${sessionData.baselinePain}/10)` : 'مقارنة بالتقييم السريري المبدئي')}</div>
                     </div>
 
                     <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3); text-align: center;">
                         <div style="font-size: 2em; font-weight: bold; color: #38bdf8;">${sessionData.indicators.mobility}%</div>
                         <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر استعادة المدى الحركي</div>
-                        <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">بناءً على التقييم الحركي الفعلي المسجل</div>
+                        <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${sessionData.currentSessionDay === 2 ? 'بانتظار تقييمك لجلسة اليوم' : 'بناءً على التقييم الحركي الفعلي المسجل'}</div>
                     </div>
 
                     <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); text-align: center;">
                         <div style="font-size: 2em; font-weight: bold; color: #10b981;">${sessionData.indicators.sleepQuality}%</div>
                         <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر جودة وعمق النوم</div>
-                        <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">بناءً على تقييم النوم والراحة الفعلي المسجل</div>
+                        <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${sessionData.currentSessionDay === 2 ? 'بانتظار تقييمك لجلسة اليوم' : 'بناءً على تقييم النوم والراحة الفعلي المسجل'}</div>
                     </div>
                 </div>
 
@@ -3755,10 +3752,12 @@ function goToStep(stepNum) {
     document.querySelectorAll('.app-step-section').forEach(s => s.style.display = 'none');
     document.querySelectorAll('.stepper-node').forEach(n => n.classList.remove('active', 'completed'));
 
-    const targetSection = document.getElementById(`step-section-${stepNum}`);
+    // ربط الخطوات 4 و5 و6 بقسم خطة التعافي ومتابعة الجلسات (#step-section-4)
+    const targetSectionId = (stepNum >= 4) ? 'step-section-4' : `step-section-${stepNum}`;
+    const targetSection = document.getElementById(targetSectionId);
     if (targetSection) targetSection.style.display = 'block';
 
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= 6; i++) {
         const node = document.getElementById(`stepper-node-${i}`);
         if (node) {
             if (i < stepNum) node.classList.add('completed');
@@ -4361,7 +4360,6 @@ function acceptWelcomeTourModal() {
     try {
         if (typeof Wada3anAiEngine !== 'undefined') {
             Wada3anAiEngine.unlockAudio();
-            Wada3anAiEngine.playIntroAudioGuide();
         }
     } catch (e) {}
 }
@@ -4430,22 +4428,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     goToStep(1);
 
-    // تشغيل الترحيب الصوتي للطبيب الافتراضي تلقائياً عند فتح الأداة
-    window.introPlayedOrAttempted = false;
-    const triggerAutoIntro = () => {
-        if (window.introPlayedOrAttempted) return;
-        window.introPlayedOrAttempted = true;
-        Wada3anAiEngine.unlockAudio();
-        Wada3anAiEngine.playIntroAudioGuide();
-    };
-
-    // محاولة التشغيل التلقائي المباشر (للمتصفحات الداعمة للتشغيل الذاتي)
-    setTimeout(() => {
-        Wada3anAiEngine.unlockAudio();
-        Wada3anAiEngine.playIntroAudioGuide().then(res => {
-            if (res) window.introPlayedOrAttempted = true;
-        }).catch(() => {});
-    }, 700);
+    // تجهيز الصوت الترحيبي للاستماع عند طلب المراجع حصراً عبر زر الاستماع
+    window.introPlayedOrAttempted = true;
 
     // تفعيل فوري مع أول لمسة لفك قيود المتصفحات (AudioContext Unlock) دون تشغيل الصوت قسراً
     const mobileFirstTouchUnlock = () => {
@@ -4824,8 +4808,6 @@ function playClinicalAudioFallback(stationKey, onDone) {
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
                 osc.start(now);
                 osc.stop(now + 0.35);
-                setTimeout(() => { if (onDone) onDone(); }, 400);
-                return;
             } else if (stationKey === 'exercise_finish') {
                 const now = ctx.currentTime;
                 const osc = ctx.createOscillator();
@@ -4839,8 +4821,6 @@ function playClinicalAudioFallback(stationKey, onDone) {
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
                 osc.start(now);
                 osc.stop(now + 0.55);
-                setTimeout(() => { if (onDone) onDone(); }, 600);
-                return;
             }
         }
     } catch (e) {}
@@ -5177,40 +5157,113 @@ async function sendChatMessage() {
     if (!clinicalDialogueState.patientVitals) {
         clinicalDialogueState.patientVitals = {};
     }
-    // 1. استخراج العمر بالكلمات المفتاحية
-    const ageMatch = normalizedDigitsText.match(/(?:عمري|عمر|سن|سنة|سنه)\s*[:=]?\s*(\d{1,2})/i);
+    // 1. استخراج العمر بالكلمات المفتاحية (دعم الصياغات المباشرة واللاحقة مثل: عمري 43، العمر: 43، 43 سنة)
+    const ageMatch = normalizedDigitsText.match(/(?:العمر|عمري|عمر|سن|سني|السن)\s*(?:هو|يكون|:|=)?\s*(\d{1,2})/i) ||
+                     normalizedDigitsText.match(/\b(\d{1,2})\s*(?:سنة|سنه|عام|عاما|عاماً)\b/i);
     if (ageMatch && parseInt(ageMatch[1], 10) >= 10 && parseInt(ageMatch[1], 10) <= 99) {
         clinicalDialogueState.patientVitals.age = parseInt(ageMatch[1], 10);
     }
-    // 2. استخراج الوزن بالكلمات المفتاحية
-    const weightMatch = normalizedDigitsText.match(/(?:وزني|وزن|كيلو|كغم|كغ)\s*[:=]?\s*(\d{2,3})/i);
+    // 2. استخراج الوزن بالكلمات المفتاحية (مثل: وزني 66، الوزن: 66، 66 كيلو، 66 كغم)
+    const weightMatch = normalizedDigitsText.match(/(?:الوزن|وزني|وزن)\s*(?:هو|يكون|:|=)?\s*(\d{2,3})/i) ||
+                        normalizedDigitsText.match(/\b(\d{2,3})\s*(?:كيلو|كغم|كغ|كيلوغرام|كلغ)\b/i);
     if (weightMatch && parseInt(weightMatch[1], 10) >= 30 && parseInt(weightMatch[1], 10) <= 250) {
         clinicalDialogueState.patientVitals.weight = parseInt(weightMatch[1], 10);
     }
-    // 3. استخراج الطول بالكلمات المفتاحية
-    const heightMatch = normalizedDigitsText.match(/(?:طولي|طول|سم)\s*[:=]?\s*(\d{2,3})/i);
+    // 3. استخراج الطول بالكلمات المفتاحية (مثل: طولي 165، الطول: 165، 165 سم)
+    const heightMatch = normalizedDigitsText.match(/(?:الطول|طولي|طول)\s*(?:هو|يكون|:|=)?\s*(\d{2,3})/i) ||
+                        normalizedDigitsText.match(/\b(\d{2,3})\s*(?:سم|سنتيمتر|سنتي)\b/i);
     if (heightMatch && parseInt(heightMatch[1], 10) >= 120 && parseInt(heightMatch[1], 10) <= 220) {
         clinicalDialogueState.patientVitals.height = parseInt(heightMatch[1], 10);
     }
 
-    // 4. استخراج ذكي متقدم للأرقام المتتالية المجردة بدون كلمات مفتاحية (مثل: "يونس 34 77 183" أو "34 77 183")
+    // 4. استخراج ذكي متقدم للأرقام المتتالية المجردة بدون كلمات مفتاحية (مثل: "رمزي 43 66 165" أو "43 66 165")
+    // الترتيب السريري القياسي في المحادثة: الاسم، العمر، الوزن، الطول
     const standaloneNumbers = (normalizedDigitsText.match(/\b\d{2,3}\b/g) || []).map(n => parseInt(n, 10));
     const candidateVitals = standaloneNumbers.filter(n => n >= 12 && n <= 230);
     if (candidateVitals.length > 0) {
         // أ. استخراج الطول (المدى الطبيعي 120 - 220 سم)
-        if (!clinicalDialogueState.patientVitals.height) {
+        let detectedHeight = clinicalDialogueState.patientVitals.height;
+        if (!detectedHeight) {
             const hCand = candidateVitals.find(n => n >= 120 && n <= 220);
-            if (hCand) clinicalDialogueState.patientVitals.height = hCand;
+            if (hCand) {
+                detectedHeight = hCand;
+                clinicalDialogueState.patientVitals.height = hCand;
+            }
         }
-        // ب. استخراج الوزن (المدى الطبيعي 35 - 180 كجم) بشرط ألا يكون هو الطول نفسه
-        if (!clinicalDialogueState.patientVitals.weight) {
-            const wCand = candidateVitals.find(n => n >= 35 && n <= 180 && n !== clinicalDialogueState.patientVitals.height);
-            if (wCand) clinicalDialogueState.patientVitals.weight = wCand;
+
+        // ب. الأرقام المتبقية بعد استبعاد الطول: الترتيب السريري المعتمد هو (العمر أولاً، ثم الوزن ثانياً)
+        const nonHeight = candidateVitals.filter(n => n !== detectedHeight);
+        if (nonHeight.length >= 2) {
+            // الأول هو العمر، والثاني هو الوزن طبقاً لصياغة سؤال الطبيب: (عمرك، ووزنك، وطولك)
+            if (!ageMatch) clinicalDialogueState.patientVitals.age = nonHeight[0];
+            if (!weightMatch) clinicalDialogueState.patientVitals.weight = nonHeight[1];
+        } else if (nonHeight.length === 1) {
+            const single = nonHeight[0];
+            if (!clinicalDialogueState.patientVitals.age && !ageMatch && single <= 95 && single >= 12) {
+                clinicalDialogueState.patientVitals.age = single;
+            } else if (!clinicalDialogueState.patientVitals.weight && !weightMatch && single >= 35 && single <= 230) {
+                clinicalDialogueState.patientVitals.weight = single;
+            }
         }
-        // ج. استخراج العمر (المدى الطبيعي 12 - 95 سنة) بشرط ألا يكون هو الطول أو الوزن
-        if (!clinicalDialogueState.patientVitals.age) {
-            const aCand = candidateVitals.find(n => n >= 12 && n <= 95 && n !== clinicalDialogueState.patientVitals.height && n !== clinicalDialogueState.patientVitals.weight);
-            if (aCand) clinicalDialogueState.patientVitals.age = aCand;
+    }
+
+    // تحديث فوري واحتساب مؤشر كتلة الجسم والحمولة الميكانيكية بمجرد توفر أو تصحيح الوزن والطول
+    if (clinicalDialogueState.patientVitals.weight && clinicalDialogueState.patientVitals.height) {
+        const w = clinicalDialogueState.patientVitals.weight;
+        const h = clinicalDialogueState.patientVitals.height;
+        const hM = h / 100;
+        const bmiVal = parseFloat((w / (hM * hM)).toFixed(1));
+        const minHealthyW = parseFloat((18.5 * hM * hM).toFixed(1));
+        const maxHealthyW = parseFloat((24.9 * hM * hM).toFixed(1));
+        const idealW = parseFloat((22.0 * hM * hM).toFixed(1));
+
+        let bmiStatus = "وزن طبيعي متوازن";
+        let bmiColor = "#10b981";
+        let deltaText = `✅ وزنك ضمن النطاق الصحي المثالي (${minHealthyW} - ${maxHealthyW} كجم)`;
+        let impact = "وزنك متناسق ولا يشكل حمولة ضغط إضافية على الغضاريف والفقرات.";
+
+        if (bmiVal < 18.5) {
+            const deltaKg = parseFloat((minHealthyW - w).toFixed(1));
+            bmiStatus = "نحافة / نقص في الكتلة العضلية";
+            bmiColor = "#38bdf8";
+            deltaText = `⚠️ نقص في الوزن بمقدار -${deltaKg} كجم عن الحد الأدنى للوزن الصحي (${minHealthyW} كجم)`;
+            impact = "نقص الكتلة العضلية يقلل من الثبات الميكانيكي للمفاصل ويجعل الفقرات عرضة للإجهاد السريع.";
+        } else if (bmiVal >= 25 && bmiVal < 30) {
+            const deltaKg = parseFloat((w - maxHealthyW).toFixed(1));
+            const excessVsIdeal = parseFloat((w - idealW).toFixed(1));
+            const addedLoad = parseFloat((deltaKg * 4).toFixed(1));
+            bmiStatus = "زيادة وزن (Overweight)";
+            bmiColor = "#f59e0b";
+            deltaText = `⚠️ وزن زائد بمقدار +${deltaKg} كجم عن الحد الصحي (+${excessVsIdeal} كجم عن الوزن المثالي)`;
+            impact = `يضيف حوالي +${addedLoad} كجم حمولة ضغط إضافية على الركبتين وأسفل الظهر أثناء الحركة.`;
+        } else if (bmiVal >= 30) {
+            const deltaKg = parseFloat((w - maxHealthyW).toFixed(1));
+            const excessVsIdeal = parseFloat((w - idealW).toFixed(1));
+            const addedLoad = parseFloat((deltaKg * 4).toFixed(1));
+            bmiStatus = "سمنة مفرطة / حمولة ميكانيكية حرجة";
+            bmiColor = "#ef4444";
+            deltaText = `🚨 وزن زائد حرج بمقدار +${deltaKg} كجم (+${excessVsIdeal} كجم عن الوزن المثالي)`;
+            impact = `كل 1 كجم زيادة يضاعف الحمل 4 أضعاف، مما يشكل حمولة ضغط فائقة تصل إلى +${addedLoad} كجم على مفاصلك وفقراتك.`;
+        }
+
+        const calculatedBmiInfo = {
+            value: bmiVal,
+            status: bmiStatus,
+            color: bmiColor,
+            minHealthyW,
+            maxHealthyW,
+            idealW,
+            deltaText,
+            impact
+        };
+
+        clinicalDialogueState.patientVitals.bmiInfo = calculatedBmiInfo;
+        if (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) {
+            currentAssessmentData.bmiInfo = calculatedBmiInfo;
+            if (!currentAssessmentData.patientVitals) currentAssessmentData.patientVitals = {};
+            currentAssessmentData.patientVitals.weight = w;
+            currentAssessmentData.patientVitals.height = h;
+            currentAssessmentData.patientVitals.age = clinicalDialogueState.patientVitals.age;
         }
     }
 

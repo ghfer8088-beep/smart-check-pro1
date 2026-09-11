@@ -261,8 +261,12 @@ const PatientFlow = (function() {
             motivation,
             baselinePain,
             currentPain,
-            painTrendHTML: generatePainTrendChartSVG(dailyLogs, baselinePain),
-            indicators: {
+            painTrendHTML: (currentSessionDay >= 3 && dailyLogs.length >= 1) ? generatePainTrendChartSVG(dailyLogs, baselinePain) : '',
+            indicators: (currentSessionDay <= 2) ? {
+                painReduction: 0,
+                mobility: 0,
+                sleepQuality: 0
+            } : {
                 painReduction: painReductionRate,
                 mobility: mobilityScore,
                 sleepQuality: sleepScore
