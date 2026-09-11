@@ -1113,17 +1113,22 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
         ];
 
         const pool = WADA3AN_AI_CONFIG.getPoolKeys();
-        const totalPoolKeys = pool.length || 1;
-        const maxKeyAttempts = Math.min(totalPoolKeys, 8);
         let lastErrorMsg = '';
 
-        for (let attempt = 0; attempt < maxKeyAttempts; attempt++) {
-            const key = pool[attempt % pool.length] || WADA3AN_AI_CONFIG.getApiKey();
-            if (!key) break;
+        // المرور على كل مفاتيح الحوض بالترتيب، تخطي المستنفدة
+        for (let attempt = 0; attempt < pool.length; attempt++) {
+            const startIdx = WADA3AN_AI_CONFIG._currentPoolIndex;
+            const idx = (startIdx + attempt) % pool.length;
+            const activeKey = pool[idx];
+            if (!activeKey) continue;
+
+            // تخطي المفتاح إذا كان في فترة التهدئة (مستنفد)
+            const coolDown = WADA3AN_AI_CONFIG._exhaustedKeys.get(activeKey);
+            if (coolDown && Date.now() < coolDown) continue;
 
             for (let modelName of audioModels) {
                 try {
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key}`;
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${activeKey}`;
                     const payload = {
                         contents: [{
                             parts: [{ text: cleanText }]
@@ -1160,11 +1165,13 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                                 const blobUrl = URL.createObjectURL(wavBlob);
                                 if (!this._audioCache) this._audioCache = {};
                                 this._audioCache[cacheKey] = blobUrl;
+                                // تحديث المؤشر للبدء من هذا المفتاح الناجح في المرة القادمة
+                                WADA3AN_AI_CONFIG._currentPoolIndex = idx;
                                 return returnDetails ? { audioUrl: blobUrl, error: null } : blobUrl;
                             }
                         }
                     } else if (res.status === 429) {
-                        WADA3AN_AI_CONFIG.rotateKey(key);
+                        WADA3AN_AI_CONFIG.rotateKey(activeKey);
                         lastErrorMsg = 'تم تدوير المفتاح بسبب بلوغ الحصة';
                         break; // الانتقال للمفتاح التالي في الحوض فوراً
                     } else {
@@ -1177,9 +1184,6 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                     console.warn(`Gemini audio model ${modelName} attempt notice:`, e);
                 }
             }
-
-            // تدوير المفتاح للتجربة التالية
-            WADA3AN_AI_CONFIG.rotateKey(key);
         }
 
         return returnDetails ? { audioUrl: null, error: lastErrorMsg || 'تعذر توليد الصوت البشري' } : null;

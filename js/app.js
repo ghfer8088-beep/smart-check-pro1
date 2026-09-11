@@ -416,10 +416,25 @@ async function runDiagnosticAnalysis() {
             currentSelectedPoint = allPts.find(p => p.id === 'lumbar_spine') || { id: 'lumbar_spine', title: 'أسفل الظهر والفقرات القطنية', region: 'lumbar' };
         }
 
-        const age = parseInt(document.getElementById('patient-age')?.value) || 35;
-        const gender = document.querySelector('input[name="patient_gender"]:checked')?.value || 'ذكر';
-        const weight = parseFloat(document.getElementById('patient-weight')?.value) || null;
-        const height = parseFloat(document.getElementById('patient-height')?.value) || null;
+        // استخراج البيانات الحيوية: أولاً من clinicalDialogueState (وضع الشات)، ثم من حقول النموذج
+        const chatVitals = (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState?.patientVitals) ? clinicalDialogueState.patientVitals : {};
+        const chatName = (typeof clinicalDialogueState !== 'undefined') ? (clinicalDialogueState?.patientName || '') : '';
+
+        const age = chatVitals.age || parseInt(document.getElementById('patient-age')?.value) || 35;
+        const weight = chatVitals.weight || parseFloat(document.getElementById('patient-weight')?.value) || null;
+        const height = chatVitals.height || parseFloat(document.getElementById('patient-height')?.value) || null;
+
+        // استخراج الجنس: من الشات أولاً، ثم من النموذج، ثم التخمين من اسم المريض
+        let gender = chatVitals.gender || document.querySelector('input[name="patient_gender"]:checked')?.value || '';
+        if (!gender || gender === 'ذكر') {
+            // محاولة استنتاج الجنس من الاسم العربي
+            const femaleNamePattern = /^(ميس|سارة|لينا|منى|رنا|هند|نور|ريم|دنيا|إيمان|ايمان|فاطمة|زينب|مريم|يسرى|رنده|رندة|ديما|لارا|لمى|لمياء|علا|عبير|غادة|وفاء|سمر|سمية|رغد|أميرة|أريج|ربى|إيناس|ناديا|ليلى|هيفاء|سوزان|رويدا|روان|إنعام|بيان|شيرين|مها|دلال|أسيل|نادين|إيمان|تقى|تقوى|داليا|يارا|ياسمين|جنى|أمل|حلا|عبير|إسراء|اسراء|إيمان|تمارا|رانيا|ريهام|نجلاء|ولاء|وئام|بسمة|بسمه|حنين|نادية|سعاد|لجين|ابتسام|شذى|أمنية|نوف|ألاء|الاء|مياء|دانا|زهراء|صبا|منال|حياة|هناء|إنجي|إنجى|بثينة|حمدة|صفاء|صفى|وسن|عفراء|حور|جواهر|شهد|شهده)/i;
+            if (femaleNamePattern.test(chatName.trim())) {
+                gender = 'أنثى';
+            } else if (!gender) {
+                gender = 'ذكر';
+            }
+        }
 
         let explicitPain = null;
         let hasExplicitPain = false;
@@ -530,6 +545,10 @@ async function runDiagnosticAnalysis() {
             ...assessmentResult,
             patientName: pName,
             patientPhone: pPhone,
+            age,
+            gender,
+            weight,
+            height,
             pointId: currentSelectedPoint.id,
             painAreaTitle: currentSelectedPoint.title,
             painAreaKey: currentSelectedPoint.id,
@@ -583,7 +602,7 @@ async function runDiagnosticAnalysis() {
             weight: clinicalDialogueState.patientVitals?.weight || weight,
             height: clinicalDialogueState.patientVitals?.height || height,
             painArea: currentSelectedPoint?.title || 'العمود الفقري والمفاصل',
-            painLevel: explicitPain,
+            painLevel: painSeverity || explicitPain,
             notes: userNotes || (clinicalDialogueState.collectedSymptoms ? clinicalDialogueState.collectedSymptoms.join(' - ') : ''),
             createdAt: activePatient?.createdAt || new Date().toISOString(),
             lastUpdated: new Date().toISOString()
@@ -2324,7 +2343,19 @@ function renderVideoSuccessStories() {
     const list = getVideoSuccessStories();
     container.innerHTML = list.map(item => {
         const titleSafe = (item.title || '').replace(/"/g, '&quot;');
-        const targetUrl = item.directUrl || item.url || item.embedUrl || 'https://www.facebook.com/Wada3an.Al.Alam';
+        const GENERIC_FB_PAGE = 'https://www.facebook.com/Wada3an.Al.Alam';
+        // استخدام الرابط المباشر إذا كان محدداً وليس الصفحة العامة، وإلا استخدام رابط url
+        let targetUrl = item.directUrl || '';
+        const isGenericPage = !targetUrl || targetUrl.trim() === GENERIC_FB_PAGE || targetUrl.trim() === 'https://www.facebook.com/Wada3an.Al.Alam/';
+        if (isGenericPage) {
+            // تحويل رابط تضمين يوتيوب إلى رابط مباشر إذا أمكن
+            let altUrl = item.url || '';
+            if (altUrl.includes('youtube.com/embed/')) {
+                const vidId = altUrl.split('embed/')[1]?.split('?')[0];
+                if (vidId) altUrl = `https://www.youtube.com/watch?v=${vidId}`;
+            }
+            targetUrl = altUrl || GENERIC_FB_PAGE;
+        }
         const urlSafe = targetUrl.replace(/"/g, '&quot;');
         const descSafe = (item.description || '').replace(/"/g, '&quot;');
         const catSafe = item.category || '⚡ حالة سريرية موثقة';
@@ -2798,8 +2829,8 @@ async function loadPatientRecoveryDashboard(patientId) {
                     <button type="button" onclick="exportClinicalSummaryForDoctor('${patientId}')" class="btn-header no-print" style="padding: 7px 8px; font-size: 0.8em; background: #0f172a; border: 1.5px solid #38bdf8; color: #38bdf8; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; width: 100%; box-sizing: border-box;">
                         <span>📋</span> ملخص المعالج
                     </button>
-                    <div style="background: #0f172a; border: 1px solid #10b981; padding: 7px 8px; border-radius: 8px; color: #10b981; font-weight: bold; font-size: 0.8em; text-align: center; display: flex; align-items: center; justify-content: center; white-space: nowrap; width: 100%; box-sizing: border-box;">
-                        ✓ ${sessionData.stageTitle}
+                    <div style="background: #0f172a; border: 1px solid #10b981; padding: 7px 8px; border-radius: 8px; color: #10b981; font-weight: bold; font-size: 0.78em; text-align: center; display: flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; overflow: hidden;" title="✓ ${sessionData.stageTitle}">
+                        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; max-width: 100%;">✓ ${(sessionData.stageTitle || '').length > 22 ? sessionData.stageTitle.substring(0, 20) + '…' : sessionData.stageTitle}</span>
                     </div>
                 </div>
             </div>
@@ -3746,10 +3777,15 @@ async function exportClinicalSummaryForDoctor(patientId) {
         if (targetId && typeof SmartDB !== 'undefined' && SmartDB.getPatientDailyLogs) {
             dailyLogs = await SmartDB.getPatientDailyLogs(targetId) || [];
         }
-        const baselinePain = patient.painLevel || 7;
+        // استخراج شدة الألم الأساسية من مصادر متعددة بالأولوية
+        const baselinePain = patient.painLevel ||
+            patient.latestAssessment?.painSeverity ||
+            (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.painSeverity) ||
+            (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.internalPainScore) ||
+            null; // null = غير محدد (لا نعرض 7 افتراضياً)
         const lastLog = dailyLogs.length > 0 ? dailyLogs[dailyLogs.length - 1] : null;
-        const currentPain = lastLog ? (typeof lastLog.painScore === 'number' ? lastLog.painScore : baselinePain) : baselinePain;
-        const painDrop = Math.max(0, Math.min(100, Math.round(((baselinePain - currentPain) / Math.max(1, baselinePain)) * 100)));
+        const currentPain = lastLog ? (typeof lastLog.painScore === 'number' ? lastLog.painScore : (baselinePain || 7)) : (baselinePain || 7);
+        const painDrop = baselinePain ? Math.max(0, Math.min(100, Math.round(((baselinePain - currentPain) / Math.max(1, baselinePain)) * 100))) : 0;
         const painArea = resolvePainAreaTitle(patient, patient.latestAssessment || currentAssessmentData, currentSelectedPoint);
 
         // تجميع سجل الأيام السبعة
@@ -3761,16 +3797,39 @@ async function exportClinicalSummaryForDoctor(patientId) {
             }
         }
 
-        const assessment = patient.latestAssessment || {};
+        const assessment = patient.latestAssessment || (typeof currentAssessmentData !== 'undefined' ? currentAssessmentData : {});
         const diagTitle = assessment.primaryDiagnosis || patient.primaryDiagnosis || 'متلازمة خلل ميكانيكي حركي';
         const rootLevel = assessment.rootLevel || '';
         const redFlags = assessment.isRedFlag ? '⚠️ تم رصد مؤشرات حذر سريرية' : '✅ آمن تماماً للتقويم اليدوي بالكايروبراكتيك (Cleared)';
 
+        // استخراج العمر والجنس من مصادر متعددة
+        const patientAge = patient.age || assessment.age ||
+            (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.age) ||
+            (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState?.patientVitals?.age) ||
+            null;
+
+        let patientGenderRaw = patient.gender || assessment.gender ||
+            (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.gender) ||
+            (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState?.patientVitals?.gender) ||
+            '';
+        // تطبيع قيمة الجنس
+        let patientGenderDisplay;
+        if (patientGenderRaw === 'female' || patientGenderRaw === 'أنثى' || patientGenderRaw === 'انثى') {
+            patientGenderDisplay = 'أنثى';
+        } else if (patientGenderRaw === 'male' || patientGenderRaw === 'ذكر') {
+            patientGenderDisplay = 'ذكر';
+        } else {
+            // محاولة استنتاج الجنس من الاسم
+            const pName = patient.name || '';
+            const femaleNames = /^(ميس|سارة|لينا|منى|رنا|هند|نور|ريم|دنيا|إيمان|ايمان|فاطمة|زينب|مريم|يسرى|رنده|رندة|ديما|لارا|لمى|لمياء|علا|عبير|غادة|وفاء|سمر|سمية|رغد|أميرة|أريج|ربى|ناديا|ليلى|هيفاء|سوزان|روان|بيان|شيرين|مها|دلال|نادين|تقى|يارا|ياسمين|جنى|أمل|حلا|إسراء|رانيا|ريهام|ولاء|وئام|بسمة|حنين|نادية|سعاد|لجين|شذى|نوف|ألاء|دانا|زهراء|منال|هناء|شهد)/i;
+            patientGenderDisplay = femaleNames.test(pName.trim()) ? 'أنثى' : (pName ? 'ذكر' : 'غير محدد');
+        }
+
         activeDoctorSummaryData = {
             patientName: patient.name,
             patientPhone: patient.phone,
-            patientAge: patient.age || 'غير محدد',
-            patientGender: patient.gender === 'female' ? 'أنثى' : 'ذكر',
+            patientAge: patientAge || 'غير محدد',
+            patientGender: patientGenderDisplay,
             painArea,
             diagTitle,
             rootLevel,
