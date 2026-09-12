@@ -3,7 +3,7 @@
 // استراتيجية Network-First لضمان وصول المريض لأحدث التحديثات فوراً
 // ==========================================================================
 
-const CACHE_NAME = 'wada3an-alam-v15.3';
+const CACHE_NAME = 'wada3an-alam-v15.7';
 const STATIC_ASSETS = [
     './',
     './index.html',
@@ -96,7 +96,8 @@ const STATIC_ASSETS = [
     './js/ai-config.js',
     './js/ai-engine.js',
     './js/app.js',
-    './js/text-editor.js'
+    './js/text-editor.js',
+    './js/security-shield.js'
 ];
 
 self.addEventListener('install', (event) => {

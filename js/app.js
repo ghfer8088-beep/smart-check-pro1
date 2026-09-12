@@ -3,6 +3,18 @@
 // مطورة من قبل "وداعاً للألم" (تقنية الكايروبراكتيك)
 // ==========================================================================
 
+// 🛡️ حماية الملكية الفكرية وقفل النطاق على مستوى المحرك البرمجي (Embedded Domain Guard)
+(function _secureAppDomain() {
+    try {
+        const h = (window.location.hostname || '').toLowerCase();
+        const allowed = ['smartchecktools.com', 'www.smartchecktools.com', 'ghfer8088-beep.github.io', 'localhost', '127.0.0.1', ''].some(d => h === d || h.endsWith('.' + d));
+        if (!allowed && window.location.protocol !== 'file:') {
+            window.location.href = 'https://smartchecktools.com';
+            throw new Error('Unauthorized deployment execution blocked.');
+        }
+    } catch(e) {}
+})();
+
 let currentSelectedPoint = null;
 let currentAssessmentData = null;
 let activePatient = null;
