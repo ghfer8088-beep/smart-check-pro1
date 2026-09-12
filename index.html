@@ -39,11 +39,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=17.1">
+    <link rel="stylesheet" href="css/style.css?v=17.2">
     <script>
-        // التحقق من تحديثات Service Worker وتفريغ الكاش القديم فوراً عند الترقية للإصدار 17.0
+        // التحقق من تحديثات Service Worker وتفريغ الكاش القديم فوراً عند الترقية للإصدار 17.2
         (function() {
-            const APP_TARGET_VER = '17.0';
+            const APP_TARGET_VER = '17.2';
             const currentVer = localStorage.getItem('smart_app_version');
             if (currentVer !== APP_TARGET_VER) {
                 if ('caches' in window) {
@@ -246,7 +246,7 @@
                 <div style="display: flex; align-items: center; gap: 14px;">
                     <div style="width: 58px; height: 78px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; filter: drop-shadow(0 4px 12px rgba(212, 175, 55, 0.55));">
                         <!-- وسام التميز السريري الملكي فائق الفخامة والريادة (تصميم فيكتور SVG مخصص فائق الدقة) -->
-                        <img src="assets/royal-excellence-medal.svg" alt="وسام التميز السريري والريادة العالمية" style="width: 100%; height: 100%; object-fit: contain;">
+                        <img src="assets/royal-excellence-medal.svg?v=17.2" alt="وسام التميز السريري والريادة العالمية" style="width: 100%; height: 100%; object-fit: contain;">
                     </div>
                     <div>
                         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 2px;">
@@ -379,10 +379,17 @@
                         </div>
                     </div>
 
-                    <button type="button" id="btn-goto-step2" disabled onclick="if(window.Wada3anAiEngine) Wada3anAiEngine.unlockAudio(); goToStep(2);" class="royal-clinical-next-btn">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                        <span>متابعة الفحص السريري الذكي</span>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><polyline points="15 18 9 12 15 6"/></svg>
+                    <button type="button" id="btn-goto-step2" disabled onclick="if(window.Wada3anAiEngine) Wada3anAiEngine.unlockAudio(); goToStep(2);" class="royal-clinical-next-btn" style="width: 100%; max-width: 520px; margin: 0 auto; background: linear-gradient(180deg, #f59e0b 0%, #ea580c 50%, #c2410c 51%, #9a3412 100%); color: #ffffff; border: 2px solid #fdba74; border-radius: 50px; padding: 10px 24px 10px 14px; font-size: 1.18em; font-weight: 900; letter-spacing: 0.5px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 14px; box-shadow: 0 8px 25px rgba(234, 88, 12, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.7), 0 2px 4px rgba(0, 0, 0, 0.3); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);">
+                        <!-- Left Glossy Orb Icon Circle (مستوحى بدقة من النموذج المرفق) -->
+                        <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 45%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.4) 100%), linear-gradient(135deg, #f59e0b 0%, #c2410c 100%); border: 2.5px solid #ffffff; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.8); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff" style="margin-left: 2px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));"><polygon points="6,4 20,12 6,20"/></svg>
+                        </div>
+                        <!-- Main Text -->
+                        <span style="flex-grow: 1; text-align: center; font-size: 1.08em; font-weight: 900; color: #ffffff; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);">
+                            متابعة الفحص السريري الذكي
+                        </span>
+                        <!-- Right Arrow Chevron -->
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));"><polyline points="15 18 9 12 15 6"/></svg>
                     </button>
                 </div>
             </div>
@@ -1119,7 +1126,7 @@
                 <!-- وسام التميز السريري الملكي فائق الفخامة والريادة (تصميم فيكتور SVG مخصص) -->
                 <div style="margin-bottom: 16px; display: flex; justify-content: center;">
                     <div style="width: 120px; height: 164px; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 8px 24px rgba(212, 175, 55, 0.65));">
-                        <img src="assets/royal-excellence-medal.svg" alt="وسام الانتصار على الألم والتعافي الحركي" style="width: 100%; height: 100%; object-fit: contain;">
+                        <img src="assets/royal-excellence-medal.svg?v=17.2" alt="وسام الانتصار على الألم والتعافي الحركي" style="width: 100%; height: 100%; object-fit: contain;">
                     </div>
                 </div>
 
@@ -1493,19 +1500,19 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/geo-tracker.js?v=17.1"></script>
-    <script src="js/cloud-sync.js?v=17.1"></script>
-    <script src="js/database.js?v=17.1"></script>
-    <script src="js/exercise-image-studio.js?v=17.1"></script>
-    <script src="js/exercises-db.js?v=17.1"></script>
-    <script src="js/diagnostic-engine.js?v=17.1"></script>
-    <script src="js/audio-pacer.js?v=17.1"></script>
-    <script src="js/patient-flow.js?v=17.1"></script>
-    <script src="js/admin-engine.js?v=17.1"></script>
-    <script src="js/ai-config.js?v=17.1"></script>
-    <script src="js/ai-engine.js?v=17.1"></script>
-    <script src="js/app.js?v=17.1"></script>
-    <script src="js/text-editor.js?v=17.1"></script>
+    <script src="js/geo-tracker.js?v=17.2"></script>
+    <script src="js/cloud-sync.js?v=17.2"></script>
+    <script src="js/database.js?v=17.2"></script>
+    <script src="js/exercise-image-studio.js?v=17.2"></script>
+    <script src="js/exercises-db.js?v=17.2"></script>
+    <script src="js/diagnostic-engine.js?v=17.2"></script>
+    <script src="js/audio-pacer.js?v=17.2"></script>
+    <script src="js/patient-flow.js?v=17.2"></script>
+    <script src="js/admin-engine.js?v=17.2"></script>
+    <script src="js/ai-config.js?v=17.2"></script>
+    <script src="js/ai-engine.js?v=17.2"></script>
+    <script src="js/app.js?v=17.2"></script>
+    <script src="js/text-editor.js?v=17.2"></script>
 
     <script>
         // تشغيل عداد التفاعل الحي الاجتماعي (Live Online Social Proof) وكاشف الدولة والمدينة
