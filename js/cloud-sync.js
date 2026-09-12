@@ -23,13 +23,73 @@
         }
     } catch (e) {}
 
-    // استرجاع كافة المرضى المرحلين سحابياً
+    // استرجاع كافة المرضى المرحلين سحابياً مع تنظيف ذكي وتوحيد السجلات المكررة
     function getCloudSyncedPatients() {
         try {
             const raw = localStorage.getItem(CLOUD_PATIENTS_KEY);
             if (raw) {
                 const parsed = JSON.parse(raw);
-                if (Array.isArray(parsed)) return parsed;
+                if (Array.isArray(parsed)) {
+                    // إزالة التكرارات الناتجة عن تكرار الإرسال وتوحيد السجلات بالهاتف
+                    const cleanList = [];
+                    const phoneMap = new Map();
+
+                    for (const pt of parsed) {
+                        if (!pt) continue;
+                        // تصحيح الاسم إن كان "الاسم" أو "الآسم" أو "الإسم"
+                        let pName = pt.fullName || pt.name || '';
+                        if (pName === 'الاسم' || pName === 'الآسم' || pName === 'الإسم') {
+                            pName = 'مراجع كريم';
+                        }
+
+                        // احتساب BMI تلقائياً إن وجد الوزن والطول
+                        const w = parseFloat(pt.weight);
+                        const h = parseFloat(pt.height);
+                        let bmi = pt.bmi;
+                        if (!bmi && w > 0 && h > 0) {
+                            bmi = parseFloat((w / Math.pow(h / 100, 2)).toFixed(1));
+                        }
+
+                        const cleanedPt = {
+                            ...pt,
+                            name: pName || 'مراجع كريم',
+                            fullName: pName || 'مراجع كريم',
+                            bmi: bmi || ''
+                        };
+
+                        const cleanPhone = (cleanedPt.phone || '').replace(/\D/g, '');
+                        if (cleanPhone && cleanPhone.length >= 7) {
+                            if (phoneMap.has(cleanPhone)) {
+                                // دمج السجلين مع تفضيل السجل الأكثر اكتمالاً بالبيانات
+                                const existing = phoneMap.get(cleanPhone);
+                                const merged = {
+                                    ...cleanedPt,
+                                    ...existing,
+                                    name: (existing.name !== 'مراجع كريم' && existing.name !== 'الاسم') ? existing.name : cleanedPt.name,
+                                    fullName: (existing.fullName !== 'مراجع كريم' && existing.fullName !== 'الاسم') ? existing.fullName : cleanedPt.fullName,
+                                    age: existing.age || cleanedPt.age,
+                                    weight: existing.weight || cleanedPt.weight,
+                                    height: existing.height || cleanedPt.height,
+                                    bmi: existing.bmi || cleanedPt.bmi,
+                                    painArea: (existing.painArea && existing.painArea !== 'العمود الفقري والمفاصل') ? existing.painArea : (cleanedPt.painArea || existing.painArea),
+                                    diagnosisTitle: existing.diagnosisTitle || cleanedPt.diagnosisTitle,
+                                    chiefDiagnosis: existing.chiefDiagnosis || cleanedPt.chiefDiagnosis,
+                                    assessment: existing.assessment || cleanedPt.assessment
+                                };
+                                phoneMap.set(cleanPhone, merged);
+                            } else {
+                                phoneMap.set(cleanPhone, cleanedPt);
+                            }
+                        } else {
+                            // سجل بدون هاتف: لا نضيفه إذا كان اسماً محظوراً بدون بيانات حقيقية
+                            if (pName !== 'الاسم' && pName !== 'الآسم') {
+                                cleanList.push(cleanedPt);
+                            }
+                        }
+                    }
+
+                    return [...Array.from(phoneMap.values()), ...cleanList];
+                }
             }
         } catch (e) {}
         return [];
@@ -51,6 +111,16 @@
     async function dispatchPatientToCloud(patientRecord) {
         if (!patientRecord) return null;
 
+        // تنظيف الاسم والتحقق الصارم من عدم ترحيل كلمة "الاسم" كاسم شخصي للمريض
+        let rawName = patientRecord.name || patientRecord.fullName || '';
+        let cleanName = rawName.trim();
+        if (/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)$/i.test(cleanName)) {
+            cleanName = (patientRecord.fullName && !/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)$/i.test(patientRecord.fullName)) 
+                ? patientRecord.fullName 
+                : 'مراجع كريم';
+        }
+        if (!cleanName) cleanName = 'مراجع كريم';
+
         // جلب البيانات الجغرافية للزائر (الدولة، المدينة، الجهاز)
         let geoInfo = null;
         try {
@@ -59,24 +129,40 @@
             }
         } catch (e) {}
 
-        const patientId = patientRecord.id || ('pat_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 5));
+        const patientId = patientRecord.id || patientRecord.patientId || ('pat_' + (patientRecord.phone ? String(patientRecord.phone).replace(/\D/g, '') : Date.now().toString(36)) + '_' + Math.random().toString(36).substr(2, 5));
         
+        // احتساب مؤشر كتلة الجسم BMI بدقة إن توفر الطول والوزن
+        const w = parseFloat(patientRecord.weight);
+        const h = parseFloat(patientRecord.height);
+        let calculatedBmi = patientRecord.bmi;
+        if (!calculatedBmi && w > 0 && h > 0) {
+            calculatedBmi = parseFloat((w / Math.pow(h / 100, 2)).toFixed(1));
+        }
+
+        // استخراج موضع الألم بدقة ومنع الفراغ أو الفرض القسري للعمود الفقري
+        const resolvedPain = patientRecord.painAreaTitle 
+            || patientRecord.painArea 
+            || patientRecord.selectedPoint 
+            || patientRecord.condition 
+            || 'استشارة وفحص سريري شامل';
+
         const enhancedRecord = {
             ...patientRecord,
             id: patientId,
             patientId: patientId,
-            name: patientRecord.name || patientRecord.fullName || 'مجهول',
-            fullName: patientRecord.fullName || patientRecord.name || 'مجهول',
+            name: cleanName,
+            fullName: patientRecord.fullName && !/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)$/i.test(patientRecord.fullName) ? patientRecord.fullName : cleanName,
             phone: patientRecord.phone || '',
             age: patientRecord.age || '',
             gender: patientRecord.gender || 'male',
             height: patientRecord.height || '',
             weight: patientRecord.weight || '',
-            bmi: patientRecord.bmi || '',
-            painArea: patientRecord.painArea || patientRecord.painAreaTitle || patientRecord.selectedPoint || 'العمود الفقري والمفاصل',
-            selectedPoint: patientRecord.selectedPoint || patientRecord.painArea || patientRecord.anatomicalPoint || '',
-            chiefDiagnosis: patientRecord.chiefDiagnosis || patientRecord.diagnosisTitle || patientRecord.condition || '',
-            diagnosisTitle: patientRecord.diagnosisTitle || patientRecord.chiefDiagnosis || '',
+            bmi: calculatedBmi || '',
+            painArea: resolvedPain,
+            painAreaTitle: resolvedPain,
+            selectedPoint: patientRecord.selectedPoint || resolvedPain,
+            chiefDiagnosis: patientRecord.chiefDiagnosis || patientRecord.diagnosisTitle || patientRecord.condition || 'تشخيص سريري متكامل',
+            diagnosisTitle: patientRecord.diagnosisTitle || patientRecord.chiefDiagnosis || 'تشخيص سريري متكامل',
             severityLevel: patientRecord.severityLevel || patientRecord.painLevel || '',
             vitalsSummary: patientRecord.vitalsSummary || '',
             clinicalQuestions: patientRecord.clinicalQuestions || {},
@@ -94,13 +180,13 @@
             device: (geoInfo && geoInfo.device) ? geoInfo.device : 'Mobile',
             deviceIcon: (geoInfo && geoInfo.deviceIcon) ? geoInfo.deviceIcon : '📱',
             timestamp: patientRecord.timestamp || patientRecord.createdAt || new Date().toISOString(),
-            status: patientRecord.status || 'new', // new, reviewed, contacted
+            status: patientRecord.status || 'new',
             sourceDomain: window.location.hostname || 'smartchecktools.com'
         };
 
         // 1. التخزين في قاعدة البيانات الموحدة
         const currentPatients = getCloudSyncedPatients();
-        const existingIdx = currentPatients.findIndex(p => p.id === enhancedRecord.id || (p.phone && p.phone === enhancedRecord.phone && p.fullName === enhancedRecord.fullName));
+        const existingIdx = currentPatients.findIndex(p => p.id === enhancedRecord.id || (p.phone && enhancedRecord.phone && p.phone === enhancedRecord.phone));
 
         if (existingIdx >= 0) {
             // تحديث سجل موجود
@@ -112,7 +198,7 @@
 
         saveCloudSyncedPatients(currentPatients);
 
-        // 2. مزامنة فورية مع SmartDB إن كان متاحاً
+        // 2. مزامنة فورية مع SmartDB محلياً
         try {
             if (window.SmartDB && typeof window.SmartDB.savePatientRecord === 'function') {
                 await window.SmartDB.savePatientRecord(enhancedRecord);
@@ -231,6 +317,87 @@
         } catch(e) {}
     }
 
+    // دالة توحيد وتدقيق السجل السحابي ومنع القيم الفارغة وتصحيح موضع الألم والتشخيص
+    function normalizeCloudPatientRecord(pt) {
+        if (!pt) return null;
+        const pId = pt.id || pt.patientId || ('pat_' + (pt.phone ? String(pt.phone).replace(/\D/g, '') : Date.now().toString(36)));
+        let pName = (pt.fullName || pt.name || '').trim();
+        if (/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)$/i.test(pName)) {
+            pName = 'مراجع كريم';
+        }
+        if (!pName) pName = 'مراجع كريم';
+
+        const pPhone = pt.phone || '';
+        
+        // احتساب مؤشر كتلة الجسم BMI بدقة
+        const w = parseFloat(pt.weight);
+        const h = parseFloat(pt.height);
+        let bmi = pt.bmi;
+        if (!bmi && w > 0 && h > 0) {
+            bmi = parseFloat((w / Math.pow(h / 100, 2)).toFixed(1));
+        }
+
+        // استخراج واستنتاج موضع الشكوى الحقيقي بذكاء إن كان فارغاً أو مفروضاً خطأً
+        let resolvedPain = pt.painArea || pt.painAreaTitle || pt.selectedPoint || '';
+        if (!resolvedPain || resolvedPain === 'العمود الفقري والمفاصل') {
+            const textToSearch = ((pt.notes || '') + ' ' + (pt.mriReportText || '') + ' ' + (Array.isArray(pt.collectedSymptoms) ? pt.collectedSymptoms.join(' ') : '')).toLowerCase();
+            if (/ركبة|ركبه|صابونة|طقطقة\s*ركبة|احتكاك\s*ركبة|patella|knee/.test(textToSearch)) {
+                resolvedPain = 'مفصل الركبة والصابونة';
+            } else if (/رقبة|رقبه|عنق|ديسك\s*رقبة|تصلب\s*رقبة|cervical|neck/.test(textToSearch)) {
+                resolvedPain = 'الفقرات العنقية (الرقبة الخلفية)';
+            } else if (/كتف|كتفي|لوح\s*الكتف|أبهر|ابهر|كفة\s*مدورة|shoulder/.test(textToSearch)) {
+                resolvedPain = 'مفصل الكتف والكفة المدورة';
+            } else if (/كاحل|قدم|كعب|مشط|أكيليس|مسمار\s*كعب|ankle|foot/.test(textToSearch)) {
+                resolvedPain = 'الكاحل ومفصل القدم';
+            } else if (/رسغ|معصم|يد|كف|نفق\s*رسغي|wrist|hand/.test(textToSearch)) {
+                resolvedPain = 'الرسغ ومفصل اليد';
+            } else if (/عرق\s*النسا|سياتيكا|كمثرية|sciatica/.test(textToSearch)) {
+                resolvedPain = 'عضلات الأرداف ومسار عرق النسا';
+            } else if (/عجز|عجزي|حوض|sacroiliac/.test(textToSearch)) {
+                resolvedPain = 'المفصل العجزي الحوضي';
+            } else if (/ظهر|قطنية|أسفل\s*الظهر|اسفل\s*الظهر|ديسك/.test(textToSearch)) {
+                resolvedPain = 'الفقرات القطنية وأسفل الظهر';
+            } else {
+                resolvedPain = pt.painArea || 'استشارة وفحص سريري شامل للمفاصل';
+            }
+        }
+
+        let resolvedDiag = pt.diagnosisTitle || pt.chiefDiagnosis || pt.condition || '';
+        if (!resolvedDiag || resolvedDiag === 'فحص واستشارة سريرية' || resolvedDiag === 'استشارة وفحص سريري متكامل') {
+            if (resolvedPain && resolvedPain !== 'استشارة وفحص سريري شامل للمفاصل') {
+                resolvedDiag = `فحص وتشخيص سريري (${resolvedPain})`;
+            } else {
+                resolvedDiag = 'فحص واستشارة سريرية متكاملة';
+            }
+        }
+
+        return {
+            ...pt,
+            id: pId,
+            patientId: pId,
+            name: pName,
+            fullName: pName,
+            phone: pPhone,
+            age: pt.age || null,
+            weight: pt.weight || null,
+            height: pt.height || null,
+            bmi: bmi || '',
+            gender: pt.gender || 'male',
+            painArea: resolvedPain,
+            painAreaTitle: resolvedPain,
+            selectedPoint: pt.selectedPoint || resolvedPain,
+            chiefDiagnosis: resolvedDiag,
+            diagnosisTitle: resolvedDiag,
+            country: pt.country || 'دولي',
+            city: (pt.city && pt.city !== 'غير محدد') ? pt.city : '',
+            flag: pt.flag || '🌐',
+            device: pt.device || 'Mobile',
+            deviceIcon: pt.deviceIcon || '📱',
+            createdAt: pt.createdAt || pt.timestamp || new Date().toISOString(),
+            lastUpdated: new Date().toISOString()
+        };
+    }
+
     // جلب كافة المرضى المرحلين من السحابة عبر كافة الأجهزة والهواتف حول العالم
     async function fetchCloudPatients() {
         const currentList = getCloudSyncedPatients();
@@ -247,28 +414,13 @@
                 if (hubData && hubData.data && Array.isArray(hubData.data.patients)) {
                     for (const pt of hubData.data.patients) {
                         if (!pt) continue;
-                        const pId = pt.id || pt.patientId || ('pat_' + (pt.phone ? String(pt.phone).replace(/\D/g, '') : Date.now().toString(36)));
-                        const pName = pt.fullName || pt.name || 'مراجع جديد';
-                        const pPhone = pt.phone || '';
-                        const normalized = {
-                            ...pt,
-                            id: pId,
-                            patientId: pId,
-                            name: pName,
-                            fullName: pName,
-                            phone: pPhone,
-                            painArea: pt.painArea || pt.selectedPoint || 'العمود الفقري والمفاصل',
-                            chiefDiagnosis: pt.diagnosisTitle || pt.chiefDiagnosis || pt.condition || 'فحص واستشارة سريرية',
-                            country: pt.country || 'غير محدد',
-                            city: pt.city || 'غير محدد',
-                            flag: pt.flag || '🌐',
-                            device: pt.device || 'Mobile',
-                            deviceIcon: pt.deviceIcon || '📱',
-                            createdAt: pt.createdAt || pt.timestamp || new Date().toISOString(),
-                            lastUpdated: new Date().toISOString()
-                        };
+                        const normalized = normalizeCloudPatientRecord(pt);
+                        if (!normalized) continue;
 
-                        const idx = currentList.findIndex(x => (pId && (x.id === pId || x.patientId === pId)) || (pPhone && x.phone === pPhone && (x.fullName === pName || x.name === pName)));
+                        const pId = normalized.id;
+                        const pPhone = (normalized.phone || '').replace(/\D/g, '');
+
+                        const idx = currentList.findIndex(x => (pId && (x.id === pId || x.patientId === pId)) || (pPhone && x.phone && x.phone.replace(/\D/g, '') === pPhone));
                         if (idx >= 0) {
                             currentList[idx] = { ...currentList[idx], ...normalized };
                         } else {
@@ -276,10 +428,10 @@
                             changed = true;
                         }
 
-                        // حفظ فوري في SmartDB للمريض والتقييم السريري والسجلات
+                        // حفظ فوري في SmartDB بدون إعادة بث سحابي
                         try {
                             if (window.SmartDB && typeof window.SmartDB.savePatient === 'function') {
-                                window.SmartDB.savePatient(normalized);
+                                window.SmartDB.savePatient(normalized, { skipCloudSync: true });
                             }
                             const rawAss = pt.assessment || pt.latestAssessment;
                             if (rawAss && window.SmartDB && typeof window.SmartDB.saveAssessment === 'function') {
@@ -287,15 +439,6 @@
                                     patientId: pId,
                                     ...rawAss
                                 });
-                            }
-                            const logsArr = pt.dailyLogs || pt.logs;
-                            if (Array.isArray(logsArr) && window.SmartDB && typeof window.SmartDB.saveDailyLog === 'function') {
-                                for (const l of logsArr) {
-                                    window.SmartDB.saveDailyLog({
-                                        patientId: pId,
-                                        ...l
-                                    });
-                                }
                             }
                         } catch(e) {}
                     }
@@ -323,28 +466,13 @@
                             if (item.event === 'message' && item.message) {
                                 const pt = JSON.parse(item.message);
                                 if (pt && (pt.id || pt.patientId || pt.phone || pt.fullName || pt.name)) {
-                                    const pId = pt.id || pt.patientId || ('pat_' + (pt.phone ? String(pt.phone).replace(/\D/g, '') : Date.now().toString(36)));
-                                    const pName = pt.fullName || pt.name || 'مراجع جديد';
-                                    const pPhone = pt.phone || '';
-                                    const normalized = {
-                                        ...pt,
-                                        id: pId,
-                                        patientId: pId,
-                                        name: pName,
-                                        fullName: pName,
-                                        phone: pPhone,
-                                        painArea: pt.painArea || pt.selectedPoint || 'العمود الفقري والمفاصل',
-                                        chiefDiagnosis: pt.diagnosisTitle || pt.chiefDiagnosis || pt.condition || 'فحص واستشارة سريرية',
-                                        country: pt.country || 'غير محدد',
-                                        city: pt.city || 'غير محدد',
-                                        flag: pt.flag || '🌐',
-                                        device: pt.device || 'Mobile',
-                                        deviceIcon: pt.deviceIcon || '📱',
-                                        createdAt: pt.createdAt || pt.timestamp || new Date().toISOString(),
-                                        lastUpdated: new Date().toISOString()
-                                    };
+                                    const normalized = normalizeCloudPatientRecord(pt);
+                                    if (!normalized) continue;
 
-                                    const idx = currentList.findIndex(x => (pId && (x.id === pId || x.patientId === pId)) || (pPhone && x.phone === pPhone && (x.fullName === pName || x.name === pName)));
+                                    const pId = normalized.id;
+                                    const pPhone = (normalized.phone || '').replace(/\D/g, '');
+
+                                    const idx = currentList.findIndex(x => (pId && (x.id === pId || x.patientId === pId)) || (pPhone && x.phone && x.phone.replace(/\D/g, '') === pPhone));
                                     if (idx >= 0) {
                                         currentList[idx] = { ...currentList[idx], ...normalized };
                                     } else {
@@ -354,7 +482,7 @@
 
                                     try {
                                         if (window.SmartDB && typeof window.SmartDB.savePatient === 'function') {
-                                            window.SmartDB.savePatient(normalized);
+                                            window.SmartDB.savePatient(normalized, { skipCloudSync: true });
                                         }
                                         const rawAss = pt.assessment || pt.latestAssessment;
                                         if (rawAss && window.SmartDB && typeof window.SmartDB.saveAssessment === 'function') {
@@ -362,15 +490,6 @@
                                                 patientId: pId,
                                                 ...rawAss
                                             });
-                                        }
-                                        const logsArr = pt.dailyLogs || pt.logs;
-                                        if (Array.isArray(logsArr) && window.SmartDB && typeof window.SmartDB.saveDailyLog === 'function') {
-                                            for (const l of logsArr) {
-                                                window.SmartDB.saveDailyLog({
-                                                    patientId: pId,
-                                                    ...l
-                                                });
-                                            }
                                         }
                                     } catch(e) {}
                                 }
@@ -401,8 +520,19 @@
                     if (data.event === 'message' && data.message) {
                         const pt = JSON.parse(data.message);
                         if (pt) {
-                            dispatchPatientToCloud(pt);
-                            if (typeof callback === 'function') callback(pt);
+                            const normalized = normalizeCloudPatientRecord(pt);
+                            if (normalized) {
+                                const cList = getCloudSyncedPatients();
+                                const pIdx = cList.findIndex(x => (normalized.id && x.id === normalized.id) || (normalized.phone && x.phone === normalized.phone));
+                                if (pIdx >= 0) cList[pIdx] = Object.assign({}, cList[pIdx], normalized);
+                                else cList.unshift(normalized);
+                                saveCloudSyncedPatients(cList);
+
+                                if (window.SmartDB && typeof window.SmartDB.savePatient === 'function') {
+                                    window.SmartDB.savePatient(normalized, { skipCloudSync: true });
+                                }
+                                if (typeof callback === 'function') callback(normalized);
+                            }
                         }
                     }
                 } catch (e) {}

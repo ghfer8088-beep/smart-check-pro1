@@ -31,7 +31,66 @@ const AdminEngine = (function() {
                 }
             } catch (e) {}
 
-            const patients = await SmartDB.getAllPatients();
+            const rawPatients = await SmartDB.getAllPatients();
+            
+            // تنظيف ودمج السجلات المكررة بالهاتف لمنع تكرار نفس المريض
+            const consolidatedMap = new Map();
+            const standaloneList = [];
+
+            for (const pt of rawPatients) {
+                if (!pt || (!pt.patientId && !pt.id)) continue;
+                
+                // تصحيح الاسم إن كان "الاسم" أو "الآسم"
+                let cName = (pt.fullName || pt.name || '').trim();
+                if (/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)$/i.test(cName)) {
+                    cName = 'مراجع كريم';
+                }
+                if (!cName) cName = 'مراجع كريم';
+
+                const cPhone = (pt.phone || '').replace(/\D/g, '');
+                const patientClean = {
+                    ...pt,
+                    patientId: pt.patientId || pt.id,
+                    name: cName,
+                    fullName: cName,
+                    age: pt.age || pt.patientVitals?.age || null,
+                    weight: pt.weight || pt.patientVitals?.weight || null,
+                    height: pt.height || pt.patientVitals?.height || null,
+                    bmi: pt.bmi || (pt.weight && pt.height ? parseFloat((pt.weight / Math.pow(pt.height/100, 2)).toFixed(1)) : null),
+                    gender: pt.gender || 'male'
+                };
+
+                if (cPhone && cPhone.length >= 7) {
+                    if (consolidatedMap.has(cPhone)) {
+                        const existing = consolidatedMap.get(cPhone);
+                        const merged = {
+                            ...patientClean,
+                            ...existing,
+                            name: (existing.name !== 'مراجع كريم') ? existing.name : patientClean.name,
+                            fullName: (existing.fullName !== 'مراجع كريم') ? existing.fullName : patientClean.fullName,
+                            age: existing.age || patientClean.age,
+                            weight: existing.weight || patientClean.weight,
+                            height: existing.height || patientClean.height,
+                            bmi: existing.bmi || patientClean.bmi,
+                            painArea: (existing.painArea && existing.painArea !== 'العمود الفقري والمفاصل') ? existing.painArea : (patientClean.painArea || existing.painArea),
+                            painAreaTitle: (existing.painAreaTitle && existing.painAreaTitle !== 'العمود الفقري والمفاصل') ? existing.painAreaTitle : (patientClean.painAreaTitle || existing.painAreaTitle),
+                            chiefDiagnosis: (existing.chiefDiagnosis && existing.chiefDiagnosis !== 'استشارة وفحص سريري متكامل') ? existing.chiefDiagnosis : (patientClean.chiefDiagnosis || existing.chiefDiagnosis),
+                            diagnosisTitle: (existing.diagnosisTitle && existing.diagnosisTitle !== 'استشارة وفحص سريري متكامل') ? existing.diagnosisTitle : (patientClean.diagnosisTitle || existing.diagnosisTitle),
+                            assessment: existing.assessment || patientClean.assessment
+                        };
+                        consolidatedMap.set(cPhone, merged);
+                    } else {
+                        consolidatedMap.set(cPhone, patientClean);
+                    }
+                } else {
+                    // استبعاد السجلات الوهمية المجهولة تماماً
+                    if (cName !== 'مراجع كريم' || pt.age || pt.weight) {
+                        standaloneList.push(patientClean);
+                    }
+                }
+            }
+
+            const patients = [...Array.from(consolidatedMap.values()), ...standaloneList];
             const overview = [];
 
             for (const p of patients) {
@@ -58,7 +117,6 @@ const AdminEngine = (function() {
                 let latestAssessment = assessments.length > 0 ? assessments[assessments.length - 1] : null;
                 if (!latestAssessment) {
                     latestAssessment = p.assessment || p.latestAssessment || p.diagnosticReport || p.clinicalData || null;
-                    // مزامنة التقييم إلى SmartDB محلياً لضمان سرعة الوصول واستقرار التقارير مستقبلاً
                     if (latestAssessment && typeof SmartDB.saveAssessment === 'function') {
                         try {
                             SmartDB.saveAssessment({
@@ -78,24 +136,43 @@ const AdminEngine = (function() {
                     recoveryScore = Math.min(100, Math.round((logs.length / 7) * 100));
                 }
 
-                // استخراج التشخيص السريري الدقيق ومنع ظهور "غير محدد" نهائياً
-                let resolvedDiagnosis = latestAssessment?.primaryDiagnosis 
-                    || latestAssessment?.title
-                    || p.chiefDiagnosis 
-                    || p.diagnosisTitle 
-                    || (p.condition && p.condition !== 'in_progress' ? p.condition : null)
-                    || (latestAssessment?.painAreaTitle ? `فحص سريري متكامل (${latestAssessment.painAreaTitle})` : null)
-                    || (p.painArea ? `فحص سريري متكامل (${p.painArea})` : null)
-                    || (p.selectedPoint ? `فحص سريري (${p.selectedPoint})` : null)
-                    || 'استشارة وفحص سريري متكامل';
-
-                // استخراج موضع الشكوى الدقيق
+                // استخراج واستنتاج موضع الشكوى الحقيقي بدقة فائقة
                 let resolvedPainArea = latestAssessment?.painAreaTitle 
                     || latestAssessment?.painLocation
-                    || p.painArea 
                     || p.painAreaTitle
-                    || p.selectedPoint 
-                    || 'العمود الفقري والمفاصل';
+                    || (p.painArea && p.painArea !== 'العمود الفقري والمفاصل' ? p.painArea : null)
+                    || (p.selectedPoint && p.selectedPoint !== 'العمود الفقري والمفاصل' ? p.selectedPoint : null);
+
+                if (!resolvedPainArea || resolvedPainArea === 'العمود الفقري والمفاصل') {
+                    const combinedNotes = ((p.notes || '') + ' ' + (p.mriReportText || '') + ' ' + (Array.isArray(p.collectedSymptoms) ? p.collectedSymptoms.join(' ') : '')).toLowerCase();
+                    if (/ركبة|ركبه|صابونة|طقطقة|احتكاك\s*ركبة|patella|knee/.test(combinedNotes)) {
+                        resolvedPainArea = 'مفصل الركبة والصابونة';
+                    } else if (/رقبة|رقبه|عنق|ديسك\s*رقبة|تصلب|cervical|neck/.test(combinedNotes)) {
+                        resolvedPainArea = 'الفقرات العنقية (الرقبة الخلفية)';
+                    } else if (/كتف|كتفي|لوح|أبهر|ابهر|كفة\s*مدورة|shoulder/.test(combinedNotes)) {
+                        resolvedPainArea = 'مفصل الكتف والكفة المدورة';
+                    } else if (/كاحل|قدم|كعب|مشط|أكيليس|مسمار\s*كعب|ankle|foot/.test(combinedNotes)) {
+                        resolvedPainArea = 'الكاحل ومفصل القدم';
+                    } else if (/رسغ|معصم|يد|كف|نفق\s*رسغي|wrist|hand/.test(combinedNotes)) {
+                        resolvedPainArea = 'الرسغ ومفصل اليد';
+                    } else if (/عرق\s*النسا|سياتيكا|كمثرية|sciatica/.test(combinedNotes)) {
+                        resolvedPainArea = 'عضلات الأرداف ومسار عرق النسا';
+                    } else if (/عجز|عجزي|حوض|sacroiliac/.test(combinedNotes)) {
+                        resolvedPainArea = 'المفصل العجزي الحوضي';
+                    } else if (/ظهر|قطنية|أسفل\s*الظهر|اسفل\s*الظهر|ديسك/.test(combinedNotes)) {
+                        resolvedPainArea = 'الفقرات القطنية وأسفل الظهر';
+                    } else {
+                        resolvedPainArea = p.painArea || 'استشارة وفحص سريري شامل للمفاصل';
+                    }
+                }
+
+                // استخراج التشخيص السريري الدقيق
+                let resolvedDiagnosis = latestAssessment?.primaryDiagnosis 
+                    || latestAssessment?.title
+                    || (p.chiefDiagnosis && p.chiefDiagnosis !== 'فحص واستشارة سريرية' && p.chiefDiagnosis !== 'استشارة وفحص سريري متكامل' ? p.chiefDiagnosis : null)
+                    || (p.diagnosisTitle && p.diagnosisTitle !== 'فحص واستشارة سريرية' && p.diagnosisTitle !== 'استشارة وفحص سريري متكامل' ? p.diagnosisTitle : null)
+                    || (p.condition && p.condition !== 'in_progress' && p.condition !== 'فحص ألم عام' ? p.condition : null)
+                    || (resolvedPainArea && resolvedPainArea !== 'استشارة وفحص سريري شامل للمفاصل' ? `فحص وتشخيص سريري (${resolvedPainArea})` : 'استشارة وفحص سريري متكامل');
 
                 overview.push({
                     patient: p,

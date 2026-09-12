@@ -58,12 +58,15 @@ const SmartDB = (function() {
     }
 
     // دوال إدارة المرضى
-    async function savePatient(patient) {
+    async function savePatient(patient, options = {}) {
         if (!patient) return null;
 
         // تأكد من وجود patientId فريد وموثوق دائماً لمنع أخطاء IndexedDB والتخزين المحلي
         if (!patient.patientId) {
-            patient.patientId = 'pat_' + (patient.phone ? String(patient.phone).replace(/\D/g, '') : Date.now().toString(36)) + '_' + Math.random().toString(36).substr(2, 5);
+            patient.patientId = patient.id || ('pat_' + (patient.phone ? String(patient.phone).replace(/\D/g, '') : Date.now().toString(36)) + '_' + Math.random().toString(36).substr(2, 5));
+        }
+        if (!patient.id) {
+            patient.id = patient.patientId;
         }
         if (!patient.createdAt) {
             patient.createdAt = new Date().toISOString();
@@ -71,17 +74,36 @@ const SmartDB = (function() {
         patient.lastUpdated = new Date().toISOString();
 
         try {
-            localStorage.setItem('smart_patient_' + patient.patientId, JSON.stringify(patient));
+            // دمج ذكي مع السجل المحلي السابق لمنع مسح المؤشرات الحيوية كالعمر والوزن
+            let prevRecord = null;
+            const existingRaw = localStorage.getItem('smart_patient_' + patient.patientId);
+            if (existingRaw) {
+                try { prevRecord = JSON.parse(existingRaw); } catch(e) {}
+            }
+            const mergedPatient = prevRecord ? { ...prevRecord, ...patient } : patient;
+
+            // تنظيف الاسم إن كان كلمة محظورة مثل 'الاسم' أو 'الآسم'
+            if (mergedPatient.name === 'الاسم' || mergedPatient.name === 'الآسم' || mergedPatient.name === 'الإسم') {
+                if (mergedPatient.fullName && mergedPatient.fullName !== mergedPatient.name) {
+                    mergedPatient.name = mergedPatient.fullName;
+                } else {
+                    mergedPatient.name = 'مراجع كريم';
+                }
+            }
+
+            localStorage.setItem('smart_patient_' + mergedPatient.patientId, JSON.stringify(mergedPatient));
             const allPts = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
-            const idx = allPts.findIndex(p => p.patientId === patient.patientId || (patient.phone && p.phone && p.phone === patient.phone));
-            if (idx >= 0) allPts[idx] = { ...allPts[idx], ...patient };
-            else allPts.unshift(patient);
+            const idx = allPts.findIndex(p => p.patientId === mergedPatient.patientId || (mergedPatient.phone && p.phone && p.phone === mergedPatient.phone));
+            if (idx >= 0) allPts[idx] = { ...allPts[idx], ...mergedPatient };
+            else allPts.unshift(mergedPatient);
             localStorage.setItem('smart_all_patients', JSON.stringify(allPts));
+            patient = mergedPatient;
         } catch(e) {}
 
-        // ☁️ ترحيل المريض سحابياً فورياً عبر جسر المزامنة العالمي مع كشف الدولة والمدينة
+        // ☁️ ترحيل المريض سحابياً فورياً عبر جسر المزامنة العالمي (فقط إذا لم يكن وارداً من المزامنة السحابية نفسها منعاً للحلقات المفرغة)
         try {
-            if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.dispatchPatient === 'function') {
+            const shouldSkipCloud = options.skipCloudSync || patient.fromCloudSync || patient._fromCloud;
+            if (!shouldSkipCloud && typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.dispatchPatient === 'function') {
                 SmartCloudSync.dispatchPatient(patient);
             }
         } catch(e) {}
@@ -107,6 +129,17 @@ const SmartDB = (function() {
             const raw = localStorage.getItem('smart_patient_' + patientId);
             if (raw) lsPatient = JSON.parse(raw);
         } catch(e) {}
+
+        // محاولة الاسترجاع من الذاكرة السحابية المتزامنة إن لم يوجد محلياً
+        if (!lsPatient) {
+            try {
+                if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.getPatients === 'function') {
+                    const cList = SmartCloudSync.getPatients();
+                    const foundInCloud = cList.find(x => x.id === patientId || x.patientId === patientId || (x.phone && lsPatient?.phone && x.phone === lsPatient.phone));
+                    if (foundInCloud) lsPatient = foundInCloud;
+                }
+            } catch(e) {}
+        }
 
         try {
             const db = await openDB();
@@ -139,28 +172,76 @@ const SmartDB = (function() {
                     const map = new Map();
                     dbList.forEach(p => map.set(p.patientId, p));
                     lsPatients.forEach(p => {
-                        if (!map.has(p.patientId)) map.set(p.patientId, p);
+                        if (!map.has(p.patientId)) {
+                            map.set(p.patientId, p);
+                        } else {
+                            // دمج الحقول المفقودة
+                            map.set(p.patientId, { ...p, ...map.get(p.patientId) });
+                        }
                     });
 
-                    // دمج الحالات السحابية المرحلية من المزامنة العالمية
+                    // دمج الحالات السحابية المرحلية من المزامنة العالمية بكامل بياناتها السريرية (العمر، الوزن، الطول، موضع الألم، التشخيص)
                     try {
                         if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.getPatients === 'function') {
                             const cloudList = SmartCloudSync.getPatients();
                             cloudList.forEach(cp => {
                                 const pId = cp.patientId || cp.id;
-                                if (pId && !map.has(pId)) {
+                                if (!pId) return;
+
+                                // تصحيح الاسم إن كان "الاسم" أو "الآسم"
+                                let cleanName = cp.fullName || cp.name || 'مراجع جديد';
+                                if (cleanName === 'الاسم' || cleanName === 'الآسم' || cleanName === 'الإسم') {
+                                    cleanName = 'مراجع كريم';
+                                }
+
+                                const fullCloudPatient = {
+                                    ...cp,
+                                    patientId: pId,
+                                    id: pId,
+                                    name: cleanName,
+                                    fullName: cleanName,
+                                    phone: cp.phone || '',
+                                    age: cp.age || null,
+                                    weight: cp.weight || null,
+                                    height: cp.height || null,
+                                    bmi: cp.bmi || (cp.weight && cp.height ? parseFloat((cp.weight / Math.pow(cp.height/100, 2)).toFixed(1)) : null),
+                                    gender: cp.gender || 'male',
+                                    painArea: cp.painArea || cp.painAreaTitle || cp.selectedPoint || '',
+                                    painAreaTitle: cp.painAreaTitle || cp.painArea || cp.selectedPoint || '',
+                                    selectedPoint: cp.selectedPoint || cp.painArea || '',
+                                    chiefDiagnosis: cp.chiefDiagnosis || cp.diagnosisTitle || cp.condition || '',
+                                    diagnosisTitle: cp.diagnosisTitle || cp.chiefDiagnosis || '',
+                                    assessment: cp.assessment || cp.latestAssessment || null,
+                                    latestAssessment: cp.latestAssessment || cp.assessment || null,
+                                    treatmentPlan: cp.treatmentPlan || '',
+                                    notes: cp.notes || '',
+                                    collectedSymptoms: cp.collectedSymptoms || [],
+                                    country: cp.country || 'دولي',
+                                    countryCode: cp.countryCode || '',
+                                    city: cp.city || '',
+                                    flag: cp.flag || '🌐',
+                                    device: cp.device || 'Mobile',
+                                    deviceIcon: cp.deviceIcon || '📱',
+                                    createdAt: cp.timestamp || cp.createdAt || new Date().toISOString()
+                                };
+
+                                if (!map.has(pId)) {
+                                    map.set(pId, fullCloudPatient);
+                                } else {
+                                    // إذا كان السجل موجوداً ولكن تنقصه بيانات كالعمر أو الوزن أو موضع الشكوى، ندمجها فوراً
+                                    const existing = map.get(pId);
                                     map.set(pId, {
-                                        patientId: pId,
-                                        name: cp.fullName || cp.name,
-                                        phone: cp.phone,
-                                        age: cp.age,
-                                        gender: cp.gender,
-                                        country: cp.country,
-                                        city: cp.city,
-                                        flag: cp.flag,
-                                        device: cp.device,
-                                        chiefDiagnosis: cp.diagnosisTitle,
-                                        createdAt: cp.timestamp
+                                        ...fullCloudPatient,
+                                        ...existing,
+                                        age: existing.age || fullCloudPatient.age,
+                                        weight: existing.weight || fullCloudPatient.weight,
+                                        height: existing.height || fullCloudPatient.height,
+                                        bmi: existing.bmi || fullCloudPatient.bmi,
+                                        painArea: existing.painArea || fullCloudPatient.painArea,
+                                        painAreaTitle: existing.painAreaTitle || fullCloudPatient.painAreaTitle,
+                                        chiefDiagnosis: existing.chiefDiagnosis || fullCloudPatient.chiefDiagnosis,
+                                        diagnosisTitle: existing.diagnosisTitle || fullCloudPatient.diagnosisTitle,
+                                        assessment: existing.assessment || fullCloudPatient.assessment
                                     });
                                 }
                             });

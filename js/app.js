@@ -214,6 +214,43 @@ function resolvePainAreaTitle(patient = null, assessment = null, point = null) {
     return 'مفاصل الجسم والعمود الفقري';
 }
 
+// كشف واستنتاج موضع الألم الحقيقي من كلام المراجع أو الأعراض في حال عدم الاختيار من المجسم
+function detectAnatomicalPointFromText(text) {
+    if (!text) return null;
+    const tLower = text.toLowerCase();
+    const allPts = [...(typeof getFrontPoints === 'function' ? getFrontPoints() : []), ...(typeof getBackPoints === 'function' ? getBackPoints() : [])];
+    
+    if (/ركبة|ركبه|صابونة|طقطقة\s*ركبة|احتكاك\s*ركبة|patella|knee/i.test(tLower)) {
+        return allPts.find(p => p.id === 'knee_right_f') || { id: 'knee_right_f', title: 'مفصل الركبة والصابونة', region: 'knee' };
+    }
+    if (/رقبة|رقبه|عنق|ديسك\s*رقبة|تصلب\s*رقبة|فقرات\s*عنقية|cervical|neck/i.test(tLower)) {
+        return allPts.find(p => p.id === 'cervical_back') || { id: 'cervical_back', title: 'الفقرات العنقية (الرقبة الخلفية)', region: 'cervical' };
+    }
+    if (/كتف|كتفي|لوح\s*الكتف|أبهر|ابهر|كفة\s*مدورة|تجمد\s*كتف|shoulder|scapula/i.test(tLower)) {
+        return allPts.find(p => p.id === 'shoulder_right_f') || { id: 'shoulder_right_f', title: 'مفصل الكتف والكفة المدورة', region: 'shoulder' };
+    }
+    if (/كاحل|قدم|كعب|مشط|أكيليس|اكيليس|مسمار\s*كعب|لفافة\s*أخمصية|ankle|foot|heel/i.test(tLower)) {
+        return allPts.find(p => p.id === 'ankle_right_f') || { id: 'ankle_right_f', title: 'الكاحل ومفصل القدم', region: 'knee' };
+    }
+    if (/رسغ|معصم|يد|كف|أصابع|اصابع|نفق\s*رسغي|تنميل\s*أصابع|wrist|hand/i.test(tLower)) {
+        return allPts.find(p => p.id === 'wrist_right_f') || { id: 'wrist_right_f', title: 'الرسغ ومفصل اليد', region: 'general' };
+    }
+    if (/كوع|مرفق|مرفق\s*تنس|ساعد|زند|elbow/i.test(tLower)) {
+        return allPts.find(p => p.id === 'elbow_right_f') || { id: 'elbow_right_f', title: 'مفصل الكوع والمرفق', region: 'general' };
+    }
+    if (/عرق\s*النسا|سياتيكا|كمثرية|تنميل\s*فخذ|sciatica/i.test(tLower)) {
+        return allPts.find(p => p.id === 'gluteal_right') || { id: 'gluteal_right', title: 'عضلات الأرداف ومسار عرق النسا', region: 'lumbar' };
+    }
+    if (/عجز|عجزي|حوض\s*خلفي|sacroiliac/i.test(tLower)) {
+        return allPts.find(p => p.id === 'sacroiliac_right') || { id: 'sacroiliac_right', title: 'المفصل العجزي الحوضي', region: 'lumbar' };
+    }
+    if (/ظهر|قطنية|أسفل\s*الظهر|اسفل\s*الظهر|ديسك\s*الظهر|لومبار|lumbar/i.test(tLower)) {
+        return allPts.find(p => p.id === 'lumbar_spine') || { id: 'lumbar_spine', title: 'الفقرات القطنية وأسفل الظهر', region: 'lumbar' };
+    }
+    return null;
+}
+
+
 // دالة التنبيهات المخصصة الفاخرة
 function showToast(message, type = 'info', duration = 7000) {
     let container = document.getElementById('toast-container');
@@ -881,8 +918,16 @@ async function runDiagnosticAnalysis() {
         if (typeof SmartWatchdog !== 'undefined') {
             SmartWatchdog.recordHeartbeat('report_generating', null, currentSelectedPoint?.title);
         }
-        if (!currentSelectedPoint) {
-            // نقطة افتراضية لأسفل الظهر في حال الانتقال المباشر
+        // استخراج رسائل المراجع النصية لتحليل السياق السريري
+        const userChatMessages = (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState?.history)
+            ? clinicalDialogueState.history.filter(h => h.sender === 'user').map(h => h.text).join(' ')
+            : '';
+
+        // كشف موضع الألم الحقيقي إن لم يكن محدداً أو كان افتراضياً
+        const detectedPt = detectAnatomicalPointFromText(userChatMessages);
+        if (detectedPt) {
+            currentSelectedPoint = detectedPt;
+        } else if (!currentSelectedPoint) {
             const allPts = typeof getBackPoints === 'function' ? getBackPoints() : [];
             currentSelectedPoint = allPts.find(p => p.id === 'lumbar_spine') || { id: 'lumbar_spine', title: 'أسفل الظهر والفقرات القطنية', region: 'lumbar' };
         }
@@ -894,11 +939,6 @@ async function runDiagnosticAnalysis() {
         const age = chatVitals.age || parseInt(document.getElementById('patient-age')?.value) || 35;
         const weight = chatVitals.weight || parseFloat(document.getElementById('patient-weight')?.value) || null;
         const height = chatVitals.height || parseFloat(document.getElementById('patient-height')?.value) || null;
-
-        // استخراج رسائل المراجع النصية لتحليل السياق السريري
-        const userChatMessages = (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState?.history)
-            ? clinicalDialogueState.history.filter(h => h.sender === 'user').map(h => h.text).join(' ')
-            : '';
 
         // استخراج الجنس: من الشات أولاً، ثم من النموذج، ثم التخمين المتقدم من اسم المراجع والسياق
         let gender = chatVitals.gender || document.querySelector('input[name="patient_gender"]:checked')?.value || '';
@@ -3169,16 +3209,34 @@ async function activateRecoveryPlanInstantly() {
         const resolvedPainTitle = resolvePainAreaTitle(null, currentAssessmentData, currentSelectedPoint);
 
         const patientGender = (clinicalDialogueState?.patientVitals?.gender) || detectArabicGender(existingName);
+        const pWeight1 = clinicalDialogueState?.patientVitals?.weight || currentAssessmentData?.patientVitals?.weight || null;
+        const pHeight1 = clinicalDialogueState?.patientVitals?.height || currentAssessmentData?.patientVitals?.height || null;
+        let pBmi1 = currentAssessmentData?.bmiInfo?.value || '';
+        if (!pBmi1 && pWeight1 && pHeight1) {
+            pBmi1 = parseFloat((pWeight1 / Math.pow(pHeight1/100, 2)).toFixed(1));
+        }
+
         const patientObj = {
             patientId,
+            id: patientId,
             name: existingName,
+            fullName: clinicalDialogueState?.patientFullName || existingName,
             phone: existingPhone,
             gender: patientGender,
-            age: clinicalDialogueState?.patientVitals?.age || null,
-            weight: clinicalDialogueState?.patientVitals?.weight || null,
-            height: clinicalDialogueState?.patientVitals?.height || null,
-            painArea: currentAssessmentData?.pointId || (currentSelectedPoint ? currentSelectedPoint.id : 'lumbar_spine'),
+            age: clinicalDialogueState?.patientVitals?.age || currentAssessmentData?.patientVitals?.age || null,
+            weight: pWeight1,
+            height: pHeight1,
+            bmi: pBmi1,
+            painArea: resolvedPainTitle,
             painAreaTitle: resolvedPainTitle,
+            selectedPoint: resolvedPainTitle,
+            chiefDiagnosis: currentAssessmentData?.primaryDiagnosis?.title || currentAssessmentData?.title || 'تشخيص سريري متكامل',
+            diagnosisTitle: currentAssessmentData?.primaryDiagnosis?.title || currentAssessmentData?.title || 'تشخيص سريري متكامل',
+            treatmentPlan: currentAssessmentData?.treatmentPlan || (currentAssessmentData?.recommendations ? currentAssessmentData.recommendations.join('\n') : ''),
+            assessment: currentAssessmentData,
+            latestAssessment: currentAssessmentData,
+            notes: (clinicalDialogueState?.collectedSymptoms && clinicalDialogueState.collectedSymptoms.length > 0) ? clinicalDialogueState.collectedSymptoms.join(' - ') : (currentAssessmentData?.notes || ''),
+            collectedSymptoms: clinicalDialogueState?.collectedSymptoms || currentAssessmentData?.collectedSymptoms || [],
             createdAt: activePatient?.createdAt || new Date().toISOString()
         };
 
@@ -3270,16 +3328,34 @@ async function submitPatientRegistrationAndStart() {
     const weightVal = parseFloat(document.getElementById('patient-weight')?.value) || (typeof currentAssessmentData !== 'undefined' ? currentAssessmentData?.patientVitals?.weight : null);
     const heightVal = parseFloat(document.getElementById('patient-height')?.value) || (typeof currentAssessmentData !== 'undefined' ? currentAssessmentData?.patientVitals?.height : null);
 
+    const pWeight2 = weightVal || clinicalDialogueState?.patientVitals?.weight || null;
+    const pHeight2 = heightVal || clinicalDialogueState?.patientVitals?.height || null;
+    let pBmi2 = currentAssessmentData?.bmiInfo?.value || '';
+    if (!pBmi2 && pWeight2 && pHeight2) {
+        pBmi2 = parseFloat((pWeight2 / Math.pow(pHeight2/100, 2)).toFixed(1));
+    }
+
     const patientObj = {
         patientId,
+        id: patientId,
         name,
+        fullName: name,
         phone: fullPhone,
         gender: patientGender,
-        age: ageVal,
-        weight: weightVal,
-        height: heightVal,
-        painArea: currentAssessmentData?.pointId || (currentSelectedPoint ? currentSelectedPoint.id : 'lumbar_spine'),
+        age: ageVal || clinicalDialogueState?.patientVitals?.age || null,
+        weight: pWeight2,
+        height: pHeight2,
+        bmi: pBmi2,
+        painArea: resolvedPainTitle,
         painAreaTitle: resolvedPainTitle,
+        selectedPoint: resolvedPainTitle,
+        chiefDiagnosis: currentAssessmentData?.primaryDiagnosis?.title || currentAssessmentData?.title || 'تشخيص سريري متكامل',
+        diagnosisTitle: currentAssessmentData?.primaryDiagnosis?.title || currentAssessmentData?.title || 'تشخيص سريري متكامل',
+        treatmentPlan: currentAssessmentData?.treatmentPlan || (currentAssessmentData?.recommendations ? currentAssessmentData.recommendations.join('\n') : ''),
+        assessment: currentAssessmentData,
+        latestAssessment: currentAssessmentData,
+        notes: (clinicalDialogueState?.collectedSymptoms && clinicalDialogueState.collectedSymptoms.length > 0) ? clinicalDialogueState.collectedSymptoms.join(' - ') : (currentAssessmentData?.notes || ''),
+        collectedSymptoms: clinicalDialogueState?.collectedSymptoms || currentAssessmentData?.collectedSymptoms || [],
         createdAt: new Date().toISOString()
     };
 
@@ -6719,6 +6795,7 @@ async function sendChatMessage() {
             'حكيتلك', 'قلتلك', 'حكيت', 'قلت', 'راجع', 'موجوع', 'متألم', 'شخص', 'انسان',
             'مرحبا', 'صباح', 'مساء', 'سلام', 'هلا', 'اهلين', 'أهلين', 'شكرا', 'يسلمو', 'نعم',
             'السلام', 'عليكم', 'وعليكم', 'الخير', 'أهلا', 'أهلاً',
+            'اسم', 'الاسم', 'الآسم', 'الإسم', 'اسمي', 'اسمها', 'اسمه', 'اسمك',
             'عمري', 'عمر', 'وزني', 'وزن', 'طولي', 'طول', 'كيلو', 'سنة', 'سم',
             'وعمري', 'ووزني', 'وطولي', 'وسني', 'وأنا', 'وانا',
             'كيف', 'كيفك', 'حالك', 'شلونك', 'اخبارك', 'أخبارك', 'علومك', 'شخبارك',
@@ -6728,53 +6805,64 @@ async function sendChatMessage() {
             'ممكن', 'ساعدني', 'سؤال', 'استفسار', 'طيب', 'ماشي', 'اوك', 'أوك', 'يلا'
         ];
 
-        // استخراج الاسم الأول فقط بدقة تامة ومنع أي استطراد أو كلمات لاحقة
-        const sanitizeFirstName = (raw) => {
+        // استخراج الاسم الحقيقي بدقة وتجريده من البادئات مثل "الاسم" أو "الآسم"
+        const sanitizeNameResult = (raw) => {
             if (!raw) return null;
             let clean = raw.trim()
                 .replace(/^يا\s+/i, '')
+                .replace(/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)\s*[:=-]?\s*/i, '')
                 .replace(/^[،,.-]+/g, '')
                 .replace(/[،,.:؛!?\d]+$/g, '')
                 .trim();
-            // أخذ الكلمة الأولى فقط كاسم أول حصراً
-            const firstWord = clean.split(/\s+/)[0];
-            if (!firstWord || firstWord.length < 2) return null;
-            // فحص الكلمات المحظورة
-            const lowerWord = firstWord.toLowerCase();
-            if (forbiddenWords.includes(lowerWord) || lowerWord.startsWith('وعمر') || lowerWord.startsWith('ووزن') || lowerWord.startsWith('وطول') || lowerWord.startsWith('وسن')) {
+            if (!clean || clean.length < 2) return null;
+            
+            const words = clean.split(/\s+/).filter(w => w && w.length >= 2);
+            if (words.length === 0) return null;
+
+            // فحص الكلمة الأولى
+            let firstWord = words[0];
+            let lowerFirst = firstWord.toLowerCase();
+            if (forbiddenWords.includes(lowerFirst) || lowerFirst.startsWith('وعمر') || lowerFirst.startsWith('ووزن') || lowerFirst.startsWith('وطول') || lowerFirst.startsWith('وسن')) {
+                // إذا كانت الكلمة الأولى من المحظورات (مثل كتابة "الاسم لجين") نتجاوزها للكلمة التالية
+                if (words.length > 1) {
+                    const secondWord = words[1];
+                    const lowerSecond = secondWord.toLowerCase();
+                    if (!forbiddenWords.includes(lowerSecond) && !lowerSecond.startsWith('وعمر') && !lowerSecond.startsWith('ووزن')) {
+                        return { first: secondWord, full: words.slice(1).join(' ') };
+                    }
+                }
                 return null;
             }
-            return firstWord;
+            return { first: firstWord, full: words.join(' ') };
         };
 
         const namePatterns = [
+            /(?:الاسم|الآسم|الإسم|اسم|اسمي\s+هو|اسمي)\s*[:=-]?\s*([^\d,.:؛!?\n]+)/i,
+            /(?:أنا|انا)\s+(?:اسمي|المدعو|أدعى|الاسم|الآسم)\s*[:=-]?\s*([^\d,.:؛!?\n]+)/i,
             /(?:اسمي\s+هو|اسمي|أدعى|ادعى)\s+([^\s\d,.:؛!?]+)/i,
-            /(?:أنا|انا)\s+(?:اسمي|المدعو|أدعى)\s+([^\s\d,.:؛!?]+)/i,
             /(?:أنا|انا)\s+([^\s\d,.:؛!?]+)/i,
             /(?:معك|معاك|أخوك|اخوك|أختك|اختك)\s+([^\s\d,.:؛!?]+)/i
         ];
         for (let pat of namePatterns) {
             const m = text.match(pat);
             if (m && m[1]) {
-                const validFirst = sanitizeFirstName(m[1]);
-                if (validFirst) {
-                    clinicalDialogueState.patientName = validFirst;
+                const res = sanitizeNameResult(m[1]);
+                if (res && res.first) {
+                    clinicalDialogueState.patientName = res.first;
+                    if (res.full) clinicalDialogueState.patientFullName = res.full;
                     break;
                 }
             }
         }
 
-        // إذا كان الدور خاصاً بالاسم والمؤشرات وكتب المراجع اسمه في البداية (مثل: "خالد" أو "خالد وعمري 34 ووزني 77...")
-        // بشرط ألا تكون الجملة عبارة عن تحية أو استفسار عام (مثل "كيف حالك" أو "شو تخصصكم")
+        // إذا كان الدور خاصاً بالاسم والمؤشرات وكتب المراجع اسمه في البداية (مثل: "لجين" أو "الآسم لجين" أو "خالد وعمري 34...")
         if (!clinicalDialogueState.patientName && clinicalDialogueState.step === 'vitals') {
             const isQuestionOrGreeting = /^(كيف|شو|ايش|إيش|مين|وين|متى|ليش|لماذا|هل|مرحبا|صباح|مساء|سلام|أهلا|اهلا|الحمد|بخير|السلام)/i.test(text.trim());
             if (!isQuestionOrGreeting) {
-                const words = text.trim().split(/\s+/);
-                if (words.length >= 1) {
-                    const validFirst = sanitizeFirstName(words[0]);
-                    if (validFirst) {
-                        clinicalDialogueState.patientName = validFirst;
-                    }
+                const res = sanitizeNameResult(text.trim());
+                if (res && res.first) {
+                    clinicalDialogueState.patientName = res.first;
+                    if (res.full) clinicalDialogueState.patientFullName = res.full;
                 }
             }
         }
@@ -6965,20 +7053,58 @@ async function sendChatMessage() {
 
             // ✅ حفظ ملف المريض بشكل فوري في قاعدة بيانات العيادة مع معالجة الأخطاء
             if (window.SmartDB && typeof SmartDB.savePatient === 'function') {
-                // ✅ الاسم الافتراضي المحايد بدل "المراجع الجديد" أو "مريض غير محدد"
-                const savedName = clinicalDialogueState.patientName && clinicalDialogueState.patientName.length > 1
+                let savedName = clinicalDialogueState.patientName && clinicalDialogueState.patientName.length > 1
                     ? clinicalDialogueState.patientName
                     : 'مراجع كريم';
+                if (/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)$/i.test(savedName)) {
+                    savedName = clinicalDialogueState.patientFullName || 'مراجع كريم';
+                }
+
+                const pVitals = clinicalDialogueState.patientVitals || {};
+                const pWeight = pVitals.weight || null;
+                const pHeight = pVitals.height || null;
+                const pAge = pVitals.age || null;
+                const pGender = pVitals.gender || detectArabicGender(savedName);
+                let pBmi = pVitals.bmiInfo?.value || '';
+                if (!pBmi && pWeight && pHeight) {
+                    pBmi = parseFloat((pWeight / Math.pow(pHeight/100, 2)).toFixed(1));
+                }
+
+                // تحديد موضع الألم الحقيقي إن لم يكن محدداً أو كان افتراضياً
+                let resolvedPain = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint && currentSelectedPoint.title) ? currentSelectedPoint.title : '';
+                if (!resolvedPain || resolvedPain === 'الفقرات القطنية وأسفل الظهر') {
+                    const detected = detectAnatomicalPointFromText((clinicalDialogueState.history || []).map(h => h.text).join(' '));
+                    if (detected) {
+                        resolvedPain = detected.title;
+                        currentSelectedPoint = detected;
+                    } else if (!resolvedPain) {
+                        resolvedPain = 'استشارة وفحص سريري شامل';
+                    }
+                }
+
                 const pId = 'pat_' + (clinicalDialogueState.patientPhone ? clinicalDialogueState.patientPhone.replace(/\D/g, '') : Date.now().toString(36));
                 SmartDB.savePatient({
                     patientId: pId,
+                    id: pId,
                     name: savedName,
+                    fullName: clinicalDialogueState.patientFullName || savedName,
                     phone: clinicalDialogueState.patientPhone,
+                    age: pAge,
+                    weight: pWeight,
+                    height: pHeight,
+                    bmi: pBmi,
+                    gender: pGender,
                     status: 'in_progress',
-                    condition: (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.title : 'فحص ألم عام',
-                    painArea: (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.title : '',
+                    condition: resolvedPain,
+                    painArea: resolvedPain,
+                    painAreaTitle: resolvedPain,
+                    selectedPoint: resolvedPain,
                     pointId: (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.id : '',
-                    notes: 'تم توثيق رقم الهاتف في الشات السريري'
+                    chiefDiagnosis: `فحص وتشخيص سريري (${resolvedPain})`,
+                    diagnosisTitle: `فحص وتشخيص سريري (${resolvedPain})`,
+                    assessment: typeof currentAssessmentData !== 'undefined' ? currentAssessmentData : null,
+                    notes: (clinicalDialogueState.collectedSymptoms && clinicalDialogueState.collectedSymptoms.length > 0) ? clinicalDialogueState.collectedSymptoms.join(' - ') : 'تم توثيق رقم الهاتف والمؤشرات في الشات السريري',
+                    collectedSymptoms: clinicalDialogueState.collectedSymptoms || []
                 }).then(() => {
                     console.log('✅ تم حفظ ملف المريض في قاعدة البيانات:', savedName);
                     // إرسال إشعار للوحة التحكم بوجود مريض جديد
@@ -6986,10 +7112,10 @@ async function sendChatMessage() {
                         SmartDB.addAdminNotification({
                             type: 'new_registration',
                             title: `👤 مراجع جديد: ${savedName}`,
-                            message: `انضم ${savedName} للعيادة - منطقة: ${(typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.title : 'غير محدد'} - هاتف: ${clinicalDialogueState.patientPhone}`,
+                            message: `انضم ${savedName} للعيادة - منطقة: ${resolvedPain} - هاتف: ${clinicalDialogueState.patientPhone}`,
                             patientName: savedName,
                             patientPhone: clinicalDialogueState.patientPhone,
-                            meta: { painArea: (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.title : '' }
+                            meta: { painArea: resolvedPain }
                         });
                     }
                 }).catch(e => console.warn('⚠️ SmartDB save error:', e));
@@ -7100,20 +7226,57 @@ async function sendChatMessage() {
 
     // حفظ فوري في قاعدة البيانات إذا توفر رقم الهاتف
     if (clinicalDialogueState.patientPhone && window.SmartDB && typeof SmartDB.savePatient === 'function') {
-        // ✅ الاسم المحايد بدل "مريض غير محدد"
-        const savedName2 = clinicalDialogueState.patientName && clinicalDialogueState.patientName.length > 1
+        let savedName2 = clinicalDialogueState.patientName && clinicalDialogueState.patientName.length > 1
             ? clinicalDialogueState.patientName
             : 'مراجع كريم';
+        if (/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)$/i.test(savedName2)) {
+            savedName2 = clinicalDialogueState.patientFullName || 'مراجع كريم';
+        }
+
+        const pVitals2 = clinicalDialogueState.patientVitals || {};
+        const pWeight2 = pVitals2.weight || null;
+        const pHeight2 = pVitals2.height || null;
+        const pAge2 = pVitals2.age || null;
+        const pGender2 = pVitals2.gender || detectArabicGender(savedName2);
+        let pBmi2 = pVitals2.bmiInfo?.value || '';
+        if (!pBmi2 && pWeight2 && pHeight2) {
+            pBmi2 = parseFloat((pWeight2 / Math.pow(pHeight2/100, 2)).toFixed(1));
+        }
+
+        let resolvedPain2 = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint && currentSelectedPoint.title) ? currentSelectedPoint.title : '';
+        if (!resolvedPain2 || resolvedPain2 === 'الفقرات القطنية وأسفل الظهر') {
+            const detected2 = detectAnatomicalPointFromText((clinicalDialogueState.history || []).map(h => h.text).join(' '));
+            if (detected2) {
+                resolvedPain2 = detected2.title;
+                currentSelectedPoint = detected2;
+            } else if (!resolvedPain2) {
+                resolvedPain2 = 'استشارة وفحص سريري شامل';
+            }
+        }
+
         const pId2 = 'pat_' + (clinicalDialogueState.patientPhone ? clinicalDialogueState.patientPhone.replace(/\D/g, '') : Date.now().toString(36));
         SmartDB.savePatient({
             patientId: pId2,
+            id: pId2,
             name: savedName2,
+            fullName: clinicalDialogueState.patientFullName || savedName2,
             phone: clinicalDialogueState.patientPhone,
+            age: pAge2,
+            weight: pWeight2,
+            height: pHeight2,
+            bmi: pBmi2,
+            gender: pGender2,
             status: 'in_progress',
-            condition: (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.title : 'فحص ألم عام',
-            painArea: (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.title : '',
+            condition: resolvedPain2,
+            painArea: resolvedPain2,
+            painAreaTitle: resolvedPain2,
+            selectedPoint: resolvedPain2,
             pointId: (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.id : '',
-            notes: 'تحديث الحوار السريري الذكي'
+            chiefDiagnosis: `فحص وتشخيص سريري (${resolvedPain2})`,
+            diagnosisTitle: `فحص وتشخيص سريري (${resolvedPain2})`,
+            assessment: typeof currentAssessmentData !== 'undefined' ? currentAssessmentData : null,
+            notes: 'تحديث الحوار السريري الذكي',
+            collectedSymptoms: clinicalDialogueState.collectedSymptoms || []
         }).catch(() => {});
     }
 
@@ -7165,16 +7328,19 @@ async function sendChatMessage() {
 
 // إنهاء الحوار وبناء التقرير الطبي فوراً
 function finishChatIntakeAndGenerateReport() {
-    // التحقق الصارم من وجود نقطة ألم تشريحية مختارة، وإن لم توجد يتم إسناد نقطة افتراضية لأسفل الظهر أو استنتاجها
-    if (typeof currentSelectedPoint === 'undefined' || !currentSelectedPoint || !currentSelectedPoint.id) {
-        const allPts = typeof getBackPoints === 'function' ? getBackPoints() : [];
-        currentSelectedPoint = allPts.find(p => p.id === 'lumbar_spine') || { id: 'lumbar_spine', title: 'أسفل الظهر والفقرات القطنية', region: 'lumbar' };
-    }
-
     const userMessages = (clinicalDialogueState.history || [])
         .filter(h => h.sender === 'user')
         .map(h => h.text)
         .join(' ');
+
+    // التحقق الصارم من وجود نقطة ألم تشريحية مختارة، وإن لم توجد أو كانت افتراضية يتم استنتاجها من كلام المراجع
+    const detectedFromChat = detectAnatomicalPointFromText(userMessages);
+    if (detectedFromChat) {
+        currentSelectedPoint = detectedFromChat;
+    } else if (typeof currentSelectedPoint === 'undefined' || !currentSelectedPoint || !currentSelectedPoint.id) {
+        const allPts = typeof getBackPoints === 'function' ? getBackPoints() : [];
+        currentSelectedPoint = allPts.find(p => p.id === 'lumbar_spine') || { id: 'lumbar_spine', title: 'أسفل الظهر والفقرات القطنية', region: 'lumbar' };
+    }
 
     // حارس رقم الهاتف الصارم: منع الانتقال للتشخيص بدون رقم هاتف معتمد
     const hasPhoneStored = clinicalDialogueState.patientPhone && String(clinicalDialogueState.patientPhone).replace(/\D/g, '').length >= 7;
@@ -7522,8 +7688,8 @@ async function stopAndSendVoiceNote() {
     if (capturedText) {
         // استخراج الاسم والمؤشرات من النص الملتقط فوراً إن وجدت
         if (!clinicalDialogueState.patientName) {
-            const forbiddenNames = ['كيف', 'كيفك', 'شو', 'ايش', 'مرحبا', 'أهلا', 'اهلا', 'سلام', 'تعبان', 'مريض', 'دكتور', 'طبيب', 'المريض', 'عندي', 'وجع', 'الم', 'ظهر', 'ديسك'];
-            const nameMatch = capturedText.match(/(?:اسمي\s+هو|اسمي|أدعى|ادعى|أنا|انا)\s+([^\s\d,.:؛!?]+)/i);
+            const forbiddenNames = ['اسم', 'الاسم', 'الآسم', 'الإسم', 'اسمي', 'كيف', 'كيفك', 'شو', 'ايش', 'مرحبا', 'أهلا', 'اهلا', 'سلام', 'تعبان', 'مريض', 'دكتور', 'طبيب', 'المريض', 'عندي', 'وجع', 'الم', 'ظهر', 'ديسك'];
+            const nameMatch = capturedText.match(/(?:الاسم|الآسم|الإسم|اسم|اسمي\s+هو|اسمي|أدعى|ادعى|أنا|انا)\s*[:=-]?\s*([^\s\d,.:؛!?]+)/i);
             if (nameMatch && nameMatch[1] && !forbiddenNames.includes(nameMatch[1].toLowerCase()) && nameMatch[1].length >= 2) {
                 clinicalDialogueState.patientName = nameMatch[1];
                 refreshUserMessageHeaders(clinicalDialogueState.patientName);

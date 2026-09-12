@@ -16,9 +16,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=17.3"></script>
-    <script src="js/security-shield.js?v=17.3"></script>
-    <link rel="stylesheet" href="css/style.css?v=17.3">
+    <script src="js/system-watchdog.js?v=17.4"></script>
+    <script src="js/security-shield.js?v=17.4"></script>
+    <link rel="stylesheet" href="css/style.css?v=17.4">
     <style>
         body {
             background-color: #080c14;
@@ -1351,16 +1351,16 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/geo-tracker.js?v=17.3"></script>
-    <script src="js/cloud-sync.js?v=17.3"></script>
-    <script src="js/database.js?v=17.3"></script>
-    <script src="js/exercise-image-studio.js?v=17.3"></script>
-    <script src="js/exercises-db.js?v=17.3"></script>
-    <script src="js/diagnostic-engine.js?v=17.3"></script>
-    <script src="js/patient-flow.js?v=17.3"></script>
-    <script src="js/admin-engine.js?v=17.3"></script>
-    <script src="js/ai-config.js?v=17.3"></script>
-    <script src="js/ai-engine.js?v=17.3"></script>
+    <script src="js/geo-tracker.js?v=17.4"></script>
+    <script src="js/cloud-sync.js?v=17.4"></script>
+    <script src="js/database.js?v=17.4"></script>
+    <script src="js/exercise-image-studio.js?v=17.4"></script>
+    <script src="js/exercises-db.js?v=17.4"></script>
+    <script src="js/diagnostic-engine.js?v=17.4"></script>
+    <script src="js/patient-flow.js?v=17.4"></script>
+    <script src="js/admin-engine.js?v=17.4"></script>
+    <script src="js/ai-config.js?v=17.4"></script>
+    <script src="js/ai-engine.js?v=17.4"></script>
 
     <script>
         let allPatientsList = [];
@@ -2479,21 +2479,17 @@
                 return;
             }
 
-            tbody.innerHTML = list.map(item => {
-                const p = item.patient || {};
-                const cleanPhone = (p.phone || '').replace(/[^0-9]/g, '');
-
-                // بيانات الموقع الجغرافي والجهاز
-                const flag = p.flag || '🌍';
-                const country = p.country || 'دولي';
-                const city = (p.city && p.city !== 'غير محدد') ? p.city : '';
-                const deviceIcon = p.device === 'Mobile' ? '📱' : (p.device === 'Tablet' ? '📟' : '💻');
-                const locationDisplay = city ? `${flag} ${city} (${country})` : `${flag} ${country}`;
-
                 return `
                 <tr style="border-bottom: 1px solid #1e293b; color: #e2e8f0;">
                     <td style="padding: 14px; font-weight: bold; color: var(--primary-gold);">${p.patientId}</td>
-                    <td style="padding: 14px; font-weight: bold;">${p.name}</td>
+                    <td style="padding: 14px; font-weight: bold;">
+                        <div style="font-size: 1.05em; color: #ffffff;">${p.name}</div>
+                        <div style="color: #94a3b8; font-size: 0.82em; margin-top: 4px; font-weight: normal; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                            <span style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 1px 6px; border-radius: 4px; color: #7dd3fc;">العمر: ${p.age ? p.age + ' سنة' : '-'}</span>
+                            <span style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 1px 6px; border-radius: 4px; color: #6ee7b7;">الوزن: ${p.weight ? p.weight + ' كغ' : '-'}</span>
+                            <span style="color: #cbd5e1;">${p.gender === 'female' || p.gender === 'أنثى' ? 'أنثى ♀' : 'ذكر ♂'}</span>
+                        </div>
+                    </td>
                     <td style="padding: 14px;">${p.phone || '-'}</td>
                     <td style="padding: 14px;">
                         <span style="display: inline-flex; align-items: center; gap: 5px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25); padding: 3px 8px; border-radius: 6px; font-size: 0.85em; color: #bae6fd; white-space: nowrap;">
@@ -2563,6 +2559,20 @@
                                         ${item.recoveryScore}% تعافي
                                     </span>
                                 </div>
+                            </div>
+
+                            <!-- شريط المؤشرات الحيوية البارز على واجهة البطاقة -->
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; padding: 7px 12px; margin-bottom: 10px; font-size: 0.84em;">
+                                <span style="color: var(--primary-gold); font-weight: bold;">👤 المؤشرات الحيوية:</span>
+                                <span style="color: #e2e8f0;">العمر: <strong style="color: #38bdf8;">${p.age ? p.age + ' سنة' : '-'}</strong></span>
+                                <span style="color: #64748b;">•</span>
+                                <span style="color: #e2e8f0;">الوزن: <strong style="color: #38bdf8;">${p.weight ? p.weight + ' كغ' : '-'}</strong></span>
+                                <span style="color: #64748b;">•</span>
+                                <span style="color: #e2e8f0;">الطول: <strong style="color: #38bdf8;">${p.height ? p.height + ' سم' : '-'}</strong></span>
+                                <span style="color: #64748b;">•</span>
+                                <span style="color: #e2e8f0;">BMI: <strong style="color: #10b981;">${p.bmi || (p.weight && p.height ? (p.weight / Math.pow(p.height/100, 2)).toFixed(1) : '-')}</strong></span>
+                                <span style="color: #64748b;">•</span>
+                                <span style="color: #cbd5e1;">${p.gender === 'female' || p.gender === 'أنثى' ? 'أنثى ♀' : 'ذكر ♂'}</span>
                             </div>
 
                             <!-- مؤشرات الحالة السريرية الرئيسية -->
@@ -2872,23 +2882,138 @@
             const locationDisplay = city ? `${flag} ${city} (${country})` : `${flag} ${country}`;
             const device = p.device || 'Mobile';
 
-            // التشخيص السريري
-            const diagTitle = assessment?.primaryDiagnosis 
-                || assessment?.title 
-                || p.chiefDiagnosis 
-                || p.diagnosisTitle 
-                || item?.latestDiagnosis 
-                || 'استشارة وفحص سريري متكامل';
-
-            const rootLevel = assessment?.rootLevel 
+            // الكشف التشريحي الذكي والدقيق
+            let rootLevel = assessment?.rootLevel 
                 || assessment?.anatomicalLevel 
                 || assessment?.painAreaTitle 
                 || p.painArea 
                 || item?.painArea 
-                || 'العمود الفقري والمفاصل الحركية';
+                || '';
+
+            const fullContextText = `${rootLevel} ${p.painArea || ''} ${p.selectedPoint || ''} ${p.notes || ''} ${(p.collectedSymptoms || []).join(' ')} ${p.chiefDiagnosis || ''} ${p.diagnosisTitle || ''} ${assessment?.title || ''}`.toLowerCase();
+
+            let targetAreaType = 'lumbar'; // الافتراضي
+            if (fullContextText.includes('ركب') || fullContextText.includes('knee') || fullContextText.includes('صابون') || fullContextText.includes('رضف')) {
+                targetAreaType = 'knee';
+                if (!rootLevel || rootLevel.includes('العمود الفقري')) rootLevel = 'مفصل الركبة وصابونة الرضفة';
+            } else if (fullContextText.includes('عنق') || fullContextText.includes('رقب') || fullContextText.includes('neck') || fullContextText.includes('cervical')) {
+                targetAreaType = 'neck';
+                if (!rootLevel || rootLevel.includes('العمود الفقري والمفاصل')) rootLevel = 'الفقرات العنقية والرقبة (C3-C7)';
+            } else if (fullContextText.includes('كتف') || fullContextText.includes('shoulder') || fullContextText.includes('كفة')) {
+                targetAreaType = 'shoulder';
+                if (!rootLevel || rootLevel.includes('العمود الفقري')) rootLevel = 'مفصل الكتف والكفة المدورة';
+            } else if (fullContextText.includes('كاحل') || fullContextText.includes('قدم') || fullContextText.includes('عقب') || fullContextText.includes('ankle') || fullContextText.includes('أخمص')) {
+                targetAreaType = 'ankle';
+                if (!rootLevel || rootLevel.includes('العمود الفقري')) rootLevel = 'مفصل الكاحل واللفافة الأخمصية';
+            } else if (fullContextText.includes('معصم') || fullContextText.includes('يد') || fullContextText.includes('رسغ') || fullContextText.includes('wrist')) {
+                targetAreaType = 'wrist';
+                if (!rootLevel || rootLevel.includes('العمود الفقري')) rootLevel = 'مفصل الرسغ ونفق الرسغ';
+            } else if (fullContextText.includes('حوض') || fullContextText.includes('ورك') || fullContextText.includes('نسا') || fullContextText.includes('sciatica') || fullContextText.includes('عصعص')) {
+                targetAreaType = 'sciatica';
+                if (!rootLevel || rootLevel.includes('العمود الفقري والمفاصل')) rootLevel = 'الفقرات القطنية وعصب النسا والورك';
+            } else if (fullContextText.includes('ظهر') || fullContextText.includes('قطن') || fullContextText.includes('lumbar') || fullContextText.includes('دسك') || fullContextText.includes('غضروف')) {
+                targetAreaType = 'lumbar';
+                if (!rootLevel || rootLevel.includes('المفاصل الحركية')) rootLevel = 'الفقرات القطنية وأسفل الظهر (L1-S1)';
+            }
+
+            if (!rootLevel) rootLevel = 'العمود الفقري والمفاصل الحركية';
+
+            // قواميس التشخيصات والتمارين التخصصية حسب المنطقة التشريحية
+            const clinicalAreaProfiles = {
+                knee: {
+                    defaultDiag: 'متلازمة الألم الرضفي الفخذي واحتكاك صابونة الركبة',
+                    defaultSecDiag: 'ضعف نسبي في العضلة المتسعة الإنسية (VMO) وقصر في أوتار المأبض',
+                    biomechanical: `توضح معطيات الفحص السريري وجود خلل ميكانيكي حركي في مفصل الركبة وصابونة الرضفة ناتج عن تفاوت قوة عضلات الفخذ الرباعية والأوتار المحيطة، مما يسبب زيادة الاحتكاك الرضفي الفخذي وإجهاد الغضروف الهلالي عند صعود الدرج أو الثني.`,
+                    exercises: [
+                        { title: 'تمرين مد الساق المستقيمة المتساوي (Straight Leg Raise)', reps: '10 تكرارات × 3 جولات لكل ساق', note: 'لتقوية العضلة الرباعية دون إحداث ضغط على الغضروف المفصلي' },
+                        { title: 'تمرين إطالة أوتار المأبض وعضلة السمانة (Hamstring & Calf Stretch)', reps: 'الثبات 20 ثانية × 3 مرات', note: 'لتخفيف الشد الخلفي حول الركبة واستعادة انسيابية المفصل' },
+                        { title: 'تمرين التثبيت المتساوي للركبة بالمنشفة (VMO Isometric Press)', reps: 'الثبات 10 ثوانٍ × 10 تكرارات', note: 'تثبيت صابونة الركبة في مسارها الحركي الطبيعي وتخفيف الاحتكاك' }
+                    ],
+                    bmiNote: 'الوزن الزائد يضاعف الحمل الميكانيكي على مفصل الركبة بمقدار 4 أضعاف مع كل خطوة.'
+                },
+                neck: {
+                    defaultDiag: 'متلازمة الإجهاد العنقي الوضعي والشد العضلي حول الفقرات',
+                    defaultSecDiag: 'متلازمة الرأس المتقدم للأمام (Forward Head Posture) وتشنج العضلة شبه المنحرفة',
+                    biomechanical: `توضح معطيات الفحص السريري وجود متلازمة الرأس الأمامي والضغط الميكانيكي على الفقرات العنقية (C3-C7)، مما يؤدي إلى تقلص مزمن في عضلات شبه المنحرف وقاعدة الجمجمة وضغط متزايد على الأقراص الغضروفية ومخارج الأعصاب.`,
+                    exercises: [
+                        { title: 'تمرين ثني الذقن واستطالة العنق (Chin Tucks)', reps: '10 تكرارات مع ثبات 5 ثوانٍ', note: 'إعادة محاذاة الفقرات العنقية وتخفيف الضغط الغضروفي' },
+                        { title: 'تمرين إطالة عضلة شبه المنحرف العلوية (Upper Trap Stretch)', reps: 'الثبات 15 ثانية لكل جانب × 3', note: 'لتفريغ التشنج العضلي المسبب للصداع والشد العنقودي' },
+                        { title: 'تمرين تقريب لوحي الكتف للخلف (Scapular Retraction)', reps: '10 تكرارات × 3 جولات', note: 'فتح القفص الصدري وتقوية مثبتات العنق والكتفين' }
+                    ],
+                    bmiNote: 'ترهل القوام وضعف الكتلة العضلية يزيد من إجهاد عضلات العنق الداعمة.'
+                },
+                shoulder: {
+                    defaultDiag: 'متلازمة انحشار أوتار الكفة المدورة والتهاب المحفظة الكتفية',
+                    defaultSecDiag: 'محدودية حركية في الدوران الخارجي وضعف مثبتات لوح الكتف',
+                    biomechanical: `توضح معطيات الفحص السريري وجود انحشار وظيفي في أوتار الكفة المدورة تحت النتوء الأخرمي، مما يحد من المدى الحركي للرفع والدوران ويسبب التهاباً ميكانيكياً في الجراب الزلالي للكتف.`,
+                    exercises: [
+                        { title: 'تمرين البندول الحركي للكتف (Codman’s Pendulum)', reps: 'دقيقة في اتجاه عقارب الساعة وعكسها', note: 'تفريغ الضغط عن التجويف الحقاني واسترخاء الأوتار' },
+                        { title: 'تمرين الدوران الخارجي للكفة المدورة (Rotator Cuff External Rotation)', reps: '10 تكرارات × 3 جولات', note: 'تثبيت رأس عظم العضد ومنع انحشار الأوتار أثناء الرفع' },
+                        { title: 'تمرين الزحف الجداري بأطراف الأصابع (Wall Finger Walk)', reps: 'الصعود التدريجي 8 تكرارات × 3', note: 'زيادة المدى الحركي للكتف تدريجياً دون ألم حاد' }
+                    ],
+                    bmiNote: 'تراكم الدهون حول الجذع والكتفين قد يعيق ميكانيكا رفع الذراع الكاملة.'
+                },
+                ankle: {
+                    defaultDiag: 'إجهاد الأربطة الشظوية والتهاب اللفافة الأخمصية للكاحل',
+                    defaultSecDiag: 'هبوط وظيفي في قوس القدم وزيادة الضغط على وتر أخيل',
+                    biomechanical: `توضح معطيات الفحص السريري وجود اختلال في ميكانيكية مشط القدم وتوتر في وتر العرقوب والأوتار الشظوية، مما يؤثر على امتصاص الصدمات أثناء المشي ويزيد من إجهاد الكاحل وقوس القدم.`,
+                    exercises: [
+                        { title: 'تمرين رسم الحروف بأصابع القدم (Ankle Alphabet)', reps: 'دورتين كاملتين لكل قدم', note: 'استعادة التناسق العصبي العضلي وتحريك المفصل' },
+                        { title: 'تمرين إطالة وتر أخيل واللفافة الأخمصية (Achilles & Plantar Stretch)', reps: 'الثبات 20 ثانية × 3 مرات', note: 'تخفيف الشد الحاد في الكعب وباطن القدم' },
+                        { title: 'تمرين الاتزان على ساق واحدة (Single-Leg Balance)', reps: 'الثبات 20 ثانية × 3 مرات', note: 'إعادة تأهيل المستقبلات الحسية العميقة للكاحل' }
+                    ],
+                    bmiNote: 'زيادة الوزن تضع عبئاً مباشراً على قوس القدم ووتر أخيل مع كل خطوة.'
+                },
+                wrist: {
+                    defaultDiag: 'متلازمة نفق الرسغ والتهاب أوتار المعصم الوظيفي',
+                    defaultSecDiag: 'إجهاد متكرر في العصب الأوسط وأوتار القابضات',
+                    biomechanical: `توضح معطيات الفحص وجود زيادة في الضغط الميكانيكي داخل النفق الرسغي وتهيج في أوتار قابضات الأصابع نتيجة الحركات التكرارية والوضعيات الثابتة.`,
+                    exercises: [
+                        { title: 'تمرين انزلاق العصب الأوسط (Median Nerve Gliding)', reps: '8 تكرارات بهدوء × 3 جولات', note: 'تحرير العصب وتخفيف التنميل والخدر' },
+                        { title: 'تمرين إطالة باسطات وقابضات الرسغ (Wrist Flexor/Extensor Stretch)', reps: 'الثبات 15 ثانية × 3 مرات', note: 'تخفيف التوتر العضلي في الساعد' },
+                        { title: 'تمرين تنشيط قبضة اليد بكرة إسفنجية خفيفة', reps: '10 تكرارات مع ضغط خفيف', note: 'تنشيط الدورة الدموية دون إجهاد الأوتار' }
+                    ],
+                    bmiNote: 'احتباس السوائل المرافق للوزن الزائد قد يزيد الضغط داخل نفق الرسغ.'
+                },
+                sciatica: {
+                    defaultDiag: 'اعتلال الجذور العصبية القطنية (عرق النسا) ومتلازمة الكمثرية',
+                    defaultSecDiag: 'انضغاط العصب الوركي وتشنج عضلة الكمثرية بالحوض',
+                    biomechanical: `توضح معطيات الفحص السريري وجود تهيج وانضغاط في مسار العصب الوركي (عرق النسا) إما من مخرج الفقرات القطنية أو لانضغاطه تحت عضلة الكمثرية المشدودة في الحوض، مسبباً ألماً يمتد على طول الساق.`,
+                    exercises: [
+                        { title: 'تمرين إطالة عضلة الكمثرية في وضع الاستلقاء (Piriformis Stretch - Figure 4)', reps: 'الثبات 20 ثانية لكل جانب × 3', note: 'تفريغ الضغط الميكانيكي عن مسار العصب الوركي' },
+                        { title: 'تمرين انزلاق العصب الوركي الحركي (Sciatic Nerve Flossing)', reps: '10 تكرارات سلسة وبدون شد عنيف', note: 'استعادة حركة وانسيابية العصب داخل الأنسجة المحيطة' },
+                        { title: 'تمرين الجسر الحوضي الخفيف (Gentle Glute Bridge)', reps: 'الثبات 5 ثوانٍ × 8 تكرارات', note: 'إعادة تفعيل عضلات الحوض وتثبيت المفصل العجزي' }
+                    ],
+                    bmiNote: 'الوزن الزائد يزيد الضغط على الأقراص القطنية ويضغط عصب النسا.'
+                },
+                lumbar: {
+                    defaultDiag: 'انزلاق غضروفي قطني خفيف مع تقلص وتشنج عضلي حاد',
+                    defaultSecDiag: 'إجهاد الأربطة القطنية العجزية وضعف عضلات الثبات الجذعي (Core)',
+                    biomechanical: `توضح معطيات الفحص السريري وجود زيادة في الضغط المحوري على الأقراص الغضروفية القطنية (L4-S1) وضعف في عضلات الثبات المحورية العميقة (Core)، مما يسبب إجهاداً ميكانيكياً على المفاصل الوجيهية وتقلصاً تعويضياً في العضلات الناصبة للفقرات.`,
+                    exercises: [
+                        { title: 'تمرين ماكنزي لإلغاء الضغط الغضروفي (Prone Press-up / Cobra)', reps: '10 تكرارات مع ثبات ثانيتين', note: 'لتمركز الغضروف وتخفيف الضغط عن الأعصاب القطنية' },
+                        { title: 'تمرين الجسر الحوضي لتثبيت الجذع (Pelvic Bridging)', reps: 'الثبات 10 ثوانٍ × 10 تكرارات', note: 'لتقوية عضلات الألوية واللب السفلي ودعم الفقرات' },
+                        { title: 'تمرين سحب الركبة إلى الصدر (Single Knee to Chest)', reps: 'الثبات 15 ثانية لكل ساق × 3', note: 'لإطالة عضلات أسفل الظهر بلطف وتفريغ الاحتقان العضلي' }
+                    ],
+                    bmiNote: 'الوزن الزائد يغير مركز الثقل ويزيد الحمل على الغضاريف القطنية بمقدار مضاعف.'
+                }
+            };
+
+            const profile = clinicalAreaProfiles[targetAreaType] || clinicalAreaProfiles.lumbar;
+
+            // التشخيص السريري
+            let rawDiag = assessment?.primaryDiagnosis 
+                || assessment?.title 
+                || p.chiefDiagnosis 
+                || p.diagnosisTitle 
+                || item?.latestDiagnosis;
+            
+            const diagTitle = (rawDiag && rawDiag !== 'استشارة وفحص سريري متكامل' && !rawDiag.includes('استشارة')) 
+                ? rawDiag 
+                : profile.defaultDiag;
 
             const secDiag = assessment?.secondaryDiagnosis 
-                || 'إجهاد ميكانيكي وظيفي في الأنسجة المحيطة ومحدودية حركية مرافقة';
+                || profile.defaultSecDiag;
 
             const probability = assessment?.probability || 95;
             const confidence = assessment?.confidenceScore || 92;
@@ -2910,18 +3035,18 @@
                 } else if (bmiVal >= 25 && bmiVal < 30) {
                     bmiStatus = "زيادة وزن (Overweight)";
                     bmiColor = "#f59e0b";
-                    bmiImpact = "يضيف حمولة إضافية بمقدار 4 أضعاف على مفاصل الركبة وفقرات القطنية.";
+                    bmiImpact = profile.bmiNote || "يضيف حمولة إضافية بمقدار 4 أضعاف على المفاصل وفقرات الظهر.";
                 } else if (bmiVal >= 30) {
                     bmiStatus = "سمنة مفرطة / حمل ميكانيكي حرج";
                     bmiColor = "#ef4444";
-                    bmiImpact = "حمولة ضغط فائقة تسارع من تآكل الغضاريف وتزيد من انضغاط الأعصاب.";
+                    bmiImpact = (profile.bmiNote ? profile.bmiNote + ' بالإضافة إلى تسارع تآكل الأنسجة.' : "حمولة ضغط فائقة تسارع من تآكل الغضاريف وتزيد من انضغاط الأعصاب.");
                 }
             }
 
             // التفسير البيوميكانيكي
             const biomechanicalCause = assessment?.biomechanicalCause 
                 || assessment?.clinicalSummary
-                || `توضح معطيات الفحص السريري وجود خلل ميكانيكي حركي في منطقة (${rootLevel}) ناتج عن اضطراب في توازن القوى العضلية المحيطة، مما يؤدي إلى زيادة الاحتكاك الموضعي والتهيج العصبي الميكانيكي.`;
+                || profile.biomechanical;
 
             // التوصيات
             const recommendations = (assessment?.recommendations && assessment.recommendations.length > 0)
@@ -2935,11 +3060,7 @@
             // التمارين
             let exercises = assessment?.exercises || assessment?.recommendedExercises || [];
             if (!Array.isArray(exercises) || exercises.length === 0) {
-                exercises = [
-                    { title: 'تمرين الإطالة وتخفيف الضغط الغضروفي', reps: '10 تكرارات × 3 جولات', note: 'تنفس بعمق مع الحفاظ على استقامة الجذع' },
-                    { title: 'تمرين التنشيط والتثبيت العضلي العميق', reps: 'الثبات 15 ثانية × 3 مرات', note: 'بدون حركات مفاجئة لتفادي الشد العضلي' },
-                    { title: 'تمرين استعادة المدى الحركي للمفصل', reps: 'تكرار خفيف حسب الراحة', note: 'يوقف التمرين فوراً في حال الشعور بألم حاد' }
-                ];
+                exercises = profile.exercises;
             }
 
             // الأعراض والشكوى
