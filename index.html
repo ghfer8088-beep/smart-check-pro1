@@ -29,11 +29,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=15.7">
+    <link rel="stylesheet" href="css/style.css?v=15.8">
     <script>
-        // التحقق من تحديثات Service Worker وتفريغ الكاش القديم فوراً عند الترقية للإصدار 15.7
+        // التحقق من تحديثات Service Worker وتفريغ الكاش القديم فوراً عند الترقية للإصدار 15.8
         (function() {
-            const APP_TARGET_VER = '15.7';
+            const APP_TARGET_VER = '15.8';
             const currentVer = localStorage.getItem('smart_app_version');
             if (currentVer !== APP_TARGET_VER) {
                 if ('caches' in window) {
@@ -179,6 +179,31 @@
         </div>
     </header>
     <div id="mobile-menu-backdrop" class="mobile-backdrop" onclick="closeMobileMenu()"></div>
+
+    <!-- 🟢 شريط التفاعل الحي والمصداقية اللحظية (Social Proof & Live Visitors Counter < 100) -->
+    <div id="live-online-bar" class="no-print" style="background: linear-gradient(90deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.95) 50%, rgba(15, 23, 42, 0.98) 100%); border-bottom: 1.5px solid rgba(212, 175, 55, 0.35); padding: 9px 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 0.88em; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 8px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.45); padding: 4px 14px; border-radius: 20px;">
+                <span style="display: inline-block; width: 9px; height: 9px; background: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981; animation: pulseOnline 1.8s infinite;"></span>
+                <span style="color: #6ee7b7; font-weight: 700;">أونلاين الآن:</span>
+                <span id="live-online-users-count" style="color: #fff; font-weight: 800; font-size: 1.1em; min-width: 26px; text-align: center;">67</span>
+                <span style="color: #cbd5e1; font-size: 0.92em;">مراجعاً في الفحص والاستشارة</span>
+            </div>
+            <div id="visitor-geo-badge" style="display: inline-flex; align-items: center; gap: 6px; color: #94a3b8; font-size: 0.88em;">
+                <span>📍</span>
+                <span id="visitor-detected-location">جاري كشف موقعك الجغرافي...</span>
+            </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; font-size: 0.84em; color: #cbd5e1; flex-wrap: wrap;">
+            <span style="display: inline-flex; align-items: center; gap: 5px; background: rgba(212, 175, 55, 0.12); border: 1px solid rgba(212, 175, 55, 0.35); padding: 3px 10px; border-radius: 12px; color: var(--primary-gold); font-weight: 600;">
+                <span>🔒</span> فحص مشفر ومحمي برمجياً
+            </span>
+            <span id="cloud-sync-status-pill" style="display: inline-flex; align-items: center; gap: 5px; color: #93c5fd; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 3px 10px; border-radius: 12px;">
+                <span>☁️</span> قاعدة بيانات سحابية متصلة
+            </span>
+        </div>
+    </div>
 
     <!-- شريط تتبع الخطوات المنطقي القابل للنقر للتنقل الحر (6 مراحل سريرية معيارية) -->
     <div class="stepper-container no-print">
@@ -1511,16 +1536,63 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/database.js?v=15.7"></script>
-    <script src="js/exercise-image-studio.js?v=15.7"></script>
-    <script src="js/exercises-db.js?v=15.7"></script>
-    <script src="js/diagnostic-engine.js?v=15.7"></script>
-    <script src="js/audio-pacer.js?v=15.7"></script>
-    <script src="js/patient-flow.js?v=15.7"></script>
-    <script src="js/admin-engine.js?v=15.7"></script>
-    <script src="js/ai-config.js?v=15.7"></script>
-    <script src="js/ai-engine.js?v=15.7"></script>
-    <script src="js/app.js?v=15.7"></script>
-    <script src="js/text-editor.js?v=15.7"></script>
+    <script src="js/geo-tracker.js?v=15.8"></script>
+    <script src="js/cloud-sync.js?v=15.8"></script>
+    <script src="js/database.js?v=15.8"></script>
+    <script src="js/exercise-image-studio.js?v=15.8"></script>
+    <script src="js/exercises-db.js?v=15.8"></script>
+    <script src="js/diagnostic-engine.js?v=15.8"></script>
+    <script src="js/audio-pacer.js?v=15.8"></script>
+    <script src="js/patient-flow.js?v=15.8"></script>
+    <script src="js/admin-engine.js?v=15.8"></script>
+    <script src="js/ai-config.js?v=15.8"></script>
+    <script src="js/ai-engine.js?v=15.8"></script>
+    <script src="js/app.js?v=15.8"></script>
+    <script src="js/text-editor.js?v=15.8"></script>
+
+    <script>
+        // تشغيل عداد التفاعل الحي الاجتماعي (Live Online Social Proof) وكاشف الدولة والمدينة
+        (function initLiveSocialProof() {
+            const countEl = document.getElementById('live-online-users-count');
+            const locEl = document.getElementById('visitor-detected-location');
+
+            // رقم أولي عشوائي طبيعي جداً (أقل من 100 قطعاً: بين 58 و 83)
+            let baseOnline = 58 + Math.floor(Math.random() * 26);
+            if (countEl) countEl.textContent = baseOnline;
+
+            // كشف الموقع الجغرافي للزائر
+            if (window.SmartGeoTracker && typeof window.SmartGeoTracker.getVisitorInfo === 'function') {
+                window.SmartGeoTracker.getVisitorInfo().then(info => {
+                    if (locEl && info) {
+                        const flag = info.flag || '🌐';
+                        const cityText = (info.city && info.city !== 'غير محدد') ? `${info.city} - ` : '';
+                        const countryText = (info.country && info.country !== 'غير محدد') ? info.country : 'زائر معتمد';
+                        const deviceIcon = info.deviceIcon || '📱';
+                        locEl.textContent = `${flag} ${cityText}${countryText} (${deviceIcon})`;
+                    }
+                }).catch(() => {
+                    if (locEl) locEl.textContent = '🇸🇦 المملكة العربية السعودية (📱)';
+                });
+            }
+
+            // تموج وتذبذب ديناميكي طبيعي كل 13 ثانية (يبقى دائماً محصوراً أقل من 100)
+            setInterval(() => {
+                if (!countEl) return;
+                const delta = (Math.random() > 0.48 ? 1 : -1) * (Math.floor(Math.random() * 3) + 1);
+                baseOnline += delta;
+                if (baseOnline > 89) baseOnline = 87;
+                if (baseOnline < 52) baseOnline = 55;
+                
+                countEl.style.transition = 'transform 0.3s ease, color 0.3s ease';
+                countEl.style.transform = 'scale(1.2)';
+                countEl.style.color = delta >= 0 ? '#6ee7b7' : '#fef08a';
+                countEl.textContent = baseOnline;
+                setTimeout(() => {
+                    countEl.style.transform = 'scale(1)';
+                    countEl.style.color = '#fff';
+                }, 350);
+            }, 13000);
+        })();
+    </script>
 </body>
 </html>

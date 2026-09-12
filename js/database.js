@@ -71,6 +71,13 @@ const SmartDB = (function() {
             }
         } catch(e) {}
 
+        // ☁️ ترحيل المريض سحابياً فورياً عبر جسر المزامنة العالمي مع كشف الدولة والمدينة
+        try {
+            if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.dispatchPatient === 'function') {
+                SmartCloudSync.dispatchPatient(patient);
+            }
+        } catch(e) {}
+
         try {
             const db = await openDB();
             return new Promise((resolve) => {
@@ -126,6 +133,32 @@ const SmartDB = (function() {
                     lsPatients.forEach(p => {
                         if (!map.has(p.patientId)) map.set(p.patientId, p);
                     });
+
+                    // دمج الحالات السحابية المرحلية من المزامنة العالمية
+                    try {
+                        if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.getPatients === 'function') {
+                            const cloudList = SmartCloudSync.getPatients();
+                            cloudList.forEach(cp => {
+                                const pId = cp.patientId || cp.id;
+                                if (pId && !map.has(pId)) {
+                                    map.set(pId, {
+                                        patientId: pId,
+                                        name: cp.fullName || cp.name,
+                                        phone: cp.phone,
+                                        age: cp.age,
+                                        gender: cp.gender,
+                                        country: cp.country,
+                                        city: cp.city,
+                                        flag: cp.flag,
+                                        device: cp.device,
+                                        chiefDiagnosis: cp.diagnosisTitle,
+                                        createdAt: cp.timestamp
+                                    });
+                                }
+                            });
+                        }
+                    } catch(e) {}
+
                     resolve(Array.from(map.values()));
                 };
                 req.onerror = () => resolve(lsPatients);

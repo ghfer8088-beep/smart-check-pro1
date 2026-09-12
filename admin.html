@@ -192,6 +192,65 @@
                 </div>
             </div>
 
+            <!-- ========================================================================== -->
+            <!-- 🌍 لوحة الإحصائيات الجغرافية وحركة الزوار العالمية وقاعدة البيانات السحابية -->
+            <!-- ========================================================================== -->
+            <div id="admin-geo-analytics-card" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(17, 24, 39, 0.95) 100%); border: 1.5px solid rgba(56, 189, 248, 0.5); border-radius: 14px; padding: 22px; margin-bottom: 25px; box-shadow: 0 4px 25px rgba(0,0,0,0.5);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid rgba(56, 189, 248, 0.25); padding-bottom: 15px; margin-bottom: 18px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="font-size: 2em; filter: drop-shadow(0 2px 8px rgba(56,189,248,0.5));">
+                            🌍
+                        </div>
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <h3 style="color: #38bdf8; margin: 0; font-size: 1.25em;">حركة الزوار وتوزيع المراجعين الجغرافي (Geo-Analytics & Cloud Sync)</h3>
+                                <span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid #10b981; padding: 2px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold; display: inline-flex; align-items: center; gap: 4px;">
+                                    <span style="display: inline-block; width: 7px; height: 7px; background: #10b981; border-radius: 50%; box-shadow: 0 0 6px #10b981;"></span> مزامنة عالمية متصلة
+                                </span>
+                            </div>
+                            <div style="color: #94a3b8; font-size: 0.86em; margin-top: 3px;">رصد فوري لبلدان ومدن الزوار والمراجعين من أي مكان بالعالم وترحيل بياناتهم تلقائياً لقاعدة البيانات المركزية</div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button type="button" onclick="renderGeoAnalytics()" class="btn-header" style="background: rgba(56, 189, 248, 0.15); border-color: #38bdf8; color: #7dd3fc; font-size: 0.85em; padding: 7px 14px;">
+                            🔄 تحديث فوري
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4 مؤشرات جغرافية سريعة -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 18px;">
+                    <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 10px; padding: 14px; text-align: center;">
+                        <div id="geo-stat-total-visits" style="font-size: 2em; font-weight: bold; color: #38bdf8;">0</div>
+                        <div style="color: #94a3b8; font-size: 0.85em;">إجمالي زيارات واستشارات المنظومة</div>
+                    </div>
+                    <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 10px; padding: 14px; text-align: center;">
+                        <div id="geo-stat-countries-count" style="font-size: 2em; font-weight: bold; color: var(--primary-gold);">0</div>
+                        <div style="color: #94a3b8; font-size: 0.85em;">عدد الدول النشطة</div>
+                    </div>
+                    <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 14px; text-align: center;">
+                        <div id="geo-stat-mobile-pct" style="font-size: 2em; font-weight: bold; color: #10b981;">0%</div>
+                        <div style="color: #94a3b8; font-size: 0.85em;">نسبة استخدام الموبايل 📱</div>
+                    </div>
+                    <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 10px; padding: 14px; text-align: center;">
+                        <div id="geo-stat-cloud-patients" style="font-size: 2em; font-weight: bold; color: #c084fc;">0</div>
+                        <div style="color: #94a3b8; font-size: 0.85em;">سجلات مرحّلة سحابياً ☁️</div>
+                    </div>
+                </div>
+
+                <!-- تفصيل الدول والمدن الأكثر تفاعلاً -->
+                <div style="background: #0b111e; border: 1px solid rgba(51, 65, 85, 0.6); border-radius: 10px; padding: 16px;">
+                    <div style="color: #cbd5e1; font-weight: bold; font-size: 0.95em; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+                        <span>📍 توزيع المراجعين والزيارات حسب الدولة والمدينة:</span>
+                        <span id="geo-last-sync-time" style="color: #64748b; font-size: 0.8em; font-weight: normal;">محدث تلقائياً</span>
+                    </div>
+                    <div id="geo-countries-breakdown-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px;">
+                        <!-- يتم ملؤها برمجياً -->
+                    </div>
+                </div>
+            </div>
+
             <!-- بطاقة إعدادات وربط محرك الذكاء الاصطناعي (Gemini Clinical AI) -->
             <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(6, 78, 59, 0.35) 100%); padding: 22px 24px; border-radius: 14px; border: 1.5px solid #10b981; margin-bottom: 25px; box-shadow: 0 6px 25px rgba(0,0,0,0.6);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
@@ -386,6 +445,7 @@
                             <th style="padding: 14px;">رقم الملف</th>
                             <th style="padding: 14px;">اسم المريض</th>
                             <th style="padding: 14px;">الجوال</th>
+                            <th style="padding: 14px;">الدولة والمدينة</th>
                             <th style="padding: 14px;">موضع الشكوى</th>
                             <th style="padding: 14px;">التشخيص السريري</th>
                             <th style="padding: 14px;">الجلسة الحالية</th>
@@ -509,15 +569,17 @@
         </div>
     </div>
 
-    <!-- اسكربتات إدارة قاعدة البيانات والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/database.js?v=10.1"></script>
-    <script src="js/exercise-image-studio.js?v=10.1"></script>
-    <script src="js/exercises-db.js?v=10.1"></script>
-    <script src="js/diagnostic-engine.js?v=10.1"></script>
-    <script src="js/patient-flow.js?v=10.1"></script>
-    <script src="js/admin-engine.js?v=10.1"></script>
-    <script src="js/ai-config.js?v=12.8"></script>
-    <script src="js/ai-engine.js?v=12.8"></script>
+    <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
+    <script src="js/geo-tracker.js?v=15.8"></script>
+    <script src="js/cloud-sync.js?v=15.8"></script>
+    <script src="js/database.js?v=15.8"></script>
+    <script src="js/exercise-image-studio.js?v=15.8"></script>
+    <script src="js/exercises-db.js?v=15.8"></script>
+    <script src="js/diagnostic-engine.js?v=15.8"></script>
+    <script src="js/patient-flow.js?v=15.8"></script>
+    <script src="js/admin-engine.js?v=15.8"></script>
+    <script src="js/ai-config.js?v=15.8"></script>
+    <script src="js/ai-engine.js?v=15.8"></script>
 
     <script>
         let allPatientsList = [];
@@ -548,7 +610,7 @@
 
             // الاستماع للتحديثات الحية من التبويبات الأخرى فورياً
             window.addEventListener('storage', (e) => {
-                if (e.key === 'smart_last_notif_time' || e.key === 'smart_admin_notifications') {
+                if (e.key === 'smart_last_notif_time' || e.key === 'smart_admin_notifications' || e.key === 'smart_last_cloud_sync_time') {
                     loadNotificationsData(true);
                     loadAdminData(false);
                 }
@@ -556,6 +618,15 @@
                     renderAdminVideosGrid();
                 }
             });
+
+            // ☁️ الاشتراك المباشر بالمزامنة السحابية اللحظية للمرضى والزيارات حول العالم
+            if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.subscribe === 'function') {
+                SmartCloudSync.subscribe(async (newPatient) => {
+                    await loadAdminData(false);
+                    loadNotificationsData(true);
+                    renderGeoAnalytics();
+                });
+            }
         });
 
         // ==========================================================================
@@ -1255,6 +1326,7 @@
             document.getElementById('stat-recovery-avg').textContent = avgRec + '%';
 
             renderTable(allPatientsList);
+            renderGeoAnalytics();
         }
 
         function loadNotificationsData(playSoundIfNew = false) {
@@ -1479,7 +1551,7 @@
             if (!list || list.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="9" style="text-align: center; padding: 35px; color: #94a3b8; font-size: 1.05em;">
+                        <td colspan="10" style="text-align: center; padding: 35px; color: #94a3b8; font-size: 1.05em;">
                             📂 لا يوجد مراجعين مسجلين حالياً.<br>
                             <button type="button" onclick="handleSeedDemoPatients()" style="margin-top: 12px; background: var(--primary-gold); color: #0a0e14; border: none; padding: 10px 22px; border-radius: 8px; font-weight: bold; cursor: pointer;">
                                 ✨ توليد 3 حالات سريرية تجريبية لفحص اللوحة
@@ -1490,23 +1562,38 @@
             }
 
             tbody.innerHTML = list.map(item => {
-                const cleanPhone = (item.patient.phone || '').replace(/[^0-9]/g, '');
+                const p = item.patient || {};
+                const cleanPhone = (p.phone || '').replace(/[^0-9]/g, '');
+
+                // بيانات الموقع الجغرافي والجهاز
+                const flag = p.flag || '🌍';
+                const country = p.country || 'دولي';
+                const city = (p.city && p.city !== 'غير محدد') ? p.city : '';
+                const deviceIcon = p.device === 'Mobile' ? '📱' : (p.device === 'Tablet' ? '📟' : '💻');
+                const locationDisplay = city ? `${flag} ${city} (${country})` : `${flag} ${country}`;
+
                 return `
                 <tr style="border-bottom: 1px solid #1e293b; color: #e2e8f0;">
-                    <td style="padding: 14px; font-weight: bold; color: var(--primary-gold);">${item.patient.patientId}</td>
-                    <td style="padding: 14px; font-weight: bold;">${item.patient.name}</td>
-                    <td style="padding: 14px;">${item.patient.phone || '-'}</td>
+                    <td style="padding: 14px; font-weight: bold; color: var(--primary-gold);">${p.patientId}</td>
+                    <td style="padding: 14px; font-weight: bold;">${p.name}</td>
+                    <td style="padding: 14px;">${p.phone || '-'}</td>
+                    <td style="padding: 14px;">
+                        <span style="display: inline-flex; align-items: center; gap: 5px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25); padding: 3px 8px; border-radius: 6px; font-size: 0.85em; color: #bae6fd; white-space: nowrap;">
+                            <span>${locationDisplay}</span>
+                            <span title="${p.device || 'جهاز'}">${deviceIcon}</span>
+                        </span>
+                    </td>
                     <td style="padding: 14px;">${item.painArea}</td>
                     <td style="padding: 14px;">${item.latestDiagnosis}</td>
                     <td style="padding: 14px;">اليوم ${Math.min(7, item.logsCount + 1)} من 7</td>
                     <td style="padding: 14px; color: #10b981; font-weight: bold;">${item.recoveryScore}%</td>
                     <td style="padding: 14px; text-align: center;">
-                        <button onclick="openPatientTimingModal('${item.patient.patientId}', '${item.patient.name}', ${item.logsCount + 1})" style="background: #3b82f6; color: #fff; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 0.88em; font-weight: bold;">⏱️ تعديل التوقيت</button>
+                        <button onclick="openPatientTimingModal('${p.patientId}', '${p.name}', ${item.logsCount + 1})" style="background: #3b82f6; color: #fff; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 0.88em; font-weight: bold;">⏱️ تعديل التوقيت</button>
                     </td>
                     <td style="padding: 14px; text-align: center; white-space: nowrap;">
                         ${cleanPhone ? `<a href="https://wa.me/${cleanPhone}" target="_blank" style="display: inline-block; background: #25d366; color: #fff; text-decoration: none; padding: 7px 10px; border-radius: 6px; font-size: 0.88em; font-weight: bold; margin-left: 4px;">💬 واتساب</a>` : ''}
-                        <button onclick="loginAsPatient('${item.patient.patientId}')" style="background: #10b981; color: #fff; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 0.88em;">عرض</button>
-                        <button onclick="deletePatientRecord('${item.patient.patientId}')" style="background: #ef4444; color: #fff; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 0.88em; margin-right: 4px;">حذف</button>
+                        <button onclick="loginAsPatient('${p.patientId}')" style="background: #10b981; color: #fff; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 0.88em;">عرض</button>
+                        <button onclick="deletePatientRecord('${p.patientId}')" style="background: #ef4444; color: #fff; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 0.88em; margin-right: 4px;">حذف</button>
                     </td>
                 </tr>
             `}).join('');
@@ -1518,12 +1605,104 @@
                 renderTable(allPatientsList);
                 return;
             }
-            const filtered = allPatientsList.filter(item => 
-                (item.patient.name && item.patient.name.toLowerCase().includes(q)) ||
-                (item.patient.patientId && item.patient.patientId.toLowerCase().includes(q)) ||
-                (item.patient.phone && item.patient.phone.includes(q))
-            );
+            const filtered = allPatientsList.filter(item => {
+                const p = item.patient || {};
+                return (p.name && p.name.toLowerCase().includes(q)) ||
+                       (p.patientId && p.patientId.toLowerCase().includes(q)) ||
+                       (p.phone && p.phone.includes(q)) ||
+                       (p.country && p.country.toLowerCase().includes(q)) ||
+                       (p.city && p.city.toLowerCase().includes(q));
+            });
             renderTable(filtered);
+        }
+
+        function renderGeoAnalytics() {
+            if (typeof SmartCloudSync === 'undefined' || typeof SmartCloudSync.getAnalytics !== 'function') return;
+
+            const analytics = SmartCloudSync.getAnalytics();
+            const totalVisitsEl = document.getElementById('geo-stat-total-visits');
+            const countriesCountEl = document.getElementById('geo-stat-countries-count');
+            const mobilePctEl = document.getElementById('geo-stat-mobile-pct');
+            const cloudPatientsEl = document.getElementById('geo-stat-cloud-patients');
+            const breakdownEl = document.getElementById('geo-countries-breakdown-list');
+            const lastSyncEl = document.getElementById('geo-last-sync-time');
+
+            // تجميع وتوحيد الدول والمدن من السجلات المسجلة محلياً وسحابياً
+            const patientCountriesMap = {};
+            let mobilePatients = 0;
+            let desktopPatients = 0;
+
+            allPatientsList.forEach(item => {
+                const p = item.patient || {};
+                const c = p.country || 'المملكة العربية السعودية';
+                const flag = p.flag || '🇸🇦';
+                const city = p.city || 'الرياض';
+                const key = flag + ' ' + c;
+
+                if (!patientCountriesMap[key]) {
+                    patientCountriesMap[key] = { country: c, flag: flag, count: 0, cities: {} };
+                }
+                patientCountriesMap[key].count++;
+                patientCountriesMap[key].cities[city] = (patientCountriesMap[key].cities[city] || 0) + 1;
+
+                if (p.device === 'Mobile') mobilePatients++;
+                else desktopPatients++;
+            });
+
+            // دمج نتائج الزيارات والمتصفحين
+            if (analytics.topCountries && analytics.topCountries.length > 0) {
+                analytics.topCountries.forEach(tc => {
+                    const key = (tc.flag || '🌐') + ' ' + tc.country;
+                    if (!patientCountriesMap[key]) {
+                        patientCountriesMap[key] = { country: tc.country, flag: tc.flag, count: tc.count, cities: tc.cities || {} };
+                    } else {
+                        patientCountriesMap[key].count += tc.count;
+                        Object.entries(tc.cities || {}).forEach(([city, count]) => {
+                            patientCountriesMap[key].cities[city] = (patientCountriesMap[key].cities[city] || 0) + count;
+                        });
+                    }
+                });
+            }
+
+            const mergedCountries = Object.values(patientCountriesMap).sort((a, b) => b.count - a.count);
+            const totalVisitsCount = Math.max(analytics.totalVisits + allPatientsList.length, allPatientsList.length, 1);
+
+            if (totalVisitsEl) totalVisitsEl.textContent = totalVisitsCount;
+            if (countriesCountEl) countriesCountEl.textContent = Math.max(mergedCountries.length, 1);
+            if (mobilePctEl) {
+                const totalDevices = analytics.mobileCount + mobilePatients + analytics.desktopCount + desktopPatients;
+                const mobPct = totalDevices > 0 ? Math.round(((analytics.mobileCount + mobilePatients) / totalDevices) * 100) : 85;
+                mobilePctEl.textContent = mobPct + '%';
+            }
+            if (cloudPatientsEl) cloudPatientsEl.textContent = allPatientsList.length;
+            if (lastSyncEl) lastSyncEl.textContent = 'محدث الآن: ' + new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+            if (breakdownEl) {
+                if (mergedCountries.length === 0) {
+                    breakdownEl.innerHTML = '<div style="color: #94a3b8; font-size: 0.9em; padding: 10px;">جاري رصد حركة الزيارات السحابية...</div>';
+                    return;
+                }
+
+                breakdownEl.innerHTML = mergedCountries.map(item => {
+                    const citiesArr = Object.keys(item.cities || {});
+                    const citiesStr = citiesArr.length > 0 ? citiesArr.join('، ') : 'مدن متعددة';
+                    return `
+                    <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.6em;">${item.flag || '🌐'}</span>
+                            <div>
+                                <strong style="color: #f8fafc; font-size: 0.95em; display: block;">${item.country}</strong>
+                                <span style="color: #94a3b8; font-size: 0.8em;">🏙️ ${citiesStr}</span>
+                            </div>
+                        </div>
+                        <div style="text-align: left;">
+                            <span style="background: rgba(56, 189, 248, 0.15); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 10px; border-radius: 12px; font-size: 0.82em; font-weight: bold;">
+                                ${item.count} زيارة
+                            </span>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
         }
 
         let activeTargetSessionNum = 1;

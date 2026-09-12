@@ -123,6 +123,10 @@ const AdminEngine = (function() {
                 patientId: "P-104821",
                 name: "أحمد محمود الرواشدة",
                 phone: "+962791234567",
+                country: "الأردن",
+                city: "عمّان",
+                flag: "🇯🇴",
+                device: "Mobile",
                 painArea: "الفقرات القطنية وأسفل الظهر",
                 createdAt: new Date(Date.now() - 4 * 86400000).toISOString(),
                 assessment: {
@@ -144,6 +148,10 @@ const AdminEngine = (function() {
                 patientId: "P-209143",
                 name: "سارة خليل العبادي",
                 phone: "+962788765432",
+                country: "المملكة العربية السعودية",
+                city: "الرياض",
+                flag: "🇸🇦",
+                device: "Mobile",
                 painArea: "الفقرات العنقية وقاعدة الرقبة",
                 createdAt: new Date(Date.now() - 6 * 86400000).toISOString(),
                 assessment: {
@@ -167,6 +175,10 @@ const AdminEngine = (function() {
                 patientId: "P-308512",
                 name: "طارق زياد القاسم",
                 phone: "+962775551122",
+                country: "الإمارات العربية المتحدة",
+                city: "دبي",
+                flag: "🇦🇪",
+                device: "Desktop",
                 painArea: "المفصل العجزي الحرقفي والحوض",
                 createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
                 assessment: {
@@ -189,6 +201,10 @@ const AdminEngine = (function() {
                 patientId: dp.patientId,
                 name: dp.name,
                 phone: dp.phone,
+                country: dp.country,
+                city: dp.city,
+                flag: dp.flag,
+                device: dp.device,
                 painArea: dp.painArea,
                 createdAt: dp.createdAt
             });
