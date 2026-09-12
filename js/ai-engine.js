@@ -1476,10 +1476,10 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
 4. يجب أن يكون الرد السريري في حدود 35 إلى 60 كلمة فقط بلهجة طبية فصيحة ومريحة.
 5. ممنوع منعاً باتاً استخدام الكلمات: "عيادة"، "مركز"، "فريقنا"، "كوادرنا"! المعالج الوحيد هو المعالج جمال، والجهة هي: في «وداعاً للألم».
 6. لا تقترح أي خيارات أو أزرار جاهزة للمراجع.
-7. ضع في أسطر مستقلة في نهاية ردك بدقة:
-[TRANSCRIPTION: ملخص ما قاله المراجع بصوته]
-[EXTRACTED_NAME: الاسم إن ذكره المراجع]
-[EXTRACTED_PHONE: رقم الهاتف إن ذكره المراجع]
+7. ضع في أسطر مستقلة في نهاية ردك بدقة تامة:
+[TRANSCRIPTION: النص الكامل والدقيق لكل ما قاله المراجع بصوته كلمة بكلمة باللغة العربية]
+[EXTRACTED_NAME: الاسم إن ذكره المراجع أو نادى به]
+[EXTRACTED_PHONE: رقم الهاتف إن ذكره المراجع أو قاله بأي صيغة]
 `;
 
         const payload = {
@@ -1567,6 +1567,11 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
                             nextStep = 'ask_phone';
                         } else if (currentStep === 'ask_phone' || currentStep === 'completed') {
                             nextStep = (extractedPhone && typeof isValidPhoneNumber === 'function' && isValidPhoneNumber(extractedPhone)) ? 'completed' : 'ask_phone';
+                        }
+
+                        if (Array.isArray(history)) {
+                            if (transcription) history.push({ sender: 'user', text: transcription });
+                            if (message) history.push({ sender: 'bot', text: message });
                         }
 
                         // الرد الفوري بدون أي انتظار للصوت السحابي (لتوفير سرعة فائقة في أجزاء من الثانية)

@@ -7440,9 +7440,18 @@ async function stopAndSendVoiceNote() {
         chatInputField.style.borderColor = '';
     }
 
-    const userDisplayMsg = capturedText ? `🎙️ "${capturedText}"` : '🎙️ [رسالة صوتية مسجلة]';
+    let tempVoiceBubbleId = null;
+    let userDisplayMsg = '';
 
-    appendChatMessage('user', userDisplayMsg);
+    if (capturedText) {
+        userDisplayMsg = `🎙️ "${capturedText}"`;
+        appendChatMessage('user', userDisplayMsg);
+    } else {
+        tempVoiceBubbleId = 'temp-voice-bubble-' + Date.now();
+        userDisplayMsg = `<span id="${tempVoiceBubbleId}" style="display:inline-flex; align-items:center; gap:8px;"><span style="animation: spin 1s linear infinite; display:inline-block;">🎙️</span> <em>جاري تحويل صوتك إلى نص بدقة...</em></span>`;
+        appendChatMessage('user', userDisplayMsg);
+    }
+
     renderChatQuickReplies([]);
 
     const messagesBox = document.getElementById('ai-chat-messages-box');
@@ -7452,7 +7461,7 @@ async function stopAndSendVoiceNote() {
         const typingEl = document.createElement('div');
         typingEl.id = loadingId;
         typingEl.style.cssText = 'color: #38bdf8; font-size: 0.88em; padding: 10px 14px; display: flex; align-items: center; gap: 10px; background: rgba(15,23,42,0.85); border-radius: 10px; border: 1.5px solid #0284c7; box-shadow: 0 4px 15px rgba(2,132,199,0.25);';
-        typingEl.innerHTML = `<span style="animation: spin 1s linear infinite; display: inline-block;">👂</span> ${persona.name} يستمع لتسجيلك ويفهم شكواك...`;
+        typingEl.innerHTML = `<span style="animation: spin 1s linear infinite; display: inline-block;">👂</span> ${persona.name} يستمع لصوتك ويحلل كلامك بدقة...`;
         messagesBox.appendChild(typingEl);
         messagesBox.scrollTop = messagesBox.scrollHeight;
     }
@@ -7490,7 +7499,7 @@ async function stopAndSendVoiceNote() {
             audioUrl: null
         };
     } else {
-        // في حال تعذر التقاط النص محلياً: إرسال التسجيل الصوتي المباشر لـ Gemini
+        // في حال تعذر التقاط النص محلياً: إرسال التسجيل الصوتي المباشر لـ Gemini مع تفريغه لنص كامل
         result = await Wada3anAiEngine.advanceClinicalDialogueWithAudio({
             audioBlob,
             mimeType: recordedAudioMimeType,
@@ -7499,6 +7508,15 @@ async function stopAndSendVoiceNote() {
             history: clinicalDialogueState.history,
             patientName: clinicalDialogueState.patientName
         });
+
+        // استبدال نص الفقاعة المؤقت بالنص الصوتي المفرغ الحقيقي (تحويل كامل وموحد إلى نص)
+        const finalTrans = (result && result.transcription) ? result.transcription.trim() : 'رسالة صوتية سريرية';
+        if (tempVoiceBubbleId) {
+            const tempEl = document.getElementById(tempVoiceBubbleId);
+            if (tempEl) {
+                tempEl.innerHTML = `🎙️ "${finalTrans}"`;
+            }
+        }
     }
 
     const indicator = document.getElementById(loadingId);
