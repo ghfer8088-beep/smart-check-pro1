@@ -157,7 +157,7 @@
     // جلب كافة الزيارات المسجلة سحابياً من كافة الهواتف والكمبيوترات حول العالم
     async function fetchCloudVisits() {
         try {
-            const resp = await fetch(`${CLOUD_VISITS_ENDPOINT}/json?poll=1&since=30d`);
+            const resp = await fetch(`${CLOUD_VISITS_ENDPOINT}/json?poll=1&since=all`);
             if (!resp.ok) return;
             const text = await resp.text();
             if (!text) return;
@@ -197,7 +197,7 @@
     // جلب كافة المرضى المرحلين من السحابة عبر كافة الأجهزة والهواتف حول العالم
     async function fetchCloudPatients() {
         try {
-            const pollUrl = `${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=30d`;
+            const pollUrl = `${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=all`;
             const resp = await fetch(pollUrl);
             if (!resp.ok) return getCloudSyncedPatients();
             const text = await resp.text();
@@ -213,25 +213,60 @@
                     const item = JSON.parse(line);
                     if (item.event === 'message' && item.message) {
                         const pt = JSON.parse(item.message);
-                        if (pt && (pt.id || pt.patientId || pt.phone)) {
-                            const pId = pt.id || pt.patientId;
-                            const idx = currentList.findIndex(x => (pId && (x.id === pId || x.patientId === pId)) || (pt.phone && x.phone === pt.phone && (x.fullName === pt.fullName || x.name === pt.name)));
+                        if (pt && (pt.id || pt.patientId || pt.phone || pt.fullName || pt.name)) {
+                            const pId = pt.id || pt.patientId || ('pat_' + (pt.phone ? String(pt.phone).replace(/\D/g, '') : Date.now().toString(36)));
+                            const pName = pt.fullName || pt.name || 'مراجع جديد';
+                            const pPhone = pt.phone || '';
                             const normalized = {
                                 ...pt,
-                                id: pId || ('pat_' + Date.now().toString(36)),
-                                patientId: pId || ('pat_' + Date.now().toString(36)),
-                                name: pt.fullName || pt.name || 'مراجع',
-                                fullName: pt.fullName || pt.name || 'مراجع',
-                                phone: pt.phone || '',
-                                painArea: pt.painArea || pt.selectedPoint || 'فحص سريري عام',
-                                createdAt: pt.createdAt || pt.timestamp || new Date().toISOString()
+                                id: pId,
+                                patientId: pId,
+                                name: pName,
+                                fullName: pName,
+                                phone: pPhone,
+                                painArea: pt.painArea || pt.selectedPoint || 'العمود الفقري والمفاصل',
+                                chiefDiagnosis: pt.diagnosisTitle || pt.chiefDiagnosis || pt.condition || 'فحص واستشارة سريرية',
+                                country: pt.country || 'غير محدد',
+                                city: pt.city || 'غير محدد',
+                                flag: pt.flag || '🌐',
+                                device: pt.device || 'Mobile',
+                                deviceIcon: pt.deviceIcon || '📱',
+                                createdAt: pt.createdAt || pt.timestamp || new Date().toISOString(),
+                                lastUpdated: new Date().toISOString()
                             };
+
+                            const idx = currentList.findIndex(x => (pId && (x.id === pId || x.patientId === pId)) || (pPhone && x.phone === pPhone && (x.fullName === pName || x.name === pName)));
                             if (idx >= 0) {
                                 currentList[idx] = { ...currentList[idx], ...normalized };
                             } else {
                                 currentList.unshift(normalized);
                                 changed = true;
                             }
+
+                            // حفظ فوري ومؤكد في قاعدة بيانات SmartDB ولائحة المرضى
+                            try {
+                                if (window.SmartDB && typeof window.SmartDB.savePatient === 'function') {
+                                    window.SmartDB.savePatient(normalized);
+                                }
+                            } catch(e) {}
+
+                            // إضافة إشعار للإدارة بالانضمام الجديد إن لم يكن مضافاً
+                            try {
+                                if (window.SmartDB && typeof window.SmartDB.addAdminNotification === 'function') {
+                                    const notifs = window.SmartDB.getAdminNotifications();
+                                    const existsNotif = notifs.some(n => (pPhone && n.patientPhone === pPhone) || (n.patientName === pName && n.type === 'new_registration'));
+                                    if (!existsNotif) {
+                                        window.SmartDB.addAdminNotification({
+                                            type: 'new_registration',
+                                            title: `👤 مراجع جديد: ${pName}`,
+                                            message: `انضم المراجع ${pName} (${pPhone || 'بدون هاتف'}) - من ${normalized.city} (${normalized.country}) عبر ${normalized.deviceIcon} ${normalized.device}.`,
+                                            patientName: pName,
+                                            patientPhone: pPhone,
+                                            meta: { painArea: normalized.painArea }
+                                        });
+                                    }
+                                }
+                            } catch(e) {}
                         }
                     }
                 } catch(e) {}

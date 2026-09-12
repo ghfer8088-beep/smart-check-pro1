@@ -17,8 +17,8 @@
     </script>
 
     <script src="js/system-watchdog.js?v=16.3"></script>
-    <script src="js/security-shield.js?v=16.7"></script>
-    <link rel="stylesheet" href="css/style.css?v=16.7">
+    <script src="js/security-shield.js?v=16.8"></script>
+    <link rel="stylesheet" href="css/style.css?v=16.8">
     <style>
         body {
             background-color: #080c14;
@@ -104,7 +104,7 @@
                     <span>⚙️</span> إعدادات وتخصيص المنظومة
                 </button>
                 <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 10px 16px;">
-                    ⚡ تحديث الكاش (v16.7)
+                    ⚡ تحديث الكاش (v16.8)
                 </button>
                 <a href="index.html" class="btn-header" style="background: #1e293b; color: #fff; padding: 10px 20px; font-size: 0.95em;">
                     🌐 فتح واجهة المراجعين
@@ -229,6 +229,9 @@
                     </div>
 
                     <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <button type="button" onclick="triggerManualCloudSync()" class="btn-header" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #fff; border: none; font-weight: bold; padding: 9px 18px; font-size: 0.88em; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);">
+                            <span id="sync-spin-icon-main">🔄</span> تحديث ومزامنة سحابية
+                        </button>
                         <button type="button" onclick="openAddPatientModal()" class="btn-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; border: none; font-weight: bold; padding: 9px 16px; font-size: 0.88em; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
                             <span>➕</span> إضافة مريض جديد
                         </button>
@@ -983,16 +986,16 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/geo-tracker.js?v=16.7"></script>
-    <script src="js/cloud-sync.js?v=16.7"></script>
-    <script src="js/database.js?v=16.7"></script>
-    <script src="js/exercise-image-studio.js?v=16.7"></script>
-    <script src="js/exercises-db.js?v=16.7"></script>
-    <script src="js/diagnostic-engine.js?v=16.7"></script>
-    <script src="js/patient-flow.js?v=16.7"></script>
-    <script src="js/admin-engine.js?v=16.7"></script>
-    <script src="js/ai-config.js?v=16.7"></script>
-    <script src="js/ai-engine.js?v=16.7"></script>
+    <script src="js/geo-tracker.js?v=16.8"></script>
+    <script src="js/cloud-sync.js?v=16.8"></script>
+    <script src="js/database.js?v=16.8"></script>
+    <script src="js/exercise-image-studio.js?v=16.8"></script>
+    <script src="js/exercises-db.js?v=16.8"></script>
+    <script src="js/diagnostic-engine.js?v=16.8"></script>
+    <script src="js/patient-flow.js?v=16.8"></script>
+    <script src="js/admin-engine.js?v=16.8"></script>
+    <script src="js/ai-config.js?v=16.8"></script>
+    <script src="js/ai-engine.js?v=16.8"></script>
 
     <script>
         let allPatientsList = [];
@@ -2292,7 +2295,9 @@
 
         async function triggerManualCloudSync() {
             const icon = document.getElementById('sync-spin-icon');
+            const iconMain = document.getElementById('sync-spin-icon-main');
             if (icon) icon.style.animation = 'spin 1s linear infinite';
+            if (iconMain) iconMain.style.animation = 'spin 1s linear infinite';
             try {
                 if (typeof SmartCloudSync !== 'undefined') {
                     await Promise.all([
@@ -2303,12 +2308,13 @@
                 await loadAdminData(false);
                 loadNotificationsData(true);
                 renderGeoAnalytics();
-                alert('✅ تمت المزامنة السحابية بنجاح! تم جلب وتحديث أحدث بيانات المرضى والزيارات من كافة الأجهزة.');
+                alert(`✅ تمت المزامنة السحابية بنجاح!\nتم جلب وتحديث كافة سجلات المرضى والزيارات من السحابة.\n(إجمالي المراجعين المسجلين الآن: ${allPatientsList.length})`);
             } catch (e) {
                 console.error(e);
                 alert('⚠️ تم تحديث البيانات محلياً بنجاح.');
             } finally {
                 if (icon) icon.style.animation = 'none';
+                if (iconMain) iconMain.style.animation = 'none';
             }
         }
         window.triggerManualCloudSync = triggerManualCloudSync;
