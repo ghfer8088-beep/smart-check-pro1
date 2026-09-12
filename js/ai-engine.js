@@ -23,8 +23,12 @@ const Wada3anAiEngine = {
                         .map(m => m.name.replace(/^models\//, ''));
                     
                     if (models.length > 0) {
-                        // تفضيل نماذج flash إن وجدت
-                        const preferred = models.find(m => m.includes('flash') || m.includes('pro')) || models[0];
+                        // تفضيل أحدث نماذج flash النشطة والمعتمدة
+                        const preferred = models.find(m => m === 'gemini-3.6-flash') ||
+                                          models.find(m => m === 'gemini-3.5-flash') ||
+                                          models.find(m => m === 'gemini-3.1-flash-lite') ||
+                                          models.find(m => m.includes('flash')) ||
+                                          models[0];
                         const apiVer = listUrl.includes('/v1/') ? 'v1' : 'v1beta';
                         return { model: preferred, version: apiVer, availableModels: models };
                     }
@@ -629,7 +633,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
         const key = WADA3AN_AI_CONFIG.getApiKey();
         if (!key) throw new Error('No valid API key');
 
-        const candidateModels = ['gemini-1.5-flash', 'gemini-2.0-flash'];
+        const candidateModels = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-2.0-flash'];
         let lastError = null;
 
         for (const model of candidateModels) {
@@ -1218,10 +1222,8 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             return returnDetails ? { audioUrl: this._audioCache[cacheKey], error: null } : this._audioCache[cacheKey];
         }
 
-        // النموذج الرئيسي المؤكد العمل - نجرب المفاتيح بالترتيب من المؤشر الحالي
-        // النموذج الثاني كاحتياطي فقط عند فشل الأول بخطأ غير 429
-        const primaryModel   = 'gemini-2.5-flash-preview-tts';
-        const secondaryModel = 'gemini-2.5-pro-preview-tts'; // احتياطي
+        // النماذج الصوتية المتوافقة مع توليد الكلام
+        const ttsModels = ['gemini-2.5-flash-preview-tts', 'gemini-3.1-flash-tts-preview', 'gemini-2.5-pro-preview-tts'];
 
         const pool = WADA3AN_AI_CONFIG.getPoolKeys();
         let lastErrorMsg = '';
@@ -1257,7 +1259,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                 }
             };
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 4000);
+            const timeoutId = setTimeout(() => controller.abort(), 6000);
             try {
                 const res = await fetch(url, {
                     method: 'POST',
@@ -1276,68 +1278,34 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
         // المرور على المفاتيح المتاحة بالترتيب
         for (const { key: activeKey, idx } of availableKeys) {
             console.log(`[TTS] جاري تجربة المفتاح [${idx}]...`);
-            try {
-                // جرب النموذج الأساسي أولاً
-                const res = await tryTtsRequest(activeKey, primaryModel);
-
-                if (res.ok) {
-                    const data = await res.json();
-                    const part = data?.candidates?.[0]?.content?.parts?.[0];
-                    if (part?.inlineData?.data) {
-                        const wavBlob = this.pcmToWavBlob(part.inlineData.data, 24000);
-                        if (wavBlob) {
-                            const blobUrl = URL.createObjectURL(wavBlob);
-                            if (!this._audioCache) this._audioCache = {};
-                            this._audioCache[cacheKey] = blobUrl;
-                            // تحديث المؤشر للبدء من هذا المفتاح الناجح في المرة القادمة
-                            WADA3AN_AI_CONFIG._currentPoolIndex = idx;
-                            console.log(`[TTS] ✅ نجح المفتاح [${idx}] مع ${primaryModel}`);
-                            return returnDetails ? { audioUrl: blobUrl, error: null } : blobUrl;
-                        }
-                    }
-                    // استجابة ناجحة لكن بدون بيانات صوتية - جرب النموذج الاحتياطي
-                    lastErrorMsg = 'لا توجد بيانات صوتية في الاستجابة';
-                } else if (res.status === 429) {
-                    // مفتاح مستنفد - سجّله وانتقل للتالي
-                    WADA3AN_AI_CONFIG.rotateKey(activeKey);
-                    lastErrorMsg = `429 - مفتاح [${idx}] مستنفد`;
-                    console.warn(`[TTS] 429 على المفتاح [${idx}] - انتقال للتالي`);
-                    continue; // الانتقال للمفتاح التالي
-                } else if (res.status === 404) {
-                    // النموذج غير موجود - جرب الاحتياطي
-                    lastErrorMsg = `404 - ${primaryModel} غير متاح`;
-                    try {
-                        const res2 = await tryTtsRequest(activeKey, secondaryModel);
-                        if (res2.ok) {
-                            const data2 = await res2.json();
-                            const part2 = data2?.candidates?.[0]?.content?.parts?.[0];
-                            if (part2?.inlineData?.data) {
-                                const wavBlob2 = this.pcmToWavBlob(part2.inlineData.data, 24000);
-                                if (wavBlob2) {
-                                    const blobUrl2 = URL.createObjectURL(wavBlob2);
-                                    if (!this._audioCache) this._audioCache = {};
-                                    this._audioCache[cacheKey] = blobUrl2;
-                                    WADA3AN_AI_CONFIG._currentPoolIndex = idx;
-                                    console.log(`[TTS] ✅ نجح المفتاح [${idx}] مع ${secondaryModel}`);
-                                    return returnDetails ? { audioUrl: blobUrl2, error: null } : blobUrl2;
-                                }
+            let keyRotated = false;
+            for (const modelName of ttsModels) {
+                try {
+                    const res = await tryTtsRequest(activeKey, modelName);
+                    if (res.ok) {
+                        const data = await res.json();
+                        const part = data?.candidates?.[0]?.content?.parts?.[0];
+                        if (part?.inlineData?.data) {
+                            const wavBlob = this.pcmToWavBlob(part.inlineData.data, 24000);
+                            if (wavBlob) {
+                                const blobUrl = URL.createObjectURL(wavBlob);
+                                if (!this._audioCache) this._audioCache = {};
+                                this._audioCache[cacheKey] = blobUrl;
+                                WADA3AN_AI_CONFIG._currentPoolIndex = idx;
+                                console.log(`[TTS] ✅ نجح المفتاح [${idx}] مع ${modelName}`);
+                                return returnDetails ? { audioUrl: blobUrl, error: null } : blobUrl;
                             }
-                        } else if (res2.status === 429) {
-                            WADA3AN_AI_CONFIG.rotateKey(activeKey);
-                            continue;
                         }
-                    } catch (e2) {
-                        lastErrorMsg = e2.message;
+                    } else if (res.status === 429) {
+                        WADA3AN_AI_CONFIG.rotateKey(activeKey);
+                        keyRotated = true;
+                        break;
                     }
-                } else {
-                    const errObj = await res.json().catch(() => ({}));
-                    lastErrorMsg = errObj?.error?.message || `كود ${res.status}`;
-                    console.warn(`[TTS] خطأ ${res.status} على المفتاح [${idx}]:`, lastErrorMsg);
+                } catch (e) {
+                    lastErrorMsg = e.message;
                 }
-            } catch (e) {
-                lastErrorMsg = e.name === 'AbortError' ? 'timeout 4s' : e.message;
-                console.warn(`[TTS] استثناء على المفتاح [${idx}]:`, lastErrorMsg);
             }
+            if (keyRotated) continue;
         }
 
         console.warn(`[TTS] ❌ فشلت كل المفاتيح المتاحة. السبب: ${lastErrorMsg}`);
@@ -1512,7 +1480,7 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
 
         const totalPoolKeys = WADA3AN_AI_CONFIG.getPoolKeys().length || 1;
         const maxKeyRotations = Math.min(3, totalPoolKeys);
-        const candidateAudioModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-3.5-flash'];
+        const candidateAudioModels = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
 
         for (let keyAttempt = 0; keyAttempt < maxKeyRotations; keyAttempt++) {
             const key = WADA3AN_AI_CONFIG.getApiKey();
