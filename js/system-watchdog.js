@@ -571,31 +571,47 @@ const SmartWatchdog = (function() {
             });
         }
 
-        // 4. فحص محرك الذكاء الاصطناعي والمحرك الاحتياطي
+        // 4. ✅ فحص محرك الذكاء الاصطناعي الفعلي (Google Gemini API Live Ping)
         try {
-            if (typeof SmartAIConfig !== 'undefined') {
-                const isReady = typeof SmartAIConfig.isConfigured === 'function' ? SmartAIConfig.isConfigured() : false;
-                report.modules.push({
-                    name: 'محرك الذكاء الاصطناعي والحوار السريري',
-                    status: 'OPTIMAL',
-                    details: isReady ? 'مفعل بالسحابة الذكية المباشرة' : 'يعمل بالمحرك التشريحي الاحتياطي المتطور (7 مناطق طبية)'
-                });
+            const aiConfig = (typeof WADA3AN_AI_CONFIG !== 'undefined') ? WADA3AN_AI_CONFIG : (typeof SmartAIConfig !== 'undefined' ? SmartAIConfig : null);
+            const isConfigured = aiConfig && typeof aiConfig.isConfigured === 'function' && aiConfig.isConfigured();
+
+            if (isConfigured) {
+                const aiPingStart = performance.now();
+                // تنفيذ اختبار اتصال حي وحقيقي 100% مع خوادم Google Gemini
+                const pingResult = await aiConfig.testConnection();
+                const latency = Math.round(performance.now() - aiPingStart);
+
+                if (pingResult && pingResult.success) {
+                    report.modules.push({
+                        name: 'محرك الذكاء الاصطناعي المباشر (Google Gemini API)',
+                        status: 'OPTIMAL',
+                        details: `متصل سحابياً ويعمل بكفاءة فائقة (زمن الاستجابة الحقيقي: ${latency}ms - النموذج: ${aiConfig.DEFAULT_MODEL || 'gemini-1.5-flash'})`
+                    });
+                } else {
+                    report.score -= 20;
+                    report.modules.push({
+                        name: 'محرك الذكاء الاصطناعي المباشر (Google Gemini API)',
+                        status: 'WARNING',
+                        details: `تنبيه: ${pingResult ? pingResult.message : 'تعذر الاتصال'} (سيعمل المحرك التشريحي الاحتياطي تلقائياً)`
+                    });
+                }
             } else {
                 report.modules.push({
                     name: 'محرك الذكاء الاصطناعي والحوار السريري',
                     status: 'OPTIMAL',
-                    details: 'المحرك التشريحي السباعي جاهز للعمل'
+                    details: 'المحرك التشريحي الاحتياطي المتطور جاهز للعمل (لم يُضبط مفتاح API في الإعدادات)'
                 });
             }
         } catch (e) {
             report.modules.push({
-                name: 'محرك الذكاء الاصطناعي والحوار السريري',
+                name: 'محرك الذكاء الاصطناعي (Google Gemini)',
                 status: 'WARNING',
-                details: e.message
+                details: `فحص الاتصال: ${e.message}`
             });
         }
 
-        // 5. فحص المحطات الصوتية السبعة
+        // 5. فحص المحطات الصوتية الشاملة (9 محطات)
         try {
             const audioResults = await verifyAllStationAudios(false);
             const failedAudios = audioResults.filter(a => a.status === 'ERROR');
@@ -603,14 +619,14 @@ const SmartWatchdog = (function() {
                 report.modules.push({
                     name: 'مصفوفة المحطات الصوتية (Audio Matrix)',
                     status: 'OPTIMAL',
-                    details: `جميع المحطات الـ 7 متصلة وجاهزة بنسبة 100% (أعلى زمن استجابة: ${Math.max(...audioResults.map(a => a.latencyMs || 0))}ms)`
+                    details: `جميع المحطات الـ ${audioResults.length} متصلة وجاهزة بنسبة 100% (أعلى زمن استجابة: ${Math.max(...audioResults.map(a => a.latencyMs || 0))}ms)`
                 });
             } else {
                 report.score -= (failedAudios.length * 5);
                 report.modules.push({
                     name: 'مصفوفة المحطات الصوتية (Audio Matrix)',
                     status: 'WARNING',
-                    details: `تنبيه: ${failedAudios.length} ملفات صوتية تحتاج إعادة تحقق`
+                    details: `تنبيه: ${failedAudios.length} محطة تحتاج تحقق من ملفاتها`
                 });
             }
         } catch (e) {

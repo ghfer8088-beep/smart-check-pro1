@@ -6725,16 +6725,36 @@ async function sendChatMessage() {
             clinicalDialogueState.patientPhone = validFoundPhone;
             clinicalDialogueState.step = 'completed';
 
-            // حفظ ملف المريض بشكل فوري ولحظي في قاعدة بيانات العيادة
+            // ✅ حفظ ملف المريض بشكل فوري في قاعدة بيانات العيادة مع معالجة الأخطاء
             if (window.SmartDB && typeof SmartDB.savePatient === 'function') {
+                // ✅ الاسم الافتراضي المحايد بدل "المراجع الجديد" أو "مريض غير محدد"
+                const savedName = clinicalDialogueState.patientName && clinicalDialogueState.patientName.length > 1
+                    ? clinicalDialogueState.patientName
+                    : 'مراجع كريم';
                 SmartDB.savePatient({
-                    name: clinicalDialogueState.patientName || 'مريض غير محدد',
+                    name: savedName,
                     phone: clinicalDialogueState.patientPhone,
                     status: 'in_progress',
                     condition: (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.title : 'فحص ألم عام',
+                    painArea: (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.title : '',
+                    pointId: (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.id : '',
                     notes: 'تم توثيق رقم الهاتف في الشات السريري'
-                }).catch(e => console.warn('Realtime SmartDB save error:', e));
+                }).then(() => {
+                    console.log('✅ تم حفظ ملف المريض في قاعدة البيانات:', savedName);
+                    // إرسال إشعار للوحة التحكم بوجود مريض جديد
+                    if (typeof SmartDB.addAdminNotification === 'function') {
+                        SmartDB.addAdminNotification({
+                            type: 'new_registration',
+                            title: `👤 مراجع جديد: ${savedName}`,
+                            message: `انضم ${savedName} للعيادة - منطقة: ${(typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.title : 'غير محدد'} - هاتف: ${clinicalDialogueState.patientPhone}`,
+                            patientName: savedName,
+                            patientPhone: clinicalDialogueState.patientPhone,
+                            meta: { painArea: (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.title : '' }
+                        });
+                    }
+                }).catch(e => console.warn('⚠️ SmartDB save error:', e));
             }
+
 
             const patientGreeting = (clinicalDialogueState.patientName && clinicalDialogueState.patientName !== 'المراجع الكريم') ? ` يا ${clinicalDialogueState.patientName}` : '';
             const closingMsg = `✅ تم تسجيل رقم هاتفك بنجاح${patientGreeting}. نقوم الآن بإصدار تقريرك السريري المتكامل وتحويلك فوراً لصفحة التشخيص وخطة التعافي... ⏱️`;
@@ -6753,13 +6773,14 @@ async function sendChatMessage() {
                 finishChatIntakeAndGenerateReport();
             };
 
-            // تشغيل صوت محطة الانتقال الدائم المسجل مسبقاً لدكتورة سارة
-            // مع مؤقت أمان 1.5 ثانية للانتقال الفوري وتفادي أي بطء على هواتف الآيفون
-            setTimeout(doTransition, 1500);
+            // ✅ تشغيل صوت محطة الانتقال لدكتورة سارة مع مهلة أمان 12 ثانية لضمان اكتمال الصوت
+            // (رُفعت المهلة من 1500ms لـ 12000ms لمنع قطع الصوت قبل انتهائه)
+            setTimeout(doTransition, 12000);
             playStationAudio('transition', () => {
                 doTransition();
             });
             return;
+
         } else {
             // الرقم غير صالح أو غير مكتمل
             const indicator = document.getElementById(loadingId);
@@ -6837,14 +6858,20 @@ async function sendChatMessage() {
 
     // حفظ فوري في قاعدة البيانات إذا توفر رقم الهاتف
     if (clinicalDialogueState.patientPhone && window.SmartDB && typeof SmartDB.savePatient === 'function') {
+        // ✅ الاسم المحايد بدل "مريض غير محدد"
+        const savedName2 = clinicalDialogueState.patientName && clinicalDialogueState.patientName.length > 1
+            ? clinicalDialogueState.patientName
+            : 'مراجع كريم';
         SmartDB.savePatient({
-            name: clinicalDialogueState.patientName || 'مريض غير محدد',
+            name: savedName2,
             phone: clinicalDialogueState.patientPhone,
             status: 'in_progress',
             condition: (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.title : 'فحص ألم عام',
+            pointId: (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.id : '',
             notes: 'تحديث الحوار السريري الذكي'
         }).catch(() => {});
     }
+
 
     clinicalDialogueState.step = nextResponse.nextStep;
 
@@ -7061,38 +7088,65 @@ async function startVoiceNoteRecording() {
 
         mediaRecorderInstance.start(250);
 
-        // تشغيل التعرف اللحظي على الكلام في الخلفية بالتوازي لتوفير سرعة خارقة وتفريغ فوري دقيق
+        // ✅ التعرف اللحظي على الكلام مع عرض النص فوراً في خانة إدخال الشات
         liveVoiceNoteTranscript = '';
         const SpeechRecClass = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (SpeechRecClass) {
             try {
                 liveVoiceRecognitionInstance = new SpeechRecClass();
-                liveVoiceRecognitionInstance.lang = 'ar-JO';
-                liveVoiceRecognitionInstance.interimResults = true;
-                liveVoiceRecognitionInstance.continuous = true;
+                liveVoiceRecognitionInstance.lang = 'ar-SA'; // عربي شامل (فصحى + لهجات)
+                liveVoiceRecognitionInstance.interimResults = true;  // ظهور النص لحظة بلحظة
+                liveVoiceRecognitionInstance.continuous = true;       // استمرار الاستماع
+                liveVoiceRecognitionInstance.maxAlternatives = 1;
+
                 liveVoiceRecognitionInstance.onresult = (evt) => {
-                    let full = '';
+                    // جمع كل النتائج (المؤقتة والنهائية معاً)
+                    let finalText = '';
+                    let interimText = '';
                     for (let i = 0; i < evt.results.length; ++i) {
-                        full += evt.results[i][0].transcript + ' ';
+                        if (evt.results[i].isFinal) {
+                            finalText += evt.results[i][0].transcript + ' ';
+                        } else {
+                            interimText += evt.results[i][0].transcript;
+                        }
                     }
-                    const cleanText = full.trim();
+                    const cleanText = (finalText + interimText).trim();
                     if (cleanText) {
-                        liveVoiceNoteTranscript = cleanText;
+                        liveVoiceNoteTranscript = finalText.trim() || cleanText;
+
+                        // ✅ عرض النص في خانة الشات مباشرةً لحظة بلحظة
+                        const chatInput = document.getElementById('ai-chat-input');
+                        if (chatInput) {
+                            chatInput.value = cleanText;
+                            chatInput.style.borderColor = '#10b981'; // حدود خضراء أثناء الإملاء
+                        }
+
+                        // تحديث نص شريط التسجيل بمعاينة النص
                         const timerText = document.getElementById('recording-timer-text');
                         if (timerText) {
-                            const snippet = cleanText.length > 25 ? cleanText.substring(0, 25) + '...' : cleanText;
+                            const snippet = cleanText.length > 30 ? cleanText.substring(0, 30) + '...' : cleanText;
                             timerText.textContent = `🎙️ "${snippet}"`;
                         }
                     }
                 };
+
+                liveVoiceRecognitionInstance.onend = () => {
+                    // عند انتهاء التعرف: إعادة لون الحدود للطبيعي
+                    const chatInput = document.getElementById('ai-chat-input');
+                    if (chatInput) chatInput.style.borderColor = '';
+                };
+
                 liveVoiceRecognitionInstance.onerror = (e) => {
-                    console.warn('Live voice recognition note:', e.error);
+                    console.warn('Live voice recognition error:', e.error);
+                    const chatInput = document.getElementById('ai-chat-input');
+                    if (chatInput) chatInput.style.borderColor = '';
                 };
                 liveVoiceRecognitionInstance.start();
             } catch (recErr) {
                 console.warn('Parallel speech recognition note:', recErr);
             }
         }
+
 
         // إظهار شريط التسجيل الحي
         const inputBar = document.getElementById('ai-chat-input-bar');
@@ -7155,7 +7209,17 @@ async function stopAndSendVoiceNote() {
         return;
     }
 
-    const capturedText = (liveVoiceNoteTranscript || '').trim();
+    // ✅ قراءة النص الملتقط من خانة الشات (حيث يُكتب لحظياً) أو من المتغير
+    const chatInputField = document.getElementById('ai-chat-input');
+    const inputFieldText = chatInputField ? chatInputField.value.trim() : '';
+    const capturedText = (liveVoiceNoteTranscript || inputFieldText || '').trim();
+
+    // تنظيف خانة الإدخال بعد قراءة النص
+    if (chatInputField) {
+        chatInputField.value = '';
+        chatInputField.style.borderColor = '';
+    }
+
     const userDisplayMsg = capturedText ? `🎙️ "${capturedText}"` : '🎙️ [رسالة صوتية مسجلة]';
 
     appendChatMessage('user', userDisplayMsg);

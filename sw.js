@@ -3,7 +3,7 @@
 // استراتيجية Network-First لضمان وصول المريض لأحدث التحديثات فوراً
 // ==========================================================================
 
-const CACHE_NAME = 'wada3an-alam-v16.3';
+const CACHE_NAME = 'wada3an-alam-v16.4';
 const STATIC_ASSETS = [
     './',
     './index.html',
@@ -132,6 +132,13 @@ self.addEventListener('activate', (event) => {
 // استراتيجية Network-First: جلب التحديث أولاً من الخادم/القرص ثم تحديث الكاش
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
+    const reqUrl = event.request.url || '';
+    if (!reqUrl.startsWith('http')) return;
+
+    // ✅ عدم اعتراض طلبات الذكاء الاصطناعي وجوجل الخارجية لتفادي أخطاء CORS والكاش في iOS Safari
+    if (reqUrl.includes('generativelanguage.googleapis.com') || reqUrl.includes('googletagmanager.com') || reqUrl.includes('google-analytics.com')) {
+        return;
+    }
 
     event.respondWith(
         fetch(event.request)

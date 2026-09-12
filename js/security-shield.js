@@ -119,6 +119,10 @@
 
     // 5. كشف فتح أدوات المطور (DevTools Detection Trap)
     function initDevToolsTrap() {
+        // ✅ تعطيل الفخ على الهواتف والأجهزة اللمسية لتجنب إطلاق خاطئ عند تمدد واجهات Safari/iOS
+        const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || ('ontouchstart' in window);
+        if (isMobileDevice) return;
+
         let devtoolsOpen = false;
         const threshold = 160;
 
@@ -180,11 +184,20 @@
     // 7. الحماية من الاختطاف داخل إطارات خارجية (Anti-Clickjacking / Frame Buster)
     function enforceTopWindow() {
         try {
-            if (window.top !== window.self) {
-                window.top.location = window.self.location.href;
+            if (window.top && window.top !== window.self) {
+                try {
+                    // إذا كان من نفس النطاق، يوجه للنافذة الرئيسية
+                    if (window.top.location.hostname === window.location.hostname) {
+                        window.top.location = window.self.location.href;
+                    }
+                } catch (crossOriginErr) {
+                    // متصفحات التطبيقات (مثل واتساب/تيليجرام/سفاري بريفيو) تعمل داخل Webview/iframe خارجي
+                    // ✅ تم منع إخفاء body نهائياً لتفادي مشكلة الشاشة البيضاء على هواتف الآيفون
+                    console.info('[Security] Embedded Webview/Frame detected, continuing execution.');
+                }
             }
         } catch (e) {
-            document.body.style.display = 'none';
+            // لا يتم حظر أو إخفاء الصفحة مطلقاً لتجنب الشاشة البيضاء
         }
     }
 

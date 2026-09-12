@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -1729,11 +1729,10 @@
         async function loadAdminData(refreshDemoIfEmpty = false) {
             allPatientsList = await AdminEngine.loadPatientsOverview();
 
-            // يتم توليد بيانات تجريبية فقط بالضغط الصريح على زر "تجربة بيانات للاختبار"
-            if (allPatientsList.length === 0 && refreshDemoIfEmpty) {
-                await AdminEngine.seedDemoPatients();
-                allPatientsList = await AdminEngine.loadPatientsOverview();
-            }
+            // ✅ تم إيقاف التوليد التلقائي للبيانات التجريبية نهائياً
+            // البيانات التجريبية تعمل فقط بالضغط الصريح على زر "تجربة بيانات للاختبار"
+            // if (allPatientsList.length === 0 && refreshDemoIfEmpty) { ... } // مُعطَّل
+
 
             document.getElementById('stat-patients-count').textContent = allPatientsList.length;
             const totalLogs = allPatientsList.reduce((acc, p) => acc + (p.logsCount || 0), 0);

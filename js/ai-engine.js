@@ -119,7 +119,7 @@ const Wada3anAiEngine = {
         const pointId = (patientData.pointId || patientData.painAreaKey || '').toLowerCase();
         const painAreaLower = painArea.toLowerCase();
 
-        // استنتاج التشخيص التشريحي الدقيق للمنطقة إن كان المدخل عاماً أو مفقوداً لمنع التعميم نهائياً
+        // ✅ خريطة التشخيص التشريحي الشاملة والدقيقة لكافة نقاط الألم — مُصلَّحة ومُوسَّعة
         if (!condition || condition === 'إجهاد ميكانيكي حركي' || condition.includes('تقرير استرشادي') || condition.includes('استرشادي')) {
             if (pointId.includes('knee') || painAreaLower.includes('ركب') || painAreaLower.includes('صابون')) {
                 condition = 'متلازمة الألم الرضفي الفخذي واحتكاك صابونة الركبة (Patellofemoral Pain Syndrome)';
@@ -127,18 +127,39 @@ const Wada3anAiEngine = {
                 condition = 'انزلاق غضروفي قطني واعتلال الجذور العصبية L4-S1 (Lumbar Disc Herniation & Radiculopathy)';
             } else if (pointId.includes('cervical') || painAreaLower.includes('عنق') || painAreaLower.includes('رقب')) {
                 condition = 'انزلاق غضروفي عنقي وانحباس مفاصل الفقرات C5-C7 (Cervical Disc & Facet Syndrome)';
-            } else if (pointId.includes('scapula') || pointId.includes('trapezius') || painAreaLower.includes('أبهر') || painAreaLower.includes('كتف')) {
+            } else if (pointId.includes('scapula') || pointId.includes('trapezius') || painAreaLower.includes('أبهر')) {
                 condition = 'متلازمة عقد الأبهر الليفية وتشنج العضلات المعينية واللوحية (Rhomboid & Scapular Trigger Points)';
             } else if (pointId.includes('sacroiliac') || pointId.includes('gluteal') || painAreaLower.includes('حوض') || painAreaLower.includes('عرق النسا')) {
                 condition = 'متلازمة العضلة الكمثرية وعرق النسا الانضغاطي (Piriformis Syndrome & Sciatica)';
             } else if (pointId.includes('shoulder') || painAreaLower.includes('كتف')) {
                 condition = 'متلازمة ضغط واحتكاك أوتار الكفة المدورة وتيبس مفصل الكتف (Rotator Cuff Impingement)';
-            } else if (pointId.includes('plantar') || pointId.includes('ankle') || painAreaLower.includes('كعب') || painAreaLower.includes('قدم')) {
+            } else if (pointId.includes('ankle') || painAreaLower.includes('كاحل') || painAreaLower.includes('الكاحل') || painAreaLower.includes('مفصل القدم')) {
+                // ✅ الكاحل مُنفصل تشريحياً عن الكعب
+                condition = 'خلل وعدم استقرار مفصل الكاحل مع إجهاد الرباط الخارجي الجانبي (Lateral Ankle Instability & Ligament Strain)';
+            } else if (pointId.includes('plantar') || painAreaLower.includes('كعب') || painAreaLower.includes('باطن القدم') || painAreaLower.includes('أخمص')) {
+                // ✅ الكعب وباطن القدم منفصل عن الكاحل
                 condition = 'التهاب اللفافة الأخمصية ومسمار العظم وإجهاد وتر أكيليس (Plantar Fasciitis)';
+            } else if (pointId.includes('elbow') || painAreaLower.includes('كوع') || painAreaLower.includes('مرفق')) {
+                condition = 'التهاب اللقيمة الجانبية وإجهاد أوتار الساعد (Lateral Epicondylitis - Tennis Elbow)';
+            } else if (pointId.includes('wrist') || pointId.includes('carpal') || painAreaLower.includes('رسغ') || painAreaLower.includes('معصم') || painAreaLower.includes('كف')) {
+                condition = 'متلازمة النفق الرسغي وانضغاط العصب المتوسط (Carpal Tunnel Syndrome & Wrist Tendinopathy)';
+            } else if (pointId.includes('hip') || painAreaLower.includes('ورك') || painAreaLower.includes('مفصل الورك')) {
+                condition = 'التهاب واحتكاك مفصل الورك والتهاب الجراب المدور (Hip Osteoarthritis & Trochanteric Bursitis)';
+            } else if (pointId.includes('thoracic') || painAreaLower.includes('ظهر أعلى') || painAreaLower.includes('بين الكتفين') || painAreaLower.includes('صدري')) {
+                condition = 'انحباس المفاصل الصدرية الفقارية والتهاب الأضلاع الغضروفية (Thoracic Facet Syndrome)';
+            } else if (pointId.includes('rib') || painAreaLower.includes('ضلع') || painAreaLower.includes('صدر')) {
+                condition = 'التهاب مفاصل الضلوع مع الغضاريف الصدرية (Costochondritis & Rib Joint Dysfunction)';
+            } else if (pointId.includes('jaw') || painAreaLower.includes('فك') || painAreaLower.includes('صدغ')) {
+                condition = 'اضطراب المفصل الصدغي الفكي وتشنج عضلات المضغ (TMJ Dysfunction & Masticatory Muscle Spasm)';
+            } else if (pointId.includes('head') || pointId.includes('headache') || painAreaLower.includes('صداع') || painAreaLower.includes('رأس')) {
+                condition = 'الصداع العنقي التوتري الناتج عن انضغاط مفاصل الفقرات العنقية العليا (Cervicogenic Headache)';
+            } else if (pointId.includes('foot') || painAreaLower.includes('قدم') || painAreaLower.includes('مشط')) {
+                condition = 'إجهاد عظام مشط القدم والتهاب أغماد أوتار القدم (Metatarsalgia & Foot Overuse Syndrome)';
             } else {
                 condition = 'اضطراب ميكانيكي حركي وتشنج وظيفي في المفاصل والأوتار';
             }
         }
+
         const probability = patientData.probability || 85;
         const duration = patientData.painDurationText || patientData.painDuration || 'ألم مستمر';
         const hasExplicitPain = !!patientData.hasExplicitPain && patientData.painSeverity !== null && patientData.painSeverity !== undefined;
@@ -295,7 +316,7 @@ ${greetingInstruction}
         const pointId = (patientData.pointId || patientData.painAreaKey || '').toLowerCase();
         const painAreaLower = painArea.toLowerCase();
 
-        // استنتاج التشخيص التشريحي الدقيق للمنطقة إن كان المدخل عاماً
+        // ✅ خريطة التشخيص التشريحي الشاملة والدقيقة لكافة نقاط الألم — مُصلَّحة ومُوسَّعة (offline fallback)
         if (!condition || condition === 'إجهاد ميكانيكي حركي' || condition.includes('تقرير استرشادي')) {
             if (pointId.includes('knee') || painAreaLower.includes('ركب') || painAreaLower.includes('صابون')) {
                 condition = 'متلازمة الألم الرضفي الفخذي واحتكاك صابونة الركبة (Patellofemoral Pain Syndrome)';
@@ -303,18 +324,38 @@ ${greetingInstruction}
                 condition = 'انزلاق غضروفي قطني واعتلال الجذور العصبية L4-S1 (Lumbar Disc Herniation & Radiculopathy)';
             } else if (pointId.includes('cervical') || painAreaLower.includes('عنق') || painAreaLower.includes('رقب')) {
                 condition = 'انزلاق غضروفي عنقي وانحباس مفاصل الفقرات C5-C7 (Cervical Disc & Facet Syndrome)';
-            } else if (pointId.includes('scapula') || pointId.includes('trapezius') || painAreaLower.includes('أبهر') || painAreaLower.includes('كتف')) {
+            } else if (pointId.includes('scapula') || pointId.includes('trapezius') || painAreaLower.includes('أبهر')) {
                 condition = 'متلازمة عقد الأبهر الليفية وتشنج العضلات المعينية واللوحية (Rhomboid & Scapular Trigger Points)';
             } else if (pointId.includes('sacroiliac') || pointId.includes('gluteal') || painAreaLower.includes('حوض') || painAreaLower.includes('عرق النسا')) {
                 condition = 'متلازمة العضلة الكمثرية وعرق النسا الانضغاطي (Piriformis Syndrome & Sciatica)';
             } else if (pointId.includes('shoulder') || painAreaLower.includes('كتف')) {
                 condition = 'متلازمة ضغط واحتكاك أوتار الكفة المدورة وتيبس مفصل الكتف (Rotator Cuff Impingement)';
-            } else if (pointId.includes('plantar') || pointId.includes('ankle') || painAreaLower.includes('كعب') || painAreaLower.includes('قدم')) {
+            } else if (pointId.includes('ankle') || painAreaLower.includes('كاحل') || painAreaLower.includes('الكاحل') || painAreaLower.includes('مفصل القدم')) {
+                // ✅ الكاحل مُنفصل تشريحياً عن الكعب
+                condition = 'خلل وعدم استقرار مفصل الكاحل مع إجهاد الرباط الخارجي الجانبي (Lateral Ankle Instability & Ligament Strain)';
+            } else if (pointId.includes('plantar') || painAreaLower.includes('كعب') || painAreaLower.includes('باطن القدم') || painAreaLower.includes('أخمص')) {
                 condition = 'التهاب اللفافة الأخمصية ومسمار العظم وإجهاد وتر أكيليس (Plantar Fasciitis)';
+            } else if (pointId.includes('elbow') || painAreaLower.includes('كوع') || painAreaLower.includes('مرفق')) {
+                condition = 'التهاب اللقيمة الجانبية وإجهاد أوتار الساعد (Lateral Epicondylitis - Tennis Elbow)';
+            } else if (pointId.includes('wrist') || pointId.includes('carpal') || painAreaLower.includes('رسغ') || painAreaLower.includes('معصم') || painAreaLower.includes('كف')) {
+                condition = 'متلازمة النفق الرسغي وانضغاط العصب المتوسط (Carpal Tunnel Syndrome & Wrist Tendinopathy)';
+            } else if (pointId.includes('hip') || painAreaLower.includes('ورك') || painAreaLower.includes('مفصل الورك')) {
+                condition = 'التهاب واحتكاك مفصل الورك والتهاب الجراب المدور (Hip Osteoarthritis & Trochanteric Bursitis)';
+            } else if (pointId.includes('thoracic') || painAreaLower.includes('ظهر أعلى') || painAreaLower.includes('بين الكتفين') || painAreaLower.includes('صدري')) {
+                condition = 'انحباس المفاصل الصدرية الفقارية والتهاب الأضلاع الغضروفية (Thoracic Facet Syndrome)';
+            } else if (pointId.includes('rib') || painAreaLower.includes('ضلع') || painAreaLower.includes('صدر')) {
+                condition = 'التهاب مفاصل الضلوع مع الغضاريف الصدرية (Costochondritis & Rib Joint Dysfunction)';
+            } else if (pointId.includes('jaw') || painAreaLower.includes('فك') || painAreaLower.includes('صدغ')) {
+                condition = 'اضطراب المفصل الصدغي الفكي وتشنج عضلات المضغ (TMJ Dysfunction & Masticatory Muscle Spasm)';
+            } else if (pointId.includes('head') || pointId.includes('headache') || painAreaLower.includes('صداع') || painAreaLower.includes('رأس')) {
+                condition = 'الصداع العنقي التوتري الناتج عن انضغاط مفاصل الفقرات العنقية العليا (Cervicogenic Headache)';
+            } else if (pointId.includes('foot') || painAreaLower.includes('قدم') || painAreaLower.includes('مشط')) {
+                condition = 'إجهاد عظام مشط القدم والتهاب أغماد أوتار القدم (Metatarsalgia & Foot Overuse Syndrome)';
             } else {
                 condition = 'اضطراب ميكانيكي حركي وتشنج وظيفي في المفاصل والأوتار';
             }
         }
+
 
         // استنتاج الآلية الميكانيكية الدقيقة للحالة
         let mechanism = patientData.biomechanicalMechanism || '';
@@ -594,7 +635,8 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             try {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3500);
+                // ✅ رُفعت المهلة من 3500ms إلى 20000ms لإتاحة الوقت الكافي لجيميني للرد الحقيقي
+                const timeoutId = setTimeout(() => controller.abort(), 20000);
 
                 const response = await fetch(url, {
                     method: 'POST',
@@ -922,24 +964,55 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             }
         }
 
-        // استجواب متسلسل للأمام دائماً متوافق تشريحياً مع المفصل
-        if (userTurnCount <= 2) {
-            if (hasAddressedNumbness) {
-                return {
-                    message: `فهمت وصفك بدقة${nameSuffix}. كطبيبك السريري في «وداعاً للألم»:\n${anatQ.provocation}\n${anatQ.duration}`,
-                    quickReplies: [],
-                    nextStep: 'chatting'
-                };
-            } else {
-                return {
-                    message: `فهمت وصفك بدقة${nameSuffix}. كطبيبك السريري في «وداعاً للألم»:\n${anatQ.numbness}`,
-                    quickReplies: [],
-                    nextStep: 'chatting'
-                };
-            }
-        } else {
+        // ✅ استجواب متسلسل متعمق بلا سقف للأسئلة — يستمر حتى تكتمل الصورة السريرية الكاملة
+        // المرحلة: تحديد نوع السؤال المناسب بناءً على ما سبق تغطيته من أعراض
+        const hasAddressedProvocation = allHistoryText.length > 100 && /يزداد|يشتد|عند|الانحناء|الجلوس|الوقوف|المشي|الحركة|الثني/i.test(allHistoryText);
+        const hasAddressedDuration = /منذ|متى|أسبوع|شهر|سنة|أيام|مدة|يوم/i.test(allHistoryText);
+        const hasAddressedLifeImpact = /نوم|عمل|يومي|يقظ|يوقف|يمنع|يصعب|الحياة|النشاط/i.test(allHistoryText);
+        const hasAddressedMorning = /صباح|الاستيقاظ|النوم|ليل/i.test(allHistoryText);
+        const hasAddressedIntensity = /شدة|حدة|قوي|خفيف|متوسط|رقم|من عشرة|\/10/i.test(allHistoryText);
+
+        // اختيار السؤال المناسب بناءً على الفجوات السريرية المتبقية
+        if (!hasAddressedProvocation) {
             return {
-                message: `اكتملت الآن الصورة السريرية الشاملة لتشخيص حالتك وتحددت ميكانيكية الخلل في **${title}** بدقة${nameSuffix || ' يا غالي'}!\n\nأدخل رقم هاتفك لفتح التقرير السريري الخاص بك ولربط ملفك بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:`,
+                message: `فهمت وصفك بدقة${nameSuffix}. لاستكمال الصورة السريرية لـ **${title}**:\n${anatQ.provocation}`,
+                quickReplies: [],
+                nextStep: 'chatting'
+            };
+        } else if (!hasAddressedNumbness) {
+            return {
+                message: `شكراً على هذا التفصيل${nameSuffix}. سؤال سريري مهم:\n${anatQ.numbness}`,
+                quickReplies: [],
+                nextStep: 'chatting'
+            };
+        } else if (!hasAddressedDuration) {
+            return {
+                message: `ممتاز${nameSuffix}. ${anatQ.duration}`,
+                quickReplies: [],
+                nextStep: 'chatting'
+            };
+        } else if (!hasAddressedMorning) {
+            return {
+                message: `فهمتك تماماً${nameSuffix}. ${anatQ.stiffness}`,
+                quickReplies: [],
+                nextStep: 'chatting'
+            };
+        } else if (!hasAddressedIntensity) {
+            return {
+                message: `لأحدد شدة الخلل الميكانيكي بدقة${nameSuffix}، لو تعطيني رقماً من 1 إلى 10 يصف قوة الألم في **${title}** في أسوأ أوقاته؟`,
+                quickReplies: [],
+                nextStep: 'chatting'
+            };
+        } else if (!hasAddressedLifeImpact) {
+            return {
+                message: `وضح لي${nameSuffix}، كيف يؤثر هذا الألم في **${title}** على حياتك اليومية؟ هل يؤثر على نومك أو عملك أو ممارسة أنشطتك المعتادة؟`,
+                quickReplies: [],
+                nextStep: 'chatting'
+            };
+        } else {
+            // اكتملت كل جوانب الصورة السريرية — طلب الهاتف
+            return {
+                message: `اكتملت الآن الصورة السريرية الشاملة وتحددت ميكانيكية الخلل في **${title}** بدقة${nameSuffix || ' يا غالي'}!\n\nأدخل رقم هاتفك لفتح التقرير السريري الخاص بك ولربط ملفك بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:`,
                 quickReplies: [],
                 nextStep: 'ask_phone',
                 isPhonePrompt: true,
