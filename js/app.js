@@ -1107,9 +1107,18 @@ async function runDiagnosticAnalysis() {
             gender: gender,
             weight: clinicalDialogueState.patientVitals?.weight || weight,
             height: clinicalDialogueState.patientVitals?.height || height,
+            bmi: currentAssessmentData?.bmiInfo?.value || '',
             painArea: currentSelectedPoint?.title || 'العمود الفقري والمفاصل',
+            selectedPoint: currentSelectedPoint?.title || currentSelectedPoint?.id || '',
+            chiefDiagnosis: assessmentResult.primaryDiagnosis?.title || 'تشخيص سريري متكامل',
+            diagnosisTitle: assessmentResult.primaryDiagnosis?.title || 'تشخيص سريري متكامل',
             painLevel: painSeverity || explicitPain,
+            severityLevel: painSeverity || explicitPain,
             notes: userNotes || (clinicalDialogueState.collectedSymptoms ? clinicalDialogueState.collectedSymptoms.join(' - ') : ''),
+            collectedSymptoms: clinicalDialogueState.collectedSymptoms || [],
+            assessment: currentAssessmentData,
+            latestAssessment: currentAssessmentData,
+            treatmentPlan: assessmentResult.recommendations ? assessmentResult.recommendations.join('\n') : '',
             createdAt: activePatient?.createdAt || new Date().toISOString(),
             lastUpdated: new Date().toISOString()
         };
@@ -5817,10 +5826,51 @@ document.addEventListener('DOMContentLoaded', async () => {
         checkAndApplyVideoSyncFromUrl();
     }
 
-    const savedPatientId = SmartDB.getCurrentSessionPatientId();
+    // فحص وتطبيق أي استعراض تقرير طبي أو مزامنة عبر الرابط (?patient_id= / ?view_report=)
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryPatientId = urlParams.get('patient_id') || urlParams.get('id');
+    const forceViewReport = urlParams.get('view_report') === '1' || urlParams.get('view_report') === '3';
+
+    let savedPatientId = queryPatientId || SmartDB.getCurrentSessionPatientId();
+    if (queryPatientId) {
+        SmartDB.setCurrentSessionPatientId(queryPatientId);
+    }
+
     if (savedPatientId) {
         const p = await SmartDB.getPatient(savedPatientId);
         if (p) {
+            activePatient = p;
+            let assessments = [];
+            try { assessments = await SmartDB.getPatientAssessments(savedPatientId); } catch(e) {}
+            if (!currentAssessmentData) {
+                currentAssessmentData = (assessments && assessments.length > 0) 
+                    ? assessments[assessments.length - 1] 
+                    : (p.assessment || p.latestAssessment || null);
+            }
+            // استرجاع وتوليد بيانات التقرير إن لم تكن مكتملة لضمان فتح التقرير فوراً دون السقوط للخطوة 1
+            if (!currentAssessmentData && (p.chiefDiagnosis || p.painArea || p.diagnosisTitle)) {
+                currentAssessmentData = {
+                    patientId: savedPatientId,
+                    patientName: p.name || 'المراجع المحترم',
+                    primaryDiagnosis: p.chiefDiagnosis || p.diagnosisTitle || 'فحص واستشارة سريرية',
+                    painAreaTitle: p.painArea || 'العمود الفقري والمفاصل',
+                    probability: 95,
+                    confidenceScore: 92,
+                    painSeverity: p.painLevel || 7,
+                    patientVitals: { age: p.age, gender: p.gender, weight: p.weight, height: p.height },
+                    recommendations: p.treatmentPlan ? p.treatmentPlan.split('\n') : ['تطبيق تمارين الإطالة الموجهة', 'تجنب الجلوس الطويل والمحافظة على استقامة الظهر'],
+                    rootLevel: p.painArea || 'العمود الفقري',
+                    secondaryDiagnosis: 'إجهاد ميكانيكي وظيفي في الأنسجة المحيطة',
+                    biomechanicalCause: 'اختلال في توازن الأحمال الميكانيكية الحركية وضغط على الأنسجة الداعمة.'
+                };
+            }
+
+            if (forceViewReport && currentAssessmentData) {
+                displayDiagnosticReport(currentAssessmentData);
+                goToStep(3);
+                return;
+            }
+
             const isPlanActive = localStorage.getItem('smart_plan_activated') === 'true';
             const logs = await SmartDB.getPatientDailyLogs(savedPatientId);
             if (isPlanActive || (logs && logs.length > 0) || maxUnlocked >= 4) {

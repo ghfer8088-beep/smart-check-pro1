@@ -16,9 +16,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=17.2"></script>
-    <script src="js/security-shield.js?v=17.2"></script>
-    <link rel="stylesheet" href="css/style.css?v=17.2">
+    <script src="js/system-watchdog.js?v=17.3"></script>
+    <script src="js/security-shield.js?v=17.3"></script>
+    <link rel="stylesheet" href="css/style.css?v=17.3">
     <style>
         body {
             background-color: #080c14;
@@ -52,6 +52,61 @@
         }
         body.admin-view-table #patients-cards-container {
             display: none !important;
+        }
+
+        /* تنسيقات نافذة التقرير الطبي الملكي والطباعة الرسمية */
+        .admin-report-grid-card {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 14px;
+        }
+        @media print {
+            body {
+                background: #ffffff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                color: #000000 !important;
+            }
+            body * {
+                visibility: hidden !important;
+            }
+            #admin-patient-report-modal,
+            #admin-patient-report-modal * {
+                visibility: visible !important;
+            }
+            #admin-patient-report-modal {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                background: #ffffff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                z-index: 9999999 !important;
+                display: block !important;
+            }
+            .admin-report-modal-sheet {
+                background: #ffffff !important;
+                color: #0f172a !important;
+                border: none !important;
+                box-shadow: none !important;
+                max-width: 100% !important;
+                padding: 15px !important;
+                max-height: none !important;
+                overflow: visible !important;
+            }
+            .admin-report-no-print {
+                display: none !important;
+            }
+            .admin-report-grid-card {
+                background: #f8fafc !important;
+                border: 1px solid #cbd5e1 !important;
+                color: #0f172a !important;
+            }
+            .admin-report-print-text-dark {
+                color: #0f172a !important;
+            }
         }
 
         /* هيدر اللوحة وتوزيع الأزرار على سطح المكتب */
@@ -1256,17 +1311,56 @@
         </div>
     </div>
 
+    <!-- ========================================================================== -->
+    <!-- 🏥 عارض التقرير الطبي والتشخيص السريري الشامل للمراجع (#admin-patient-report-modal) -->
+    <!-- ========================================================================== -->
+    <div id="admin-patient-report-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 10000; align-items: center; justify-content: center; padding: 15px; overflow-y: auto;">
+        <div class="modal-inner admin-report-modal-sheet" style="background: #0d1522; border: 2px solid var(--primary-gold); border-radius: 18px; max-width: 980px; width: 100%; max-height: 92vh; display: flex; flex-direction: column; padding: 24px; box-shadow: 0 15px 50px rgba(0,0,0,0.9); box-sizing: border-box; overflow-y: auto; color: #e2e8f0; position: relative;">
+            
+            <!-- شريط أزرار التحكم العلوي (لا يظهر عند الطباعة) -->
+            <div class="admin-report-no-print" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(212, 175, 55, 0.3); padding-bottom: 14px; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.6em;">📋</span>
+                    <div>
+                        <div style="color: var(--primary-gold); font-weight: 800; font-size: 1.15em;">عارض التقرير الطبي والسريري الرسمي للمراجع</div>
+                        <div style="color: #94a3b8; font-size: 0.8em;">معاينة تشخيص المراجع، التفسير البيوميكانيكي، والبرنامج التأهيلي</div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <button type="button" onclick="printAdminPatientReport()" style="background: #2563eb; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.88em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(37,99,235,0.4);">
+                        <span>🖨️</span> طباعة / حفظ PDF
+                    </button>
+                    <button type="button" id="admin-report-wa-btn" onclick="sendAdminPatientWhatsAppReport()" style="background: #25d366; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.88em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(37,211,102,0.4);">
+                        <span>💬</span> إرسال واتساب
+                    </button>
+                    <button type="button" id="admin-report-patient-view-btn" onclick="openPatientInteractiveSession()" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 14px; border-radius: 8px; font-weight: bold; font-size: 0.85em; cursor: pointer;">
+                        <span>🔗</span> فتح كجلسة مريض
+                    </button>
+                    <button type="button" onclick="closeAdminPatientReportModal()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.88em; cursor: pointer;">
+                        ✕ إغلاق
+                    </button>
+                </div>
+            </div>
+
+            <!-- جسم التقرير الطبي الكامل المطبوع والقابل للعرض -->
+            <div id="admin-patient-report-render-area">
+                <!-- سيتم حقن التقرير ديناميكياً هنا عبر openAdminPatientReportModal -->
+            </div>
+
+        </div>
+    </div>
+
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/geo-tracker.js?v=17.2"></script>
-    <script src="js/cloud-sync.js?v=17.2"></script>
-    <script src="js/database.js?v=17.2"></script>
-    <script src="js/exercise-image-studio.js?v=17.2"></script>
-    <script src="js/exercises-db.js?v=17.2"></script>
-    <script src="js/diagnostic-engine.js?v=17.2"></script>
-    <script src="js/patient-flow.js?v=17.2"></script>
-    <script src="js/admin-engine.js?v=17.2"></script>
-    <script src="js/ai-config.js?v=17.2"></script>
-    <script src="js/ai-engine.js?v=17.2"></script>
+    <script src="js/geo-tracker.js?v=17.3"></script>
+    <script src="js/cloud-sync.js?v=17.3"></script>
+    <script src="js/database.js?v=17.3"></script>
+    <script src="js/exercise-image-studio.js?v=17.3"></script>
+    <script src="js/exercises-db.js?v=17.3"></script>
+    <script src="js/diagnostic-engine.js?v=17.3"></script>
+    <script src="js/patient-flow.js?v=17.3"></script>
+    <script src="js/admin-engine.js?v=17.3"></script>
+    <script src="js/ai-config.js?v=17.3"></script>
+    <script src="js/ai-engine.js?v=17.3"></script>
 
     <script>
         let allPatientsList = [];
@@ -2247,8 +2341,8 @@
                                 </a>
                             ` : ''}
                             ${n.patientId ? `
-                                <button type="button" onclick="loginAsPatient('${n.patientId}')" style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid #10b981; padding: 5px 10px; border-radius: 6px; font-size: 0.82em; cursor: pointer;">
-                                    🔍 فتح الملف
+                                <button type="button" onclick="openAdminPatientReportModal('${n.patientId}')" style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid #10b981; padding: 5px 10px; border-radius: 6px; font-size: 0.82em; cursor: pointer; font-weight: bold;">
+                                    👁️ عرض التقرير الطبي
                                 </button>
                             ` : ''}
                         </div>
@@ -2416,7 +2510,7 @@
                     </td>
                     <td style="padding: 14px; text-align: center; white-space: nowrap;">
                         ${cleanPhone ? `<a href="https://wa.me/${cleanPhone}" target="_blank" style="display: inline-block; background: #25d366; color: #fff; text-decoration: none; padding: 7px 10px; border-radius: 6px; font-size: 0.88em; font-weight: bold; margin-left: 4px;">💬 واتساب</a>` : ''}
-                        <button onclick="loginAsPatient('${p.patientId}')" style="background: #10b981; color: #fff; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 0.88em;">عرض</button>
+                        <button onclick="openAdminPatientReportModal('${p.patientId}')" style="background: #10b981; color: #fff; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 0.88em; font-weight: bold;">👁️ التقرير</button>
                         <button onclick="deletePatientRecord('${p.patientId}')" style="background: #ef4444; color: #fff; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 0.88em; margin-right: 4px;">حذف</button>
                     </td>
                 </tr>
@@ -2494,7 +2588,7 @@
 
                             <!-- الإجراءات الرئيسية للمدير: زر التقرير الملكي البارز في القمة -->
                             <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;">
-                                <button type="button" onclick="loginAsPatient('${p.patientId}')" style="width: 100%; background: linear-gradient(135deg, #059669 0%, #10b981 50%, #047857 100%); color: #ffffff; border: none; padding: 13px; border-radius: 9px; font-size: 1.02em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);">
+                                <button type="button" onclick="openAdminPatientReportModal('${p.patientId}')" style="width: 100%; background: linear-gradient(135deg, #059669 0%, #10b981 50%, #047857 100%); color: #ffffff; border: none; padding: 13px; border-radius: 9px; font-size: 1.02em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);">
                                     <span>👁️ عرض التقرير السريري والطبي الكامل</span>
                                 </button>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
@@ -2724,9 +2818,368 @@
             URL.revokeObjectURL(url);
         }
 
+        // ==========================================================================
+        // 🏥 دوال عارض التقرير الطبي والسريري الرسمي للمراجع داخل لوحة الإدارة
+        // ==========================================================================
+        let activeAdminReportPatient = null;
+        let activeAdminReportAssessment = null;
+
+        async function openAdminPatientReportModal(patientId) {
+            if (!patientId) return;
+            const modal = document.getElementById('admin-patient-report-modal');
+            const renderArea = document.getElementById('admin-patient-report-render-area');
+            if (!modal || !renderArea) return;
+
+            renderArea.innerHTML = `
+                <div style="text-align: center; padding: 50px 20px; color: var(--primary-gold);">
+                    <div style="font-size: 2.5em; animation: spin 1s linear infinite; display: inline-block; margin-bottom: 12px;">⏳</div>
+                    <div style="font-size: 1.1em; font-weight: bold;">جاري استدعاء وتدقيق التقرير الطبي والسريري للمريض...</div>
+                </div>
+            `;
+            modal.style.display = 'flex';
+
+            let item = allPatientsList.find(x => x.patient && (x.patient.patientId === patientId || x.patient.id === patientId));
+            let p = item ? item.patient : await SmartDB.getPatient(patientId);
+            if (!p) {
+                renderArea.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #f87171;">
+                        ⚠️ تعذر العثور على سجل المريض برقم (${patientId}).
+                    </div>
+                `;
+                return;
+            }
+
+            let assessments = [];
+            try { assessments = await SmartDB.getPatientAssessments(patientId); } catch(e) { assessments = []; }
+            let assessment = (assessments && assessments.length > 0) ? assessments[assessments.length - 1] : null;
+            if (!assessment) {
+                assessment = p.assessment || p.latestAssessment || p.diagnosticReport || item?.latestAssessment || null;
+            }
+
+            activeAdminReportPatient = p;
+            activeAdminReportAssessment = assessment;
+
+            // استخراج القيم السريرية بدقة فائقة
+            const pName = p.name || p.fullName || 'مراجع كريم';
+            const cleanPhone = (p.phone || '').replace(/[^0-9]/g, '');
+            const reportId = assessment?.reportId || ('SCP-' + (patientId.replace(/\D/g, '') || Math.floor(100000 + Math.random() * 900000)));
+            const createdDate = new Date(p.createdAt || p.timestamp || Date.now()).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+            
+            // الموقع والجهاز
+            const flag = p.flag || '🌐';
+            const country = p.country || 'دولي';
+            const city = (p.city && p.city !== 'غير محدد') ? p.city : '';
+            const locationDisplay = city ? `${flag} ${city} (${country})` : `${flag} ${country}`;
+            const device = p.device || 'Mobile';
+
+            // التشخيص السريري
+            const diagTitle = assessment?.primaryDiagnosis 
+                || assessment?.title 
+                || p.chiefDiagnosis 
+                || p.diagnosisTitle 
+                || item?.latestDiagnosis 
+                || 'استشارة وفحص سريري متكامل';
+
+            const rootLevel = assessment?.rootLevel 
+                || assessment?.anatomicalLevel 
+                || assessment?.painAreaTitle 
+                || p.painArea 
+                || item?.painArea 
+                || 'العمود الفقري والمفاصل الحركية';
+
+            const secDiag = assessment?.secondaryDiagnosis 
+                || 'إجهاد ميكانيكي وظيفي في الأنسجة المحيطة ومحدودية حركية مرافقة';
+
+            const probability = assessment?.probability || 95;
+            const confidence = assessment?.confidenceScore || 92;
+            const painSeverity = assessment?.painSeverity || assessment?.painLevel || p.painLevel || 7;
+
+            // احتساب BMI
+            let w = parseFloat(p.weight) || assessment?.patientVitals?.weight || 0;
+            let h = parseFloat(p.height) || assessment?.patientVitals?.height || 0;
+            let bmiVal = assessment?.bmiInfo?.value || (w && h > 0 ? parseFloat((w / ((h/100)*(h/100))).toFixed(1)) : (p.bmi || null));
+            let bmiStatus = "وزن طبيعي متوازن";
+            let bmiColor = "#10b981";
+            let bmiImpact = "الوزن متناسق ولا يشكل حمولة ضغط إضافية على المفاصل والفقرات.";
+
+            if (bmiVal) {
+                if (bmiVal < 18.5) {
+                    bmiStatus = "نحافة / نقص كتلة عضلية";
+                    bmiColor = "#38bdf8";
+                    bmiImpact = "نقص الدعم العضلي يقلل الثبات الميكانيكي للمفاصل.";
+                } else if (bmiVal >= 25 && bmiVal < 30) {
+                    bmiStatus = "زيادة وزن (Overweight)";
+                    bmiColor = "#f59e0b";
+                    bmiImpact = "يضيف حمولة إضافية بمقدار 4 أضعاف على مفاصل الركبة وفقرات القطنية.";
+                } else if (bmiVal >= 30) {
+                    bmiStatus = "سمنة مفرطة / حمل ميكانيكي حرج";
+                    bmiColor = "#ef4444";
+                    bmiImpact = "حمولة ضغط فائقة تسارع من تآكل الغضاريف وتزيد من انضغاط الأعصاب.";
+                }
+            }
+
+            // التفسير البيوميكانيكي
+            const biomechanicalCause = assessment?.biomechanicalCause 
+                || assessment?.clinicalSummary
+                || `توضح معطيات الفحص السريري وجود خلل ميكانيكي حركي في منطقة (${rootLevel}) ناتج عن اضطراب في توازن القوى العضلية المحيطة، مما يؤدي إلى زيادة الاحتكاك الموضعي والتهيج العصبي الميكانيكي.`;
+
+            // التوصيات
+            const recommendations = (assessment?.recommendations && assessment.recommendations.length > 0)
+                ? assessment.recommendations
+                : (p.treatmentPlan ? p.treatmentPlan.split('\n') : [
+                    'تطبيق كمادات دافئة/باردة موضعية لمدة 15 دقيقة مرتين يومياً',
+                    'تجنب الجلوس المتواصل لأكثر من 45 دقيقة دون استراحة حركية',
+                    'المواظبة اليومية على برنامج التمارين التأهيلية المخصص بالأسفل'
+                ]);
+
+            // التمارين
+            let exercises = assessment?.exercises || assessment?.recommendedExercises || [];
+            if (!Array.isArray(exercises) || exercises.length === 0) {
+                exercises = [
+                    { title: 'تمرين الإطالة وتخفيف الضغط الغضروفي', reps: '10 تكرارات × 3 جولات', note: 'تنفس بعمق مع الحفاظ على استقامة الجذع' },
+                    { title: 'تمرين التنشيط والتثبيت العضلي العميق', reps: 'الثبات 15 ثانية × 3 مرات', note: 'بدون حركات مفاجئة لتفادي الشد العضلي' },
+                    { title: 'تمرين استعادة المدى الحركي للمفصل', reps: 'تكرار خفيف حسب الراحة', note: 'يوقف التمرين فوراً في حال الشعور بألم حاد' }
+                ];
+            }
+
+            // الأعراض والشكوى
+            const symptomsText = (Array.isArray(p.collectedSymptoms) && p.collectedSymptoms.length > 0)
+                ? p.collectedSymptoms.join(' • ')
+                : (p.notes || assessment?.notes || 'ألم وإجهاد حركي متكرر مصحوب بمحدودية في المرونة الوظيفية');
+
+            // مقياس الألم
+            let painColor = '#10b981';
+            let painLabel = 'ألم خفيف إلى متوسط';
+            if (painSeverity >= 8) { painColor = '#ef4444'; painLabel = 'ألم شديد جداً وحاد'; }
+            else if (painSeverity >= 5) { painColor = '#f59e0b'; painLabel = 'ألم متوسط إلى ملحوظ'; }
+
+            // اليوم ونسبة التعافي
+            let logsCount = item?.logsCount || (p.dailyLogs ? p.dailyLogs.length : 0);
+            let recoveryScore = item?.recoveryScore || p.recoveryScore || 15;
+
+            // تحديث زر الواتساب في الهيدر
+            const waBtn = document.getElementById('admin-report-wa-btn');
+            if (waBtn) {
+                if (cleanPhone) {
+                    waBtn.style.display = 'inline-flex';
+                } else {
+                    waBtn.style.display = 'none';
+                }
+            }
+
+            renderArea.innerHTML = `
+                <div style="background: linear-gradient(135deg, #0f172a 0%, #152238 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                    
+                    <!-- 1. ترويسة التقرير الطبية الرسمية -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary-gold); padding-bottom: 18px; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
+                        <div style="display: flex; align-items: center; gap: 14px;">
+                            <img src="assets/logo.png" alt="شعار وداعاً للألم" style="height: 64px; width: 64px; border-radius: 50%; border: 2px solid var(--primary-gold); background: #000; box-shadow: 0 4px 12px rgba(212,175,55,0.3);">
+                            <div>
+                                <h1 style="color: #ffffff; margin: 0 0 4px 0; font-size: 1.45em; font-weight: 800;">التقرير الطبي والتشخيص السريري الشامل</h1>
+                                <div style="color: var(--primary-gold); font-size: 0.9em; font-weight: bold;">
+                                    «وداعاً للألم» للكايروبراكتيك والطب التكاملي • منصة Smart Check Pro
+                                </div>
+                                <div style="color: #94a3b8; font-size: 0.8em; margin-top: 3px;">
+                                    رقم الملف: <strong style="color: #38bdf8;">${patientId}</strong> | رقم التقرير: <strong style="color: #e2e8f0;">${reportId}</strong> | التاريخ: ${createdDate}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <div style="background: rgba(16, 185, 129, 0.15); border: 1.5px solid #10b981; padding: 6px 12px; border-radius: 8px; text-align: center;">
+                                <div style="color: #10b981; font-weight: 900; font-size: 1.1em;">${probability}%</div>
+                                <div style="color: #94a3b8; font-size: 0.72em;">نسبة الاحتمالية</div>
+                            </div>
+                            <div style="background: rgba(212, 175, 55, 0.15); border: 1.5px solid var(--primary-gold); padding: 6px 12px; border-radius: 8px; text-align: center;">
+                                <div style="color: var(--primary-gold); font-weight: 900; font-size: 1.1em;">${confidence}%</div>
+                                <div style="color: #94a3b8; font-size: 0.72em;">مؤشر الثقة السريرية</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. شبكة بيانات المراجع والمؤشرات الحيوية -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-bottom: 20px;">
+                        <div class="admin-report-grid-card">
+                            <span style="color: #94a3b8; font-size: 0.82em;">👤 اسم المراجع:</span>
+                            <div style="color: #ffffff; font-weight: 800; font-size: 1.05em; margin-top: 2px;">${pName}</div>
+                        </div>
+                        <div class="admin-report-grid-card">
+                            <span style="color: #94a3b8; font-size: 0.82em;">📱 رقم الهاتف:</span>
+                            <div style="color: #38bdf8; font-family: monospace; font-weight: bold; font-size: 1em; margin-top: 2px;" dir="ltr">${p.phone || 'غير مسجل'}</div>
+                        </div>
+                        <div class="admin-report-grid-card">
+                            <span style="color: #94a3b8; font-size: 0.82em;">🌍 الموقع والجهاز:</span>
+                            <div style="color: #e2e8f0; font-weight: 600; font-size: 0.9em; margin-top: 2px;">${locationDisplay} (${device})</div>
+                        </div>
+                        <div class="admin-report-grid-card">
+                            <span style="color: #94a3b8; font-size: 0.82em;">⚧ الجنس والعمر:</span>
+                            <div style="color: #e2e8f0; font-weight: 600; font-size: 0.9em; margin-top: 2px;">${p.gender === 'female' || p.gender === 'أنثى' ? 'أنثى' : 'ذكر'} • ${p.age ? p.age + ' سنة' : 'غير محدد'}</div>
+                        </div>
+                        <div class="admin-report-grid-card">
+                            <span style="color: #94a3b8; font-size: 0.82em;">⚖️ الوزن والطول:</span>
+                            <div style="color: #e2e8f0; font-weight: 600; font-size: 0.9em; margin-top: 2px;">${w ? w + ' كغ' : '-'} • ${h ? h + ' سم' : '-'}</div>
+                        </div>
+                        <div class="admin-report-grid-card" style="border-color: ${bmiColor};">
+                            <span style="color: #94a3b8; font-size: 0.82em;">📊 كتلة الجسم (BMI):</span>
+                            <div style="color: ${bmiColor}; font-weight: 800; font-size: 0.92em; margin-top: 2px;">
+                                ${bmiVal ? bmiVal + ' (' + bmiStatus + ')' : 'غير متوفر'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. نتيجة التشخيص السريري الكبرى -->
+                    <div style="background: rgba(8, 12, 20, 0.85); border: 2px solid var(--primary-gold); border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                            <div>
+                                <span style="color: #94a3b8; font-size: 0.82em; font-weight: bold;">🩺 التشخيص السريري المباشر:</span>
+                                <h2 style="color: var(--primary-gold); margin: 4px 0 0 0; font-size: 1.3em; font-weight: 900;">${diagTitle}</h2>
+                            </div>
+                            <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 12px; border-radius: 15px; font-size: 0.85em; font-weight: bold;">
+                                احتمالية: ${probability}%
+                            </span>
+                        </div>
+                        <div style="color: #38bdf8; font-size: 0.88em; font-weight: bold; margin-bottom: 8px;">
+                            🎯 المستوى التشريحي المستهدف: ${rootLevel}
+                        </div>
+                        <div style="color: #cbd5e1; font-size: 0.85em; background: rgba(15, 23, 42, 0.7); padding: 8px 12px; border-radius: 6px; border-right: 3px solid #38bdf8;">
+                            <strong>التشخيص التفريقي المصاحب:</strong> ${secDiag}
+                        </div>
+                    </div>
+
+                    <!-- 4. تقييم الألم والأعراض المسجلة -->
+                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 14px; margin-bottom: 20px;">
+                        <div class="admin-report-grid-card">
+                            <span style="color: #94a3b8; font-size: 0.82em; font-weight: bold;">⚡ مقياس شدة الألم (VAS 1-10):</span>
+                            <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+                                <div style="width: 46px; height: 46px; border-radius: 50%; background: ${painColor}22; border: 2px solid ${painColor}; color: ${painColor}; display: flex; align-items: center; justify-content: center; font-size: 1.4em; font-weight: 900;">
+                                    ${painSeverity}
+                                </div>
+                                <div>
+                                    <div style="color: #ffffff; font-weight: bold; font-size: 0.9em;">من 10</div>
+                                    <div style="color: ${painColor}; font-size: 0.78em; font-weight: bold;">${painLabel}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="admin-report-grid-card">
+                            <span style="color: #94a3b8; font-size: 0.82em; font-weight: bold;">📝 الأعراض المسجلة والشكوى السريرية:</span>
+                            <div style="color: #e2e8f0; font-size: 0.88em; line-height: 1.6; margin-top: 6px;">
+                                ${symptomsText}
+                            </div>
+                            ${p.mriReportText ? `
+                            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #334155; color: #38bdf8; font-size: 0.82em;">
+                                <strong>📄 تقرير الرنين المغناطيسي (MRI):</strong> ${p.mriReportText}
+                            </div>` : ''}
+                        </div>
+                    </div>
+
+                    <!-- 5. التفسير البيوميكانيكي لحركة المفاصل والفقرات -->
+                    <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid #334155; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                        <div style="color: #6ee7b7; font-weight: bold; font-size: 0.95em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                            <span>🔬</span> التفسير والتحليل البيوميكانيكي للحالة:
+                        </div>
+                        <p style="color: #cbd5e1; font-size: 0.88em; line-height: 1.7; margin: 0;">
+                            ${biomechanicalCause}
+                        </p>
+                        ${bmiVal && bmiImpact ? `
+                        <div style="margin-top: 10px; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; font-size: 0.82em; color: ${bmiColor}; border-right: 3px solid ${bmiColor};">
+                            ⚖️ <strong>تأثير مؤشر كتلة الجسم على المفاصل:</strong> ${bmiImpact}
+                        </div>` : ''}
+                    </div>
+
+                    <!-- 6. البرنامج التأهيلي والتمارين الموصوفة -->
+                    <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid #334155; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                        <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.95em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                            <span>🏋️</span> التمارين التأهيلية الحركية المعتمدة للحالة:
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; margin-bottom: 12px;">
+                            ${exercises.map((ex, i) => {
+                                const title = ex.title || ex.name || ('تمرين تأهيلي #' + (i+1));
+                                const reps = ex.reps || ex.sets || '10 تكرارات × 3 جولات';
+                                const note = ex.note || ex.description || 'أداء هادئ وتدريجي';
+                                return `
+                                <div style="background: #080c14; border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 8px; padding: 10px 12px;">
+                                    <div style="color: #ffffff; font-weight: bold; font-size: 0.9em;">${i+1}. ${title}</div>
+                                    <div style="color: #38bdf8; font-size: 0.8em; margin: 3px 0;">⏱️ ${reps}</div>
+                                    <div style="color: #94a3b8; font-size: 0.76em;">💡 ${note}</div>
+                                </div>`;
+                            }).join('')}
+                        </div>
+
+                        <div style="border-top: 1px solid #334155; padding-top: 10px; margin-top: 8px;">
+                            <div style="color: #6ee7b7; font-size: 0.84em; font-weight: bold; margin-bottom: 4px;">📌 إرشادات نمط الحياة والوقاية:</div>
+                            <ul style="color: #cbd5e1; font-size: 0.82em; margin: 0; padding-right: 18px; line-height: 1.6;">
+                                ${recommendations.map(r => `<li>${r}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- 7. مسار التعافي والالتزام بالجلسات -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #080c14; border: 1px solid #334155; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <div style="color: #94a3b8; font-size: 0.8em;">حالة خطة الـ 7 أيام المجانية:</div>
+                            <div style="color: #ffffff; font-weight: bold; font-size: 0.95em; margin-top: 2px;">
+                                اليوم ${Math.min(7, logsCount + 1)} من 7 • إنجاز ${logsCount} جلسات حركية
+                            </div>
+                        </div>
+                        <div style="text-align: left;">
+                            <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 0.9em;">
+                                ${recoveryScore}% نسبة التعافي المحققة
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- 8. تذييل التقرير والاعتماد الرسمي -->
+                    <div style="border-top: 1px solid rgba(212, 175, 55, 0.3); padding-top: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 0.8em; color: #94a3b8;">
+                        <div>
+                            تم إصدار هذا التقرير آلياً عبر محرك التشخيص السريري الذكي لمركز «وداعاً للألم» للكايروبراكتيك.
+                        </div>
+                        <div style="color: var(--primary-gold); font-weight: bold;">
+                            مركز «وداعاً للألم» للكايروبراكتيك والطب التكاملي
+                        </div>
+                    </div>
+
+                </div>
+            `;
+        }
+
+        function closeAdminPatientReportModal() {
+            const modal = document.getElementById('admin-patient-report-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function printAdminPatientReport() {
+            window.print();
+        }
+
+        function sendAdminPatientWhatsAppReport() {
+            if (!activeAdminReportPatient) return;
+            const cleanPhone = (activeAdminReportPatient.phone || '').replace(/[^0-9]/g, '');
+            if (!cleanPhone) {
+                alert('لا يوجد رقم هاتف مسجل لهذا المراجع.');
+                return;
+            }
+
+            const pName = activeAdminReportPatient.name || activeAdminReportPatient.fullName || 'أخي الكريم';
+            const diag = activeAdminReportAssessment?.primaryDiagnosis 
+                || activeAdminReportPatient.chiefDiagnosis 
+                || activeAdminReportPatient.diagnosisTitle 
+                || 'استشارة وفحص سريري';
+            const pain = activeAdminReportPatient.painArea || 'العمود الفقري والمفاصل';
+
+            const msg = `السلام عليكم ورحمة الله وبركاته يا ${pName}،\nيسر مركز «وداعاً للألم» للكايروبراكتيك والطب التكاملي تزويدك بملخص تقريرك الطبي:\n\n🩺 التشخيص السريري: ${diag}\n🎯 موضع الشكوى: ${pain}\n\n✅ خطتك العلاجية وتمارينك التأهيلية جاهزة لك للمتابعة مجاناً عبر المنصة.\nمع تمنياتنا لك بتمام الشفاء والعافية.`;
+
+            const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
+            window.open(waUrl, '_blank');
+        }
+
+        function openPatientInteractiveSession() {
+            if (!activeAdminReportPatient) return;
+            loginAsPatient(activeAdminReportPatient.patientId);
+        }
+
         function loginAsPatient(patientId) {
             SmartDB.setCurrentSessionPatientId(patientId);
-            window.open('index.html', '_blank');
+            window.open(`index.html?patient_id=${encodeURIComponent(patientId)}&view_report=3`, '_blank');
         }
 
         async function deletePatientRecord(patientId) {

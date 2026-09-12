@@ -46,25 +46,65 @@ const AdminEngine = (function() {
                 try {
                     logs = await SmartDB.getPatientDailyLogs(p.patientId);
                 } catch(e) { logs = []; }
+
+                // استخراج السجلات اليومية من كائن المريض نفسه في حال كانت قادمة من المزامنة السحابية
+                if ((!logs || logs.length === 0) && Array.isArray(p.dailyLogs) && p.dailyLogs.length > 0) {
+                    logs = p.dailyLogs;
+                } else if ((!logs || logs.length === 0) && Array.isArray(p.logs) && p.logs.length > 0) {
+                    logs = p.logs;
+                }
                 
-                const latestAssessment = assessments.length > 0 ? assessments[assessments.length - 1] : null;
-                const baselinePain = latestAssessment ? (latestAssessment.painSeverity || 7) : 7;
+                // استخراج التقييم السريري الشامل: من IndexedDB أو من كائن المريض السحابي
+                let latestAssessment = assessments.length > 0 ? assessments[assessments.length - 1] : null;
+                if (!latestAssessment) {
+                    latestAssessment = p.assessment || p.latestAssessment || p.diagnosticReport || p.clinicalData || null;
+                    // مزامنة التقييم إلى SmartDB محلياً لضمان سرعة الوصول واستقرار التقارير مستقبلاً
+                    if (latestAssessment && typeof SmartDB.saveAssessment === 'function') {
+                        try {
+                            SmartDB.saveAssessment({
+                                patientId: p.patientId,
+                                ...latestAssessment
+                            });
+                        } catch (e) {}
+                    }
+                }
+
+                const baselinePain = latestAssessment ? (latestAssessment.painSeverity || latestAssessment.painLevel || p.painLevel || 7) : (p.painLevel || 7);
                 
-                let recoveryScore = 15;
+                let recoveryScore = p.recoveryScore || 15;
                 if (typeof PatientFlow !== 'undefined' && typeof PatientFlow.calculateRecoveryScore === 'function') {
                     recoveryScore = PatientFlow.calculateRecoveryScore(baselinePain, logs);
-                } else {
+                } else if (logs && logs.length > 0) {
                     recoveryScore = Math.min(100, Math.round((logs.length / 7) * 100));
                 }
+
+                // استخراج التشخيص السريري الدقيق ومنع ظهور "غير محدد" نهائياً
+                let resolvedDiagnosis = latestAssessment?.primaryDiagnosis 
+                    || latestAssessment?.title
+                    || p.chiefDiagnosis 
+                    || p.diagnosisTitle 
+                    || (p.condition && p.condition !== 'in_progress' ? p.condition : null)
+                    || (latestAssessment?.painAreaTitle ? `فحص سريري متكامل (${latestAssessment.painAreaTitle})` : null)
+                    || (p.painArea ? `فحص سريري متكامل (${p.painArea})` : null)
+                    || (p.selectedPoint ? `فحص سريري (${p.selectedPoint})` : null)
+                    || 'استشارة وفحص سريري متكامل';
+
+                // استخراج موضع الشكوى الدقيق
+                let resolvedPainArea = latestAssessment?.painAreaTitle 
+                    || latestAssessment?.painLocation
+                    || p.painArea 
+                    || p.painAreaTitle
+                    || p.selectedPoint 
+                    || 'العمود الفقري والمفاصل';
 
                 overview.push({
                     patient: p,
                     latestAssessment,
-                    logsCount: logs.length,
+                    logsCount: (logs ? logs.length : 0),
                     recoveryScore,
-                    latestDiagnosis: latestAssessment?.primaryDiagnosis || 'غير محدد',
-                    painArea: latestAssessment?.painAreaTitle || p.painArea || 'العمود الفقري والمفاصل',
-                    createdAt: p.createdAt || new Date().toISOString()
+                    latestDiagnosis: resolvedDiagnosis,
+                    painArea: resolvedPainArea,
+                    createdAt: p.createdAt || p.timestamp || new Date().toISOString()
                 });
             }
 

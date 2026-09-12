@@ -62,7 +62,10 @@
         const patientId = patientRecord.id || ('pat_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 5));
         
         const enhancedRecord = {
+            ...patientRecord,
             id: patientId,
+            patientId: patientId,
+            name: patientRecord.name || patientRecord.fullName || 'مجهول',
             fullName: patientRecord.fullName || patientRecord.name || 'مجهول',
             phone: patientRecord.phone || '',
             age: patientRecord.age || '',
@@ -70,13 +73,19 @@
             height: patientRecord.height || '',
             weight: patientRecord.weight || '',
             bmi: patientRecord.bmi || '',
-            selectedPoint: patientRecord.selectedPoint || patientRecord.anatomicalPoint || '',
+            painArea: patientRecord.painArea || patientRecord.painAreaTitle || patientRecord.selectedPoint || 'العمود الفقري والمفاصل',
+            selectedPoint: patientRecord.selectedPoint || patientRecord.painArea || patientRecord.anatomicalPoint || '',
+            chiefDiagnosis: patientRecord.chiefDiagnosis || patientRecord.diagnosisTitle || patientRecord.condition || '',
             diagnosisTitle: patientRecord.diagnosisTitle || patientRecord.chiefDiagnosis || '',
-            severityLevel: patientRecord.severityLevel || '',
+            severityLevel: patientRecord.severityLevel || patientRecord.painLevel || '',
             vitalsSummary: patientRecord.vitalsSummary || '',
             clinicalQuestions: patientRecord.clinicalQuestions || {},
             mriReportText: patientRecord.mriReportText || '',
             treatmentPlan: patientRecord.treatmentPlan || '',
+            assessment: patientRecord.assessment || patientRecord.latestAssessment || null,
+            latestAssessment: patientRecord.latestAssessment || patientRecord.assessment || null,
+            notes: patientRecord.notes || '',
+            collectedSymptoms: patientRecord.collectedSymptoms || [],
             // معلومات التوزيع الجغرافي العالمية
             country: (geoInfo && geoInfo.country) ? geoInfo.country : (patientRecord.country || 'غير محدد'),
             countryCode: (geoInfo && geoInfo.countryCode) ? geoInfo.countryCode : (patientRecord.countryCode || ''),
@@ -84,7 +93,7 @@
             flag: (geoInfo && geoInfo.flag) ? geoInfo.flag : (patientRecord.flag || '🌐'),
             device: (geoInfo && geoInfo.device) ? geoInfo.device : 'Mobile',
             deviceIcon: (geoInfo && geoInfo.deviceIcon) ? geoInfo.deviceIcon : '📱',
-            timestamp: patientRecord.timestamp || new Date().toISOString(),
+            timestamp: patientRecord.timestamp || patientRecord.createdAt || new Date().toISOString(),
             status: patientRecord.status || 'new', // new, reviewed, contacted
             sourceDomain: window.location.hostname || 'smartchecktools.com'
         };
@@ -267,10 +276,26 @@
                             changed = true;
                         }
 
-                        // حفظ فوري في SmartDB
+                        // حفظ فوري في SmartDB للمريض والتقييم السريري والسجلات
                         try {
                             if (window.SmartDB && typeof window.SmartDB.savePatient === 'function') {
                                 window.SmartDB.savePatient(normalized);
+                            }
+                            const rawAss = pt.assessment || pt.latestAssessment;
+                            if (rawAss && window.SmartDB && typeof window.SmartDB.saveAssessment === 'function') {
+                                window.SmartDB.saveAssessment({
+                                    patientId: pId,
+                                    ...rawAss
+                                });
+                            }
+                            const logsArr = pt.dailyLogs || pt.logs;
+                            if (Array.isArray(logsArr) && window.SmartDB && typeof window.SmartDB.saveDailyLog === 'function') {
+                                for (const l of logsArr) {
+                                    window.SmartDB.saveDailyLog({
+                                        patientId: pId,
+                                        ...l
+                                    });
+                                }
                             }
                         } catch(e) {}
                     }
@@ -330,6 +355,22 @@
                                     try {
                                         if (window.SmartDB && typeof window.SmartDB.savePatient === 'function') {
                                             window.SmartDB.savePatient(normalized);
+                                        }
+                                        const rawAss = pt.assessment || pt.latestAssessment;
+                                        if (rawAss && window.SmartDB && typeof window.SmartDB.saveAssessment === 'function') {
+                                            window.SmartDB.saveAssessment({
+                                                patientId: pId,
+                                                ...rawAss
+                                            });
+                                        }
+                                        const logsArr = pt.dailyLogs || pt.logs;
+                                        if (Array.isArray(logsArr) && window.SmartDB && typeof window.SmartDB.saveDailyLog === 'function') {
+                                            for (const l of logsArr) {
+                                                window.SmartDB.saveDailyLog({
+                                                    patientId: pId,
+                                                    ...l
+                                                });
+                                            }
                                         }
                                     } catch(e) {}
                                 }
