@@ -151,11 +151,11 @@ const SmartWatchdog = (function() {
             clearTimeout(activeSessionWatcher.timer);
         }
 
-        // إذا كان المريض في خطوة حرجة (إعداد التقرير، المحادثة السريرية، إدخال الهاتف)
-        if (['report_generating', 'clinical_dialogue', 'phone_submission'].includes(step)) {
+        // ✅ تم استثناء المحادثة السريرية نهائياً من أي مؤقت زمني لأن المريض إنسان يفكر ويكتب بحرية
+        if (['report_generating'].includes(step)) {
             activeSessionWatcher.timer = setTimeout(() => {
                 detectAndHandleFreeze(step);
-            }, SESSION_TIMEOUT_MS);
+            }, 45000); // 45 ثانية فقط لتوليد التقرير السحابي
         }
     }
 
@@ -196,33 +196,18 @@ const SmartWatchdog = (function() {
         try {
             console.warn('🛡️ [SmartWatchdog] جاري التدخل الذاتي لإنقاذ جلسة المريض وتجاوز التجمد...');
 
-            // إذا كان التجمد أثناء إعداد التقرير السريري أو الحوار أو إدخال الهاتف
-            if (stalledStep === 'report_generating' || stalledStep === 'phone_submission' || stalledStep === 'clinical_dialogue') {
+            // التدخل فقط وفقط إذا علق توليد التقرير السحابي أكثر من 45 ثانية
+            if (stalledStep === 'report_generating') {
                 const painArea = sessionState.painArea || 'العمود الفقري ومفاصل الحركة';
                 const patientId = sessionState.patientId || (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : 'PT-HEALED');
                 
-                // تخمين تشخيص سريري ذكي متكامل 100% ومناسب تشريحياً
                 const failsafeAssessment = generateFailsafeAssessment(painArea, patientId);
 
-                // حفظ التقييم المستشفى في قاعدة البيانات فوراً
                 if (typeof SmartDB !== 'undefined' && typeof SmartDB.saveAssessment === 'function') {
                     await SmartDB.saveAssessment(failsafeAssessment);
                 }
 
-                // تسجيل إشعار استشفاء للإدارة
-                recordHealedIncident('SESSION_FREEZE', `تم إنقاذ الجلسة ذاتياً وإعداد تقرير سريري متكامل للمريض (${patientId}) لمنطقة (${painArea}) ونقله لخطة التعافي.`);
-
-                // إذا كنا في صفحة المريض الحالية (index.html)، تحويل واجهة المريض فوراً لصفحة التعافي
-                if (typeof window !== 'undefined' && window.location.pathname.includes('index.html')) {
-                    if (typeof window.showToast === 'function') {
-                        window.showToast('✨ تم استكمال تقييمك السريري وإعداد خطة التعافي بنجاح!', 'success');
-                    }
-                    if (typeof window.loadPatientRecoveryDashboard === 'function') {
-                        setTimeout(() => {
-                            window.loadPatientRecoveryDashboard(patientId);
-                        }, 600);
-                    }
-                }
+                recordHealedIncident('SESSION_FREEZE', `تم إكمال التقرير السريري تلقائياً بعد بطء الاتصال السحابي.`);
             }
         } catch (e) {
             console.error('🛡️ [SmartWatchdog] فشل الاستشفاء الجزئي:', e);

@@ -455,9 +455,9 @@ ${greetingInstruction}
     // معالجة رد المريض وتوليد السؤال السريري التالي المناسب لحالته
     // معالجة رد المريض وتوليد رد تفاعلي طبي وإنساني فائق الذكاء (Conversational Clinical Agent)
     async advanceClinicalDialogue(context) {
-        const key = WADA3AN_AI_CONFIG.getApiKey();
-        const { currentStep, history, painPointTitle, patientName, patientVitals, lastUserMessage } = context;
+        const { currentStep, history, painPointTitle, patientName, patientPhone, patientVitals, lastUserMessage } = context;
 
+        const key = WADA3AN_AI_CONFIG.getApiKey();
         // في حال عدم توفر مفتاح أو تعذر الاتصال، الرد بذكاء تفاعلي يعالج ما قاله المراجع فعلياً
         if (!key || !WADA3AN_AI_CONFIG.isConfigured()) {
             return this.generateFallbackDialogueStep(context);

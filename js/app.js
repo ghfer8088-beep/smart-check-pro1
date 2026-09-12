@@ -6456,9 +6456,6 @@ async function sendChatMessage() {
     appendChatMessage('user', text);
     renderChatQuickReplies([]);
 
-    if (typeof SmartWatchdog !== 'undefined') {
-        SmartWatchdog.recordHeartbeat('clinical_dialogue', clinicalDialogueState.patientPhone, currentSelectedPoint?.title);
-    }
 
     const messagesBox = document.getElementById('ai-chat-messages-box');
     const loadingId = 'ai-typing-indicator';
@@ -6818,6 +6815,7 @@ async function sendChatMessage() {
             history: clinicalDialogueState.history,
             painPointTitle: currentSelectedPoint.title,
             patientName: clinicalDialogueState.patientName,
+            patientPhone: clinicalDialogueState.patientPhone,
             patientVitals: clinicalDialogueState.patientVitals,
             lastUserMessage: text
         });
@@ -6828,6 +6826,7 @@ async function sendChatMessage() {
             history: clinicalDialogueState.history,
             painPointTitle: currentSelectedPoint.title,
             patientName: clinicalDialogueState.patientName,
+            patientPhone: clinicalDialogueState.patientPhone,
             patientVitals: clinicalDialogueState.patientVitals,
             lastUserMessage: text
         });
@@ -6879,9 +6878,11 @@ async function sendChatMessage() {
     appendChatMessage('bot', nextResponse.message);
     renderChatQuickReplies(nextResponse.quickReplies || []);
 
-    // حارس رقم الهاتف الإلزامي الصارم: انتقال مضمون للتقرير فور توفر رقم الهاتف
-    const hasAnyPhoneRecorded = (clinicalDialogueState.patientPhone && String(clinicalDialogueState.patientPhone).replace(/\D/g, '').length >= 7) || nextResponse.extractedPhone;
-    if ((nextResponse.isReady || nextResponse.nextStep === 'completed' || clinicalDialogueState.step === 'completed' || hasAnyPhoneRecorded) && hasAnyPhoneRecorded) {
+    // ✅ الانتقال للتقرير فقط وفقط عندما يقرر الطبيب/جيميني اكتمال الفحص السريري [READY_FOR_DIAGNOSIS] وتوفر رقم الهاتف
+    const hasValidPhoneForReport = (clinicalDialogueState.patientPhone && String(clinicalDialogueState.patientPhone).replace(/\D/g, '').length >= 7) || nextResponse.extractedPhone;
+    const isEvaluationComplete = nextResponse.isReady || nextResponse.nextStep === 'completed' || clinicalDialogueState.step === 'completed';
+
+    if (isEvaluationComplete && hasValidPhoneForReport) {
         if (!clinicalDialogueState.patientPhone && nextResponse.extractedPhone) {
             clinicalDialogueState.patientPhone = nextResponse.extractedPhone;
         }
@@ -6891,6 +6892,7 @@ async function sendChatMessage() {
         });
         return;
     }
+
 }
 
 // إنهاء الحوار وبناء التقرير الطبي فوراً
