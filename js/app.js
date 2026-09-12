@@ -6696,15 +6696,14 @@ async function sendChatMessage() {
     const cleanDigitsOnly = pureNumbers.replace(/\D/g, '');
     const nonDigitChars = text.replace(/[\d\+\-\s\(\)\.\,\/]/g, '').trim();
 
-    // إذا كان النص المدخل عبارة عن أرقام هاتف (8-15 رقماً) مع قلة الكلمات النصية فهو رقم هاتف قطعي
+    // إذا كان النص المدخل عبارة عن أرقام هاتف واضحة أو محاولة إدخال رقم هاتف
     const isPurePhoneInput = (cleanDigitsOnly.length >= 8 && cleanDigitsOnly.length <= 15 && nonDigitChars.length <= 8);
-    const lastBotMsg = (clinicalDialogueState.history && clinicalDialogueState.history.length > 0)
-        ? [...clinicalDialogueState.history].reverse().find(h => h.sender === 'bot')
-        : null;
-    const wasAskedForPhone = clinicalDialogueState.step === 'ask_phone' || 
-        (lastBotMsg && /رقم\s*(?:هاتف|موبايل|تلفون|جوال)|هاتفك|موبايلك|تلفونك|جوالك/i.test(lastBotMsg.text));
+    const isExplicitPhoneAttempt = (cleanDigitsOnly.length >= 6 && nonDigitChars.length <= 10);
     const userMentionsPhoneExplicitly = /(?:هاتفي|تلفوني|موبايلي|جوالي|رقمي|رقم\s*الهاتف|رقم\s*المحمول)/i.test(text);
-    const isExpectingPhone = isPurePhoneInput || clinicalDialogueState.step === 'ask_phone' || wasAskedForPhone || userMentionsPhoneExplicitly;
+
+    // الحوار يتوقع رقم هاتف فقط وفقط إذا كانت الخطوة السريرية الحالية صراحة هي طلب الهاتف وكان المدخل يحتوي على أرقام، أو كان المدخل أرقاماً صريحة
+    const isExpectingPhone = isPurePhoneInput || 
+        (clinicalDialogueState.step === 'ask_phone' && (cleanDigitsOnly.length >= 5 || userMentionsPhoneExplicitly || isExplicitPhoneAttempt));
 
     if (isExpectingPhone) {
         const phoneCandidates = [];

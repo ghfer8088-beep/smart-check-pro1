@@ -565,7 +565,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
 `;
 
         try {
-            const rawReply = await this.callRawGemini(systemPrompt, { maxTokens: 800, temperature: 0.6 });
+            const rawReply = await this.callRawGemini(systemPrompt, { maxTokens: 4096, temperature: 0.6 });
             if (rawReply && rawReply.trim()) {
                 let extractedPhone = null;
                 const phoneM = rawReply.match(/\[EXTRACTED_PHONE:\s*([^\]]+)\]/);
@@ -599,8 +599,10 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                     .replace(/\[ASK_PHONE\]/g, '')
                     .trim();
 
-                // إذا حاول النموذج إعطاء تشخيص أو ادعاء اكتمال دون رقم هاتف، نحوله لطلب رقم الهاتف
-                if (!hasValidPhoneNow && (rawReply.includes('[READY_FOR_DIAGNOSIS]') || rawReply.includes('[ASK_PHONE]'))) {
+                // هل الذكاء الاصطناعي يطلب رقم الهاتف صراحة بعد اكتمال الاستقصاء السريري؟
+                const isExplicitlyAskingPhone = rawReply.includes('[ASK_PHONE]') || (rawReply.includes('[READY_FOR_DIAGNOSIS]') && !hasValidPhoneNow);
+
+                if (isExplicitlyAskingPhone) {
                     isReady = false;
                     const pNameStr = (patientName && patientName !== 'غير محدد') ? ` يا ${patientName}` : '';
                     if (!message || message.length < 15 || /تشخيص|تقرير|انتهينا/i.test(message)) {
@@ -612,7 +614,8 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                     message = `✅ تم استلام رقم هاتفك بنجاح${pNameStr}. نقوم الآن بإصدار تقريرك السريري وتحويلك فوراً لصفحة التشخيص وخطة التعافي... ⏱️`;
                 }
 
-                const nextStep = isReady ? 'completed' : ((rawReply.includes('[ASK_PHONE]') || !hasValidPhoneNow) ? 'ask_phone' : 'chatting');
+                // ننتقل لطلب الهاتف فقط إذا طلب الطبيب الهاتف صراحة، وإلا فإن الحوار الطبي السريري يستمر بحرية
+                const nextStep = isReady ? 'completed' : (isExplicitlyAskingPhone ? 'ask_phone' : 'chatting');
                 return { message, quickReplies: [], nextStep, isReady, extractedName, extractedPhone };
             }
         } catch (e) {
@@ -624,7 +627,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
 
     // استدعاء مباشر لـ Gemini مع محاولة تلقائية عبر النماذج وتدوير حوض المفاتيح عند بلوغ الحصة (Key Rotation)
     async callRawGemini(promptText, options = {}) {
-        const { maxTokens = 1024, temperature = 0.6 } = options;
+        const { maxTokens = 4096, temperature = 0.6 } = options;
 
         if (!WADA3AN_AI_CONFIG.isConfigured()) {
             throw new Error('Gemini API key is not configured');
@@ -650,7 +653,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                         contents: [{ parts: [{ text: promptText }] }],
                         generationConfig: {
                             temperature,
-                            maxOutputTokens: 1000
+                            maxOutputTokens: Math.max(maxTokens, 4096)
                         }
                     }),
                     signal: controller.signal
@@ -659,7 +662,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
 
                 if (response.ok) {
                     const data = await response.json();
-                    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                    const reply = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('').trim();
                     if (reply && reply.trim()) {
                         return reply;
                     }
@@ -1475,7 +1478,7 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
                     }
                 ]
             }],
-            generationConfig: { temperature: 0.7, maxOutputTokens: 600 }
+            generationConfig: { temperature: 0.7, maxOutputTokens: 4096 }
         };
 
         const totalPoolKeys = WADA3AN_AI_CONFIG.getPoolKeys().length || 1;
