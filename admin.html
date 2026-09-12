@@ -1719,6 +1719,16 @@
                 document.getElementById('admin-main-content').style.display = 'block';
                 await loadAdminData();
                 await loadNotificationsData();
+
+                // تفعيل المزامنة السحابية الحية لاستقبال المرضى فور تسجيلهم على أي هاتف في العالم
+                if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.subscribe === 'function') {
+                    SmartCloudSync.subscribe(async (newPt) => {
+                        console.log('⚡ وصل مريض سحابي جديد للتو:', newPt);
+                        try { playNotificationChime(); } catch(e) {}
+                        await loadAdminData();
+                        await loadNotificationsData();
+                    });
+                }
             } else {
                 alert('كلمة المرور غير صحيحة');
             }

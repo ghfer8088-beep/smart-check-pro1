@@ -41,9 +41,9 @@
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
     <link rel="stylesheet" href="css/style.css?v=16.3">
     <script>
-        // التحقق من تحديثات Service Worker وتفريغ الكاش القديم فوراً عند الترقية للإصدار 16.5
+        // التحقق من تحديثات Service Worker وتفريغ الكاش القديم فوراً عند الترقية للإصدار 16.6
         (function() {
-            const APP_TARGET_VER = '16.5';
+            const APP_TARGET_VER = '16.6';
             const currentVer = localStorage.getItem('smart_app_version');
             if (currentVer !== APP_TARGET_VER) {
                 if ('caches' in window) {
@@ -636,7 +636,16 @@
 
         <!-- ================= الخطوة 3: التقرير الطبي ================= -->
         <section id="step-section-3" class="app-step-section" style="display: none;">
-            <div id="clinical-report-container"></div>
+            <div id="clinical-report-container">
+                <div style="text-align: center; padding: 45px 20px; background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.95) 100%); border-radius: 16px; border: 2px solid var(--primary-gold); margin: 25px auto; max-width: 620px; box-shadow: 0 10px 40px rgba(0,0,0,0.7);">
+                    <div style="font-size: 3em; margin-bottom: 15px; animation: pulse 1.5s infinite;">⏳</div>
+                    <h3 style="color: #ffffff; font-size: 1.5em; font-weight: 900; margin: 0 0 10px 0; text-shadow: 0 2px 6px rgba(0,0,0,0.6);">تقريرك قيد التحضير يرجى الانتظار</h3>
+                    <p style="color: var(--primary-gold); font-size: 1.05em; font-weight: 600; margin: 0 0 15px 0;">يقوم الطبيب الافتراضي بمعالجة بيانات فحصك السريري وإعداد التشخيص الدقيق وخطة التعافي المخصصة...</p>
+                    <div style="width: 80%; height: 6px; background: #1e293b; border-radius: 3px; margin: 0 auto; overflow: hidden;">
+                        <div style="height: 100%; width: 60%; background: linear-gradient(90deg, #d4af37, #10b981); border-radius: 3px; animation: pulse 1.2s infinite;"></div>
+                    </div>
+                </div>
+            </div>
         </section>
 
 

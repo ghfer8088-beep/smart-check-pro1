@@ -605,13 +605,15 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                 if (isExplicitlyAskingPhone) {
                     isReady = false;
                     const pNameStr = (patientName && patientName !== 'غير محدد') ? ` يا ${patientName}` : '';
-                    if (!message || message.length < 15 || /تشخيص|تقرير|انتهينا/i.test(message)) {
+                    if (!message || message.length < 10) {
                         message = `اكتمل الآن تقييمك السريري الشامل وتحددت طبيعة المشكلة بدقة${pNameStr}! يرجى تزويدي برقم هاتفك لفتح التقرير الطبي الشامل وربط ملفك بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:`;
                     }
                 } else if (hasValidPhoneNow && (extractedPhone || isReady || /تم (?:تسجيل|استلام) رقم هاتفك/i.test(message))) {
                     isReady = true;
                     const pNameStr = (patientName && patientName !== 'غير محدد') ? ` يا ${patientName}` : '';
-                    message = `✅ تم استلام رقم هاتفك بنجاح${pNameStr}. نقوم الآن بإصدار تقريرك السريري وتحويلك فوراً لصفحة التشخيص وخطة التعافي... ⏱️`;
+                    if (!message || message.length < 10) {
+                        message = `✅ تم استلام رقم هاتفك بنجاح${pNameStr}. نقوم الآن بإصدار تقريرك السريري وتحويلك فوراً لصفحة التشخيص وخطة التعافي... ⏱️`;
+                    }
                 }
 
                 // ننتقل لطلب الهاتف فقط إذا طلب الطبيب الهاتف صراحة، وإلا فإن الحوار الطبي السريري يستمر بحرية

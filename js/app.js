@@ -2401,9 +2401,12 @@ function displayDiagnosticReport(data) {
 
                 <!-- مساحة التحليل البيوميكانيكي والسريري المخصص -->
                 <div id="ai-insight-content-area" style="min-height: 90px; margin-bottom: 18px;">
-                    <div style="display: flex; align-items: center; gap: 10px; color: #94a3b8; font-size: 0.9em; padding: 15px 0;">
-                        <span style="font-size: 1.3em; animation: spin 1.2s linear infinite; display: inline-block;">⚙️</span>
-                        <span>جاري صياغة التفسير البيوميكانيكي المخصص لحالتك بناءً على إجاباتك ووصفك...</span>
+                    <div style="display: flex; align-items: center; gap: 14px; color: #ffffff; background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(15, 23, 42, 0.85) 100%); border: 1.5px solid rgba(212, 175, 55, 0.45); border-radius: 12px; padding: 16px 20px; font-size: 0.98em;">
+                        <span style="font-size: 2em; animation: spin 1.2s linear infinite; display: inline-block;">⏳</span>
+                        <div>
+                            <div style="color: var(--primary-gold); font-size: 1.15em; font-weight: 900; margin-bottom: 4px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">تقريرك قيد التحضير يرجى الانتظار</div>
+                            <div style="color: #f1f5f9; font-size: 0.88em; font-weight: 500;">يقوم النظام الطبي بتحليل الأعراض وصياغة التفسير البيوميكانيكي المخصص لحالتك...</div>
+                        </div>
                     </div>
                 </div>
 
@@ -6059,6 +6062,15 @@ function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
         if (currentActiveStationAudio) {
             currentActiveStationAudio = null;
         }
+        if (stationKey === 'diagnosis_guide') {
+            const playBtn = document.getElementById('btn-play-report-audio');
+            if (playBtn) {
+                playBtn.innerHTML = '<span>🔁</span> إعادة الاستماع';
+                playBtn.style.animation = 'none';
+            }
+            const desc = document.getElementById('report-audio-status-desc');
+            if (desc) desc.textContent = 'اكتمل الشرح الصوتي للتقرير السريري وخطة التعافي.';
+        }
         if (typeof onComplete === 'function') {
             onComplete();
         }
@@ -6176,6 +6188,20 @@ function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
                 if (playBtn) playBtn.innerHTML = '<span>⏸️</span> إيقاف الشرح';
                 const audioText = document.getElementById('welcome-audio-text');
                 if (audioText) audioText.textContent = '🔊 د. سارة تشرح الآن: استمع لتحديد موضع ألمك بدقة...';
+            } else if (stationKey === 'diagnosis_guide') {
+                const reportBar = document.getElementById('report-audio-player-bar');
+                if (reportBar) {
+                    reportBar.style.display = 'flex';
+                    reportBar.style.border = '2px solid var(--primary-gold)';
+                    reportBar.style.boxShadow = '0 0 20px rgba(212, 175, 55, 0.45)';
+                }
+                const playBtn = document.getElementById('btn-play-report-audio');
+                if (playBtn) {
+                    playBtn.innerHTML = '<span>⏸️</span> إيقاف الشرح';
+                    playBtn.style.animation = 'none';
+                }
+                const desc = document.getElementById('report-audio-status-desc');
+                if (desc) desc.innerHTML = '<span style="color: var(--primary-gold); font-weight: bold;">🔊 د. سارة تشرح الآن تقريرك السريري وخطة التعافي...</span>';
             }
         }).catch(() => {
             if (stationKey === 'welcome') {
@@ -6185,6 +6211,23 @@ function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
                 if (playBtn) playBtn.innerHTML = '<span>🔊</span> استمع للشرح';
                 const audioText = document.getElementById('welcome-audio-text');
                 if (audioText) audioText.textContent = 'د. سارة ترشدك للبدء.. استمع لتحديد موضع ألمك بدقة';
+            } else if (stationKey === 'diagnosis_guide') {
+                const reportBar = document.getElementById('report-audio-player-bar');
+                if (reportBar) {
+                    reportBar.style.display = 'flex';
+                    reportBar.style.border = '2px solid #10b981';
+                    reportBar.style.boxShadow = '0 0 25px rgba(16, 185, 129, 0.55)';
+                }
+                const playBtn = document.getElementById('btn-play-report-audio');
+                if (playBtn) {
+                    playBtn.innerHTML = '<span>🔊</span> استمع للشرح الصوتي (د. سارة)';
+                    playBtn.style.animation = 'pulse 1.5s infinite';
+                    playBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                    playBtn.style.color = '#fff';
+                    playBtn.style.border = 'none';
+                }
+                const desc = document.getElementById('report-audio-status-desc');
+                if (desc) desc.innerHTML = '<span style="color: #6ee7b7; font-weight: bold;">🎙️ دكتورة سارة سجلت لك شرحاً صوتياً لتقريرك وخطة علاجك (اضغط هنا للاستماع)</span>';
             }
             if (!isCancelled) triggerComplete();
         });
@@ -6762,7 +6805,9 @@ async function sendChatMessage() {
                 const savedName = clinicalDialogueState.patientName && clinicalDialogueState.patientName.length > 1
                     ? clinicalDialogueState.patientName
                     : 'مراجع كريم';
+                const pId = 'pat_' + (clinicalDialogueState.patientPhone ? clinicalDialogueState.patientPhone.replace(/\D/g, '') : Date.now().toString(36));
                 SmartDB.savePatient({
+                    patientId: pId,
                     name: savedName,
                     phone: clinicalDialogueState.patientPhone,
                     status: 'in_progress',
@@ -6788,7 +6833,7 @@ async function sendChatMessage() {
 
 
             const patientGreeting = (clinicalDialogueState.patientName && clinicalDialogueState.patientName !== 'المراجع الكريم') ? ` يا ${clinicalDialogueState.patientName}` : '';
-            const closingMsg = `✅ تم تسجيل رقم هاتفك بنجاح${patientGreeting}. نقوم الآن بإصدار تقريرك السريري المتكامل وتحويلك فوراً لصفحة التشخيص وخطة التعافي... ⏱️`;
+            const closingMsg = `✅ تم تسجيل رقم هاتفك بنجاح${patientGreeting}. نقوم الآن بإصدار تقريرك السريري المتكامل وتحويلك فوراً لصفحة التشخيص وخطة التعافي... ⏱️<div style="margin-top: 10px; text-align: center;"><button type="button" onclick="window.doDirectTransitionToReport && window.doDirectTransitionToReport()" class="btn-header btn-header-gold" style="padding: 7px 18px; font-size: 0.86em; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);">⚡ الانتقال المباشر للتقرير</button></div>`;
             
             const indicator = document.getElementById(loadingId);
             if (indicator) indicator.remove();
@@ -6803,10 +6848,10 @@ async function sendChatMessage() {
                 if (typeof Wada3anAiEngine !== 'undefined') Wada3anAiEngine.stopSpeaking();
                 finishChatIntakeAndGenerateReport();
             };
+            window.doDirectTransitionToReport = doTransition;
 
-            // ✅ تشغيل صوت محطة الانتقال لدكتورة سارة مع مهلة أمان 12 ثانية لضمان اكتمال الصوت
-            // (رُفعت المهلة من 1500ms لـ 12000ms لمنع قطع الصوت قبل انتهائه)
-            setTimeout(doTransition, 12000);
+            // مهلة أمان قصوى 58 ثانية لمنع تعليق الشاشة في حال حجب الصوت من المتصفح
+            setTimeout(doTransition, 58000);
             playStationAudio('transition', () => {
                 doTransition();
             });
@@ -6895,11 +6940,14 @@ async function sendChatMessage() {
         const savedName2 = clinicalDialogueState.patientName && clinicalDialogueState.patientName.length > 1
             ? clinicalDialogueState.patientName
             : 'مراجع كريم';
+        const pId2 = 'pat_' + (clinicalDialogueState.patientPhone ? clinicalDialogueState.patientPhone.replace(/\D/g, '') : Date.now().toString(36));
         SmartDB.savePatient({
+            patientId: pId2,
             name: savedName2,
             phone: clinicalDialogueState.patientPhone,
             status: 'in_progress',
             condition: (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.title : 'فحص ألم عام',
+            painArea: (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.title : '',
             pointId: (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.id : '',
             notes: 'تحديث الحوار السريري الذكي'
         }).catch(() => {});

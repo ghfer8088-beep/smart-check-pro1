@@ -60,15 +60,23 @@ const SmartDB = (function() {
     // دوال إدارة المرضى
     async function savePatient(patient) {
         if (!patient) return null;
+
+        // تأكد من وجود patientId فريد وموثوق دائماً لمنع أخطاء IndexedDB والتخزين المحلي
+        if (!patient.patientId) {
+            patient.patientId = 'pat_' + (patient.phone ? String(patient.phone).replace(/\D/g, '') : Date.now().toString(36)) + '_' + Math.random().toString(36).substr(2, 5);
+        }
+        if (!patient.createdAt) {
+            patient.createdAt = new Date().toISOString();
+        }
+        patient.lastUpdated = new Date().toISOString();
+
         try {
-            if (patient.patientId) {
-                localStorage.setItem('smart_patient_' + patient.patientId, JSON.stringify(patient));
-                const allPts = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
-                const idx = allPts.findIndex(p => p.patientId === patient.patientId);
-                if (idx >= 0) allPts[idx] = { ...allPts[idx], ...patient };
-                else allPts.push(patient);
-                localStorage.setItem('smart_all_patients', JSON.stringify(allPts));
-            }
+            localStorage.setItem('smart_patient_' + patient.patientId, JSON.stringify(patient));
+            const allPts = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
+            const idx = allPts.findIndex(p => p.patientId === patient.patientId || (patient.phone && p.phone && p.phone === patient.phone));
+            if (idx >= 0) allPts[idx] = { ...allPts[idx], ...patient };
+            else allPts.unshift(patient);
+            localStorage.setItem('smart_all_patients', JSON.stringify(allPts));
         } catch(e) {}
 
         // ☁️ ترحيل المريض سحابياً فورياً عبر جسر المزامنة العالمي مع كشف الدولة والمدينة

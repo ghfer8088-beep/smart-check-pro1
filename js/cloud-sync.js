@@ -12,6 +12,7 @@
     const CLOUD_PATIENTS_KEY = 'smart_cloud_synced_patients';
     const CLOUD_CHANNEL_NAME = 'smart_check_pro_global_sync_channel';
     const SYNC_EVENT_NAME = 'smart-patient-cloud-sync';
+    const CLOUD_SYNC_ENDPOINT = 'https://ntfy.sh/wada3an_smart_check_clinic_sync_2026';
 
     // إنشاء قناة بث لحظية للمتصفحات (Cross-Tab / Cross-Window Live Broadcast)
     let syncBroadcastChannel = null;
@@ -121,17 +122,107 @@
             } catch (e) {}
         }
 
-        // إطلاق حدث محلي في نفس النافذة
+        // 4. ترحيل حقيقي عبر جسر الإنترنت السحابي لربط كافة الأجهزة والهواتف بلوحة الإدارة فورياً
         try {
-            window.dispatchEvent(new CustomEvent(SYNC_EVENT_NAME, { detail: broadcastPayload }));
+            fetch(CLOUD_SYNC_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Title': `New Patient: ${enhancedRecord.fullName || 'مريض جديد'}`,
+                    'Priority': 'default',
+                    'Tags': 'hospital,stethoscope,ambulance'
+                },
+                body: JSON.stringify(enhancedRecord)
+            }).catch(() => {});
         } catch (e) {}
 
         return enhancedRecord;
     }
 
+    // جلب كافة المرضى المرحلين من السحابة عبر كافة الأجهزة والهواتف حول العالم
+    async function fetchCloudPatients() {
+        try {
+            const pollUrl = `${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=30d`;
+            const resp = await fetch(pollUrl);
+            if (!resp.ok) return getCloudSyncedPatients();
+            const text = await resp.text();
+            if (!text) return getCloudSyncedPatients();
+
+            const lines = text.trim().split('\n');
+            const currentList = getCloudSyncedPatients();
+            let changed = false;
+
+            for (const line of lines) {
+                if (!line.trim()) continue;
+                try {
+                    const item = JSON.parse(line);
+                    if (item.event === 'message' && item.message) {
+                        const pt = JSON.parse(item.message);
+                        if (pt && (pt.id || pt.patientId || pt.phone)) {
+                            const pId = pt.id || pt.patientId;
+                            const idx = currentList.findIndex(x => (pId && (x.id === pId || x.patientId === pId)) || (pt.phone && x.phone === pt.phone && (x.fullName === pt.fullName || x.name === pt.name)));
+                            const normalized = {
+                                ...pt,
+                                id: pId || ('pat_' + Date.now().toString(36)),
+                                patientId: pId || ('pat_' + Date.now().toString(36)),
+                                name: pt.fullName || pt.name || 'مراجع',
+                                fullName: pt.fullName || pt.name || 'مراجع',
+                                phone: pt.phone || '',
+                                painArea: pt.painArea || pt.selectedPoint || 'فحص سريري عام',
+                                createdAt: pt.createdAt || pt.timestamp || new Date().toISOString()
+                            };
+                            if (idx >= 0) {
+                                currentList[idx] = { ...currentList[idx], ...normalized };
+                            } else {
+                                currentList.unshift(normalized);
+                                changed = true;
+                            }
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            if (changed) {
+                saveCloudSyncedPatients(currentList);
+            }
+            return currentList;
+        } catch (err) {
+            console.warn('fetchCloudPatients notice:', err);
+            return getCloudSyncedPatients();
+        }
+    }
+
+    // إنشاء اتصال لحظي دائم (Server-Sent Events) لتلقي أي مريض جديد فوراً دون إعادة تحميل الصفحة
+    let cloudEventSource = null;
+    function initCloudListener(callback) {
+        if (typeof EventSource === 'undefined') return;
+        if (cloudEventSource) return;
+
+        try {
+            cloudEventSource = new EventSource(`${CLOUD_SYNC_ENDPOINT}/sse`);
+            cloudEventSource.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.event === 'message' && data.message) {
+                        const pt = JSON.parse(data.message);
+                        if (pt) {
+                            dispatchPatientToCloud(pt);
+                            if (typeof callback === 'function') callback(pt);
+                        }
+                    }
+                } catch (e) {}
+            };
+            cloudEventSource.onerror = () => {
+                // إعادة الاتصال تتم تلقائياً بحسب مواصفات المتصفح لـ EventSource
+            };
+        } catch (e) {}
+    }
+
     // استماع لوحة الإدارة للمرضى الجدد في الوقت الحقيقي
     function subscribeToPatientUpdates(callback) {
         if (typeof callback !== 'function') return;
+
+        // تفعيل الاستماع السحابي المباشر عبر EventSource
+        initCloudListener(callback);
 
         // استماع عبر BroadcastChannel
         if (syncBroadcastChannel) {
@@ -308,6 +399,8 @@
     window.SmartCloudSync = {
         dispatchPatient: dispatchPatientToCloud,
         getPatients: getCloudSyncedPatients,
+        fetchCloudPatients: fetchCloudPatients,
+        initCloudListener: initCloudListener,
         subscribe: subscribeToPatientUpdates,
         getAnalytics: getGeoAnalyticsSummary,
         getDetailedAnalytics: getDetailedVisitorStats,

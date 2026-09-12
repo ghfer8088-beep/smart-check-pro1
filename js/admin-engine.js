@@ -24,6 +24,13 @@ const AdminEngine = (function() {
     // استخراج تقرير إحصائي شامل وترتيب المرضى (الأحدث أولاً في أعلى القائمة)
     async function loadPatientsOverview() {
         try {
+            // جلب ومزامنة كافة الحالات السحابية المرحلية من كافة الهواتف والأجهزة حول العالم
+            try {
+                if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.fetchCloudPatients === 'function') {
+                    await SmartCloudSync.fetchCloudPatients();
+                }
+            } catch (e) {}
+
             const patients = await SmartDB.getAllPatients();
             const overview = [];
 
