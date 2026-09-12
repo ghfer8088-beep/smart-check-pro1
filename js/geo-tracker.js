@@ -172,7 +172,7 @@
             const isRecent = lastVisit && (now.getTime() - new Date(lastVisit.timestamp).getTime()) < 60000;
 
             if (!isRecent) {
-                history.push({
+                const visitItem = {
                     visitorId: info.visitorId,
                     country: info.country,
                     countryCode: info.countryCode,
@@ -182,12 +182,20 @@
                     deviceIcon: info.deviceIcon,
                     timestamp: now.toISOString(),
                     page: window.location.pathname
-                });
+                };
+                history.push(visitItem);
 
                 // الاحتفاظ بآخر 500 زيارة للحفاظ على الأداء والسرعة
                 if (history.length > 500) history = history.slice(-500);
                 try {
                     localStorage.setItem(VISITS_HISTORY_KEY, JSON.stringify(history));
+                } catch (e) {}
+
+                // ترحيل الزيارة سحابياً للوحة الإدارة العامة فورياً عبر الأجهزة
+                try {
+                    if (window.SmartCloudSync && typeof window.SmartCloudSync.dispatchVisit === 'function') {
+                        window.SmartCloudSync.dispatchVisit(visitItem);
+                    }
                 } catch (e) {}
             }
 

@@ -122,20 +122,76 @@
             } catch (e) {}
         }
 
-        // 4. ترحيل حقيقي عبر جسر الإنترنت السحابي لربط كافة الأجهزة والهواتف بلوحة الإدارة فورياً
+    const CLOUD_VISITS_ENDPOINT = 'https://ntfy.sh/wada3an_smart_check_visits_2026';
+
+    // 4. ترحيل حقيقي عبر جسر الإنترنت السحابي لربط كافة الأجهزة والهواتف بلوحة الإدارة فورياً
         try {
             fetch(CLOUD_SYNC_ENDPOINT, {
                 method: 'POST',
                 headers: {
-                    'Title': `New Patient: ${enhancedRecord.fullName || 'مريض جديد'}`,
-                    'Priority': 'default',
-                    'Tags': 'hospital,stethoscope,ambulance'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(enhancedRecord)
-            }).catch(() => {});
+            }).then(() => {
+                console.log('☁️ تم ترحيل المريض سحابياً بنجاح عبر جسر الإنترنت العالمي.');
+            }).catch(err => {
+                console.warn('⚠️ تنبيه ترحيل المريض سحابياً:', err);
+            });
         } catch (e) {}
 
         return enhancedRecord;
+    }
+
+    // ترحيل زيارة متصفح جديدة سحابياً لكافة الأجهزة
+    function dispatchVisitToCloud(visitRecord) {
+        if (!visitRecord) return;
+        try {
+            fetch(CLOUD_VISITS_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(visitRecord)
+            }).catch(() => {});
+        } catch (e) {}
+    }
+
+    // جلب كافة الزيارات المسجلة سحابياً من كافة الهواتف والكمبيوترات حول العالم
+    async function fetchCloudVisits() {
+        try {
+            const resp = await fetch(`${CLOUD_VISITS_ENDPOINT}/json?poll=1&since=30d`);
+            if (!resp.ok) return;
+            const text = await resp.text();
+            if (!text) return;
+
+            const lines = text.trim().split('\n');
+            const VISITS_KEY = 'smart_geo_visits_history';
+            let localVisits = [];
+            try {
+                localVisits = JSON.parse(localStorage.getItem(VISITS_KEY) || '[]');
+            } catch(e) {}
+
+            let changed = false;
+            for (const line of lines) {
+                if (!line.trim()) continue;
+                try {
+                    const item = JSON.parse(line);
+                    if (item.event === 'message' && item.message) {
+                        const v = JSON.parse(item.message);
+                        if (v && (v.visitorId || v.timestamp)) {
+                            const exists = localVisits.some(lv => lv.visitorId === v.visitorId && Math.abs(new Date(lv.timestamp) - new Date(v.timestamp)) < 120000);
+                            if (!exists) {
+                                localVisits.push(v);
+                                changed = true;
+                            }
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            if (changed) {
+                if (localVisits.length > 1000) localVisits = localVisits.slice(-1000);
+                localStorage.setItem(VISITS_KEY, JSON.stringify(localVisits));
+            }
+        } catch(e) {}
     }
 
     // جلب كافة المرضى المرحلين من السحابة عبر كافة الأجهزة والهواتف حول العالم
@@ -402,6 +458,8 @@
         fetchCloudPatients: fetchCloudPatients,
         initCloudListener: initCloudListener,
         subscribe: subscribeToPatientUpdates,
+        dispatchVisit: dispatchVisitToCloud,
+        fetchCloudVisits: fetchCloudVisits,
         getAnalytics: getGeoAnalyticsSummary,
         getDetailedAnalytics: getDetailedVisitorStats,
         clearVisits: clearVisitsHistory,

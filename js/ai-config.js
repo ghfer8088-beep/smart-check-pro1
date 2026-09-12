@@ -110,7 +110,7 @@ const WADA3AN_AI_CONFIG = {
 
 
 
-    // استرجاع المفتاح النشط مع التبديل الذكي وتخطي المفاتيح المستنفدة
+    // استرجاع المفتاح النشط مع التوزيع المتوازن الذكي (Session Load Balancing) وتخطي المفاتيح المستنفدة
     getApiKey: function() {
         try {
             const now = Date.now();
@@ -125,12 +125,26 @@ const WADA3AN_AI_CONFIG = {
             const pool = this.getPoolKeys().filter(k => this.isValidApiKey(k));
             if (pool.length === 0) return '';
 
+            // توزيع عشوائي متوازن للجلسة الحالية لتفادي استخدام جميع الزوار لنفس المفتاح (Load Balancing)
+            let sessionIdx = sessionStorage.getItem('wada3an_session_key_idx');
+            if (sessionIdx === null) {
+                sessionIdx = Math.floor(Math.random() * pool.length);
+                sessionStorage.setItem('wada3an_session_key_idx', sessionIdx.toString());
+            } else {
+                sessionIdx = parseInt(sessionIdx, 10);
+                if (isNaN(sessionIdx) || sessionIdx < 0 || sessionIdx >= pool.length) {
+                    sessionIdx = Math.floor(Math.random() * pool.length);
+                    sessionStorage.setItem('wada3an_session_key_idx', sessionIdx.toString());
+                }
+            }
+
             for (let i = 0; i < pool.length; i++) {
-                const idx = (this._currentPoolIndex + i) % pool.length;
+                const idx = (sessionIdx + i) % pool.length;
                 const candidate = pool[idx];
                 const coolDownUntil = this._exhaustedKeys.get(candidate);
                 if (!coolDownUntil || now > coolDownUntil) {
                     this._currentPoolIndex = idx;
+                    sessionStorage.setItem('wada3an_session_key_idx', idx.toString());
                     return candidate;
                 }
             }
@@ -150,6 +164,18 @@ const WADA3AN_AI_CONFIG = {
                 this._exhaustedKeys.forEach((v, k) => { toSave[k] = v; });
                 localStorage.setItem('wada3an_exhausted_keys', JSON.stringify(toSave));
             } catch (e) {}
+
+            // تحريك مؤشر الجلسة للمفتاح التالي فوراً
+            try {
+                const pool = this.getPoolKeys().filter(k => this.isValidApiKey(k));
+                if (pool.length > 0) {
+                    let cur = parseInt(sessionStorage.getItem('wada3an_session_key_idx') || '0', 10);
+                    const next = (cur + 1) % pool.length;
+                    sessionStorage.setItem('wada3an_session_key_idx', next.toString());
+                    this._currentPoolIndex = next;
+                    console.log(`🔄 تم تدوير المفتاح السحابي إلى المفتاح رقم [${next + 1} من ${pool.length}]`);
+                }
+            } catch(e) {}
         }
     },
 

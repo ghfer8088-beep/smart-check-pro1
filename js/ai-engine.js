@@ -599,8 +599,25 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                     .replace(/\[ASK_PHONE\]/g, '')
                     .trim();
 
+                // حساب عدد رسائل المريض الفعلية في المحادثة لضمان استقصاء سريري متكامل وعميق
+                const userClinicalMessagesCount = (history || []).filter(h => h.sender === 'user').length;
+                const isConsultationThorough = userClinicalMessagesCount >= 3;
+
                 // هل الذكاء الاصطناعي يطلب رقم الهاتف صراحة بعد اكتمال الاستقصاء السريري؟
-                const isExplicitlyAskingPhone = rawReply.includes('[ASK_PHONE]') || (rawReply.includes('[READY_FOR_DIAGNOSIS]') && !hasValidPhoneNow);
+                let isExplicitlyAskingPhone = rawReply.includes('[ASK_PHONE]') || (rawReply.includes('[READY_FOR_DIAGNOSIS]') && !hasValidPhoneNow);
+
+                // صمام أمان سريري: ممنوع منعاً باتاً طلب الهاتف قبل استيفاء 3 أسئلة وإجابات استقصائية متعمقة على الأقل
+                if (isExplicitlyAskingPhone && !isConsultationThorough && !hasValidPhoneNow) {
+                    isExplicitlyAskingPhone = false;
+                    isReady = false;
+                    const pNameStr = (patientName && patientName !== 'غير محدد') ? ` يا ${patientName}` : '';
+                    message = message.replace(/(?:اكتمل الآن تقييمك|أدخل رقم هاتفك|يرجى تزويدي برقم هاتفك|لفتح التقرير الطبي).*$/s, '').trim();
+                    if (!message || message.length < 20) {
+                        message = `لفحص حالتك والوقوف على أصل المشكلة بدقة${pNameStr}، صف لي كيف يتصرف الألم مع الحركة والجلوس؟ وهل تشعر بأي خدر، تنميل، طقطقة، أو شعور بعدم ثبات في المفصل؟`;
+                    } else if (!message.includes('؟')) {
+                        message += `\n\nواستكمالاً للتدقيق الطبي، هل تلاحظ اشتداد الألم عند حركة معينة أو أثناء الراحة والنوم؟`;
+                    }
+                }
 
                 if (isExplicitlyAskingPhone) {
                     isReady = false;
@@ -616,7 +633,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                     }
                 }
 
-                // ننتقل لطلب الهاتف فقط إذا طلب الطبيب الهاتف صراحة، وإلا فإن الحوار الطبي السريري يستمر بحرية
+                // ننتقل لطلب الهاتف فقط إذا طلب الطبيب الهاتف صراحة بعد اكتمال الاستقصاء، وإلا فإن الحوار الطبي السريري يستمر بحرية
                 const nextStep = isReady ? 'completed' : (isExplicitlyAskingPhone ? 'ask_phone' : 'chatting');
                 return { message, quickReplies: [], nextStep, isReady, extractedName, extractedPhone };
             }

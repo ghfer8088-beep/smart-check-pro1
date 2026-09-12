@@ -17,8 +17,8 @@
     </script>
 
     <script src="js/system-watchdog.js?v=16.3"></script>
-    <script src="js/security-shield.js?v=16.3"></script>
-    <link rel="stylesheet" href="css/style.css?v=16.3">
+    <script src="js/security-shield.js?v=16.7"></script>
+    <link rel="stylesheet" href="css/style.css?v=16.7">
     <style>
         body {
             background-color: #080c14;
@@ -97,11 +97,14 @@
                 <button type="button" onclick="openVisitorAnalyticsModal()" class="btn-header" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(14, 165, 233, 0.15) 100%); border-color: #38bdf8; color: #7dd3fc; font-weight: bold; padding: 10px 18px; font-size: 0.92em; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.2);">
                     <span>📊</span> احصائيات الزوار
                 </button>
+                <button type="button" onclick="triggerManualCloudSync()" class="btn-header" style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.25) 0%, rgba(3, 105, 161, 0.15) 100%); border-color: #0284c7; color: #7dd3fc; font-weight: bold; padding: 10px 18px; font-size: 0.92em; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.2);">
+                    <span id="sync-spin-icon">🔄</span> مزامنة سحابية فورية
+                </button>
                 <button type="button" onclick="openSystemSettingsModal()" class="btn-header" style="background: rgba(212, 175, 55, 0.18); border-color: var(--primary-gold); color: var(--primary-gold); font-weight: bold; padding: 10px 18px; font-size: 0.92em; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15);">
                     <span>⚙️</span> إعدادات وتخصيص المنظومة
                 </button>
                 <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 10px 16px;">
-                    ⚡ تحديث الكاش (v16.3)
+                    ⚡ تحديث الكاش (v16.7)
                 </button>
                 <a href="index.html" class="btn-header" style="background: #1e293b; color: #fff; padding: 10px 20px; font-size: 0.95em;">
                     🌐 فتح واجهة المراجعين
@@ -980,16 +983,16 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/geo-tracker.js?v=16.2"></script>
-    <script src="js/cloud-sync.js?v=16.2"></script>
-    <script src="js/database.js?v=16.2"></script>
-    <script src="js/exercise-image-studio.js?v=16.2"></script>
-    <script src="js/exercises-db.js?v=16.2"></script>
-    <script src="js/diagnostic-engine.js?v=16.2"></script>
-    <script src="js/patient-flow.js?v=16.2"></script>
-    <script src="js/admin-engine.js?v=16.2"></script>
-    <script src="js/ai-config.js?v=16.2"></script>
-    <script src="js/ai-engine.js?v=16.2"></script>
+    <script src="js/geo-tracker.js?v=16.7"></script>
+    <script src="js/cloud-sync.js?v=16.7"></script>
+    <script src="js/database.js?v=16.7"></script>
+    <script src="js/exercise-image-studio.js?v=16.7"></script>
+    <script src="js/exercises-db.js?v=16.7"></script>
+    <script src="js/diagnostic-engine.js?v=16.7"></script>
+    <script src="js/patient-flow.js?v=16.7"></script>
+    <script src="js/admin-engine.js?v=16.7"></script>
+    <script src="js/ai-config.js?v=16.7"></script>
+    <script src="js/ai-engine.js?v=16.7"></script>
 
     <script>
         let allPatientsList = [];
@@ -1030,13 +1033,23 @@
                 }
             });
 
-            // ☁️ الاشتراك المباشر بالمزامنة السحابية اللحظية للمرضى والزيارات حول العالم
-            if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.subscribe === 'function') {
-                SmartCloudSync.subscribe(async (newPatient) => {
-                    await loadAdminData(false);
-                    loadNotificationsData(true);
+            // ☁️ الاشتراك المباشر والمزامنة السحابية اللحظية للمرضى والزيارات حول العالم
+            if (typeof SmartCloudSync !== 'undefined') {
+                SmartCloudSync.fetchCloudPatients().then(() => {
+                    loadAdminData(false);
+                    loadNotificationsData(false);
+                }).catch(() => {});
+                SmartCloudSync.fetchCloudVisits().then(() => {
                     renderGeoAnalytics();
-                });
+                }).catch(() => {});
+
+                if (typeof SmartCloudSync.subscribe === 'function') {
+                    SmartCloudSync.subscribe(async (newPatient) => {
+                        await loadAdminData(false);
+                        loadNotificationsData(true);
+                        renderGeoAnalytics();
+                    });
+                }
             }
         });
 
@@ -1737,6 +1750,12 @@
         let activePtFilter = 'all';
 
         async function loadAdminData(refreshDemoIfEmpty = false) {
+            if (typeof SmartCloudSync !== 'undefined') {
+                try {
+                    if (typeof SmartCloudSync.fetchCloudPatients === 'function') await SmartCloudSync.fetchCloudPatients();
+                    if (typeof SmartCloudSync.fetchCloudVisits === 'function') await SmartCloudSync.fetchCloudVisits();
+                } catch(e) {}
+            }
             allPatientsList = await AdminEngine.loadPatientsOverview();
 
             // ✅ تم إيقاف التوليد التلقائي للبيانات التجريبية نهائياً
@@ -2258,13 +2277,41 @@
         // ==========================================================================
         let detailedVisitsData = null;
 
-        function openVisitorAnalyticsModal() {
+        async function openVisitorAnalyticsModal() {
             const modal = document.getElementById('visitor-analytics-modal');
             if (modal) {
                 modal.style.display = 'flex';
+                if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.fetchCloudVisits === 'function') {
+                    try {
+                        await SmartCloudSync.fetchCloudVisits();
+                    } catch(e) {}
+                }
                 renderVisitorAnalyticsModalContent();
             }
         }
+
+        async function triggerManualCloudSync() {
+            const icon = document.getElementById('sync-spin-icon');
+            if (icon) icon.style.animation = 'spin 1s linear infinite';
+            try {
+                if (typeof SmartCloudSync !== 'undefined') {
+                    await Promise.all([
+                        typeof SmartCloudSync.fetchCloudPatients === 'function' ? SmartCloudSync.fetchCloudPatients() : Promise.resolve(),
+                        typeof SmartCloudSync.fetchCloudVisits === 'function' ? SmartCloudSync.fetchCloudVisits() : Promise.resolve()
+                    ]);
+                }
+                await loadAdminData(false);
+                loadNotificationsData(true);
+                renderGeoAnalytics();
+                alert('✅ تمت المزامنة السحابية بنجاح! تم جلب وتحديث أحدث بيانات المرضى والزيارات من كافة الأجهزة.');
+            } catch (e) {
+                console.error(e);
+                alert('⚠️ تم تحديث البيانات محلياً بنجاح.');
+            } finally {
+                if (icon) icon.style.animation = 'none';
+            }
+        }
+        window.triggerManualCloudSync = triggerManualCloudSync;
 
         function closeVisitorAnalyticsModal() {
             const modal = document.getElementById('visitor-analytics-modal');

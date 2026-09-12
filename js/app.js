@@ -769,8 +769,114 @@ function renderRedFlags() {
     container.innerHTML = html;
 }
 
+// =========================================================================
+// نافذة التحضير الملكية للتقرير الطبي مع ساعة رملية تفاعلية وشريط إنجاز سلس
+// =========================================================================
+function showRoyalReportLoadingModal() {
+    let modal = document.getElementById('royal-report-loading-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'royal-report-loading-modal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100vw; height: 100vh;
+            z-index: 9999999;
+            background: rgba(5, 10, 20, 0.90);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            font-family: inherit;
+        `;
+
+        modal.innerHTML = `
+            <div style="background: linear-gradient(135deg, #0b1320 0%, #16243b 50%, #0d1a2d 100%); border: 2px solid var(--primary-gold, #d4af37); box-shadow: 0 0 50px rgba(212, 175, 55, 0.4), 0 25px 60px rgba(0,0,0,0.85); border-radius: 22px; padding: 36px 28px; max-width: 480px; width: 100%; text-align: center; color: #fff; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, transparent 60%); pointer-events: none;"></div>
+                
+                <div style="font-size: 3.8rem; margin-bottom: 16px; line-height: 1; display: inline-block; filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.7)); animation: royalHourglassSpin 3s cubic-bezier(0.65, 0, 0.35, 1) infinite;">
+                    ⏳
+                </div>
+                
+                <div style="margin-bottom: 14px;">
+                    <span style="display: inline-flex; align-items: center; gap: 6px; background: rgba(212, 175, 55, 0.15); border: 1px solid #d4af37; padding: 5px 14px; border-radius: 30px; font-size: 0.85rem; color: #fef08a; font-weight: 700;">
+                        <span>✨</span> الاستشاري الافتراضي • «وداعاً للألم»
+                    </span>
+                </div>
+                
+                <h3 style="color: #ffffff; font-size: 1.4rem; font-weight: 900; margin: 0 0 10px 0; letter-spacing: 0.3px;">
+                    تقريرك السريري قيد التحضير والتجهيز
+                </h3>
+                
+                <p style="color: #cbd5e1; font-size: 0.92rem; line-height: 1.7; margin: 0 0 20px 0;">
+                    يرجى الانتظار ثوانٍ معدودة... يقوم النظام بتحليل كافة الأعراض وصياغة التفسير البيوميكانيكي وخطة التعافي المخصصة لك بدقة.
+                </p>
+                
+                <div style="background: rgba(15, 23, 42, 0.8); height: 8px; border-radius: 10px; overflow: hidden; border: 1px solid rgba(212, 175, 55, 0.35); margin-bottom: 14px; position: relative;">
+                    <div id="royal-loading-bar-inner" style="background: linear-gradient(90deg, #d4af37 0%, #10b981 50%, #38bdf8 100%); height: 100%; width: 20%; border-radius: 10px; transition: width 0.4s ease; box-shadow: 0 0 12px rgba(212, 175, 55, 0.8);"></div>
+                </div>
+                
+                <div id="royal-loading-status-text" style="font-size: 0.84rem; color: #38bdf8; font-weight: 600; min-height: 20px;">
+                    🔍 جاري مضاهاة المعايير السريرية وتحديد المستوى التشريحي...
+                </div>
+            </div>
+            <style>
+                @keyframes royalHourglassSpin {
+                    0% { transform: rotate(0deg) scale(1); }
+                    40% { transform: rotate(180deg) scale(1.12); }
+                    50% { transform: rotate(180deg) scale(1.12); }
+                    90% { transform: rotate(360deg) scale(1); }
+                    100% { transform: rotate(360deg) scale(1); }
+                }
+            </style>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    modal.style.display = 'flex';
+    requestAnimationFrame(() => {
+        modal.style.opacity = '1';
+    });
+
+    const bar = document.getElementById('royal-loading-bar-inner');
+    const statusText = document.getElementById('royal-loading-status-text');
+    if (bar) bar.style.width = '20%';
+
+    setTimeout(() => {
+        if (bar) bar.style.width = '55%';
+        if (statusText) statusText.textContent = '🧬 جاري احتساب مؤشر الإجهاد البيوميكانيكي والحمولة الميكانيكية...';
+    }, 600);
+
+    setTimeout(() => {
+        if (bar) bar.style.width = '85%';
+        if (statusText) statusText.textContent = '🎁 جاري تجهيز خطة التمارين التأهيلية المنزلية والتقرير النهائي...';
+    }, 1200);
+
+    setTimeout(() => {
+        if (bar) bar.style.width = '100%';
+        if (statusText) statusText.textContent = '✅ اكتمل تجهيز التقرير بنجاح! جاري فتح النتائج...';
+    }, 1700);
+}
+
+function hideRoyalReportLoadingModal() {
+    const modal = document.getElementById('royal-report-loading-modal');
+    if (!modal) return;
+    modal.style.opacity = '0';
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, 450);
+}
+window.showRoyalReportLoadingModal = showRoyalReportLoadingModal;
+window.hideRoyalReportLoadingModal = hideRoyalReportLoadingModal;
+
 // تنفيذ الفحص السريري وتوليد التقرير الطبي الملكي
 async function runDiagnosticAnalysis() {
+    showRoyalReportLoadingModal();
     try {
         if (typeof SmartWatchdog !== 'undefined') {
             SmartWatchdog.recordHeartbeat('report_generating', null, currentSelectedPoint?.title);
@@ -1038,10 +1144,18 @@ async function runDiagnosticAnalysis() {
         }
         goToStep(3);
         setTimeout(() => {
-            playStationAudio('diagnosis_guide');
-        }, 600);
+            hideRoyalReportLoadingModal();
+            const reportEl = document.getElementById('clinical-report-container') || document.getElementById('report-section-diagnosis');
+            if (reportEl) {
+                reportEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            setTimeout(() => {
+                playStationAudio('diagnosis_guide');
+            }, 400);
+        }, 1800);
     } catch (err) {
         console.error('Error in runDiagnosticAnalysis:', err);
+        hideRoyalReportLoadingModal();
         if (typeof SmartWatchdog !== 'undefined') {
             SmartWatchdog.handleSystemIncident({
                 type: 'DIAGNOSTIC_ENGINE_ERROR',
