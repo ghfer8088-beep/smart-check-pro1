@@ -1077,13 +1077,14 @@ const ClinicalEngine = (function() {
             clinicalEvidence.push(`الأعراض المرافقة المرصودة: ${answers.associatedSymptoms.join("، ")}`);
         }
 
-        if (point && point.title) {
-            clinicalEvidence.push(`الموضع التشريحي المستهدف: فحص وتأكيد الارتباط الميكانيكي بنطاق (${point.title})`);
+        const pointTitle = pointData?.regionName || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint?.title) || painArea || 'المنطقة المحددة';
+        if (pointTitle) {
+            clinicalEvidence.push(`الموضع التشريحي المستهدف: فحص وتأكيد الارتباط الميكانيكي بنطاق (${pointTitle})`);
         }
 
         // ضمان عدم بقاء قائمة الأدلة فارغة تحت أي ظرف
         if (clinicalEvidence.length === 0) {
-            clinicalEvidence.push(`الفحص الميكانيكي الموضعي: رصد إجهاد وتشنج موضعي في نطاق (${point ? point.title : 'المنطقة المحددة'})`);
+            clinicalEvidence.push(`الفحص الميكانيكي الموضعي: رصد إجهاد وتشنج موضعي في نطاق (${pointTitle})`);
             clinicalEvidence.push(`النمط الوظيفي: تأثر النطاق الحركي وانضغاط أنسجة المفصل مع الحركة والجهد اليومي`);
         }
 
