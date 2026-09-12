@@ -346,6 +346,9 @@ function selectAnatomyPoint(point, element) {
     }
 
     currentSelectedPoint = point;
+    if (typeof SmartWatchdog !== 'undefined') {
+        SmartWatchdog.recordHeartbeat('point_selected', null, point?.title);
+    }
     try {
         localStorage.setItem('smart_current_point', JSON.stringify(point));
         const curMax = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
@@ -769,6 +772,9 @@ function renderRedFlags() {
 // تنفيذ الفحص السريري وتوليد التقرير الطبي الملكي
 async function runDiagnosticAnalysis() {
     try {
+        if (typeof SmartWatchdog !== 'undefined') {
+            SmartWatchdog.recordHeartbeat('report_generating', null, currentSelectedPoint?.title);
+        }
         if (!currentSelectedPoint) {
             // نقطة افتراضية لأسفل الظهر في حال الانتقال المباشر
             const allPts = typeof getBackPoints === 'function' ? getBackPoints() : [];
@@ -1027,12 +1033,25 @@ async function runDiagnosticAnalysis() {
         }
 
         displayDiagnosticReport(currentAssessmentData);
+        if (typeof SmartWatchdog !== 'undefined') {
+            SmartWatchdog.clearSessionHeartbeat();
+        }
         goToStep(3);
         setTimeout(() => {
             playStationAudio('diagnosis_guide');
         }, 600);
     } catch (err) {
         console.error('Error in runDiagnosticAnalysis:', err);
+        if (typeof SmartWatchdog !== 'undefined') {
+            SmartWatchdog.handleSystemIncident({
+                type: 'DIAGNOSTIC_ENGINE_ERROR',
+                severity: 'CRITICAL',
+                title: 'خطأ أثناء توليد التقرير السريري',
+                message: err.message || 'استثناء في runDiagnosticAnalysis',
+                patientId: currentAssessmentData?.patientId,
+                painArea: currentSelectedPoint?.title
+            });
+        }
         try {
             if (currentAssessmentData) {
                 displayDiagnosticReport(currentAssessmentData);
@@ -6436,6 +6455,10 @@ async function sendChatMessage() {
     input.value = '';
     appendChatMessage('user', text);
     renderChatQuickReplies([]);
+
+    if (typeof SmartWatchdog !== 'undefined') {
+        SmartWatchdog.recordHeartbeat('clinical_dialogue', clinicalDialogueState.patientPhone, currentSelectedPoint?.title);
+    }
 
     const messagesBox = document.getElementById('ai-chat-messages-box');
     const loadingId = 'ai-typing-indicator';

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -16,8 +16,8 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/security-shield.js?v=16.2"></script>
-    <link rel="stylesheet" href="css/style.css?v=16.2">
+    <script src="js/security-shield.js?v=16.3"></script>
+    <link rel="stylesheet" href="css/style.css?v=16.3">
     <style>
         body {
             background-color: #080c14;
@@ -89,6 +89,10 @@
                 </div>
             </div>
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <button type="button" id="btn-system-health-badge" onclick="openSystemHealthModal()" class="btn-header" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 10px 18px; font-size: 0.92em; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);">
+                    <span id="health-badge-icon" style="font-size: 1.15em;">🛡️</span>
+                    <span id="health-badge-text">درع المراقبة: 100% مستقر</span>
+                </button>
                 <button type="button" onclick="openVisitorAnalyticsModal()" class="btn-header" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(14, 165, 233, 0.15) 100%); border-color: #38bdf8; color: #7dd3fc; font-weight: bold; padding: 10px 18px; font-size: 0.92em; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.2);">
                     <span>📊</span> احصائيات الزوار
                 </button>
@@ -96,7 +100,7 @@
                     <span>⚙️</span> إعدادات وتخصيص المنظومة
                 </button>
                 <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 10px 16px;">
-                    ⚡ تحديث الكاش (v16.0)
+                    ⚡ تحديث الكاش (v16.3)
                 </button>
                 <a href="index.html" class="btn-header" style="background: #1e293b; color: #fff; padding: 10px 20px; font-size: 0.95em;">
                     🌐 فتح واجهة المراجعين
@@ -116,6 +120,27 @@
 
         <!-- محتوى الإدارة الكامل بعد تسجيل الدخول -->
         <div id="admin-main-content" style="display: none;">
+
+            <!-- شريط الطوارئ الخطر الفوري (Emergency Danger Bar) -->
+            <div id="admin-emergency-danger-banner" style="display: none; background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(185, 28, 28, 0.98)); border: 2px solid #fecaca; border-radius: 14px; padding: 16px 22px; margin-bottom: 22px; box-shadow: 0 8px 30px rgba(239, 68, 68, 0.6); animation: pulseRed 2s infinite; color: #fff;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <span style="font-size: 2.3em;">🚨</span>
+                        <div>
+                            <strong style="font-size: 1.18em; display: block;" id="emergency-banner-title">تحذير طوارئ: تم رصد تجمد في جلسة مريض أو خلل برمجي!</strong>
+                            <span style="font-size: 0.9em; opacity: 0.95;" id="emergency-banner-desc">تدخل محرك الاستشفاء الذاتي لإنقاذ الجلسة وتأمين التقرير السريري فوراً.</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button type="button" onclick="if (window.SmartWatchdog) SmartWatchdog.stopDangerAlarmSound(); document.getElementById('admin-emergency-danger-banner').style.display='none';" style="background: rgba(0,0,0,0.4); color: #fff; border: 1px solid #fff; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer;">
+                            🔕 إيقاف الصوت
+                        </button>
+                        <button type="button" onclick="openSystemHealthModal()" style="background: #fff; color: #b91c1c; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+                            🔍 مركز الاستشفاء والإصلاح
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <!-- مركز الإشعارات والتنبيهات الحية للإدارة -->
             <div id="admin-notifications-card" style="background: #111827; border: 1px solid var(--primary-gold); border-radius: 14px; padding: 22px; margin-bottom: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
@@ -825,6 +850,134 @@
         </div>
     </div>
 
+        <!-- ========================================================================== -->
+    <!-- 🛡️ مركز المراقبة الحية والاستشفاء الذاتي وفحص الأصوات (System Health Sentinel) -->
+    <!-- ========================================================================== -->
+    <div id="system-health-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 9999; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;">
+        <div class="modal-inner" style="background: #0f172a; border: 1.5px solid #10b981; border-radius: 16px; max-width: 1100px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; padding: 24px; box-shadow: 0 10px 45px rgba(0,0,0,0.9); box-sizing: border-box; overflow: hidden;">
+            
+            <!-- Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(16, 185, 129, 0.3); padding-bottom: 15px; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="font-size: 2.2em; filter: drop-shadow(0 2px 8px rgba(16,185,129,0.5));">🛡️</div>
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <h2 style="color: #6ee7b7; margin: 0; font-size: 1.35em;">مركز المراقبة الحية والاستشفاء الذاتي وفحص الأصوات (System Sentinel)</h2>
+                            <span id="health-modal-status-badge" style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid #10b981; padding: 2px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
+                                🟢 المنظومة مستقرة 100%
+                            </span>
+                        </div>
+                        <div style="color: #94a3b8; font-size: 0.85em; margin-top: 3px;">
+                            فحص ومراقبة أخطاء الأداة لحظة بلحظة، إنذار خطر فوري عند التجمد، تشافي تلقائي ذكي، وتدقيق شامل لكافة المحطات الصوتية
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button type="button" onclick="runAdminFullDiagnostics()" class="btn-header" style="background: rgba(16, 185, 129, 0.15); border-color: #10b981; color: #6ee7b7; padding: 8px 14px; font-size: 0.85em; font-weight: bold;">
+                        🔍 فحص شامل للمنظومة
+                    </button>
+                    <button type="button" onclick="closeSystemHealthModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.8em; cursor: pointer; line-height: 1; padding: 0 5px;">&times;</button>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div style="overflow-y: auto; padding-right: 5px; flex: 1;">
+                
+                <!-- 4 KPI Cards -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 20px;">
+                    <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
+                        <div id="health-stat-score" style="font-size: 2.2em; font-weight: bold; color: #10b981;">100%</div>
+                        <div style="color: #94a3b8; font-size: 0.85em; margin-top: 4px;">مؤشر سلامة واستقرار النظام 📈</div>
+                    </div>
+                    <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
+                        <div id="health-stat-audios" style="font-size: 2.2em; font-weight: bold; color: #38bdf8;">7 / 7</div>
+                        <div style="color: #94a3b8; font-size: 0.85em; margin-top: 4px;">جاهزية المحطات الصوتية 🎵</div>
+                    </div>
+                    <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
+                        <div id="health-stat-healed" style="font-size: 2.2em; font-weight: bold; color: var(--primary-gold);">0</div>
+                        <div style="color: #94a3b8; font-size: 0.85em; margin-top: 4px;">عمليات الاستشفاء الذاتي المنجزة 🧬</div>
+                    </div>
+                    <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
+                        <div id="health-stat-critical" style="font-size: 2.2em; font-weight: bold; color: #ef4444;">0</div>
+                        <div style="color: #94a3b8; font-size: 0.85em; margin-top: 4px;">حوادث معلقة تتطلب تدخلاً 🚨</div>
+                    </div>
+                </div>
+
+                <!-- Action Toolbar Buttons -->
+                <div style="background: #080c14; border: 1px solid rgba(51, 65, 85, 0.6); border-radius: 10px; padding: 14px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <button type="button" onclick="testAllStationAudiosUI()" style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #7dd3fc; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.88em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                            🎵 فحص واختبار كافة الأصوات الـ 7
+                        </button>
+                        <button type="button" onclick="handleRescueStalledSessions()" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.88em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                            ⚡ استشفاء وإنقاذ كافة الجلسات المعلقة
+                        </button>
+                        <button type="button" onclick="handleSimulateIncidentAndAlarm()" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.88em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                            🧪 محاكاة تجمد وإنذار الخطر
+                        </button>
+                    </div>
+                    <div>
+                        <button type="button" onclick="handleClearIncidentsLogs()" style="background: none; border: 1px solid #64748b; color: #94a3b8; padding: 8px 14px; border-radius: 8px; font-size: 0.85em; cursor: pointer;">
+                            🗑️ تفريغ سجل الحوادث
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Section 1: مصفوفة فحص الأصوات الشاملة -->
+                <div style="background: #111827; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(56, 189, 248, 0.2); padding-bottom: 10px;">
+                        <h3 style="color: #38bdf8; margin: 0; font-size: 1.15em; display: flex; align-items: center; gap: 8px;">
+                            <span>🎧</span> مصفوفة فحص مواضع ومحطات الأصوات وتوقيتاتها (Station Audio Matrix)
+                        </h3>
+                        <span style="color: #94a3b8; font-size: 0.82em;">فحص التوفر، الحظر التلقائي، وسرعة الاستجابة</span>
+                    </div>
+                    <div id="audio-matrix-table-container">
+                        <!-- Dynamically populated -->
+                    </div>
+                </div>
+
+                <!-- Section 2: نتائج الفحص الشامل للمنظومة -->
+                <div id="diagnostics-results-panel" style="display: none; background: #111827; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(16, 185, 129, 0.2); padding-bottom: 10px;">
+                        <h3 style="color: #6ee7b7; margin: 0; font-size: 1.15em; display: flex; align-items: center; gap: 8px;">
+                            <span>🔍</span> تقرير الفحص الشامل لمحركات المنظومة وقواعد البيانات
+                        </h3>
+                        <span id="diagnostics-report-timestamp" style="color: #94a3b8; font-size: 0.8em;"></span>
+                    </div>
+                    <div id="diagnostics-modules-container" style="display: flex; flex-direction: column; gap: 10px;">
+                    </div>
+                </div>
+
+                <!-- Section 3: سجل الحوادث الحية والاستشفاء الذاتي -->
+                <div style="background: #111827; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 18px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 10px;">
+                        <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.15em; display: flex; align-items: center; gap: 8px;">
+                            <span>⚡</span> سجل الحوادث الحية وتدخلات الاستشفاء التلقائي (Incident & Self-Healing Stream)
+                        </h3>
+                        <span style="color: #94a3b8; font-size: 0.82em;">رصد مباشر عبر BroadcastChannel & Telemetry</span>
+                    </div>
+                    <div id="health-incidents-stream-container" style="display: flex; flex-direction: column; gap: 10px; max-height: 280px; overflow-y: auto;">
+                        <!-- Dynamically populated -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div style="border-top: 1px solid rgba(16, 185, 129, 0.2); padding-top: 14px; margin-top: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="color: #64748b; font-size: 0.82em;">
+                    SmartWatchdog v16.3 متصل ومفعل في الخلفية لضمان استمرارية عمل المنظومة بنسبة 100%.
+                </div>
+                <div>
+                    <button type="button" onclick="closeSystemHealthModal()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 6px 18px; border-radius: 6px; font-size: 0.85em; cursor: pointer;">
+                        إغلاق
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
     <script src="js/geo-tracker.js?v=16.2"></script>
     <script src="js/cloud-sync.js?v=16.2"></script>
@@ -855,6 +1008,7 @@
 
             updateSoundBtnUI();
             initAiAdminStatus();
+            initWatchdogAdmin();
             populateAvailableSystemVoices();
             renderAdminVideosGrid();
             if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -1438,6 +1592,7 @@
 
             WADA3AN_AI_CONFIG.setApiKey(key);
             initAiAdminStatus();
+            initWatchdogAdmin();
             
             const msgEl = document.getElementById('ai-test-result-msg');
             if (msgEl) {
@@ -1491,6 +1646,7 @@
             const input = document.getElementById('gemini-api-key-input');
             if (input) input.value = '';
             initAiAdminStatus();
+            initWatchdogAdmin();
             const msgEl = document.getElementById('ai-test-result-msg');
             if (msgEl) {
                 msgEl.style.display = 'block';
