@@ -1,4 +1,4 @@
-﻿// ==========================================================================
+// ==========================================================================
 // Smart Check Pro 2.0 - محرك المراقبة الحية والاستشفاء الذاتي وفحص الأصوات
 // System Watchdog, Autonomous Self-Healing & Audio Diagnostics Sentinel (v16.3)
 // ==========================================================================
@@ -60,10 +60,24 @@ const SmartWatchdog = (function() {
         },
         {
             id: 'station_motivation',
-            name: 'محطة التحفيز والالتزام بالتمارين',
+            name: 'محطة التحفيز والراحة بين التمارين',
             path: 'assets/audio/station_motivation.mp3',
-            trigger: 'أثناء تشغيل العداد التفاعلي وممارسة التمارين',
+            trigger: 'أثناء تشغيل العداد التفاعلي وفترة الاستراحة بين التمارين',
             category: 'exercise_pacer'
+        },
+        {
+            id: 'station_exercise_start',
+            name: 'محطة انطلاق وبدء التمرين',
+            path: 'assets/audio/station_exercise_start.mp3',
+            trigger: 'عند الضغط على بدء تمرين تأهيلي',
+            category: 'exercise_start'
+        },
+        {
+            id: 'station_exercise_finish',
+            name: 'محطة إنجاز واكتمال التمرين',
+            path: 'assets/audio/station_exercise_finish.mp3',
+            trigger: 'عند انتهاء عداد التمرين وبدء الانتقال للتالي',
+            category: 'exercise_finish'
         },
         {
             id: 'station_chat_welcome_sarah',

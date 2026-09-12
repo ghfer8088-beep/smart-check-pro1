@@ -236,8 +236,17 @@ function toggleExerciseTimer(btn, defaultSeconds = 30) {
             
             if (typeof playStationAudio === 'function') {
                 playStationAudio('exercise_finish');
+            } else if (typeof ClinicalAudioPacer !== 'undefined') {
+                ClinicalAudioPacer.playCompleteChime();
             }
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+            // تشغيل محطة التحفيز / الراحة بين التمارين
+            setTimeout(() => {
+                if (typeof playStationAudio === 'function') {
+                    playStationAudio('motivation');
+                }
+            }, 1200);
         }
     }, 1000);
 }

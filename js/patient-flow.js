@@ -438,8 +438,118 @@ const PatientFlow = (function() {
                 }
 
                 if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+                // 🔔 بدء فترة الاستراحة الذكية والتوجيه الصوتي للتمرين التالي
+                triggerExerciseRestPeriod(cardEl, buttonEl);
             }
         }, 1000);
+    }
+
+    // إدارة فترة الراحة التفاعلية (15 ثانية) والتنقل للتمرين التالي بالأصوات
+    let activeRestInterval = null;
+    function triggerExerciseRestPeriod(currentCardEl, completedButtonEl) {
+        if (!currentCardEl) return;
+        if (activeRestInterval) {
+            clearInterval(activeRestInterval);
+            activeRestInterval = null;
+        }
+
+        // البحث عن بطاقة التمرين التالية
+        const allCards = Array.from(document.querySelectorAll('.clinical-exercise-card, .exercise-visual-card'));
+        const currentIndex = allCards.indexOf(currentCardEl);
+        const nextCard = (currentIndex !== -1 && currentIndex + 1 < allCards.length) ? allCards[currentIndex + 1] : null;
+
+        // إزالة أي شريط استراحة سابق
+        const existingBanners = document.querySelectorAll('.exercise-rest-transition-banner');
+        existingBanners.forEach(b => b.remove());
+
+        if (nextCard) {
+            // توجد تمارين تالية في جلسة اليوم
+            let restSec = 15;
+            const nextButton = nextCard.querySelector('.btn-exercise-timer');
+            const nextName = nextCard.querySelector('h4')?.textContent || 'التمرين التالي';
+
+            // إنشاء شريط الاستراحة الفاخر
+            const banner = document.createElement('div');
+            banner.className = 'exercise-rest-transition-banner';
+            banner.style.cssText = `
+                background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(16, 185, 129, 0.15) 100%);
+                border: 2px dashed #d4af37;
+                border-radius: 12px;
+                padding: 14px 18px;
+                margin: 14px 0;
+                text-align: center;
+                animation: pulse 1.5s infinite;
+                box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2);
+            `;
+            banner.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                    <div style="font-weight: bold; color: #fbbf24; font-size: 1.05em; display: flex; align-items: center; gap: 8px;">
+                        <span>⏸️ خذ نفساً عميقاً (فترة راحة للأنسجة):</span>
+                        <span class="rest-timer-countdown" style="background: #d4af37; color: #0a0e14; padding: 2px 10px; border-radius: 12px; font-weight: 900;">${restSec} ثانية</span>
+                    </div>
+                    <div style="font-size: 0.88em; color: #94a3b8;">
+                        التالي: <strong style="color: #ffffff;">${nextName}</strong>
+                    </div>
+                    <button type="button" class="btn-skip-rest" style="background: rgba(255,255,255,0.12); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; padding: 5px 12px; font-size: 0.82em; cursor: pointer; font-weight: bold;">
+                        تخطي الراحة والبدء فوراً ⏭️
+                    </button>
+                </div>
+            `;
+
+            currentCardEl.parentNode.insertBefore(banner, currentCardEl.nextSibling);
+
+            // تشغيل محطة صوت التحفيز أو الإرشاد بعد رنين اكتمال التمرين بثانية
+            setTimeout(() => {
+                if (typeof playStationAudio === 'function') {
+                    playStationAudio('motivation');
+                }
+            }, 1200);
+
+            // التركيز اللطيف والتمرير نحو التالي
+            nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            nextCard.style.outline = '2px solid #d4af37';
+            nextCard.style.boxShadow = '0 0 25px rgba(212, 175, 55, 0.4)';
+
+            const finishRest = () => {
+                clearInterval(activeRestInterval);
+                activeRestInterval = null;
+                if (banner) banner.remove();
+                if (nextCard) {
+                    nextCard.style.outline = '';
+                    nextCard.style.boxShadow = '';
+                }
+                // تنبيه رنين لطيف لبدء التمرين التالي
+                if (typeof ClinicalAudioPacer !== 'undefined') {
+                    ClinicalAudioPacer.playStartChime();
+                }
+            };
+
+            const skipBtn = banner.querySelector('.btn-skip-rest');
+            if (skipBtn) skipBtn.onclick = finishRest;
+
+            activeRestInterval = setInterval(() => {
+                restSec--;
+                const countSpan = banner.querySelector('.rest-timer-countdown');
+                if (countSpan) countSpan.textContent = `${restSec} ثانية`;
+
+                // دقات إيقاعية هادئة للتنفس
+                if (restSec > 0 && typeof ClinicalAudioPacer !== 'undefined') {
+                    ClinicalAudioPacer.playTickBeep(restSec <= 3);
+                }
+
+                if (restSec <= 0) {
+                    finishRest();
+                }
+            }, 1000);
+        } else {
+            // آخر تمرين في جلسة اليوم: تشغيل صوت الاحتفال بالخطة
+            setTimeout(() => {
+                if (typeof playStationAudio === 'function') {
+                    playStationAudio('motivation');
+                }
+            }, 1200);
+        }
     }
 
     // احتساب النسبة المئوية العامة لتعافي المريض
