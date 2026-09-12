@@ -5126,7 +5126,7 @@ function resetToInitialState() {
     const proceedBtn = document.getElementById('btn-goto-step2');
     if (proceedBtn) {
         proceedBtn.disabled = true;
-        proceedBtn.style.opacity = '0.5';
+        proceedBtn.style.opacity = '';
     }
 
     if (typeof clinicalDialogueState !== 'undefined') {
