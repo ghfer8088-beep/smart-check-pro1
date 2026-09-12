@@ -175,6 +175,13 @@ const SmartDB = (function() {
             localStorage.removeItem('smart_assessments_' + patientId);
             const allPts = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
             localStorage.setItem('smart_all_patients', JSON.stringify(allPts.filter(p => p.patientId !== patientId)));
+
+            // إزالة المريض أيضاً من السجلات السحابية المتزامنة لضمان عدم عودته نهائياً
+            try {
+                const cloudPts = JSON.parse(localStorage.getItem('smart_cloud_synced_patients') || '[]');
+                const filteredCloud = cloudPts.filter(cp => (cp.patientId || cp.id) !== patientId);
+                localStorage.setItem('smart_cloud_synced_patients', JSON.stringify(filteredCloud));
+            } catch(e) {}
         } catch(e) {}
 
         try {
@@ -453,6 +460,36 @@ const SmartDB = (function() {
         localStorage.removeItem('smart_admin_notifications');
     }
 
+    async function clearAllPatients() {
+        try {
+            localStorage.removeItem('smart_all_patients');
+            localStorage.removeItem('smart_cloud_synced_patients');
+            localStorage.removeItem('smart_last_cloud_sync_time');
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && (k.startsWith('smart_patient_') || k.startsWith('smart_daily_logs_') || k.startsWith('smart_assessments_') || k.startsWith('force_unlock_') || k.startsWith('custom_target_time_'))) {
+                    keysToRemove.push(k);
+                }
+            }
+            keysToRemove.forEach(k => localStorage.removeItem(k));
+        } catch(e) {}
+
+        try {
+            const db = await openDB();
+            return new Promise((resolve) => {
+                const tx = db.transaction(['patients', 'assessments', 'dailyLogs'], 'readwrite');
+                tx.objectStore('patients').clear();
+                tx.objectStore('assessments').clear();
+                tx.objectStore('dailyLogs').clear();
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(true);
+            });
+        } catch(e) {
+            return true;
+        }
+    }
+
     return {
         openDB,
         savePatient,
@@ -460,6 +497,7 @@ const SmartDB = (function() {
         getPatientById: getPatient,
         getAllPatients,
         deletePatient,
+        clearAllPatients,
         saveAssessment,
         getPatientAssessments,
         saveDailyLog,
@@ -472,8 +510,8 @@ const SmartDB = (function() {
         addAdminNotification,
         getAdminNotifications,
         markNotificationAsRead,
-        deleteNotification,
         markAllNotificationsAsRead,
+        deleteNotification,
         clearAllNotifications
     };
 })();

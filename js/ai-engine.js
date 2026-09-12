@@ -458,8 +458,9 @@ ${greetingInstruction}
         const { currentStep, history, painPointTitle, patientName, patientPhone, patientVitals, lastUserMessage } = context;
 
         const key = WADA3AN_AI_CONFIG.getApiKey();
-        // في حال عدم توفر مفتاح أو تعذر الاتصال، الرد بذكاء تفاعلي يعالج ما قاله المراجع فعلياً
+        // في حال عدم توفر مفتاح أو تعذر الاتصال، الرد بذكاء تفاعلي يعالج ما قاله المراجع فعلياً بعد محاكاة التحليل الطبي
         if (!key || !WADA3AN_AI_CONFIG.isConfigured()) {
+            await new Promise(resolve => setTimeout(resolve, 1400 + Math.floor(Math.random() * 800)));
             return this.generateFallbackDialogueStep(context);
         }
 
@@ -918,50 +919,12 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
         const isAffirmative = /^(?:نعم|ايوه|اي|اه|صحيح|بالضبط|اكيد|مضبوط|تمام|طبعا|فعلا|صح|بصير|بحس)$/i.test(userTextNorm);
         const isSimpleNegative = /^(?:لا|كلا|ما في|ما عندي|ابدا|مش موجود|مو موجود|ما بحس)$/i.test(userTextNorm);
 
-        // إذا كان المراجع يجيب بنعم
+        // إعداد البادئة المناسبة لرد الطبيب بناءً على رد المراجع (نعم / لا / تفصيل)
+        let acknowledgmentPrefix = `فهمت وصفك بدقة${nameSuffix}. `;
         if (isAffirmative) {
-            if (userTurnCount <= 2) {
-                if (hasAddressedNumbness) {
-                    return {
-                        message: `فهمتك تماماً${nameSuffix}. ${anatQ.duration}`,
-                        quickReplies: [],
-                        nextStep: 'chatting'
-                    };
-                } else {
-                    return {
-                        message: `فهمتك تماماً${nameSuffix}. ${anatQ.numbness}`,
-                        quickReplies: [],
-                        nextStep: 'chatting'
-                    };
-                }
-            } else {
-                return {
-                    message: `اكتملت الآن الصورة السريرية الشاملة لتشخيص حالتك وتحددت ميكانيكية الخلل في **${title}** بدقة${nameSuffix || ' يا غالي'}!\n\nأدخل رقم هاتفك لفتح التقرير السريري الخاص بك ولربط ملفك بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:`,
-                    quickReplies: [],
-                    nextStep: 'ask_phone',
-                    isPhonePrompt: true,
-                    isReady: false
-                };
-            }
-        }
-
-        // إذا كان المراجع يجيب بلا
-        if (isSimpleNegative) {
-            if (userTurnCount <= 2) {
-                return {
-                    message: `ممتاز، استبعاد هذا العرض مؤشر سريري طيب يؤكد أن المشكلة تتركز موضعياً في **${title}**.\n\n${anatQ.provocation}`,
-                    quickReplies: [],
-                    nextStep: 'chatting'
-                };
-            } else {
-                return {
-                    message: `اكتملت الآن الصورة السريرية الشاملة لتشخيص حالتك وتحددت ميكانيكية الخلل في **${title}** بدقة${nameSuffix || ' يا غالي'}!\n\nأدخل رقم هاتفك لفتح التقرير السريري الخاص بك ولربط ملفك بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:`,
-                    quickReplies: [],
-                    nextStep: 'ask_phone',
-                    isPhonePrompt: true,
-                    isReady: false
-                };
-            }
+            acknowledgmentPrefix = `تماماً، تأكيد هذا العرض يساعدنا في استيضاح المسببات الدقيقة لـ **${title}**${nameSuffix}. `;
+        } else if (isSimpleNegative) {
+            acknowledgmentPrefix = `ممتاز، استبعاد هذا العرض مؤشر سريري طيب يؤكد أن الخلل يتركز ميكانيكياً في **${title}**${nameSuffix}. `;
         }
 
         // ✅ استجواب متسلسل متعمق بلا سقف للأسئلة — يستمر حتى تكتمل الصورة السريرية الكاملة
@@ -975,37 +938,37 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
         // اختيار السؤال المناسب بناءً على الفجوات السريرية المتبقية
         if (!hasAddressedProvocation) {
             return {
-                message: `فهمت وصفك بدقة${nameSuffix}. لاستكمال الصورة السريرية لـ **${title}**:\n${anatQ.provocation}`,
+                message: `${acknowledgmentPrefix}لاستكمال الصورة السريرية لـ **${title}**:\n${anatQ.provocation}`,
                 quickReplies: [],
                 nextStep: 'chatting'
             };
         } else if (!hasAddressedNumbness) {
             return {
-                message: `شكراً على هذا التفصيل${nameSuffix}. سؤال سريري مهم:\n${anatQ.numbness}`,
+                message: `${acknowledgmentPrefix}سؤال سريري دقيق لفحص الأعصاب الطرفية:\n${anatQ.numbness}`,
                 quickReplies: [],
                 nextStep: 'chatting'
             };
         } else if (!hasAddressedDuration) {
             return {
-                message: `ممتاز${nameSuffix}. ${anatQ.duration}`,
+                message: `${acknowledgmentPrefix}${anatQ.duration}`,
                 quickReplies: [],
                 nextStep: 'chatting'
             };
         } else if (!hasAddressedMorning) {
             return {
-                message: `فهمتك تماماً${nameSuffix}. ${anatQ.stiffness}`,
+                message: `${acknowledgmentPrefix}${anatQ.stiffness}`,
                 quickReplies: [],
                 nextStep: 'chatting'
             };
         } else if (!hasAddressedIntensity) {
             return {
-                message: `لأحدد شدة الخلل الميكانيكي بدقة${nameSuffix}، لو تعطيني رقماً من 1 إلى 10 يصف قوة الألم في **${title}** في أسوأ أوقاته؟`,
+                message: `${acknowledgmentPrefix}لأحدد شدة الخلل الميكانيكي بدقة، لو تعطيني رقماً من 1 إلى 10 يصف شدة الألم في **${title}** في أوقات ذروته؟`,
                 quickReplies: [],
                 nextStep: 'chatting'
             };
         } else if (!hasAddressedLifeImpact) {
             return {
-                message: `وضح لي${nameSuffix}، كيف يؤثر هذا الألم في **${title}** على حياتك اليومية؟ هل يؤثر على نومك أو عملك أو ممارسة أنشطتك المعتادة؟`,
+                message: `${acknowledgmentPrefix}وضح لي، كيف يؤثر هذا الألم في **${title}** على روتينك وحياتك اليومية؟ هل يوقظك من النوم أو يعيق عملك ومشيك؟`,
                 quickReplies: [],
                 nextStep: 'chatting'
             };

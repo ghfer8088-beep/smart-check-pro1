@@ -268,11 +268,15 @@ const AdminEngine = (function() {
         return true;
     }
 
-    // تفريغ كافة السجلات
+    // تفريغ كافة السجلات بالكامل ومنع عودتها نهائياً
     async function clearAllPatients() {
-        const patients = await SmartDB.getAllPatients();
-        for (const p of patients) {
-            await SmartDB.deletePatient(p.patientId);
+        if (typeof SmartDB !== 'undefined' && typeof SmartDB.clearAllPatients === 'function') {
+            await SmartDB.clearAllPatients();
+        } else {
+            const patients = await SmartDB.getAllPatients();
+            for (const p of patients) {
+                await SmartDB.deletePatient(p.patientId);
+            }
         }
         return true;
     }

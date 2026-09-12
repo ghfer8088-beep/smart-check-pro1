@@ -2332,6 +2332,20 @@ function displayDiagnosticReport(data) {
                 </div>
             </div>
 
+            <!-- مشغل الشرح الصوتي للتقرير بصوت د. سارة (متوافق 100% مع iOS Safari) -->
+            <div id="report-audio-player-bar" class="no-print" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid var(--primary-gold); border-radius: 12px; padding: 12px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 2em;">🎙️</span>
+                    <div>
+                        <div id="report-audio-status-title" style="color: #ffffff; font-weight: bold; font-size: 0.92em;">استمع للشرح الصوتي للتقرير السريري (د. سارة)</div>
+                        <div id="report-audio-status-desc" style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">توجيهات صوتية فورية توضح أبعاد حالتك وخطة الراحة الحركية</div>
+                    </div>
+                </div>
+                <button type="button" id="btn-play-report-audio" onclick="toggleReportVoiceAudio()" class="btn-header btn-header-gold" style="padding: 8px 18px; font-weight: bold; font-size: 0.88em; border-radius: 20px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);">
+                    <span>🔊</span> تشغيل الصوت
+                </button>
+            </div>
+
             <!-- شريط التنقل السريع التفاعلي في التقرير (مريح وسلس للهواتف) -->
             <div class="no-print report-quick-nav-bar" style="display: flex; gap: 6px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 6px; -webkit-overflow-scrolling: touch;">
                 <button type="button" onclick="document.getElementById('report-section-diagnosis')?.scrollIntoView({behavior: 'smooth'})" class="btn-header btn-header-gold" style="font-size: 0.8em; padding: 6px 12px; border-radius: 16px; flex-shrink: 0; white-space: nowrap;">🩺 التشخيص</button>
@@ -6176,6 +6190,27 @@ function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
         });
     }
 }
+
+// التحكم الصوتي التفاعلي بشرح التقرير السريري (د. سارة)
+function toggleReportVoiceAudio() {
+    const btn = document.getElementById('btn-play-report-audio');
+    const desc = document.getElementById('report-audio-status-desc');
+    if (currentActiveStationAudio && !currentActiveStationAudio.paused && currentActiveStationAudio.currentTime > 0) {
+        try {
+            currentActiveStationAudio.pause();
+        } catch(e) {}
+        if (btn) btn.innerHTML = '<span>🔊</span> متابعة الاستماع';
+        if (desc) desc.textContent = 'تم إيقاف الصوت مؤقتاً';
+    } else {
+        if (btn) btn.innerHTML = '<span>⏸️</span> إيقاف مؤقت';
+        if (desc) desc.textContent = '🔊 د. سارة تشرح الآن تقريرك السريري وخطة التعافي...';
+        playStationAudio('diagnosis_guide', () => {
+            if (btn) btn.innerHTML = '<span>🔁</span> إعادة الاستماع';
+            if (desc) desc.textContent = 'اكتمل الشرح الصوتي للتقرير السريري.';
+        });
+    }
+}
+window.toggleReportVoiceAudio = toggleReportVoiceAudio;
 
 // نظام النغمات التفاعلية والتوجيه الصوتي البديل في حال غياب تسجيل الاستوديو
 function playClinicalAudioFallback(stationKey, onDone) {

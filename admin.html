@@ -2015,11 +2015,12 @@
             if (confirm('هل أنت متأكد من رغبتك في مسح كافة السجلات؟')) {
                 await AdminEngine.clearAllPatients();
                 allPatientsList = [];
+                updatePatientFilterCounts();
                 renderTable([]);
                 document.getElementById('stat-patients-count').textContent = '0';
                 document.getElementById('stat-sessions-count').textContent = '0';
                 document.getElementById('stat-recovery-avg').textContent = '0%';
-                alert('تم تفريغ السجلات بنجاح');
+                alert('تم تفريغ السجلات بنجاح ومسح كافة الحالات.');
             }
         }
 
