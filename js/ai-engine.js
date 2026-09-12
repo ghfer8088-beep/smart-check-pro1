@@ -509,18 +509,30 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
 10. استخراج البيانات (بدقة متناهية):
    - إذا ذكر المريض اسمه صراحة: [EXTRACTED_NAME: الاسم الأول فقط]. (ممنوع منعاً باتاً استخراج كلمات التحية مثل 'كيف' أو 'مرحبا' أو 'أهلا' أو أدوات السؤال كاسم، وإذا لم يذكر اسمه فاكتب: غير محدد).
    - إذا كتب المريض رقم هاتفه: [EXTRACTED_PHONE: الرقم]
-   - إذا اكتمل الفحص السريري تماماً أو تم استلام رقم الهاتف: [READY_FOR_DIAGNOSIS]
+   - ممنوع منعاً باتاً إطلاق [READY_FOR_DIAGNOSIS] بدون وجود رقم هاتف مسجل صراحة أو استخراجه بـ [EXTRACTED_PHONE]. إذا لم يكتب المريض رقم هاتفه بعد، فاطلب رقم الهاتف فوراً واكتب فقط [ASK_PHONE].
 
 11. ضوابط صارمة جداً:
    - ممنوع منعاً باتاً استخدام الكلمات: "عيادة"، "مركز"، "فريقنا"، "كوادرنا"! الجهة هي: في «وداعاً للألم».
    - ممنوع منعاً باتاً ترقيم الكلمات أو وضع أقواس أرقام مثل (1) (2).
    - لا تضع أي أزرار أو خيارات جاهزة.
+   - ممنوع منعاً باتاً إعطاء تشخيص سريري نهائي أو تفصيلي داخل المحادثة؛ التشخيص مكانه التقرير الطبي الملكي بعد استلام الهاتف.
 `;
 
         try {
             const rawReply = await this.callRawGemini(systemPrompt, { maxTokens: 800, temperature: 0.6 });
             if (rawReply && rawReply.trim()) {
-                const isReady = rawReply.includes('[READY_FOR_DIAGNOSIS]');
+                let extractedPhone = null;
+                const phoneM = rawReply.match(/\[EXTRACTED_PHONE:\s*([^\]]+)\]/);
+                if (phoneM && phoneM[1]) {
+                    extractedPhone = phoneM[1].trim();
+                }
+
+                // التدقيق: هل رقم الهاتف متوفر حالياً في السياق أو تم استخراجه في هذا الرد؟
+                const hasValidPhoneNow = (patientPhone && String(patientPhone).replace(/\D/g, '').length >= 7) ||
+                                         (extractedPhone && String(extractedPhone).replace(/\D/g, '').length >= 7);
+
+                // إشارة الانتقال للتشخيص لا تُقبل إلا إذا توفر رقم الهاتف
+                let isReady = rawReply.includes('[READY_FOR_DIAGNOSIS]') && hasValidPhoneNow;
                 
                 let extractedName = null;
                 const nameM = rawReply.match(/\[EXTRACTED_NAME:\s*([^\]]+)\]/);
@@ -532,12 +544,6 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                     }
                 }
 
-                let extractedPhone = null;
-                const phoneM = rawReply.match(/\[EXTRACTED_PHONE:\s*([^\]]+)\]/);
-                if (phoneM && phoneM[1]) {
-                    extractedPhone = phoneM[1].trim();
-                }
-
                 let message = rawReply
                     .replace(/\[READY_FOR_DIAGNOSIS\]/g, '')
                     .replace(/\[QUICK_REPLIES:.*?\]/g, '')
@@ -547,13 +553,20 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                     .replace(/\[ASK_PHONE\]/g, '')
                     .trim();
 
-                // إذا تم استلام رقم هاتف أو كانت الإشارة جاهزة، التأكد من عدم وجود أي تشخيص داخل الشات واستبدالها برسالة الاستلام الرسمية
-                if (extractedPhone || isReady || /تم (?:تسجيل|استلام) رقم هاتفك/i.test(message)) {
+                // إذا حاول النموذج إعطاء تشخيص أو ادعاء اكتمال دون رقم هاتف، نحوله لطلب رقم الهاتف
+                if (!hasValidPhoneNow && (rawReply.includes('[READY_FOR_DIAGNOSIS]') || rawReply.includes('[ASK_PHONE]'))) {
+                    isReady = false;
+                    const pNameStr = (patientName && patientName !== 'غير محدد') ? ` يا ${patientName}` : '';
+                    if (!message || message.length < 15 || /تشخيص|تقرير|انتهينا/i.test(message)) {
+                        message = `اكتمل الآن تقييمك السريري الشامل وتحددت طبيعة المشكلة بدقة${pNameStr}! يرجى تزويدي برقم هاتفك لفتح التقرير الطبي الشامل وربط ملفك بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:`;
+                    }
+                } else if (hasValidPhoneNow && (extractedPhone || isReady || /تم (?:تسجيل|استلام) رقم هاتفك/i.test(message))) {
+                    isReady = true;
                     const pNameStr = (patientName && patientName !== 'غير محدد') ? ` يا ${patientName}` : '';
                     message = `✅ تم استلام رقم هاتفك بنجاح${pNameStr}. نقوم الآن بإصدار تقريرك السريري وتحويلك فوراً لصفحة التشخيص وخطة التعافي... ⏱️`;
                 }
 
-                const nextStep = isReady ? 'completed' : (rawReply.includes('[ASK_PHONE]') ? 'ask_phone' : 'chatting');
+                const nextStep = isReady ? 'completed' : ((rawReply.includes('[ASK_PHONE]') || !hasValidPhoneNow) ? 'ask_phone' : 'chatting');
                 return { message, quickReplies: [], nextStep, isReady, extractedName, extractedPhone };
             }
         } catch (e) {

@@ -6785,6 +6785,12 @@ async function sendChatMessage() {
 
 // إنهاء الحوار وبناء التقرير الطبي فوراً
 function finishChatIntakeAndGenerateReport() {
+    // التحقق الصارم من وجود نقطة ألم تشريحية مختارة، وإن لم توجد يتم إسناد نقطة افتراضية لأسفل الظهر أو استنتاجها
+    if (typeof currentSelectedPoint === 'undefined' || !currentSelectedPoint || !currentSelectedPoint.id) {
+        const allPts = typeof getBackPoints === 'function' ? getBackPoints() : [];
+        currentSelectedPoint = allPts.find(p => p.id === 'lumbar_spine') || { id: 'lumbar_spine', title: 'أسفل الظهر والفقرات القطنية', region: 'lumbar' };
+    }
+
     const userMessages = (clinicalDialogueState.history || [])
         .filter(h => h.sender === 'user')
         .map(h => h.text)
