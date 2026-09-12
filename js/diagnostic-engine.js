@@ -980,8 +980,20 @@ const ClinicalEngine = (function() {
             relievingFactors = ["إطالة السمانة على لوح مائل/حائط", "تمارين رفع الكعبين اللامتراكزة", "تدليك باطن القدم وأسفل الساق"];
             chiropracticProtocol = "تعديل محاذاة مفصل الكاحل (Talocrural Joint) وتفريغ تشنج ألياف السمانة ووتر أكيليس يدوياً.";
         }
-        // تحليل حالات الكاحل والقدم واللفافة الأخمصية
-        else if ((pointId || "").includes("ankle") || (pointId || "").includes("foot") || (pointId || "").includes("plantar")) {
+        // تحليل حالات الكاحل ومفصل القدم المستقلة
+        else if ((pointId || "").includes("ankle") && !notes.includes("كعب") && !notes.includes("مسمار") && !notes.includes("أخمص") && q1Val !== "plantar_fasciitis_heel") {
+            primaryDiagnosis = "إجهاد وتمطط أربطة الكاحل وعدم استقرار المفصل الكاحلي (Ankle Ligament Strain & Talocrural Instability)";
+            primaryDiagnosisKey = "ankle_sprain_instability";
+            secondaryDiagnosis = "تشنج الأوتار الشظوية ومحدودية مرونة الثني لمفصل الكاحل";
+            probability = 95;
+            rootLevel = "Talocrural Joint & Lateral Collateral Ligaments (ATFL/CFL)";
+            biomechanicalMechanism = "تمطط مفرط في محفظة وأربطة مفصل الكاحل مع انحراف ميكانيكي دقيق في حركة عظمة القعب (Talus)، مما يقلل الثبات الحركي ويولد ألماً موضعياً وتورماً عند الارتكاز أو المشي على أسطح غير مستوية.";
+            aggravatingFactors = ["المشي على أسطح غير مستوية أو الركض", "ثني والتواء الكاحل للداخل أو الخارج", "الوقوف الطويل بدون دعم أو حذاء ثابت"];
+            relievingFactors = ["تمارين ثني وبسط وتدوير الكاحل (Ankle Pumps & Circles)", "تثبيت ودعم الكاحل برباط ضاغط خفيف", "الراحة والكمادات الباردة بعد المشي"];
+            chiropracticProtocol = "إعادة ضبط ومحاذاة عظام الكاحل (Talocrural & Subtalar Joints) وتفريغ التشنج العضلي في بطة الساق لتحقيق ثبات حركي متوازن.";
+        }
+        // تحليل حالات القدم واللفافة الأخمصية ومسمار الكعب
+        else if ((pointId || "").includes("plantar") || (pointId || "").includes("foot") || (pointId || "").includes("heel") || notes.includes("كعب") || notes.includes("مسمار") || notes.includes("أخمص") || q1Val === "plantar_fasciitis_heel") {
             primaryDiagnosis = "التهاب اللفافة الأخمصية ومسمار العظم (Plantar Fasciitis & Calcaneal Spur)";
             primaryDiagnosisKey = "ankle_plantar_achilles";
             secondaryDiagnosis = "اعتلال وتيبس وتر أكيليس وانهيار القوس الأخمصي";

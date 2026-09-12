@@ -1142,6 +1142,28 @@ function prescribePathologyExercises({ pointId, primaryDiagnosisKey, answers = {
 
     // 10. حالات الكاحل والقدم ووتر أكيليس والسمانة (اليمنى واليسرى)
     if (pId.includes("ankle") || pId.includes("achilles") || pId.includes("calf") || pId.includes("37515") || pId.includes("foot") || pId.includes("plantar")) {
+        const isPureAnkle = pId.includes("ankle") && !pId.includes("plantar") && !pId.includes("heel");
+        if (isPureAnkle) {
+            if (isPhase1) {
+                return [
+                    MASTER_EXERCISES_CATALOG.ankle[2], // ثني وبسط الكاحل لتنشيط الدورة الدموية
+                    MASTER_EXERCISES_CATALOG.ankle[3], // تدوير الكاحل واستعادة المدى الحركي
+                    MASTER_EXERCISES_CATALOG.ankle[1]  // تقوية وتر أكيليس وثبات مفصل الكاحل
+                ];
+            } else if (isPhase2) {
+                return [
+                    MASTER_EXERCISES_CATALOG.ankle[2], // ثني وبسط الكاحل
+                    MASTER_EXERCISES_CATALOG.ankle[1], // رفع الكعبين لتقوية الثبات
+                    MASTER_EXERCISES_CATALOG.ankle[3]  // تدوير الكاحل
+                ];
+            } else {
+                return [
+                    MASTER_EXERCISES_CATALOG.ankle[1], // رفع الكعبين
+                    MASTER_EXERCISES_CATALOG.ankle[2], // ثني وبسط الكاحل
+                    MASTER_EXERCISES_CATALOG.ankle[3]  // تدوير الكاحل
+                ];
+            }
+        }
         if (isPhase1) {
             return [
                 MASTER_EXERCISES_CATALOG.ankle[0], // إطالة اللفافة على الحائط

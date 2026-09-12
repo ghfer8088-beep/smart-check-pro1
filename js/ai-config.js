@@ -32,6 +32,9 @@ const WADA3AN_AI_CONFIG = {
     // الحصول على كافة مفاتيح الحوض (المدمجة + المضافة محلياً)
     getPoolKeys: function() {
         const pool = [...this.KEY_POOL];
+        if (this.isValidApiKey(this.DEFAULT_API_KEY) && !pool.includes(this.DEFAULT_API_KEY.trim())) {
+            pool.unshift(this.DEFAULT_API_KEY.trim());
+        }
         try {
             const extraKeys = JSON.parse(localStorage.getItem('wada3an_gemini_api_keys_pool') || '[]');
             if (Array.isArray(extraKeys)) {
