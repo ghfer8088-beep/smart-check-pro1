@@ -6730,15 +6730,42 @@ async function sendChatMessage() {
         clinicalDialogueState.collectedSymptoms.push(text.trim());
     }
 
-    // الانتقال للخطوة التالية في الحوار (نصي فقط وفائق السرعة)
-    const nextResponse = await Wada3anAiEngine.advanceClinicalDialogue({
-        currentStep: clinicalDialogueState.step,
-        history: clinicalDialogueState.history,
-        painPointTitle: currentSelectedPoint.title,
-        patientName: clinicalDialogueState.patientName,
-        patientVitals: clinicalDialogueState.patientVitals,
-        lastUserMessage: text
-    });
+    // الانتقال للخطوة التالية في الحوار (مع حماية تامة ضد التوقف أو التعليق)
+    let nextResponse;
+    try {
+        nextResponse = await Wada3anAiEngine.advanceClinicalDialogue({
+            currentStep: clinicalDialogueState.step,
+            history: clinicalDialogueState.history,
+            painPointTitle: currentSelectedPoint.title,
+            patientName: clinicalDialogueState.patientName,
+            patientVitals: clinicalDialogueState.patientVitals,
+            lastUserMessage: text
+        });
+    } catch (dialogueErr) {
+        console.warn('Fallback activated due to dialogue exception:', dialogueErr);
+        nextResponse = Wada3anAiEngine.generateFallbackDialogueStep({
+            currentStep: clinicalDialogueState.step,
+            history: clinicalDialogueState.history,
+            painPointTitle: currentSelectedPoint.title,
+            patientName: clinicalDialogueState.patientName,
+            patientVitals: clinicalDialogueState.patientVitals,
+            lastUserMessage: text
+        });
+    } finally {
+        const indicator = document.getElementById(loadingId);
+        if (indicator) indicator.remove();
+    }
+
+    if (!nextResponse || !nextResponse.message) {
+        nextResponse = Wada3anAiEngine.generateFallbackDialogueStep({
+            currentStep: clinicalDialogueState.step,
+            history: clinicalDialogueState.history,
+            painPointTitle: currentSelectedPoint.title,
+            patientName: clinicalDialogueState.patientName,
+            patientVitals: clinicalDialogueState.patientVitals,
+            lastUserMessage: text
+        });
+    }
 
     // التقاط الاسم ورقم الهاتف في حال استخرجهما الذكاء الاصطناعي من سياق الحديث
     if (!clinicalDialogueState.patientName && nextResponse.extractedName) {
@@ -6762,12 +6789,9 @@ async function sendChatMessage() {
 
     clinicalDialogueState.step = nextResponse.nextStep;
 
-    const indicator = document.getElementById(loadingId);
-    if (indicator) indicator.remove();
-
     // عرض رد الطبيب في الشات فوراً وبشكل نصي سريع
     appendChatMessage('bot', nextResponse.message);
-    renderChatQuickReplies(nextResponse.quickReplies);
+    renderChatQuickReplies(nextResponse.quickReplies || []);
 
     // حارس رقم الهاتف الإلزامي الصارم: انتقال مضمون للتقرير فور توفر رقم الهاتف
     const hasAnyPhoneRecorded = (clinicalDialogueState.patientPhone && String(clinicalDialogueState.patientPhone).replace(/\D/g, '').length >= 7) || nextResponse.extractedPhone;

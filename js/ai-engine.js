@@ -580,93 +580,50 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
     async callRawGemini(promptText, options = {}) {
         const { maxTokens = 1024, temperature = 0.6 } = options;
 
-        // النماذج المعتمدة والنشطة حالياً في Google Generative Language API
-        const candidateModels = [
-            'gemini-3-flash-preview',
-            'gemini-3.6-flash',
-            'gemini-3.5-flash',
-            'gemini-flash-latest'
-        ];
+        if (!WADA3AN_AI_CONFIG.isConfigured()) {
+            throw new Error('Gemini API key is not configured');
+        }
 
-        const uniqueModels = [...new Set(candidateModels)];
+        const key = WADA3AN_AI_CONFIG.getApiKey();
+        if (!key) throw new Error('No valid API key');
 
-        const payload = {
-            contents: [{ parts: [{ text: promptText }] }],
-            generationConfig: {
-                temperature,
-                maxOutputTokens: 1200,
-                thinkingConfig: {
-                    thinkingBudget: 0
-                }
-            }
-        };
-
-
+        const candidateModels = ['gemini-1.5-flash', 'gemini-2.0-flash'];
         let lastError = null;
-        const pool = WADA3AN_AI_CONFIG.getPoolKeys();
-        const now = Date.now();
 
-        // إنشاء قائمة المفاتيح المتاحة (غير المستنفدة) بدءاً من المؤشر الحالي
-        const startIdx = WADA3AN_AI_CONFIG._currentPoolIndex;
-        const availableKeys = [];
-        for (let i = 0; i < pool.length; i++) {
-            const idx = (startIdx + i) % pool.length;
-            const k = pool[idx];
-            if (!k) continue;
-            const cd = WADA3AN_AI_CONFIG._exhaustedKeys.get(k);
-            if (!cd || now > cd) availableKeys.push({ key: k, idx });
-        }
+        for (const model of candidateModels) {
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3500);
 
-        // إذا لم تتوفر مفاتيح، نحاول بأفضل مفتاح متاح (أقرب وقت انتهاء cooldown)
-        if (availableKeys.length === 0) {
-            const bestKey = WADA3AN_AI_CONFIG.getApiKey();
-            if (bestKey) availableKeys.push({ key: bestKey, idx: WADA3AN_AI_CONFIG._currentPoolIndex });
-        }
-
-        console.log(`[AI] المفاتيح المتاحة: ${availableKeys.length}/${pool.length}`);
-
-        for (const { key, idx } of availableKeys) {
-            for (const model of uniqueModels) {
-                try {
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 7000); // مهلة 7 ثوانٍ
-
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload),
-                        signal: controller.signal
-                    });
-                    clearTimeout(timeoutId);
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-                        if (reply && reply.trim()) {
-                            localStorage.setItem('wada3an_active_ai_model', model);
-                            WADA3AN_AI_CONFIG._currentPoolIndex = idx;
-                            console.log(`[AI] ✅ نجح المفتاح [${idx}] مع ${model}`);
-                            return reply;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: promptText }] }],
+                        generationConfig: {
+                            temperature,
+                            maxOutputTokens: 1000
                         }
-                    } else if (response.status === 404) {
-                        console.warn(`[AI] نموذج ${model} غير متاح للمفتاح [${idx}] (404)`);
-                        continue; // تجربة النموذج التالي فوراً
-                    } else if (response.status === 429) {
-                        WADA3AN_AI_CONFIG.rotateKey(key);
-                        console.warn(`[AI] 429 على المفتاح [${idx}] - انتقال للتالي`);
-                        break; // الانتقال للمفتاح التالي
-                    } else {
-                        const errData = await response.json().catch(() => ({}));
-                        lastError = new Error(`Status ${response.status}`);
+                    }),
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (reply && reply.trim()) {
+                        return reply;
                     }
-                } catch (err) {
-                    lastError = err;
-                    if (err.name === 'AbortError') {
-                        console.warn(`[AI] انتهاء مهلة النموذج ${model} على المفتاح [${idx}]`);
-                        continue;
-                    }
+                } else if (response.status === 429) {
+                    WADA3AN_AI_CONFIG.rotateKey(key);
+                    break;
+                } else {
+                    lastError = new Error(`Status ${response.status}`);
                 }
+            } catch (err) {
+                lastError = err;
             }
         }
 
@@ -682,13 +639,59 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             .replace(/^(?:أنت|انت|دكتور|طبيب|ما حكيتلك|حكيتلك|مش|مو|لا|تعبان|كيف|كيفك|شلونك|أخبارك|اخبارك|شو|ايش|إيش|وين|مين|ليش|لماذا|هل|مرحبا|أهلا|اهلا|سلام)$/i, '')
             .trim();
         const userTurnCount = (history || []).filter(h => h.sender === 'user').length;
-        // مخاطبة المراجع باسمه بلطف في البداية فقط، دون تكراره المزعج في كل رد
         const shouldGreetByName = cleanName && userTurnCount <= 1;
         const nameSuffix = shouldGreetByName ? (' يا ' + cleanName) : '';
         const userText = (lastUserMessage || '').trim();
         const title = painPointTitle || 'موضع الألم';
 
-        // 0. التحقق من التحية أو السؤال عن الحال ("كيف حالك", "شلونك", "أخبارك", "مرحبا", "سلام")
+        // تتبع شامل للمحادثة لمنع تكرار أي سؤال سابق
+        const allHistoryText = (history || []).map(h => h.text).join(' ') + ' ' + userText;
+        const hasAddressedNumbness = /(?:خدر|تنميل|لسعة\s*كهربا|وخز)/i.test(allHistoryText);
+        const hasAddressedTriggers = /(?:جلوس|وقوف|مشي|انحناء|حمل|ثني|بسط)/i.test(allHistoryText);
+        const hasAddressedDuration = /(?:منذ|كم\s*مدة|شهر|سنة|اسبوع|يوم|فترة|زمان)/i.test(allHistoryText);
+
+        // كشف النفي الصريح للأعراض
+        const isNegating = /(?:ما\s*(?:في|عندي|بحس|اشعر|أشعر|يوجد|حكيتلك|قلتلك)|لا\s*(?:يوجد|في|ما|أشعر|اشعر)|بدون|خالي|سليم|مش\s*موجود|مو\s*موجود|ما\s*عانيت|ابدا|أبدا|ابداً|نهائيا|نهائياً)/i.test(userText);
+
+        // كشف نفي الخدر أو التنميل أو الوخز بالتحديد (مثل: "ما عندي خدر"، "لا ما في وخز وحكيتلك ما في خدر")
+        const deniedNumbness = /(?:ما\s*(?:في|عندي|بحس|اشعر|أشعر|يوجد|ذكرت)|لا\s*(?:يوجد|في|ما|أشعر)|بدون|مش\s*موجود|مو\s*موجود|سليم|خالي)\s*(?:اي|أي)?\s*(?:خدر|تنميل|وخز|لسعة|كهربا|حرارة|نار)/i.test(userText) ||
+                               /(?:خدر|تنميل|وخز|لسعة|كهربا)\s*(?:ما\s*في|مش\s*موجود|مو\s*موجود|لا\s*يوجد|ما\s*عندي|سليم|خالي)/i.test(userText) ||
+                               /(?:وحكيتلك|حكيتلك|قلتلك)\s*(?:ما\s*في|ما\s*عندي|بدون)\s*(?:خدر|تنميل|وخز)/i.test(userText);
+
+        // كشف تصحيح المراجع للطبيب (مثل: "حكيتلك ما في"، "قلتلك من قبل")
+        const isExplicitCorrection = /(?:وحكيتلك|حكيتلك|قلتلك|وضحتلك|ما\s*حكيتلك|مش\s*(?:هيك|صحيح)|أنا\s*قلت|انا\s*حكيت|سبق\s*وحكيت|ما\s*(?:قلت|حكيت|ذكرت))/i.test(userText);
+
+        // كشف سؤال المراجع عن الرد أو انتظار الإجابة ("وين الرد", "وينك", "ألو", "جاوبني")
+        const isAskingForReply = /(?:وين\s*(?:الرد|الدكتور|التقرير|التشخيص|ك|الجواب)|وينك|الو|ألو|معي|سامعني|جاوبني|رد\s*علي)/i.test(userText);
+
+        // 0. انتظار الرد أو التحقق من التواجد
+        if (isAskingForReply) {
+            return {
+                message: `أنا معك ومتابع حالتك بكل اهتمام${nameSuffix}! أعتذر عن أي تأخير.\n\nلتحديد تشخيص **${title}** بدقة متناهية: هل يشتد الألم أكثر عند الجلوس أم عند الوقوف والحركة؟ ومنذ متى بدأت هذه الشكوى تحديداً؟`,
+                quickReplies: [],
+                nextStep: 'chatting'
+            };
+        }
+
+        // 0.1 نفي الخدر والتنميل بشكل قاطع (استجابة فورية ذكية تطمئن المراجع وتلتقط كلامه بدقة)
+        if (deniedNumbness) {
+            return {
+                message: `أعتذر منك${nameSuffix}، وشكراً لتوضيحك وتأكيدك الدقيق. استبعاد الخدر والتنميل والوخز مؤشر سريري ممتاز ومطمئن جداً؛ فهو يعني أن جذور الأعصاب سليمة تماماً وأن الخلل ميكانيكي بحت يتركز في مفاصل وعضلات **${title}**.\n\nطالما أن الألم موضعي فقط وبدون خدر: هل يزداد مع حركات معينة كالانحناء أو الجلوس الطويل؟ ومنذ متى بدأت هذه الشكوى تحديداً؟`,
+                quickReplies: [],
+                nextStep: 'chatting'
+            };
+        }
+
+        // 0.2 تصحيح المراجع للطبيب
+        if (isExplicitCorrection) {
+            return {
+                message: `أعتذر منك${nameSuffix}، معك حق تماماً وأنا أتابع ملاحظتك بدقة.\n\nبناءً على ما أوضحت، طالما أن الألم موضعي فقط: هل يشتد الألم عند حركة معينة في **${title}** (كالجلوس أو الانحناء)، وهل يوقظك من النوم؟`,
+                quickReplies: [],
+                nextStep: 'chatting'
+            };
+        }
+
+        // 0.3 التحقق من التحية أو السؤال عن الحال ("كيف حالك", "شلونك", "أخبارك", "مرحبا", "سلام")
         if (/^(?:كيف\s*حالك|كيفك|شلونك|أخبارك|اخبارك|شخبارك|عساك\s*بخير|شو\s*أخبارك|أهلاً|اهلا|مرحبا|صباح\s*الخير|مساء\s*الخير|السلام\s*عليكم|سلام\s*عليكم)/i.test(userText)) {
             return {
                 message: `أهلاً وسهلاً بك يا طيب، الحمد لله بأتم صحة وعافية ويسعدني جداً الاطمئنان عليك وخدمتك! 😊\n\nنحن هنا في «وداعاً للألم» لمساعدتك في علاج وتأهيل **${title}** بتقنية الكايروبراكتيك المعتمدة وبأمان تام.\n\nللبدء في تقييمك السريري، يسعدني التعرف على اسمك الكريم، وعمرك، ووزنك، وما الذي تشعر به تحديداً في **${title}**؟`,
@@ -697,31 +700,25 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             };
         }
 
-        // 0.0 تأكيد استلام البيانات الحيوية فور تزويدها (العمر، الوزن، الطول)
+        // 0.4 تأكيد استلام البيانات الحيوية فور تزويدها (العمر، الوزن، الطول)
         const hasVitalsInText = /(?:عمري|عمر|سن|سنة|سنه|وزني|وزن|طولي|طول)\s*[:=]?\s*\d+/i.test(userText) || (patientVitals && (patientVitals.age || patientVitals.weight));
         if (hasVitalsInText && userTurnCount <= 2) {
             const ageInfo = patientVitals?.age ? ` (العمر: ${patientVitals.age} سنة)` : '';
             const weightInfo = patientVitals?.weight ? ` (الوزن: ${patientVitals.weight} كغم)` : '';
             const heightInfo = patientVitals?.height ? ` (الطول: ${patientVitals.height} سم)` : '';
+
+            const q2Text = hasAddressedNumbness
+                ? `2. ما هي الوضعية التي تمنحك بعض الراحة أو تخفف الألم؟`
+                : `2. هل تشعر بأي خدر أو تنميل أو ألم ممتد كلسعة الكهرباء في الأصابع أو الأطراف؟`;
+
             return {
-                message: `أهلاً بك${nameSuffix}، تم تسجيل بياناتك الحيوية بنجاح${ageInfo}${weightInfo}${heightInfo}. هذه المؤشرات بالغة الأهمية لمعايرة الأحمال البيوميكانيكية على المفاصل بدقة وأمان.\n\nوالآن لتشخيص ميكانيكية المشكلة في **${title}** بدقة:\n1. هل يزداد ألمك مع حركات معينة (مثل الثني، البسط، أو حمل ورفع الأشياء)؟\n2. هل تشعر بأي خدر أو تنميل أو ألم ممتد كلسعة الكهرباء في الأصابع أو الأطراف؟\n3. ومنذ متى بدأت هذه الشكوى تحديداً؟`,
+                message: `أهلاً بك${nameSuffix}، تم تسجيل بياناتك الحيوية بنجاح${ageInfo}${weightInfo}${heightInfo}. هذه المؤشرات بالغة الأهمية لمعايرة الأحمال البيوميكانيكية على المفاصل بدقة وأمان.\n\nوالآن لتشخيص ميكانيكية المشكلة في **${title}** بدقة:\n1. هل يزداد ألمك مع حركات معينة (مثل الثني، البسط، أو حمل ورفع الأشياء)؟\n${q2Text}\n3. ومنذ متى بدأت هذه الشكوى تحديداً؟`,
                 quickReplies: [],
                 nextStep: 'chatting'
             };
         }
 
-        // 0.1 التحقق من نفي أو تصحيح المراجع للطبيب (مثل: "ما حكيتلك عندي خدر"، "ما عندي كهربا")
-        const isExplicitCorrection = /(?:ما\s*(?:عندي|حكيت|قلت|ذكرت|أعاني)|ما\s*حكيتلك|مش\s*(?:هيك|صحيح)|أنا\s*قلت|انا\s*حكيت)/i.test(userText);
-        if (isExplicitCorrection) {
-            return {
-                message: `أعتذر منك${nameSuffix}، وشكراً جزيلاً على توضيحك وتصحيحي الدقيق، فهذا يوجهنا للمسار السريري الصحيح تماماً.\n\nطالما أن الألم موضعي وبدون خدر، أخبرني: هل تزداد حدة الألم عند حركة معينة في **${title}**، وهل تشعر بضعف في قوة القبضة أو الحركة؟`,
-                quickReplies: [],
-                nextStep: 'chatting'
-            };
-        }
-
-
-        // 0.1 أعراض قد ترتبط أسبابها باختصاصنا السريري (دوخة، طنين، ألم صدر وضيق تنفس، تأهيل جلطات، صعوبة حركة)
+        // 0.5 أعراض قد ترتبط أسبابها باختصاصنا السريري (دوخة، طنين، ألم صدر وضيق تنفس، تأهيل جلطات، صعوبة حركة)
         const isRelatedOutScope = /دوخة|دوار|طنين|أذن|صدر|قفص\s*صدري|جلطة|جلطه|شلل|تأهيل\s*حركي|صعوبة\s*مشي|توازن/i.test(userText);
         if (isRelatedOutScope && !/ديسك|فقرات|ظهر|رقبة|ركبة|كتف|ساق|رجل/i.test(userText)) {
             return {
@@ -731,7 +728,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             };
         }
 
-        // 0.2 استفسار عن أمراض خارج نطاق الاختصاص كلياً (سكري، ضغط، قلب، كلى، كبد، جلدية، أسنان، عيون)
+        // 0.6 استفسار عن أمراض خارج نطاق الاختصاص كلياً (سكري، ضغط، قلب، كلى، كبد، جلدية، أسنان، عيون)
         const isPureOutOfScope = /سكري|سكر|ضغط\s*الدم|قلب|شرايين|كلى|كبد|معدة|قولون|حساسية|جلدية|حبوب|أسنان|اسنان|عيون|نظر/i.test(userText);
         if (isPureOutOfScope && !/ألم|وجع|خدر|تنميل|عصب|ديسك|فقرات|شد/i.test(userText)) {
             return {
@@ -741,7 +738,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             };
         }
 
-        // 0.1 السؤال عما إذا كان الاسم أو البيانات الحيوية ضرورية ("هل الاسم ضروري؟", "ليش بدك الاسم؟", "ضروري الاسم؟")
+        // 0.7 السؤال عما إذا كان الاسم أو البيانات الحيوية ضرورية
         if (/(?:هل|ليش|لماذا|شو\s*دخل|ايش\s*دخل)?\s*(?:الاسم|اسم|عمري|وزني|طولي|المعلومات|البيانات)\s*(?:ضروري|لازم|مهم|اجباري|إجباري|شو\s*بفيد|ليش|لماذا)/i.test(userText)) {
             return {
                 message: `نعم يا غالي، معرفة اسمك الكريم وعمرك ووزنك وطولك أمر أساسي وسريري بالغ الأهمية؛ لأنها تمكننا من فتح ملف طبي خاص بك، وحساب مؤشر الأحمال البيوميكانيكية على المفاصل بدقة وأمان، وتحديد سبب ألمك في **${title}**.\n\nتفضل بتزويدي باسمك الكريم وعمرك ووزنك وطولك لنبدأ استشارتك بشكل سليم.`,
@@ -777,7 +774,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             };
         }
 
-        // 3. استفسارات جانبية أو أسئلة تقنية وتصميمية (مثل: مواقع تصميم مجانية، ذكاء اصطناعي، برامج)
+        // 3. استفسارات جانبية أو أسئلة تقنية وتصميمية
         if (/تصميم|موقع|مواقع|برنامج|كانفا|فوتوشوب|كمبيوتر|لابتوب|شاشة|شاشات/i.test(userText)) {
             return {
                 message: `بكل سرور${nameSuffix}! مواقع مثل Canva و Figma ممتازة وتوفر خيارات مجانية رائعة.\n\nولكن كاستشارك الذكي: الجلوس الطويل أمام الشاشات يضاعف الضغط على **${title}**! طمني، كم ساعة تجلس يومياً؟ وهل يشتد ألمك أثناء الجلوس أم عند الوقوف؟`,
@@ -803,7 +800,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             };
         }
 
-        // 5. إذا كان المراجع يسأل هل أنت دكتور أو من أنت أو كيف عرفت
+        // 5. إذا كان المراجع يسأل هل أنت دكتور أو من أنت
         if (/دكتور|طبيب|مين\s*انت|من\s*أنت|من\s*انت|مين\s*حضرتك|عرف\s*عنك|ايش\s*انت|شو\s*انت|روبوت|ذكاء|بوت/i.test(userText)) {
             return {
                 message: `أهلاً بك${nameSuffix}. نعم، أنا الاستشاري الذكي في «وداعاً للألم». مهمتي الاستماع لشكواك وتشخيص طبيعة الألم في **${title}** وتقديم خطة تمارين موجهة ومساعدتك بالتنسيق مع المعالج جمال متخصص الكايروبراكتيك.\n\nأخبرني، كيف بدأ هذا الألم معك؟ وما هي الحركة التي تثيره أكثر شيء؟`,
@@ -831,8 +828,8 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             };
         }
 
-        // 8. الاستفسار عن الموقع أو التكلفة أو الحجز
-        if (/وين|مكان|عنوان|موقع|سعر|تكلفة|جلسة|علاج|مركزكم|عيادتكم|حجز/i.test(userText)) {
+        // 8. الاستفسار عن موقع العيادة أو التكلفة أو الحجز (فقط عند السؤال الصريح عن مقر العيادة)
+        if (/(?:وين\s*(?:عيادتكم|موقعكم|مكانكم|عنوانكم|العيادة|المركز)|مكانكم|عنوانكم|موقعكم|كم\s*السعر|كم\s*التكلفة|تكلفة\s*الجلسة|حجز\s*موعد)/i.test(userText)) {
             return {
                 message: `نحن في «وداعاً للألم» متواجدون في الأردن (عمان والزرقاء) مع المعالج جمال المتخصص في الكايروبراكتيك وتقويم الفقرات بدون جراحة أو أدوية، مع توفر خدمة زيارات منزلية لمن يتعذر عليه الحضور. خطة التمارين المرفقة هنا مجانية 100% لمساعدتك فوراً.\n\nطمني، هل يمتد الألم في **${title}** للأطراف أم يتركز في موضع الألم فقط؟`,
                 quickReplies: [],
@@ -840,7 +837,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             };
         }
 
-        // 9. المشي الجانبي / الميلان / مشكلة الردف / الانحناء الوقائي (Antalgic Tilt / Scoliosis)
+        // 9. المشي الجانبي / الميلان / مشكلة الردف / الانحناء الوقائي
         if (/ردف|مايل|مفتول|مشلول|جانبي|عوجاج|اعوجاج|بمشي|المشي|مشيتي|عرجة|بعرج/i.test(userText)) {
             return {
                 message: `سلامتك ألف سلامة${nameSuffix}. هذا المشي المفتول أو المائل يسمى طبياً «الانحناء الوقائي Antalgic Tilt»، وهو رد فعل دفاعي لا إرادي من عضلات الجذع لتفريغ الضغط عن المفصل أو العصب المتأثر في **${title}** وتجنب الألم الحاد.\n\nطمني، هل يمتد الألم من الردف إلى الفخذ، أم يتركز في الردف وأسفل الظهر فقط؟ وهل تجد صعوبة أكبر عند الجلوس أم عند الوقوف والمشي؟`,
@@ -850,7 +847,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
         }
 
         // 10. الأعراض العصبية المحددة (إذا ذكرها المراجع صراحة ودون نفي)
-        if (!isNegating && /خدر|تنميل|حرارة|حرقان|لسعة|كهربا|كهرباء/i.test(userText)) {
+        if (!isNegating && !deniedNumbness && /خدر|تنميل|حرارة|حرقان|لسعة|كهربا|كهرباء/i.test(userText)) {
             return {
                 message: `سلامتك${nameSuffix}. هذا النوع من الأعراض يشير إلى وجود تهيج ميكانيكي في المسار العصبي المرتبط بـ **${title}**.\n\nهل يشتد هذا الشعور عند الجلوس المطول أو السعال، وهل يخف عند المشي وتغيير الوضعية؟`,
                 quickReplies: [],
@@ -876,22 +873,28 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             .trim();
 
         const userTextNorm = norm(userText);
-        const userMessagesNorm = norm((history || []).filter(h => h.sender === 'user').map(m => m.text).join(' '));
-
         const isAffirmative = /^(?:نعم|ايوه|اي|اه|صحيح|بالضبط|اكيد|مضبوط|تمام|طبعا|فعلا|صح|بصير|بحس)$/i.test(userTextNorm);
         const isSimpleNegative = /^(?:لا|كلا|ما في|ما عندي|ابدا|مش موجود|مو موجود|ما بحس)$/i.test(userTextNorm);
 
         // إذا كان المراجع يجيب بنعم
         if (isAffirmative) {
             if (userTurnCount <= 2) {
-                return {
-                    message: `فهمتك تماماً${nameSuffix}. طالما أن الحركة تزيد الألم، فهل يمتد هذا الشعور في **${title}** على شكل خدر أو تنميل أو لسعة كهربائية نحو الأصابع أو الأطراف؟`,
-                    quickReplies: [],
-                    nextStep: 'chatting'
-                };
+                if (hasAddressedNumbness) {
+                    return {
+                        message: `فهمتك تماماً${nameSuffix}. طالما أن الحركة تزيد الألم، أخبرني: كم المدة التقريبية التي تعاني منها من هذه المشكلة في **${title}**، وهل يوقظك الألم من النوم؟`,
+                        quickReplies: [],
+                        nextStep: 'chatting'
+                    };
+                } else {
+                    return {
+                        message: `فهمتك تماماً${nameSuffix}. طالما أن الحركة تزيد الألم، فهل يمتد هذا الشعور في **${title}** على شكل خدر أو تنميل أو لسعة كهربائية نحو الأصابع أو الأطراف؟`,
+                        quickReplies: [],
+                        nextStep: 'chatting'
+                    };
+                }
             } else if (userTurnCount <= 4) {
                 return {
-                    message: `واضح ومهم جداً${nameSuffix}. هذا التأثر يؤكد وجود إجهاد ميكانيكي وضغط على مسار الحركة. كم المدة التقريبية التي تعاني منها من هذه المشكلة، وهل يوقظك الألم من النوم؟`,
+                    message: `واضح ومهم جداً${nameSuffix}. هذا التأثر يؤكد وجود إجهاد ميكانيكي وضغط على مسار الحركة. كم المدة التقريبية التي تعاني فيها من هذه المشكلة، وهل يوقظك الألم من النوم؟`,
                     quickReplies: [],
                     nextStep: 'chatting'
                 };
@@ -933,11 +936,19 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
 
         // استجواب متسلسل للأمام دائماً يمنع الرجوع لنقطة الصفر إطلاقاً
         if (userTurnCount <= 2) {
-            return {
-                message: `فهمت وصفك بدقة${nameSuffix}. كطبيبك السريري، هل تشعر بأن هذا الألم في **${title}** يمتد كخدر أو لسعة نحو الأصابع أو الأطراف، أم هو محصور موضعياً في المفصل؟`,
-                quickReplies: [],
-                nextStep: 'chatting'
-            };
+            if (hasAddressedNumbness) {
+                return {
+                    message: `فهمت وصفك بدقة${nameSuffix}. كطبيبك السريري، هل يزداد هذا الألم في **${title}** مع حركات معينة كالانحناء، الجلوس الطويل، أو حمل الأوزان؟ وما هي الوضعية التي تمنحك بعض الراحة؟`,
+                    quickReplies: [],
+                    nextStep: 'chatting'
+                };
+            } else {
+                return {
+                    message: `فهمت وصفك بدقة${nameSuffix}. كطبيبك السريري، هل تشعر بأن هذا الألم في **${title}** يمتد كخدر أو لسعة نحو الأصابع أو الأطراف، أم هو محصور موضعياً في المفصل؟`,
+                    quickReplies: [],
+                    nextStep: 'chatting'
+                };
+            }
         } else if (userTurnCount <= 4) {
             return {
                 message: `سلامتك وراحتك هي غايتنا${nameSuffix}. منذ متى بدأت تشعر بهذه الشكوى في **${title}**؟ وهل يوقظك الألم من النوم أثناء الليل أو يمنعك من الحركة الطبيعية؟`,
