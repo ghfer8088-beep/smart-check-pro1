@@ -162,74 +162,146 @@
 
     // استخراج ملخص الإحصائيات الجغرافية الكاملة
     function getGeoAnalyticsSummary() {
-        const patients = getCloudSyncedPatients();
+        const stats = getDetailedVisitorStats();
+        return {
+            totalVisits: stats.totalVisits,
+            totalPatients: getCloudSyncedPatients().length,
+            uniqueCountriesCount: stats.uniqueCountriesCount,
+            topCountries: stats.countries,
+            topCities: stats.countries.flatMap(c => c.citiesList).sort((a, b) => b.count - a.count),
+            mobileCount: stats.mobileCount,
+            desktopCount: stats.desktopCount,
+            mobilePercentage: stats.mobilePercentage
+        };
+    }
+
+    // استخراج تحليلات الزوار التفصيلية الحقيقية 100% مع تفصيل المدن والأجهزة والتوقيت لكل دولة
+    function getDetailedVisitorStats() {
         let visitsHistory = [];
         try {
             const rawVisits = localStorage.getItem('smart_geo_visits_history');
             if (rawVisits) visitsHistory = JSON.parse(rawVisits);
         } catch (e) {}
 
-        // دمج السجلات الجغرافية
         const countryMap = {};
-        const cityMap = {};
+        const totalVisits = visitsHistory.length;
         let mobileCount = 0;
         let desktopCount = 0;
+        let tabletCount = 0;
+        let lastVisit = null;
 
-        // احتساب من الزيارات
-        visitsHistory.forEach(v => {
-            const cName = v.country || 'غير محدد';
+        visitsHistory.forEach((v, idx) => {
+            const cName = (v.country && v.country !== 'غير محدد') ? v.country : 'دولي / غير محدد';
             const flag = v.flag || '🌐';
-            const key = flag + ' ' + cName;
+            const code = v.countryCode || '';
+            const key = cName;
 
             if (!countryMap[key]) {
-                countryMap[key] = { country: cName, flag: flag, count: 0, cities: {} };
+                countryMap[key] = {
+                    country: cName,
+                    countryCode: code,
+                    flag: flag,
+                    count: 0,
+                    percentage: 0,
+                    cities: {},
+                    devices: { mobile: 0, desktop: 0, tablet: 0 },
+                    recentVisits: []
+                };
             }
+
             countryMap[key].count++;
 
-            const cityName = v.city && v.city !== 'غير محدد' ? v.city : '';
-            if (cityName) {
-                countryMap[key].cities[cityName] = (countryMap[key].cities[cityName] || 0) + 1;
-                cityMap[cityName] = (cityMap[cityName] || 0) + 1;
+            const cityName = (v.city && v.city !== 'غير محدد') ? v.city : 'غير محدد';
+            countryMap[key].cities[cityName] = (countryMap[key].cities[cityName] || 0) + 1;
+
+            const dev = (v.device || 'Mobile').toLowerCase();
+            if (dev.includes('tablet')) {
+                tabletCount++;
+                countryMap[key].devices.tablet++;
+            } else if (dev.includes('desktop')) {
+                desktopCount++;
+                countryMap[key].devices.desktop++;
+            } else {
+                mobileCount++;
+                countryMap[key].devices.mobile++;
             }
 
-            if (v.device === 'Mobile') mobileCount++;
-            else desktopCount++;
+            countryMap[key].recentVisits.unshift({
+                visitorId: v.visitorId || ('vis_' + idx),
+                city: cityName,
+                device: v.device || 'Mobile',
+                deviceIcon: v.deviceIcon || (dev.includes('desktop') ? '💻' : (dev.includes('tablet') ? '📟' : '📱')),
+                timestamp: v.timestamp || new Date().toISOString(),
+                page: v.page || '/'
+            });
+
+            if (!lastVisit || new Date(v.timestamp) > new Date(lastVisit.timestamp)) {
+                lastVisit = v;
+            }
         });
 
-        // احتساب من المرضى المسجلين
-        patients.forEach(p => {
-            const cName = p.country || 'غير محدد';
-            const flag = p.flag || '🌐';
-            const key = flag + ' ' + cName;
+        // تحويل المدن لمصفوفة مرتبة وحساب النسب المئوية
+        const sortedCountries = Object.values(countryMap).map(c => {
+            c.percentage = totalVisits > 0 ? Math.round((c.count / totalVisits) * 100) : 0;
+            c.citiesList = Object.entries(c.cities)
+                .map(([city, count]) => ({
+                    name: city,
+                    count: count,
+                    percentage: c.count > 0 ? Math.round((count / c.count) * 100) : 0
+                }))
+                .sort((a, b) => b.count - a.count);
+            // حصر أحدث 50 زيارة لكل دولة
+            if (c.recentVisits.length > 50) c.recentVisits = c.recentVisits.slice(0, 50);
+            return c;
+        }).sort((a, b) => b.count - a.count);
 
-            if (!countryMap[key]) {
-                countryMap[key] = { country: cName, flag: flag, count: 0, cities: {} };
-            }
-            countryMap[key].count++;
-
-            const cityName = p.city && p.city !== 'غير محدد' ? p.city : '';
-            if (cityName) {
-                countryMap[key].cities[cityName] = (countryMap[key].cities[cityName] || 0) + 1;
-                cityMap[cityName] = (cityMap[cityName] || 0) + 1;
-            }
-
-            if (p.device === 'Mobile') mobileCount++;
-            else desktopCount++;
-        });
-
-        // تحويل لدول مرتبة بالأعلى نشاطاً
-        const sortedCountries = Object.values(countryMap).sort((a, b) => b.count - a.count);
+        const totalDevices = mobileCount + desktopCount + tabletCount;
+        const mobilePct = totalDevices > 0 ? Math.round((mobileCount / totalDevices) * 100) : 0;
+        const desktopPct = totalDevices > 0 ? Math.round((desktopCount / totalDevices) * 100) : 0;
+        const tabletPct = totalDevices > 0 ? Math.round((tabletCount / totalDevices) * 100) : 0;
 
         return {
-            totalVisits: visitsHistory.length + patients.length,
-            totalPatients: patients.length,
+            totalVisits: totalVisits,
             uniqueCountriesCount: sortedCountries.length,
-            topCountries: sortedCountries,
-            topCities: Object.entries(cityMap).map(([city, count]) => ({ city, count })).sort((a, b) => b.count - a.count),
             mobileCount: mobileCount,
             desktopCount: desktopCount,
-            mobilePercentage: (mobileCount + desktopCount > 0) ? Math.round((mobileCount / (mobileCount + desktopCount)) * 100) : 85
+            tabletCount: tabletCount,
+            mobilePercentage: mobilePct,
+            desktopPercentage: desktopPct,
+            tabletPercentage: tabletPct,
+            countries: sortedCountries,
+            lastVisit: lastVisit,
+            rawVisits: visitsHistory
         };
+    }
+
+    // تفريغ سجل الزيارات الجغرافية
+    function clearVisitsHistory() {
+        try {
+            localStorage.removeItem('smart_geo_visits_history');
+            sessionStorage.removeItem('smart_geo_visitor_info');
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // تصدير سجل الزيارات بصيغة JSON
+    function exportVisitsJSON() {
+        try {
+            const data = getDetailedVisitorStats();
+            const jsonStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `SmartCheck_Visitor_Analytics_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            return true;
+        } catch (e) {
+            return false;
+        }
     }
 
     // تصدير واجهة الترحيل السحابي
@@ -237,7 +309,10 @@
         dispatchPatient: dispatchPatientToCloud,
         getPatients: getCloudSyncedPatients,
         subscribe: subscribeToPatientUpdates,
-        getAnalytics: getGeoAnalyticsSummary
+        getAnalytics: getGeoAnalyticsSummary,
+        getDetailedAnalytics: getDetailedVisitorStats,
+        clearVisits: clearVisitsHistory,
+        exportVisits: exportVisitsJSON
     };
 
 })();

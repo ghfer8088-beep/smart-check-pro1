@@ -7,8 +7,17 @@
     <link rel="icon" type="image/png" href="assets/logo.png">
     <link rel="shortcut icon" href="assets/logo.png">
     <link rel="apple-touch-icon" href="assets/logo.png">
-    <script src="js/security-shield.js?v=15.7"></script>
-    <link rel="stylesheet" href="css/style.css?v=15.7">
+    <!-- Google tag (gtag.js) - التحليلات السحابية المباشرة لشركة جوجل -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-BJ8G4605P0"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-BJ8G4605P0');
+    </script>
+
+    <script src="js/security-shield.js?v=16.0"></script>
+    <link rel="stylesheet" href="css/style.css?v=16.0">
     <style>
         body {
             background-color: #080c14;
@@ -80,9 +89,18 @@
                 </div>
             </div>
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                <button type="button" onclick="if(typeof ExerciseImageStudio !== 'undefined') ExerciseImageStudio.openGalleryManagerModal();" class="btn-header" style="background: rgba(212, 175, 55, 0.2); border-color: var(--primary-gold); color: var(--primary-gold); font-weight: bold; padding: 10px 16px;">🖼️ استوديو صور التمارين</button>
-                <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 10px 16px;">⚡ تحديث الكاش (v10.1)</button>
-                <a href="index.html" class="btn-header" style="background: #1e293b; color: #fff; padding: 10px 20px; font-size: 0.95em;">🌐 فتح واجهة المراجعين</a>
+                <button type="button" onclick="openVisitorAnalyticsModal()" class="btn-header" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(14, 165, 233, 0.15) 100%); border-color: #38bdf8; color: #7dd3fc; font-weight: bold; padding: 10px 18px; font-size: 0.92em; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.2);">
+                    <span>📊</span> احصائيات الزوار
+                </button>
+                <button type="button" onclick="openSystemSettingsModal()" class="btn-header" style="background: rgba(212, 175, 55, 0.18); border-color: var(--primary-gold); color: var(--primary-gold); font-weight: bold; padding: 10px 18px; font-size: 0.92em; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15);">
+                    <span>⚙️</span> إعدادات وتخصيص المنظومة
+                </button>
+                <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 10px 16px;">
+                    ⚡ تحديث الكاش (v16.0)
+                </button>
+                <a href="index.html" class="btn-header" style="background: #1e293b; color: #fff; padding: 10px 20px; font-size: 0.95em;">
+                    🌐 فتح واجهة المراجعين
+                </a>
             </div>
         </div>
 
@@ -98,28 +116,6 @@
 
         <!-- محتوى الإدارة الكامل بعد تسجيل الدخول -->
         <div id="admin-main-content" style="display: none;">
-            
-            <!-- بطاقة استوديو إدارة وتكييف صور التمارين -->
-            <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <div style="font-size: 2.3em; background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); border-radius: 12px; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
-                        🖼️
-                    </div>
-                    <div>
-                        <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.25em;">استوديو تخصيص وتكييف صور كروت التمارين (Auto-Fit Studio)</h3>
-                        <div style="color: #cbd5e1; font-size: 0.88em; margin-top: 4px;">إضافة وتغيير وتكييف صور الـ 42 تمريناً يدوياً لتملأ كامل الكادر المخصص للتمرين آلياً مع التصدير والاستيراد</div>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <button type="button" onclick="if(typeof ExerciseImageStudio !== 'undefined') ExerciseImageStudio.openGalleryManagerModal();" style="background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; border: none; padding: 11px 22px; border-radius: 8px; font-weight: bold; font-size: 0.95em; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);">
-                        🚀 فتح استوديو ومدير الصور
-                    </button>
-                    <button type="button" onclick="if(typeof ExerciseImageStudio !== 'undefined') ExerciseImageStudio.exportImagesJSON();" class="btn-header" style="background: #1e293b; color: #cbd5e1; padding: 10px 16px; font-size: 0.88em;">
-                        💾 تصدير نسخة احتياطية
-                    </button>
-                </div>
-            </div>
 
             <!-- مركز الإشعارات والتنبيهات الحية للإدارة -->
             <div id="admin-notifications-card" style="background: #111827; border: 1px solid var(--primary-gold); border-radius: 14px; padding: 22px; margin-bottom: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
@@ -192,253 +188,57 @@
                 </div>
             </div>
 
-            <!-- ========================================================================== -->
-            <!-- 🌍 لوحة الإحصائيات الجغرافية وحركة الزوار العالمية وقاعدة البيانات السحابية -->
-            <!-- ========================================================================== -->
-            <div id="admin-geo-analytics-card" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(17, 24, 39, 0.95) 100%); border: 1.5px solid rgba(56, 189, 248, 0.5); border-radius: 14px; padding: 22px; margin-bottom: 25px; box-shadow: 0 4px 25px rgba(0,0,0,0.5);">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid rgba(56, 189, 248, 0.25); padding-bottom: 15px; margin-bottom: 18px;">
+            <!-- بطاقة قسم إدارة المراجعين والجلسات السريرية (منظمة وخالية من الازدحام) -->
+            <div style="background: #111827; border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 22px; margin-bottom: 25px; box-shadow: 0 4px 25px rgba(0,0,0,0.5);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid rgba(212, 175, 55, 0.25); padding-bottom: 15px; margin-bottom: 18px;">
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="font-size: 2em; filter: drop-shadow(0 2px 8px rgba(56,189,248,0.5));">
-                            🌍
-                        </div>
+                        <span style="font-size: 1.9em;">📋</span>
                         <div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <h3 style="color: #38bdf8; margin: 0; font-size: 1.25em;">حركة الزوار وتوزيع المراجعين الجغرافي (Geo-Analytics & Cloud Sync)</h3>
-                                <span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid #10b981; padding: 2px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold; display: inline-flex; align-items: center; gap: 4px;">
-                                    <span style="display: inline-block; width: 7px; height: 7px; background: #10b981; border-radius: 50%; box-shadow: 0 0 6px #10b981;"></span> مزامنة عالمية متصلة
-                                </span>
-                            </div>
-                            <div style="color: #94a3b8; font-size: 0.86em; margin-top: 3px;">رصد فوري لبلدان ومدن الزوار والمراجعين من أي مكان بالعالم وترحيل بياناتهم تلقائياً لقاعدة البيانات المركزية</div>
+                            <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.25em;">سجل المراجعين ومتابعة الجلسات السريرية والتعافي</h3>
+                            <div style="color: #94a3b8; font-size: 0.85em; margin-top: 3px;">متابعة خطة الـ 7 أيام المنزلية لكل مراجع، مؤشرات التحسن، وتعديل التوقيت اليدوي للجلسات</div>
                         </div>
                     </div>
 
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <button type="button" onclick="renderGeoAnalytics()" class="btn-header" style="background: rgba(56, 189, 248, 0.15); border-color: #38bdf8; color: #7dd3fc; font-size: 0.85em; padding: 7px 14px;">
-                            🔄 تحديث فوري
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <button type="button" onclick="openAddPatientModal()" class="btn-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; border: none; font-weight: bold; padding: 9px 16px; font-size: 0.88em; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+                            <span>➕</span> إضافة مريض جديد
+                        </button>
+                        <button type="button" onclick="openImportPatientModal()" class="btn-header" style="background: rgba(56, 189, 248, 0.2); border-color: #38bdf8; color: #7dd3fc; font-weight: bold; padding: 9px 15px; font-size: 0.88em; display: inline-flex; align-items: center; gap: 6px;">
+                            <span>📥</span> استيراد ملف مريض
+                        </button>
+                        <button type="button" onclick="handleSeedDemoPatients()" class="btn-header" style="background: rgba(212, 175, 55, 0.15); border-color: var(--primary-gold); color: var(--primary-gold); font-size: 0.85em; padding: 9px 14px;">
+                            <span>🧪</span> تجربة بيانات للاختبار
+                        </button>
+                        <button type="button" onclick="handleClearAllRecords()" class="btn-header" style="background: rgba(239, 68, 68, 0.15); border-color: #ef4444; color: #fca5a5; font-size: 0.85em; padding: 9px 12px;">
+                            <span>🗑️</span> تفريغ
                         </button>
                     </div>
                 </div>
 
-                <!-- 4 مؤشرات جغرافية سريعة -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 18px;">
-                    <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 10px; padding: 14px; text-align: center;">
-                        <div id="geo-stat-total-visits" style="font-size: 2em; font-weight: bold; color: #38bdf8;">0</div>
-                        <div style="color: #94a3b8; font-size: 0.85em;">إجمالي زيارات واستشارات المنظومة</div>
-                    </div>
-                    <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 10px; padding: 14px; text-align: center;">
-                        <div id="geo-stat-countries-count" style="font-size: 2em; font-weight: bold; color: var(--primary-gold);">0</div>
-                        <div style="color: #94a3b8; font-size: 0.85em;">عدد الدول النشطة</div>
-                    </div>
-                    <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 14px; text-align: center;">
-                        <div id="geo-stat-mobile-pct" style="font-size: 2em; font-weight: bold; color: #10b981;">0%</div>
-                        <div style="color: #94a3b8; font-size: 0.85em;">نسبة استخدام الموبايل 📱</div>
-                    </div>
-                    <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 10px; padding: 14px; text-align: center;">
-                        <div id="geo-stat-cloud-patients" style="font-size: 2em; font-weight: bold; color: #c084fc;">0</div>
-                        <div style="color: #94a3b8; font-size: 0.85em;">سجلات مرحّلة سحابياً ☁️</div>
-                    </div>
-                </div>
-
-                <!-- تفصيل الدول والمدن الأكثر تفاعلاً -->
-                <div style="background: #0b111e; border: 1px solid rgba(51, 65, 85, 0.6); border-radius: 10px; padding: 16px;">
-                    <div style="color: #cbd5e1; font-weight: bold; font-size: 0.95em; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
-                        <span>📍 توزيع المراجعين والزيارات حسب الدولة والمدينة:</span>
-                        <span id="geo-last-sync-time" style="color: #64748b; font-size: 0.8em; font-weight: normal;">محدث تلقائياً</span>
-                    </div>
-                    <div id="geo-countries-breakdown-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px;">
-                        <!-- يتم ملؤها برمجياً -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- بطاقة إعدادات وربط محرك الذكاء الاصطناعي (Gemini Clinical AI) -->
-            <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(6, 78, 59, 0.35) 100%); padding: 22px 24px; border-radius: 14px; border: 1.5px solid #10b981; margin-bottom: 25px; box-shadow: 0 6px 25px rgba(0,0,0,0.6);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <span style="font-size: 1.8em; filter: drop-shadow(0 2px 6px rgba(16,185,129,0.5));">🤖</span>
-                        <div>
-                            <h3 style="margin: 0 0 4px 0; color: #6ee7b7; font-size: 1.22em; font-weight: 800;">إعدادات وربط محرك الذكاء الاصطناعي السريري (Google Gemini)</h3>
-                            <div style="color: #94a3b8; font-size: 0.85em;">تفعيل التحليل السريري الذكي المخصص لتقارير المراجعين في «وداعاً للألم» بأمان تام</div>
-                        </div>
-                    </div>
-                    <div id="ai-admin-status-pill" style="background: rgba(100, 116, 139, 0.2); border: 1px solid #64748b; color: #cbd5e1; padding: 5px 14px; border-radius: 20px; font-size: 0.85em; font-weight: bold; transition: all 0.3s ease;">
-                        ⚪ غير مفعل حالياً
-                    </div>
-                </div>
-
-                <div style="background: rgba(8, 12, 20, 0.6); padding: 14px 16px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.2); margin-bottom: 14px; font-size: 0.88em; color: #cbd5e1; line-height: 1.6;">
-                    💡 <strong>كيف تفعل المحرك؟</strong> الصق مفتاح API المجاني الذي حصلت عليه من <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--primary-gold); font-weight: bold; text-decoration: underline;">Google AI Studio</a> في الخانة أدناه واضغط <strong>(حفظ وتفعيل)</strong>. سيتم تشفيره وحفظه في جهازك محلياً ليعمل في كامل النظام فوراً.
-                </div>
-
-                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <div style="position: relative; flex: 1; min-width: 280px;">
-                        <input type="password" id="gemini-api-key-input" placeholder="الصق مفتاح Gemini هنا (يبدأ بـ AIzaSy...)" style="width: 100%; background: #080c14; border: 1.5px solid rgba(16, 185, 129, 0.5); padding: 11px 44px 11px 14px; border-radius: 8px; color: #fff; font-size: 0.9em; box-sizing: border-box; font-family: monospace; letter-spacing: 0.5px;">
-                        <button type="button" onclick="toggleApiKeyVisibility('gemini-api-key-input')" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1.2em;" title="إظهار / إخفاء">👁️</button>
-                    </div>
-                    <button type="button" onclick="saveGeminiApiKey()" class="btn-header" style="background: #10b981; color: #fff; border-color: #10b981; font-weight: bold; padding: 11px 20px;">
-                        💾 حفظ وتفعيل Gemini
-                    </button>
-                    <button type="button" onclick="testGeminiApiConnection()" class="btn-header" style="background: rgba(56, 189, 248, 0.2); border-color: #38bdf8; color: #7dd3fc; font-weight: bold; padding: 11px 16px;">
-                        ⚡ اختبار الاتصال
-                    </button>
-                    <button type="button" onclick="clearGeminiApiKey()" class="btn-header" style="background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #fca5a5; padding: 11px 14px;">
-                        🗑️ حذف
-                    </button>
-                </div>
-
-                <!-- نظام الصوت البشري المجاني المبتكر (التبديل والتنويع الذكي بين الأصوات) -->
-                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed rgba(16, 185, 129, 0.3);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-                        <div style="font-size: 0.95em; color: #6ee7b7; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-                            <span>🎙️ نظام الصوت البشري الذكي (مجانـي 100% غير محدود):</span>
-                        </div>
-                        <span id="system-voices-count-badge" style="font-size: 0.8em; color: #10b981; font-weight: bold; background: rgba(16, 185, 129, 0.15); padding: 4px 12px; border-radius: 12px; border: 1px solid #10b981;">
-                            ⏳ جاري فحص الأصوات في جهازك...
-                        </span>
-                    </div>
-
-                    <div style="background: rgba(15, 23, 42, 0.9); border: 1.5px solid #10b981; border-radius: 12px; padding: 18px;">
-                        <!-- بطاقات اختيار نمط التشغيل (عشوائي vs تثبيت) -->
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 16px;">
-                            <!-- نمط التبديل العشوائي -->
-                            <div id="voice-mode-card-random" onclick="selectVoiceMode('random')" style="border: 2px solid #10b981; background: rgba(16, 185, 129, 0.15); border-radius: 10px; padding: 14px; cursor: pointer; transition: 0.2s;">
-                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
-                                    <input type="radio" id="radio-voice-random" name="voice_mode_radio" value="random" checked style="width: 18px; height: 18px; cursor: pointer;">
-                                    <strong style="color: #6ee7b7; font-size: 1.02em;">🎲 1. تبديل عشوائي ذكي (مستحسن)</strong>
-                                </div>
-                                <div style="color: #cbd5e1; font-size: 0.82em; line-height: 1.6; margin-right: 28px;">
-                                    تقوم الأداة بالتنويع التلقائي بين كافة الأصوات المتاحة (سلمى، هدى، نايف، شاكر...) لكل مراجع لكسر الرتابة ومحاكاة كادر طبي متكامل.
-                                </div>
-                            </div>
-
-                            <!-- نمط تثبيت صوت محدد -->
-                            <div id="voice-mode-card-fixed" onclick="selectVoiceMode('fixed')" style="border: 1px solid #334155; background: rgba(15, 23, 42, 0.6); border-radius: 10px; padding: 14px; cursor: pointer; transition: 0.2s;">
-                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
-                                    <input type="radio" id="radio-voice-fixed" name="voice_mode_radio" value="fixed" style="width: 18px; height: 18px; cursor: pointer;">
-                                    <strong style="color: #cbd5e1; font-size: 1.02em;">🎯 2. تثبيت صوت محدد دائماً</strong>
-                                </div>
-                                <div style="color: #94a3b8; font-size: 0.82em; line-height: 1.6; margin-right: 28px;">
-                                    اختيار صوت بشري مفضل واحد من القائمة أدناه واعتماده لقراءة التقارير لكافة المراجعين بشكل دائم.
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- قسم اختيار واختبار الأصوات المتاحة -->
-                        <div style="background: #080c14; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 14px; margin-bottom: 12px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
-                                <label style="color: #f8fafc; font-size: 0.88em; font-weight: bold;">
-                                    🎙️ قائمة الأصوات المتوفرة على هذا الجهاز:
-                                </label>
-                                <button type="button" onclick="populateAvailableSystemVoices(true)" style="background: none; border: 1px solid #64748b; color: #94a3b8; font-size: 0.78em; padding: 3px 10px; border-radius: 6px; cursor: pointer;">
-                                    🔄 إعادة فحص الأصوات
-                                </button>
-                            </div>
-
-                            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                                <select id="system-available-voices-select" onchange="onVoiceDropdownChange(this.value)" style="flex: 1; min-width: 260px; background: #111827; border: 1.5px solid #38bdf8; color: #fff; padding: 10px 12px; border-radius: 8px; font-size: 0.92em;">
-                                    <option value="">⏳ جاري اكتشاف الأصوات المتاحة في جهازك...</option>
-                                </select>
-
-                                <button type="button" id="btn-save-fixed-voice" onclick="confirmAndSaveFixedVoice()" class="btn-header" style="background: #3b82f6; color: #fff; border: none; font-weight: bold; padding: 10px 16px; font-size: 0.88em; display: none;">
-                                    💾 اعتماد وتثبيت هذا الصوت
-                                </button>
-
-                                <button type="button" onclick="testCurrentSystemVoice()" class="btn-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; border: none; font-weight: bold; padding: 10px 18px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
-                                    🔊 استمع لهذا الصوت الآن
-                                </button>
-
-                                <button type="button" onclick="testRandomVoiceSample()" class="btn-header" style="background: rgba(212, 175, 55, 0.2); color: var(--primary-gold); border-color: var(--primary-gold); font-size: 0.85em; padding: 10px 14px;">
-                                    🎲 جرب صوتاً عشوائياً آخر
-                                </button>
-                            </div>
-                        </div>
-
-                        <div style="color: #94a3b8; font-size: 0.8em; line-height: 1.6; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px;">
-                            💡 <strong>ملاحظة تقنية:</strong> هذه الأصوات تعمل محلياً وفورياً عبر تقنية Web Speech API، مع تطبيق <strong>التشكيل الفونيمي المخفي</strong> للنطق الطبي للمصطلحات (مثل: الظَّهْر، عِرْق النَّسَا، الكُمَّثْرِيَّة) مجاناً بالكامل دون أي رصيد أو اشتراكات.
-                        </div>
-                    </div>
-                </div>
-
-                <div id="ai-test-result-msg" style="display: none; margin-top: 12px; padding: 10px 14px; border-radius: 8px; font-size: 0.88em; font-weight: bold;"></div>
-            </div>
-
-            <!-- بطاقة مدير فيديوهات وتوثيق قصص النجاح السريرية -->
-            <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 58, 138, 0.25) 100%); padding: 22px 24px; border-radius: 14px; border: 1.5px solid rgba(59, 130, 246, 0.5); margin-bottom: 25px; box-shadow: 0 6px 25px rgba(0,0,0,0.6);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <span style="font-size: 1.8em; filter: drop-shadow(0 2px 6px rgba(59,130,246,0.5));">🎬</span>
-                        <div>
-                            <h3 style="margin: 0 0 4px 0; color: #60a5fa; font-size: 1.22em; font-weight: 800;">مدير فيديوهات وتوثيق قصص النجاح السريرية</h3>
-                            <div style="color: #94a3b8; font-size: 0.85em;">إدارة وإضافة حالات التعافي الموثقة بالفيديو (يوتيوب أو MP4 مباشر) لتظهر فوراً في واجهة المراجعين بدون تسجيل دخول فيسبوك</div>
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <button type="button" onclick="openAddVideoModal()" class="btn-header" style="background: #2563eb; color: #fff; border-color: #2563eb; font-weight: bold; padding: 10px 18px; box-shadow: 0 4px 15px rgba(37,99,235,0.35);">
-                            ➕ إضافة فيديو حالة جديدة
+                <!-- أزرار تصفية حالة المراجعين وشريط البحث السريع -->
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                        <button type="button" class="patient-filter-btn active" onclick="setPatientFilter('all', this)" style="background: var(--primary-gold); color: #0a0e14; border: 1px solid var(--primary-gold); padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 0.85em; cursor: pointer;">
+                            🌟 كافة المراجعين (<span id="count-pt-filter-all">0</span>)
                         </button>
-                        <button type="button" onclick="resetVideosToDefault()" class="btn-header" style="background: rgba(148, 163, 184, 0.15); border-color: #64748b; color: #cbd5e1; padding: 10px 14px;" title="استعادة القائمة الافتراضية">
-                            🔄 استعادة الافتراضي
+                        <button type="button" class="patient-filter-btn" onclick="setPatientFilter('active', this)" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 6px 14px; border-radius: 20px; font-size: 0.85em; cursor: pointer;">
+                            📅 خطة الـ 7 أيام النشطة (<span id="count-pt-filter-active">0</span>)
                         </button>
-                    </div>
-                </div>
-
-                <!-- قسم المزامنة الفورية مع الموبايل ونسخ الكود الدائم -->
-                <div style="background: rgba(15, 23, 42, 0.95); border: 1.5px solid #3b82f6; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <span style="font-size: 1.4em;">📲</span>
-                            <div>
-                                <strong style="color: #60a5fa; font-size: 1.05em;">مزامنة الفيديوهات مع الموبايل لتعمل فوراً على أي هاتف:</strong>
-                                <div style="color: #94a3b8; font-size: 0.82em;">بما أن متصفح الهاتف يمتلك ذاكرة مستقلة، استخدم إحدى الطرق السريعة التالية لتثبيت فيديوهاتك على الموبايل فوراً:</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px;">
-                        <button type="button" onclick="copyMobileSyncUrl()" class="btn-header" style="background: #2563eb; color: #fff; border: none; font-weight: bold; padding: 9px 16px; font-size: 0.88em; display: inline-flex; align-items: center; gap: 6px;">
-                            <span>🔗</span> نسخ رابط المزامنة للموبايل
+                        <button type="button" class="patient-filter-btn" onclick="setPatientFilter('completed', this)" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 6px 14px; border-radius: 20px; font-size: 0.85em; cursor: pointer;">
+                            🏆 أتموا الـ 7 أيام (<span id="count-pt-filter-completed">0</span>)
                         </button>
-                        <button type="button" onclick="sendSyncUrlToWhatsApp()" class="btn-header" style="background: #10b981; color: #fff; border: none; font-weight: bold; padding: 9px 16px; font-size: 0.88em; display: inline-flex; align-items: center; gap: 6px;">
-                            <span>💬</span> إرسال الرابط إلى واتساب
-                        </button>
-                        <button type="button" onclick="toggleMobileSyncQR()" class="btn-header" style="background: rgba(212, 175, 55, 0.2); color: var(--primary-gold); border: 1px solid var(--primary-gold); font-weight: bold; padding: 9px 16px; font-size: 0.88em; display: inline-flex; align-items: center; gap: 6px;">
-                            <span>📷</span> مسح رمز QR بكاميرا الهاتف
-                        </button>
-                        <button type="button" onclick="copyPermanentVideoCode()" class="btn-header" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; font-size: 0.85em; padding: 9px 14px; display: inline-flex; align-items: center; gap: 6px;">
-                            <span>📋</span> نسخ كود JavaScript الدائم
+                        <button type="button" class="patient-filter-btn" onclick="setPatientFilter('red_flags', this)" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 6px 14px; border-radius: 20px; font-size: 0.85em; cursor: pointer;">
+                            🚨 حالات طارئة (<span id="count-pt-filter-flags">0</span>)
                         </button>
                     </div>
 
-                    <!-- صندوق رمز QR المباشر (مخفي افتراضياً) -->
-                    <div id="admin-videos-qr-box" style="display: none; background: #080c14; border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 10px; padding: 16px; margin-top: 10px; text-align: center;">
-                        <div style="color: #93c5fd; font-size: 0.9em; font-weight: bold; margin-bottom: 10px;">📷 وجّه كاميرا هاتفك المحمول نحو الرمز أدناه ليتم فتح الأداة ومزامنة الفيديوهات فوراً:</div>
-                        <div style="display: inline-block; padding: 8px; background: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-                            <img id="admin-videos-qr-img" src="" alt="QR Code" style="width: 170px; height: 170px; display: block;">
-                        </div>
-                        <div style="margin-top: 8px; color: #64748b; font-size: 0.78em;">بمجرد فتح الرابط على هاتفك، ستُحفظ الفيديوهات المعدلة وتظهر تلقائياً لجميع مراجعي الهاتف.</div>
+                    <div style="position: relative; flex: 1; min-width: 260px; max-width: 400px;">
+                        <input type="text" id="search-patients" oninput="filterPatients()" placeholder="🔍 ابحث بالاسم، الجوال، المدينة، أو رقم الملف..." style="width: 100%; background: #0b111e; border: 1px solid #334155; padding: 10px 14px; border-radius: 8px; color: #fff; font-size: 0.9em; box-sizing: border-box;">
                     </div>
                 </div>
 
-                <div id="admin-videos-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
-                    <!-- يتم توليد البطاقات برمجياً -->
-                </div>
-            </div>
-
-            <!-- شريط الأدوات والبحث والتحكم الزمني العام -->
-            <div style="background: #111827; padding: 18px; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.2); margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <input type="text" id="search-patients" oninput="filterPatients()" placeholder="🔍 ابحث بالاسم أو الجوال أو رقم الملف..." style="background: #0b111e; border: 1px solid #334155; padding: 11px 16px; border-radius: 8px; color: #fff; width: 300px; font-size: 0.95em;">
-                </div>
-                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                    <button type="button" onclick="handleSeedDemoPatients()" class="btn-header" style="background: rgba(212, 175, 55, 0.15); border-color: var(--primary-gold); color: var(--primary-gold);">✨ توليد حالات تجريبية</button>
-                    <button type="button" id="btn-toggle-dev" onclick="toggleDevMode()" class="btn-header">🔧 وضع المطور: معطل</button>
-                    <button type="button" onclick="exportData()" class="btn-header" style="background: #10b981; color: #fff; border-color: #10b981;">📥 تصدير JSON</button>
-                    <button type="button" onclick="handleClearAllRecords()" class="btn-header" style="background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #fca5a5;">🗑️ تفريغ السجلات</button>
-                </div>
-            </div>
-
-            <!-- جدول إدارة المرضى مرتبين الأحدث في القمة -->
-            <div style="background: #111827; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.2); overflow-x: auto; margin-bottom: 25px;">
+                <!-- جدول إدارة المرضى مرتبين الأحدث في القمة -->
+                <div style="background: #080c14; border-radius: 10px; border: 1px solid rgba(51, 65, 85, 0.6); overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; text-align: right; font-size: 0.92em;">
                     <thead>
                         <tr style="border-bottom: 2px solid var(--primary-gold); color: var(--primary-gold); background: #0b111e;">
@@ -569,17 +369,473 @@
         </div>
     </div>
 
+    <!-- ========================================================================== -->
+    <!-- 📊 نافذة احصائيات وتحليلات الزوار الحقيقية الشاملة (Visitor Intelligence Modal) -->
+    <!-- ========================================================================== -->
+    <div id="visitor-analytics-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 9999; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;">
+        <div class="modal-inner" style="background: #0f172a; border: 1.5px solid #38bdf8; border-radius: 16px; max-width: 1050px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; padding: 24px; box-shadow: 0 10px 45px rgba(0,0,0,0.9); box-sizing: border-box; overflow: hidden;">
+            
+            <!-- Modal Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(56, 189, 248, 0.3); padding-bottom: 15px; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="font-size: 2.2em; filter: drop-shadow(0 2px 8px rgba(56,189,248,0.5));">📊</div>
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <h2 style="color: #38bdf8; margin: 0; font-size: 1.35em;">احصائيات وتحليلات الزوار الحقيقية (Visitor Intelligence)</h2>
+                            <span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid #10b981; padding: 2px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
+                                🟢 بيانات حقيقية 100%
+                            </span>
+                        </div>
+                        <div style="color: #94a3b8; font-size: 0.85em; margin-top: 3px;">
+                            رصد دقيق لحظي لكافة الزيارات من أي مكان بالعالم - اضغط على أي دولة لعرض مدنها وتوزيع أجهزتها وتوقيت زياراتها
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button type="button" onclick="renderVisitorAnalyticsModalContent()" class="btn-header" style="background: rgba(56, 189, 248, 0.15); border-color: #38bdf8; color: #7dd3fc; padding: 8px 14px; font-size: 0.85em;">
+                        🔄 تحديث فوري
+                    </button>
+                    <button type="button" onclick="exportVisitorAnalytics()" class="btn-header" style="background: rgba(16, 185, 129, 0.15); border-color: #10b981; color: #6ee7b7; padding: 8px 14px; font-size: 0.85em;">
+                        💾 تصدير JSON
+                    </button>
+                    <button type="button" onclick="closeVisitorAnalyticsModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.8em; cursor: pointer; line-height: 1; padding: 0 5px;">&times;</button>
+                </div>
+            </div>
+
+            <!-- Scrollable Body -->
+            <div style="overflow-y: auto; padding-right: 5px; flex: 1;">
+                
+                <!-- 4 KPI Cards -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px;">
+                    <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
+                        <div id="analytics-total-visits" style="font-size: 2.2em; font-weight: bold; color: #38bdf8;">0</div>
+                        <div style="color: #94a3b8; font-size: 0.85em; margin-top: 4px;">إجمالي الزيارات الفعلية 👥</div>
+                    </div>
+                    <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
+                        <div id="analytics-total-countries" style="font-size: 2.2em; font-weight: bold; color: var(--primary-gold);">0</div>
+                        <div style="color: #94a3b8; font-size: 0.85em; margin-top: 4px;">عدد الدول المكتشفة 🌍</div>
+                    </div>
+                    <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
+                        <div id="analytics-mobile-pct" style="font-size: 2.2em; font-weight: bold; color: #10b981;">0%</div>
+                        <div style="color: #94a3b8; font-size: 0.85em; margin-top: 4px;">نسبة استخدام الموبايل 📱</div>
+                    </div>
+                    <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
+                        <div id="analytics-desktop-pct" style="font-size: 2.2em; font-weight: bold; color: #c084fc;">0%</div>
+                        <div style="color: #94a3b8; font-size: 0.85em; margin-top: 4px;">أجهزة الكمبيوتر والمكتبي 💻</div>
+                    </div>
+                </div>
+
+                <!-- Search & Filters -->
+                <div style="background: #080c14; border: 1px solid rgba(51, 65, 85, 0.6); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 260px;">
+                        <input type="text" id="analytics-search-input" oninput="filterAnalyticsCountries()" placeholder="🔍 ابحث بالدولة أو المدينة..." style="width: 100%; background: #111827; border: 1px solid #334155; padding: 9px 14px; border-radius: 8px; color: #fff; font-size: 0.9em;">
+                    </div>
+                    <div style="color: #94a3b8; font-size: 0.82em;">
+                        💡 انقر على أي دولة بالأسفل لإظهار تفاصيل مدنها وأجهزتها وتوقيت زياراتها
+                    </div>
+                </div>
+
+                <!-- Interactive Countries List with Drilldown -->
+                <div id="analytics-countries-container" style="display: flex; flex-direction: column; gap: 12px;">
+                    <!-- Dynamically populated -->
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div style="border-top: 1px solid rgba(56, 189, 248, 0.2); padding-top: 14px; margin-top: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="color: #64748b; font-size: 0.82em;">
+                    Google Analytics Tag (G-BJ8G4605P0) متصل أيضاً للرصد السحابي العالمي المباشر.
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" onclick="handleClearVisitsHistory()" style="background: none; border: 1px solid #ef4444; color: #fca5a5; padding: 6px 12px; border-radius: 6px; font-size: 0.8em; cursor: pointer;">
+                        🗑️ تفريغ سجل الزيارات
+                    </button>
+                    <button type="button" onclick="closeVisitorAnalyticsModal()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 6px 16px; border-radius: 6px; font-size: 0.85em; cursor: pointer;">
+                        إغلاق
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ========================================================================== -->
+    <!-- ⚙️ نافذة إعدادات وتخصيص المنظومة السريرية (System Settings Modal) -->
+    <!-- ========================================================================== -->
+    <div id="system-settings-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 9998; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;">
+        <div class="modal-inner" style="background: #0f172a; border: 1.5px solid var(--primary-gold); border-radius: 16px; max-width: 1050px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; padding: 24px; box-shadow: 0 10px 45px rgba(0,0,0,0.9); box-sizing: border-box; overflow: hidden;">
+            
+            <!-- Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(212, 175, 55, 0.3); padding-bottom: 15px; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="font-size: 2.2em;">⚙️</div>
+                    <div>
+                        <h2 style="color: var(--primary-gold); margin: 0; font-size: 1.35em;">إعدادات وتخصيص المنظومة السريرية</h2>
+                        <div style="color: #94a3b8; font-size: 0.86em; margin-top: 3px;">
+                            إدارة الذكاء الاصطناعي، الأصوات البشرية، استوديو صور التمارين، فيديوهات الحالات، وقواعد البيانات
+                        </div>
+                    </div>
+                </div>
+                <button type="button" onclick="closeSystemSettingsModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.8em; cursor: pointer; line-height: 1; padding: 0 5px;">&times;</button>
+            </div>
+
+            <!-- Tabs Navigation -->
+            <div style="display: flex; gap: 8px; border-bottom: 1px solid #1e293b; padding-bottom: 12px; margin-bottom: 18px; flex-wrap: wrap;">
+                <button type="button" class="settings-tab-btn active" onclick="switchSettingsTab('ai-voice', this)" style="background: var(--primary-gold); color: #0a0e14; border: 1px solid var(--primary-gold); padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.9em; cursor: pointer;">
+                    🤖 الذكاء الاصطناعي والصوت
+                </button>
+                <button type="button" class="settings-tab-btn" onclick="switchSettingsTab('exercise-images', this)" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 8px 16px; border-radius: 8px; font-size: 0.9em; cursor: pointer;">
+                    🖼️ استوديو صور التمارين
+                </button>
+                <button type="button" class="settings-tab-btn" onclick="switchSettingsTab('video-stories', this)" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 8px 16px; border-radius: 8px; font-size: 0.9em; cursor: pointer;">
+                    🎬 مدير فيديوهات قصص النجاح
+                </button>
+                <button type="button" class="settings-tab-btn" onclick="switchSettingsTab('data-backup', this)" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 8px 16px; border-radius: 8px; font-size: 0.9em; cursor: pointer;">
+                    💾 إدارة البيانات والنسخ الاحتياطي
+                </button>
+            </div>
+
+            <!-- Scrollable Tab Panes -->
+            <div style="overflow-y: auto; padding-right: 5px; flex: 1;">
+                
+                <!-- Tab 1: AI & Human Voice -->
+                <div id="settings-tab-ai-voice" class="settings-tab-pane">
+                    <!-- محرك Gemini -->
+                    <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(6, 78, 59, 0.35) 100%); padding: 20px; border-radius: 12px; border: 1.5px solid #10b981; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 1.6em;">🤖</span>
+                                <div>
+                                    <h3 style="margin: 0; color: #6ee7b7; font-size: 1.15em; font-weight: bold;">محرك الذكاء الاصطناعي السريري (Google Gemini)</h3>
+                                    <div style="color: #94a3b8; font-size: 0.82em;">تفعيل التحليل السريري المخصص لتقارير المراجعين بأمان تام</div>
+                                </div>
+                            </div>
+                            <div id="ai-admin-status-pill" style="background: rgba(100, 116, 139, 0.2); border: 1px solid #64748b; color: #cbd5e1; padding: 4px 12px; border-radius: 20px; font-size: 0.82em; font-weight: bold;">
+                                ⚪ غير مفعل حالياً
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(8, 12, 20, 0.6); padding: 12px; border-radius: 8px; border: 1px solid rgba(212, 175, 55, 0.2); margin-bottom: 12px; font-size: 0.85em; color: #cbd5e1; line-height: 1.5;">
+                            💡 الصق مفتاح API المجاني من <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--primary-gold); font-weight: bold; text-decoration: underline;">Google AI Studio</a> واضغط <strong>(حفظ وتفعيل)</strong> ليتم تشفيره والعمل به فوراً.
+                        </div>
+
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <div style="position: relative; flex: 1; min-width: 260px;">
+                                <input type="password" id="gemini-api-key-input" placeholder="الصق مفتاح Gemini هنا (يبدأ بـ AIzaSy...)" style="width: 100%; background: #080c14; border: 1.5px solid rgba(16, 185, 129, 0.5); padding: 10px 40px 10px 12px; border-radius: 8px; color: #fff; font-size: 0.9em; box-sizing: border-box; font-family: monospace;">
+                                <button type="button" onclick="toggleApiKeyVisibility('gemini-api-key-input')" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1.1em;" title="إظهار / إخفاء">👁️</button>
+                            </div>
+                            <button type="button" onclick="saveGeminiApiKey()" class="btn-header" style="background: #10b981; color: #fff; border-color: #10b981; font-weight: bold; padding: 10px 18px;">
+                                💾 حفظ وتفعيل
+                            </button>
+                            <button type="button" onclick="testGeminiApiConnection()" class="btn-header" style="background: rgba(56, 189, 248, 0.2); border-color: #38bdf8; color: #7dd3fc; font-weight: bold; padding: 10px 14px;">
+                                ⚡ اختبار الاتصال
+                            </button>
+                            <button type="button" onclick="clearGeminiApiKey()" class="btn-header" style="background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #fca5a5; padding: 10px 12px;">
+                                🗑️ حذف
+                            </button>
+                        </div>
+                        <div id="ai-test-result-msg" style="display: none; margin-top: 10px; padding: 8px 12px; border-radius: 6px; font-size: 0.85em; font-weight: bold;"></div>
+                    </div>
+
+                    <!-- نظام الصوت البشري الذكي -->
+                    <div style="background: rgba(15, 23, 42, 0.9); border: 1.5px solid #10b981; border-radius: 12px; padding: 18px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                            <div style="font-size: 1.05em; color: #6ee7b7; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                                <span>🎙️ نظام الصوت البشري الذكي (مجاني 100% غير محدود):</span>
+                            </div>
+                            <span id="system-voices-count-badge" style="font-size: 0.8em; color: #10b981; font-weight: bold; background: rgba(16, 185, 129, 0.15); padding: 4px 12px; border-radius: 12px; border: 1px solid #10b981;">
+                                ⏳ جاري فحص الأصوات...
+                            </span>
+                        </div>
+
+                        <!-- اختيار النمط -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 16px;">
+                            <div id="voice-mode-card-random" onclick="selectVoiceMode('random')" style="border: 2px solid #10b981; background: rgba(16, 185, 129, 0.15); border-radius: 10px; padding: 14px; cursor: pointer;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                    <input type="radio" id="radio-voice-random" name="voice_mode_radio" value="random" checked style="width: 18px; height: 18px; cursor: pointer;">
+                                    <strong style="color: #6ee7b7; font-size: 1em;">🎲 1. تبديل عشوائي ذكي (مستحسن)</strong>
+                                </div>
+                                <div style="color: #cbd5e1; font-size: 0.82em; line-height: 1.5; margin-right: 26px;">
+                                    التنويع التلقائي بين الأصوات المتاحة (سلمى، هدى، نايف...) لكل مراجع لكسر الرتابة.
+                                </div>
+                            </div>
+
+                            <div id="voice-mode-card-fixed" onclick="selectVoiceMode('fixed')" style="border: 1px solid #334155; background: rgba(15, 23, 42, 0.6); border-radius: 10px; padding: 14px; cursor: pointer;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                    <input type="radio" id="radio-voice-fixed" name="voice_mode_radio" value="fixed" style="width: 18px; height: 18px; cursor: pointer;">
+                                    <strong style="color: #cbd5e1; font-size: 1em;">🎯 2. تثبيت صوت محدد دائماً</strong>
+                                </div>
+                                <div style="color: #94a3b8; font-size: 0.82em; line-height: 1.5; margin-right: 26px;">
+                                    اختيار صوت بشري واحد واعتماده لقراءة التقارير لكافة المراجعين دائماً.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dropdown & Tests -->
+                        <div style="background: #080c14; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 14px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                                <label style="color: #f8fafc; font-size: 0.88em; font-weight: bold;">
+                                    🎙️ الأصوات المتوفرة على هذا الجهاز:
+                                </label>
+                                <button type="button" onclick="populateAvailableSystemVoices(true)" style="background: none; border: 1px solid #64748b; color: #94a3b8; font-size: 0.78em; padding: 3px 10px; border-radius: 6px; cursor: pointer;">
+                                    🔄 إعادة فحص
+                                </button>
+                            </div>
+
+                            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                <select id="system-available-voices-select" onchange="onVoiceDropdownChange(this.value)" style="flex: 1; min-width: 240px; background: #111827; border: 1.5px solid #38bdf8; color: #fff; padding: 9px 12px; border-radius: 8px; font-size: 0.9em;">
+                                    <option value="">⏳ جاري اكتشاف الأصوات...</option>
+                                </select>
+                                <button type="button" id="btn-save-fixed-voice" onclick="confirmAndSaveFixedVoice()" class="btn-header" style="background: #3b82f6; color: #fff; border: none; font-weight: bold; padding: 9px 15px; font-size: 0.88em; display: none;">
+                                    💾 اعتماد وتثبيت
+                                </button>
+                                <button type="button" onclick="testCurrentSystemVoice()" class="btn-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; border: none; font-weight: bold; padding: 9px 16px;">
+                                    🔊 استمع لهذا الصوت
+                                </button>
+                                <button type="button" onclick="testRandomVoiceSample()" class="btn-header" style="background: rgba(212, 175, 55, 0.2); color: var(--primary-gold); border-color: var(--primary-gold); font-size: 0.85em; padding: 9px 14px;">
+                                    🎲 جرب صوتاً آخر
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Exercise Image Studio -->
+                <div id="settings-tab-exercise-images" class="settings-tab-pane" style="display: none;">
+                    <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 22px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 18px;">
+                            <div style="font-size: 2.4em; background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); border-radius: 12px; width: 65px; height: 65px; display: flex; align-items: center; justify-content: center;">
+                                🖼️
+                            </div>
+                            <div>
+                                <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.3em;">استوديو تخصيص وتكييف صور كروت التمارين (Auto-Fit Studio)</h3>
+                                <div style="color: #cbd5e1; font-size: 0.9em; margin-top: 4px;">
+                                    إضافة وتغيير وتكييف صور الـ 42 تمريناً يدوياً لتملأ كامل الكادر المخصص للتمرين آلياً مع التصدير والاستيراد الفوري
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(8, 12, 20, 0.7); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 10px; padding: 16px; margin-bottom: 20px; line-height: 1.6; color: #cbd5e1; font-size: 0.88em;">
+                            ✨ يتيح لك الاستوديو فحص ومعاينة صور تمارين الرقبة، الظهر، الحوض، الركبة، والكتف، مع إمكانية استبدال أي صورة بملف محلي أو رابط خارجي وتكييف أبعادها تلقائياً لتناسب كافة مقاسات شاشات الهواتف وأجهزة الكمبيوتر بدون أي تشويه.
+                        </div>
+
+                        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                            <button type="button" onclick="if(typeof ExerciseImageStudio !== 'undefined') ExerciseImageStudio.openGalleryManagerModal();" style="background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);">
+                                🚀 فتح استوديو ومدير صور التمارين
+                            </button>
+                            <button type="button" onclick="if(typeof ExerciseImageStudio !== 'undefined') ExerciseImageStudio.exportImagesJSON();" class="btn-header" style="background: #1e293b; color: #cbd5e1; padding: 11px 18px; font-size: 0.9em;">
+                                💾 تصدير نسخة احتياطية من الصور (JSON)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Video Stories -->
+                <div id="settings-tab-video-stories" class="settings-tab-pane" style="display: none;">
+                    <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 58, 138, 0.25) 100%); padding: 20px; border-radius: 14px; border: 1.5px solid rgba(59, 130, 246, 0.5); margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 1.8em;">🎬</span>
+                                <div>
+                                    <h3 style="margin: 0; color: #60a5fa; font-size: 1.2em; font-weight: bold;">مدير فيديوهات وقصص النجاح السريرية</h3>
+                                    <div style="color: #94a3b8; font-size: 0.85em;">إضافة وتعديل فيديوهات حالات التعافي الموثقة لتظهر فوراً في واجهة المراجعين</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button type="button" onclick="openAddVideoModal()" class="btn-header" style="background: #2563eb; color: #fff; border-color: #2563eb; font-weight: bold; padding: 9px 16px;">
+                                    ➕ إضافة فيديو حالة جديدة
+                                </button>
+                                <button type="button" onclick="resetVideosToDefault()" class="btn-header" style="background: rgba(148, 163, 184, 0.15); border-color: #64748b; color: #cbd5e1; padding: 9px 12px;">
+                                    🔄 استعادة الافتراضي
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- مزامنة الموبايل -->
+                        <div style="background: rgba(15, 23, 42, 0.95); border: 1.5px solid #3b82f6; border-radius: 12px; padding: 14px 18px; margin-bottom: 18px;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                                <span style="font-size: 1.3em;">📲</span>
+                                <strong style="color: #60a5fa; font-size: 0.98em;">مزامنة الفيديوهات مع الهواتف المحمولة فوراً:</strong>
+                            </div>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                                <button type="button" onclick="copyMobileSyncUrl()" class="btn-header" style="background: #2563eb; color: #fff; border: none; font-weight: bold; padding: 8px 14px; font-size: 0.85em;">
+                                    🔗 نسخ رابط المزامنة
+                                </button>
+                                <button type="button" onclick="sendSyncUrlToWhatsApp()" class="btn-header" style="background: #10b981; color: #fff; border: none; font-weight: bold; padding: 8px 14px; font-size: 0.85em;">
+                                    💬 إرسال لواتساب
+                                </button>
+                                <button type="button" onclick="toggleMobileSyncQR()" class="btn-header" style="background: rgba(212, 175, 55, 0.2); color: var(--primary-gold); border: 1px solid var(--primary-gold); font-weight: bold; padding: 8px 14px; font-size: 0.85em;">
+                                    📷 مسح QR بكاميرا الهاتف
+                                </button>
+                                <button type="button" onclick="copyPermanentVideoCode()" class="btn-header" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; font-size: 0.82em; padding: 8px 12px;">
+                                    📋 نسخ الكود البرمجي
+                                </button>
+                            </div>
+
+                            <div id="admin-videos-qr-box" style="display: none; background: #080c14; border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 10px; padding: 14px; margin-top: 10px; text-align: center;">
+                                <div style="color: #93c5fd; font-size: 0.88em; font-weight: bold; margin-bottom: 8px;">📷 امسح الرمز بكاميرا هاتفك ليتم فتح الأداة ومزامنة التحديثات:</div>
+                                <div style="display: inline-block; padding: 6px; background: #ffffff; border-radius: 8px;">
+                                    <img id="admin-videos-qr-img" src="" alt="QR Code" style="width: 150px; height: 150px; display: block;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="admin-videos-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
+                            <!-- Dynamically populated -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 4: Data & Backup -->
+                <div id="settings-tab-data-backup" class="settings-tab-pane" style="display: none;">
+                    <div style="background: #111827; border: 1.5px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 22px;">
+                        <h3 style="color: var(--primary-gold); margin: 0 0 12px 0; font-size: 1.2em;">💾 إدارة قواعد البيانات والنسخ الاحتياطي (Data Management)</h3>
+                        <p style="color: #cbd5e1; font-size: 0.88em; line-height: 1.6; margin-bottom: 18px;">
+                            يمكنك تصدير كافة سجلات المرضى والتقييمات والجلسات والإشعارات في ملف JSON مشفر للنسخ الاحتياطي أو نقله لأي جهاز آخر، أو استيراد نسخة احتياطية سابقة بضغطة زر واحدة.
+                        </p>
+
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+                            <button type="button" onclick="exportData()" class="btn-header" style="background: #10b981; color: #fff; border-color: #10b981; font-weight: bold; padding: 10px 18px;">
+                                📥 تصدير نسخة احتياطية كاملة (JSON)
+                            </button>
+                            <label class="btn-header" style="background: #2563eb; color: #fff; border-color: #2563eb; font-weight: bold; padding: 10px 18px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                                <span>📤</span> استيراد نسخة احتياطية
+                                <input type="file" id="db-import-file" accept=".json" onchange="handleImportDatabaseFile(event)" style="display: none;">
+                            </label>
+                            <button type="button" id="btn-toggle-dev" onclick="toggleDevMode()" class="btn-header" style="padding: 10px 16px;">
+                                🔧 وضع المطور: معطل
+                            </button>
+                        </div>
+
+                        <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 8px; padding: 14px; font-size: 0.85em; color: #94a3b8; line-height: 1.6;">
+                            🌐 <strong>حول المزامنة السحابية عبر مختلف الأجهزة:</strong> نظراً لأن استضافة الموقع تعمل على GitHub Pages بدون خادم خلفي، فإن بيانات الفحص التي يجريها المرضى حول العالم تُرسل فوراً إلى العيادة عبر تقارير الواتساب المشفرة (التي تحوي كامل بيانات المريض وخطة علاجه)، ويمكن استيرادها فورياً إلى اللوحة بنقرة واحدة عبر زر <strong>(استيراد ملف مريض)</strong>.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div style="border-top: 1px solid rgba(212, 175, 55, 0.2); padding-top: 14px; margin-top: 14px; display: flex; justify-content: flex-end;">
+                <button type="button" onclick="closeSystemSettingsModal()" style="background: var(--primary-gold); color: #0a0e14; border: none; padding: 9px 24px; border-radius: 8px; font-weight: bold; font-size: 0.92em; cursor: pointer;">
+                    تم وإغلاق
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ========================================================================== -->
+    <!-- 📥 نافذة استيراد ملف مريض (Import Patient Modal) -->
+    <!-- ========================================================================== -->
+    <div id="import-patient-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+        <div class="modal-inner" style="background: #0f172a; border: 1.5px solid #38bdf8; border-radius: 14px; max-width: 560px; width: 100%; padding: 22px; box-shadow: 0 10px 40px rgba(0,0,0,0.85); box-sizing: border-box;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(56, 189, 248, 0.3); padding-bottom: 12px; margin-bottom: 16px;">
+                <h3 style="color: #38bdf8; margin: 0; font-size: 1.2em;">📥 استيراد ملف مريض إلى اللوحة فوراً</h3>
+                <button type="button" onclick="closeImportPatientModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.5em; cursor: pointer;">&times;</button>
+            </div>
+
+            <div style="color: #cbd5e1; font-size: 0.88em; line-height: 1.6; margin-bottom: 14px;">
+                الصق هنا نص تقرير الواتساب الذي أرسله المريض، أو كود المريض المشفر (JSON)، أو رابط التقرير:
+            </div>
+
+            <textarea id="import-patient-text-input" rows="6" placeholder="مثال:
+الاسم: أحمد خالد
+الهاتف: 0501234567
+الشكوى: أسفل الظهر وعرق النسا
+أو الصق كائن JSON كامل..." style="width: 100%; background: #080c14; border: 1.5px solid #334155; padding: 12px; border-radius: 8px; color: #fff; font-size: 0.88em; box-sizing: border-box; resize: vertical; margin-bottom: 16px; font-family: inherit;"></textarea>
+
+            <div style="display: flex; gap: 10px;">
+                <button type="button" onclick="handleImportPatientSubmit()" style="flex: 1; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 0.95em; cursor: pointer;">
+                    📥 استيراد وإضافة لجدول المراجعين
+                </button>
+                <button type="button" onclick="closeImportPatientModal()" style="background: rgba(148, 163, 184, 0.15); border: 1px solid #475569; color: #cbd5e1; padding: 12px 18px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                    إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================== -->
+    <!-- ➕ نافذة إضافة مريض يدوياً (Add Patient Modal) -->
+    <!-- ========================================================================== -->
+    <div id="add-patient-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+        <div class="modal-inner" style="background: #0f172a; border: 1.5px solid #10b981; border-radius: 14px; max-width: 580px; width: 100%; padding: 22px; box-shadow: 0 10px 40px rgba(0,0,0,0.85); box-sizing: border-box;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(16, 185, 129, 0.3); padding-bottom: 12px; margin-bottom: 16px;">
+                <h3 style="color: #6ee7b7; margin: 0; font-size: 1.2em;">➕ إضافة ملف مراجع جديد للعيادة</h3>
+                <button type="button" onclick="closeAddPatientModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.5em; cursor: pointer;">&times;</button>
+            </div>
+
+            <form id="add-patient-form" onsubmit="handleAddPatientSubmit(event)" style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="color: #cbd5e1; font-size: 0.85em; display: block; margin-bottom: 4px; font-weight: bold;">اسم المريض:</label>
+                        <input type="text" id="add-pt-name" required placeholder="مثال: فهد المطيري" style="width: 100%; background: #080c14; border: 1px solid #334155; padding: 10px; border-radius: 8px; color: #fff; font-size: 0.9em; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="color: #cbd5e1; font-size: 0.85em; display: block; margin-bottom: 4px; font-weight: bold;">رقم الجوال (مع مفتاح الدولة):</label>
+                        <input type="tel" id="add-pt-phone" required placeholder="96650xxxxxxx" style="width: 100%; background: #080c14; border: 1px solid #334155; padding: 10px; border-radius: 8px; color: #fff; font-size: 0.9em; box-sizing: border-box;" dir="ltr">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="color: #cbd5e1; font-size: 0.85em; display: block; margin-bottom: 4px; font-weight: bold;">الدولة:</label>
+                        <input type="text" id="add-pt-country" value="المملكة العربية السعودية" style="width: 100%; background: #080c14; border: 1px solid #334155; padding: 10px; border-radius: 8px; color: #fff; font-size: 0.9em; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="color: #cbd5e1; font-size: 0.85em; display: block; margin-bottom: 4px; font-weight: bold;">المدينة:</label>
+                        <input type="text" id="add-pt-city" value="الرياض" style="width: 100%; background: #080c14; border: 1px solid #334155; padding: 10px; border-radius: 8px; color: #fff; font-size: 0.9em; box-sizing: border-box;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="color: #cbd5e1; font-size: 0.85em; display: block; margin-bottom: 4px; font-weight: bold;">منطقة الألم / العضو:</label>
+                        <select id="add-pt-area" style="width: 100%; background: #080c14; border: 1px solid #334155; padding: 10px; border-radius: 8px; color: #fff; font-size: 0.9em; box-sizing: border-box;">
+                            <option value="الفقرات القطنية">الفقرات القطنية (أسفل الظهر)</option>
+                            <option value="الفقرات العنقية">الفقرات العنقية (الرقبة والأبهر)</option>
+                            <option value="مفصل الركبة">مفصل الركبة والصابونة</option>
+                            <option value="مفصل الكتف">مفصل الكتف</option>
+                            <option value="الحوض والعصب الوركي">الحوض وعرق النسا</option>
+                            <option value="أعلى الظهر">أعلى الظهر والقفص الصدري</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="color: #cbd5e1; font-size: 0.85em; display: block; margin-bottom: 4px; font-weight: bold;">اليوم في الخطة (1 إلى 7):</label>
+                        <input type="number" id="add-pt-day" min="1" max="7" value="1" style="width: 100%; background: #080c14; border: 1px solid #334155; padding: 10px; border-radius: 8px; color: #fff; font-size: 0.9em; box-sizing: border-box; text-align: center;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="color: #cbd5e1; font-size: 0.85em; display: block; margin-bottom: 4px; font-weight: bold;">التشخيص المبدئي:</label>
+                    <input type="text" id="add-pt-diagnosis" value="انزلاق غضروفي قطني وانضغاط جذري بسيط" style="width: 100%; background: #080c14; border: 1px solid #334155; padding: 10px; border-radius: 8px; color: #fff; font-size: 0.9em; box-sizing: border-box;">
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 8px;">
+                    <button type="submit" style="flex: 1; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 0.95em; cursor: pointer;">
+                        💾 إضافة المريض وحفظ الملف
+                    </button>
+                    <button type="button" onclick="closeAddPatientModal()" style="background: rgba(148, 163, 184, 0.15); border: 1px solid #475569; color: #cbd5e1; padding: 12px 18px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                        إلغاء
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/geo-tracker.js?v=15.8"></script>
-    <script src="js/cloud-sync.js?v=15.8"></script>
-    <script src="js/database.js?v=15.8"></script>
-    <script src="js/exercise-image-studio.js?v=15.8"></script>
-    <script src="js/exercises-db.js?v=15.8"></script>
-    <script src="js/diagnostic-engine.js?v=15.8"></script>
-    <script src="js/patient-flow.js?v=15.8"></script>
-    <script src="js/admin-engine.js?v=15.8"></script>
-    <script src="js/ai-config.js?v=15.8"></script>
-    <script src="js/ai-engine.js?v=15.8"></script>
+    <script src="js/geo-tracker.js?v=16.0"></script>
+    <script src="js/cloud-sync.js?v=16.0"></script>
+    <script src="js/database.js?v=16.0"></script>
+    <script src="js/exercise-image-studio.js?v=16.0"></script>
+    <script src="js/exercises-db.js?v=16.0"></script>
+    <script src="js/diagnostic-engine.js?v=16.0"></script>
+    <script src="js/patient-flow.js?v=16.0"></script>
+    <script src="js/admin-engine.js?v=16.0"></script>
+    <script src="js/ai-config.js?v=16.0"></script>
+    <script src="js/ai-engine.js?v=16.0"></script>
 
     <script>
         let allPatientsList = [];
@@ -1311,22 +1567,87 @@
             }
         }
 
-        async function loadAdminData(refreshDemoIfEmpty = true) {
+        let activePtFilter = 'all';
+
+        async function loadAdminData(refreshDemoIfEmpty = false) {
             allPatientsList = await AdminEngine.loadPatientsOverview();
 
+            // يتم توليد بيانات تجريبية فقط بالضغط الصريح على زر "تجربة بيانات للاختبار"
             if (allPatientsList.length === 0 && refreshDemoIfEmpty) {
                 await AdminEngine.seedDemoPatients();
                 allPatientsList = await AdminEngine.loadPatientsOverview();
             }
 
             document.getElementById('stat-patients-count').textContent = allPatientsList.length;
-            const totalLogs = allPatientsList.reduce((acc, p) => acc + p.logsCount, 0);
+            const totalLogs = allPatientsList.reduce((acc, p) => acc + (p.logsCount || 0), 0);
             document.getElementById('stat-sessions-count').textContent = totalLogs;
-            const avgRec = allPatientsList.length > 0 ? Math.round(allPatientsList.reduce((acc, p) => acc + p.recoveryScore, 0) / allPatientsList.length) : 0;
+            const avgRec = allPatientsList.length > 0 ? Math.round(allPatientsList.reduce((acc, p) => acc + (p.recoveryScore || 0), 0) / allPatientsList.length) : 0;
             document.getElementById('stat-recovery-avg').textContent = avgRec + '%';
 
-            renderTable(allPatientsList);
+            updatePatientFilterCounts();
+            renderTable(getFilteredPatientsList());
             renderGeoAnalytics();
+        }
+
+        function updatePatientFilterCounts() {
+            const countAll = allPatientsList.length;
+            const countActive = allPatientsList.filter(p => (p.logsCount || 0) < 7).length;
+            const countCompleted = allPatientsList.filter(p => (p.logsCount || 0) >= 7).length;
+            const countFlags = allPatientsList.filter(p => {
+                const pat = p.patient || {};
+                return pat.redFlagsDetected || (p.latestDiagnosis && p.latestDiagnosis.includes('طارئ'));
+            }).length;
+
+            if (document.getElementById('count-pt-filter-all')) document.getElementById('count-pt-filter-all').textContent = countAll;
+            if (document.getElementById('count-pt-filter-active')) document.getElementById('count-pt-filter-active').textContent = countActive;
+            if (document.getElementById('count-pt-filter-completed')) document.getElementById('count-pt-filter-completed').textContent = countCompleted;
+            if (document.getElementById('count-pt-filter-flags')) document.getElementById('count-pt-filter-flags').textContent = countFlags;
+        }
+
+        function setPatientFilter(filterType, btnEl) {
+            activePtFilter = filterType;
+            document.querySelectorAll('.patient-filter-btn').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = '#1e293b';
+                b.style.color = '#cbd5e1';
+                b.style.borderColor = '#334155';
+            });
+            if (btnEl) {
+                btnEl.classList.add('active');
+                btnEl.style.background = 'var(--primary-gold)';
+                btnEl.style.color = '#0a0e14';
+                btnEl.style.borderColor = 'var(--primary-gold)';
+            }
+            renderTable(getFilteredPatientsList());
+        }
+
+        function getFilteredPatientsList() {
+            let list = allPatientsList;
+            if (activePtFilter === 'active') {
+                list = list.filter(p => (p.logsCount || 0) < 7);
+            } else if (activePtFilter === 'completed') {
+                list = list.filter(p => (p.logsCount || 0) >= 7);
+            } else if (activePtFilter === 'red_flags') {
+                list = list.filter(p => {
+                    const pat = p.patient || {};
+                    return pat.redFlagsDetected || (p.latestDiagnosis && p.latestDiagnosis.includes('طارئ'));
+                });
+            }
+
+            const q = (document.getElementById('search-patients') ? document.getElementById('search-patients').value : '').trim().toLowerCase();
+            if (q) {
+                list = list.filter(item => {
+                    const p = item.patient || {};
+                    return (p.name && p.name.toLowerCase().includes(q)) ||
+                           (p.patientId && p.patientId.toLowerCase().includes(q)) ||
+                           (p.phone && p.phone.includes(q)) ||
+                           (p.country && p.country.toLowerCase().includes(q)) ||
+                           (p.city && p.city.toLowerCase().includes(q)) ||
+                           (item.latestDiagnosis && item.latestDiagnosis.toLowerCase().includes(q));
+                });
+            }
+
+            return list;
         }
 
         function loadNotificationsData(playSoundIfNew = false) {
@@ -1763,6 +2084,457 @@
                 await SmartDB.deletePatient(patientId);
                 loadAdminData();
             }
+        }
+
+        // ==========================================================================
+        // 📊 دوال نافذة إحصائيات الزوار الحقيقية والتفاعلية (Visitor Analytics Modal)
+        // ==========================================================================
+        let detailedVisitsData = null;
+
+        function openVisitorAnalyticsModal() {
+            const modal = document.getElementById('visitor-analytics-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                renderVisitorAnalyticsModalContent();
+            }
+        }
+
+        function closeVisitorAnalyticsModal() {
+            const modal = document.getElementById('visitor-analytics-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function renderVisitorAnalyticsModalContent() {
+            if (typeof SmartCloudSync === 'undefined' || typeof SmartCloudSync.getDetailedVisitorStats !== 'function') return;
+            
+            detailedVisitsData = SmartCloudSync.getDetailedVisitorStats();
+            
+            const totalEl = document.getElementById('analytics-total-visits');
+            const countriesEl = document.getElementById('analytics-total-countries');
+            const mobileEl = document.getElementById('analytics-mobile-pct');
+            const desktopEl = document.getElementById('analytics-desktop-pct');
+
+            if (totalEl) totalEl.textContent = detailedVisitsData.totalVisits;
+            if (countriesEl) countriesEl.textContent = detailedVisitsData.totalCountries;
+            if (mobileEl) mobileEl.textContent = detailedVisitsData.mobilePct + '%';
+            if (desktopEl) desktopEl.textContent = detailedVisitsData.desktopPct + '%';
+
+            renderAnalyticsCountriesList(detailedVisitsData.countries);
+        }
+
+        function renderAnalyticsCountriesList(countries) {
+            const container = document.getElementById('analytics-countries-container');
+            if (!container) return;
+
+            if (!countries || countries.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; color: #94a3b8; background: #080c14; border-radius: 10px; border: 1px dashed #334155;">
+                        <div style="font-size: 2.5em; margin-bottom: 8px;">🌍</div>
+                        <strong style="color: #cbd5e1; font-size: 1.05em; display: block; margin-bottom: 4px;">لا توجد زيارات مسجلة حتى الآن</strong>
+                        <span style="font-size: 0.85em; color: #64748b;">بمجرد زيارة أي شخص للموقع من هاتفه أو حاسوبه ستظهر هنا دولته ومدينته وجهازه فوراً وبدون أي أرقام وهمية.</span>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = countries.map((c, index) => {
+                const countryKeyId = 'drilldown-country-' + index;
+                const totalVisits = c.totalVisits || c.count || 0;
+                const cities = c.cities || [];
+                const devices = c.devices || { mobile: 0, desktop: 0, tablet: 0 };
+                const recentLogs = c.recentLogs || [];
+
+                const flag = c.flag || '🌐';
+                const countryName = c.country || 'دولي';
+                const topCitiesStr = cities.slice(0, 3).map(ct => `${ct.city} (${ct.count})`).join('، ');
+
+                return `
+                <div class="analytics-country-card" data-country="${countryName.toLowerCase()}" data-cities="${cities.map(ct=>ct.city).join(' ').toLowerCase()}" style="background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; overflow: hidden; transition: all 0.2s ease;">
+                    
+                    <!-- رأس بطاقة الدولة (اضغط لفتح التفاصيل) -->
+                    <div onclick="toggleCountryDrilldown('${countryKeyId}')" style="padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; gap: 12px; background: rgba(30, 41, 59, 0.4);">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="font-size: 2em; line-height: 1;">${flag}</span>
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    <strong style="color: #f8fafc; font-size: 1.05em;">${countryName}</strong>
+                                    <span style="background: rgba(56, 189, 248, 0.15); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 10px; border-radius: 12px; font-size: 0.8em; font-weight: bold;">
+                                        ${totalVisits} زيارة
+                                    </span>
+                                </div>
+                                <div style="color: #94a3b8; font-size: 0.82em; margin-top: 3px;">
+                                    🏙️ المدن: ${topCitiesStr || 'عبر مدن ومناطق مختلفة'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="display: flex; gap: 5px;" class="hide-mobile">
+                                ${devices.mobile ? `<span style="background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 7px; border-radius: 6px; font-size: 0.78em;">📱 ${devices.mobile}</span>` : ''}
+                                ${devices.desktop ? `<span style="background: rgba(168, 85, 247, 0.15); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.3); padding: 2px 7px; border-radius: 6px; font-size: 0.78em;">💻 ${devices.desktop}</span>` : ''}
+                            </div>
+                            <span id="arrow-${countryKeyId}" style="color: var(--primary-gold); font-size: 1.1em; transition: transform 0.2s ease; display: inline-block;">▼</span>
+                        </div>
+                    </div>
+
+                    <!-- لوحة التفاصيل التفاعلية بالمدن والأجهزة -->
+                    <div id="${countryKeyId}" style="display: none; padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.06); background: #080c14;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 14px;">
+                            
+                            <!-- توزيع المدن -->
+                            <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 12px;">
+                                <h4 style="margin: 0 0 10px 0; color: var(--primary-gold); font-size: 0.92em; display: flex; align-items: center; gap: 6px;">
+                                    <span>🏙️</span> توزيع الزيارات بحسب المدن:
+                                </h4>
+                                <div style="display: flex; flex-direction: column; gap: 6px;">
+                                    ${cities.length > 0 ? cities.map(ct => `
+                                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85em; padding: 4px 8px; background: rgba(255,255,255,0.02); border-radius: 4px;">
+                                            <span style="color: #e2e8f0;">📍 ${ct.city}</span>
+                                            <span style="color: #38bdf8; font-weight: bold; font-family: monospace;">${ct.count} زيارة</span>
+                                        </div>
+                                    `).join('') : '<div style="color: #64748b; font-size: 0.82em;">غير محدد بدقة بعد</div>'}
+                                </div>
+                            </div>
+
+                            <!-- توزيع الأجهزة -->
+                            <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 12px;">
+                                <h4 style="margin: 0 0 10px 0; color: #38bdf8; font-size: 0.92em; display: flex; align-items: center; gap: 6px;">
+                                    <span>📱</span> نوع الأجهزة والمتصفحات:
+                                </h4>
+                                <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.85em;">
+                                    <div style="display: flex; justify-content: space-between; padding: 4px 8px; background: rgba(255,255,255,0.02); border-radius: 4px;">
+                                        <span style="color: #cbd5e1;">📱 الهواتف الذكية (Mobile):</span>
+                                        <span style="color: #10b981; font-weight: bold;">${devices.mobile || 0}</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 4px 8px; background: rgba(255,255,255,0.02); border-radius: 4px;">
+                                        <span style="color: #cbd5e1;">💻 أجهزة الكمبيوتر (Desktop):</span>
+                                        <span style="color: #c084fc; font-weight: bold;">${devices.desktop || 0}</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; padding: 4px 8px; background: rgba(255,255,255,0.02); border-radius: 4px;">
+                                        <span style="color: #cbd5e1;">📟 الأجهزة اللوحية (Tablet):</span>
+                                        <span style="color: #fbbf24; font-weight: bold;">${devices.tablet || 0}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- سجل آخر التوقيتات الفعلية -->
+                        ${recentLogs && recentLogs.length > 0 ? `
+                            <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px;">
+                                <span style="color: #94a3b8; font-size: 0.8em; font-weight: bold; display: block; margin-bottom: 6px;">⏱️ آخر الزيارات المسجلة من هذه الدولة:</span>
+                                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                    ${recentLogs.slice(0, 8).map(lg => {
+                                        const dStr = lg.time ? new Date(lg.time).toLocaleString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+                                        return `
+                                            <span style="background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 3px 8px; border-radius: 4px; font-size: 0.75em; display: inline-flex; align-items: center; gap: 4px;">
+                                                <span>${lg.city || ''}</span>
+                                                <span style="color: #38bdf8;">(${lg.device || 'جهاز'})</span>
+                                                <span style="color: #64748b;">${dStr}</span>
+                                            </span>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                    </div>
+
+                </div>
+                `;
+            }).join('');
+        }
+
+        function toggleCountryDrilldown(id) {
+            const pane = document.getElementById(id);
+            const arrow = document.getElementById('arrow-' + id);
+            if (!pane) return;
+
+            if (pane.style.display === 'none' || !pane.style.display) {
+                pane.style.display = 'block';
+                if (arrow) arrow.style.transform = 'rotate(180deg)';
+            } else {
+                pane.style.display = 'none';
+                if (arrow) arrow.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function filterAnalyticsCountries() {
+            const q = (document.getElementById('analytics-search-input') ? document.getElementById('analytics-search-input').value : '').trim().toLowerCase();
+            const cards = document.querySelectorAll('.analytics-country-card');
+            cards.forEach(card => {
+                const country = card.getAttribute('data-country') || '';
+                const cities = card.getAttribute('data-cities') || '';
+                if (!q || country.includes(q) || cities.includes(q)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function exportVisitorAnalytics() {
+            if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.exportVisits === 'function') {
+                SmartCloudSync.exportVisits();
+            } else {
+                alert('محرك المزامنة غير متاح حالياً للتصدير');
+            }
+        }
+
+        function handleClearVisitsHistory() {
+            if (confirm('هل أنت متأكد من رغبتك في تفريغ سجل الزيارات الإحصائية؟')) {
+                if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.clearVisits === 'function') {
+                    SmartCloudSync.clearVisits();
+                    renderVisitorAnalyticsModalContent();
+                    renderGeoAnalytics();
+                    alert('تم تفريغ سجل الزيارات بنجاح');
+                }
+            }
+        }
+
+        // ==========================================================================
+        // ⚙️ دوال نافذة إعدادات وتخصيص المنظومة (System Settings Modal)
+        // ==========================================================================
+        function openSystemSettingsModal() {
+            const modal = document.getElementById('system-settings-modal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeSystemSettingsModal() {
+            const modal = document.getElementById('system-settings-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function switchSettingsTab(tabName, btnEl) {
+            document.querySelectorAll('.settings-tab-btn').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = '#1e293b';
+                b.style.color = '#cbd5e1';
+                b.style.borderColor = '#334155';
+            });
+            if (btnEl) {
+                btnEl.classList.add('active');
+                btnEl.style.background = 'var(--primary-gold)';
+                btnEl.style.color = '#0a0e14';
+                btnEl.style.borderColor = 'var(--primary-gold)';
+            }
+
+            const panes = {
+                'ai-voice': 'settings-tab-ai-voice',
+                'exercise-images': 'settings-tab-exercise-images',
+                'video-stories': 'settings-tab-video-stories',
+                'data-backup': 'settings-tab-data-backup'
+            };
+
+            Object.values(panes).forEach(paneId => {
+                const p = document.getElementById(paneId);
+                if (p) p.style.display = 'none';
+            });
+
+            const targetId = panes[tabName];
+            if (targetId) {
+                const targetEl = document.getElementById(targetId);
+                if (targetEl) targetEl.style.display = 'block';
+            }
+        }
+
+        // ==========================================================================
+        // 📥 دوال استيراد ملفات المرضى وإضافتهم يدوياً (Patient Import & Management)
+        // ==========================================================================
+        function openImportPatientModal() {
+            const modal = document.getElementById('import-patient-modal');
+            const txt = document.getElementById('import-patient-text-input');
+            if (txt) txt.value = '';
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeImportPatientModal() {
+            const modal = document.getElementById('import-patient-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function handleImportPatientSubmit() {
+            const txtEl = document.getElementById('import-patient-text-input');
+            const raw = txtEl ? txtEl.value.trim() : '';
+            if (!raw) {
+                alert('يرجى لصق نص أو بيانات المريض أولاً');
+                return;
+            }
+
+            try {
+                let patientObj = null;
+                if (raw.startsWith('{') && raw.endsWith('}')) {
+                    try {
+                        patientObj = JSON.parse(raw);
+                    } catch (e) {}
+                }
+
+                if (!patientObj) {
+                    patientObj = {
+                        patientId: 'PT-' + Math.floor(100000 + Math.random() * 900000),
+                        name: 'مراجع جديد',
+                        phone: '',
+                        country: 'دولي',
+                        city: '',
+                        device: 'Mobile',
+                        flag: '🌍',
+                        createdAt: new Date().toISOString()
+                    };
+
+                    const lines = raw.split('\n');
+                    let complaint = '';
+                    lines.forEach(l => {
+                        const line = l.trim();
+                        if (line.includes('الاسم:')) patientObj.name = line.split('الاسم:')[1].trim();
+                        else if (line.includes('الهاتف:') || line.includes('الجوال:') || line.includes('رقم الهاتف:')) {
+                            patientObj.phone = line.replace(/[^0-9+]/g, '');
+                        } else if (line.includes('الشكوى:') || line.includes('الألم:')) {
+                            complaint = line.replace(/.*(الشكوى|الألم):/, '').trim();
+                        } else if (line.includes('الدولة:')) {
+                            patientObj.country = line.split('الدولة:')[1].trim();
+                        } else if (line.includes('المدينة:')) {
+                            patientObj.city = line.split('المدينة:')[1].trim();
+                        }
+                    });
+
+                    if (complaint) {
+                        patientObj.primaryComplaint = complaint;
+                    }
+                }
+
+                if (!patientObj.patientId) {
+                    patientObj.patientId = 'PT-' + Math.floor(100000 + Math.random() * 900000);
+                }
+
+                await SmartDB.savePatient(patientObj);
+                
+                SmartDB.addAdminNotification({
+                    type: 'new_registration',
+                    title: '📥 استيراد ملف مريض جديد',
+                    message: `تم استيراد ملف المراجع (${patientObj.name || patientObj.patientId}) بنجاح وإدراجه في جدول المراجعين.`,
+                    patientId: patientObj.patientId,
+                    patientName: patientObj.name,
+                    patientPhone: patientObj.phone
+                });
+
+                closeImportPatientModal();
+                await loadAdminData(false);
+                loadNotificationsData(true);
+                alert(`✅ تم استيراد ملف المريض (${patientObj.name}) بنجاح!`);
+            } catch (err) {
+                alert('❌ حدث خطأ أثناء قراءة البيانات: ' + err.message);
+            }
+        }
+
+        function openAddPatientModal() {
+            const modal = document.getElementById('add-patient-modal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeAddPatientModal() {
+            const modal = document.getElementById('add-patient-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function handleAddPatientSubmit(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            const name = document.getElementById('add-pt-name').value.trim();
+            const phone = document.getElementById('add-pt-phone').value.trim();
+            const gender = document.getElementById('add-pt-gender').value;
+            const country = document.getElementById('add-pt-country').value.trim() || 'المملكة العربية السعودية';
+            const city = document.getElementById('add-pt-city').value.trim() || 'الرياض';
+            const complaint = document.getElementById('add-pt-complaint').value;
+            const day = parseInt(document.getElementById('add-pt-day').value) || 1;
+            const diagnosis = document.getElementById('add-pt-diagnosis').value.trim();
+
+            if (!name) {
+                alert('يرجى إدخال اسم المريض');
+                return;
+            }
+
+            const patientId = 'PT-' + Math.floor(100000 + Math.random() * 900000);
+            const newPt = {
+                patientId,
+                name,
+                phone,
+                gender,
+                country,
+                city,
+                device: 'Mobile',
+                flag: country.includes('السعودية') ? '🇸🇦' : (country.includes('مصر') ? '🇪🇬' : (country.includes('الإمارات') ? '🇦🇪' : '🌍')),
+                primaryComplaint: complaint,
+                createdAt: new Date().toISOString()
+            };
+
+            await SmartDB.savePatient(newPt);
+
+            const assessment = {
+                patientId,
+                painLocation: complaint,
+                primaryDiagnosis: diagnosis,
+                recommendedExercises: [],
+                timestamp: new Date().toISOString()
+            };
+            await SmartDB.saveAssessment(assessment);
+
+            for (let d = 1; d < day; d++) {
+                await SmartDB.saveSessionLog({
+                    patientId,
+                    day: d,
+                    completedAt: new Date(Date.now() - (day - d) * 86400000).toISOString(),
+                    painLevelBefore: 8,
+                    painLevelAfter: 5,
+                    notes: `جلسة اليوم ${d}`
+                });
+            }
+
+            SmartDB.addAdminNotification({
+                type: 'new_registration',
+                title: '➕ إضافة مريض جديد يدوياً',
+                message: `قام الطبيب بإضافة المراجع (${name}) وحفظ ملفه السريري بنجاح.`,
+                patientId,
+                patientName: name,
+                patientPhone: phone
+            });
+
+            closeAddPatientModal();
+            await loadAdminData(false);
+            loadNotificationsData(true);
+            alert(`✅ تم حفظ المريض (${name}) بنجاح برقم ملف: ${patientId}`);
+        }
+
+        async function handleImportDatabaseFile(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                if (!data || typeof data !== 'object') throw new Error('تنسيق الملف غير صالح');
+
+                if (data.patients && Array.isArray(data.patients)) {
+                    for (const p of data.patients) {
+                        await SmartDB.savePatient(p);
+                    }
+                }
+                if (data.assessments && Array.isArray(data.assessments)) {
+                    for (const a of data.assessments) {
+                        await SmartDB.saveAssessment(a);
+                    }
+                }
+                if (data.sessionLogs && Array.isArray(data.sessionLogs)) {
+                    for (const s of data.sessionLogs) {
+                        await SmartDB.saveSessionLog(s);
+                    }
+                }
+
+                alert('✅ تم استيراد النسخة الاحتياطية وتحديث قاعدة البيانات بنجاح!');
+                await loadAdminData(false);
+                loadNotificationsData(true);
+            } catch (err) {
+                alert('❌ فشل استيراد الملف: ' + err.message);
+            }
+            e.target.value = '';
         }
 
         async function forceAppUpdateAndClearCache() {
