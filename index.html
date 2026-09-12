@@ -39,11 +39,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=16.8">
+    <link rel="stylesheet" href="css/style.css?v=16.9">
     <script>
-        // التحقق من تحديثات Service Worker وتفريغ الكاش القديم فوراً عند الترقية للإصدار 16.8
+        // التحقق من تحديثات Service Worker وتفريغ الكاش القديم فوراً عند الترقية للإصدار 16.9
         (function() {
-            const APP_TARGET_VER = '16.8';
+            const APP_TARGET_VER = '16.9';
             const currentVer = localStorage.getItem('smart_app_version');
             if (currentVer !== APP_TARGET_VER) {
                 if ('caches' in window) {
@@ -140,8 +140,9 @@
                 </div>
             </div>
 
-            <button type="button" onclick="acceptWelcomeTourModal()" style="width: 100%; background: linear-gradient(135deg, var(--primary-gold) 0%, var(--primary-gold-dark) 100%); color: #0a0e14; border: none; padding: 14px; border-radius: 8px; font-weight: bold; font-size: 1.05em; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);">
-                🚀 أوافق وأبدأ الفحص السريري الذكي الآن
+            <button type="button" onclick="acceptWelcomeTourModal()" class="royal-magnetic-pulse-btn" style="width: 100%; color: #0a0e14; border: none; padding: 16px; border-radius: 10px; font-weight: 900; font-size: 1.15em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <span>🚀 أوافق وأبدأ الفحص السريري الذكي الآن</span>
+                <span>⬅️</span>
             </button>
         </div>
     </div>
@@ -243,37 +244,9 @@
             <!-- وسام الريادة العالمية: منظومة الفحص والعلاج الذكية الأولى والوحيدة في العالم (تصميم عصري رشيق للهاتف والكمبيوتر) -->
             <div class="prestige-compact-showcase no-print" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.16) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 14px 20px; margin-bottom: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
                 <div style="display: flex; align-items: center; gap: 14px;">
-                    <div style="width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fef08a 0%, #d4af37 45%, #854d0e 85%, #451a03 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(212, 175, 55, 0.65), inset 0 2px 4px rgba(255,255,255,0.7); flex-shrink: 0; border: 2px solid #fff59d; position: relative;">
+                    <div style="width: 56px; height: 56px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(212, 175, 55, 0.8), inset 0 2px 4px rgba(255,255,255,0.7); flex-shrink: 0; border: 2.5px solid #fef08a; position: relative; background: #000;">
                         <!-- وسام التميز السريري الملكي فائق الفخامة والريادة -->
-                        <svg width="34" height="34" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
-                            <defs>
-                                <linearGradient id="goldGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stop-color="#FFF59D"/>
-                                    <stop offset="40%" stop-color="#D4AF37"/>
-                                    <stop offset="85%" stop-color="#996515"/>
-                                    <stop offset="100%" stop-color="#5B3A04"/>
-                                </linearGradient>
-                                <linearGradient id="ribbonGradBlue" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stop-color="#38BDF8"/>
-                                    <stop offset="50%" stop-color="#1E40AF"/>
-                                    <stop offset="100%" stop-color="#0F172A"/>
-                                </linearGradient>
-                            </defs>
-                            <!-- أشرطة الوسام المتدلية الفاخرة -->
-                            <path d="M22 36 L15 58 L24 53 L29 58 L27 36 Z" fill="url(#ribbonGradBlue)" stroke="#D4AF37" stroke-width="1.2" stroke-linejoin="round"/>
-                            <path d="M42 36 L49 58 L40 53 L35 58 L37 36 Z" fill="url(#ribbonGradBlue)" stroke="#D4AF37" stroke-width="1.2" stroke-linejoin="round"/>
-                            <!-- خط الزخرفة الذهبي في الشريط -->
-                            <path d="M20 38 L18 54 L24 51" stroke="#FDE047" stroke-width="1" fill="none"/>
-                            <path d="M44 38 L46 54 L40 51" stroke="#FDE047" stroke-width="1" fill="none"/>
-                            <!-- قرص الوسام الذهبي الرئيسي المسنن بأشعة التميز -->
-                            <circle cx="32" cy="26" r="21" fill="url(#goldGrad1)" stroke="#FFF9C4" stroke-width="1.8"/>
-                            <circle cx="32" cy="26" r="17.5" fill="#0A0F1D" stroke="#D4AF37" stroke-width="1.2"/>
-                            <!-- إكليل الغار المحيط بنجمة التميز -->
-                            <path d="M19 28 C18 21 24 16 32 16 C40 16 46 21 45 28 C45 34 39 38 32 38 C25 38 19 34 19 28 Z" fill="none" stroke="rgba(212, 175, 55, 0.4)" stroke-width="1" stroke-dasharray="2 2"/>
-                            <!-- نجمة التميز السريري الثمانية المتبلورة (8-Point Distinction Star) -->
-                            <polygon points="32,13 34.5,21.5 43,21.5 36,26.5 38.5,35 32,30 25.5,35 28,26.5 21,21.5 29.5,21.5" fill="url(#goldGrad1)" stroke="#FFFFFF" stroke-width="0.8"/>
-                            <circle cx="32" cy="25" r="2.8" fill="#FFFFFF" opacity="0.95"/>
-                        </svg>
+                        <img src="assets/royal-excellence-medal.jpg" alt="وسام التميز السريري والريادة العالمية" style="width: 100%; height: 100%; object-fit: cover;">
                     </div>
                     <div>
                         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 2px;">
@@ -406,8 +379,9 @@
                         </div>
                     </div>
 
-                    <button type="button" id="btn-goto-step2" disabled onclick="if(window.Wada3anAiEngine) Wada3anAiEngine.unlockAudio(); goToStep(2);" style="width: 100%; background: linear-gradient(135deg, var(--primary-gold) 0%, var(--primary-gold-dark) 100%); color: #0a0e14; border: none; padding: 15px; border-radius: 10px; font-size: 1.05em; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); opacity: 0.5;">
-                        التالي: التقييم السريري الذكي ⬅️
+                    <button type="button" id="btn-goto-step2" disabled onclick="if(window.Wada3anAiEngine) Wada3anAiEngine.unlockAudio(); goToStep(2);" class="royal-magnetic-pulse-btn" style="width: 100%; color: #0a0e14; border: none; padding: 16px; border-radius: 10px; font-size: 1.15em; font-weight: 900; cursor: pointer; transition: 0.3s; opacity: 0.55; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span>🚀 التالي: التقييم السريري الذكي</span>
+                        <span>⬅️</span>
                     </button>
                 </div>
             </div>
@@ -1141,39 +1115,9 @@
                     </div>
                 </div>
 
-                <!-- أيقونة المجسم والوسام الذهبي الفاخر SVG -->
-                <div style="margin-bottom: 14px;">
-                    <svg viewBox="0 0 120 120" width="90" height="90" style="filter: drop-shadow(0 6px 14px rgba(212, 175, 55, 0.45));">
-                        <!-- أشرطة الوسام السفلية -->
-                        <polygon points="40,75 30,115 50,105 60,115 52,75" fill="#b8860b" opacity="0.85"/>
-                        <polygon points="80,75 90,115 70,105 60,115 68,75" fill="#d4af37" opacity="0.95"/>
-                        <polygon points="45,78 35,110 50,102 54,78" fill="#10b981" opacity="0.8"/>
-                        <polygon points="75,78 85,110 70,102 66,78" fill="#059669" opacity="0.8"/>
-                        <!-- الميدالية الدائرية المركزية -->
-                        <circle cx="60" cy="50" r="38" fill="url(#medalGoldGrad)" stroke="#fef08a" stroke-width="2.5"/>
-                        <circle cx="60" cy="50" r="32" fill="#09101d" stroke="#d4af37" stroke-width="1.5" stroke-dasharray="3,2"/>
-                        <!-- كأس البطولة والتأهيل -->
-                        <path d="M48,36 L72,36 L70,52 C69,59 63,64 60,64 C57,64 51,59 50,52 Z" fill="url(#trophyGrad)" stroke="#fef08a" stroke-width="1"/>
-                        <path d="M48,38 C42,38 42,48 49,48" fill="none" stroke="#fef08a" stroke-width="1.8"/>
-                        <path d="M72,38 C78,38 78,48 71,48" fill="none" stroke="#fef08a" stroke-width="1.8"/>
-                        <rect x="57" y="64" width="6" height="7" fill="#d4af37"/>
-                        <rect x="52" y="70" width="16" height="4" rx="2" fill="#fef08a"/>
-                        <!-- نجمة التعافي اللامعة -->
-                        <polygon points="60,40 62,45 67,45 63,48 65,53 60,50 55,53 57,48 53,45 58,45" fill="#ffffff"/>
-                        <!-- تدرجات الألوان -->
-                        <defs>
-                            <linearGradient id="medalGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#fef08a"/>
-                                <stop offset="50%" stop-color="#d4af37"/>
-                                <stop offset="100%" stop-color="#996515"/>
-                            </linearGradient>
-                            <linearGradient id="trophyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#ffffff"/>
-                                <stop offset="50%" stop-color="#fef08a"/>
-                                <stop offset="100%" stop-color="#d4af37"/>
-                            </linearGradient>
-                        </defs>
-                    </svg>
+                <!-- وسام التميز السريري الملكي فائق الفخامة والريادة -->
+                <div style="margin-bottom: 16px; display: flex; justify-content: center;">
+                    <img src="assets/royal-excellence-medal.jpg" alt="وسام الانتصار على الألم والتعافي الحركي" style="width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3.5px solid #fef08a; box-shadow: 0 0 30px rgba(212, 175, 55, 0.8), 0 8px 24px rgba(0,0,0,0.7); background: #000;">
                 </div>
 
                 <!-- عنوان الوثيقة الملكي المعبر عن الانتصار والتعافي -->
@@ -1546,19 +1490,19 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/geo-tracker.js?v=16.8"></script>
-    <script src="js/cloud-sync.js?v=16.8"></script>
-    <script src="js/database.js?v=16.8"></script>
-    <script src="js/exercise-image-studio.js?v=16.8"></script>
-    <script src="js/exercises-db.js?v=16.8"></script>
-    <script src="js/diagnostic-engine.js?v=16.8"></script>
-    <script src="js/audio-pacer.js?v=16.8"></script>
-    <script src="js/patient-flow.js?v=16.8"></script>
-    <script src="js/admin-engine.js?v=16.8"></script>
-    <script src="js/ai-config.js?v=16.8"></script>
-    <script src="js/ai-engine.js?v=16.8"></script>
-    <script src="js/app.js?v=16.8"></script>
-    <script src="js/text-editor.js?v=16.8"></script>
+    <script src="js/geo-tracker.js?v=16.9"></script>
+    <script src="js/cloud-sync.js?v=16.9"></script>
+    <script src="js/database.js?v=16.9"></script>
+    <script src="js/exercise-image-studio.js?v=16.9"></script>
+    <script src="js/exercises-db.js?v=16.9"></script>
+    <script src="js/diagnostic-engine.js?v=16.9"></script>
+    <script src="js/audio-pacer.js?v=16.9"></script>
+    <script src="js/patient-flow.js?v=16.9"></script>
+    <script src="js/admin-engine.js?v=16.9"></script>
+    <script src="js/ai-config.js?v=16.9"></script>
+    <script src="js/ai-engine.js?v=16.9"></script>
+    <script src="js/app.js?v=16.9"></script>
+    <script src="js/text-editor.js?v=16.9"></script>
 
     <script>
         // تشغيل عداد التفاعل الحي الاجتماعي (Live Online Social Proof) وكاشف الدولة والمدينة

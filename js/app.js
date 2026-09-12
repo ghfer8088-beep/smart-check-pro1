@@ -7083,9 +7083,31 @@ async function sendChatMessage() {
             clinicalDialogueState.patientPhone = nextResponse.extractedPhone;
         }
         clinicalDialogueState.step = 'completed';
-        playStationAudio('transition', () => {
-            finishChatIntakeAndGenerateReport();
-        });
+
+        // إعطاء وقت كافٍ لد. سارة لإنهاء نطق جملتها الأخيرة دون أن تنقطع في المنتصف
+        let transitionExecuted = false;
+        const executeTransition = () => {
+            if (transitionExecuted) return;
+            transitionExecuted = true;
+            playStationAudio('transition', () => {
+                finishChatIntakeAndGenerateReport();
+            });
+        };
+
+        if (typeof Wada3anAiEngine !== 'undefined' && Wada3anAiEngine.isSpeaking) {
+            const checkSpeakingInterval = setInterval(() => {
+                if (!Wada3anAiEngine.isSpeaking) {
+                    clearInterval(checkSpeakingInterval);
+                    executeTransition();
+                }
+            }, 400);
+            setTimeout(() => {
+                clearInterval(checkSpeakingInterval);
+                executeTransition();
+            }, 6500);
+        } else {
+            setTimeout(executeTransition, 1500);
+        }
         return;
     }
 

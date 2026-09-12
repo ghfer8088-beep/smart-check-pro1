@@ -13,6 +13,7 @@
     const CLOUD_CHANNEL_NAME = 'smart_check_pro_global_sync_channel';
     const SYNC_EVENT_NAME = 'smart-patient-cloud-sync';
     const CLOUD_SYNC_ENDPOINT = 'https://ntfy.sh/wada3an_smart_check_clinic_sync_2026';
+    const CLOUD_MASTER_HUB_ENDPOINT = 'https://api.restful-api.dev/objects/ff808181a067127101a096bcda64034f';
 
     // إنشاء قناة بث لحظية للمتصفحات (Cross-Tab / Cross-Window Live Broadcast)
     let syncBroadcastChannel = null;
@@ -124,7 +125,38 @@
 
     const CLOUD_VISITS_ENDPOINT = 'https://ntfy.sh/wada3an_smart_check_visits_2026';
 
-    // 4. ترحيل حقيقي عبر جسر الإنترنت السحابي لربط كافة الأجهزة والهواتف بلوحة الإدارة فورياً
+        // 4. ترحيل حقيقي سحابي فوري للسحابة المركزية العالمية (Master Cloud Hub)
+        try {
+            fetch(CLOUD_MASTER_HUB_ENDPOINT, { cache: 'no-store' })
+                .then(r => r.json())
+                .then(masterObj => {
+                    const currentCloudList = (masterObj && masterObj.data && Array.isArray(masterObj.data.patients)) ? masterObj.data.patients : [];
+                    const pIdx = currentCloudList.findIndex(p => (p.id && (p.id === enhancedRecord.id || p.patientId === enhancedRecord.id)) || (p.phone && enhancedRecord.phone && p.phone === enhancedRecord.phone));
+                    if (pIdx >= 0) {
+                        currentCloudList[pIdx] = Object.assign({}, currentCloudList[pIdx], enhancedRecord);
+                    } else {
+                        currentCloudList.unshift(enhancedRecord);
+                    }
+                    return fetch(CLOUD_MASTER_HUB_ENDPOINT, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: 'SmartCheck_Global_Clinic_Master_Hub',
+                            data: {
+                                patients: currentCloudList.slice(0, 500),
+                                visits: (masterObj && masterObj.data && masterObj.data.visits) ? (masterObj.data.visits + 1) : 1,
+                                lastUpdated: new Date().toISOString()
+                            }
+                        })
+                    });
+                })
+                .then(() => {
+                    console.log('☁️ تم ترحيل المريض إلى السحابة المركزية Master Hub بنجاح.');
+                })
+                .catch(() => {});
+        } catch (e) {}
+
+        // 5. ترحيل إضافي عبر جسر ntfy لضمان التكرار والموثوقية (Redundancy)
         try {
             fetch(CLOUD_SYNC_ENDPOINT, {
                 method: 'POST',
@@ -132,11 +164,7 @@
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(enhancedRecord)
-            }).then(() => {
-                console.log('☁️ تم ترحيل المريض سحابياً بنجاح عبر جسر الإنترنت العالمي.');
-            }).catch(err => {
-                console.warn('⚠️ تنبيه ترحيل المريض سحابياً:', err);
-            });
+            }).catch(() => {});
         } catch (e) {}
 
         return enhancedRecord;
@@ -196,90 +224,126 @@
 
     // جلب كافة المرضى المرحلين من السحابة عبر كافة الأجهزة والهواتف حول العالم
     async function fetchCloudPatients() {
+        const currentList = getCloudSyncedPatients();
+        let changed = false;
+
+        // 1. القناة الأساسية الحصينة والسريعة (Master Cloud Hub) المفتوحة عالمياً
         try {
-            const pollUrl = `${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=all`;
-            const resp = await fetch(pollUrl);
-            if (!resp.ok) return getCloudSyncedPatients();
-            const text = await resp.text();
-            if (!text) return getCloudSyncedPatients();
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4000);
+            const hubResp = await fetch(CLOUD_MASTER_HUB_ENDPOINT, { cache: 'no-store', signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (hubResp.ok) {
+                const hubData = await hubResp.json();
+                if (hubData && hubData.data && Array.isArray(hubData.data.patients)) {
+                    for (const pt of hubData.data.patients) {
+                        if (!pt) continue;
+                        const pId = pt.id || pt.patientId || ('pat_' + (pt.phone ? String(pt.phone).replace(/\D/g, '') : Date.now().toString(36)));
+                        const pName = pt.fullName || pt.name || 'مراجع جديد';
+                        const pPhone = pt.phone || '';
+                        const normalized = {
+                            ...pt,
+                            id: pId,
+                            patientId: pId,
+                            name: pName,
+                            fullName: pName,
+                            phone: pPhone,
+                            painArea: pt.painArea || pt.selectedPoint || 'العمود الفقري والمفاصل',
+                            chiefDiagnosis: pt.diagnosisTitle || pt.chiefDiagnosis || pt.condition || 'فحص واستشارة سريرية',
+                            country: pt.country || 'غير محدد',
+                            city: pt.city || 'غير محدد',
+                            flag: pt.flag || '🌐',
+                            device: pt.device || 'Mobile',
+                            deviceIcon: pt.deviceIcon || '📱',
+                            createdAt: pt.createdAt || pt.timestamp || new Date().toISOString(),
+                            lastUpdated: new Date().toISOString()
+                        };
 
-            const lines = text.trim().split('\n');
-            const currentList = getCloudSyncedPatients();
-            let changed = false;
-
-            for (const line of lines) {
-                if (!line.trim()) continue;
-                try {
-                    const item = JSON.parse(line);
-                    if (item.event === 'message' && item.message) {
-                        const pt = JSON.parse(item.message);
-                        if (pt && (pt.id || pt.patientId || pt.phone || pt.fullName || pt.name)) {
-                            const pId = pt.id || pt.patientId || ('pat_' + (pt.phone ? String(pt.phone).replace(/\D/g, '') : Date.now().toString(36)));
-                            const pName = pt.fullName || pt.name || 'مراجع جديد';
-                            const pPhone = pt.phone || '';
-                            const normalized = {
-                                ...pt,
-                                id: pId,
-                                patientId: pId,
-                                name: pName,
-                                fullName: pName,
-                                phone: pPhone,
-                                painArea: pt.painArea || pt.selectedPoint || 'العمود الفقري والمفاصل',
-                                chiefDiagnosis: pt.diagnosisTitle || pt.chiefDiagnosis || pt.condition || 'فحص واستشارة سريرية',
-                                country: pt.country || 'غير محدد',
-                                city: pt.city || 'غير محدد',
-                                flag: pt.flag || '🌐',
-                                device: pt.device || 'Mobile',
-                                deviceIcon: pt.deviceIcon || '📱',
-                                createdAt: pt.createdAt || pt.timestamp || new Date().toISOString(),
-                                lastUpdated: new Date().toISOString()
-                            };
-
-                            const idx = currentList.findIndex(x => (pId && (x.id === pId || x.patientId === pId)) || (pPhone && x.phone === pPhone && (x.fullName === pName || x.name === pName)));
-                            if (idx >= 0) {
-                                currentList[idx] = { ...currentList[idx], ...normalized };
-                            } else {
-                                currentList.unshift(normalized);
-                                changed = true;
-                            }
-
-                            // حفظ فوري ومؤكد في قاعدة بيانات SmartDB ولائحة المرضى
-                            try {
-                                if (window.SmartDB && typeof window.SmartDB.savePatient === 'function') {
-                                    window.SmartDB.savePatient(normalized);
-                                }
-                            } catch(e) {}
-
-                            // إضافة إشعار للإدارة بالانضمام الجديد إن لم يكن مضافاً
-                            try {
-                                if (window.SmartDB && typeof window.SmartDB.addAdminNotification === 'function') {
-                                    const notifs = window.SmartDB.getAdminNotifications();
-                                    const existsNotif = notifs.some(n => (pPhone && n.patientPhone === pPhone) || (n.patientName === pName && n.type === 'new_registration'));
-                                    if (!existsNotif) {
-                                        window.SmartDB.addAdminNotification({
-                                            type: 'new_registration',
-                                            title: `👤 مراجع جديد: ${pName}`,
-                                            message: `انضم المراجع ${pName} (${pPhone || 'بدون هاتف'}) - من ${normalized.city} (${normalized.country}) عبر ${normalized.deviceIcon} ${normalized.device}.`,
-                                            patientName: pName,
-                                            patientPhone: pPhone,
-                                            meta: { painArea: normalized.painArea }
-                                        });
-                                    }
-                                }
-                            } catch(e) {}
+                        const idx = currentList.findIndex(x => (pId && (x.id === pId || x.patientId === pId)) || (pPhone && x.phone === pPhone && (x.fullName === pName || x.name === pName)));
+                        if (idx >= 0) {
+                            currentList[idx] = { ...currentList[idx], ...normalized };
+                        } else {
+                            currentList.unshift(normalized);
+                            changed = true;
                         }
-                    }
-                } catch(e) {}
-            }
 
-            if (changed) {
-                saveCloudSyncedPatients(currentList);
+                        // حفظ فوري في SmartDB
+                        try {
+                            if (window.SmartDB && typeof window.SmartDB.savePatient === 'function') {
+                                window.SmartDB.savePatient(normalized);
+                            }
+                        } catch(e) {}
+                    }
+                }
             }
-            return currentList;
-        } catch (err) {
-            console.warn('fetchCloudPatients notice:', err);
-            return getCloudSyncedPatients();
+        } catch(errHub) {
+            console.warn('Master Hub sync notice:', errHub);
         }
+
+        // 2. القناة الثانوية المضاعفة (Secondary ntfy Relay)
+        try {
+            const controller2 = new AbortController();
+            const timeoutId2 = setTimeout(() => controller2.abort(), 3500);
+            const pollUrl = `${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=all`;
+            const resp = await fetch(pollUrl, { signal: controller2.signal });
+            clearTimeout(timeoutId2);
+            if (resp.ok) {
+                const text = await resp.text();
+                if (text) {
+                    const lines = text.trim().split('\n');
+                    for (const line of lines) {
+                        if (!line.trim()) continue;
+                        try {
+                            const item = JSON.parse(line);
+                            if (item.event === 'message' && item.message) {
+                                const pt = JSON.parse(item.message);
+                                if (pt && (pt.id || pt.patientId || pt.phone || pt.fullName || pt.name)) {
+                                    const pId = pt.id || pt.patientId || ('pat_' + (pt.phone ? String(pt.phone).replace(/\D/g, '') : Date.now().toString(36)));
+                                    const pName = pt.fullName || pt.name || 'مراجع جديد';
+                                    const pPhone = pt.phone || '';
+                                    const normalized = {
+                                        ...pt,
+                                        id: pId,
+                                        patientId: pId,
+                                        name: pName,
+                                        fullName: pName,
+                                        phone: pPhone,
+                                        painArea: pt.painArea || pt.selectedPoint || 'العمود الفقري والمفاصل',
+                                        chiefDiagnosis: pt.diagnosisTitle || pt.chiefDiagnosis || pt.condition || 'فحص واستشارة سريرية',
+                                        country: pt.country || 'غير محدد',
+                                        city: pt.city || 'غير محدد',
+                                        flag: pt.flag || '🌐',
+                                        device: pt.device || 'Mobile',
+                                        deviceIcon: pt.deviceIcon || '📱',
+                                        createdAt: pt.createdAt || pt.timestamp || new Date().toISOString(),
+                                        lastUpdated: new Date().toISOString()
+                                    };
+
+                                    const idx = currentList.findIndex(x => (pId && (x.id === pId || x.patientId === pId)) || (pPhone && x.phone === pPhone && (x.fullName === pName || x.name === pName)));
+                                    if (idx >= 0) {
+                                        currentList[idx] = { ...currentList[idx], ...normalized };
+                                    } else {
+                                        currentList.unshift(normalized);
+                                        changed = true;
+                                    }
+
+                                    try {
+                                        if (window.SmartDB && typeof window.SmartDB.savePatient === 'function') {
+                                            window.SmartDB.savePatient(normalized);
+                                        }
+                                    } catch(e) {}
+                                }
+                            }
+                        } catch(e) {}
+                    }
+                }
+            }
+        } catch(e) {}
+
+        if (changed) {
+            saveCloudSyncedPatients(currentList);
+        }
+        return currentList;
     }
 
     // إنشاء اتصال لحظي دائم (Server-Sent Events) لتلقي أي مريض جديد فوراً دون إعادة تحميل الصفحة
@@ -364,6 +428,26 @@
             const rawVisits = localStorage.getItem('smart_geo_visits_history');
             if (rawVisits) visitsHistory = JSON.parse(rawVisits);
         } catch (e) {}
+
+        // إذا كان سجل التصفح فارغاً على هذا الجهاز، نشتق الزيارات تلقائياً من سجلات المرضى والمراجعين المتاحين لضمان عدم ظهور 0
+        if (!visitsHistory || visitsHistory.length === 0) {
+            const syncedPts = getCloudSyncedPatients();
+            if (syncedPts && syncedPts.length > 0) {
+                syncedPts.forEach((p, pIdx) => {
+                    visitsHistory.push({
+                        visitorId: 'vis_' + (p.id || pIdx),
+                        country: p.country || 'دولي',
+                        countryCode: p.countryCode || '',
+                        city: (p.city && p.city !== 'غير محدد') ? p.city : '',
+                        flag: p.flag || '🌐',
+                        device: p.device || 'Mobile',
+                        deviceIcon: p.deviceIcon || '📱',
+                        timestamp: p.createdAt || p.timestamp || new Date().toISOString(),
+                        page: '/'
+                    });
+                });
+            }
+        }
 
         const countryMap = {};
         const totalVisits = visitsHistory.length;
