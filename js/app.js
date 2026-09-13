@@ -2945,19 +2945,24 @@ function displayDiagnosticReport(data) {
                     </div>
                 </div>
 
-                <div id="plan-activation-btn-wrapper" style="text-align: center; margin: 24px auto 12px auto; max-width: 580px;">
+                <div id="plan-activation-btn-wrapper" style="text-align: center; margin: 24px auto 12px auto; max-width: 520px;">
                     <button type="button" onclick="activateRecoveryPlanInstantly()" class="btn-plan-royal-card" id="btn-activate-plan-royal" aria-label="إضغط هنا لتفعيل الخطة المجانية">
                         <div class="royal-card-halo"></div>
                         <div class="royal-card-shimmer"></div>
-                        <div class="royal-main-content" style="justify-content: center; gap: 14px;">
-                            <div class="royal-icon-box" style="width: 44px; height: 44px; border-radius: 12px;">
+                        <div class="royal-main-content" style="justify-content: center; align-items: center; text-align: center; gap: 14px;">
+                            <div class="royal-icon-box" style="width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;">
                                 <span class="royal-icon-emoji" style="font-size: 1.4em;">🎁</span>
                             </div>
-                            <div class="royal-cta-headline" style="font-size: 1.3em; font-weight: 900; color: #ffffff; text-shadow: 0 2px 8px rgba(0,0,0,0.8); letter-spacing: 0.5px;">
-                                إضغط هنا لتفعيل الخطة المجانية
+                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex: 1;">
+                                <div class="pulsing-click-here" style="color: #fef08a; font-size: 1.15em; font-weight: 900; letter-spacing: 0.8px; margin-bottom: 2px;">
+                                    إضغط هنا
+                                </div>
+                                <div class="royal-cta-headline" style="font-size: 1.35em; font-weight: 900; color: #ffffff; text-shadow: 0 2px 8px rgba(0,0,0,0.8); letter-spacing: 0.4px; line-height: 1.25; text-align: center;">
+                                    لتفعيل الخطة المجانية
+                                </div>
                             </div>
-                            <div class="royal-arrow-box" style="width: 40px; height: 40px;">
-                                <span class="royal-arrow-anim" style="font-size: 1.2em;">⬅️</span>
+                            <div class="royal-arrow-box" style="width: 44px; height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                                <span class="royal-arrow-anim" style="font-size: 1.25em;">⬅️</span>
                             </div>
                         </div>
                     </button>

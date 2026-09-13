@@ -1480,21 +1480,46 @@ body {
         border-radius: 16px;
     }
     .royal-cta-headline {
-        font-size: 1.05em;
+        font-size: 1.08em;
+    }
+    .pulsing-click-here {
+        font-size: 0.98em !important;
     }
     .royal-cta-subline {
         font-size: 0.78em;
     }
     .royal-icon-box {
-        width: 42px;
-        height: 42px;
+        width: 38px;
+        height: 38px;
     }
     .royal-icon-emoji {
-        font-size: 1.35em;
+        font-size: 1.25em;
     }
     .royal-arrow-box {
-        width: 34px;
-        height: 34px;
+        width: 36px;
+        height: 36px;
+    }
+}
+
+/* تأثير نابض لعبارة "إضغط هنا" لتوجيه ولفت انتباه المريض */
+.pulsing-click-here {
+    animation: clickHerePulsate 1.5s ease-in-out infinite;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-shadow: 0 0 10px rgba(254, 240, 138, 0.7);
+}
+
+@keyframes clickHerePulsate {
+    0%, 100% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 4px rgba(254, 240, 138, 0.6));
+        color: #fef08a;
+    }
+    50% {
+        transform: scale(1.1);
+        filter: drop-shadow(0 0 14px rgba(254, 240, 138, 1)) drop-shadow(0 0 22px rgba(16, 185, 129, 0.85));
+        color: #ffffff;
     }
 }
 
