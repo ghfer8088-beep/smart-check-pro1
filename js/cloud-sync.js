@@ -862,14 +862,17 @@
     // =========================================================================
     const CLOUD_TIMING_ENDPOINT = 'https://ntfy.sh/wada3an_smart_check_timing_sync_2026';
     let timingEventSource = null;
+    let lastAppliedTimingTimestamp = parseInt(localStorage.getItem('smart_last_timing_sync_ts') || '0') || 0;
 
-    // بث تحديث التوقيت من لوحة الإدارة إلى هاتف المريض سحابياً عبر قنوات متعددة وموثوقة
+    // بث تحديث التوقيت من لوحة الإدارة إلى هاتف المريض سحابياً عبر كافة القنوات الموثوقة
     function dispatchTimingUpdateToCloud(timingData) {
         if (!timingData) return;
+        const now = Date.now();
         const payload = {
             type: 'session_timing_update',
             ...timingData,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            updatedAt: now
         };
 
         // 1. بث عبر BroadcastChannel لجميع التبويبات المفتوحة محلياً
@@ -879,23 +882,65 @@
             }
         } catch(e) {}
 
-        // 2. إرسال إلى NTFY (قناة التوقيت)
+        const rawJson = JSON.stringify(payload);
+
+        // 2. إرسال إلى NTFY (قناة التوقيت) كنص خام مباشر (يقبله NTFY بدون قيود هيدر)
         try {
             fetch(CLOUD_TIMING_ENDPOINT, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: rawJson
             }).catch(() => {});
         } catch (e) {}
 
-        // 3. إرسال إلى NTFY (القناة المركزية للعيادة كاحتياطي دائم وموثوق)
+        // 3. إرسال إلى NTFY بصيغة JSON القياسية الرسمية { topic, message, title }
+        try {
+            fetch('https://ntfy.sh', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    topic: 'wada3an_smart_check_timing_sync_2026',
+                    message: rawJson,
+                    title: 'Timing Update'
+                })
+            }).catch(() => {});
+        } catch (e) {}
+
+        // 4. إرسال إلى NTFY (القناة المركزية للعيادة كاحتياطي دائم وموثوق)
         try {
             fetch(CLOUD_SYNC_ENDPOINT, {
                 method: 'POST',
+                body: rawJson
+            }).catch(() => {});
+
+            fetch('https://ntfy.sh', {
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    topic: 'wada3an_smart_check_clinic_sync_2026',
+                    message: rawJson,
+                    title: 'Timing Update'
+                })
             }).catch(() => {});
         } catch (e) {}
+
+        // 5. حفظ التحديث اللحظي في السحابة المركزية العالمية (Master Cloud Hub) لضمان وصوله لأي متصفح
+        try {
+            fetch(CLOUD_MASTER_HUB_ENDPOINT, { cache: 'no-store' })
+                .then(r => r.json())
+                .then(masterObj => {
+                    const currentData = (masterObj && masterObj.data) ? masterObj.data : {};
+                    currentData.latestTimingUpdate = payload;
+                    currentData.lastTimingTimestamp = now;
+                    return fetch(CLOUD_MASTER_HUB_ENDPOINT, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: 'SmartCheck_Global_Clinic_Master_Hub',
+                            data: currentData
+                        })
+                    });
+                }).catch(() => {});
+        } catch(e) {}
     }
 
     // تحديث مباشر وفوري لعناصر الساعة وأزرار القفل في الصفحة المعروضة حالياً
@@ -915,6 +960,12 @@
                 if (window.activeCountdownInterval) {
                     clearInterval(window.activeCountdownInterval);
                     window.activeCountdownInterval = null;
+                }
+
+                // إيقاف دورة الاستعلام عند اكتمال الفتح
+                if (window.step5TimingPollInterval) {
+                    clearInterval(window.step5TimingPollInterval);
+                    window.step5TimingPollInterval = null;
                 }
 
                 // تحديث حاوية الزر إلى الحالة النشطة المفتوحة وإزالة أنيميشن الإطار النابض
@@ -983,7 +1034,7 @@
 
         let isMatch = false;
 
-        // إذا تم تفعيل خيار البث العام لجميع الهواتف المتصلة أو إذا كان زر العداد معروضاً على الشاشة حالياً
+        // إذا تم تفعيل خيار البث العام لجميع الأجهزة النشطة أو إذا كان زر العداد معروضاً على الشاشة حالياً
         const isClockOnScreen = !!document.getElementById('session-completion-control-wrapper') || !!document.getElementById('countdown-hours');
         if (update.broadcastToAll || update.global || isClockOnScreen) {
             isMatch = true;
@@ -1023,6 +1074,11 @@
             return false;
         }
 
+        // تسجيل أحدث طابع زمني لتفادي المعالجة المكررة
+        const updTimestamp = update.updatedAt || Date.now();
+        lastAppliedTimingTimestamp = Math.max(lastAppliedTimingTimestamp, updTimestamp);
+        try { localStorage.setItem('smart_last_timing_sync_ts', String(lastAppliedTimingTimestamp)); } catch(e) {}
+
         const pKey = currentPid || targetPid;
         const keysToUpdate = new Set();
         if (pKey) keysToUpdate.add(pKey);
@@ -1038,6 +1094,7 @@
                 localStorage.removeItem(`custom_target_time_${key}`);
                 localStorage.removeItem(`custom_total_duration_${key}`);
                 localStorage.removeItem(`sessionStartTime_${key}_${update.sessionNum || 1}`);
+                localStorage.removeItem(`sessionStartTime_${key}_${update.sessionNum || 2}`);
             } else if (update.targetTime && update.targetTime > now) {
                 localStorage.setItem(`custom_target_time_${key}`, String(update.targetTime));
                 if (update.totalDurationMs) {
@@ -1080,12 +1137,14 @@
         return true;
     }
 
-    // جلب التعديلات السحابية للتوقيت (عبر NTFY وقنوات البث السحابي)
+    // جلب التعديلات السحابية للتوقيت (عبر NTFY وقنوات البث السحابي والسحابة المركزية Master Hub)
     async function fetchRemoteTimingUpdates() {
-        // 1. جلب من قناة التوقيت المخصصة مع حماية AbortController
+        const candidateUpdates = [];
+
+        // 1. جلب من قناة التوقيت المخصصة عبر NTFY مع حماية AbortController
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000);
+            const timeoutId = setTimeout(() => controller.abort(), 2800);
             const resp = await fetch(`${CLOUD_TIMING_ENDPOINT}/json?poll=1&since=all`, {
                 cache: 'no-store',
                 signal: controller.signal
@@ -1095,7 +1154,6 @@
                 const text = await resp.text();
                 if (text) {
                     const lines = text.trim().split('\n');
-                    const updates = [];
                     for (const line of lines) {
                         if (!line.trim()) continue;
                         try {
@@ -1103,15 +1161,11 @@
                             if (item.event === 'message' && item.message) {
                                 let parsed = null;
                                 try { parsed = JSON.parse(item.message); } catch(e) { parsed = item.message; }
-                                if (parsed && (parsed.type === 'session_timing_update' || parsed.forceUnlock !== undefined)) {
-                                    updates.push(parsed);
+                                if (parsed && (parsed.type === 'session_timing_update' || parsed.forceUnlock !== undefined || parsed.targetTime !== undefined)) {
+                                    candidateUpdates.push(parsed);
                                 }
                             }
                         } catch(e) {}
-                    }
-                    updates.sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0));
-                    for (const upd of updates) {
-                        applyTimingUpdateLocally(upd);
                     }
                 }
             }
@@ -1120,7 +1174,7 @@
         // 2. جلب أيضاً من القناة المركزية للعيادة كاحتياطي دائم
         try {
             const controller2 = new AbortController();
-            const timeoutId2 = setTimeout(() => controller2.abort(), 3000);
+            const timeoutId2 = setTimeout(() => controller2.abort(), 2800);
             const resp2 = await fetch(`${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=all`, {
                 cache: 'no-store',
                 signal: controller2.signal
@@ -1137,8 +1191,8 @@
                             if (item.event === 'message' && item.message) {
                                 let parsed = null;
                                 try { parsed = JSON.parse(item.message); } catch(e) { parsed = item.message; }
-                                if (parsed && (parsed.type === 'session_timing_update' || parsed.forceUnlock !== undefined)) {
-                                    applyTimingUpdateLocally(parsed);
+                                if (parsed && (parsed.type === 'session_timing_update' || parsed.forceUnlock !== undefined || parsed.targetTime !== undefined)) {
+                                    candidateUpdates.push(parsed);
                                 }
                             }
                         } catch(e) {}
@@ -1146,6 +1200,35 @@
                 }
             }
         } catch(e) {}
+
+        // 3. جلب من السحابة المركزية العالمية Master Cloud Hub كخط دعم مؤكد فائق الموثوقية
+        try {
+            const controller3 = new AbortController();
+            const timeoutId3 = setTimeout(() => controller3.abort(), 2800);
+            const resp3 = await fetch(CLOUD_MASTER_HUB_ENDPOINT, {
+                cache: 'no-store',
+                signal: controller3.signal
+            });
+            clearTimeout(timeoutId3);
+            if (resp3.ok) {
+                const masterObj = await resp3.json();
+                if (masterObj && masterObj.data && masterObj.data.latestTimingUpdate) {
+                    candidateUpdates.push(masterObj.data.latestTimingUpdate);
+                }
+            }
+        } catch(e) {}
+
+        // فرز كافة التحديثات وتطبيق الأحدث إذا كان جديداً
+        if (candidateUpdates.length > 0) {
+            candidateUpdates.sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0));
+            const latest = candidateUpdates[candidateUpdates.length - 1];
+            if (latest) {
+                const updTime = latest.updatedAt || Date.now();
+                if (updTime > lastAppliedTimingTimestamp) {
+                    applyTimingUpdateLocally(latest);
+                }
+            }
+        }
     }
 
     // الاستماع اللحظي الدائم (SSE) على هاتف المريض
@@ -1161,8 +1244,11 @@
                     if (data.event === 'message' && data.message) {
                         let parsed = null;
                         try { parsed = JSON.parse(data.message); } catch(e) { parsed = data.message; }
-                        if (parsed && (parsed.type === 'session_timing_update' || parsed.forceUnlock !== undefined)) {
-                            applyTimingUpdateLocally(parsed);
+                        if (parsed && (parsed.type === 'session_timing_update' || parsed.forceUnlock !== undefined || parsed.targetTime !== undefined)) {
+                            const updTime = parsed.updatedAt || Date.now();
+                            if (updTime > lastAppliedTimingTimestamp) {
+                                applyTimingUpdateLocally(parsed);
+                            }
                         }
                     }
                 } catch(e) {}
@@ -1175,7 +1261,10 @@
             if (syncBroadcastChannel) {
                 syncBroadcastChannel.addEventListener('message', (event) => {
                     if (event.data && event.data.type === 'session_timing_update') {
-                        applyTimingUpdateLocally(event.data);
+                        const updTime = event.data.updatedAt || Date.now();
+                        if (updTime > lastAppliedTimingTimestamp) {
+                            applyTimingUpdateLocally(event.data);
+                        }
                     }
                 });
             }
