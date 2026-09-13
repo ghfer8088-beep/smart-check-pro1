@@ -2951,7 +2951,13 @@
                 || (item?.painArea && item?.painArea !== 'العمود الفقري والمفاصل' && item?.painArea !== 'العمود الفقري ومفاصل الحركة' ? item?.painArea : null)
                 || '';
 
-            const fullContextText = `${rootLevel} ${p.painArea || ''} ${p.selectedPoint || ''} ${p.notes || ''} ${(p.collectedSymptoms || []).join(' ')} ${p.chiefDiagnosis || ''} ${p.diagnosisTitle || ''} ${assessment?.title || ''}`.toLowerCase();
+            if (item) {
+                if (item.painArea && item.painArea !== 'العمود الفقري والمفاصل' && item.painArea !== 'العمود الفقري ومفاصل الحركة') {
+                    rootLevel = item.painArea;
+                }
+            }
+
+            const fullContextText = `${rootLevel} ${p.painArea || ''} ${p.selectedPoint || ''} ${p.notes || ''} ${(p.collectedSymptoms || []).join(' ')} ${p.chiefDiagnosis || ''} ${p.diagnosisTitle || ''} ${assessment?.title || ''} ${item?.painArea || ''} ${item?.latestDiagnosis || ''}`.toLowerCase();
 
             let targetAreaType = null;
             if (/ركب|ركبه|knee|patella|صابون|رضف/.test(fullContextText)) {
@@ -3117,7 +3123,7 @@
                 || cleanRawDiag.includes('استشارة');
 
             const diagTitle = !isInvalidDiag ? cleanRawDiag : profile.defaultDiag;
-            p._resolvedPain = resolvedPainArea;
+            p._resolvedPain = rootLevel;
             p._resolvedDiag = diagTitle;
 
             let cleanSecDiag = assessment?.secondaryDiagnosis;
@@ -3518,19 +3524,23 @@
         }
 
         function renderVisitorAnalyticsModalContent() {
-            if (typeof SmartCloudSync === 'undefined' || typeof SmartCloudSync.getDetailedVisitorStats !== 'function') return;
+            const sync = window.SmartCloudSync;
+            if (!sync) return;
+            const getStats = sync.getDetailedVisitorStats || sync.getDetailedAnalytics;
+            if (typeof getStats !== 'function') return;
             
-            detailedVisitsData = SmartCloudSync.getDetailedVisitorStats();
+            detailedVisitsData = getStats.call(sync);
+            if (!detailedVisitsData) return;
             
             const totalEl = document.getElementById('analytics-total-visits');
             const countriesEl = document.getElementById('analytics-total-countries');
             const mobileEl = document.getElementById('analytics-mobile-pct');
             const desktopEl = document.getElementById('analytics-desktop-pct');
 
-            if (totalEl) totalEl.textContent = detailedVisitsData.totalVisits;
-            if (countriesEl) countriesEl.textContent = detailedVisitsData.totalCountries;
-            if (mobileEl) mobileEl.textContent = detailedVisitsData.mobilePct + '%';
-            if (desktopEl) desktopEl.textContent = detailedVisitsData.desktopPct + '%';
+            if (totalEl) totalEl.textContent = detailedVisitsData.totalVisits || 0;
+            if (countriesEl) countriesEl.textContent = detailedVisitsData.totalCountries || (detailedVisitsData.countries ? detailedVisitsData.countries.length : 0);
+            if (mobileEl) mobileEl.textContent = (detailedVisitsData.mobilePct || 0) + '%';
+            if (desktopEl) desktopEl.textContent = (detailedVisitsData.desktopPct || 0) + '%';
 
             renderAnalyticsCountriesList(detailedVisitsData.countries);
         }
@@ -3553,7 +3563,7 @@
             container.innerHTML = countries.map((c, index) => {
                 const countryKeyId = 'drilldown-country-' + index;
                 const totalVisits = c.totalVisits || c.count || 0;
-                const cities = c.cities || [];
+                const cities = Array.isArray(c.cities) ? c.cities : (c.cities && typeof c.cities === 'object' ? Object.entries(c.cities).map(([k,v]) => ({ city: k, count: v })) : []);
                 const devices = c.devices || { mobile: 0, desktop: 0, tablet: 0 };
                 const recentLogs = c.recentLogs || [];
 
@@ -3974,6 +3984,28 @@
         let lastAudioMatrixData = null;
 
         function initWatchdogAdmin() {
+            if (typeof SmartWatchdog !== 'undefined') {
+                try {
+                    const incidents = SmartWatchdog.getStoredIncidents();
+                    let resolvedAny = false;
+                    incidents.forEach(inc => {
+                        if (inc.message && inc.message.includes('resolvedPainArea')) {
+                            SmartWatchdog.resolveIncident(inc.id, 'تم تصحيح المتغير البرمجي وتدقيق تقرير المريض');
+                            resolvedAny = true;
+                        }
+                    });
+                    if (resolvedAny) {
+                        const remainingCritical = SmartWatchdog.getStoredIncidents().filter(i => i.severity === 'CRITICAL' && i.autoHealingStatus !== 'RESOLVED');
+                        if (remainingCritical.length === 0) {
+                            const banner = document.getElementById('admin-emergency-danger-banner');
+                            if (banner) banner.style.display = 'none';
+                            if (typeof SmartWatchdog.stopDangerAlarmSound === 'function') {
+                                SmartWatchdog.stopDangerAlarmSound();
+                            }
+                        }
+                    }
+                } catch(e) {}
+            }
             updateSystemHealthBadge();
 
             // الاستماع اللحظي للحوادث القادمة عبر BroadcastChannel

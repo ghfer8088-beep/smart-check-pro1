@@ -172,12 +172,22 @@ const SmartDB = (function() {
                     const dbList = req.result || [];
                     const map = new Map();
                     dbList.forEach(p => map.set(p.patientId, p));
+                    const isGen = (str) => !str || str === 'العمود الفقري ومفاصل الحركة' || str === 'العمود الفقري والمفاصل' || str === 'استشارة وفحص سريري شامل';
                     lsPatients.forEach(p => {
                         if (!map.has(p.patientId)) {
                             map.set(p.patientId, p);
                         } else {
-                            // دمج الحقول المفقودة
-                            map.set(p.patientId, { ...p, ...map.get(p.patientId) });
+                            const existing = map.get(p.patientId);
+                            map.set(p.patientId, {
+                                ...existing,
+                                ...p,
+                                painArea: !isGen(p.painArea) ? p.painArea : (!isGen(existing.painArea) ? existing.painArea : p.painArea),
+                                painAreaTitle: !isGen(p.painAreaTitle) ? p.painAreaTitle : (!isGen(existing.painAreaTitle) ? existing.painAreaTitle : p.painAreaTitle),
+                                selectedPoint: !isGen(p.selectedPoint) ? p.selectedPoint : (!isGen(existing.selectedPoint) ? existing.selectedPoint : p.selectedPoint),
+                                chiefDiagnosis: (p.chiefDiagnosis && p.chiefDiagnosis !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة') ? p.chiefDiagnosis : (existing.chiefDiagnosis || p.chiefDiagnosis),
+                                diagnosisTitle: (p.diagnosisTitle && p.diagnosisTitle !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة') ? p.diagnosisTitle : (existing.diagnosisTitle || p.diagnosisTitle),
+                                assessment: (p.assessment && !p.assessment.autoHealed) ? p.assessment : (existing.assessment || p.assessment)
+                            });
                         }
                     });
 
@@ -232,17 +242,18 @@ const SmartDB = (function() {
                                     // إذا كان السجل موجوداً ولكن تنقصه بيانات كالعمر أو الوزن أو موضع الشكوى، ندمجها فوراً
                                     const existing = map.get(pId);
                                     map.set(pId, {
-                                        ...fullCloudPatient,
                                         ...existing,
+                                        ...fullCloudPatient,
                                         age: existing.age || fullCloudPatient.age,
                                         weight: existing.weight || fullCloudPatient.weight,
                                         height: existing.height || fullCloudPatient.height,
                                         bmi: existing.bmi || fullCloudPatient.bmi,
-                                        painArea: existing.painArea || fullCloudPatient.painArea,
-                                        painAreaTitle: existing.painAreaTitle || fullCloudPatient.painAreaTitle,
-                                        chiefDiagnosis: existing.chiefDiagnosis || fullCloudPatient.chiefDiagnosis,
-                                        diagnosisTitle: existing.diagnosisTitle || fullCloudPatient.diagnosisTitle,
-                                        assessment: existing.assessment || fullCloudPatient.assessment
+                                        painArea: !isGen(fullCloudPatient.painArea) ? fullCloudPatient.painArea : (!isGen(existing.painArea) ? existing.painArea : fullCloudPatient.painArea),
+                                        painAreaTitle: !isGen(fullCloudPatient.painAreaTitle) ? fullCloudPatient.painAreaTitle : (!isGen(existing.painAreaTitle) ? existing.painAreaTitle : fullCloudPatient.painAreaTitle),
+                                        selectedPoint: !isGen(fullCloudPatient.selectedPoint) ? fullCloudPatient.selectedPoint : (!isGen(existing.selectedPoint) ? existing.selectedPoint : fullCloudPatient.selectedPoint),
+                                        chiefDiagnosis: (fullCloudPatient.chiefDiagnosis && fullCloudPatient.chiefDiagnosis !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة') ? fullCloudPatient.chiefDiagnosis : (existing.chiefDiagnosis || fullCloudPatient.chiefDiagnosis),
+                                        diagnosisTitle: (fullCloudPatient.diagnosisTitle && fullCloudPatient.diagnosisTitle !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة') ? fullCloudPatient.diagnosisTitle : (existing.diagnosisTitle || fullCloudPatient.diagnosisTitle),
+                                        assessment: (fullCloudPatient.assessment && !fullCloudPatient.assessment.autoHealed) ? fullCloudPatient.assessment : (existing.assessment || fullCloudPatient.assessment)
                                     });
                                 }
                             });
