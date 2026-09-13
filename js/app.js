@@ -4130,9 +4130,14 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 <div style="color: ${lockStatus.isLocked ? 'var(--primary-gold)' : '#10b981'}; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
                     <span>⏱️</span> ${lockStatus.isLocked ? 'ساعة التوقيت المعتمدة (فترة استشفاء جارية)' : '✅ الجلسة مفتوحة ومتاحة الآن'}
                 </div>
-                <span style="background: ${lockStatus.isLocked ? 'rgba(212, 175, 55, 0.15)' : 'rgba(16, 185, 129, 0.2)'}; border: 1px solid ${lockStatus.isLocked ? 'var(--primary-gold)' : '#10b981'}; color: ${lockStatus.isLocked ? '#fef08a' : '#6ee7b7'}; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
-                    ${lockStatus.isLocked ? `الجلسة ${activeDay} من 7 (مقفلة مؤقتاً)` : `الجلسة ${activeDay} من 7 (متاحة ومفتوحة)`}
-                </span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="background: ${lockStatus.isLocked ? 'rgba(212, 175, 55, 0.15)' : 'rgba(16, 185, 129, 0.2)'}; border: 1px solid ${lockStatus.isLocked ? 'var(--primary-gold)' : '#10b981'}; color: ${lockStatus.isLocked ? '#fef08a' : '#6ee7b7'}; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
+                        ${lockStatus.isLocked ? `الجلسة ${activeDay} من 7 (مقفلة مؤقتاً)` : `الجلسة ${activeDay} من 7 (متاحة ومفتوحة)`}
+                    </span>
+                    <button type="button" onclick="openPatientDirectTimingModal('${patientId}', ${activeDay})" style="background: rgba(212, 175, 55, 0.18); border: 1px solid var(--primary-gold); color: #fef08a; padding: 4px 10px; border-radius: 16px; font-size: 0.78em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="تعديل توقيت الجلسة مباشرة على الموبايل">
+                        <span>⚙️</span> تعديل التوقيت
+                    </button>
+                </div>
             </div>
             
             <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 12px;">
@@ -4196,15 +4201,14 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                     <div style="color: #10b981; font-size: 1.15em; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                         <span>⏳</span> فترة استشفاء الأنسجة جارية (الفاصل البيولوجي 24 ساعة)
                     </div>
-                    <p style="color: #cbd5e1; font-size: 0.88em; margin: 0 0 18px 0; line-height: 1.6; max-width: 620px; margin-left: auto; margin-right: auto;">
-                        وفق البروتوكول السريري، لا يمكن توثيق الجلسة إلا بعد اكتمال استشفاء الأنسجة لحماية عضلاتك ومفاصلك. زر التوثيق يتفعل تلقائياً فور اكتمال شريط التقدم أدناه.
+                    <p style="color: #cbd5e1; font-size: 0.88em; margin: 0 0 16px 0; line-height: 1.6; max-width: 620px; margin-left: auto; margin-right: auto;">
+                        وفق البروتوكول السريري، لا يمكن توثيق الجلسة إلا بعد مرور الـ 24 ساعة لاكتمال استشفاء الألياف العضلية وتجنب الإجهاد. بمجرد انتهاء الوقت سيتفعل زر حفظ التقييم والانتقال للجلسة التالية.
                     </p>
-                    <div id="recovery-loading-btn-track" class="session-recovery-progress-container" title="شريط استشفاء الأنسجة">
+                    <div id="recovery-loading-btn-track" class="session-recovery-progress-container" title="زر حفظ وتسجيل الجلسة">
                         <div id="recovery-loading-btn-fill" class="session-recovery-progress-fill" style="width: ${initialPct}%;"></div>
-                        <div class="session-recovery-progress-text">
-                            <span style="display: inline-block; animation: spin 2.5s linear infinite;">⏳</span>
-                            <span>استشفاء الأنسجة: <strong id="recovery-progress-percent" style="color: #6ee7b7; font-size: 1.08em;">${initialPct}%</strong></span>
-                            <span id="recovery-progress-time-sub" style="color: #e2e8f0; font-size: 0.86em; margin-right: 6px; font-weight: normal;">(متبقي <span id="recovery-progress-remaining-text">${remText}</span>)</span>
+                        <div class="session-recovery-progress-text" style="font-size: 0.95em;">
+                            <span>🔒</span>
+                            <span>زر حفظ تسجيل الجلسة (#${activeDay}) يتفعل بعد مرور الـ 24 ساعة (متبقي <strong id="recovery-progress-remaining-text" style="color: #6ee7b7;">${remText}</strong>)</span>
                         </div>
                     </div>
                 </div>
@@ -4395,7 +4399,172 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             }
         }, lockStatus.totalDurationMs);
     }
+    // تفعيل الاستعلام السحابي اللحظي المستمر كل 3 ثوانٍ لتحديث الساعة والزر تلقائياً إذا تم التعديل من الإدارة
+    if (window.step5TimingPollInterval) {
+        clearInterval(window.step5TimingPollInterval);
+        window.step5TimingPollInterval = null;
+    }
+    if (lockStatus.isLocked) {
+        window.step5TimingPollInterval = setInterval(() => {
+            if (!document.hidden && window.SmartCloudSync && typeof window.SmartCloudSync.fetchRemoteTimingUpdates === 'function') {
+                window.SmartCloudSync.fetchRemoteTimingUpdates();
+            }
+        }, 3000);
+    }
 }
+
+// =========================================================================
+// نافذة تعديل توقيت الجلسة الفورية المباشرة على الموبايل
+// =========================================================================
+let activeDirectTimingPatientId = '';
+let activeDirectTimingSessionNum = 2;
+
+function openPatientDirectTimingModal(patientId, sessionNum = 2) {
+    activeDirectTimingPatientId = patientId || (activePatient && (activePatient.patientId || activePatient.id)) || localStorage.getItem('smart_current_patient_id') || '';
+    activeDirectTimingSessionNum = sessionNum || 2;
+    const modal = document.getElementById('direct-patient-timing-modal');
+    const subtitle = document.getElementById('direct-timing-subtitle');
+    if (subtitle && activePatient) {
+        subtitle.innerHTML = `المريض: <strong>${activePatient.name || activePatient.fullName || ''}</strong> (الجلسة #${activeDirectTimingSessionNum}): يمكنك كمعالج فتح الجلسة فوراً الآن أو تعديل التوقيت:`;
+    }
+    if (modal) modal.style.display = 'flex';
+}
+
+function closePatientDirectTimingModal() {
+    const modal = document.getElementById('direct-patient-timing-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function executeDirectQuickUnlock() {
+    const pId = activeDirectTimingPatientId || (activePatient && (activePatient.patientId || activePatient.id)) || localStorage.getItem('smart_current_patient_id') || '';
+    const cleanPhone = (activePatient && activePatient.phone) ? String(activePatient.phone).replace(/\D/g, '') : '';
+    const sNum = activeDirectTimingSessionNum || 2;
+
+    // 1. تطبيق فوري محلي
+    localStorage.setItem('force_unlock_global', 'true');
+    localStorage.removeItem('custom_target_time_global');
+    localStorage.removeItem('custom_total_duration_global');
+    if (pId) {
+        localStorage.setItem(`force_unlock_${pId}`, 'true');
+        localStorage.removeItem(`custom_target_time_${pId}`);
+        localStorage.removeItem(`custom_total_duration_${pId}`);
+        localStorage.removeItem(`sessionStartTime_${pId}_${sNum}`);
+    }
+    if (cleanPhone) {
+        localStorage.setItem(`force_unlock_${cleanPhone}`, 'true');
+        localStorage.removeItem(`custom_target_time_${cleanPhone}`);
+        localStorage.removeItem(`custom_total_duration_${cleanPhone}`);
+    }
+    localStorage.setItem('countdownUpdated', Date.now().toString());
+
+    if (window.step5TimingPollInterval) {
+        clearInterval(window.step5TimingPollInterval);
+        window.step5TimingPollInterval = null;
+    }
+
+    // 2. تحديث فوري لعناصر الصفحة مباشرة
+    if (window.SmartCloudSync && typeof window.SmartCloudSync.applyTimingUpdateLocally === 'function') {
+        window.SmartCloudSync.applyTimingUpdateLocally({
+            forceUnlock: true,
+            sessionNum: sNum,
+            patientId: pId,
+            broadcastToAll: true,
+            global: true
+        });
+    }
+
+    // 3. بث سحابي
+    if (window.SmartCloudSync && typeof window.SmartCloudSync.dispatchTimingUpdate === 'function') {
+        window.SmartCloudSync.dispatchTimingUpdate({
+            patientId: pId,
+            patientPhone: cleanPhone,
+            patientName: (activePatient && (activePatient.name || activePatient.fullName)) || '',
+            sessionNum: sNum,
+            hours: 0,
+            minutes: 0,
+            seconds: 0,
+            forceUnlock: true,
+            broadcastToAll: true,
+            global: true
+        });
+    }
+
+    closePatientDirectTimingModal();
+    showToast('🎉 تم فتح الجلسة فورياً بنجاح! يمكنك الآن حفظ التقييم ومتابعة الخطة 🚀', 'success');
+}
+
+function executeDirectCustomTiming() {
+    const pId = activeDirectTimingPatientId || (activePatient && (activePatient.patientId || activePatient.id)) || localStorage.getItem('smart_current_patient_id') || '';
+    const cleanPhone = (activePatient && activePatient.phone) ? String(activePatient.phone).replace(/\D/g, '') : '';
+    const sNum = activeDirectTimingSessionNum || 2;
+
+    const h = parseInt(document.getElementById('direct-timing-hours')?.value) || 0;
+    const m = parseInt(document.getElementById('direct-timing-mins')?.value) || 0;
+    const s = parseInt(document.getElementById('direct-timing-secs')?.value) || 0;
+    const totalDurationMs = ((h * 3600) + (m * 60) + s) * 1000;
+
+    if (totalDurationMs <= 0) {
+        executeDirectQuickUnlock();
+        return;
+    }
+
+    const targetTime = Date.now() + totalDurationMs;
+
+    // 1. تطبيق محلي
+    localStorage.setItem('custom_target_time_global', String(targetTime));
+    localStorage.setItem('custom_total_duration_global', String(totalDurationMs));
+    localStorage.removeItem('force_unlock_global');
+    if (pId) {
+        localStorage.setItem(`custom_target_time_${pId}`, String(targetTime));
+        localStorage.setItem(`custom_total_duration_${pId}`, String(totalDurationMs));
+        localStorage.removeItem(`force_unlock_${pId}`);
+    }
+    if (cleanPhone) {
+        localStorage.setItem(`custom_target_time_${cleanPhone}`, String(targetTime));
+        localStorage.setItem(`custom_total_duration_${cleanPhone}`, String(totalDurationMs));
+        localStorage.removeItem(`force_unlock_${cleanPhone}`);
+    }
+    localStorage.setItem('countdownUpdated', Date.now().toString());
+
+    // 2. تحديث فوري مباشر لعناصر الصفحة
+    if (window.SmartCloudSync && typeof window.SmartCloudSync.applyTimingUpdateLocally === 'function') {
+        window.SmartCloudSync.applyTimingUpdateLocally({
+            forceUnlock: false,
+            targetTime: targetTime,
+            totalDurationMs: totalDurationMs,
+            sessionNum: sNum,
+            patientId: pId,
+            broadcastToAll: true,
+            global: true
+        });
+    }
+
+    // 3. بث سحابي
+    if (window.SmartCloudSync && typeof window.SmartCloudSync.dispatchTimingUpdate === 'function') {
+        window.SmartCloudSync.dispatchTimingUpdate({
+            patientId: pId,
+            patientPhone: cleanPhone,
+            patientName: (activePatient && (activePatient.name || activePatient.fullName)) || '',
+            sessionNum: sNum,
+            hours: h,
+            minutes: m,
+            seconds: s,
+            targetTime: targetTime,
+            totalDurationMs: totalDurationMs,
+            forceUnlock: false,
+            broadcastToAll: true,
+            global: true
+        });
+    }
+
+    closePatientDirectTimingModal();
+    showToast(`⏱️ تم ضبط توقيت الجلسة بنجاح (${h} س و ${m} د و ${s} ث)!`, 'info');
+}
+
+window.openPatientDirectTimingModal = openPatientDirectTimingModal;
+window.closePatientDirectTimingModal = closePatientDirectTimingModal;
+window.executeDirectQuickUnlock = executeDirectQuickUnlock;
+window.executeDirectCustomTiming = executeDirectCustomTiming;
 
 // =========================================================================
 // الخطوة 6: وثيقة التعافي والإنهاء (التخرج بعد 7 أيام)

@@ -879,55 +879,23 @@
             }
         } catch(e) {}
 
-        // 2. إرسال إلى NTFY بصيغة النص الصريح (Plain Body) لتفادي أي رفض للـ Headers
-        try {
-            fetch(CLOUD_TIMING_ENDPOINT, {
-                method: 'POST',
-                headers: { 'Title': 'Timing Update' },
-                body: JSON.stringify(payload)
-            }).catch(() => {});
-        } catch (e) {}
-
-        // 3. إرسال إلى NTFY بصيغة JSON الرسمية
+        // 2. إرسال إلى NTFY (قناة التوقيت)
         try {
             fetch(CLOUD_TIMING_ENDPOINT, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    topic: 'wada3an_smart_check_timing_sync_2026',
-                    message: JSON.stringify(payload)
-                })
+                body: JSON.stringify(payload)
             }).catch(() => {});
-        } catch(e) {}
+        } catch (e) {}
 
-        // 4. ترحيل وتوثيق التحديث في السحابة المركزية Master Hub كخط حماية سحابي دائم
+        // 3. إرسال إلى NTFY (القناة المركزية للعيادة كاحتياطي دائم وموثوق)
         try {
-            fetch(CLOUD_MASTER_HUB_ENDPOINT, { cache: 'no-store' })
-                .then(r => r.json())
-                .then(hub => {
-                    const hubData = (hub && hub.data) ? hub.data : {};
-                    const timingMap = hubData.timingUpdates || {};
-                    const key = payload.patientId || payload.patientPhone || 'global_timing';
-                    timingMap[key] = payload;
-                    if (payload.patientPhone) {
-                        const cp = String(payload.patientPhone).replace(/\D/g, '');
-                        if (cp) timingMap[cp] = payload;
-                    }
-
-                    return fetch(CLOUD_MASTER_HUB_ENDPOINT, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            name: 'SmartCheck_Global_Clinic_Master_Hub',
-                            data: {
-                                ...hubData,
-                                timingUpdates: timingMap,
-                                lastTimingUpdate: Date.now()
-                            }
-                        })
-                    });
-                }).catch(() => {});
-        } catch(e) {}
+            fetch(CLOUD_SYNC_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).catch(() => {});
+        } catch (e) {}
     }
 
     // تحديث مباشر وفوري لعناصر الساعة وأزرار القفل في الصفحة المعروضة حالياً
@@ -1112,11 +1080,17 @@
         return true;
     }
 
-    // جلب التعديلات السحابية للتوقيت (عبر NTFY وعبر Master Hub)
+    // جلب التعديلات السحابية للتوقيت (عبر NTFY وقنوات البث السحابي)
     async function fetchRemoteTimingUpdates() {
-        // 1. جلب من NTFY
+        // 1. جلب من قناة التوقيت المخصصة مع حماية AbortController
         try {
-            const resp = await fetch(`${CLOUD_TIMING_ENDPOINT}/json?poll=1&since=24h`);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000);
+            const resp = await fetch(`${CLOUD_TIMING_ENDPOINT}/json?poll=1&since=all`, {
+                cache: 'no-store',
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
             if (resp.ok) {
                 const text = await resp.text();
                 if (text) {
@@ -1143,15 +1117,31 @@
             }
         } catch(e) {}
 
-        // 2. جلب من السحابة المركزية Master Hub كخط حماية ثانٍ
+        // 2. جلب أيضاً من القناة المركزية للعيادة كاحتياطي دائم
         try {
-            const hubResp = await fetch(CLOUD_MASTER_HUB_ENDPOINT, { cache: 'no-store' });
-            if (hubResp.ok) {
-                const hubObj = await hubResp.json();
-                if (hubObj && hubObj.data && hubObj.data.timingUpdates) {
-                    const map = hubObj.data.timingUpdates;
-                    for (const k in map) {
-                        if (map[k]) applyTimingUpdateLocally(map[k]);
+            const controller2 = new AbortController();
+            const timeoutId2 = setTimeout(() => controller2.abort(), 3000);
+            const resp2 = await fetch(`${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=all`, {
+                cache: 'no-store',
+                signal: controller2.signal
+            });
+            clearTimeout(timeoutId2);
+            if (resp2.ok) {
+                const text2 = await resp2.text();
+                if (text2) {
+                    const lines2 = text2.trim().split('\n');
+                    for (const line of lines2) {
+                        if (!line.trim()) continue;
+                        try {
+                            const item = JSON.parse(line);
+                            if (item.event === 'message' && item.message) {
+                                let parsed = null;
+                                try { parsed = JSON.parse(item.message); } catch(e) { parsed = item.message; }
+                                if (parsed && (parsed.type === 'session_timing_update' || parsed.forceUnlock !== undefined)) {
+                                    applyTimingUpdateLocally(parsed);
+                                }
+                            }
+                        } catch(e) {}
                     }
                 }
             }

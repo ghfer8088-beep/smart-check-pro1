@@ -380,7 +380,7 @@ const PatientFlow = (function() {
             if (displayElements && displayElements.minutes) displayElements.minutes.textContent = String(m).padStart(2, '0');
             if (displayElements && displayElements.seconds) displayElements.seconds.textContent = String(s).padStart(2, '0');
 
-            if (progressFill || progressPercentEl) {
+            if (progressFill || progressPercentEl || progressRemEl) {
                 const totalDuration = totalDurationMs || (24 * 3600 * 1000);
                 const elapsed = Math.max(0, totalDuration - diff);
                 const pct = Math.min(100, Math.max(0, Math.round((elapsed / totalDuration) * 100)));
