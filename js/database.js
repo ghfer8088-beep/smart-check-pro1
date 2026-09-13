@@ -439,10 +439,17 @@ const SmartDB = (function() {
     }
 
     // دوال المتابعة اليومية
-    async function saveDailyLog(log) {
+    async function saveDailyLog(log, options = {}) {
         if (!log) return null;
         if (!log.logId) {
             log.logId = 'log_' + (log.patientId || 'pt') + '_' + (log.sessionNumber || 1) + '_' + Date.now();
+        }
+
+        // ☁️ ترحيل سحابي فوري للجلسة المنجزة لكافة الأجهزة (موبايل + لابتوب)
+        if (!options.skipCloudSync && typeof window.SmartCloudSync !== 'undefined' && typeof window.SmartCloudSync.dispatchSessionLog === 'function') {
+            try {
+                window.SmartCloudSync.dispatchSessionLog(log);
+            } catch (e) {}
         }
 
         // حفظ متزامن وفوري في LocalStorage
@@ -492,6 +499,14 @@ const SmartDB = (function() {
             }
         } catch(e) {}
 
+        // دمج الجلسات المتزامنة سحابياً من الأجهزة الأخرى
+        let cloudLogs = [];
+        try {
+            if (typeof window.SmartCloudSync !== 'undefined' && typeof window.SmartCloudSync.getPatientLogs === 'function') {
+                cloudLogs = window.SmartCloudSync.getPatientLogs(patientId) || [];
+            }
+        } catch(e) {}
+
         try {
             const db = await openDB();
             return new Promise((resolve) => {
@@ -501,11 +516,21 @@ const SmartDB = (function() {
                 req.onsuccess = () => {
                     const dbLogs = req.result || [];
                     const mergedMap = new Map();
-                    lsLogs.forEach(l => {
+                    // 1. الجلسات السحابية
+                    cloudLogs.forEach(l => {
+                        if (!l) return;
                         const key = (typeof l.sessionNumber === 'number') ? `sess_${l.sessionNumber}` : (l.logId || `date_${l.date}`);
                         mergedMap.set(key, l);
                     });
+                    // 2. الجلسات المحلية في LocalStorage
+                    lsLogs.forEach(l => {
+                        if (!l) return;
+                        const key = (typeof l.sessionNumber === 'number') ? `sess_${l.sessionNumber}` : (l.logId || `date_${l.date}`);
+                        mergedMap.set(key, { ...(mergedMap.get(key) || {}), ...l });
+                    });
+                    // 3. الجلسات في IndexedDB
                     dbLogs.forEach(l => {
+                        if (!l) return;
                         const key = (typeof l.sessionNumber === 'number') ? `sess_${l.sessionNumber}` : (l.logId || `date_${l.date}`);
                         mergedMap.set(key, { ...(mergedMap.get(key) || {}), ...l });
                     });
@@ -514,13 +539,21 @@ const SmartDB = (function() {
                     resolve(mergedLogs);
                 };
                 req.onerror = () => {
-                    lsLogs.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
-                    resolve(lsLogs);
+                    const fallbackMap = new Map();
+                    cloudLogs.forEach(l => { if (l && l.sessionNumber) fallbackMap.set(l.sessionNumber, l); });
+                    lsLogs.forEach(l => { if (l && l.sessionNumber) fallbackMap.set(l.sessionNumber, l); });
+                    const res = Array.from(fallbackMap.values());
+                    res.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
+                    resolve(res);
                 };
             });
         } catch(e) {
-            lsLogs.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
-            return lsLogs;
+            const fallbackMap = new Map();
+            cloudLogs.forEach(l => { if (l && l.sessionNumber) fallbackMap.set(l.sessionNumber, l); });
+            lsLogs.forEach(l => { if (l && l.sessionNumber) fallbackMap.set(l.sessionNumber, l); });
+            const res = Array.from(fallbackMap.values());
+            res.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
+            return res;
         }
     }
 

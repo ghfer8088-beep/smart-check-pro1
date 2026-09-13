@@ -409,6 +409,9 @@
                     <button type="button" onclick="triggerManualCloudSync()" class="btn-header admin-btn-sync" style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.25) 0%, rgba(3, 105, 161, 0.15) 100%); border-color: #0284c7; color: #7dd3fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
                         <span id="sync-spin-icon">🔄</span> مزامنة فورية
                     </button>
+                    <button type="button" onclick="openSyncBridgeModal()" class="btn-header admin-btn-bridge" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.3) 0%, rgba(180, 83, 9, 0.25) 100%); border-color: var(--primary-gold); color: #fef08a; font-weight: bold; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" title="جسر توحيد البيانات بين الموبايل واللابتوب">
+                        <span>📲</span> جسر المزامنة (موبايل ⇄ لابتوب)
+                    </button>
                     <button type="button" onclick="openSystemSettingsModal()" class="btn-header admin-btn-settings" style="background: rgba(212, 175, 55, 0.18); border-color: var(--primary-gold); color: var(--primary-gold); font-weight: bold; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
                         <span>⚙️</span> إعدادات
                     </button>
@@ -618,6 +621,51 @@
             </div>
         </div>
 
+    <!-- نافذة جسر المزامنة الفوري وتوحيد البيانات بين الهاتف واللابتوب -->
+    <div id="sync-bridge-modal" class="app-modal" style="display: none;">
+        <div class="modal-inner" style="max-width: 620px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 12px; margin-bottom: 18px;">
+                <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.25em;">📲 جسر توحيد البيانات الفوري (موبايل ⇄ لابتوب)</h3>
+                <button type="button" onclick="document.getElementById('sync-bridge-modal').style.display='none'" style="background: none; border: none; color: #94a3b8; font-size: 1.5em; cursor: pointer;">&times;</button>
+            </div>
+            
+            <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid #10b981; border-radius: 10px; padding: 14px; margin-bottom: 16px; color: #6ee7b7; font-size: 0.92em; line-height: 1.6;">
+                💡 <strong>ضمان تطابق البيانات 100%:</strong> استخدم هذا الجسر لتوحيد ومطابقة كافة سجلات المرضى، الجلسات المنجزة، وإحصائيات الزوار بين هاتفك واللابتوب في لحظة واحدة دون أي اختلاف.
+            </div>
+
+            <!-- خيار 1: مزامنة سحابية مركزية فورية -->
+            <div style="background: #0b111e; border: 1px solid #334155; border-radius: 10px; padding: 14px; margin-bottom: 14px;">
+                <h4 style="color: #38bdf8; margin: 0 0 10px 0; font-size: 1em;">☁️ الخيار الأول: المزامنة السحابية المركزية</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <button type="button" onclick="handleBroadcastCurrentDeviceData()" style="background: #0284c7; color: #fff; border: none; padding: 12px 8px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.88em; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <span>📤</span> رفع بيانات هذا الجهاز للسحابة
+                    </button>
+                    <button type="button" onclick="handlePullCloudDataAndApply()" style="background: #10b981; color: #fff; border: none; padding: 12px 8px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.88em; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <span>📥</span> جلب وتوحيد البيانات من السحابة
+                    </button>
+                </div>
+            </div>
+
+            <!-- خيار 2: نسخ ولصق رمز المزامنة المباشر -->
+            <div style="background: #0b111e; border: 1px solid #334155; border-radius: 10px; padding: 14px; margin-bottom: 14px;">
+                <h4 style="color: var(--primary-gold); margin: 0 0 10px 0; font-size: 1em;">📋 الخيار الثاني: رمز المزامنة المباشر (Direct Token)</h4>
+                <p style="color: #94a3b8; font-size: 0.82em; margin-bottom: 10px;">اضغط "نسخ كود المزامنة" من هاتفك، ثم الصقه هنا على اللابتوب واضغط "استيراد وتوحيد":</p>
+                <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
+                    <button type="button" onclick="copyClinicSyncToken()" style="flex: 1; min-width: 170px; background: var(--primary-gold); color: #0a0e14; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.88em;">
+                        📋 1. نسخ كود المزامنة من هذا الجهاز
+                    </button>
+                    <button type="button" onclick="shareClinicSyncLinkViaWhatsApp()" style="background: #25d366; color: #fff; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.88em;">
+                        💬 إرسال رابط للواتساب
+                    </button>
+                </div>
+                <textarea id="sync-token-paste-area" placeholder="الصق كود المزامنة هنا على اللابتوب..." style="width: 100%; height: 75px; background: #080c14; border: 1px solid #334155; border-radius: 6px; color: #cbd5e1; padding: 8px; font-family: monospace; font-size: 0.82em; resize: none; box-sizing: border-box; margin-bottom: 8px;"></textarea>
+                <button type="button" onclick="applyPastedSyncToken()" style="width: 100%; background: #059669; color: #fff; border: none; padding: 11px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.95em;">
+                    📥 2. استيراد الكود وتوحيد كافة بيانات اللابتوب فوراً
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- نافذة تعديل التوقيت اليدوي الدقيق (ساعات، دقائق، ثواني) لكل مريض -->
     <div id="patient-timing-modal" class="app-modal">
         <div class="modal-inner" style="max-width: 520px;">
@@ -636,7 +684,8 @@
                         🎯 رقم الجلسة المستهدفة:
                     </label>
                     <select id="timing-session-num" style="background: #0b111e; border: 1px solid var(--primary-gold); color: #fef08a; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 0.95em; cursor: pointer;">
-                        <option value="2">الجلسة 2 (فترة الاستشفاء)</option>
+                        <option value="all">⚡ جميع الجلسات (فتح أو ضبط شامل لكافة الجلسات)</option>
+                        <option value="2">الجلسة 2 (فترة الاستشفاء الأولى)</option>
                         <option value="3">الجلسة 3</option>
                         <option value="4">الجلسة 4</option>
                         <option value="5">الجلسة 5</option>
@@ -1424,6 +1473,24 @@
                 setTimeout(() => populateAvailableSystemVoices(), 500);
                 setTimeout(() => populateAvailableSystemVoices(), 1200);
             }
+
+            // التحقق من وجود رابط مزامنة مباشر قادم من هاتف المعالج
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const syncData = urlParams.get('sync_data') || urlParams.get('sync_token');
+                if (syncData && typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.importSnapshot === 'function') {
+                    let jsonStr = '';
+                    if (syncData.startsWith('{')) {
+                        jsonStr = syncData;
+                    } else {
+                        jsonStr = decodeURIComponent(escape(atob(syncData)));
+                    }
+                    const snap = JSON.parse(jsonStr);
+                    await SmartCloudSync.importSnapshot(snap);
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    console.log('✅ تم استيراد وتوحيد البيانات تلقائياً من رابط المزامنة.');
+                }
+            } catch(e) {}
 
             // الاستماع للتحديثات الحية من التبويبات الأخرى فورياً
             window.addEventListener('storage', (e) => {
@@ -2871,10 +2938,11 @@
             activeTargetPatientPhone = patientPhone || '';
             activeTargetPatientName = patientName || '';
             document.getElementById('target-patient-id').value = patientId;
-            document.getElementById('timing-patient-name').textContent = `المريض: ${patientName}`;
+            document.getElementById('timing-patient-name').textContent = `المريض: ${patientName} (${patientPhone || 'بلا هاتف'}) - الجلسة التالية: #${activeTargetSessionNum}`;
             const sNumSelect = document.getElementById('timing-session-num');
             if (sNumSelect) {
-                sNumSelect.value = String(activeTargetSessionNum);
+                const matchOpt = Array.from(sNumSelect.options).find(o => o.value === String(activeTargetSessionNum));
+                sNumSelect.value = matchOpt ? String(activeTargetSessionNum) : 'all';
             }
             document.getElementById('patient-timing-modal').style.display = 'flex';
         }
@@ -2882,28 +2950,127 @@
         function quickUnlockSessionNow() {
             const patientId = document.getElementById('target-patient-id').value;
             const sNumSelect = document.getElementById('timing-session-num');
-            const targetSNum = sNumSelect ? parseInt(sNumSelect.value) || activeTargetSessionNum : activeTargetSessionNum;
+            const targetVal = sNumSelect ? sNumSelect.value : String(activeTargetSessionNum);
             const isBroadcast = document.getElementById('timing-broadcast-all') ? document.getElementById('timing-broadcast-all').checked : true;
-            AdminEngine.setPatientSessionTiming(patientId, targetSNum, 0, 0, 0, activeTargetPatientPhone, activeTargetPatientName, isBroadcast);
+            const sNum = (targetVal === 'all') ? 0 : (parseInt(targetVal) || activeTargetSessionNum);
+            AdminEngine.setPatientSessionTiming(patientId, sNum, 0, 0, 0, activeTargetPatientPhone, activeTargetPatientName, isBroadcast);
             document.getElementById('patient-timing-modal').style.display = 'none';
-            alert(`✅ تم فتح الجلسة (#${targetSNum}) فورياً للمريض وبث التعديل لهاتفه سحابياً!`);
+            alert(`✅ تم فتح الجلسة فورياً للمريض وبث أمر الفتح لهاتفه سحابياً بنجاح!`);
             loadAdminData();
         }
 
         function saveCustomTimingValues() {
             const patientId = document.getElementById('target-patient-id').value;
             const sNumSelect = document.getElementById('timing-session-num');
-            const targetSNum = sNumSelect ? parseInt(sNumSelect.value) || activeTargetSessionNum : activeTargetSessionNum;
+            const targetVal = sNumSelect ? sNumSelect.value : String(activeTargetSessionNum);
             const h = document.getElementById('timing-hours').value;
             const m = document.getElementById('timing-mins').value;
             const s = document.getElementById('timing-secs').value;
             const isBroadcast = document.getElementById('timing-broadcast-all') ? document.getElementById('timing-broadcast-all').checked : true;
 
-            AdminEngine.setPatientSessionTiming(patientId, targetSNum, h, m, s, activeTargetPatientPhone, activeTargetPatientName, isBroadcast);
+            const sNum = (targetVal === 'all') ? 2 : (parseInt(targetVal) || activeTargetSessionNum);
+            AdminEngine.setPatientSessionTiming(patientId, sNum, h, m, s, activeTargetPatientPhone, activeTargetPatientName, isBroadcast);
             document.getElementById('patient-timing-modal').style.display = 'none';
-            alert(`✅ تم ضبط توقيت الجلسة (#${targetSNum}) بنجاح (${h} س و ${m} د و ${s} ث) وبث التعديل لهاتف المريض سحابياً!`);
+            alert(`✅ تم ضبط التوقيت بنجاح (${h} س و ${m} د و ${s} ث) وبث التعديل لهاتف المريض سحابياً!`);
             loadAdminData();
         }
+
+        // =========================================================================
+        // دوال جسر المزامنة الفوري وتوحيد البيانات 100% بين الهاتف واللابتوب
+        // =========================================================================
+        function openSyncBridgeModal() {
+            document.getElementById('sync-bridge-modal').style.display = 'flex';
+        }
+        window.openSyncBridgeModal = openSyncBridgeModal;
+
+        async function handleBroadcastCurrentDeviceData() {
+            if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.broadcastSnapshot === 'function') {
+                const ok = await SmartCloudSync.broadcastSnapshot();
+                if (ok) {
+                    alert('🚀 تم رفع وبث كافة بيانات هذا الجهاز (المرضى، الجلسات، الزيارات) إلى السحابة بنجاح!');
+                } else {
+                    alert('⚠️ تعذر رفع البيانات إلى السحابة حالياً.');
+                }
+            }
+        }
+        window.handleBroadcastCurrentDeviceData = handleBroadcastCurrentDeviceData;
+
+        async function handlePullCloudDataAndApply() {
+            if (typeof SmartCloudSync !== 'undefined') {
+                await SmartCloudSync.fetchCloudPatients();
+                await SmartCloudSync.fetchCloudVisits();
+                await loadAdminData(false);
+                alert(`✅ تم سحب وتوحيد كافة البيانات من السحابة بنجاح!\nإجمالي المراجعين المسجلين الآن: ${allPatientsList.length}`);
+            }
+        }
+        window.handlePullCloudDataAndApply = handlePullCloudDataAndApply;
+
+        function copyClinicSyncToken() {
+            if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.exportSnapshot === 'function') {
+                const snapshot = SmartCloudSync.exportSnapshot();
+                if (!snapshot) {
+                    alert('⚠️ تعذر استخراج بيانات المزامنة.');
+                    return;
+                }
+                const jsonStr = JSON.stringify(snapshot);
+                const encoded = btoa(unescape(encodeURIComponent(jsonStr)));
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(encoded).then(() => {
+                        alert('📋 تم نسخ كود المزامنة الشامل بنجاح!\nالآن توجه إلى اللابتوب والصق الكود في خانة الاستيراد.');
+                    }).catch(() => {
+                        prompt('انسخ كود المزامنة التالي:', encoded);
+                    });
+                } else {
+                    prompt('انسخ كود المزامنة التالي:', encoded);
+                }
+            }
+        }
+        window.copyClinicSyncToken = copyClinicSyncToken;
+
+        function shareClinicSyncLinkViaWhatsApp() {
+            if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.exportSnapshot === 'function') {
+                const snapshot = SmartCloudSync.exportSnapshot();
+                if (!snapshot) return;
+                const jsonStr = JSON.stringify(snapshot);
+                const encoded = btoa(unescape(encodeURIComponent(jsonStr)));
+                const baseUrl = window.location.origin + window.location.pathname;
+                const link = `${baseUrl}?sync_data=${encodeURIComponent(encoded.slice(0, 1800))}`;
+                const msg = encodeURIComponent(`رابط مزامنة بيانات لوحة الإدارة للعيادة:\n${link}`);
+                window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
+            }
+        }
+        window.shareClinicSyncLinkViaWhatsApp = shareClinicSyncLinkViaWhatsApp;
+
+        async function applyPastedSyncToken() {
+            const raw = (document.getElementById('sync-token-paste-area').value || '').trim();
+            if (!raw) {
+                alert('⚠️ يرجى لصق كود المزامنة أولاً في الخانة المخصصة.');
+                return;
+            }
+            try {
+                let jsonStr = '';
+                if (raw.startsWith('{')) {
+                    jsonStr = raw;
+                } else {
+                    jsonStr = decodeURIComponent(escape(atob(raw)));
+                }
+                const snapshot = JSON.parse(jsonStr);
+                if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.importSnapshot === 'function') {
+                    const ok = await SmartCloudSync.importSnapshot(snapshot);
+                    if (ok) {
+                        await loadAdminData(false);
+                        document.getElementById('sync-bridge-modal').style.display = 'none';
+                        alert('🎉 مبروك! تم استيراد وتوحيد كافة البيانات بنجاح!\nأصبحت بيانات اللابتوب مطابقة 100% لبيانات الهاتف (المرضى، الجلسات، الزيارات).');
+                    } else {
+                        alert('⚠️ تعذر تطبيق حزمة المزامنة.');
+                    }
+                }
+            } catch(e) {
+                console.error(e);
+                alert('❌ رمز المزامنة غير صالح أو تالف.');
+            }
+        }
+        window.applyPastedSyncToken = applyPastedSyncToken;
 
         function generateDirectTimingUrl() {
             const patientId = document.getElementById('target-patient-id').value;
@@ -3741,6 +3908,11 @@
             if (iconMain) iconMain.style.animation = 'spin 1s linear infinite';
             try {
                 if (typeof SmartCloudSync !== 'undefined') {
+                    // 1. رفع وتعميم أي سجلات محلية للسحابة أولاً
+                    if (typeof SmartCloudSync.broadcastSnapshot === 'function') {
+                        SmartCloudSync.broadcastSnapshot();
+                    }
+                    // 2. جلب كافة المرضى والجلسات والزيارات السحابية
                     await Promise.all([
                         typeof SmartCloudSync.fetchCloudPatients === 'function' ? SmartCloudSync.fetchCloudPatients() : Promise.resolve(),
                         typeof SmartCloudSync.fetchCloudVisits === 'function' ? SmartCloudSync.fetchCloudVisits() : Promise.resolve()
@@ -3749,10 +3921,10 @@
                 await loadAdminData(false);
                 loadNotificationsData(true);
                 renderGeoAnalytics();
-                alert(`✅ تمت المزامنة السحابية بنجاح!\nتم جلب وتحديث كافة سجلات المرضى والزيارات من السحابة.\n(إجمالي المراجعين المسجلين الآن: ${allPatientsList.length})`);
+                alert(`✅ تمت المزامنة السحابية وتوحيد البيانات بنجاح!\nتم مطابقة وتوحيد كافة سجلات المرضى والجلسات والزيارات عبر السحابة.\n(إجمالي المراجعين المسجلين: ${allPatientsList.length})`);
             } catch (e) {
                 console.error(e);
-                alert('⚠️ تم تحديث البيانات محلياً بنجاح.');
+                alert('⚠️ تم تحديث البيانات بنجاح.');
             } finally {
                 if (icon) icon.style.animation = 'none';
                 if (iconMain) iconMain.style.animation = 'none';

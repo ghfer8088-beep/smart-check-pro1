@@ -149,11 +149,20 @@ const AdminEngine = (function() {
                 try {
                     logs = await SmartDB.getPatientDailyLogs(p.patientId);
                 } catch(e) { logs = []; }
-
+                if ((!logs || logs.length === 0) && p.id && p.id !== p.patientId) {
+                    try { logs = await SmartDB.getPatientDailyLogs(p.id); } catch(e) {}
+                }
+                
                 if ((!logs || logs.length === 0) && Array.isArray(p.dailyLogs) && p.dailyLogs.length > 0) {
                     logs = p.dailyLogs;
                 } else if ((!logs || logs.length === 0) && Array.isArray(p.logs) && p.logs.length > 0) {
                     logs = p.logs;
+                }
+                if ((!logs || logs.length === 0) && typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.getPatientLogs === 'function') {
+                    try {
+                        const cLogs = SmartCloudSync.getPatientLogs(p.patientId) || SmartCloudSync.getPatientLogs(p.id);
+                        if (cLogs && cLogs.length > 0) logs = cLogs;
+                    } catch(e) {}
                 }
                 
                 // استخراج التقييم السريري الحقيقي مع استبعاد التقييمات الوهمية
@@ -342,15 +351,20 @@ const AdminEngine = (function() {
         const cleanPhone = patientPhone ? String(patientPhone).replace(/\D/g, '') : '';
 
         if (forceUnlock) {
-            // فتح الجلسة فوراً
+            // فتح الجلسة فوراً لكافة الجلسات المحتملة لمنع أي تعارض في رقم الجلسة بين الأجهزة
             localStorage.setItem(`force_unlock_${patientId}`, 'true');
             localStorage.removeItem(`custom_target_time_${patientId}`);
             localStorage.removeItem(`custom_total_duration_${patientId}`);
-            localStorage.removeItem(`sessionStartTime_${patientId}_${sessionNum}`);
+            for (let i = 1; i <= 7; i++) {
+                localStorage.removeItem(`sessionStartTime_${patientId}_${i}`);
+            }
             if (cleanPhone) {
                 localStorage.setItem(`force_unlock_${cleanPhone}`, 'true');
                 localStorage.removeItem(`custom_target_time_${cleanPhone}`);
                 localStorage.removeItem(`custom_total_duration_${cleanPhone}`);
+                for (let i = 1; i <= 7; i++) {
+                    localStorage.removeItem(`sessionStartTime_${cleanPhone}_${i}`);
+                }
             }
             if (broadcastToAll) {
                 localStorage.setItem('force_unlock_global', 'true');
