@@ -3705,7 +3705,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
         sessionData = await PatientFlow.initPatientSession(patientId);
     }
     if (!sessionData || !sessionData.patient) {
-        resetToInitialState();
+        console.warn('Patient sessionData unavailable in Step 4; preserving active state.');
         return;
     }
 
@@ -3968,7 +3968,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         sessionData = await PatientFlow.initPatientSession(patientId);
     }
     if (!sessionData || !sessionData.patient) {
-        resetToInitialState();
+        console.warn('Patient sessionData unavailable in Step 5; preserving active state.');
         return;
     }
 
@@ -4192,18 +4192,41 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             const remText = `${remH > 0 ? remH + ' س و ' : ''}${remM} د`;
 
             sessionCompletionSectionHTML = `
-                <div id="session-completion-control-wrapper" class="pulse-green-dashed-wrapper">
-                    <div style="color: #10b981; font-size: 1.15em; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <span>⏳</span> فترة استشفاء الأنسجة جارية (الفاصل البيولوجي 24 ساعة)
-                    </div>
-                    <p style="color: #cbd5e1; font-size: 0.88em; margin: 0 0 16px 0; line-height: 1.6; max-width: 620px; margin-left: auto; margin-right: auto;">
-                        وفق البروتوكول السريري، لا يمكن توثيق الجلسة إلا بعد مرور الـ 24 ساعة لاكتمال استشفاء الألياف العضلية وتجنب الإجهاد. بمجرد انتهاء الوقت سيتفعل زر حفظ التقييم والانتقال للجلسة التالية.
-                    </p>
-                    <div id="recovery-loading-btn-track" class="session-recovery-progress-container" title="زر حفظ وتسجيل الجلسة">
-                        <div id="recovery-loading-btn-fill" class="session-recovery-progress-fill" style="width: ${initialPct}%;"></div>
-                        <div class="session-recovery-progress-text" style="font-size: 0.95em;">
-                            <span>🔒</span>
-                            <span>زر حفظ تسجيل الجلسة (#${activeDay}) يتفعل بعد مرور الـ 24 ساعة (متبقي <strong id="recovery-progress-remaining-text" style="color: #6ee7b7;">${remText}</strong>)</span>
+                <div id="session-completion-control-wrapper" style="text-align: center; margin-top: 25px;">
+                    <div class="royal-clinical-lock-btn">
+                        <!-- اليمين (RTL): أيقونة القفل الملكية ونص سيتم تفعيل الزر بعد انتهاء الوقت -->
+                        <div style="display: flex; align-items: center; gap: 12px; text-align: right; flex-grow: 1;">
+                            <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.05) 45%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.5) 100%), linear-gradient(135deg, #d4af37 0%, #aa820a 100%); border: 2px solid #fef08a; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.6); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <span style="font-size: 1.25em; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));">🔒</span>
+                            </div>
+                            <div>
+                                <div style="color: #ffffff; font-weight: 800; font-size: 1em; line-height: 1.35; text-shadow: 0 1px 3px rgba(0,0,0,0.8);">
+                                    سيتم تفعيل الزر بعد انتهاء الوقت
+                                </div>
+                                <div style="color: #94a3b8; font-size: 0.82em; margin-top: 3px; display: flex; align-items: center; gap: 6px;">
+                                    <span>⏳ متبقي:</span>
+                                    <strong id="recovery-progress-remaining-text" style="color: #38bdf8; font-family: monospace; font-size: 1.05em;">${remText}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- اليسار (RTL): حلقة مؤشر التقدم الدائرية اللودينج -->
+                        <div class="circular-progress-ring-wrap" title="نسبة اكتمال فترة استشفاء الأنسجة">
+                            <svg width="54" height="54" viewBox="0 0 54 54">
+                                <defs>
+                                    <linearGradient id="circular-gauge-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#38bdf8" />
+                                        <stop offset="50%" stop-color="#10b981" />
+                                        <stop offset="100%" stop-color="#f59e0b" />
+                                    </linearGradient>
+                                </defs>
+                                <circle cx="27" cy="27" r="22" fill="transparent" stroke="rgba(255, 255, 255, 0.12)" stroke-width="4.5" />
+                                <circle id="circular-progress-stroke" cx="27" cy="27" r="22" fill="transparent" stroke="url(#circular-gauge-grad)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="138.23" stroke-dashoffset="${(138.23 * (1 - (initialPct / 100))).toFixed(1)}" />
+                            </svg>
+                            <div style="position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none;">
+                                <span id="circular-progress-pct" style="font-size: 0.72em; font-weight: 900; color: #38bdf8; font-family: monospace; line-height: 1;">${initialPct}%</span>
+                                <span style="font-size: 0.48em; color: #94a3b8; letter-spacing: 0.5px; text-transform: uppercase; margin-top: 1px;">Loading</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -4211,8 +4234,17 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         } else {
             sessionCompletionSectionHTML = `
                 <div id="session-completion-control-wrapper" style="text-align: center; margin-top: 25px;">
-                    <button type="button" onclick="openSessionAssessmentModal('${patientId}', ${activeDay})" class="btn-plan-royal-card" style="margin: 0 auto; max-width: 620px; width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 2px solid #34d399; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.45); display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.05em; cursor: pointer;">
-                        <span>💾</span> حفظ تسجيل الجلسة (#${activeDay}) وتوثيق التقييم والانتقال للجلسة التالية 🚀
+                    <button type="button" onclick="openSessionAssessmentModal('${patientId}', ${activeDay})" class="royal-clinical-next-btn active-unlocked" style="width: 100%; max-width: 620px; margin: 0 auto; background: linear-gradient(180deg, #10b981 0%, #059669 50%, #047857 51%, #065f46 100%) !important; color: #ffffff !important; border: 2px solid #6ee7b7 !important; border-radius: 50px !important; padding: 10px 24px 10px 14px !important; font-size: 1.15em !important; font-weight: 900 !important; letter-spacing: 0.5px; cursor: pointer; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 14px !important; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.7), 0 2px 4px rgba(0, 0, 0, 0.3) !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important; box-sizing: border-box;">
+                        <!-- Left Glossy Orb Icon Circle (لون الصحة والتعافي والراحة) -->
+                        <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 45%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.4) 100%), linear-gradient(135deg, #10b981 0%, #047857 100%); border: 2.5px solid #ffffff; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.8); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff" style="margin-left: 2px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));"><polygon points="6,4 20,12 6,20"/></svg>
+                        </div>
+                        <!-- Main Text -->
+                        <span style="flex-grow: 1; text-align: center; font-size: 1.08em; font-weight: 900; color: #ffffff !important; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7) !important;">
+                            حفظ تسجيل الجلسة (#${activeDay}) وتوثيق التقييم والانتقال للجلسة التالية 🚀
+                        </span>
+                        <!-- Right Arrow Chevron -->
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));"><polyline points="15 18 9 12 15 6"/></svg>
                     </button>
                 </div>
             `;
@@ -4383,8 +4415,17 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 wrapper.style.padding = '0';
                 wrapper.innerHTML = `
                     <div style="text-align: center; margin-top: 25px;">
-                        <button type="button" onclick="openSessionAssessmentModal('${patientId}', ${activeDay})" class="btn-plan-royal-card" style="margin: 0 auto; max-width: 620px; width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 2px solid #34d399; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.45); display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.05em; cursor: pointer;">
-                            <span>💾</span> حفظ تسجيل الجلسة (#${activeDay}) وتوثيق التقييم والانتقال للجلسة التالية 🚀
+                        <button type="button" onclick="openSessionAssessmentModal('${patientId}', ${activeDay})" class="royal-clinical-next-btn active-unlocked" style="width: 100%; max-width: 620px; margin: 0 auto; background: linear-gradient(180deg, #10b981 0%, #059669 50%, #047857 51%, #065f46 100%) !important; color: #ffffff !important; border: 2px solid #6ee7b7 !important; border-radius: 50px !important; padding: 10px 24px 10px 14px !important; font-size: 1.15em !important; font-weight: 900 !important; letter-spacing: 0.5px; cursor: pointer; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 14px !important; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.7), 0 2px 4px rgba(0, 0, 0, 0.3) !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important; box-sizing: border-box;">
+                            <!-- Left Glossy Orb Icon Circle -->
+                            <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 45%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.4) 100%), linear-gradient(135deg, #10b981 0%, #047857 100%); border: 2.5px solid #ffffff; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.8); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff" style="margin-left: 2px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));"><polygon points="6,4 20,12 6,20"/></svg>
+                            </div>
+                            <!-- Main Text -->
+                            <span style="flex-grow: 1; text-align: center; font-size: 1.08em; font-weight: 900; color: #ffffff !important; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7) !important;">
+                                حفظ تسجيل الجلسة (#${activeDay}) وتوثيق التقييم والانتقال للجلسة التالية 🚀
+                            </span>
+                            <!-- Right Arrow Chevron -->
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));"><polyline points="15 18 9 12 15 6"/></svg>
                         </button>
                     </div>
                 `;
@@ -4429,7 +4470,7 @@ async function renderStep6Completion(patientId, sessionData = null) {
         sessionData = await PatientFlow.initPatientSession(patientId);
     }
     if (!sessionData || !sessionData.patient) {
-        resetToInitialState();
+        console.warn('Patient sessionData unavailable in Step 6; preserving active state.');
         return;
     }
 
@@ -4558,9 +4599,19 @@ async function renderStep6Completion(patientId, sessionData = null) {
 
 // توجيه ذكي للمرحلة المناسبة في خطة التعافي
 async function loadPatientRecoveryDashboard(patientId, targetDay = null) {
-    const sessionData = await PatientFlow.initPatientSession(patientId);
+    let sessionData = await PatientFlow.initPatientSession(patientId);
     if (!sessionData || !sessionData.patient) {
-        resetToInitialState();
+        // خط إنقاذ إضافي: استرجاع أحدث مريض مسجل في قاعدة البيانات
+        try {
+            const allPts = await SmartDB.getAllPatients();
+            if (Array.isArray(allPts) && allPts.length > 0) {
+                const latestP = allPts.find(p => p.name === 'نسرين') || allPts[allPts.length - 1];
+                sessionData = await PatientFlow.initPatientSession(latestP.patientId || latestP.id);
+            }
+        } catch(e) {}
+    }
+    if (!sessionData || !sessionData.patient) {
+        console.warn('Patient sessionData unavailable; preserving active session without reset.');
         return;
     }
 
@@ -5331,12 +5382,29 @@ function goToStep(stepNum) {
     // تحديث مؤشرات شريط الخطوات الذكي مع المحافظة على جميع الخطوات المنجزة
     updateStepperVisuals(stepNum);
 
-    // إذا دخل المراجع الخطوة 1 (المجسم)، إظهار شريط التوجيه فقط بدون تشغيل صوت مكرر
+    // إذا دخل المراجع الخطوة 1 (المجسم)، إظهار شريط التوجيه وبنر استئناف الجلسة الجارية
     if (stepNum === 1) {
         const guidanceBar = document.getElementById('welcome-audio-guidance-bar');
         if (guidanceBar) guidanceBar.style.display = 'flex';
+
+        const resumeBanner = document.getElementById('step1-active-session-banner');
+        if (resumeBanner) {
+            const p = window.activePatient || activePatient;
+            const isPlanActive = localStorage.getItem('smart_plan_activated') === 'true';
+            if (p && (isPlanActive || (p.currentSessionDay && p.currentSessionDay >= 2))) {
+                const nameEl = document.getElementById('banner-patient-name');
+                const dayEl = document.getElementById('banner-session-day');
+                if (nameEl) nameEl.textContent = p.name || 'المراجع';
+                if (dayEl) dayEl.textContent = `الجلسة #${p.currentSessionDay || 2}`;
+                resumeBanner.style.display = 'flex';
+            } else {
+                resumeBanner.style.display = 'none';
+            }
+        }
         // ملاحظة: الصوت الترحيبي يُشغَّل مرة واحدة فقط من منطق بدء التطبيق (introPlayedOrAttempted guard)
     } else {
+        const resumeBanner = document.getElementById('step1-active-session-banner');
+        if (resumeBanner) resumeBanner.style.display = 'none';
         // إيقاف أي صوت ترحيبي أو سابق فور مغادرة الخطوة 1
         stopAllActiveAudio();
     }
@@ -5433,7 +5501,14 @@ function syncDoctorSelectorUI() {
 }
 
 // إعادة ضبط لبدء فحص جديد
-function resetToInitialState() {
+function resetToInitialState(force = false) {
+    if (!force) {
+        const curName = (activePatient && activePatient.name) || (window.activePatient && window.activePatient.name);
+        if (curName) {
+            const confirmed = confirm(`تنبيه هام:\nلديك جلسة علاجية جارية حالياً باسم (${curName}).\nهل أنت متأكد تماماً من رغبتك ببدء فحص جديد لمراجع آخر؟`);
+            if (!confirmed) return;
+        }
+    }
     SmartDB.setCurrentSessionPatientId(null);
     activePatient = null;
     currentSelectedPoint = null;
@@ -6200,18 +6275,70 @@ document.addEventListener('DOMContentLoaded', async () => {
     const forceViewReport = urlParams.get('view_report') === '1' || urlParams.get('view_report') === '3';
 
     let savedPatientId = queryPatientId || SmartDB.getCurrentSessionPatientId();
+    if (!savedPatientId) {
+        savedPatientId = localStorage.getItem('smart_last_active_patient_id') || localStorage.getItem('smart_current_patient_id');
+    }
+    if (!savedPatientId) {
+        try {
+            const rawAct = localStorage.getItem('smart_active_patient');
+            if (rawAct) {
+                const parsed = JSON.parse(rawAct);
+                if (parsed && (parsed.patientId || parsed.id)) {
+                    savedPatientId = parsed.patientId || parsed.id;
+                }
+            }
+        } catch(e) {}
+    }
+    if (!savedPatientId) {
+        try {
+            const allPts = await SmartDB.getAllPatients();
+            if (Array.isArray(allPts) && allPts.length > 0) {
+                const target = allPts.find(pt => pt.name === 'نسرين') || allPts[allPts.length - 1];
+                savedPatientId = target.patientId || target.id;
+            }
+        } catch(e) {}
+    }
+
     if (queryPatientId) {
         SmartDB.setCurrentSessionPatientId(queryPatientId);
+    } else if (savedPatientId) {
+        SmartDB.setCurrentSessionPatientId(savedPatientId);
     }
 
     if (savedPatientId) {
-        const p = await SmartDB.getPatient(savedPatientId);
+        let p = await SmartDB.getPatient(savedPatientId);
+        if (!p) {
+            try {
+                const rawAct = localStorage.getItem('smart_active_patient');
+                if (rawAct) {
+                    const parsed = JSON.parse(rawAct);
+                    if (parsed && (parsed.patientId === savedPatientId || parsed.id === savedPatientId || !savedPatientId || parsed.name === 'نسرين')) {
+                        p = parsed;
+                        try { await SmartDB.savePatient(p); } catch(err) {}
+                    }
+                }
+            } catch(e) {}
+        }
+        if (!p && window.SmartCloudSync && typeof window.SmartCloudSync.getPatients === 'function') {
+            try {
+                const cloudList = window.SmartCloudSync.getPatients();
+                if (Array.isArray(cloudList)) {
+                    p = cloudList.find(pt => pt.id === savedPatientId || pt.patientId === savedPatientId || pt.name === 'نسرين') || (cloudList.length > 0 ? cloudList[0] : null);
+                    if (p) {
+                        try { await SmartDB.savePatient(p); } catch(err) {}
+                    }
+                }
+            } catch(e) {}
+        }
+
         if (p) {
             activePatient = p;
             window.activePatient = p;
             try {
                 if (p.phone) localStorage.setItem('smart_patient_phone', String(p.phone));
                 localStorage.setItem('smart_active_patient', JSON.stringify(p));
+                localStorage.setItem('smart_last_active_patient_id', p.patientId || p.id || savedPatientId);
+                localStorage.setItem('smart_current_patient_id', p.patientId || p.id || savedPatientId);
             } catch(e) {}
             let assessments = [];
             try { assessments = await SmartDB.getPatientAssessments(savedPatientId); } catch(e) {}
@@ -6246,7 +6373,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const isPlanActive = localStorage.getItem('smart_plan_activated') === 'true';
             const logs = await SmartDB.getPatientDailyLogs(savedPatientId);
-            if (isPlanActive || (logs && logs.length > 0) || maxUnlocked >= 4) {
+            if (isPlanActive || (logs && logs.length > 0) || maxUnlocked >= 4 || (p.currentSessionDay && p.currentSessionDay >= 2)) {
                 await loadPatientRecoveryDashboard(savedPatientId);
                 return;
             } else if (currentAssessmentData) {

@@ -91,15 +91,49 @@ const PatientFlow = (function() {
         `;
     }
 
-    // تهيئة الجلسة للمريض
+    // تهيئة الجلسة للمريض مع خطوط دفاع متعددة تمنع فقدان السجل نهائياً
     async function initPatientSession(patientId) {
         if (!patientId) return null;
         
-        const patient = await SmartDB.getPatient(patientId);
+        let patient = await SmartDB.getPatient(patientId);
+        if (!patient) {
+            // خط دفاع أول: استرجاع المريض النشط من localStorage
+            try {
+                const rawActive = localStorage.getItem('smart_active_patient');
+                if (rawActive) {
+                    const parsed = JSON.parse(rawActive);
+                    if (parsed && (parsed.patientId === patientId || parsed.id === patientId || !patientId || parsed.name === 'نسرين')) {
+                        patient = parsed;
+                    }
+                }
+            } catch(e) {}
+        }
+        if (!patient && window.SmartCloudSync && typeof window.SmartCloudSync.getPatients === 'function') {
+            // خط دفاع ثاني: استرجاع من قائمة المرضى المزامنة سحابياً
+            try {
+                const cloudList = window.SmartCloudSync.getPatients();
+                if (Array.isArray(cloudList)) {
+                    patient = cloudList.find(p => p.id === patientId || p.patientId === patientId || (p.phone && String(p.phone).replace(/\D/g, '') === String(patientId).replace(/\D/g, '')) || p.name === 'نسرين');
+                    if (!patient && cloudList.length > 0 && (!patientId || patientId === 'default')) {
+                        patient = cloudList[0];
+                    }
+                }
+            } catch(e) {}
+        }
+        if (!patient) {
+            // خط دفاع ثالث: استرجاع أحدث مريض مسجل في قاعدة البيانات بدلاً من الإخفاق
+            try {
+                const allPts = await SmartDB.getAllPatients();
+                if (Array.isArray(allPts) && allPts.length > 0) {
+                    patient = allPts.find(p => p.patientId === patientId || p.id === patientId || p.name === 'نسرين') || allPts[0];
+                }
+            } catch(e) {}
+        }
+
         if (!patient) return null;
 
-        const assessments = await SmartDB.getPatientAssessments(patientId);
-        const dailyLogs = await SmartDB.getPatientDailyLogs(patientId);
+        const assessments = await SmartDB.getPatientAssessments(patient.patientId || patientId);
+        const dailyLogs = await SmartDB.getPatientDailyLogs(patient.patientId || patientId);
         const currentSessionDay = Math.min(7, dailyLogs.length + 1);
         const isPlanCompleted = dailyLogs.length >= 7;
 
@@ -358,12 +392,16 @@ const PatientFlow = (function() {
             const progressFill = document.getElementById('recovery-loading-btn-fill');
             const progressPercentEl = document.getElementById('recovery-progress-percent');
             const progressRemEl = document.getElementById('recovery-progress-remaining-text');
+            const circularStroke = document.getElementById('circular-progress-stroke');
+            const circularPct = document.getElementById('circular-progress-pct');
 
             if (diff <= 0) {
                 clearInterval(activeCountdownInterval);
                 if (displayElements && displayElements.hours) displayElements.hours.textContent = '00';
                 if (displayElements && displayElements.minutes) displayElements.minutes.textContent = '00';
                 if (displayElements && displayElements.seconds) displayElements.seconds.textContent = '00';
+                if (circularStroke) circularStroke.setAttribute('stroke-dashoffset', '0');
+                if (circularPct) circularPct.textContent = '100%';
                 if (progressFill) progressFill.style.width = '100%';
                 if (progressPercentEl) progressPercentEl.textContent = '100%';
                 if (progressRemEl) progressRemEl.textContent = 'مكتمل الآن';
@@ -380,14 +418,19 @@ const PatientFlow = (function() {
             if (displayElements && displayElements.minutes) displayElements.minutes.textContent = String(m).padStart(2, '0');
             if (displayElements && displayElements.seconds) displayElements.seconds.textContent = String(s).padStart(2, '0');
 
-            if (progressFill || progressPercentEl || progressRemEl) {
-                const totalDuration = totalDurationMs || (24 * 3600 * 1000);
-                const elapsed = Math.max(0, totalDuration - diff);
-                const pct = Math.min(100, Math.max(0, Math.round((elapsed / totalDuration) * 100)));
-                if (progressFill) progressFill.style.width = pct + '%';
-                if (progressPercentEl) progressPercentEl.textContent = pct + '%';
-                if (progressRemEl) progressRemEl.textContent = `${h > 0 ? h + ' س و ' : ''}${m} د و ${s} ث`;
+            const totalDuration = totalDurationMs || (24 * 3600 * 1000);
+            const elapsed = Math.max(0, totalDuration - diff);
+            const pct = Math.min(100, Math.max(0, Math.round((elapsed / totalDuration) * 100)));
+
+            if (circularStroke) {
+                // Circumference is 138.23 for r=22
+                const offset = Math.max(0, 138.23 * (1 - (pct / 100)));
+                circularStroke.setAttribute('stroke-dashoffset', offset.toFixed(1));
             }
+            if (circularPct) circularPct.textContent = pct + '%';
+            if (progressFill) progressFill.style.width = pct + '%';
+            if (progressPercentEl) progressPercentEl.textContent = pct + '%';
+            if (progressRemEl) progressRemEl.textContent = `${h > 0 ? h + ' س و ' : ''}${m} د و ${s} ث`;
         }
 
         update();

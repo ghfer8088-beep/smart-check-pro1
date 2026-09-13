@@ -982,14 +982,71 @@
                             <div style="background: rgba(16, 185, 129, 0.15); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px; margin-bottom: 14px; color: #6ee7b7; font-weight: bold; font-size: 0.95em;">
                                 🔓 تم فتح الجلسة لك الآن من قبل المعالج! يمكنك حفظ التقييم ومتابعة الخطة 🚀
                             </div>
-                            <button type="button" onclick="openSessionAssessmentModal('${pId}', ${currentDay})" class="btn-plan-royal-card" style="margin: 0 auto; max-width: 620px; width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 2px solid #34d399; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.45); display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.05em; cursor: pointer;">
-                                <span>💾</span> حفظ تسجيل الجلسة (#${currentDay}) وتوثيق التقييم والانتقال للجلسة التالية 🚀
+                            <button type="button" onclick="openSessionAssessmentModal('${pId}', ${currentDay})" class="royal-clinical-next-btn active-unlocked" style="width: 100%; max-width: 620px; margin: 0 auto; background: linear-gradient(180deg, #10b981 0%, #059669 50%, #047857 51%, #065f46 100%) !important; color: #ffffff !important; border: 2px solid #6ee7b7 !important; border-radius: 50px !important; padding: 10px 24px 10px 14px !important; font-size: 1.15em !important; font-weight: 900 !important; letter-spacing: 0.5px; cursor: pointer; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 14px !important; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.7), 0 2px 4px rgba(0, 0, 0, 0.3) !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important; box-sizing: border-box;">
+                                <!-- Left Glossy Orb Icon Circle -->
+                                <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 45%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.4) 100%), linear-gradient(135deg, #10b981 0%, #047857 100%); border: 2.5px solid #ffffff; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.8); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff" style="margin-left: 2px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));"><polygon points="6,4 20,12 6,20"/></svg>
+                                </div>
+                                <!-- Main Text -->
+                                <span style="flex-grow: 1; text-align: center; font-size: 1.08em; font-weight: 900; color: #ffffff !important; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7) !important;">
+                                    حفظ تسجيل الجلسة (#${currentDay}) وتوثيق التقييم والانتقال للجلسة التالية 🚀
+                                </span>
+                                <!-- Right Arrow Chevron -->
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));"><polyline points="15 18 9 12 15 6"/></svg>
                             </button>
                         </div>
                     `;
                 }
             } else if (update.targetTime && update.targetTime > Date.now()) {
                 const totalDur = update.totalDurationMs || (update.targetTime - Date.now());
+                const currentDay = update.sessionNum || (window.activePatient && window.activePatient.currentSessionDay) || 2;
+                const pId = update.patientId || (window.activePatient && (window.activePatient.patientId || window.activePatient.id)) || localStorage.getItem('smart_current_patient_id') || '';
+
+                if (wrapper && !wrapper.querySelector('.royal-clinical-lock-btn')) {
+                    wrapper.className = '';
+                    wrapper.style.border = 'none';
+                    wrapper.style.boxShadow = 'none';
+                    wrapper.style.background = 'transparent';
+                    wrapper.style.padding = '0';
+                    wrapper.innerHTML = `
+                        <div style="text-align: center; margin-top: 25px;">
+                            <div class="royal-clinical-lock-btn">
+                                <div style="display: flex; align-items: center; gap: 12px; text-align: right; flex-grow: 1;">
+                                    <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.05) 45%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.5) 100%), linear-gradient(135deg, #d4af37 0%, #aa820a 100%); border: 2px solid #fef08a; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.6); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <span style="font-size: 1.25em; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));">🔒</span>
+                                    </div>
+                                    <div>
+                                        <div style="color: #ffffff; font-weight: 800; font-size: 1em; line-height: 1.35; text-shadow: 0 1px 3px rgba(0,0,0,0.8);">
+                                            سيتم تفعيل الزر بعد انتهاء الوقت
+                                        </div>
+                                        <div style="color: #94a3b8; font-size: 0.82em; margin-top: 3px; display: flex; align-items: center; gap: 6px;">
+                                            <span>⏳ متبقي:</span>
+                                            <strong id="recovery-progress-remaining-text" style="color: #38bdf8; font-family: monospace; font-size: 1.05em;">...</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="circular-progress-ring-wrap" title="نسبة اكتمال فترة استشفاء الأنسجة">
+                                    <svg width="54" height="54" viewBox="0 0 54 54">
+                                        <defs>
+                                            <linearGradient id="circular-gauge-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                <stop offset="0%" stop-color="#38bdf8" />
+                                                <stop offset="50%" stop-color="#10b981" />
+                                                <stop offset="100%" stop-color="#f59e0b" />
+                                            </linearGradient>
+                                        </defs>
+                                        <circle cx="27" cy="27" r="22" fill="transparent" stroke="rgba(255, 255, 255, 0.12)" stroke-width="4.5" />
+                                        <circle id="circular-progress-stroke" cx="27" cy="27" r="22" fill="transparent" stroke="url(#circular-gauge-grad)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="138.23" stroke-dashoffset="138.23" />
+                                    </svg>
+                                    <div style="position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none;">
+                                        <span id="circular-progress-pct" style="font-size: 0.72em; font-weight: 900; color: #38bdf8; font-family: monospace; line-height: 1;">0%</span>
+                                        <span style="font-size: 0.48em; color: #94a3b8; letter-spacing: 0.5px; text-transform: uppercase; margin-top: 1px;">Loading</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
                 if (window.PatientFlow && typeof window.PatientFlow.startCountdownTimer === 'function') {
                     window.PatientFlow.startCountdownTimer(update.targetTime, {
                         hours: elHours,

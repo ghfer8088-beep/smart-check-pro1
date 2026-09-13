@@ -39,11 +39,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=18.6">
+    <link rel="stylesheet" href="css/style.css?v=18.7">
     <script>
-        // التحقق من تحديثات Service Worker وتفريغ الكاش القديم فوراً عند الترقية للإصدار 18.6
+        // التحقق من تحديثات Service Worker وتحديث الكاش بسلاسة دون تفريغ أي بيانات للمرضى
         (function() {
-            const APP_TARGET_VER = '18.6';
+            const APP_TARGET_VER = '18.7';
             const currentVer = localStorage.getItem('smart_app_version');
             if (currentVer !== APP_TARGET_VER) {
                 if ('caches' in window) {
@@ -51,11 +51,6 @@
                         return Promise.all(keys.map(k => caches.delete(k)));
                     }).then(function() {
                         localStorage.setItem('smart_app_version', APP_TARGET_VER);
-                        if (window.location.protocol.startsWith('http') && 'serviceWorker' in navigator) {
-                            navigator.serviceWorker.getRegistrations().then(function(regs) {
-                                for (let r of regs) { r.unregister(); }
-                            }).catch(function() {});
-                        }
                     }).catch(function() {});
                 } else {
                     localStorage.setItem('smart_app_version', APP_TARGET_VER);
@@ -240,6 +235,21 @@
 
         <!-- ================= الخطوة 1: فحص وتحديد موضع الألم ================= -->
         <section id="step-section-1" class="app-step-section">
+
+            <!-- بنر استئناف الجلسة العلاجية الجارية تلقائياً لحماية المراجع من أي فقدان لجلسته -->
+            <div id="step1-active-session-banner" class="no-print" style="display: none; background: linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(15, 23, 42, 0.95) 100%); border: 2px solid #10b981; border-radius: 14px; padding: 14px 18px; margin-bottom: 18px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.35); align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 1.8em;">🌿</span>
+                    <div>
+                        <strong style="color: #6ee7b7; font-size: 1.02em; display: block;">مرحباً <span id="banner-patient-name">المراجع العزيز</span>! لديك جلسة علاجية جارية (<span id="banner-session-day">الجلسة #2</span>)</strong>
+                        <span style="color: #cbd5e1; font-size: 0.85em;">تم حفظ تقدمك وجدولك بالكامل بأمان. اضغط لمتابعة تمارينك الحالية فوراً.</span>
+                    </div>
+                </div>
+                <button type="button" onclick="loadPatientRecoveryDashboard(window.activePatient?.patientId || (window.activePatient && window.activePatient.id) || SmartDB.getCurrentSessionPatientId())" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: 1.5px solid #6ee7b7; border-radius: 30px; padding: 10px 22px; font-weight: 900; font-size: 0.95em; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.45); white-space: nowrap;">
+                    <span>متابعة جلستي الآن</span>
+                    <span>➔</span>
+                </button>
+            </div>
 
             <!-- وسام الريادة العالمية: منظومة الفحص والعلاج الذكية الأولى والوحيدة في العالم (تصميم عصري رشيق للهاتف والكمبيوتر) -->
             <div class="prestige-compact-showcase no-print" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.16) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 14px 20px; margin-bottom: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">

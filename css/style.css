@@ -2548,3 +2548,95 @@ body {
     width: 100%;
     padding: 0 14px;
 }
+
+/* زر الترقب والاستشفاء الملكي مع عداد دائري ونمط المرحلة الأولى */
+.royal-clinical-lock-btn {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 50%, #0b111e 100%) !important;
+    border: 2px solid rgba(212, 175, 55, 0.6) !important;
+    border-radius: 50px !important;
+    padding: 10px 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 14px !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.1) !important;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.royal-clinical-lock-btn:hover {
+    border-color: var(--primary-gold) !important;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.7), 0 0 15px rgba(212, 175, 55, 0.25) !important;
+}
+
+/* الحلقة الدائرية التفاعلية للتقدم اللودينج */
+.circular-progress-ring-wrap {
+    position: relative;
+    width: 54px;
+    height: 54px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.5));
+}
+
+.circular-progress-ring-wrap svg {
+    transform: rotate(-90deg);
+}
+
+.circular-progress-ring-wrap circle {
+    transition: stroke-dashoffset 0.8s ease;
+}
+
+/* زر الحفظ المفعل بعد انتهاء الوقت - مطابق تماماً لزر المرحلة الأولى بالأخضر الزمردي والكتابة البيضاء النقية */
+.royal-clinical-next-btn.active-unlocked {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    background: linear-gradient(180deg, #10b981 0%, #059669 50%, #047857 51%, #065f46 100%) !important;
+    color: #ffffff !important;
+    border: 2px solid #6ee7b7 !important;
+    border-radius: 50px !important;
+    padding: 10px 24px 10px 14px !important;
+    font-size: 1.15em !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.5px !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 14px !important;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.7), 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
+    box-sizing: border-box;
+}
+
+.royal-clinical-next-btn.active-unlocked:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(16, 185, 129, 0.75), inset 0 2px 4px rgba(255, 255, 255, 0.9) !important;
+}
+
+@media (max-width: 480px) {
+    .royal-clinical-lock-btn {
+        padding: 8px 12px !important;
+        gap: 8px !important;
+    }
+    .royal-clinical-lock-btn .circular-progress-ring-wrap {
+        width: 48px;
+        height: 48px;
+    }
+    .royal-clinical-next-btn.active-unlocked {
+        padding: 8px 14px 8px 10px !important;
+        font-size: 0.95em !important;
+        gap: 8px !important;
+    }
+}
