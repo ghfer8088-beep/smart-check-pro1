@@ -381,6 +381,54 @@
         } catch (e) {}
     }
 
+    // تحديث بيانات التوقيت للمريض محلياً وتحديث الواجهة فوراً
+    function applyTimingUpdateLocally(data) {
+        if (!data) return;
+        const patientId = data.patientId || data.id;
+        if (!patientId) return;
+        const patients = getCloudSyncedPatients();
+        const idx = patients.findIndex(p => p.id === patientId || p.patientId === patientId);
+        if (idx < 0) return;
+
+        const patient = patients[idx];
+        // دمج حقول التوقيت
+        const timingFields = ['sessionNumber','painScore','mobilityRate','sleepRate','date','timestamp'];
+        timingFields.forEach(f => {
+            if (data[f] !== undefined) patient[f] = data[f];
+        });
+
+        // تحديث سجل اليوم إن وجد رقم جلسة
+        if (data.sessionNumber) {
+            const lsKey = 'smart_daily_logs_' + patientId;
+            const existing = JSON.parse(localStorage.getItem(lsKey) || '[]');
+            const logIdx = existing.findIndex(l => l.sessionNumber === data.sessionNumber);
+            const logUpdate = {
+                patientId,
+                sessionNumber: data.sessionNumber,
+                painScore: data.painScore,
+                mobilityRate: data.mobilityRate,
+                sleepRate: data.sleepRate,
+                date: data.date || new Date().toISOString()
+            };
+            if (logIdx >= 0) existing[logIdx] = { ...existing[logIdx], ...logUpdate };
+            else existing.push(logUpdate);
+            existing.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
+            localStorage.setItem(lsKey, JSON.stringify(existing));
+        }
+
+        // حفظ المريض المحدث
+        patients[idx] = patient;
+        saveCloudSyncedPatients(patients);
+
+        // مزامنة مع SmartDB إن كان متاحاً
+        if (window.SmartDB && typeof window.SmartDB.savePatient === 'function') {
+            try { window.SmartDB.savePatient(patient, { skipCloudSync: true }); } catch(e) {}
+        }
+
+        // تحديث الواجهة
+        triggerAppUIRefresh();
+    }
+
     // دالة ترحيل مريض جديد سحابياً من أي مكان في العالم
     async function dispatchPatientToCloud(patientRecord) {
         if (!patientRecord) return null;
@@ -1550,7 +1598,6 @@
     // =========================================================================
     // ⏱️ مزامنة توقيت الجلسات وقفل/فتح الجلسات السحابي بين الإدارة وهواتف المرضى
     // =========================================================================
-    const CLOUD_TIMING_ENDPOINT = 'https://ntfy.sh/wada3an_smart_check_timing_sync_2026';
     let timingEventSource = null;
     let lastAppliedTimingTimestamp = parseInt(localStorage.getItem('smart_last_timing_sync_ts') || '0') || 0;
 

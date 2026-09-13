@@ -16,9 +16,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=19.0"></script>
-    <script src="js/security-shield.js?v=19.0"></script>
-    <link rel="stylesheet" href="css/style.css?v=19.0">
+    <script src="js/system-watchdog.js?v=19.1"></script>
+    <script src="js/security-shield.js?v=19.1"></script>
+    <link rel="stylesheet" href="css/style.css?v=19.1">
     <style>
         body {
             background-color: #080c14;
@@ -419,7 +419,7 @@
                         <span>⚙️</span> إعدادات
                     </button>
                     <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header admin-btn-cache" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 9px 12px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
-                        ⚡ تحديث الكاش (v19.0)
+                        ⚡ تحديث الكاش (v19.1)
                     </button>
                     <a href="index.html" class="btn-header admin-btn-front" style="background: #1e293b; color: #fff; padding: 9px 14px; font-size: 0.86em; text-decoration: none; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid #334155;">
                         🌐 واجهة المراجعين
@@ -1437,17 +1437,17 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/mqtt.min.js?v=19.0"></script>
-    <script src="js/geo-tracker.js?v=19.0"></script>
-    <script src="js/cloud-sync.js?v=19.0"></script>
-    <script src="js/database.js?v=19.0"></script>
-    <script src="js/exercise-image-studio.js?v=19.0"></script>
-    <script src="js/exercises-db.js?v=19.0"></script>
-    <script src="js/diagnostic-engine.js?v=19.0"></script>
-    <script src="js/patient-flow.js?v=19.0"></script>
-    <script src="js/admin-engine.js?v=19.0"></script>
-    <script src="js/ai-config.js?v=19.0"></script>
-    <script src="js/ai-engine.js?v=19.0"></script>
+    <script src="js/mqtt.min.js?v=19.1"></script>
+    <script src="js/geo-tracker.js?v=19.1"></script>
+    <script src="js/cloud-sync.js?v=19.1"></script>
+    <script src="js/database.js?v=19.1"></script>
+    <script src="js/exercise-image-studio.js?v=19.1"></script>
+    <script src="js/exercises-db.js?v=19.1"></script>
+    <script src="js/diagnostic-engine.js?v=19.1"></script>
+    <script src="js/patient-flow.js?v=19.1"></script>
+    <script src="js/admin-engine.js?v=19.1"></script>
+    <script src="js/ai-config.js?v=19.1"></script>
+    <script src="js/ai-engine.js?v=19.1"></script>
 
     <script>
         let allPatientsList = [];
@@ -1456,15 +1456,23 @@
         let isSoundAlertEnabled = localStorage.getItem('smart_admin_sound_enabled') !== 'false';
         let lastKnownNotifCount = 0;
 
-        document.addEventListener('DOMContentLoaded', async () => {
+        async function initAdminPage() {
             setDesktopViewMode(localStorage.getItem('smart_admin_desktop_view') || 'cards');
-            await SmartDB.openDB();
-            const isDev = await SmartDB.getSetting('isDeveloperMode', false);
-            const btn = document.getElementById('btn-toggle-dev');
-            if (btn) {
-                btn.textContent = isDev ? '🔧 وضع المطور: مفعل (بدون قفل زمني)' : '🔧 وضع المطور: معطل';
-                btn.style.background = isDev ? '#10b981' : '#1e293b';
-            }
+            try {
+                if (typeof SmartDB !== 'undefined' && typeof SmartDB.openDB === 'function') {
+                    await SmartDB.openDB();
+                }
+            } catch(e) {}
+
+            try {
+                const isDev = (typeof SmartDB !== 'undefined' && typeof SmartDB.getSetting === 'function') 
+                    ? await SmartDB.getSetting('isDeveloperMode', false) : false;
+                const btn = document.getElementById('btn-toggle-dev');
+                if (btn) {
+                    btn.textContent = isDev ? '🔧 وضع المطور: مفعل (بدون قفل زمني)' : '🔧 وضع المطور: معطل';
+                    btn.style.background = isDev ? '#10b981' : '#1e293b';
+                }
+            } catch(e) {}
 
             updateSoundBtnUI();
             initAiAdminStatus();
@@ -1507,17 +1515,24 @@
                 }
             });
 
-            // التحقق من حالة تسجيل الدخول السابقة للدخول التلقائي السلس
-            if (sessionStorage.getItem('smart_admin_auth') === 'true' || localStorage.getItem('smart_admin_auth') === 'true') {
-                const lb = document.getElementById('admin-login-box');
-                const mc = document.getElementById('admin-main-content');
-                if (lb) lb.style.display = 'none';
-                if (mc) mc.style.display = 'block';
+            // ضمان فتح محتوى الإدارة فوراً وبشكل مباشر
+            const lb = document.getElementById('admin-login-box');
+            const mc = document.getElementById('admin-main-content');
+            if (lb) lb.style.display = 'none';
+            if (mc) mc.style.display = 'block';
+
+            // تشغيل فوري ولحظي لعرض البيانات المحلية دون أي تأخير
+            try {
+                await loadAdminData(false);
+            } catch(e) {
+                console.error('Error in initial loadAdminData:', e);
             }
 
-            // تشغيل فوري ولحظي لعرض البيانات المحلية دون أي تأخير أو انتظار شبكي
-            await loadAdminData(false);
-            loadNotificationsData(false);
+            try {
+                loadNotificationsData(false);
+            } catch(e) {
+                console.error('Error in initial loadNotificationsData:', e);
+            }
 
             // ☁️ الاشتراك المباشر والمزامنة السحابية اللحظية للمرضى والزيارات حول العالم
             if (typeof SmartCloudSync !== 'undefined') {
@@ -1537,6 +1552,13 @@
                     });
                 }
             }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAdminPage);
+        } else {
+            initAdminPage();
+        }
 
             // 🔄 فحص دوري هادئ كل 45 ثانية كاحتياطي، مع الاعتماد الكامل على البث اللحظي الفوري عبر MQTT
             setInterval(async () => {
@@ -1550,7 +1572,6 @@
                     renderGeoAnalytics();
                 } catch (e) {}
             }, 45000);
-        });
 
         // ==========================================================================
         // دوال إدارة وتوثيق قصص النجاح بالفيديو (Success Stories Video Manager)
@@ -2243,7 +2264,7 @@
                 } catch(e) {}
 
                 try {
-                    await loadAdminData();
+                    await loadAdminData(false);
                 } catch(e) {
                     console.error('Error in loadAdminData:', e);
                 }
@@ -2278,12 +2299,6 @@
             // تطهير واستشفاء فوري من أي تقييمات وهمية سابقة لتنظيف المتصفح فوراً
             if (typeof SmartDB !== 'undefined' && typeof SmartDB.purgeDummyAssessments === 'function') {
                 try { await SmartDB.purgeDummyAssessments(); } catch(e) {}
-            }
-            if (typeof SmartCloudSync !== 'undefined') {
-                try {
-                    if (typeof SmartCloudSync.fetchCloudPatients === 'function') await SmartCloudSync.fetchCloudPatients();
-                    if (typeof SmartCloudSync.fetchCloudVisits === 'function') await SmartCloudSync.fetchCloudVisits();
-                } catch(e) {}
             }
             allPatientsList = await AdminEngine.loadPatientsOverview();
 
@@ -2682,7 +2697,6 @@
             `}).join('');
 
             // توليد بطاقات المراجعين الملكية الفاخرة المريحة للمدير (على الموبايل والكمبيوتر)
-            const mobileCardsContainer = document.getElementById('patients-cards-container') || document.getElementById('patients-mobile-cards-wrap');
             if (mobileCardsContainer) {
                 if (!list || list.length === 0) {
                     mobileCardsContainer.innerHTML = `
