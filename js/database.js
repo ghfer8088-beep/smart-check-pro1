@@ -47,6 +47,7 @@ const SmartDB = (function() {
 
             req.onsuccess = (e) => {
                 dbInstance = e.target.result;
+                try { purgeDummyAssessments(); } catch(err) {}
                 resolve(dbInstance);
             };
 
@@ -334,12 +335,73 @@ const SmartDB = (function() {
         }
     }
 
+    // تطهير وحذف أي تقييمات وهمية مكررة أو تالفة
+    async function purgeDummyAssessments() {
+        try {
+            // 1. تنظيف التخزين المحلي LocalStorage
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && k.startsWith('smart_assessments_')) {
+                    try {
+                        const raw = localStorage.getItem(k);
+                        if (raw) {
+                            const arr = JSON.parse(raw);
+                            if (Array.isArray(arr)) {
+                                const clean = arr.filter(a => 
+                                    !a.autoHealed && 
+                                    a.primaryDiagnosis !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة' && 
+                                    a.painLocation !== 'العمود الفقري ومفاصل الحركة'
+                                );
+                                if (clean.length !== arr.length) {
+                                    localStorage.setItem(k, JSON.stringify(clean));
+                                }
+                            }
+                        }
+                    } catch(e) {}
+                }
+            }
+        } catch(e) {}
+
+        try {
+            // 2. تنظيف IndexedDB
+            const db = await openDB();
+            return new Promise((resolve) => {
+                const tx = db.transaction('assessments', 'readwrite');
+                const store = tx.objectStore('assessments');
+                const req = store.openCursor();
+                req.onsuccess = (e) => {
+                    const cursor = e.target.result;
+                    if (cursor) {
+                        const val = cursor.value;
+                        if (val && (
+                            val.autoHealed === true || 
+                            val.primaryDiagnosis === 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة' || 
+                            val.painLocation === 'العمود الفقري ومفاصل الحركة'
+                        )) {
+                            cursor.delete();
+                        }
+                        cursor.continue();
+                    }
+                };
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(true);
+            });
+        } catch(e) {
+            return true;
+        }
+    }
+
     async function getPatientAssessments(patientId) {
         let lsAssessments = [];
         try {
             if (patientId) {
                 const lsKey = 'smart_assessments_' + patientId;
-                lsAssessments = JSON.parse(localStorage.getItem(lsKey) || '[]');
+                const raw = JSON.parse(localStorage.getItem(lsKey) || '[]');
+                lsAssessments = (raw || []).filter(a => 
+                    !a.autoHealed && 
+                    a.primaryDiagnosis !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة' && 
+                    a.painLocation !== 'العمود الفقري ومفاصل الحركة'
+                );
             }
         } catch(e) {}
 
@@ -350,7 +412,11 @@ const SmartDB = (function() {
                 const index = tx.objectStore('assessments').index('patientId');
                 const req = index.getAll(patientId);
                 req.onsuccess = () => {
-                    const dbAssessments = req.result || [];
+                    const dbAssessments = (req.result || []).filter(a => 
+                        !a.autoHealed && 
+                        a.primaryDiagnosis !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة' && 
+                        a.painLocation !== 'العمود الفقري ومفاصل الحركة'
+                    );
                     if (dbAssessments.length > 0) return resolve(dbAssessments);
                     resolve(lsAssessments);
                 };
@@ -601,6 +667,7 @@ const SmartDB = (function() {
         markNotificationAsRead,
         markAllNotificationsAsRead,
         deleteNotification,
-        clearAllNotifications
+        clearAllNotifications,
+        purgeDummyAssessments
     };
 })();

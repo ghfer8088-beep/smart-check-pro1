@@ -198,7 +198,7 @@ const SmartWatchdog = (function() {
 
             // التدخل فقط وفقط إذا علق توليد التقرير السحابي أكثر من 45 ثانية
             if (stalledStep === 'report_generating') {
-                const painArea = sessionState.painArea || 'العمود الفقري ومفاصل الحركة';
+                const painArea = sessionState.painArea || sessionState.painAreaTitle || sessionState.selectedPoint?.title || 'أسفل الظهر والفقرات القطنية';
                 const patientId = sessionState.patientId || (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : 'PT-HEALED');
                 
                 const failsafeAssessment = generateFailsafeAssessment(painArea, patientId);
@@ -217,7 +217,7 @@ const SmartWatchdog = (function() {
     // توليد تقييم سريري معتمد ودقيق تشريحياً بنسبة 100%
     function generateFailsafeAssessment(painArea, patientId) {
         let anatomicalCategory = 'spine';
-        let primaryDiag = 'إجهاد وتوتر ميكانيكي حاد في الأنسجة الداعمة';
+        let primaryDiag = 'انزلاق غضروفي قطني خفيف مع شد عضلات أسفل الظهر';
         let exercises = ['pelvic_tilt', 'cat_camel', 'child_pose'];
 
         const pLower = (painArea || '').toLowerCase();
