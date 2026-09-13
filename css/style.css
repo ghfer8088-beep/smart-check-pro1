@@ -761,7 +761,58 @@ body {
     }
 
     .main-wrapper {
-        padding: 0 8px !important;
+        padding: 0 4px !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* استغلال أقصى مساحة في شاشات الموبايل وإلغاء الفراغات والهوامش الزائدة */
+    .patient-recovery-master-card,
+    .clinical-report-printable,
+    #step4-day1-container > div,
+    #patient-recovery-dashboard > div,
+    #step5-sessions-container > div {
+        padding: 12px 8px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-bottom: 15px !important;
+        border-radius: 12px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* تقليص حشو البطاقات الداخلية المتداخلة في الموبايل */
+    .patient-recovery-master-card > div[style*="padding"],
+    .clinical-report-printable > div[style*="padding"],
+    .clinical-report-grid-card,
+    .admin-report-grid-card {
+        padding: 12px 10px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* تثبيت وتوسيع مساحة نافذة المحادثة السريرية في الموبايل لمنع التشتت */
+    #ai-chat-intake-container {
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    #ai-chat-messages-box {
+        height: 52vh !important;
+        max-height: 58vh !important;
+        min-height: 320px !important;
+        padding: 12px 8px !important;
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+    }
+    #ai-chat-input-bar {
+        position: sticky;
+        bottom: 0;
+        z-index: 50;
+        background: #0f172a !important;
+        box-shadow: 0 -4px 15px rgba(0,0,0,0.5) !important;
+        padding: 8px 10px !important;
     }
 
     /* أزرار الاتصال والتواصل على الموبايل - أحجام متناسقة ومريحة */

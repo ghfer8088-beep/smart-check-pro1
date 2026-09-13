@@ -171,6 +171,10 @@
             const lastVisit = history[history.length - 1];
             const isRecent = lastVisit && (now.getTime() - new Date(lastVisit.timestamp).getTime()) < 60000;
 
+            if (window.location.pathname.includes('admin') || window.location.pathname.includes('calibrator')) {
+                return info;
+            }
+
             if (!isRecent) {
                 const visitItem = {
                     visitorId: info.visitorId,

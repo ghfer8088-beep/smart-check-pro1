@@ -2364,6 +2364,165 @@ function formatBidiMedicalText(text) {
     });
 }
 
+// التحديد التشريحي للفقرات المصابة المحتملة (Vertebral Mapping)
+function generateVertebralMappingCard(painArea, contextText = '') {
+    const text = ((painArea || '') + ' ' + (contextText || '')).toLowerCase();
+    
+    let isCervical = /عنق|رقب|cervical|neck|صداع|فك|كتف/.test(text);
+    let isThoracic = /صدر|أعلى\s*الظهر|منتصف\s*الظهر|thoracic|أبهر|ابهر|لوح|كتف/.test(text);
+    let isLumbar = /ظهر|قطن|lumbar|دسك|غضروف|نسا|سياتيكا|عرق|فخذ|ساق|ركب/.test(text);
+    let isSacral = /حوض|عجز|عصعص|ردف|كمثرية|مقعدة|sacr|pelvi|si\s*joint/.test(text);
+    
+    if (!isCervical && !isThoracic && !isLumbar && !isSacral) {
+        if (/ركب|قدم|كاحل/.test(text)) {
+            isLumbar = true;
+            isSacral = true;
+        } else if (/يد|رسغ|معصم|كوع/.test(text)) {
+            isCervical = true;
+        } else {
+            isLumbar = true;
+        }
+    }
+
+    const items = [];
+    if (isCervical) {
+        items.push({
+            region: 'الفقرات العنقية (Cervical Spine)',
+            icon: '🦒',
+            vertebrae: 'C3 - C7 (وبالأخص C5-C6 و C6-C7)',
+            nerves: 'الجذور العصبية العنقية (C5, C6, C7)',
+            clinicalImpact: 'مسؤولة عن عضلات الرقبة، لوح الكتف، وتمتد أعراض انضغاطها كألم حارق أو خدر وتنميل نحو الكتف، الذراع، واليد وصولاً لإبهام وسبابة اليد.'
+        });
+    }
+    if (isThoracic) {
+        items.push({
+            region: 'الفقرات الصدرية (Thoracic Spine)',
+            icon: '🛡️',
+            vertebrae: 'T3 - T8 (المفاصل الضلعية الفقرية)',
+            nerves: 'الأعصاب الوربية بين الأضلاع (Intercostal Nerves)',
+            clinicalImpact: 'مسؤولة عن تثبيت القفص الصدري وعضلات ما بين لوحي الكتف (متلازمة الأبهر)، وتسبب تشنجاً حاداً وضيق نفس ميكانيكي عند التنفس العميق أو الجلوس الطويل.'
+        });
+    }
+    if (isLumbar) {
+        items.push({
+            region: 'الفقرات القطنية (Lumbar Spine)',
+            icon: '⚡',
+            vertebrae: 'L4 - L5 و L5 - S1 (المفصل القطني العجزي)',
+            nerves: 'الجذور العصبية L4, L5, S1 (عصب النسا Sciatic Nerve)',
+            clinicalImpact: 'تتحمل 80% من وزن الجسم المحوري وتعتبر الأكثر عرضة للضغط الغضروفي؛ انضغاطها يسبب ألم أسفل الظهر الممتد إلى المقعدة، خلف الفخذ، بطة الساق، والقدم.'
+        });
+    }
+    if (isSacral) {
+        items.push({
+            region: 'الفقرات العجزية والمفصل الحوضي (Sacral & Pelvis)',
+            icon: '⚖️',
+            vertebrae: 'S1 - S4 والمفصل العجزي الحرقفي (SI Joint)',
+            nerves: 'الضفيرة العجزية وعصب العضلة الكمثرية',
+            clinicalImpact: 'مسؤولة عن ثبات الحوض والمشية المتزنة؛ اختلال تموضعها يسبب انحباس عصب النسا تحت العضلة الكمثرية وألماً ميكانيكياً عند الوقوف أو تقليب وضعية النوم.'
+        });
+    }
+
+    return `
+        <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%); border: 1.5px solid #38bdf8; border-radius: 14px; padding: 20px; margin-bottom: 22px; box-shadow: 0 6px 25px rgba(0,0,0,0.45);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid rgba(56, 189, 248, 0.25); padding-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.6em;">🦴</span>
+                    <div>
+                        <h4 style="color: #38bdf8; margin: 0; font-size: 1.1em; font-weight: 800;">التحديد التشريحي للفقرات المصابة المحتملة (Vertebral Mapping)</h4>
+                        <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">تحديد مقاطع العمود الفقري والجذور العصبية المرتبطة بموضع الألم</div>
+                    </div>
+                </div>
+                <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #7dd3fc; font-size: 0.78em; padding: 3px 10px; border-radius: 12px; font-weight: bold;">
+                    تحليل بيوميكانيكي دقيق
+                </span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+                ${items.map(it => `
+                    <div style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <strong style="color: #f8fafc; font-size: 0.95em;">${it.icon} ${it.region}</strong>
+                            </div>
+                            <div style="color: var(--primary-gold); font-size: 0.88em; font-weight: bold; margin-bottom: 4px;">
+                                🎯 الفقرات المستهدفة: <span>${it.vertebrae}</span>
+                            </div>
+                            <div style="color: #6ee7b7; font-size: 0.82em; font-weight: bold; margin-bottom: 6px;">
+                                ⚡ الأعصاب المتأثرة: <span>${it.nerves}</span>
+                            </div>
+                            <div style="color: #cbd5e1; font-size: 0.82em; line-height: 1.6;">
+                                ${it.clinicalImpact}
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
+
+// الفحوصات المخبرية والتكاملية الموصى بها
+function generateIntegrativeLabCard() {
+    return `
+        <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(49, 46, 129, 0.25) 100%); border: 1.5px solid #a855f7; border-radius: 14px; padding: 20px; margin-bottom: 22px; box-shadow: 0 6px 25px rgba(0,0,0,0.45);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid rgba(168, 85, 247, 0.25); padding-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.6em;">🔬</span>
+                    <div>
+                        <h4 style="color: #c084fc; margin: 0; font-size: 1.1em; font-weight: 800;">الفحوصات المخبرية والتكاملية الموصى بها (نقص الفيتامينات والمعادن)</h4>
+                        <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">لاستبعاد المسببات الأيضية وتغذية الأعصاب الداعمة لسرعة الاستشفاء</div>
+                    </div>
+                </div>
+                <span style="background: rgba(168, 85, 247, 0.15); border: 1px solid #a855f7; color: #d8b4fe; font-size: 0.78em; padding: 3px 10px; border-radius: 12px; font-weight: bold;">
+                    طب تكاملي شامل
+                </span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
+                <!-- فيتامين B12 -->
+                <div style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 10px; padding: 12px;">
+                    <div style="color: #fef08a; font-weight: bold; font-size: 0.92em; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                        <span>💊</span> فيتامين B12 (Cobalamin)
+                    </div>
+                    <p style="color: #cbd5e1; font-size: 0.82em; line-height: 1.6; margin: 0;">
+                        ضروري لترميم غلاف المايلين النخاعي. نقصه يسبب خدراناً وتنميلاً ولسعات كهربائية طرفية قد تتداخل أو تفاقم أعراض الديسك وعرق النسا.
+                    </p>
+                </div>
+
+                <!-- فيتامين D3 والكالسيوم -->
+                <div style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 10px; padding: 12px;">
+                    <div style="color: #fef08a; font-weight: bold; font-size: 0.92em; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                        <span>☀️</span> فيتامين د3 (Vit D3) والكالسيوم
+                    </div>
+                    <p style="color: #cbd5e1; font-size: 0.82em; line-height: 1.6; margin: 0;">
+                        أساس صلابة وكثافة الفقرات العظمية. نقصه يسبب وهن العظام وآلاماً هيكلية مزمنة وضعف استجابة الأربطة للتأهيل الحركي.
+                    </p>
+                </div>
+
+                <!-- المغنيسيوم -->
+                <div style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 10px; padding: 12px;">
+                    <div style="color: #fef08a; font-weight: bold; font-size: 0.92em; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                        <span>⚡</span> المغنيسيوم (Serum Magnesium)
+                    </div>
+                    <p style="color: #cbd5e1; font-size: 0.82em; line-height: 1.6; margin: 0;">
+                        المنظم الحيوي لانبساط العضلات. نقصه يؤدي إلى تقلصات عضلية مستمرة وتشنجات عضلية حادة (Spasms) تمنع فك احتقان المفصل.
+                    </p>
+                </div>
+
+                <!-- الالتهاب والغدة -->
+                <div style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 10px; padding: 12px;">
+                    <div style="color: #fef08a; font-weight: bold; font-size: 0.92em; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                        <span>🧪</span> مؤشرات الالتهاب والغدة (CBC, ESR, TSH)
+                    </div>
+                    <p style="color: #cbd5e1; font-size: 0.82em; line-height: 1.6; margin: 0;">
+                        فحوصات استبعادية هامة لنفي الالتهابات الروماتيزمية وخمول الغدة الدرقية الذي يسبب تيبساً عاماً وآلاماً متعددة في المفاصل.
+                    </p>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
 // عرض التقرير الطبي الملكي عالي الاحترافية (Royal Medical Report)
 function displayDiagnosticReport(data) {
     const reportContainer = document.getElementById('clinical-report-container');
@@ -2541,6 +2700,9 @@ function displayDiagnosticReport(data) {
                 </div>
             </div>
 
+            <!-- ================= 2.1 التحديد التشريحي للفقرات المصابة المحتملة (Vertebral Mapping) ================= -->
+            ${generateVertebralMappingCard(data.painAreaTitle || data.painArea || data.selectedPoint || data.pointTitle || '', data.notes || (data.collectedSymptoms ? data.collectedSymptoms.join(' ') : ''))}
+
             <!-- ================= 3. تقرير وتفسير الطبيب الافتراضي المباشر (Gemini AI Clinical Engine) ================= -->
             <div id="ai-clinical-insight-card" class="ai-clinical-card" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(6, 78, 59, 0.28) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 24px; margin-bottom: 22px; box-shadow: 0 8px 30px rgba(0,0,0,0.55); position: relative;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid rgba(16, 185, 129, 0.25); padding-bottom: 14px;">
@@ -2590,6 +2752,9 @@ function displayDiagnosticReport(data) {
                     </div>
                 </div>
             </div>
+
+            <!-- ================= 3.1 الفحوصات المخبرية والتكاملية الموصى بها (نقص الفيتامينات والمعادن) ================= -->
+            ${generateIntegrativeLabCard()}
 
             <!-- ================= 4. شبكة المؤشرات الحيوية والإجهاد الميكانيكي والأدلة ================= -->
             <div style="background: #0f172a; border-radius: 14px; padding: 22px; border: 1px solid rgba(212, 175, 55, 0.25); margin-bottom: 22px;">
@@ -3558,7 +3723,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
     });
 
     container.innerHTML = `
-        <div style="background: #111827; border: 1px solid var(--primary-gold); border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
+        <div class="patient-recovery-master-card" style="background: #111827; border: 1px solid var(--primary-gold); border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
             
             <!-- شريط التنقل السريع بين المراحل السابقة والمتابعة -->
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px dashed rgba(212, 175, 55, 0.3);">
@@ -4033,7 +4198,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
     }
 
     container.innerHTML = `
-        <div style="background: #111827; border: 1px solid var(--primary-gold); border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
+        <div class="patient-recovery-master-card" style="background: #111827; border: 1px solid var(--primary-gold); border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
             
             <!-- شريط التنقل السريع بين المراحل السابقة -->
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px dashed rgba(212, 175, 55, 0.3);">
@@ -6636,6 +6801,7 @@ async function initAiClinicalChat() {
             </div>
         `;
         appendChatMessage('bot', instantWelcomeMsg);
+        renderRoyalChatVitalsCard(messagesBox);
         renderChatQuickReplies([]);
 
         // تشغيل التسجيل البشري الاستوديو الفوري للترحيب (د. سارة / د. جمال)
@@ -6651,6 +6817,271 @@ async function initAiClinicalChat() {
     }, 850);
 
 }
+
+// =========================================================================
+// بطاقة المؤشرات الحيوية الملكية التفاعلية داخل الشات السريري
+// =========================================================================
+function renderRoyalChatVitalsCard(box) {
+    if (!box) return;
+    const existing = document.getElementById('royal-chat-vitals-card');
+    if (existing) existing.remove();
+
+    const defaultName = clinicalDialogueState?.patientFullName || clinicalDialogueState?.patientName || document.getElementById('patient-name')?.value || '';
+    const defaultAge = clinicalDialogueState?.patientVitals?.age || document.getElementById('patient-age')?.value || '';
+    const defaultWeight = clinicalDialogueState?.patientVitals?.weight || document.getElementById('patient-weight')?.value || '';
+    const defaultHeight = clinicalDialogueState?.patientVitals?.height || document.getElementById('patient-height')?.value || '';
+    const defaultGender = clinicalDialogueState?.patientVitals?.gender || 'ذكر';
+
+    window._chatVitalsSelectedGender = defaultGender;
+
+    const cardEl = document.createElement('div');
+    cardEl.id = 'royal-chat-vitals-card';
+    cardEl.style.cssText = `
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.95) 100%);
+        border: 2px solid var(--primary-gold);
+        border-radius: 14px;
+        padding: 16px;
+        margin: 10px 0 14px 0;
+        box-shadow: 0 6px 25px rgba(0,0,0,0.55);
+        animation: fadeIn 0.4s ease;
+    `;
+
+    cardEl.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(212, 175, 55, 0.3); padding-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.4em;">📋</span>
+                <div>
+                    <strong style="color: var(--primary-gold); font-size: 1em; display: block;">المؤشرات الحيوية الضرورية للتشخيص</strong>
+                    <span style="color: #94a3b8; font-size: 0.78em;">لحساب مؤشر الأحمال البيوميكانيكية ومعايرة التمارين لحالتك</span>
+                </div>
+            </div>
+            <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.78em; padding: 3px 10px; border-radius: 12px; font-weight: bold;">
+                خطوة أساسية واحدة
+            </span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 12px;">
+            <!-- الاسم الكامل -->
+            <div style="grid-column: 1 / -1;">
+                <label style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: bold;">👤 الاسم الكريم (الاسم الكامل):</label>
+                <input type="text" id="chat-vitals-name" value="${defaultName}" placeholder="مثال: أحمد عبد الله أو سارة..." style="width: 100%; background: #080d1a; border: 1.5px solid #334155; border-radius: 8px; padding: 9px 12px; color: #ffffff; font-size: 0.92em; box-sizing: border-box; outline: none;">
+            </div>
+
+            <!-- الجنس -->
+            <div style="grid-column: 1 / -1;">
+                <label style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: bold;">⚧ الجنس:</label>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" id="btn-chat-gender-male" onclick="window.setChatVitalsGender('ذكر')" style="flex: 1; padding: 8px 12px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; background: ${defaultGender === 'ذكر' ? 'var(--primary-gold)' : '#1e293b'}; border: 1.5px solid ${defaultGender === 'ذكر' ? 'var(--primary-gold)' : '#334155'}; color: ${defaultGender === 'ذكر' ? '#0a0e14' : '#94a3b8'}; transition: all 0.2s ease;">
+                        👨 ذكر
+                    </button>
+                    <button type="button" id="btn-chat-gender-female" onclick="window.setChatVitalsGender('أنثى')" style="flex: 1; padding: 8px 12px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; background: ${defaultGender === 'أنثى' ? 'var(--primary-gold)' : '#1e293b'}; border: 1.5px solid ${defaultGender === 'أنثى' ? 'var(--primary-gold)' : '#334155'}; color: ${defaultGender === 'أنثى' ? '#0a0e14' : '#94a3b8'}; transition: all 0.2s ease;">
+                        👩 أنثى
+                    </button>
+                </div>
+            </div>
+
+            <!-- العمر -->
+            <div>
+                <label style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: bold;">🎂 العمر (سنة):</label>
+                <input type="number" inputmode="numeric" id="chat-vitals-age" value="${defaultAge}" min="10" max="110" placeholder="مثال: 38" style="width: 100%; background: #080d1a; border: 1.5px solid #334155; border-radius: 8px; padding: 9px 10px; color: #ffffff; font-size: 0.92em; box-sizing: border-box; outline: none;">
+            </div>
+
+            <!-- الوزن -->
+            <div>
+                <label style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: bold;">⚖️ الوزن (كغم):</label>
+                <input type="number" inputmode="decimal" id="chat-vitals-weight" value="${defaultWeight}" min="30" max="250" placeholder="مثال: 72" style="width: 100%; background: #080d1a; border: 1.5px solid #334155; border-radius: 8px; padding: 9px 10px; color: #ffffff; font-size: 0.92em; box-sizing: border-box; outline: none;">
+            </div>
+
+            <!-- الطول -->
+            <div>
+                <label style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: bold;">📏 الطول (سم):</label>
+                <input type="number" inputmode="numeric" id="chat-vitals-height" value="${defaultHeight}" min="100" max="230" placeholder="مثال: 170" style="width: 100%; background: #080d1a; border: 1.5px solid #334155; border-radius: 8px; padding: 9px 10px; color: #ffffff; font-size: 0.92em; box-sizing: border-box; outline: none;">
+            </div>
+        </div>
+
+        <button type="button" onclick="window.submitChatRoyalVitals()" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; padding: 12px; border-radius: 8px; font-size: 0.95em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);">
+            <span>⚡ اعتماد المؤشرات وبدء الاستشارة السريرية</span>
+            <span>⬅️</span>
+        </button>
+    `;
+
+    box.appendChild(cardEl);
+    box.scrollTop = box.scrollHeight;
+}
+
+window.setChatVitalsGender = function(g) {
+    window._chatVitalsSelectedGender = g;
+    const btnMale = document.getElementById('btn-chat-gender-male');
+    const btnFemale = document.getElementById('btn-chat-gender-female');
+    if (g === 'ذكر') {
+        if (btnMale) {
+            btnMale.style.background = 'var(--primary-gold)';
+            btnMale.style.borderColor = 'var(--primary-gold)';
+            btnMale.style.color = '#0a0e14';
+        }
+        if (btnFemale) {
+            btnFemale.style.background = '#1e293b';
+            btnFemale.style.borderColor = '#334155';
+            btnFemale.style.color = '#94a3b8';
+        }
+    } else {
+        if (btnFemale) {
+            btnFemale.style.background = 'var(--primary-gold)';
+            btnFemale.style.borderColor = 'var(--primary-gold)';
+            btnFemale.style.color = '#0a0e14';
+        }
+        if (btnMale) {
+            btnMale.style.background = '#1e293b';
+            btnMale.style.borderColor = '#334155';
+            btnMale.style.color = '#94a3b8';
+        }
+    }
+};
+
+window.submitChatRoyalVitals = function() {
+    const nameInput = document.getElementById('chat-vitals-name');
+    const ageInput = document.getElementById('chat-vitals-age');
+    const weightInput = document.getElementById('chat-vitals-weight');
+    const heightInput = document.getElementById('chat-vitals-height');
+
+    const nameVal = nameInput ? nameInput.value.trim() : '';
+    const ageVal = ageInput ? parseInt(ageInput.value, 10) : null;
+    const weightVal = weightInput ? parseFloat(weightInput.value) : null;
+    const heightVal = heightInput ? parseFloat(heightInput.value) : null;
+    const genderVal = window._chatVitalsSelectedGender || 'ذكر';
+
+    if (!nameVal || nameVal.length < 2) {
+        if (nameInput) { nameInput.style.borderColor = '#ef4444'; nameInput.focus(); }
+        showToast('⚠️ يرجى إدخال اسمك الكريم للمتابعة', 'warning');
+        return;
+    }
+    if (!ageVal || ageVal < 10 || ageVal > 110) {
+        if (ageInput) { ageInput.style.borderColor = '#ef4444'; ageInput.focus(); }
+        showToast('⚠️ يرجى إدخال عمر صحيح بين 10 و 110 سنة', 'warning');
+        return;
+    }
+    if (!weightVal || weightVal < 30 || weightVal > 250) {
+        if (weightInput) { weightInput.style.borderColor = '#ef4444'; weightInput.focus(); }
+        showToast('⚠️ يرجى إدخال وزن صحيح بين 30 و 250 كجم', 'warning');
+        return;
+    }
+    if (!heightVal || heightVal < 100 || heightVal > 230) {
+        if (heightInput) { heightInput.style.borderColor = '#ef4444'; heightInput.focus(); }
+        showToast('⚠️ يرجى إدخال طول تقريبي صحيح بين 100 و 230 سم', 'warning');
+        return;
+    }
+
+    // حساب BMI
+    const hM = heightVal / 100;
+    const bmiVal = parseFloat((weightVal / (hM * hM)).toFixed(1));
+    const minHealthyW = parseFloat((18.5 * hM * hM).toFixed(1));
+    const maxHealthyW = parseFloat((24.9 * hM * hM).toFixed(1));
+    const idealW = parseFloat((22.0 * hM * hM).toFixed(1));
+
+    let bmiStatus = "وزن طبيعي متوازن";
+    let bmiColor = "#10b981";
+    let deltaText = `✅ وزنك ضمن النطاق الصحي المثالي (${minHealthyW} - ${maxHealthyW} كجم)`;
+    let impact = "وزنك متناسق ولا يشكل حمولة ضغط إضافية على الغضاريف والفقرات.";
+
+    if (bmiVal < 18.5) {
+        const deltaKg = parseFloat((minHealthyW - weightVal).toFixed(1));
+        bmiStatus = "نحافة / نقص في الكتلة العضلية";
+        bmiColor = "#38bdf8";
+        deltaText = `⚠️ نقص في الوزن بمقدار -${deltaKg} كجم عن الحد الأدنى للوزن الصحي (${minHealthyW} كجم)`;
+        impact = "نقص الكتلة العضلية يقلل من الثبات الميكانيكي للمفاصل ويجعل الفقرات عرضة للإجهاد السريع.";
+    } else if (bmiVal >= 25 && bmiVal < 30) {
+        const deltaKg = parseFloat((weightVal - maxHealthyW).toFixed(1));
+        const excessVsIdeal = parseFloat((weightVal - idealW).toFixed(1));
+        const addedLoad = parseFloat((deltaKg * 4).toFixed(1));
+        bmiStatus = "زيادة وزن (Overweight)";
+        bmiColor = "#f59e0b";
+        deltaText = `⚠️ وزن زائد بمقدار +${deltaKg} كجم عن الحد الصحي (+${excessVsIdeal} كجم عن الوزن المثالي)`;
+        impact = `يضيف حوالي +${addedLoad} كجم حمولة ضغط إضافية على الركبتين وأسفل الظهر أثناء الحركة.`;
+    } else if (bmiVal >= 30) {
+        const deltaKg = parseFloat((weightVal - maxHealthyW).toFixed(1));
+        const excessVsIdeal = parseFloat((weightVal - idealW).toFixed(1));
+        const addedLoad = parseFloat((deltaKg * 4).toFixed(1));
+        bmiStatus = "سمنة مفرطة / حمولة ميكانيكية حرجة";
+        bmiColor = "#ef4444";
+        deltaText = `🚨 وزن زائد حرج بمقدار +${deltaKg} كجم (+${excessVsIdeal} كجم عن الوزن المثالي)`;
+        impact = `كل 1 كجم زيادة يضاعف الحمل 4 أضعاف، مما يشكل حمولة ضغط فائقة تصل إلى +${addedLoad} كجم على مفاصلك وفقراتك.`;
+    }
+
+    const calculatedBmiInfo = {
+        value: bmiVal,
+        status: bmiStatus,
+        color: bmiColor,
+        minHealthyW,
+        maxHealthyW,
+        idealW,
+        deltaText,
+        impact
+    };
+
+    // حفظ في الحالة السريرية
+    clinicalDialogueState.patientName = nameVal.split(' ')[0];
+    clinicalDialogueState.patientFullName = nameVal;
+    clinicalDialogueState.patientVitals = {
+        age: ageVal,
+        weight: weightVal,
+        height: heightVal,
+        gender: genderVal,
+        bmiInfo: calculatedBmiInfo
+    };
+    clinicalDialogueState.step = 'clinical_questions';
+
+    // مزامنة مع حقول النموذج العامة لضمان تصديرها للوحة الإدارة
+    const domName = document.getElementById('patient-name');
+    if (domName) domName.value = nameVal;
+    const domSubName = document.getElementById('sub-name');
+    if (domSubName) domSubName.value = nameVal;
+    const domAge = document.getElementById('patient-age');
+    if (domAge) domAge.value = ageVal;
+    const domWeight = document.getElementById('patient-weight');
+    if (domWeight) domWeight.value = weightVal;
+    const domHeight = document.getElementById('patient-height');
+    if (domHeight) domHeight.value = heightVal;
+    const domGenderRadios = document.querySelectorAll('input[name="patient_gender"]');
+    domGenderRadios.forEach(r => { if (r.value === genderVal) r.checked = true; });
+
+    if (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) {
+        currentAssessmentData.patientName = nameVal;
+        currentAssessmentData.patientVitals = clinicalDialogueState.patientVitals;
+        currentAssessmentData.bmiInfo = calculatedBmiInfo;
+    }
+
+    // استبدال البطاقة ببادج التوثيق الملكي
+    const cardEl = document.getElementById('royal-chat-vitals-card');
+    if (cardEl) {
+        cardEl.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="color: #6ee7b7; font-weight: bold; font-size: 0.95em; display: flex; align-items: center; gap: 8px;">
+                    <span>✅</span> تم اعتماد وتوثيق مؤشراتك الحيوية بنجاح
+                </div>
+                <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.76em; padding: 2px 8px; border-radius: 10px; font-weight: bold;">
+                    موثق سريرياً
+                </span>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; color: #cbd5e1; font-size: 0.86em; background: rgba(0,0,0,0.25); padding: 8px 12px; border-radius: 8px;">
+                <span>👤 <strong>${nameVal}</strong> (${genderVal})</span>
+                <span>🎂 العمر: <strong>${ageVal} سنة</strong></span>
+                <span>⚖️ الوزن: <strong>${weightVal} كغم</strong></span>
+                <span>📏 الطول: <strong>${heightVal} سم</strong></span>
+                <span>📊 كتلة الجسم: <strong style="color: ${bmiColor};">${bmiVal} (${bmiStatus})</strong></span>
+            </div>
+        `;
+    }
+
+    // رد الطبيب الفوري مع الصوت
+    const ptTitle = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint?.title) ? currentSelectedPoint.title : 'موضع الألم';
+    const doctorReply = `أهلاً بك يا **${nameVal}**، تم توثيق مؤشراتك الحيوية بنجاح (${calculatedBmiInfo.deltaText}).\n\nوالآن لنبدأ الاستقصاء السريري الدقيق لموضع الألم في **${ptTitle}**:\n\nما الذي تعاني منه تحديداً في **${ptTitle}**؟ وهل تشعر بألم حاد مستمر، أم تشنج وثقل يشتد مع حركات معينة أو الجلوس؟`;
+    appendChatMessage('bot', doctorReply);
+
+    if (typeof Wada3anAiEngine !== 'undefined') {
+        const token = ++Wada3anAiEngine._speechSessionToken;
+        Wada3anAiEngine.speakDoctorResponse(doctorReply, token);
+    }
+};
 
 // تحديث اسم المريض في كافة الفقاعات السابقة عند التعرف عليه
 function refreshUserMessageHeaders(newName) {
@@ -6740,6 +7171,9 @@ function appendChatMessage(sender, text, options = {}) {
 
     box.appendChild(msgEl);
     box.scrollTop = box.scrollHeight;
+    if (window.innerWidth <= 768) {
+        msgEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
 
     clinicalDialogueState.history.push({ sender, text });
 }

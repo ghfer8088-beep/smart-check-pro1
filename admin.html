@@ -2883,6 +2883,150 @@
         let activeAdminReportPatient = null;
         let activeAdminReportAssessment = null;
 
+        // التحديد التشريحي للفقرات المصابة المحتملة (Vertebral Mapping)
+        function generateVertebralMappingCard(painArea, contextText = '') {
+            const text = ((painArea || '') + ' ' + (contextText || '')).toLowerCase();
+            
+            let isCervical = /عنق|رقب|cervical|neck|صداع|فك|كتف/.test(text);
+            let isThoracic = /صدر|أعلى\s*الظهر|منتصف\s*الظهر|thoracic|أبهر|ابهر|لوح|كتف/.test(text);
+            let isLumbar = /ظهر|قطن|lumbar|دسك|غضروف|نسا|سياتيكا|عرق|فخذ|ساق|ركب/.test(text);
+            let isSacral = /حوض|عجز|عصعص|ردف|كمثرية|مقعدة|sacr|pelvi|si\s*joint/.test(text);
+            
+            if (!isCervical && !isThoracic && !isLumbar && !isSacral) {
+                if (/ركب|قدم|كاحل/.test(text)) {
+                    isLumbar = true;
+                    isSacral = true;
+                } else if (/يد|رسغ|معصم|كوع/.test(text)) {
+                    isCervical = true;
+                } else {
+                    isLumbar = true;
+                }
+            }
+
+            const items = [];
+            if (isCervical) {
+                items.push({
+                    region: 'الفقرات العنقية (Cervical Spine)',
+                    icon: '🦒',
+                    vertebrae: 'C3 - C7 (وبالأخص C5-C6 و C6-C7)',
+                    nerves: 'الجذور العصبية العنقية (C5, C6, C7)',
+                    clinicalImpact: 'مسؤولة عن عضلات الرقبة، لوح الكتف، وتمتد أعراض انضغاطها كألم حارق أو خدر وتنميل نحو الكتف، الذراع، واليد وصولاً لإبهام وسبابة اليد.'
+                });
+            }
+            if (isThoracic) {
+                items.push({
+                    region: 'الفقرات الصدرية (Thoracic Spine)',
+                    icon: '🛡️',
+                    vertebrae: 'T3 - T8 (المفاصل الضلعية الفقرية)',
+                    nerves: 'الأعصاب الوربية بين الأضلاع (Intercostal Nerves)',
+                    clinicalImpact: 'مسؤولة عن تثبيت القفص الصدري وعضلات ما بين لوحي الكتف (متلازمة الأبهر)، وتسبب تشنجاً حاداً وضيق نفس ميكانيكي عند التنفس العميق أو الجلوس الطويل.'
+                });
+            }
+            if (isLumbar) {
+                items.push({
+                    region: 'الفقرات القطنية (Lumbar Spine)',
+                    icon: '⚡',
+                    vertebrae: 'L4 - L5 و L5 - S1 (المفصل القطني العجزي)',
+                    nerves: 'الجذور العصبية L4, L5, S1 (عصب النسا Sciatic Nerve)',
+                    clinicalImpact: 'تتحمل 80% من وزن الجسم المحوري وتعتبر الأكثر عرضة للضغط الغضروفي؛ انضغاطها يسبب ألم أسفل الظهر الممتد إلى المقعدة، خلف الفخذ، بطة الساق، والقدم.'
+                });
+            }
+            if (isSacral) {
+                items.push({
+                    region: 'الفقرات العجزية والمفصل الحوضي (Sacral & Pelvis)',
+                    icon: '⚖️',
+                    vertebrae: 'S1 - S4 والمفصل العجزي الحرقفي (SI Joint)',
+                    nerves: 'الضفيرة العجزية وعصب العضلة الكمثرية',
+                    clinicalImpact: 'مسؤولة عن ثبات الحوض والمشية المتزنة؛ اختلال تموضعها يسبب انحباس عصب النسا تحت العضلة الكمثرية وألماً ميكانيكياً عند الوقوف أو تقليب وضعية النوم.'
+                });
+            }
+
+            return `
+                <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%); border: 1.5px solid #38bdf8; border-radius: 14px; padding: 18px; margin-bottom: 20px; box-shadow: 0 6px 25px rgba(0,0,0,0.45);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(56, 189, 248, 0.25); padding-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.5em;">🦴</span>
+                            <div>
+                                <h4 style="color: #38bdf8; margin: 0; font-size: 1.05em; font-weight: 800;">التحديد التشريحي للفقرات المصابة المحتملة (Vertebral Mapping)</h4>
+                                <div style="color: #94a3b8; font-size: 0.76em; margin-top: 2px;">تحديد مقاطع العمود الفقري والجذور العصبية المرتبطة بموضع الألم</div>
+                            </div>
+                        </div>
+                        <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #7dd3fc; font-size: 0.76em; padding: 2px 10px; border-radius: 12px; font-weight: bold;">
+                            تحليل بيوميكانيكي دقيق
+                        </span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px;">
+                        ${items.map(it => `
+                            <div style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between;">
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                        <strong style="color: #f8fafc; font-size: 0.92em;">${it.icon} ${it.region}</strong>
+                                    </div>
+                                    <div style="color: var(--primary-gold); font-size: 0.85em; font-weight: bold; margin-bottom: 3px;">
+                                        🎯 الفقرات المستهدفة: <span>${it.vertebrae}</span>
+                                    </div>
+                                    <div style="color: #6ee7b7; font-size: 0.8em; font-weight: bold; margin-bottom: 5px;">
+                                        ⚡ الأعصاب المتأثرة: <span>${it.nerves}</span>
+                                    </div>
+                                    <div style="color: #cbd5e1; font-size: 0.8em; line-height: 1.5;">
+                                        ${it.clinicalImpact}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // الفحوصات المخبرية والتكاملية الموصى بها
+        function generateIntegrativeLabCard() {
+            return `
+                <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(49, 46, 129, 0.25) 100%); border: 1.5px solid #a855f7; border-radius: 14px; padding: 18px; margin-bottom: 20px; box-shadow: 0 6px 25px rgba(0,0,0,0.45);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(168, 85, 247, 0.25); padding-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.5em;">🔬</span>
+                            <div>
+                                <h4 style="color: #c084fc; margin: 0; font-size: 1.05em; font-weight: 800;">الفحوصات المخبرية والتكاملية الموصى بها (نقص الفيتامينات والمعادن)</h4>
+                                <div style="color: #94a3b8; font-size: 0.76em; margin-top: 2px;">لاستبعاد المسببات الأيضية وتغذية الأعصاب الداعمة لسرعة الاستشفاء</div>
+                            </div>
+                        </div>
+                        <span style="background: rgba(168, 85, 247, 0.15); border: 1px solid #a855f7; color: #d8b4fe; font-size: 0.76em; padding: 2px 10px; border-radius: 12px; font-weight: bold;">
+                            طب تكاملي شامل
+                        </span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px;">
+                        <div style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; padding: 10px;">
+                            <div style="color: #fef08a; font-weight: bold; font-size: 0.88em; margin-bottom: 3px;">💊 فيتامين B12 (Cobalamin)</div>
+                            <p style="color: #cbd5e1; font-size: 0.8em; line-height: 1.5; margin: 0;">
+                                ضروري لترميم غلاف المايلين النخاعي؛ نقصه يسبب خدراناً وتنميلاً ولسعات كهربائية طرفية تحاكي أو تفاقم أعراض الديسك.
+                            </p>
+                        </div>
+                        <div style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; padding: 10px;">
+                            <div style="color: #fef08a; font-weight: bold; font-size: 0.88em; margin-bottom: 3px;">☀️ فيتامين د3 والكالسيوم</div>
+                            <p style="color: #cbd5e1; font-size: 0.8em; line-height: 1.5; margin: 0;">
+                                أساس صلابة الفقرات العظمية؛ نقصه يسبب وهن العظام وآلاماً هيكلية مزمنة وضعف استجابة الأربطة للتأهيل.
+                            </p>
+                        </div>
+                        <div style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; padding: 10px;">
+                            <div style="color: #fef08a; font-weight: bold; font-size: 0.88em; margin-bottom: 3px;">⚡ المغنيسيوم (Serum Mg)</div>
+                            <p style="color: #cbd5e1; font-size: 0.8em; line-height: 1.5; margin: 0;">
+                                المنظم الحيوي لانبساط العضلات؛ نقصه يؤدي إلى تقلصات وتشنجات عضلية حادة ومستمرة في الظهر والرقبة.
+                            </p>
+                        </div>
+                        <div style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; padding: 10px;">
+                            <div style="color: #fef08a; font-weight: bold; font-size: 0.88em; margin-bottom: 3px;">🧪 مؤشرات الالتهاب والغدة (CBC, ESR, TSH)</div>
+                            <p style="color: #cbd5e1; font-size: 0.8em; line-height: 1.5; margin: 0;">
+                                فحوصات استبعادية هامة لنفي الالتهابات الروماتيزمية وخمول الغدة الدرقية المسبب لتيبس وآلام المفاصل العامة.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
         async function openAdminPatientReportModal(patientId) {
             if (!patientId) return;
             const modal = document.getElementById('admin-patient-report-modal');
@@ -3323,6 +3467,9 @@
                         </div>
                     </div>
 
+                    <!-- 3.1 التحديد التشريحي للفقرات المصابة المحتملة (Vertebral Mapping) -->
+                    ${generateVertebralMappingCard(rootLevel, symptomsText)}
+
                     <!-- 4. تقييم الألم والأعراض المسجلة -->
                     <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 14px; margin-bottom: 20px;">
                         <div class="admin-report-grid-card">
@@ -3363,6 +3510,9 @@
                             ⚖️ <strong>تأثير مؤشر كتلة الجسم على المفاصل:</strong> ${bmiImpact}
                         </div>` : ''}
                     </div>
+
+                    <!-- 5.1 الفحوصات المخبرية والتكاملية الموصى بها (نقص الفيتامينات والمعادن) -->
+                    ${generateIntegrativeLabCard()}
 
                     <!-- 6. البرنامج التأهيلي والتمارين الموصوفة -->
                     <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid #334155; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
