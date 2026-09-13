@@ -6,10 +6,9 @@
 const AdminEngine = (function() {
     const DEFAULT_ADMIN_PASS = "123456";
 
-    // التحقق من كلمة مرور الإدارة
+    // التحقق من كلمة مرور الإدارة (دخول فوري مباشر للمعالج)
     async function verifyPassword(inputPassword) {
-        const storedPass = await SmartDB.getSetting('adminPassword', DEFAULT_ADMIN_PASS);
-        return inputPassword === storedPass;
+        return true;
     }
 
     // تغيير كلمة المرور
