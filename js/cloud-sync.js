@@ -857,6 +857,182 @@
         }
     }
 
+    // =========================================================================
+    // ⏱️ مزامنة توقيت الجلسات وقفل/فتح الجلسات السحابي بين الإدارة وهواتف المرضى
+    // =========================================================================
+    const CLOUD_TIMING_ENDPOINT = 'https://ntfy.sh/wada3an_smart_check_timing_sync_2026';
+    let timingEventSource = null;
+
+    // بث تحديث التوقيت من لوحة الإدارة إلى هاتف المريض سحابياً
+    function dispatchTimingUpdateToCloud(timingData) {
+        if (!timingData) return;
+        const payload = {
+            type: 'session_timing_update',
+            ...timingData,
+            timestamp: new Date().toISOString()
+        };
+
+        // 1. بث عبر BroadcastChannel لجميع التبويبات المفتوحة محلياً
+        try {
+            if (syncBroadcastChannel) {
+                syncBroadcastChannel.postMessage(payload);
+            }
+        } catch(e) {}
+
+        // 2. إرسال سحابي فوري عبر قناة ntfy
+        try {
+            fetch(CLOUD_TIMING_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).catch(() => {});
+        } catch (e) {}
+    }
+
+    // تطبيق التحديث على هاتف المريض وتحديث العداد والشاشة فوراً
+    function applyTimingUpdateLocally(update) {
+        if (!update || update.type !== 'session_timing_update') return false;
+        const targetPid = update.patientId;
+        const targetPhone = (update.patientPhone || '').replace(/\D/g, '');
+
+        const currentPid = (window.SmartDB && typeof window.SmartDB.getCurrentSessionPatientId === 'function') 
+            ? window.SmartDB.getCurrentSessionPatientId() 
+            : localStorage.getItem('smart_current_patient_id');
+
+        let currentPhone = '';
+        try {
+            const activeP = (window.activePatient) || JSON.parse(localStorage.getItem('smart_active_patient') || '{}');
+            currentPhone = (activeP.phone || '').replace(/\D/g, '');
+        } catch(e) {}
+
+        // هل هذا التحديث موجه للمريض الحالي على هذا الهاتف؟
+        let isMatch = false;
+        if (targetPid && currentPid && (targetPid === currentPid)) {
+            isMatch = true;
+        } else if (targetPhone && currentPhone && (targetPhone === currentPhone)) {
+            isMatch = true;
+        } else if (!currentPid && targetPid) {
+            isMatch = false;
+        }
+
+        if (!isMatch && (currentPid || currentPhone)) {
+            return false;
+        }
+
+        const pKey = currentPid || targetPid;
+        if (!pKey) return false;
+
+        const now = Date.now();
+        if (update.forceUnlock) {
+            localStorage.setItem(`force_unlock_${pKey}`, 'true');
+            localStorage.removeItem(`custom_target_time_${pKey}`);
+            if (targetPid && targetPid !== pKey) {
+                localStorage.setItem(`force_unlock_${targetPid}`, 'true');
+                localStorage.removeItem(`custom_target_time_${targetPid}`);
+            }
+            if (targetPhone) {
+                localStorage.setItem(`force_unlock_${targetPhone}`, 'true');
+                localStorage.removeItem(`custom_target_time_${targetPhone}`);
+            }
+        } else if (update.targetTime && update.targetTime > now) {
+            localStorage.setItem(`custom_target_time_${pKey}`, String(update.targetTime));
+            localStorage.removeItem(`force_unlock_${pKey}`);
+            if (targetPid && targetPid !== pKey) {
+                localStorage.setItem(`custom_target_time_${targetPid}`, String(update.targetTime));
+                localStorage.removeItem(`force_unlock_${targetPid}`);
+            }
+            if (targetPhone) {
+                localStorage.setItem(`custom_target_time_${targetPhone}`, String(update.targetTime));
+                localStorage.removeItem(`force_unlock_${targetPhone}`);
+            }
+        }
+
+        // إطلاق إشعار التحديث المحلي لعداد الثواني
+        localStorage.setItem('countdownUpdated', String(now));
+
+        // إعادة تنشيط لوحة المريض لتتحدث الساعة فوراً أمام عين المريض
+        if (typeof window.loadPatientRecoveryDashboard === 'function') {
+            window.loadPatientRecoveryDashboard(pKey);
+        }
+        if (typeof window.updatePatientCountdown === 'function') {
+            window.updatePatientCountdown();
+        }
+
+        if (typeof window.showToast === 'function') {
+            if (update.forceUnlock) {
+                window.showToast('🔓 قام المعالج بفتح الجلسة لك الآن بنجاح!', 'success');
+            } else {
+                window.showToast('⏱️ قام المعالج بتعديل توقيت جلستك!', 'info');
+            }
+        }
+
+        return true;
+    }
+
+    // جلب التعديلات السحابية للتوقيت (عند فتح التطبيق أو استعادة التركيز)
+    async function fetchRemoteTimingUpdates() {
+        try {
+            const resp = await fetch(`${CLOUD_TIMING_ENDPOINT}/json?poll=1&since=12h`);
+            if (!resp.ok) return;
+            const text = await resp.text();
+            if (!text) return;
+
+            const lines = text.trim().split('\n');
+            const updates = [];
+            for (const line of lines) {
+                if (!line.trim()) continue;
+                try {
+                    const item = JSON.parse(line);
+                    if (item.event === 'message' && item.message) {
+                        const parsed = JSON.parse(item.message);
+                        if (parsed && parsed.type === 'session_timing_update') {
+                            updates.push(parsed);
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            // تطبيق التحديثات مرتبة زمنياً
+            updates.sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0));
+            for (const upd of updates) {
+                applyTimingUpdateLocally(upd);
+            }
+        } catch(e) {}
+    }
+
+    // الاستماع اللحظي الدائم (SSE) على هاتف المريض
+    function initTimingListener() {
+        if (typeof EventSource === 'undefined') return;
+        if (timingEventSource) return;
+
+        try {
+            timingEventSource = new EventSource(`${CLOUD_TIMING_ENDPOINT}/sse`);
+            timingEventSource.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.event === 'message' && data.message) {
+                        const parsed = JSON.parse(data.message);
+                        if (parsed && parsed.type === 'session_timing_update') {
+                            applyTimingUpdateLocally(parsed);
+                        }
+                    }
+                } catch(e) {}
+            };
+            timingEventSource.onerror = () => {};
+        } catch (e) {}
+
+        // الاستماع عبر BroadcastChannel للمتصفحات المفتوحة محلياً
+        try {
+            if (syncBroadcastChannel) {
+                syncBroadcastChannel.addEventListener('message', (event) => {
+                    if (event.data && event.data.type === 'session_timing_update') {
+                        applyTimingUpdateLocally(event.data);
+                    }
+                });
+            }
+        } catch(e) {}
+    }
+
     // تصدير واجهة الترحيل السحابي
     window.SmartCloudSync = {
         dispatchPatient: dispatchPatientToCloud,
@@ -870,7 +1046,11 @@
         getDetailedAnalytics: getDetailedVisitorStats,
         getDetailedVisitorStats: getDetailedVisitorStats,
         clearVisits: clearVisitsHistory,
-        exportVisits: exportVisitsJSON
+        exportVisits: exportVisitsJSON,
+        dispatchTimingUpdate: dispatchTimingUpdateToCloud,
+        applyTimingUpdate: applyTimingUpdateLocally,
+        fetchRemoteTimingUpdates: fetchRemoteTimingUpdates,
+        initTimingListener: initTimingListener
     };
 
 })();

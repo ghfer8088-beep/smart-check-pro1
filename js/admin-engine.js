@@ -330,27 +330,46 @@ const AdminEngine = (function() {
         }
     }
 
-    // التحكم الدقيق بتوقيت الجلسة الفردية لكل مريض بالساعة والدقيقة والثانية
-    function setPatientSessionTiming(patientId, sessionNum, hours, minutes, seconds) {
+    // التحكم الدقيق بتوقيت الجلسة الفردية لكل مريض بالساعة والدقيقة والثانية وبثه سحابياً لهاتف المريض
+    function setPatientSessionTiming(patientId, sessionNum, hours, minutes, seconds, patientPhone = '') {
         const h = parseInt(hours) || 0;
         const m = parseInt(minutes) || 0;
         const s = parseInt(seconds) || 0;
         const totalDurationMs = ((h * 3600) + (m * 60) + s) * 1000;
+        const forceUnlock = totalDurationMs <= 0;
+        let targetTime = 0;
 
-        if (totalDurationMs <= 0) {
+        if (forceUnlock) {
             // فتح الجلسة فوراً
             localStorage.setItem(`force_unlock_${patientId}`, 'true');
             localStorage.removeItem(`custom_target_time_${patientId}`);
             localStorage.removeItem(`sessionStartTime_${patientId}_${sessionNum}`);
         } else {
             // تحديد وقت انتهاء دقيق
-            const targetTime = Date.now() + totalDurationMs;
-            localStorage.setItem(`custom_target_time_${patientId}`, targetTime);
+            targetTime = Date.now() + totalDurationMs;
+            localStorage.setItem(`custom_target_time_${patientId}`, String(targetTime));
             localStorage.removeItem(`force_unlock_${patientId}`);
         }
 
-        // إرسال إشعار التحديث الفوري لكافة التبويبات المتزامنة
+        // إرسال إشعار التحديث الفوري لكافة التبويبات المتزامنة محلياً
         localStorage.setItem('countdownUpdated', Date.now().toString());
+
+        // بث التحديث سحابياً لهاتف المريض فورياً
+        if (window.SmartCloudSync && typeof window.SmartCloudSync.dispatchTimingUpdate === 'function') {
+            window.SmartCloudSync.dispatchTimingUpdate({
+                patientId: patientId,
+                patientPhone: patientPhone,
+                sessionNum: sessionNum,
+                hours: h,
+                minutes: m,
+                seconds: s,
+                totalDurationMs: totalDurationMs,
+                targetTime: targetTime,
+                forceUnlock: forceUnlock,
+                updatedAt: Date.now()
+            });
+        }
+
         return true;
     }
 

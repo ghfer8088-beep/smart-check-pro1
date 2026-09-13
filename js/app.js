@@ -6054,7 +6054,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             navigator.serviceWorker.getRegistration().then((reg) => {
                 if (reg) reg.update().catch(() => {});
             }).catch(() => {});
+            if (window.SmartCloudSync && typeof SmartCloudSync.fetchRemoteTimingUpdates === 'function') {
+                SmartCloudSync.fetchRemoteTimingUpdates();
+            }
         });
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && window.SmartCloudSync && typeof SmartCloudSync.fetchRemoteTimingUpdates === 'function') {
+                SmartCloudSync.fetchRemoteTimingUpdates();
+            }
+        });
+    }
+
+    // تهيئة الاستماع اللحظي لتعديل توقيت الجلسات سحابياً من لوحة الإدارة
+    if (window.SmartCloudSync) {
+        if (typeof SmartCloudSync.initTimingListener === 'function') SmartCloudSync.initTimingListener();
+        if (typeof SmartCloudSync.fetchRemoteTimingUpdates === 'function') SmartCloudSync.fetchRemoteTimingUpdates();
     }
 
 

@@ -1351,16 +1351,16 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/geo-tracker.js?v=17.5"></script>
-    <script src="js/cloud-sync.js?v=17.5"></script>
-    <script src="js/database.js?v=17.5"></script>
-    <script src="js/exercise-image-studio.js?v=17.5"></script>
-    <script src="js/exercises-db.js?v=17.5"></script>
-    <script src="js/diagnostic-engine.js?v=17.5"></script>
-    <script src="js/patient-flow.js?v=17.5"></script>
-    <script src="js/admin-engine.js?v=17.5"></script>
-    <script src="js/ai-config.js?v=17.5"></script>
-    <script src="js/ai-engine.js?v=17.5"></script>
+    <script src="js/geo-tracker.js?v=18.2"></script>
+    <script src="js/cloud-sync.js?v=18.2"></script>
+    <script src="js/database.js?v=18.2"></script>
+    <script src="js/exercise-image-studio.js?v=18.2"></script>
+    <script src="js/exercises-db.js?v=18.2"></script>
+    <script src="js/diagnostic-engine.js?v=18.2"></script>
+    <script src="js/patient-flow.js?v=18.2"></script>
+    <script src="js/admin-engine.js?v=18.2"></script>
+    <script src="js/ai-config.js?v=18.2"></script>
+    <script src="js/ai-engine.js?v=18.2"></script>
 
     <script>
         let allPatientsList = [];
@@ -2551,7 +2551,7 @@
                     <td style="padding: 14px;">اليوم ${Math.min(7, item.logsCount + 1)} من 7</td>
                     <td style="padding: 14px; color: #10b981; font-weight: bold;">${item.recoveryScore}%</td>
                     <td style="padding: 14px; text-align: center;">
-                        <button onclick="openPatientTimingModal('${p.patientId}', '${p.name}', ${item.logsCount + 1})" style="background: #3b82f6; color: #fff; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 0.88em; font-weight: bold;">⏱️ تعديل التوقيت</button>
+                        <button onclick="openPatientTimingModal('${p.patientId}', '${p.name}', ${item.logsCount + 1}, '${p.phone || ''}')" style="background: #3b82f6; color: #fff; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 0.88em; font-weight: bold;">⏱️ تعديل التوقيت</button>
                     </td>
                     <td style="padding: 14px; text-align: center; white-space: nowrap;">
                         ${cleanPhone ? `<a href="https://wa.me/${cleanPhone}" target="_blank" style="display: inline-block; background: #25d366; color: #fff; text-decoration: none; padding: 7px 10px; border-radius: 6px; font-size: 0.88em; font-weight: bold; margin-left: 4px;">💬 واتساب</a>` : ''}
@@ -2658,7 +2658,7 @@
                                     <button type="button" disabled style="background: #1e293b; color: #64748b; border: 1px solid #334155; padding: 10px; border-radius: 8px; font-size: 0.85em;">
                                         بلا هاتف مسجل
                                     </button>`}
-                                    <button type="button" onclick="openPatientTimingModal('${p.patientId}', '${p.name}', ${item.logsCount + 1})" style="background: #2563eb; color: #fff; border: none; padding: 10px; border-radius: 8px; font-size: 0.9em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                                    <button type="button" onclick="openPatientTimingModal('${p.patientId}', '${p.name}', ${item.logsCount + 1}, '${p.phone || ''}')" style="background: #2563eb; color: #fff; border: none; padding: 10px; border-radius: 8px; font-size: 0.9em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;">
                                         <span>⏱️ تعديل التوقيت</span>
                                     </button>
                                 </div>
@@ -2830,8 +2830,10 @@
         }
 
         let activeTargetSessionNum = 1;
-        function openPatientTimingModal(patientId, patientName, sessionNum = 1) {
+        let activeTargetPatientPhone = '';
+        function openPatientTimingModal(patientId, patientName, sessionNum = 1, patientPhone = '') {
             activeTargetSessionNum = sessionNum;
+            activeTargetPatientPhone = patientPhone || '';
             document.getElementById('target-patient-id').value = patientId;
             document.getElementById('timing-patient-name').textContent = `المريض: ${patientName} (الجلسة #${sessionNum})`;
             document.getElementById('patient-timing-modal').style.display = 'flex';
@@ -2839,9 +2841,9 @@
 
         function quickUnlockSessionNow() {
             const patientId = document.getElementById('target-patient-id').value;
-            AdminEngine.setPatientSessionTiming(patientId, activeTargetSessionNum, 0, 0, 0);
+            AdminEngine.setPatientSessionTiming(patientId, activeTargetSessionNum, 0, 0, 0, activeTargetPatientPhone);
             document.getElementById('patient-timing-modal').style.display = 'none';
-            alert('✅ تم فتح الجلسة فورياً للمريض!');
+            alert('✅ تم فتح الجلسة فورياً للمريض وبث التعديل لهاتفه سحابياً!');
             loadAdminData();
         }
 
@@ -2851,9 +2853,9 @@
             const m = document.getElementById('timing-mins').value;
             const s = document.getElementById('timing-secs').value;
 
-            AdminEngine.setPatientSessionTiming(patientId, activeTargetSessionNum, h, m, s);
+            AdminEngine.setPatientSessionTiming(patientId, activeTargetSessionNum, h, m, s, activeTargetPatientPhone);
             document.getElementById('patient-timing-modal').style.display = 'none';
-            alert(`✅ تم ضبط توقيت الجلسة بنجاح (${h} ساعة و ${m} دقيقة و ${s} ثانية)!`);
+            alert(`✅ تم ضبط توقيت الجلسة بنجاح (${h} ساعة و ${m} دقيقة و ${s} ثانية) وبث التعديل لهاتف المريض سحابياً!`);
             loadAdminData();
         }
 

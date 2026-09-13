@@ -288,18 +288,20 @@ const PatientFlow = (function() {
             return { isLocked: false, remainingHours: 0, remainingMs: 0, isDev: true };
         }
 
-        const forceUnlock = localStorage.getItem(`force_unlock_${patientId}`);
+        const cleanPhone = (patient && patient.phone) ? String(patient.phone).replace(/\D/g, '') : '';
+        const forceUnlock = localStorage.getItem(`force_unlock_${patientId}`) || (cleanPhone ? localStorage.getItem(`force_unlock_${cleanPhone}`) : null);
         if (forceUnlock === 'true') {
             return { isLocked: false, remainingHours: 0, remainingMs: 0, forced: true };
         }
 
-        const customTarget = localStorage.getItem(`custom_target_time_${patientId}`);
+        const customTarget = localStorage.getItem(`custom_target_time_${patientId}`) || (cleanPhone ? localStorage.getItem(`custom_target_time_${cleanPhone}`) : null);
         if (customTarget) {
             const targetMs = parseInt(customTarget);
             const now = Date.now();
             const diff = targetMs - now;
             if (diff <= 0) {
                 localStorage.removeItem(`custom_target_time_${patientId}`);
+                if (cleanPhone) localStorage.removeItem(`custom_target_time_${cleanPhone}`);
                 return { isLocked: false, remainingHours: 0, remainingMs: 0 };
             }
             return {
