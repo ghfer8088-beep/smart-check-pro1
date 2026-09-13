@@ -679,9 +679,19 @@
                     </div>
                 </div>
 
-                <button type="button" onclick="saveCustomTimingValues()" style="width: 100%; background: var(--primary-gold); color: #0a0e14; border: none; padding: 13px; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer;">
-                    حفظ وتطبيق التوقيت المخصص
+                <button type="button" onclick="saveCustomTimingValues()" style="width: 100%; background: var(--primary-gold); color: #0a0e14; border: none; padding: 13px; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer; margin-bottom: 12px; box-shadow: 0 4px 14px rgba(212, 175, 55, 0.3);">
+                    💾 حفظ وتطبيق التوقيت المخصص وبثه سحابياً
                 </button>
+
+                <!-- أزرار إرسال الرابط المباشر للمريض عبر واتساب والنسخ -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px;">
+                    <button type="button" onclick="sendDirectTimingViaWhatsApp()" style="background: #25D366; color: #ffffff; border: none; padding: 11px; border-radius: 8px; font-weight: bold; font-size: 0.9em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <span>💬 إرسال عبر واتساب</span>
+                    </button>
+                    <button type="button" onclick="copyDirectTimingLink()" style="background: #1e293b; color: #38bdf8; border: 1.5px solid #38bdf8; padding: 11px; border-radius: 8px; font-weight: bold; font-size: 0.9em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <span>📋 نسخ رابط التفعيل</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -2893,6 +2903,50 @@
             document.getElementById('patient-timing-modal').style.display = 'none';
             alert(`✅ تم ضبط توقيت الجلسة (#${targetSNum}) بنجاح (${h} س و ${m} د و ${s} ث) وبث التعديل لهاتف المريض سحابياً!`);
             loadAdminData();
+        }
+
+        function generateDirectTimingUrl() {
+            const patientId = document.getElementById('target-patient-id').value;
+            const sNumSelect = document.getElementById('timing-session-num');
+            const targetSNum = sNumSelect ? parseInt(sNumSelect.value) || activeTargetSessionNum : activeTargetSessionNum;
+            const h = parseInt(document.getElementById('timing-hours').value) || 0;
+            const m = parseInt(document.getElementById('timing-mins').value) || 0;
+            const s = parseInt(document.getElementById('timing-secs').value) || 0;
+            const totalSec = (h * 3600) + (m * 60) + s;
+            
+            const baseUrl = window.location.origin + window.location.pathname.replace(/admin\.html.*$/, 'index.html');
+            const params = new URLSearchParams();
+            if (patientId) params.set('patient_id', patientId);
+            params.set('session', String(targetSNum));
+            if (totalSec <= 0) {
+                params.set('unlock', '1');
+            } else {
+                params.set('time', String(totalSec));
+            }
+            return `${baseUrl}?${params.toString()}`;
+        }
+
+        function sendDirectTimingViaWhatsApp() {
+            saveCustomTimingValues();
+            const link = generateDirectTimingUrl();
+            const patientName = activeTargetPatientName || 'المراجع الكريم';
+            const cleanPhone = (activeTargetPatientPhone || '').replace(/\D/g, '');
+            const msg = encodeURIComponent(`مرحباً ${patientName}، تم تحديث توقيت جلستك العلاجية بنجاح. يمكنك المتابعة مباشرة عبر الرابط التالي:\n${link}`);
+            const waUrl = cleanPhone ? `https://wa.me/${cleanPhone}?text=${msg}` : `https://api.whatsapp.com/send?text=${msg}`;
+            window.open(waUrl, '_blank');
+        }
+
+        function copyDirectTimingLink() {
+            const link = generateDirectTimingUrl();
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(link).then(() => {
+                    alert('📋 تم نسخ رابط التفعيل المباشر بنجاح:\n' + link);
+                }).catch(() => {
+                    prompt('انسخ الرابط التالي:', link);
+                });
+            } else {
+                prompt('انسخ الرابط التالي:', link);
+            }
         }
 
         async function toggleDevMode() {

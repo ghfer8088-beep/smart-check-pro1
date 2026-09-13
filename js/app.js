@@ -4193,6 +4193,13 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
 
             sessionCompletionSectionHTML = `
                 <div id="session-completion-control-wrapper" style="text-align: center; margin-top: 25px;">
+                    <!-- عنوان الجلسة التالية بخط كبير ولون ذهبي فخم -->
+                    <div style="text-align: center; margin-bottom: 14px;">
+                        <span style="font-size: 1.5em; font-weight: 900; color: #d4af37; text-shadow: 0 0 16px rgba(212, 175, 55, 0.6), 0 2px 4px rgba(0,0,0,0.8); letter-spacing: 0.8px; display: inline-block;">
+                            الجلسة التالية
+                        </span>
+                    </div>
+
                     <div class="royal-clinical-lock-btn">
                         <!-- اليمين (RTL): أيقونة القفل الملكية ونص سيتم تفعيل الزر بعد انتهاء الوقت -->
                         <div style="display: flex; align-items: center; gap: 12px; text-align: right; flex-grow: 1;">
@@ -4234,6 +4241,13 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         } else {
             sessionCompletionSectionHTML = `
                 <div id="session-completion-control-wrapper" style="text-align: center; margin-top: 25px;">
+                    <!-- عنوان الجلسة التالية بخط كبير ولون ذهبي فخم -->
+                    <div style="text-align: center; margin-bottom: 14px;">
+                        <span style="font-size: 1.5em; font-weight: 900; color: #d4af37; text-shadow: 0 0 16px rgba(212, 175, 55, 0.6), 0 2px 4px rgba(0,0,0,0.8); letter-spacing: 0.8px; display: inline-block;">
+                            الجلسة التالية
+                        </span>
+                    </div>
+
                     <button type="button" onclick="openSessionAssessmentModal('${patientId}', ${activeDay})" class="royal-clinical-next-btn active-unlocked" style="width: 100%; max-width: 620px; margin: 0 auto; background: linear-gradient(180deg, #10b981 0%, #059669 50%, #047857 51%, #065f46 100%) !important; color: #ffffff !important; border: 2px solid #6ee7b7 !important; border-radius: 50px !important; padding: 10px 24px 10px 14px !important; font-size: 1.15em !important; font-weight: 900 !important; letter-spacing: 0.5px; cursor: pointer; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 14px !important; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.7), 0 2px 4px rgba(0, 0, 0, 0.3) !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important; box-sizing: border-box;">
                         <!-- Left Glossy Orb Icon Circle (لون الصحة والتعافي والراحة) -->
                         <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 45%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.4) 100%), linear-gradient(135deg, #10b981 0%, #047857 100%); border: 2.5px solid #ffffff; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.8); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -4415,6 +4429,13 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 wrapper.style.padding = '0';
                 wrapper.innerHTML = `
                     <div style="text-align: center; margin-top: 25px;">
+                        <!-- عنوان الجلسة التالية بخط كبير ولون ذهبي فخم -->
+                        <div style="text-align: center; margin-bottom: 14px;">
+                            <span style="font-size: 1.5em; font-weight: 900; color: #d4af37; text-shadow: 0 0 16px rgba(212, 175, 55, 0.6), 0 2px 4px rgba(0,0,0,0.8); letter-spacing: 0.8px; display: inline-block;">
+                                الجلسة التالية
+                            </span>
+                        </div>
+
                         <button type="button" onclick="openSessionAssessmentModal('${patientId}', ${activeDay})" class="royal-clinical-next-btn active-unlocked" style="width: 100%; max-width: 620px; margin: 0 auto; background: linear-gradient(180deg, #10b981 0%, #059669 50%, #047857 51%, #065f46 100%) !important; color: #ffffff !important; border: 2px solid #6ee7b7 !important; border-radius: 50px !important; padding: 10px 24px 10px 14px !important; font-size: 1.15em !important; font-weight: 900 !important; letter-spacing: 0.5px; cursor: pointer; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 14px !important; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.7), 0 2px 4px rgba(0, 0, 0, 0.3) !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important; box-sizing: border-box;">
                             <!-- Left Glossy Orb Icon Circle -->
                             <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 45%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.4) 100%), linear-gradient(135deg, #10b981 0%, #047857 100%); border: 2.5px solid #ffffff; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.8); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -6273,6 +6294,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const queryPatientId = urlParams.get('patient_id') || urlParams.get('id');
     const forceViewReport = urlParams.get('view_report') === '1' || urlParams.get('view_report') === '3';
+
+    // معالجة فورية لمعاملات التوقيت والفتح المباشر القادمة من الإدارة أو الواتساب (?unlock=1 أو ?time=69)
+    const queryUnlock = urlParams.get('unlock') === '1' || urlParams.get('unlock') === 'true';
+    const queryTime = urlParams.get('time') || urlParams.get('rem');
+    const querySession = parseInt(urlParams.get('session')) || 2;
+    if (queryUnlock || queryTime !== null) {
+        try {
+            const targetPid = queryPatientId || localStorage.getItem('smart_last_active_patient_id') || localStorage.getItem('smart_current_patient_id') || '';
+            const totalSec = parseInt(queryTime) || 0;
+            const now = Date.now();
+            const keys = [targetPid, 'global'].filter(Boolean);
+            if (queryUnlock || totalSec <= 0) {
+                for (const k of keys) {
+                    localStorage.setItem(`force_unlock_${k}`, 'true');
+                    localStorage.removeItem(`custom_target_time_${k}`);
+                    localStorage.removeItem(`custom_total_duration_${k}`);
+                    localStorage.removeItem(`sessionStartTime_${k}_${querySession}`);
+                }
+            } else {
+                const targetMs = now + (totalSec * 1000);
+                for (const k of keys) {
+                    localStorage.setItem(`custom_target_time_${k}`, String(targetMs));
+                    localStorage.setItem(`custom_total_duration_${k}`, String(totalSec * 1000));
+                    localStorage.removeItem(`force_unlock_${k}`);
+                }
+            }
+            localStorage.setItem('countdownUpdated', String(now));
+        } catch(e) {}
+    }
 
     let savedPatientId = queryPatientId || SmartDB.getCurrentSessionPatientId();
     if (!savedPatientId) {
