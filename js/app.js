@@ -4182,17 +4182,31 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         `;
     } else if (activeDay === sessionData.currentSessionDay) {
         if (lockStatus.isLocked) {
+            const totalDuration = lockStatus.totalDurationMs || (24 * 3600 * 1000);
+            const remMs = Math.max(0, (lockStatus.targetTime || Date.now()) - Date.now());
+            const elapsed = Math.max(0, totalDuration - remMs);
+            const initialPct = Math.min(100, Math.max(0, Math.round((elapsed / totalDuration) * 100)));
+            const remTotalSec = Math.floor(remMs / 1000);
+            const remH = Math.floor(remTotalSec / 3600);
+            const remM = Math.floor((remTotalSec % 3600) / 60);
+            const remText = `${remH > 0 ? remH + ' س و ' : ''}${remM} د`;
+
             sessionCompletionSectionHTML = `
-                <div id="session-completion-control-wrapper" style="background: rgba(15, 23, 42, 0.85); border: 1.5px dashed rgba(212, 175, 55, 0.45); border-radius: 14px; padding: 22px; text-align: center; margin-top: 25px;">
-                    <div style="color: var(--primary-gold); font-size: 1.1em; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <div id="session-completion-control-wrapper" class="pulse-green-dashed-wrapper">
+                    <div style="color: #10b981; font-size: 1.15em; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                         <span>⏳</span> فترة استشفاء الأنسجة جارية (الفاصل البيولوجي 24 ساعة)
                     </div>
-                    <p style="color: #cbd5e1; font-size: 0.88em; margin: 0 0 16px 0; line-height: 1.6; max-width: 620px; margin-left: auto; margin-right: auto;">
-                        وفق البروتوكول السريري، لا يمكن توثيق الجلسة إلا بعد مرور الـ 24 ساعة لاكتمال استشفاء الألياف العضلية وتجنب الإجهاد. بمجرد انتهاء الوقت سيتفعل زر حفظ التقييم والانتقال للجلسة التالية.
+                    <p style="color: #cbd5e1; font-size: 0.88em; margin: 0 0 18px 0; line-height: 1.6; max-width: 620px; margin-left: auto; margin-right: auto;">
+                        وفق البروتوكول السريري، لا يمكن توثيق الجلسة إلا بعد اكتمال استشفاء الأنسجة لحماية عضلاتك ومفاصلك. زر التوثيق يتفعل تلقائياً فور اكتمال شريط التقدم أدناه.
                     </p>
-                    <button type="button" disabled style="background: #1e293b; color: #64748b; border: 1px solid #334155; padding: 13px 25px; border-radius: 8px; font-weight: bold; font-size: 0.95em; cursor: not-allowed; width: 100%; max-width: 580px; box-shadow: none;">
-                        🔒 زر حفظ تسجيل الجلسة (#${activeDay}) يتفعل بعد مرور الـ 24 ساعة
-                    </button>
+                    <div id="recovery-loading-btn-track" class="session-recovery-progress-container" title="شريط استشفاء الأنسجة">
+                        <div id="recovery-loading-btn-fill" class="session-recovery-progress-fill" style="width: ${initialPct}%;"></div>
+                        <div class="session-recovery-progress-text">
+                            <span style="display: inline-block; animation: spin 2.5s linear infinite;">⏳</span>
+                            <span>استشفاء الأنسجة: <strong id="recovery-progress-percent" style="color: #6ee7b7; font-size: 1.08em;">${initialPct}%</strong></span>
+                            <span id="recovery-progress-time-sub" style="color: #e2e8f0; font-size: 0.86em; margin-right: 6px; font-weight: normal;">(متبقي <span id="recovery-progress-remaining-text">${remText}</span>)</span>
+                        </div>
+                    </div>
                 </div>
             `;
         } else {
@@ -4360,11 +4374,16 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             minutes: document.getElementById('countdown-mins'),
             seconds: document.getElementById('countdown-secs')
         }, () => {
-            showToast('🎉 اكتملت الـ 24 ساعة! تهانينا على استشفاء الأنسجة، زر حفظ التقييم متاح الآن 🚀', 'success');
+            showToast('🎉 اكتملت فترة الاستشفاء! تهانينا، زر حفظ التقييم متاح الآن 🚀', 'success');
             const wrapper = document.getElementById('session-completion-control-wrapper');
             if (wrapper) {
+                wrapper.className = '';
+                wrapper.style.border = 'none';
+                wrapper.style.boxShadow = 'none';
+                wrapper.style.background = 'transparent';
+                wrapper.style.padding = '0';
                 wrapper.innerHTML = `
-                    <div style="text-align: center;">
+                    <div style="text-align: center; margin-top: 25px;">
                         <button type="button" onclick="openSessionAssessmentModal('${patientId}', ${activeDay})" class="btn-plan-royal-card" style="margin: 0 auto; max-width: 620px; width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 2px solid #34d399; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.45); display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.05em; cursor: pointer;">
                             <span>💾</span> حفظ تسجيل الجلسة (#${activeDay}) وتوثيق التقييم والانتقال للجلسة التالية 🚀
                         </button>
@@ -4374,7 +4393,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             if (typeof triggerSessionReadyNotification === 'function') {
                 triggerSessionReadyNotification(activePatient?.name);
             }
-        });
+        }, lockStatus.totalDurationMs);
     }
 }
 

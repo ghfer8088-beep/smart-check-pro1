@@ -281,20 +281,20 @@ const PatientFlow = (function() {
     // حساب حالة القفل الزمني للجلسة
     async function getSessionLockStatus(patientId) {
         const patient = await SmartDB.getPatient(patientId);
-        if (!patient) return { isLocked: false, remainingHours: 0, remainingMs: 0 };
+        if (!patient) return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0 };
 
         const isDev = await SmartDB.getSetting('isDeveloperMode', false);
         if (isDev) {
-            return { isLocked: false, remainingHours: 0, remainingMs: 0, isDev: true };
+            return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, isDev: true };
         }
 
         const cleanPhone = (patient && patient.phone) ? String(patient.phone).replace(/\D/g, '') : '';
-        const forceUnlock = localStorage.getItem(`force_unlock_${patientId}`) || (cleanPhone ? localStorage.getItem(`force_unlock_${cleanPhone}`) : null);
-        if (forceUnlock === 'true') {
-            return { isLocked: false, remainingHours: 0, remainingMs: 0, forced: true };
+        const forceUnlock = localStorage.getItem('force_unlock_global') === 'true' || localStorage.getItem(`force_unlock_${patientId}`) === 'true' || (cleanPhone ? localStorage.getItem(`force_unlock_${cleanPhone}`) === 'true' : false);
+        if (forceUnlock) {
+            return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
         }
 
-        const customTarget = localStorage.getItem(`custom_target_time_${patientId}`) || (cleanPhone ? localStorage.getItem(`custom_target_time_${cleanPhone}`) : null);
+        const customTarget = localStorage.getItem(`custom_target_time_${patientId}`) || (cleanPhone ? localStorage.getItem(`custom_target_time_${cleanPhone}`) : null) || localStorage.getItem('custom_target_time_global');
         if (customTarget) {
             const targetMs = parseInt(customTarget);
             const now = Date.now();
@@ -302,12 +302,18 @@ const PatientFlow = (function() {
             if (diff <= 0) {
                 localStorage.removeItem(`custom_target_time_${patientId}`);
                 if (cleanPhone) localStorage.removeItem(`custom_target_time_${cleanPhone}`);
-                return { isLocked: false, remainingHours: 0, remainingMs: 0 };
+                localStorage.removeItem('custom_target_time_global');
+                return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0 };
+            }
+            let customDuration = parseInt(localStorage.getItem(`custom_total_duration_${patientId}`) || (cleanPhone ? localStorage.getItem(`custom_total_duration_${cleanPhone}`) : null) || localStorage.getItem('custom_total_duration_global') || 0);
+            if (!customDuration || customDuration <= 0) {
+                customDuration = Math.max(diff, 24 * 3600 * 1000);
             }
             return {
                 isLocked: true,
                 remainingHours: diff / (1000 * 60 * 60),
                 remainingMs: diff,
+                totalDurationMs: customDuration,
                 targetTime: targetMs
             };
         }
@@ -317,7 +323,7 @@ const PatientFlow = (function() {
         
         // الجلسة الأولى (اليوم 1) تكون متاحة ومفتوحة فوراً عند التسجيل ولا تُقفل أبداً
         if (dailyLogs.length === 0) {
-            return { isLocked: false, remainingHours: 0, remainingMs: 0 };
+            return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0 };
         }
 
         const lastLog = dailyLogs[dailyLogs.length - 1];
@@ -329,30 +335,38 @@ const PatientFlow = (function() {
         const remainingMs = intervalMs - elapsedMs;
 
         if (remainingMs <= 0) {
-            return { isLocked: false, remainingHours: 0, remainingMs: 0 };
+            return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: intervalMs };
         }
 
         return {
             isLocked: true,
             remainingHours: remainingMs / (1000 * 60 * 60),
             remainingMs,
+            totalDurationMs: intervalMs,
             targetTime: referenceTime + intervalMs
         };
     }
 
-    // تشغيل العداد التنازلي التفاعلي
-    function startCountdownTimer(targetTime, displayElements, onComplete) {
+    // تشغيل العداد التنازلي التفاعلي وشريط الاستشفاء اللودينج
+    function startCountdownTimer(targetTime, displayElements, onComplete, totalDurationMs) {
         if (activeCountdownInterval) clearInterval(activeCountdownInterval);
 
         function update() {
             const now = Date.now();
             const diff = targetTime - now;
 
+            const progressFill = document.getElementById('recovery-loading-btn-fill');
+            const progressPercentEl = document.getElementById('recovery-progress-percent');
+            const progressRemEl = document.getElementById('recovery-progress-remaining-text');
+
             if (diff <= 0) {
                 clearInterval(activeCountdownInterval);
-                if (displayElements.hours) displayElements.hours.textContent = '00';
-                if (displayElements.minutes) displayElements.minutes.textContent = '00';
-                if (displayElements.seconds) displayElements.seconds.textContent = '00';
+                if (displayElements && displayElements.hours) displayElements.hours.textContent = '00';
+                if (displayElements && displayElements.minutes) displayElements.minutes.textContent = '00';
+                if (displayElements && displayElements.seconds) displayElements.seconds.textContent = '00';
+                if (progressFill) progressFill.style.width = '100%';
+                if (progressPercentEl) progressPercentEl.textContent = '100%';
+                if (progressRemEl) progressRemEl.textContent = 'مكتمل الآن';
                 if (typeof onComplete === 'function') onComplete();
                 return;
             }
@@ -362,13 +376,23 @@ const PatientFlow = (function() {
             const m = Math.floor((totalSec % 3600) / 60);
             const s = totalSec % 60;
 
-            if (displayElements.hours) displayElements.hours.textContent = String(h).padStart(2, '0');
-            if (displayElements.minutes) displayElements.minutes.textContent = String(m).padStart(2, '0');
-            if (displayElements.seconds) displayElements.seconds.textContent = String(s).padStart(2, '0');
+            if (displayElements && displayElements.hours) displayElements.hours.textContent = String(h).padStart(2, '0');
+            if (displayElements && displayElements.minutes) displayElements.minutes.textContent = String(m).padStart(2, '0');
+            if (displayElements && displayElements.seconds) displayElements.seconds.textContent = String(s).padStart(2, '0');
+
+            if (progressFill || progressPercentEl) {
+                const totalDuration = totalDurationMs || (24 * 3600 * 1000);
+                const elapsed = Math.max(0, totalDuration - diff);
+                const pct = Math.min(100, Math.max(0, Math.round((elapsed / totalDuration) * 100)));
+                if (progressFill) progressFill.style.width = pct + '%';
+                if (progressPercentEl) progressPercentEl.textContent = pct + '%';
+                if (progressRemEl) progressRemEl.textContent = `${h > 0 ? h + ' س و ' : ''}${m} د و ${s} ث`;
+            }
         }
 
         update();
         activeCountdownInterval = setInterval(update, 1000);
+        window.activeCountdownInterval = activeCountdownInterval;
     }
 
     // مؤقت التمارين الرياضية التفاعلي مع دعم التوجيه الصوتي

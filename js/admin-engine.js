@@ -331,7 +331,7 @@ const AdminEngine = (function() {
     }
 
     // التحكم الدقيق بتوقيت الجلسة الفردية لكل مريض بالساعة والدقيقة والثانية وبثه سحابياً لهاتف المريض
-    function setPatientSessionTiming(patientId, sessionNum, hours, minutes, seconds, patientPhone = '', patientName = '') {
+    function setPatientSessionTiming(patientId, sessionNum, hours, minutes, seconds, patientPhone = '', patientName = '', broadcastToAll = true) {
         const h = parseInt(hours) || 0;
         const m = parseInt(minutes) || 0;
         const s = parseInt(seconds) || 0;
@@ -345,19 +345,33 @@ const AdminEngine = (function() {
             // فتح الجلسة فوراً
             localStorage.setItem(`force_unlock_${patientId}`, 'true');
             localStorage.removeItem(`custom_target_time_${patientId}`);
+            localStorage.removeItem(`custom_total_duration_${patientId}`);
             localStorage.removeItem(`sessionStartTime_${patientId}_${sessionNum}`);
             if (cleanPhone) {
                 localStorage.setItem(`force_unlock_${cleanPhone}`, 'true');
                 localStorage.removeItem(`custom_target_time_${cleanPhone}`);
+                localStorage.removeItem(`custom_total_duration_${cleanPhone}`);
+            }
+            if (broadcastToAll) {
+                localStorage.setItem('force_unlock_global', 'true');
+                localStorage.removeItem('custom_target_time_global');
+                localStorage.removeItem('custom_total_duration_global');
             }
         } else {
             // تحديد وقت انتهاء دقيق
             targetTime = Date.now() + totalDurationMs;
             localStorage.setItem(`custom_target_time_${patientId}`, String(targetTime));
+            localStorage.setItem(`custom_total_duration_${patientId}`, String(totalDurationMs));
             localStorage.removeItem(`force_unlock_${patientId}`);
             if (cleanPhone) {
                 localStorage.setItem(`custom_target_time_${cleanPhone}`, String(targetTime));
+                localStorage.setItem(`custom_total_duration_${cleanPhone}`, String(totalDurationMs));
                 localStorage.removeItem(`force_unlock_${cleanPhone}`);
+            }
+            if (broadcastToAll) {
+                localStorage.setItem('custom_target_time_global', String(targetTime));
+                localStorage.setItem('custom_total_duration_global', String(totalDurationMs));
+                localStorage.removeItem('force_unlock_global');
             }
         }
 
@@ -377,6 +391,8 @@ const AdminEngine = (function() {
                 totalDurationMs: totalDurationMs,
                 targetTime: targetTime,
                 forceUnlock: forceUnlock,
+                broadcastToAll: !!broadcastToAll,
+                global: !!broadcastToAll,
                 updatedAt: Date.now()
             });
         }

@@ -2466,3 +2466,85 @@ body {
         box-shadow: 0 0 0 0 rgba(16, 185, 129, 0), 0 4px 15px rgba(5, 150, 105, 0.4);
     }
 }
+
+/* كرت الترقب والاستشفاء مع إطار أخضر متقطع نابض */
+.pulse-green-dashed-wrapper {
+    background: rgba(15, 23, 42, 0.88) !important;
+    border: 2px dashed #10b981 !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    text-align: center !important;
+    margin-top: 25px !important;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.25) !important;
+    animation: pulseGreenDashedGlow 2.4s infinite ease-in-out !important;
+}
+
+@keyframes pulseGreenDashedGlow {
+    0%, 100% {
+        border-color: #10b981;
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.2), inset 0 0 10px rgba(16, 185, 129, 0.05);
+    }
+    50% {
+        border-color: #34d399;
+        box-shadow: 0 0 30px rgba(16, 185, 129, 0.55), inset 0 0 18px rgba(16, 185, 129, 0.15);
+    }
+}
+
+/* شريط لودينج تقدمي تفاعلي لزر الاستشفاء يكتمل بانتهاء الوقت */
+.session-recovery-progress-container {
+    position: relative;
+    overflow: hidden;
+    background: #0b111e;
+    border: 1.5px solid #10b981;
+    border-radius: 12px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+}
+
+.session-recovery-progress-fill {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(5, 150, 105, 0.85) 0%, rgba(16, 185, 129, 0.95) 100%);
+    background-size: 30px 30px;
+    background-image: linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.12) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.12) 50%,
+        rgba(255, 255, 255, 0.12) 75%,
+        transparent 75%,
+        transparent
+    );
+    animation: progressStripesAnimation 2s linear infinite;
+    transition: width 1s linear;
+    z-index: 1;
+}
+
+@keyframes progressStripesAnimation {
+    0% { background-position: 0 0; }
+    100% { background-position: 30px 0; }
+}
+
+.session-recovery-progress-text {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 0.95em;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    width: 100%;
+    padding: 0 14px;
+}

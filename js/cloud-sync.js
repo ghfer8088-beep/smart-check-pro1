@@ -949,10 +949,15 @@
                     window.activeCountdownInterval = null;
                 }
 
-                // تحديث حاوية الزر إلى الحالة النشطة المفتوحة
+                // تحديث حاوية الزر إلى الحالة النشطة المفتوحة وإزالة أنيميشن الإطار النابض
                 if (wrapper) {
-                    const currentDay = update.sessionNum || 2;
-                    const pId = update.patientId || (window.activePatient && (window.activePatient.patientId || window.activePatient.id)) || '';
+                    wrapper.className = '';
+                    wrapper.style.border = 'none';
+                    wrapper.style.boxShadow = 'none';
+                    wrapper.style.background = 'transparent';
+                    wrapper.style.padding = '0';
+                    const currentDay = update.sessionNum || (window.activePatient && window.activePatient.currentSessionDay) || 2;
+                    const pId = update.patientId || (window.activePatient && (window.activePatient.patientId || window.activePatient.id)) || localStorage.getItem('smart_current_patient_id') || '';
                     wrapper.innerHTML = `
                         <div style="text-align: center; margin-top: 25px;">
                             <div style="background: rgba(16, 185, 129, 0.15); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px; margin-bottom: 14px; color: #6ee7b7; font-weight: bold; font-size: 0.95em;">
@@ -965,6 +970,7 @@
                     `;
                 }
             } else if (update.targetTime && update.targetTime > Date.now()) {
+                const totalDur = update.totalDurationMs || (update.targetTime - Date.now());
                 if (window.PatientFlow && typeof window.PatientFlow.startCountdownTimer === 'function') {
                     window.PatientFlow.startCountdownTimer(update.targetTime, {
                         hours: elHours,
@@ -974,7 +980,7 @@
                         if (typeof window.loadPatientRecoveryDashboard === 'function') {
                             window.loadPatientRecoveryDashboard(update.patientId);
                         }
-                    });
+                    }, totalDur);
                 }
             }
         } catch(e) {}
@@ -1009,12 +1015,18 @@
 
         let isMatch = false;
 
+        // إذا تم تفعيل خيار البث العام لجميع الهواتف المتصلة أو إذا كان زر العداد معروضاً على الشاشة حالياً
+        const isClockOnScreen = !!document.getElementById('session-completion-control-wrapper') || !!document.getElementById('countdown-hours');
+        if (update.broadcastToAll || update.global || isClockOnScreen) {
+            isMatch = true;
+        }
+
         // 1. تطابق مباشر بالمعرف
-        if (targetPid && currentPid && (targetPid === currentPid)) {
+        if (!isMatch && targetPid && currentPid && (targetPid === currentPid)) {
             isMatch = true;
         }
         // 2. تطابق رقمي بالمعرف
-        else if (targetPid && currentPid) {
+        else if (!isMatch && targetPid && currentPid) {
             const c1 = String(targetPid).replace(/\D/g, '');
             const c2 = String(currentPid).replace(/\D/g, '');
             if (c1 && c2 && (c1 === c2 || (c1.length >= 7 && c2.length >= 7 && (c1.includes(c2) || c2.includes(c1))))) {
@@ -1038,29 +1050,31 @@
             isMatch = true;
         }
 
-        // 5. إذا لم نجد تطابقاً وكان هناك مريض محدد مسجل على الهاتف
-        if (!isMatch && (currentPid || cleanCurrentPhone)) {
+        // إذا لم يكن هناك تطابق
+        if (!isMatch) {
             return false;
         }
 
         const pKey = currentPid || targetPid;
-        if (!pKey && !targetPhone) return false;
-
-        // تطبيق التعديل على كافة المفاتيح المحتملة في localStorage
         const keysToUpdate = new Set();
         if (pKey) keysToUpdate.add(pKey);
         if (targetPid) keysToUpdate.add(targetPid);
         if (cleanCurrentPhone) keysToUpdate.add(cleanCurrentPhone);
         if (targetPhone) keysToUpdate.add(targetPhone);
+        keysToUpdate.add('global');
 
         const now = Date.now();
         for (const key of keysToUpdate) {
             if (update.forceUnlock) {
                 localStorage.setItem(`force_unlock_${key}`, 'true');
                 localStorage.removeItem(`custom_target_time_${key}`);
+                localStorage.removeItem(`custom_total_duration_${key}`);
                 localStorage.removeItem(`sessionStartTime_${key}_${update.sessionNum || 1}`);
             } else if (update.targetTime && update.targetTime > now) {
                 localStorage.setItem(`custom_target_time_${key}`, String(update.targetTime));
+                if (update.totalDurationMs) {
+                    localStorage.setItem(`custom_total_duration_${key}`, String(update.totalDurationMs));
+                }
                 localStorage.removeItem(`force_unlock_${key}`);
             }
         }

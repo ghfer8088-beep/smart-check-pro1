@@ -18,7 +18,7 @@
 
     <script src="js/system-watchdog.js?v=17.5"></script>
     <script src="js/security-shield.js?v=17.5"></script>
-    <link rel="stylesheet" href="css/style.css?v=17.5">
+    <link rel="stylesheet" href="css/style.css?v=18.4">
     <style>
         body {
             background-color: #080c14;
@@ -628,11 +628,19 @@
             
             <div id="timing-modal-content">
                 <input type="hidden" id="target-patient-id">
-                <p id="timing-patient-name" style="color: #fff; font-weight: bold; margin-bottom: 15px; font-size: 1.05em;"></p>
+                <p id="timing-patient-name" style="color: #fff; font-weight: bold; margin-bottom: 12px; font-size: 1.05em;"></p>
+
+                <!-- خيار البث لجميع الأجهزة النشطة (الموبايل المفتوح حالياً) -->
+                <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 10px 14px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="timing-broadcast-all" checked style="width: 20px; height: 20px; accent-color: #10b981; cursor: pointer;">
+                    <label for="timing-broadcast-all" style="color: #7dd3fc; font-size: 0.88em; font-weight: bold; cursor: pointer;">
+                        📡 بث التعديل فوراً لهاتف المريض (وأي هاتف متصل حالياً)
+                    </label>
+                </div>
 
                 <!-- خيار الفتح الفوري -->
                 <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 8px; padding: 12px; margin-bottom: 15px; text-align: center;">
-                    <button type="button" onclick="quickUnlockSessionNow()" style="background: #10b981; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%;">
+                    <button type="button" onclick="quickUnlockSessionNow()" style="background: #10b981; color: #fff; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; font-size: 1.02em; cursor: pointer; width: 100%;">
                         ⚡ فتح الجلسة فوراً للمريض الآن (تصفير العداد)
                     </button>
                 </div>
@@ -1351,16 +1359,16 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/geo-tracker.js?v=18.3"></script>
-    <script src="js/cloud-sync.js?v=18.3"></script>
-    <script src="js/database.js?v=18.3"></script>
-    <script src="js/exercise-image-studio.js?v=18.3"></script>
-    <script src="js/exercises-db.js?v=18.3"></script>
-    <script src="js/diagnostic-engine.js?v=18.3"></script>
-    <script src="js/patient-flow.js?v=18.3"></script>
-    <script src="js/admin-engine.js?v=18.3"></script>
-    <script src="js/ai-config.js?v=18.3"></script>
-    <script src="js/ai-engine.js?v=18.3"></script>
+    <script src="js/geo-tracker.js?v=18.4"></script>
+    <script src="js/cloud-sync.js?v=18.4"></script>
+    <script src="js/database.js?v=18.4"></script>
+    <script src="js/exercise-image-studio.js?v=18.4"></script>
+    <script src="js/exercises-db.js?v=18.4"></script>
+    <script src="js/diagnostic-engine.js?v=18.4"></script>
+    <script src="js/patient-flow.js?v=18.4"></script>
+    <script src="js/admin-engine.js?v=18.4"></script>
+    <script src="js/ai-config.js?v=18.4"></script>
+    <script src="js/ai-engine.js?v=18.4"></script>
 
     <script>
         let allPatientsList = [];
@@ -2843,7 +2851,8 @@
 
         function quickUnlockSessionNow() {
             const patientId = document.getElementById('target-patient-id').value;
-            AdminEngine.setPatientSessionTiming(patientId, activeTargetSessionNum, 0, 0, 0, activeTargetPatientPhone, activeTargetPatientName);
+            const isBroadcast = document.getElementById('timing-broadcast-all') ? document.getElementById('timing-broadcast-all').checked : true;
+            AdminEngine.setPatientSessionTiming(patientId, activeTargetSessionNum, 0, 0, 0, activeTargetPatientPhone, activeTargetPatientName, isBroadcast);
             document.getElementById('patient-timing-modal').style.display = 'none';
             alert('✅ تم فتح الجلسة فورياً للمريض وبث التعديل لهاتفه سحابياً!');
             loadAdminData();
@@ -2854,8 +2863,9 @@
             const h = document.getElementById('timing-hours').value;
             const m = document.getElementById('timing-mins').value;
             const s = document.getElementById('timing-secs').value;
+            const isBroadcast = document.getElementById('timing-broadcast-all') ? document.getElementById('timing-broadcast-all').checked : true;
 
-            AdminEngine.setPatientSessionTiming(patientId, activeTargetSessionNum, h, m, s, activeTargetPatientPhone, activeTargetPatientName);
+            AdminEngine.setPatientSessionTiming(patientId, activeTargetSessionNum, h, m, s, activeTargetPatientPhone, activeTargetPatientName, isBroadcast);
             document.getElementById('patient-timing-modal').style.display = 'none';
             alert(`✅ تم ضبط توقيت الجلسة بنجاح (${h} ساعة و ${m} دقيقة و ${s} ثانية) وبث التعديل لهاتف المريض سحابياً!`);
             loadAdminData();
