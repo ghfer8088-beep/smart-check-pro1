@@ -320,11 +320,24 @@ const AdminEngine = (function() {
                 p.chiefDiagnosis = resolvedDiagnosis;
                 p.diagnosisTitle = resolvedDiagnosis;
 
+                const effectiveLogsCount = Math.max(
+                    (logs ? logs.length : 0),
+                    p.logsCount || 0,
+                    p.completedSessions || 0,
+                    (Array.isArray(p.dailyLogs) ? p.dailyLogs.length : 0),
+                    (Array.isArray(p.logs) ? p.logs.length : 0)
+                );
+                const effectiveRecoveryScore = Math.max(
+                    recoveryScore || 0,
+                    p.recoveryScore || 0,
+                    effectiveLogsCount > 0 ? Math.min(100, Math.round((effectiveLogsCount / 7) * 100)) : 15
+                );
+
                 overview.push({
                     patient: p,
                     latestAssessment,
-                    logsCount: (logs ? logs.length : 0),
-                    recoveryScore,
+                    logsCount: effectiveLogsCount,
+                    recoveryScore: effectiveRecoveryScore,
                     latestDiagnosis: resolvedDiagnosis,
                     painArea: resolvedPainArea,
                     createdAt: p.createdAt || p.timestamp || new Date().toISOString()
@@ -392,6 +405,24 @@ const AdminEngine = (function() {
         // إرسال إشعار التحديث الفوري لكافة التبويبات المتزامنة محلياً
         localStorage.setItem('countdownUpdated', Date.now().toString());
 
+        // حفظ التوقيت داخل كائن المريض نفسه في SmartDB
+        try {
+            if (window.SmartDB && typeof window.SmartDB.getPatient === 'function') {
+                window.SmartDB.getPatient(patientId).then(pt => {
+                    if (pt) {
+                        pt.customTargetTime = targetTime;
+                        pt.customDurationMs = totalDurationMs;
+                        pt.forceUnlock = forceUnlock;
+                        pt.customTimingHours = h;
+                        pt.customTimingMinutes = m;
+                        pt.customTimingSeconds = s;
+                        pt.lastTimingUpdated = Date.now();
+                        window.SmartDB.savePatient(pt, { skipCloudSync: true });
+                    }
+                }).catch(() => {});
+            }
+        } catch(e) {}
+
         // بث التحديث سحابياً لهاتف المريض فورياً
         if (window.SmartCloudSync && typeof window.SmartCloudSync.dispatchTimingUpdate === 'function') {
             window.SmartCloudSync.dispatchTimingUpdate({
@@ -409,6 +440,11 @@ const AdminEngine = (function() {
                 global: !!broadcastToAll,
                 updatedAt: Date.now()
             });
+
+            // تعميم حزمة المزامنة الكاملة فوراً لضمان احتفاظ السحابة بالتوقيت الجديد
+            if (typeof window.SmartCloudSync.broadcastSnapshot === 'function') {
+                setTimeout(() => window.SmartCloudSync.broadcastSnapshot(), 100);
+            }
         }
 
         return true;

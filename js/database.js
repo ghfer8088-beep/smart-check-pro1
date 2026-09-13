@@ -227,6 +227,16 @@ const SmartDB = (function() {
                                     treatmentPlan: cp.treatmentPlan || '',
                                     notes: cp.notes || '',
                                     collectedSymptoms: cp.collectedSymptoms || [],
+                                    logsCount: cp.logsCount || (Array.isArray(cp.dailyLogs) ? cp.dailyLogs.length : (Array.isArray(cp.logs) ? cp.logs.length : 0)),
+                                    dailyLogs: cp.dailyLogs || cp.logs || [],
+                                    recoveryScore: cp.recoveryScore || 0,
+                                    customTimingHours: cp.customTimingHours,
+                                    customTimingMinutes: cp.customTimingMinutes,
+                                    customTimingSeconds: cp.customTimingSeconds,
+                                    customTargetTime: cp.customTargetTime || cp.targetTime,
+                                    customDurationMs: cp.customDurationMs,
+                                    forceUnlock: cp.forceUnlock,
+                                    nextSessionUnlocked: cp.nextSessionUnlocked,
                                     country: cp.country || 'دولي',
                                     countryCode: cp.countryCode || '',
                                     city: cp.city || '',
@@ -239,8 +249,12 @@ const SmartDB = (function() {
                                 if (!map.has(pId)) {
                                     map.set(pId, fullCloudPatient);
                                 } else {
-                                    // إذا كان السجل موجوداً ولكن تنقصه بيانات كالعمر أو الوزن أو موضع الشكوى، ندمجها فوراً
+                                    // إذا كان السجل موجوداً ولكن تنقصه بيانات كالعمر أو الوزن أو موضع الشكوى أو الجلسات، ندمجها فوراً
                                     const existing = map.get(pId);
+                                    const mergedLogsCount = Math.max(existing.logsCount || 0, fullCloudPatient.logsCount || 0);
+                                    const mergedRecoveryScore = Math.max(existing.recoveryScore || 0, fullCloudPatient.recoveryScore || 0);
+                                    const mergedDailyLogs = (Array.isArray(fullCloudPatient.dailyLogs) && fullCloudPatient.dailyLogs.length > (existing.dailyLogs?.length || 0)) ? fullCloudPatient.dailyLogs : (existing.dailyLogs || fullCloudPatient.dailyLogs || []);
+
                                     map.set(pId, {
                                         ...existing,
                                         ...fullCloudPatient,
@@ -248,6 +262,16 @@ const SmartDB = (function() {
                                         weight: existing.weight || fullCloudPatient.weight,
                                         height: existing.height || fullCloudPatient.height,
                                         bmi: existing.bmi || fullCloudPatient.bmi,
+                                        logsCount: mergedLogsCount,
+                                        recoveryScore: mergedRecoveryScore,
+                                        dailyLogs: mergedDailyLogs,
+                                        customTimingHours: fullCloudPatient.customTimingHours ?? existing.customTimingHours,
+                                        customTimingMinutes: fullCloudPatient.customTimingMinutes ?? existing.customTimingMinutes,
+                                        customTimingSeconds: fullCloudPatient.customTimingSeconds ?? existing.customTimingSeconds,
+                                        customTargetTime: fullCloudPatient.customTargetTime ?? existing.customTargetTime,
+                                        customDurationMs: fullCloudPatient.customDurationMs ?? existing.customDurationMs,
+                                        forceUnlock: fullCloudPatient.forceUnlock ?? existing.forceUnlock,
+                                        nextSessionUnlocked: fullCloudPatient.nextSessionUnlocked ?? existing.nextSessionUnlocked,
                                         painArea: !isGen(fullCloudPatient.painArea) ? fullCloudPatient.painArea : (!isGen(existing.painArea) ? existing.painArea : fullCloudPatient.painArea),
                                         painAreaTitle: !isGen(fullCloudPatient.painAreaTitle) ? fullCloudPatient.painAreaTitle : (!isGen(existing.painAreaTitle) ? existing.painAreaTitle : fullCloudPatient.painAreaTitle),
                                         selectedPoint: !isGen(fullCloudPatient.selectedPoint) ? fullCloudPatient.selectedPoint : (!isGen(existing.selectedPoint) ? existing.selectedPoint : fullCloudPatient.selectedPoint),

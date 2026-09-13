@@ -25,6 +25,278 @@
         }
     } catch (e) {}
 
+    // =========================================================================
+    // 🛰️ شبكة البث السحابي اللحظي العالمي المباشر (MQTT Realtime Bus)
+    // =========================================================================
+    const MQTT_BROKER_URL = 'wss://broker.emqx.io:8084/mqtt';
+    const MQTT_TOPICS = {
+        SNAPSHOT: 'wada3an/clinic/snapshot',
+        PATIENTS: 'wada3an/clinic/patients',
+        TIMING: 'wada3an/clinic/timing',
+        SESSIONS: 'wada3an/clinic/sessions',
+        VISITS: 'wada3an/clinic/visits',
+        SYNC_REQ: 'wada3an/clinic/sync_req'
+    };
+
+    let mqttClient = null;
+    let mqttConnected = false;
+    let masterHubBlockedUntil = 0; // دائرة حماية لمنع إغراق restful-api.dev عند تجاوز الحصة
+
+    function isMasterHubAllowed() {
+        return Date.now() > masterHubBlockedUntil;
+    }
+
+    function recordMasterHubFailure(status) {
+        if (status === 405 || status === 429 || status === 500) {
+            masterHubBlockedUntil = Date.now() + (60 * 60 * 1000); // إيقاف لمدة ساعة كاملة
+            console.warn(`[CloudSync] Master Hub returned ${status}. Circuit open for 1 hour; relying on MQTT & NTFY.`);
+        }
+    }
+
+    function updateMqttStatusBadge(connected) {
+        try {
+            const badge = document.getElementById('mqtt-live-badge');
+            if (badge) {
+                if (connected) {
+                    badge.style.background = 'rgba(16, 185, 129, 0.18)';
+                    badge.style.borderColor = '#10b981';
+                    badge.style.color = '#6ee7b7';
+                    badge.innerHTML = '🟢 بث سحابي لحظي نشط';
+                    badge.title = 'متصل بخادم البث اللحظي العالمي (EMQX) - المزامنة فورية 100% بين الموبايل واللابتوب';
+                } else {
+                    badge.style.background = 'rgba(245, 158, 11, 0.18)';
+                    badge.style.borderColor = '#f59e0b';
+                    badge.style.color = '#fcd34d';
+                    badge.innerHTML = '🟡 جاري الاتصال بالبث السحابي...';
+                    badge.title = 'جاري إعادة الاتصال بخادم البث السحابي اللحظي';
+                }
+            }
+        } catch(e) {}
+    }
+
+    function initMqttBus() {
+        const mqttLib = window.mqtt || (typeof mqtt !== 'undefined' ? mqtt : null);
+        if (!mqttLib || typeof mqttLib.connect !== 'function') {
+            setTimeout(initMqttBus, 600);
+            return;
+        }
+        if (mqttClient) return;
+
+        try {
+            const isMob = /Mobi|Android|iPhone/i.test(navigator.userAgent);
+            const clientId = `smart_${isMob ? 'mobile' : 'pc'}_${Math.random().toString(16).slice(2, 8)}_${Date.now()}`;
+            
+            mqttClient = mqttLib.connect(MQTT_BROKER_URL, {
+                clientId: clientId,
+                clean: true,
+                connectTimeout: 8000,
+                reconnectPeriod: 4000,
+                keepalive: 30
+            });
+
+            mqttClient.on('connect', () => {
+                mqttConnected = true;
+                console.log('🟢 [CloudSync] Connected to Realtime MQTT Bus:', clientId);
+                updateMqttStatusBadge(true);
+
+                mqttClient.subscribe([
+                    MQTT_TOPICS.SNAPSHOT,
+                    MQTT_TOPICS.PATIENTS,
+                    MQTT_TOPICS.TIMING,
+                    MQTT_TOPICS.SESSIONS,
+                    MQTT_TOPICS.VISITS,
+                    MQTT_TOPICS.SYNC_REQ
+                ], { qos: 1 }, (err) => {
+                    if (err) console.warn('[CloudSync] MQTT Subscribe error:', err);
+                });
+
+                // طلب مزامنة فورية من أي جهاز نشط
+                mqttPublish(MQTT_TOPICS.SYNC_REQ, {
+                    sender: clientId,
+                    device: isMob ? 'mobile' : 'pc',
+                    requestedAt: Date.now()
+                });
+            });
+
+            mqttClient.on('message', (topic, payloadBuffer) => {
+                try {
+                    const messageStr = payloadBuffer.toString();
+                    if (!messageStr || !messageStr.trim().startsWith('{')) return;
+                    const data = JSON.parse(messageStr);
+                    handleIncomingMqttMessage(topic, data, clientId);
+                } catch (e) {
+                    console.error('[CloudSync] Error parsing MQTT message:', e);
+                }
+            });
+
+            mqttClient.on('error', (err) => {
+                console.warn('[CloudSync] MQTT error:', err?.message || err);
+                mqttConnected = false;
+                updateMqttStatusBadge(false);
+            });
+
+            mqttClient.on('close', () => {
+                mqttConnected = false;
+                updateMqttStatusBadge(false);
+            });
+
+        } catch (e) {
+            console.error('[CloudSync] Could not initialize MQTT:', e);
+        }
+    }
+
+    function mqttPublish(topic, obj, options = {}) {
+        if (!mqttClient || !mqttConnected) return false;
+        try {
+            const raw = JSON.stringify(obj);
+            mqttClient.publish(topic, raw, { qos: 1, retain: !!options.retain, ...options }, (err) => {
+                if (err) console.warn(`[CloudSync] Publish to ${topic} error:`, err);
+            });
+            return true;
+        } catch(e) {
+            return false;
+        }
+    }
+
+    let lastReceivedSnapshotTime = 0;
+
+    async function handleIncomingMqttMessage(topic, data, myClientId) {
+        if (!data) return;
+        if (data.sender === myClientId) return;
+
+        // 1. حزمة المزامنة الكاملة
+        if (topic === MQTT_TOPICS.SNAPSHOT) {
+            const snap = data.snapshot || data;
+            const snapTime = data.timestamp || (snap.exportedAt ? new Date(snap.exportedAt).getTime() : 0);
+            if (snap && (snap.patients || snap.allPatients) && snapTime >= lastReceivedSnapshotTime) {
+                lastReceivedSnapshotTime = snapTime;
+                console.log('📦 [CloudSync] Received fresh snapshot via MQTT');
+                await importFullClinicSnapshot(snap);
+                triggerAppUIRefresh();
+            }
+            return;
+        }
+
+        // 2. تحديث التوقيت المباشر
+        if (topic === MQTT_TOPICS.TIMING) {
+            console.log('⏱️ [CloudSync] Received timing update via MQTT:', data);
+            applyTimingUpdateLocally(data);
+            return;
+        }
+
+        // 3. مريض جديد أو محدث
+        if (topic === MQTT_TOPICS.PATIENTS) {
+            const pt = data.patient || data;
+            if (pt && (pt.patientId || pt.id || pt.phone)) {
+                const normalized = normalizeCloudPatientRecord(pt);
+                if (normalized) {
+                    const cList = getCloudSyncedPatients();
+                    const pIdx = cList.findIndex(x => (normalized.id && x.id === normalized.id) || (normalized.phone && x.phone === normalized.phone));
+                    if (pIdx >= 0) cList[pIdx] = Object.assign({}, cList[pIdx], normalized);
+                    else cList.unshift(normalized);
+                    saveCloudSyncedPatients(cList);
+
+                    if (window.SmartDB && typeof window.SmartDB.savePatient === 'function') {
+                        await window.SmartDB.savePatient(normalized, { skipCloudSync: true });
+                    }
+                    triggerAppUIRefresh();
+                }
+            }
+            return;
+        }
+
+        // 4. جلسة علاجية منجزة
+        if (topic === MQTT_TOPICS.SESSIONS) {
+            const log = data.log || data;
+            if (log && log.patientId && log.sessionNumber) {
+                if (window.SmartDB && typeof window.SmartDB.saveDailyLog === 'function') {
+                    await window.SmartDB.saveDailyLog(log, { skipCloudSync: true });
+                }
+                const lsKey = 'smart_daily_logs_' + log.patientId;
+                const existing = JSON.parse(localStorage.getItem(lsKey) || '[]');
+                const lIdx = existing.findIndex(l => l.sessionNumber === log.sessionNumber);
+                if (lIdx >= 0) existing[lIdx] = { ...existing[lIdx], ...log };
+                else existing.push(log);
+                existing.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
+                localStorage.setItem(lsKey, JSON.stringify(existing));
+
+                try {
+                    const ptList = getCloudSyncedPatients();
+                    const pItem = ptList.find(x => x.id === log.patientId || x.patientId === log.patientId);
+                    if (pItem) {
+                        pItem.logsCount = existing.length;
+                        pItem.completedSessions = Math.max(pItem.completedSessions || 0, log.sessionNumber);
+                        pItem.recoveryScore = Math.min(100, Math.round((existing.length / 7) * 100));
+                        saveCloudSyncedPatients(ptList);
+                    }
+                    if (window.SmartDB && typeof window.SmartDB.getPatient === 'function') {
+                        const dbPt = await window.SmartDB.getPatient(log.patientId);
+                        if (dbPt) {
+                            dbPt.logsCount = existing.length;
+                            dbPt.completedSessions = Math.max(dbPt.completedSessions || 0, log.sessionNumber);
+                            dbPt.recoveryScore = Math.min(100, Math.round((existing.length / 7) * 100));
+                            await window.SmartDB.savePatient(dbPt, { skipCloudSync: true });
+                        }
+                    }
+                } catch(e) {}
+
+                triggerAppUIRefresh();
+            }
+            return;
+        }
+
+        // 5. زيارة جديدة
+        if (topic === MQTT_TOPICS.VISITS) {
+            const v = data.visit || data;
+            if (v && v.visitorId) {
+                const VISITS_KEY = 'smart_geo_visits_history';
+                let localVisits = [];
+                try { localVisits = JSON.parse(localStorage.getItem(VISITS_KEY) || '[]'); } catch(e) {}
+                if (!localVisits.some(x => x.visitorId === v.visitorId)) {
+                    localVisits.push(v);
+                    if (localVisits.length > 1000) localVisits = localVisits.slice(-1000);
+                    localStorage.setItem(VISITS_KEY, JSON.stringify(localVisits));
+                    if (typeof window.renderGeoAnalytics === 'function') {
+                        window.renderGeoAnalytics();
+                    }
+                }
+            }
+            return;
+        }
+
+        // 6. طلب المزامنة
+        if (topic === MQTT_TOPICS.SYNC_REQ) {
+            const currentPatients = getCloudSyncedPatients();
+            if (currentPatients && currentPatients.length > 0) {
+                broadcastFullClinicSnapshot();
+            }
+            return;
+        }
+    }
+
+    function triggerAppUIRefresh() {
+        try {
+            if (typeof window.loadAdminData === 'function') {
+                window.loadAdminData(false);
+            }
+            if (typeof window.renderGeoAnalytics === 'function') {
+                window.renderGeoAnalytics();
+            }
+            if (typeof window.loadNotificationsData === 'function') {
+                window.loadNotificationsData(true);
+            }
+        } catch(e) {}
+    }
+
+    // تشغيل الاتصال اللحظي تلقائياً عند تحميل السكربت
+    if (typeof window !== 'undefined') {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initMqttBus);
+        } else {
+            setTimeout(initMqttBus, 100);
+        }
+    }
+
     // استرجاع كافة المرضى المرحلين سحابياً مع تنظيف ذكي وتوحيد السجلات المكررة
     function getCloudSyncedPatients() {
         try {
@@ -243,33 +515,42 @@
             } catch (e) {}
         }
 
-        // 4. ترحيل حقيقي سحابي فوري للسحابة المركزية العالمية (Master Cloud Hub)
-        try {
-            fetch(CLOUD_MASTER_HUB_ENDPOINT, { cache: 'no-store' })
-                .then(r => r.json())
-                .then(masterObj => {
-                    const currentCloudList = (masterObj && masterObj.data && Array.isArray(masterObj.data.patients)) ? masterObj.data.patients : [];
-                    const pIdx = currentCloudList.findIndex(p => (p.id && (p.id === enhancedRecord.id || p.patientId === enhancedRecord.id)) || (p.phone && enhancedRecord.phone && p.phone === enhancedRecord.phone));
-                    if (pIdx >= 0) {
-                        currentCloudList[pIdx] = Object.assign({}, currentCloudList[pIdx], enhancedRecord);
-                    } else {
-                        currentCloudList.unshift(enhancedRecord);
-                    }
-                    return fetch(CLOUD_MASTER_HUB_ENDPOINT, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            name: 'SmartCheck_Global_Clinic_Master_Hub',
-                            data: {
-                                patients: currentCloudList.slice(0, 500),
-                                visits: (masterObj && masterObj.data && masterObj.data.visits) ? (masterObj.data.visits + 1) : 1,
-                                lastUpdated: new Date().toISOString()
-                            }
-                        })
-                    });
-                })
-                .catch(() => {});
-        } catch (e) {}
+        // 3.5. بث فوري مباشر عبر شبكة MQTT لجميع الأجهزة واللابتوبات
+        mqttPublish(MQTT_TOPICS.PATIENTS, { patient: enhancedRecord, timestamp: Date.now() }, { qos: 1 });
+
+        // 4. ترحيل حقيقي سحابي فوري للسحابة المركزية العالمية (Master Cloud Hub) إن كانت متاحة
+        if (isMasterHubAllowed()) {
+            try {
+                fetch(CLOUD_MASTER_HUB_ENDPOINT, { cache: 'no-store' })
+                    .then(r => {
+                        if (!r.ok) { recordMasterHubFailure(r.status); return null; }
+                        return r.json();
+                    })
+                    .then(masterObj => {
+                        if (!masterObj) return;
+                        const currentCloudList = (masterObj && masterObj.data && Array.isArray(masterObj.data.patients)) ? masterObj.data.patients : [];
+                        const pIdx = currentCloudList.findIndex(p => (p.id && (p.id === enhancedRecord.id || p.patientId === enhancedRecord.id)) || (p.phone && enhancedRecord.phone && p.phone === enhancedRecord.phone));
+                        if (pIdx >= 0) {
+                            currentCloudList[pIdx] = Object.assign({}, currentCloudList[pIdx], enhancedRecord);
+                        } else {
+                            currentCloudList.unshift(enhancedRecord);
+                        }
+                        return fetch(CLOUD_MASTER_HUB_ENDPOINT, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                name: 'SmartCheck_Global_Clinic_Master_Hub',
+                                data: {
+                                    patients: currentCloudList.slice(0, 500),
+                                    visits: (masterObj && masterObj.data && masterObj.data.visits) ? (masterObj.data.visits + 1) : 1,
+                                    lastUpdated: new Date().toISOString()
+                                }
+                            })
+                        });
+                    })
+                    .catch(() => {});
+            } catch (e) {}
+        }
 
         // 5. ترحيل إضافي عبر جسر ntfy لضمان التكرار والموثوقية (Redundancy)
         try {
@@ -336,6 +617,9 @@
                 syncBroadcastChannel.postMessage(payload);
             } catch(e) {}
         }
+
+        // 2.5. بث فوري مباشر عبر شبكة MQTT لجميع الأجهزة واللابتوبات
+        mqttPublish(MQTT_TOPICS.SESSIONS, payload, { qos: 1 });
 
         // 3. بث سحابي عبر NTFY لكافة الأجهزة حول العالم
         const jsonStr = JSON.stringify(payload);
@@ -502,6 +786,18 @@
             snapshot: snapshot,
             timestamp: Date.now()
         };
+
+        // 1. بث عبر شبكة MQTT مع الاحتفاظ بالحزمة للمتصلين لاحقاً (retain: true)
+        mqttPublish(MQTT_TOPICS.SNAPSHOT, payload, { retain: true, qos: 1 });
+
+        // 2. بث عبر BroadcastChannel للمتصفحات المفتوحة محلياً
+        try {
+            if (syncBroadcastChannel) {
+                syncBroadcastChannel.postMessage(payload);
+            }
+        } catch(e) {}
+
+        // 3. إرسال إلى NTFY كقناة ثانوية
         const rawJson = JSON.stringify(payload);
         try {
             fetch(CLOUD_SYNC_ENDPOINT, {
@@ -518,16 +814,45 @@
                     title: 'Full Clinic Sync Snapshot'
                 })
             }).catch(() => {});
-            return true;
-        } catch(e) {
-            return false;
+        } catch(e) {}
+
+        // 4. تحديث Master Hub إن كانت متاحة
+        if (isMasterHubAllowed()) {
+            try {
+                fetch(CLOUD_MASTER_HUB_ENDPOINT, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'SmartCheck_Global_Clinic_Master_Hub',
+                        data: {
+                            patients: snapshot.patients,
+                            visits: snapshot.visits,
+                            exportedAt: snapshot.exportedAt
+                        }
+                    })
+                }).then(res => {
+                    if (!res.ok) recordMasterHubFailure(res.status);
+                }).catch(() => {});
+            } catch(e) {}
         }
+
+        return true;
     }
 
     // ترحيل زيارة متصفح جديدة سحابياً لكافة الأجهزة
     function dispatchVisitToCloud(visitRecord) {
         if (!visitRecord) return;
         try {
+            // 1. بث فوري عبر MQTT
+            mqttPublish(MQTT_TOPICS.VISITS, { visit: visitRecord, timestamp: Date.now() }, { qos: 1 });
+
+            // 2. بث عبر BroadcastChannel
+            try {
+                if (syncBroadcastChannel) {
+                    syncBroadcastChannel.postMessage({ type: 'VISIT_RECORDED', visit: visitRecord });
+                }
+            } catch(e) {}
+
             const rawBody = JSON.stringify(visitRecord);
             fetch(CLOUD_VISITS_ENDPOINT, {
                 method: 'POST',
@@ -693,49 +1018,53 @@
         const currentList = getCloudSyncedPatients();
         let changed = false;
 
-        // 1. القناة الأساسية الحصينة والسريعة (Master Cloud Hub) المفتوحة عالمياً
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 4000);
-            const hubResp = await fetch(CLOUD_MASTER_HUB_ENDPOINT, { cache: 'no-store', signal: controller.signal });
-            clearTimeout(timeoutId);
-            if (hubResp.ok) {
-                const hubData = await hubResp.json();
-                if (hubData && hubData.data && Array.isArray(hubData.data.patients)) {
-                    for (const pt of hubData.data.patients) {
-                        if (!pt) continue;
-                        const normalized = normalizeCloudPatientRecord(pt);
-                        if (!normalized) continue;
+        // 1. القناة الأساسية الحصينة والسريعة (Master Cloud Hub) إن كانت متاحة
+        if (isMasterHubAllowed()) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
+                const hubResp = await fetch(CLOUD_MASTER_HUB_ENDPOINT, { cache: 'no-store', signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (hubResp.ok) {
+                    const hubData = await hubResp.json();
+                    if (hubData && hubData.data && Array.isArray(hubData.data.patients)) {
+                        for (const pt of hubData.data.patients) {
+                            if (!pt) continue;
+                            const normalized = normalizeCloudPatientRecord(pt);
+                            if (!normalized) continue;
 
-                        const pId = normalized.id;
-                        const pPhone = (normalized.phone || '').replace(/\D/g, '');
+                            const pId = normalized.id;
+                            const pPhone = (normalized.phone || '').replace(/\D/g, '');
 
-                        const idx = currentList.findIndex(x => (pId && (x.id === pId || x.patientId === pId)) || (pPhone && x.phone && x.phone.replace(/\D/g, '') === pPhone));
-                        if (idx >= 0) {
-                            currentList[idx] = { ...currentList[idx], ...normalized };
-                        } else {
-                            currentList.unshift(normalized);
-                            changed = true;
+                            const idx = currentList.findIndex(x => (pId && (x.id === pId || x.patientId === pId)) || (pPhone && x.phone && x.phone.replace(/\D/g, '') === pPhone));
+                            if (idx >= 0) {
+                                currentList[idx] = { ...currentList[idx], ...normalized };
+                            } else {
+                                currentList.unshift(normalized);
+                                changed = true;
+                            }
+
+                            // حفظ فوري في SmartDB بدون إعادة بث سحابي
+                            try {
+                                if (window.SmartDB && typeof window.SmartDB.savePatient === 'function') {
+                                    window.SmartDB.savePatient(normalized, { skipCloudSync: true });
+                                }
+                                const rawAss = pt.assessment || pt.latestAssessment;
+                                if (rawAss && window.SmartDB && typeof window.SmartDB.saveAssessment === 'function') {
+                                    window.SmartDB.saveAssessment({
+                                        patientId: pId,
+                                        ...rawAss
+                                    });
+                                }
+                            } catch(e) {}
                         }
-
-                        // حفظ فوري في SmartDB بدون إعادة بث سحابي
-                        try {
-                            if (window.SmartDB && typeof window.SmartDB.savePatient === 'function') {
-                                window.SmartDB.savePatient(normalized, { skipCloudSync: true });
-                            }
-                            const rawAss = pt.assessment || pt.latestAssessment;
-                            if (rawAss && window.SmartDB && typeof window.SmartDB.saveAssessment === 'function') {
-                                window.SmartDB.saveAssessment({
-                                    patientId: pId,
-                                    ...rawAss
-                                });
-                            }
-                        } catch(e) {}
                     }
+                } else {
+                    recordMasterHubFailure(hubResp.status);
                 }
+            } catch(errHub) {
+                console.warn('Master Hub sync notice:', errHub);
             }
-        } catch(errHub) {
-            console.warn('Master Hub sync notice:', errHub);
         }
 
         // 2. القناة الثانوية المضاعفة (Secondary ntfy Relay)
@@ -1236,7 +1565,10 @@
             updatedAt: now
         };
 
-        // 1. بث عبر BroadcastChannel لجميع التبويبات المفتوحة محلياً
+        // 1. بث فوري عبر شبكة MQTT لجميع الهواتف واللابتوبات
+        mqttPublish(MQTT_TOPICS.TIMING, payload, { qos: 1 });
+
+        // 2. بث عبر BroadcastChannel لجميع التبويبات المفتوحة محلياً
         try {
             if (syncBroadcastChannel) {
                 syncBroadcastChannel.postMessage(payload);
@@ -1245,7 +1577,7 @@
 
         const rawJson = JSON.stringify(payload);
 
-        // 2. إرسال إلى NTFY (قناة التوقيت) كنص خام مباشر (يقبله NTFY بدون قيود هيدر)
+        // 3. إرسال إلى NTFY (قناة التوقيت) كنص خام مباشر
         try {
             fetch(CLOUD_TIMING_ENDPOINT, {
                 method: 'POST',
@@ -1253,7 +1585,7 @@
             }).catch(() => {});
         } catch (e) {}
 
-        // 3. إرسال إلى NTFY بصيغة JSON القياسية الرسمية { topic, message, title }
+        // 4. إرسال إلى NTFY بصيغة JSON القياسية الرسمية
         try {
             fetch('https://ntfy.sh', {
                 method: 'POST',
@@ -1266,42 +1598,38 @@
             }).catch(() => {});
         } catch (e) {}
 
-        // 4. إرسال إلى NTFY (القناة المركزية للعيادة كاحتياطي دائم وموثوق)
+        // 5. إرسال إلى NTFY القناة المركزية
         try {
             fetch(CLOUD_SYNC_ENDPOINT, {
                 method: 'POST',
                 body: rawJson
             }).catch(() => {});
-
-            fetch('https://ntfy.sh', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    topic: 'wada3an_smart_check_clinic_sync_2026',
-                    message: rawJson,
-                    title: 'Timing Update'
-                })
-            }).catch(() => {});
         } catch (e) {}
 
-        // 5. حفظ التحديث اللحظي في السحابة المركزية العالمية (Master Cloud Hub) لضمان وصوله لأي متصفح
-        try {
-            fetch(CLOUD_MASTER_HUB_ENDPOINT, { cache: 'no-store' })
-                .then(r => r.json())
-                .then(masterObj => {
-                    const currentData = (masterObj && masterObj.data) ? masterObj.data : {};
-                    currentData.latestTimingUpdate = payload;
-                    currentData.lastTimingTimestamp = now;
-                    return fetch(CLOUD_MASTER_HUB_ENDPOINT, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            name: 'SmartCheck_Global_Clinic_Master_Hub',
-                            data: currentData
-                        })
-                    });
-                }).catch(() => {});
-        } catch(e) {}
+        // 6. حفظ التحديث اللحظي في السحابة المركزية العالمية (Master Cloud Hub) إن كانت متاحة
+        if (isMasterHubAllowed()) {
+            try {
+                fetch(CLOUD_MASTER_HUB_ENDPOINT, { cache: 'no-store' })
+                    .then(r => {
+                        if (!r.ok) { recordMasterHubFailure(r.status); return null; }
+                        return r.json();
+                    })
+                    .then(masterObj => {
+                        if (!masterObj) return;
+                        const currentData = (masterObj && masterObj.data) ? masterObj.data : {};
+                        currentData.latestTimingUpdate = payload;
+                        currentData.lastTimingTimestamp = now;
+                        return fetch(CLOUD_MASTER_HUB_ENDPOINT, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                name: 'SmartCheck_Global_Clinic_Master_Hub',
+                                data: currentData
+                            })
+                        });
+                    }).catch(() => {});
+            } catch(e) {}
+        }
     }
 
     // تحديث مباشر وفوري لعناصر الساعة وأزرار القفل في الصفحة المعروضة حالياً
@@ -1727,7 +2055,9 @@
         dispatchTimingUpdate: dispatchTimingUpdateToCloud,
         applyTimingUpdate: applyTimingUpdateLocally,
         fetchRemoteTimingUpdates: fetchRemoteTimingUpdates,
-        initTimingListener: initTimingListener
+        initTimingListener: initTimingListener,
+        isMqttConnected: () => mqttConnected,
+        initMqttBus: initMqttBus
     };
 
 })();

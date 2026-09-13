@@ -105,6 +105,7 @@ const STATIC_ASSETS = [
     './js/text-editor.js',
     './js/security-shield.js',
     './js/geo-tracker.js',
+    './js/mqtt.min.js',
     './js/cloud-sync.js'
 ];
 

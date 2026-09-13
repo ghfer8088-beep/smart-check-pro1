@@ -5006,6 +5006,21 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
     const pName = pInfo?.name || activePatient?.name || patientId;
     const pPhone = pInfo?.phone || activePatient?.phone || '';
 
+    // تحديث كائن المريض نفسه بعدد الجلسات ونسبة التعافي ومزامنتها سحابياً
+    if (pInfo) {
+        const totalDone = (allLogs && allLogs.length) ? allLogs.length : 1;
+        pInfo.logsCount = totalDone;
+        pInfo.completedSessions = Math.max(pInfo.completedSessions || 0, sessionNumber);
+        pInfo.lastSessionNumber = sessionNumber;
+        pInfo.lastLogDate = new Date().toISOString();
+        if (typeof PatientFlow !== 'undefined' && typeof PatientFlow.calculateRecoveryScore === 'function') {
+            pInfo.recoveryScore = PatientFlow.calculateRecoveryScore(pInfo.painLevel || 7, allLogs);
+        } else {
+            pInfo.recoveryScore = Math.min(100, Math.round((totalDone / 7) * 100));
+        }
+        await SmartDB.savePatient(pInfo);
+    }
+
     // تشغيل توجيه د. سارة الصوتي المخصص للجلسة الحالية
     if (typeof playDailyMotivationAudio === 'function') {
         playDailyMotivationAudio(sessionNumber, pName);
