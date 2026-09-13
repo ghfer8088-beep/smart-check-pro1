@@ -2945,24 +2945,19 @@ function displayDiagnosticReport(data) {
                     </div>
                 </div>
 
-                <div id="plan-activation-btn-wrapper" style="text-align: center; margin: 24px auto 12px auto; max-width: 640px;">
+                <div id="plan-activation-btn-wrapper" style="text-align: center; margin: 24px auto 12px auto; max-width: 520px;">
                     <button type="button" onclick="activateRecoveryPlanInstantly()" class="btn-plan-royal-card" id="btn-activate-plan-royal" aria-label="تفعيل الخطة المجانية">
                         <div class="royal-card-halo"></div>
                         <div class="royal-card-shimmer"></div>
-                        <div class="royal-badge-pill">
-                            <span class="royal-badge-dot"></span>
-                            <span>✨ برنامج استشفاء وتأهيل مجاني 100% • بدون أي رسوم</span>
-                        </div>
-                        <div class="royal-main-content">
-                            <div class="royal-icon-box">
-                                <span class="royal-icon-emoji">🚀</span>
+                        <div class="royal-main-content" style="justify-content: center; gap: 14px;">
+                            <div class="royal-icon-box" style="width: 44px; height: 44px; border-radius: 12px;">
+                                <span class="royal-icon-emoji" style="font-size: 1.4em;">🎁</span>
                             </div>
-                            <div class="royal-text-col">
-                                <div class="royal-cta-headline">تفعيل الخطة التأهيلية المنزلية الشاملة</div>
-                                <div class="royal-cta-subline">برنامج 7 أيام مخصص لحالتك • مؤقتات حركية ذكية • توجيه صوتي متقدم</div>
+                            <div class="royal-cta-headline" style="font-size: 1.35em; font-weight: 900; color: #ffffff; text-shadow: 0 2px 8px rgba(0,0,0,0.8); letter-spacing: 0.5px;">
+                                تفعيل الخطة المجانية
                             </div>
-                            <div class="royal-arrow-box">
-                                <span class="royal-arrow-anim">⬅️</span>
+                            <div class="royal-arrow-box" style="width: 40px; height: 40px;">
+                                <span class="royal-arrow-anim" style="font-size: 1.2em;">⬅️</span>
                             </div>
                         </div>
                     </button>
