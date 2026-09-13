@@ -4114,37 +4114,46 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         </div>
     `;
 
+    // حساب القيم المبدئية الدقيقة للساعة
+    let initialH = '00', initialM = '00', initialS = '00';
+    if (lockStatus.isLocked && lockStatus.remainingMs > 0) {
+        const totalSec = Math.floor(lockStatus.remainingMs / 1000);
+        initialH = String(Math.floor(totalSec / 3600)).padStart(2, '0');
+        initialM = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+        initialS = String(totalSec % 60).padStart(2, '0');
+    }
+
     // ساعة التوقيت الـ 24 ساعة المعتمدة (في كل الجلسات 2-7)
     const clock24HTML = `
-        <div style="background: linear-gradient(135deg, #0b101b 0%, #172033 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+        <div style="background: linear-gradient(135deg, #0b101b 0%, #172033 100%); border: 1.5px solid ${lockStatus.isLocked ? 'var(--primary-gold)' : '#10b981'}; border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
-                <div style="color: var(--primary-gold); font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-                    <span>⏱️</span> ساعة التوقيت المعتمدة (الفاصل البيولوجي 24 ساعة بين الجلسات)
+                <div style="color: ${lockStatus.isLocked ? 'var(--primary-gold)' : '#10b981'}; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                    <span>⏱️</span> ${lockStatus.isLocked ? 'ساعة التوقيت المعتمدة (فترة استشفاء جارية)' : '✅ الجلسة مفتوحة ومتاحة الآن'}
                 </div>
-                <span style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
-                    الجلسة ${activeDay} من 7
+                <span style="background: ${lockStatus.isLocked ? 'rgba(212, 175, 55, 0.15)' : 'rgba(16, 185, 129, 0.2)'}; border: 1px solid ${lockStatus.isLocked ? 'var(--primary-gold)' : '#10b981'}; color: ${lockStatus.isLocked ? '#fef08a' : '#6ee7b7'}; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
+                    ${lockStatus.isLocked ? `الجلسة ${activeDay} من 7 (مقفلة مؤقتاً)` : `الجلسة ${activeDay} من 7 (متاحة ومفتوحة)`}
                 </span>
             </div>
             
             <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 12px;">
-                <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
-                    <div id="countdown-hours" style="font-size: 2.2em; font-weight: bold; color: #ffffff; font-family: monospace;">${lockStatus.isLocked ? '00' : '24'}</div>
+                <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid ${lockStatus.isLocked ? 'rgba(212, 175, 55, 0.35)' : 'rgba(16, 185, 129, 0.5)'}; min-width: 75px;">
+                    <div id="countdown-hours" style="font-size: 2.2em; font-weight: bold; color: #ffffff; font-family: monospace;">${initialH}</div>
                     <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">ساعة</div>
                 </div>
-                <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
-                    <div id="countdown-mins" style="font-size: 2.2em; font-weight: bold; color: #ffffff; font-family: monospace;">00</div>
+                <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid ${lockStatus.isLocked ? 'rgba(212, 175, 55, 0.35)' : 'rgba(16, 185, 129, 0.5)'}; min-width: 75px;">
+                    <div id="countdown-mins" style="font-size: 2.2em; font-weight: bold; color: #ffffff; font-family: monospace;">${initialM}</div>
                     <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">دقيقة</div>
                 </div>
-                <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
-                    <div id="countdown-secs" style="font-size: 2.2em; font-weight: bold; color: var(--primary-gold); font-family: monospace;">00</div>
+                <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid ${lockStatus.isLocked ? 'rgba(212, 175, 55, 0.35)' : 'rgba(16, 185, 129, 0.5)'}; min-width: 75px;">
+                    <div id="countdown-secs" style="font-size: 2.2em; font-weight: bold; color: ${lockStatus.isLocked ? 'var(--primary-gold)' : '#10b981'}; font-family: monospace;">${initialS}</div>
                     <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">ثانية</div>
                 </div>
             </div>
 
             <p style="color: #cbd5e1; font-size: 0.85em; margin: 0; line-height: 1.6;">
                 ${lockStatus.isLocked 
-                    ? '⏳ يجري احتساب فترة استشفاء الأنسجة (24 ساعة). التزم بالتمارين المقررة أدناه واسترح حتى اكتمال العداد لتوثيق الجلسة.' 
-                    : '💡 الفاصل الزمني الموصى به بين كل جلسة وتالية هو 24 ساعة للسماح للألياف العضلية والغضاريف بإعادة البناء الذاتي.'}
+                    ? '⏳ يجري احتساب فترة استشفاء الأنسجة. التزم بالتمارين المقررة أدناه واسترح حتى اكتمال العداد لتوثيق الجلسة.' 
+                    : '🎉 اكتملت فترة الاستشفاء أو تم فتح الجلسة لك من قبل المعالج! يمكنك الآن أداء التمارين وحفظ تسجيل الجلسة.'}
             </p>
         </div>
     `;
@@ -4518,6 +4527,15 @@ async function loadPatientRecoveryDashboard(patientId, targetDay = null) {
     }
 
     activePatient = sessionData.patient;
+    window.activePatient = activePatient;
+    try {
+        if (activePatient && activePatient.phone) {
+            localStorage.setItem('smart_patient_phone', String(activePatient.phone));
+        }
+        if (activePatient) {
+            localStorage.setItem('smart_active_patient', JSON.stringify(activePatient));
+        }
+    } catch(e) {}
     const lockStatus = await PatientFlow.getSessionLockStatus(patientId);
 
     // إذا اكتمل البرنامج (7 جلسات): وثيقة التعافي والإنهاء (الخطوة 6)
@@ -4533,6 +4551,7 @@ async function loadPatientRecoveryDashboard(patientId, targetDay = null) {
         await renderStep5SessionsDashboard(patientId, targetDay || sessionData.currentSessionDay, sessionData);
     }
 }
+window.loadPatientRecoveryDashboard = loadPatientRecoveryDashboard;
 
 // إتمام تمارين اليوم الأول والانتقال لفترة الاستشفاء (24 ساعة)
 async function completeDay1InitialExercises(patientId) {
@@ -6099,6 +6118,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // الاستماع الفوري لحدث تحديث التوقيت الداخلي الموجه للمريض
+    window.addEventListener('smart_countdown_updated', (e) => {
+        const savedPatientId = SmartDB.getCurrentSessionPatientId() || (activePatient && (activePatient.patientId || activePatient.id));
+        if (savedPatientId) {
+            loadPatientRecoveryDashboard(savedPatientId);
+        }
+    });
+
+    // استطلاع دوري خفيف كل 4 ثوانٍ لجلب أي تعديل في توقيت الجلسة من السحابة في حال كان التطبيق معروضاً
+    setInterval(() => {
+        if (!document.hidden && window.SmartCloudSync && typeof window.SmartCloudSync.fetchRemoteTimingUpdates === 'function') {
+            window.SmartCloudSync.fetchRemoteTimingUpdates();
+        }
+    }, 4000);
+
     // إظهار أزرار الإدارة حصرياً في حال توفر صلاحيات الأدمن
     if (typeof isUserAdmin === 'function' && isUserAdmin()) {
         const adminBtnText = document.getElementById('btn-header-text-editor');
@@ -6136,6 +6170,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const p = await SmartDB.getPatient(savedPatientId);
         if (p) {
             activePatient = p;
+            window.activePatient = p;
+            try {
+                if (p.phone) localStorage.setItem('smart_patient_phone', String(p.phone));
+                localStorage.setItem('smart_active_patient', JSON.stringify(p));
+            } catch(e) {}
             let assessments = [];
             try { assessments = await SmartDB.getPatientAssessments(savedPatientId); } catch(e) {}
             if (!currentAssessmentData) {

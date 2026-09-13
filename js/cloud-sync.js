@@ -863,7 +863,7 @@
     const CLOUD_TIMING_ENDPOINT = 'https://ntfy.sh/wada3an_smart_check_timing_sync_2026';
     let timingEventSource = null;
 
-    // بث تحديث التوقيت من لوحة الإدارة إلى هاتف المريض سحابياً
+    // بث تحديث التوقيت من لوحة الإدارة إلى هاتف المريض سحابياً عبر قنوات متعددة وموثوقة
     function dispatchTimingUpdateToCloud(timingData) {
         if (!timingData) return;
         const payload = {
@@ -879,81 +879,210 @@
             }
         } catch(e) {}
 
-        // 2. إرسال سحابي فوري عبر قناة ntfy
+        // 2. إرسال إلى NTFY بصيغة النص الصريح (Plain Body) لتفادي أي رفض للـ Headers
+        try {
+            fetch(CLOUD_TIMING_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Title': 'Timing Update' },
+                body: JSON.stringify(payload)
+            }).catch(() => {});
+        } catch (e) {}
+
+        // 3. إرسال إلى NTFY بصيغة JSON الرسمية
         try {
             fetch(CLOUD_TIMING_ENDPOINT, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    topic: 'wada3an_smart_check_timing_sync_2026',
+                    message: JSON.stringify(payload)
+                })
             }).catch(() => {});
-        } catch (e) {}
+        } catch(e) {}
+
+        // 4. ترحيل وتوثيق التحديث في السحابة المركزية Master Hub كخط حماية سحابي دائم
+        try {
+            fetch(CLOUD_MASTER_HUB_ENDPOINT, { cache: 'no-store' })
+                .then(r => r.json())
+                .then(hub => {
+                    const hubData = (hub && hub.data) ? hub.data : {};
+                    const timingMap = hubData.timingUpdates || {};
+                    const key = payload.patientId || payload.patientPhone || 'global_timing';
+                    timingMap[key] = payload;
+                    if (payload.patientPhone) {
+                        const cp = String(payload.patientPhone).replace(/\D/g, '');
+                        if (cp) timingMap[cp] = payload;
+                    }
+
+                    return fetch(CLOUD_MASTER_HUB_ENDPOINT, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: 'SmartCheck_Global_Clinic_Master_Hub',
+                            data: {
+                                ...hubData,
+                                timingUpdates: timingMap,
+                                lastTimingUpdate: Date.now()
+                            }
+                        })
+                    });
+                }).catch(() => {});
+        } catch(e) {}
+    }
+
+    // تحديث مباشر وفوري لعناصر الساعة وأزرار القفل في الصفحة المعروضة حالياً
+    function updateLiveClockDomElements(update) {
+        try {
+            const elHours = document.getElementById('countdown-hours');
+            const elMins = document.getElementById('countdown-mins');
+            const elSecs = document.getElementById('countdown-secs');
+            const wrapper = document.getElementById('session-completion-control-wrapper');
+
+            if (update.forceUnlock) {
+                if (elHours) elHours.textContent = '00';
+                if (elMins) elMins.textContent = '00';
+                if (elSecs) elSecs.textContent = '00';
+
+                // إيقاف أي مؤقت نشط
+                if (window.activeCountdownInterval) {
+                    clearInterval(window.activeCountdownInterval);
+                    window.activeCountdownInterval = null;
+                }
+
+                // تحديث حاوية الزر إلى الحالة النشطة المفتوحة
+                if (wrapper) {
+                    const currentDay = update.sessionNum || 2;
+                    const pId = update.patientId || (window.activePatient && (window.activePatient.patientId || window.activePatient.id)) || '';
+                    wrapper.innerHTML = `
+                        <div style="text-align: center; margin-top: 25px;">
+                            <div style="background: rgba(16, 185, 129, 0.15); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px; margin-bottom: 14px; color: #6ee7b7; font-weight: bold; font-size: 0.95em;">
+                                🔓 تم فتح الجلسة لك الآن من قبل المعالج! يمكنك حفظ التقييم ومتابعة الخطة 🚀
+                            </div>
+                            <button type="button" onclick="openSessionAssessmentModal('${pId}', ${currentDay})" class="btn-plan-royal-card" style="margin: 0 auto; max-width: 620px; width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 2px solid #34d399; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.45); display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.05em; cursor: pointer;">
+                                <span>💾</span> حفظ تسجيل الجلسة (#${currentDay}) وتوثيق التقييم والانتقال للجلسة التالية 🚀
+                            </button>
+                        </div>
+                    `;
+                }
+            } else if (update.targetTime && update.targetTime > Date.now()) {
+                if (window.PatientFlow && typeof window.PatientFlow.startCountdownTimer === 'function') {
+                    window.PatientFlow.startCountdownTimer(update.targetTime, {
+                        hours: elHours,
+                        minutes: elMins,
+                        seconds: elSecs
+                    }, () => {
+                        if (typeof window.loadPatientRecoveryDashboard === 'function') {
+                            window.loadPatientRecoveryDashboard(update.patientId);
+                        }
+                    });
+                }
+            }
+        } catch(e) {}
     }
 
     // تطبيق التحديث على هاتف المريض وتحديث العداد والشاشة فوراً
     function applyTimingUpdateLocally(update) {
-        if (!update || update.type !== 'session_timing_update') return false;
-        const targetPid = update.patientId;
-        const targetPhone = (update.patientPhone || '').replace(/\D/g, '');
+        if (!update) return false;
+        if (update.type !== 'session_timing_update' && update.forceUnlock === undefined && update.targetTime === undefined) {
+            return false;
+        }
 
-        const currentPid = (window.SmartDB && typeof window.SmartDB.getCurrentSessionPatientId === 'function') 
+        const targetPid = update.patientId || '';
+        const targetPhone = (update.patientPhone || '').replace(/\D/g, '');
+        const targetName = (update.patientName || '').trim();
+
+        // استخراج معرف ورقم المريض الحالي على هذا الجهاز
+        let currentPid = (window.SmartDB && typeof window.SmartDB.getCurrentSessionPatientId === 'function') 
             ? window.SmartDB.getCurrentSessionPatientId() 
             : localStorage.getItem('smart_current_patient_id');
 
-        let currentPhone = '';
-        try {
-            const activeP = (window.activePatient) || JSON.parse(localStorage.getItem('smart_active_patient') || '{}');
-            currentPhone = (activeP.phone || '').replace(/\D/g, '');
-        } catch(e) {}
+        let currentPhone = localStorage.getItem('smart_patient_phone') || '';
+        let currentName = '';
 
-        // هل هذا التحديث موجه للمريض الحالي على هذا الهاتف؟
-        let isMatch = false;
-        if (targetPid && currentPid && (targetPid === currentPid)) {
-            isMatch = true;
-        } else if (targetPhone && currentPhone && (targetPhone === currentPhone)) {
-            isMatch = true;
-        } else if (!currentPid && targetPid) {
-            isMatch = false;
+        if (window.activePatient) {
+            if (!currentPid) currentPid = window.activePatient.patientId || window.activePatient.id;
+            if (!currentPhone) currentPhone = window.activePatient.phone || '';
+            currentName = (window.activePatient.name || window.activePatient.fullName || '').trim();
         }
 
-        if (!isMatch && (currentPid || currentPhone)) {
+        const cleanCurrentPhone = String(currentPhone).replace(/\D/g, '');
+
+        let isMatch = false;
+
+        // 1. تطابق مباشر بالمعرف
+        if (targetPid && currentPid && (targetPid === currentPid)) {
+            isMatch = true;
+        }
+        // 2. تطابق رقمي بالمعرف
+        else if (targetPid && currentPid) {
+            const c1 = String(targetPid).replace(/\D/g, '');
+            const c2 = String(currentPid).replace(/\D/g, '');
+            if (c1 && c2 && (c1 === c2 || (c1.length >= 7 && c2.length >= 7 && (c1.includes(c2) || c2.includes(c1))))) {
+                isMatch = true;
+            }
+        }
+
+        // 3. تطابق برقم الهاتف (مقارنة آخر 7 أرقام لتجاوز مفتاح الدولة)
+        if (!isMatch && targetPhone && cleanCurrentPhone) {
+            if (targetPhone === cleanCurrentPhone) {
+                isMatch = true;
+            } else if (targetPhone.length >= 7 && cleanCurrentPhone.length >= 7) {
+                if (targetPhone.slice(-7) === cleanCurrentPhone.slice(-7)) {
+                    isMatch = true;
+                }
+            }
+        }
+
+        // 4. تطابق باسم المريض
+        if (!isMatch && targetName && currentName && targetName === currentName) {
+            isMatch = true;
+        }
+
+        // 5. إذا لم نجد تطابقاً وكان هناك مريض محدد مسجل على الهاتف
+        if (!isMatch && (currentPid || cleanCurrentPhone)) {
             return false;
         }
 
         const pKey = currentPid || targetPid;
-        if (!pKey) return false;
+        if (!pKey && !targetPhone) return false;
+
+        // تطبيق التعديل على كافة المفاتيح المحتملة في localStorage
+        const keysToUpdate = new Set();
+        if (pKey) keysToUpdate.add(pKey);
+        if (targetPid) keysToUpdate.add(targetPid);
+        if (cleanCurrentPhone) keysToUpdate.add(cleanCurrentPhone);
+        if (targetPhone) keysToUpdate.add(targetPhone);
 
         const now = Date.now();
-        if (update.forceUnlock) {
-            localStorage.setItem(`force_unlock_${pKey}`, 'true');
-            localStorage.removeItem(`custom_target_time_${pKey}`);
-            if (targetPid && targetPid !== pKey) {
-                localStorage.setItem(`force_unlock_${targetPid}`, 'true');
-                localStorage.removeItem(`custom_target_time_${targetPid}`);
-            }
-            if (targetPhone) {
-                localStorage.setItem(`force_unlock_${targetPhone}`, 'true');
-                localStorage.removeItem(`custom_target_time_${targetPhone}`);
-            }
-        } else if (update.targetTime && update.targetTime > now) {
-            localStorage.setItem(`custom_target_time_${pKey}`, String(update.targetTime));
-            localStorage.removeItem(`force_unlock_${pKey}`);
-            if (targetPid && targetPid !== pKey) {
-                localStorage.setItem(`custom_target_time_${targetPid}`, String(update.targetTime));
-                localStorage.removeItem(`force_unlock_${targetPid}`);
-            }
-            if (targetPhone) {
-                localStorage.setItem(`custom_target_time_${targetPhone}`, String(update.targetTime));
-                localStorage.removeItem(`force_unlock_${targetPhone}`);
+        for (const key of keysToUpdate) {
+            if (update.forceUnlock) {
+                localStorage.setItem(`force_unlock_${key}`, 'true');
+                localStorage.removeItem(`custom_target_time_${key}`);
+                localStorage.removeItem(`sessionStartTime_${key}_${update.sessionNum || 1}`);
+            } else if (update.targetTime && update.targetTime > now) {
+                localStorage.setItem(`custom_target_time_${key}`, String(update.targetTime));
+                localStorage.removeItem(`force_unlock_${key}`);
             }
         }
 
         // إطلاق إشعار التحديث المحلي لعداد الثواني
         localStorage.setItem('countdownUpdated', String(now));
 
-        // إعادة تنشيط لوحة المريض لتتحدث الساعة فوراً أمام عين المريض
+        // إطلاق حدث في الـ DOM
+        try {
+            window.dispatchEvent(new CustomEvent('smart_countdown_updated', { detail: update }));
+        } catch(e) {}
+
+        // تحديث عناصر الساعة وأزرار القفل في الصفحة فوراً
+        updateLiveClockDomElements(update);
+
+        // إعادة تنشيط لوحة المريض بالكامل
         if (typeof window.loadPatientRecoveryDashboard === 'function') {
             window.loadPatientRecoveryDashboard(pKey);
+        } else if (typeof loadPatientRecoveryDashboard === 'function') {
+            loadPatientRecoveryDashboard(pKey);
         }
+
         if (typeof window.updatePatientCountdown === 'function') {
             window.updatePatientCountdown();
         }
@@ -969,33 +1098,48 @@
         return true;
     }
 
-    // جلب التعديلات السحابية للتوقيت (عند فتح التطبيق أو استعادة التركيز)
+    // جلب التعديلات السحابية للتوقيت (عبر NTFY وعبر Master Hub)
     async function fetchRemoteTimingUpdates() {
+        // 1. جلب من NTFY
         try {
-            const resp = await fetch(`${CLOUD_TIMING_ENDPOINT}/json?poll=1&since=12h`);
-            if (!resp.ok) return;
-            const text = await resp.text();
-            if (!text) return;
-
-            const lines = text.trim().split('\n');
-            const updates = [];
-            for (const line of lines) {
-                if (!line.trim()) continue;
-                try {
-                    const item = JSON.parse(line);
-                    if (item.event === 'message' && item.message) {
-                        const parsed = JSON.parse(item.message);
-                        if (parsed && parsed.type === 'session_timing_update') {
-                            updates.push(parsed);
-                        }
+            const resp = await fetch(`${CLOUD_TIMING_ENDPOINT}/json?poll=1&since=24h`);
+            if (resp.ok) {
+                const text = await resp.text();
+                if (text) {
+                    const lines = text.trim().split('\n');
+                    const updates = [];
+                    for (const line of lines) {
+                        if (!line.trim()) continue;
+                        try {
+                            const item = JSON.parse(line);
+                            if (item.event === 'message' && item.message) {
+                                let parsed = null;
+                                try { parsed = JSON.parse(item.message); } catch(e) { parsed = item.message; }
+                                if (parsed && (parsed.type === 'session_timing_update' || parsed.forceUnlock !== undefined)) {
+                                    updates.push(parsed);
+                                }
+                            }
+                        } catch(e) {}
                     }
-                } catch(e) {}
+                    updates.sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0));
+                    for (const upd of updates) {
+                        applyTimingUpdateLocally(upd);
+                    }
+                }
             }
+        } catch(e) {}
 
-            // تطبيق التحديثات مرتبة زمنياً
-            updates.sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0));
-            for (const upd of updates) {
-                applyTimingUpdateLocally(upd);
+        // 2. جلب من السحابة المركزية Master Hub كخط حماية ثانٍ
+        try {
+            const hubResp = await fetch(CLOUD_MASTER_HUB_ENDPOINT, { cache: 'no-store' });
+            if (hubResp.ok) {
+                const hubObj = await hubResp.json();
+                if (hubObj && hubObj.data && hubObj.data.timingUpdates) {
+                    const map = hubObj.data.timingUpdates;
+                    for (const k in map) {
+                        if (map[k]) applyTimingUpdateLocally(map[k]);
+                    }
+                }
             }
         } catch(e) {}
     }
@@ -1011,8 +1155,9 @@
                 try {
                     const data = JSON.parse(event.data);
                     if (data.event === 'message' && data.message) {
-                        const parsed = JSON.parse(data.message);
-                        if (parsed && parsed.type === 'session_timing_update') {
+                        let parsed = null;
+                        try { parsed = JSON.parse(data.message); } catch(e) { parsed = data.message; }
+                        if (parsed && (parsed.type === 'session_timing_update' || parsed.forceUnlock !== undefined)) {
                             applyTimingUpdateLocally(parsed);
                         }
                     }
