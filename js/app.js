@@ -5022,6 +5022,28 @@ function closeChiropracticExplainerModal() {
 // إدارة تثبيت تطبيق الويب التقدمي (PWA) والمشاركة الشاملة (Install & Share Hub)
 // ==========================================================================
 
+// إظهار شريط تنبيه التحديث الذكي عند توفر نسخة أحدث
+function showAppUpdateNoticeBanner() {
+    if (document.getElementById('pwa-update-available-banner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'pwa-update-available-banner';
+    banner.style.cssText = 'position: fixed; bottom: 25px; left: 15px; right: 15px; max-width: 480px; margin: 0 auto; background: linear-gradient(135deg, #0b1322 0%, #17253d 100%); border: 2px solid var(--primary-gold); border-radius: 14px; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; z-index: 9999999; box-shadow: 0 10px 30px rgba(0,0,0,0.85), 0 0 20px rgba(212, 175, 55, 0.45); animation: slideUpBanner 0.4s ease;';
+    banner.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 1.6em;">⚡</span>
+            <div>
+                <strong style="color: #ffffff; font-size: 0.92em; display: block;">يتوفر تحديث جديد للمنظومة!</strong>
+                <span style="color: #94a3b8; font-size: 0.78em;">تم إطلاق تحسينات وتمارين سريرية جديدة</span>
+            </div>
+        </div>
+        <button type="button" onclick="forceAppUpdateAndClearCache()" style="background: linear-gradient(135deg, #d4af37 0%, #f59e0b 100%); color: #0a0e14; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 900; font-size: 0.86em; cursor: pointer; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.4);">
+            تحديث الآن 🔄
+        </button>
+    `;
+    document.body.appendChild(banner);
+}
+window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
+
 function setupPwaInstallListener() {
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
@@ -6014,7 +6036,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     await SmartDB.openDB();
 
     if (window.location.protocol.startsWith('http') && 'serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').catch(() => {});
+        navigator.serviceWorker.register('sw.js').then((registration) => {
+            registration.onupdatefound = () => {
+                const installingWorker = registration.installing;
+                if (installingWorker) {
+                    installingWorker.onstatechange = () => {
+                        if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            showAppUpdateNoticeBanner();
+                        }
+                    };
+                }
+            };
+        }).catch(() => {});
+
+        // فحص وجود تحديثات فور فتح أو تنشيط التطبيق
+        window.addEventListener('focus', () => {
+            navigator.serviceWorker.getRegistration().then((reg) => {
+                if (reg) reg.update().catch(() => {});
+            }).catch(() => {});
+        });
     }
 
 
