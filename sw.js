@@ -3,7 +3,7 @@
 // استراتيجية Network-First لضمان وصول المريض لأحدث التحديثات فوراً
 // ==========================================================================
 
-const CACHE_NAME = 'wada3an-alam-v18.6';
+const CACHE_NAME = 'wada3an-alam-v18.7';
 const STATIC_ASSETS = [
     './',
     './index.html',
@@ -27,7 +27,9 @@ const STATIC_ASSETS = [
     './assets/audio/station_chat_welcome_sarah.mp3',
     './assets/audio/station_chat_welcome_jamal.mp3',
     './assets/audio/station_exercise_start.mp3',
+    './assets/audio/station_exercise_start.wav',
     './assets/audio/station_exercise_finish.mp3',
+    './assets/audio/station_exercise_finish.wav',
     './assets/exercises/custom_cerv_1.jpg',
     './assets/exercises/custom_cerv_2.jpg',
     './assets/exercises/custom_cerv_3.jpg',

@@ -1306,7 +1306,7 @@
                         <div style="color: #94a3b8; font-size: 0.85em; margin-top: 4px;">مؤشر سلامة واستقرار النظام 📈</div>
                     </div>
                     <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
-                        <div id="health-stat-audios" style="font-size: 2.2em; font-weight: bold; color: #38bdf8;">7 / 7</div>
+                        <div id="health-stat-audios" style="font-size: 2.2em; font-weight: bold; color: #38bdf8;">9 / 9</div>
                         <div style="color: #94a3b8; font-size: 0.85em; margin-top: 4px;">جاهزية المحطات الصوتية 🎵</div>
                     </div>
                     <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
@@ -1323,7 +1323,7 @@
                 <div style="background: #080c14; border: 1px solid rgba(51, 65, 85, 0.6); border-radius: 10px; padding: 14px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;">
                     <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                         <button type="button" onclick="testAllStationAudiosUI()" style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #7dd3fc; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.88em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                            🎵 فحص واختبار كافة الأصوات الـ 7
+                            🎵 فحص واختبار كافة الأصوات (9 محطات)
                         </button>
                         <button type="button" onclick="handleRescueStalledSessions()" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.88em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                             ⚡ استشفاء وإنقاذ كافة الجلسات المعلقة
@@ -4648,17 +4648,37 @@
                 const audio = new Audio(path);
                 activePreviewAudio = audio;
                 if (btnEl) btnEl.textContent = '🔊 يعمل...';
-                audio.play().then(() => {
-                    setTimeout(() => {
-                        audio.pause();
-                        audio.currentTime = 0;
-                        if (btnEl) btnEl.textContent = '▶️ استماع';
-                    }, 4000);
-                }).catch(() => {
-                    if (btnEl) btnEl.textContent = '⚠️ محظور';
-                    alert('تم حظر التشغيل التلقائي من المتصفح أو الملف غير متاح.');
-                });
+                const playPromise = audio.play();
+                if (playPromise) {
+                    playPromise.then(() => {
+                        setTimeout(() => {
+                            audio.pause();
+                            audio.currentTime = 0;
+                            if (btnEl) btnEl.textContent = '▶️ استماع';
+                        }, 4000);
+                    }).catch(() => {
+                        const wavPath = path.replace(/\.mp3$/i, '.wav');
+                        if (wavPath !== path) {
+                            const fallbackAudio = new Audio(wavPath);
+                            activePreviewAudio = fallbackAudio;
+                            fallbackAudio.play().then(() => {
+                                setTimeout(() => {
+                                    fallbackAudio.pause();
+                                    fallbackAudio.currentTime = 0;
+                                    if (btnEl) btnEl.textContent = '▶️ استماع';
+                                }, 4000);
+                            }).catch(() => {
+                                if (btnEl) btnEl.textContent = '⚠️ محظور';
+                                alert('تم حظر التشغيل التلقائي من المتصفح أو الملف غير متاح. يرجى النقر داخل الصفحة للسماح بالصوت.');
+                            });
+                        } else {
+                            if (btnEl) btnEl.textContent = '⚠️ محظور';
+                            alert('تم حظر التشغيل التلقائي من المتصفح أو الملف غير متاح.');
+                        }
+                    });
+                }
             } catch(e) {
+                if (btnEl) btnEl.textContent = '❌ خطأ';
                 alert('خطأ في تشغيل الصوت: ' + e.message);
             }
         }
