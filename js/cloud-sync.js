@@ -741,8 +741,8 @@
         // 2. القناة الثانوية المضاعفة (Secondary ntfy Relay)
         try {
             const controller2 = new AbortController();
-            const timeoutId2 = setTimeout(() => controller2.abort(), 3500);
-            const pollUrl = `${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=all`;
+            const timeoutId2 = setTimeout(() => controller2.abort(), 1500);
+            const pollUrl = `${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=24h`;
             const resp = await fetch(pollUrl, { signal: controller2.signal });
             clearTimeout(timeoutId2);
             if (resp.ok) {

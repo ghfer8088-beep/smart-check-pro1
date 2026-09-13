@@ -1503,6 +1503,10 @@
                 }
             });
 
+            // تشغيل فوري ولحظي لعرض البيانات المحلية دون أي تأخير أو انتظار شبكي
+            await loadAdminData(false);
+            loadNotificationsData(false);
+
             // ☁️ الاشتراك المباشر والمزامنة السحابية اللحظية للمرضى والزيارات حول العالم
             if (typeof SmartCloudSync !== 'undefined') {
                 SmartCloudSync.fetchCloudPatients().then(() => {
@@ -2605,16 +2609,28 @@
 
         function renderTable(list) {
             const tbody = document.getElementById('patients-table-body');
+            const mobileCardsContainer = document.getElementById('patients-cards-container') || document.getElementById('patients-mobile-cards-wrap');
+
             if (!list || list.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="10" style="text-align: center; padding: 35px; color: #94a3b8; font-size: 1.05em;">
-                            📂 لا يوجد مراجعين مسجلين حالياً.<br>
-                            <button type="button" onclick="handleSeedDemoPatients()" style="margin-top: 12px; background: var(--primary-gold); color: #0a0e14; border: none; padding: 10px 22px; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                                ✨ توليد 3 حالات سريرية تجريبية لفحص اللوحة
+                const emptyHtml = `
+                    <div style="text-align: center; padding: 35px 20px; color: #94a3b8; font-size: 1.05em;">
+                        📂 لا يوجد مراجعين مسجلين حالياً على هذا الجهاز.<br>
+                        <div style="margin-top: 14px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                            <button type="button" onclick="openSyncBridgeModal()" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #fff; border: 1px solid #38bdf8; padding: 10px 22px; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                                📲 استيراد بيانات الموبايل عبر جسر المزامنة
                             </button>
-                        </td>
-                    </tr>`;
+                            <button type="button" onclick="handleSeedDemoPatients()" style="background: var(--primary-gold); color: #0a0e14; border: none; padding: 10px 22px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                                ✨ توليد حالات تجريبية للاختبار
+                            </button>
+                        </div>
+                    </div>`;
+
+                if (tbody) {
+                    tbody.innerHTML = `<tr><td colspan="10">${emptyHtml}</td></tr>`;
+                }
+                if (mobileCardsContainer) {
+                    mobileCardsContainer.innerHTML = emptyHtml;
+                }
                 return;
             }
 
