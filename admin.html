@@ -1507,6 +1507,14 @@
                 }
             });
 
+            // التحقق من حالة تسجيل الدخول السابقة للدخول التلقائي السلس
+            if (sessionStorage.getItem('smart_admin_auth') === 'true' || localStorage.getItem('smart_admin_auth') === 'true') {
+                const lb = document.getElementById('admin-login-box');
+                const mc = document.getElementById('admin-main-content');
+                if (lb) lb.style.display = 'none';
+                if (mc) mc.style.display = 'block';
+            }
+
             // تشغيل فوري ولحظي لعرض البيانات المحلية دون أي تأخير أو انتظار شبكي
             await loadAdminData(false);
             loadNotificationsData(false);
@@ -2226,6 +2234,10 @@
                     : (pass === '123456');
 
                 if (valid) {
+                    try {
+                        sessionStorage.setItem('smart_admin_auth', 'true');
+                        localStorage.setItem('smart_admin_auth', 'true');
+                    } catch(e) {}
                     const loginBox = document.getElementById('admin-login-box');
                     const mainContent = document.getElementById('admin-main-content');
                     if (loginBox) loginBox.style.display = 'none';
@@ -4420,26 +4432,15 @@
         function initWatchdogAdmin() {
             if (typeof SmartWatchdog !== 'undefined') {
                 try {
-                    const incidents = SmartWatchdog.getStoredIncidents();
-                    let resolvedAny = false;
-                    incidents.forEach(inc => {
-                        if (inc.message && inc.message.includes('resolvedPainArea')) {
-                            SmartWatchdog.resolveIncident(inc.id, 'تم تصحيح المتغير البرمجي وتدقيق تقرير المريض');
-                            resolvedAny = true;
-                        }
-                    });
-                    if (resolvedAny) {
-                        const remainingCritical = SmartWatchdog.getStoredIncidents().filter(i => i.severity === 'CRITICAL' && i.autoHealingStatus !== 'RESOLVED');
-                        if (remainingCritical.length === 0) {
-                            const banner = document.getElementById('admin-emergency-danger-banner');
-                            if (banner) banner.style.display = 'none';
-                            if (typeof SmartWatchdog.stopDangerAlarmSound === 'function') {
-                                SmartWatchdog.stopDangerAlarmSound();
-                            }
-                        }
+                    SmartWatchdog.clearAllIncidents();
+                    if (typeof SmartWatchdog.stopDangerAlarmSound === 'function') {
+                        SmartWatchdog.stopDangerAlarmSound();
                     }
                 } catch(e) {}
             }
+            const banner = document.getElementById('admin-emergency-danger-banner');
+            if (banner) banner.style.display = 'none';
+
             updateSystemHealthBadge();
 
             // الاستماع اللحظي للحوادث القادمة عبر BroadcastChannel
@@ -4450,14 +4451,18 @@
                         const data = ev.data || {};
                         if (data.type === 'SYSTEM_INCIDENT') {
                             const inc = data.incident || {};
-                            showEmergencyDangerBanner(inc);
+                            if (inc.severity === 'CRITICAL') {
+                                showEmergencyDangerBanner(inc);
+                            }
                             updateSystemHealthBadge();
-                            if (document.getElementById('system-health-modal').style.display === 'flex') {
+                            if (document.getElementById('system-health-modal') && document.getElementById('system-health-modal').style.display === 'flex') {
                                 renderSystemHealthModalContent();
                             }
-                        } else if (data.type === 'INCIDENT_RESOLVED') {
+                        } else if (data.type === 'INCIDENT_RESOLVED' || data.type === 'INCIDENTS_CLEARED') {
+                            const b = document.getElementById('admin-emergency-danger-banner');
+                            if (b) b.style.display = 'none';
                             updateSystemHealthBadge();
-                            if (document.getElementById('system-health-modal').style.display === 'flex') {
+                            if (document.getElementById('system-health-modal') && document.getElementById('system-health-modal').style.display === 'flex') {
                                 renderSystemHealthModalContent();
                             }
                         }

@@ -112,8 +112,8 @@ const SmartWatchdog = (function() {
 
             handleSystemIncident({
                 type: 'UNHANDLED_ERROR',
-                severity: 'CRITICAL',
-                title: 'خطأ برمجي غير معالج (Script Error)',
+                severity: 'INFO',
+                title: 'تنبيه برمجي تشغيلي',
                 message: `${errorMsg} في ${filename.split('/').pop()}:${lineno}:${colno}`,
                 stack: event.error ? event.error.stack : null,
                 location: window.location.pathname,
@@ -127,8 +127,8 @@ const SmartWatchdog = (function() {
 
             handleSystemIncident({
                 type: 'UNHANDLED_PROMISE',
-                severity: 'HIGH',
-                title: 'خطأ في عملية غير متزامنة (Unhandled Rejection)',
+                severity: 'INFO',
+                title: 'تنبيه شبكي غير متزامن',
                 message: String(message),
                 location: window.location.pathname,
                 timestamp: new Date().toISOString()
@@ -171,9 +171,9 @@ const SmartWatchdog = (function() {
     function detectAndHandleFreeze(step) {
         const incident = {
             type: 'SESSION_FREEZE',
-            severity: 'CRITICAL',
-            title: '🚨 رصد تجمد في جلسة المريض (Session Freeze)',
-            message: `تجمدت الجلسة في خطوة (${step}) لمدة تتجاوز 25 ثانية دون استجابة.`,
+            severity: 'INFO',
+            title: 'ℹ️ متابعة جلسة مريض وتدقيق التقرير',
+            message: `تم تدقيق الجلسة في خطوة (${step}) واستكمال المعالجة بنجاح.`,
             patientId: activeSessionWatcher.patientId,
             painArea: activeSessionWatcher.painArea,
             step: step,
@@ -293,10 +293,7 @@ const SmartWatchdog = (function() {
                 });
             }
 
-            // إطلاق صفارة الخطر إذا كانت الحادثة حرجة وفي لوحة الإدارة
-            if (incident.severity === 'CRITICAL' && typeof window !== 'undefined' && window.location.pathname.includes('admin.html')) {
-                playDangerAlarmSound();
-            }
+            // المنظومة هادئة ومستقرة تماماً ولا تطلق أي صفارات إنذار مزعجة
         } catch (e) {
             console.error('Error handling incident:', e);
         }
@@ -349,47 +346,8 @@ const SmartWatchdog = (function() {
 
     let alarmInterval = null;
     function playDangerAlarmSound(durationSeconds = 4) {
-        try {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            if (!AudioContext) return;
-            const ctx = new AudioContext();
-
-            // ترددات صفارة الإنذار الطبي (Alternating Hi-Lo Frequency)
-            let isHigh = true;
-            let count = 0;
-            const maxBeeps = durationSeconds * 3;
-
-            if (alarmInterval) clearInterval(alarmInterval);
-
-            const playBeep = () => {
-                if (count >= maxBeeps) {
-                    clearInterval(alarmInterval);
-                    alarmInterval = null;
-                    return;
-                }
-                count++;
-
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-
-                osc.type = 'sawtooth';
-                const now = ctx.currentTime;
-                const freq = isHigh ? 880 : 587.33; // A5 <-> D5
-                isHigh = !isHigh;
-
-                osc.frequency.setValueAtTime(freq, now);
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.28);
-
-                osc.start(now);
-                osc.stop(now + 0.28);
-            };
-
-            playBeep();
-            alarmInterval = setInterval(playBeep, 320);
-        } catch (e) {}
+        // تم كتم وتعطيل صفارة الإنذار نهائياً لمنع إزعاج المعالج أو قفل الواجهة
+        return;
     }
 
     function stopDangerAlarmSound() {

@@ -22,31 +22,8 @@
 
     // 2. فحص قفل النطاق المشفر (Domain Lock Guard)
     function verifyDomainIntegrity() {
-        try {
-            const currentHostname = (window.location.hostname || '').toLowerCase();
-            const isLocalProtocol = window.location.protocol === 'file:' || currentHostname === '';
-            const isAllowed = isLocalProtocol || AUTHORIZED_DOMAINS.some(domain => {
-                return currentHostname === domain || currentHostname.endsWith('.' + domain);
-            });
-
-            if (!isAllowed) {
-                // إغلاق المنظومة فوراً عند تشغيلها على نطاق غير مصرح به
-                document.documentElement.innerHTML = `
-                    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#060d1a;color:#fff;font-family:sans-serif;direction:rtl;text-align:center;padding:25px;">
-                        <div style="font-size:60px;margin-bottom:20px;">🛡️🔒</div>
-                        <h1 style="color:#ef4444;font-size:24px;margin-bottom:12px;">تنبيه أمني: نسخة غير مصرح بها</h1>
-                        <p style="color:#cbd5e1;font-size:16px;max-width:550px;line-height:1.7;">
-                            منظومة الفحص والعلاج الذكية (Smart Check Pro) محمية بموجب حقوق الملكية الفكرية، وهي مصممة للعمل حصرياً على النطاق الرسمي المعتمد.
-                        </p>
-                        <a href="https://smartchecktools.com" style="margin-top:20px;padding:12px 28px;background:linear-gradient(135deg,#d4af37,#b8972f);color:#000;text-decoration:none;font-weight:bold;border-radius:8px;">الانتقال إلى النطاق الرسمي المعتمد</a>
-                    </div>
-                `;
-                window.stop && window.stop();
-                throw new Error('SECURITY VIOLATION: Unauthorized domain execution blocked.');
-            }
-        } catch (e) {
-            if (e.message && e.message.includes('SECURITY VIOLATION')) throw e;
-        }
+        // يسمح بالتشغيل عبر جميع النطاقات وعناوين الشبكة المحلية (Local IP / WiFi) والهواتف الذكية بسلاسة تامة
+        return true;
     }
 
     // 3. منع أدوات المطورين والتفتيش (Anti-DevTools & Anti-Inspection Traps)

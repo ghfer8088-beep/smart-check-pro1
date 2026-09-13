@@ -7,14 +7,8 @@ const ClinicalEngine = (function() {
 
     // 🛡️ فحص حماية المحرك السريري وقفل النطاق
     (function _validateEngineHost() {
-        try {
-            const h = (window.location.hostname || '').toLowerCase();
-            const ok = ['smartchecktools.com', 'www.smartchecktools.com', 'ghfer8088-beep.github.io', 'localhost', '127.0.0.1', ''].some(d => h === d || h.endsWith('.' + d));
-            if (!ok && window.location.protocol !== 'file:') {
-                window.location.href = 'https://smartchecktools.com';
-                throw new Error('Unauthorized clinical engine deployment.');
-            }
-        } catch(e) {}
+        // يسمح بالتشغيل عبر جميع النطاقات والشبكات المحلية والهواتف بسلاسة تامة
+        return true;
     })();
 
     // 1. قاعدة المعرفة السريرية المتفرعة ومتعددة الطبقات لكل نقطة تشريحية
