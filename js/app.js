@@ -7873,7 +7873,8 @@ async function sendChatMessage() {
                     }
                 }
 
-                const pId = 'pat_' + (clinicalDialogueState.patientPhone ? clinicalDialogueState.patientPhone.replace(/\D/g, '') : Date.now().toString(36));
+                const pPhoneDigits = clinicalDialogueState.patientPhone ? clinicalDialogueState.patientPhone.replace(/\D/g, '') : '';
+                const pId = 'pat_' + (pPhoneDigits ? pPhoneDigits + '_' + Date.now().toString(36).slice(-4) : Date.now().toString(36));
                 SmartDB.savePatient({
                     patientId: pId,
                     id: pId,
@@ -8045,7 +8046,8 @@ async function sendChatMessage() {
             }
         }
 
-        const pId2 = 'pat_' + (clinicalDialogueState.patientPhone ? clinicalDialogueState.patientPhone.replace(/\D/g, '') : Date.now().toString(36));
+        const pPhoneDigits2 = clinicalDialogueState.patientPhone ? clinicalDialogueState.patientPhone.replace(/\D/g, '') : '';
+        const pId2 = 'pat_' + (pPhoneDigits2 ? pPhoneDigits2 + '_' + Date.now().toString(36).slice(-4) : Date.now().toString(36));
         SmartDB.savePatient({
             patientId: pId2,
             id: pId2,

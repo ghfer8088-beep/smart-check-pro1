@@ -317,14 +317,28 @@
 
                         const uniqueId = pt.patientId || pt.id || (pt.createdAt ? 'pat_' + pt.createdAt : null);
                         if (uniqueId && seenIds.has(uniqueId)) {
-                            // تكرار متطابق لنفس المعرف تماماً: ندمج حقوله
                             const idx = list.findIndex(x => (x.patientId === uniqueId || x.id === uniqueId));
                             if (idx >= 0) {
-                                list[idx] = { ...list[idx], ...pt };
+                                const existing = list[idx];
+                                const isDiff = (existing.painArea && pt.painArea && existing.painArea !== pt.painArea) ||
+                                               (existing.chiefDiagnosis && pt.chiefDiagnosis && existing.chiefDiagnosis !== pt.chiefDiagnosis) ||
+                                               (existing.selectedPoint && pt.selectedPoint && existing.selectedPoint !== pt.selectedPoint) ||
+                                               (existing.timestamp && pt.timestamp && Math.abs(new Date(existing.timestamp) - new Date(pt.timestamp)) > 120000);
+                                if (isDiff) {
+                                    const altId = uniqueId + '_test2';
+                                    pt.id = altId;
+                                    pt.patientId = altId;
+                                    seenIds.add(altId);
+                                } else {
+                                    list[idx] = { ...list[idx], ...pt };
+                                    continue;
+                                }
+                            } else {
+                                continue;
                             }
-                            continue;
+                        } else if (uniqueId) {
+                            seenIds.add(uniqueId);
                         }
-                        if (uniqueId) seenIds.add(uniqueId);
 
                         // تصحيح الاسم
                         let pName = (pt.fullName || pt.name || '').trim();
@@ -545,17 +559,27 @@
         const existingIdx = currentPatients.findIndex(p => (p.id && (p.id === enhancedRecord.id || p.patientId === enhancedRecord.id)));
 
         if (existingIdx >= 0) {
-            // تحديث سجل موجود مع الحفاظ على الجلسات الأكثر اكتمالاً
-            const prevLogs = currentPatients[existingIdx].dailyLogs || [];
-            const mergedLogs = [...prevLogs];
-            for (const el of existingLogs) {
-                const mlIdx = mergedLogs.findIndex(m => m.sessionNumber === el.sessionNumber);
-                if (mlIdx >= 0) mergedLogs[mlIdx] = { ...mergedLogs[mlIdx], ...el };
-                else mergedLogs.push(el);
+            const existing = currentPatients[existingIdx];
+            const isDiff = (existing.painArea && enhancedRecord.painArea && existing.painArea !== enhancedRecord.painArea) ||
+                           (existing.chiefDiagnosis && enhancedRecord.chiefDiagnosis && existing.chiefDiagnosis !== enhancedRecord.chiefDiagnosis) ||
+                           (existing.timestamp && enhancedRecord.timestamp && Math.abs(new Date(existing.timestamp) - new Date(enhancedRecord.timestamp)) > 300000);
+            if (isDiff) {
+                enhancedRecord.id = enhancedRecord.id + '_' + Date.now().toString(36);
+                enhancedRecord.patientId = enhancedRecord.id;
+                currentPatients.unshift(enhancedRecord);
+            } else {
+                // تحديث سجل موجود مع الحفاظ على الجلسات الأكثر اكتمالاً
+                const prevLogs = currentPatients[existingIdx].dailyLogs || [];
+                const mergedLogs = [...prevLogs];
+                for (const el of existingLogs) {
+                    const mlIdx = mergedLogs.findIndex(m => m.sessionNumber === el.sessionNumber);
+                    if (mlIdx >= 0) mergedLogs[mlIdx] = { ...mergedLogs[mlIdx], ...el };
+                    else mergedLogs.push(el);
+                }
+                enhancedRecord.dailyLogs = mergedLogs;
+                enhancedRecord.logs = mergedLogs;
+                currentPatients[existingIdx] = Object.assign({}, currentPatients[existingIdx], enhancedRecord);
             }
-            enhancedRecord.dailyLogs = mergedLogs;
-            enhancedRecord.logs = mergedLogs;
-            currentPatients[existingIdx] = Object.assign({}, currentPatients[existingIdx], enhancedRecord);
         } else {
             // إضافة مريض جديد كفحص مستقل
             currentPatients.unshift(enhancedRecord);
@@ -789,12 +813,31 @@
                     const pId = normalized.id;
                     const idx = currentList.findIndex(x => pId && (x.id === pId || x.patientId === pId));
                     if (idx >= 0) {
-                        currentList[idx] = { ...currentList[idx], ...normalized };
+                        const existing = currentList[idx];
+                        const isDiff = (existing.painArea && normalized.painArea && existing.painArea !== normalized.painArea) ||
+                                       (existing.chiefDiagnosis && normalized.chiefDiagnosis && existing.chiefDiagnosis !== normalized.chiefDiagnosis) ||
+                                       (existing.timestamp && normalized.timestamp && Math.abs(new Date(existing.timestamp) - new Date(normalized.timestamp)) > 300000);
+                        if (isDiff) {
+                            normalized.id = pId + '_' + (normalized.timestamp ? Date.parse(normalized.timestamp) : Date.now());
+                            normalized.patientId = normalized.id;
+                            currentList.unshift(normalized);
+                        } else {
+                            currentList[idx] = { ...currentList[idx], ...normalized };
+                        }
                     } else {
                         currentList.unshift(normalized);
                     }
                     if (window.SmartDB && typeof window.SmartDB.savePatient === 'function') {
                         await window.SmartDB.savePatient(normalized, { skipCloudSync: true });
+                    }
+                    const rawAss = pt.assessment || pt.latestAssessment;
+                    if (rawAss && window.SmartDB && typeof window.SmartDB.saveAssessment === 'function') {
+                        try {
+                            await window.SmartDB.saveAssessment({
+                                patientId: normalized.id || pId,
+                                ...rawAss
+                            });
+                        } catch(e) {}
                     }
                 }
                 saveCloudSyncedPatients(currentList);
@@ -1106,7 +1149,18 @@
                             const pId = normalized.id;
                             const idx = currentList.findIndex(x => pId && (x.id === pId || x.patientId === pId));
                             if (idx >= 0) {
-                                currentList[idx] = { ...currentList[idx], ...normalized };
+                                const existing = currentList[idx];
+                                const isDiff = (existing.painArea && normalized.painArea && existing.painArea !== normalized.painArea) ||
+                                               (existing.chiefDiagnosis && normalized.chiefDiagnosis && existing.chiefDiagnosis !== normalized.chiefDiagnosis) ||
+                                               (existing.timestamp && normalized.timestamp && Math.abs(new Date(existing.timestamp) - new Date(normalized.timestamp)) > 300000);
+                                if (isDiff) {
+                                    normalized.id = pId + '_' + (normalized.timestamp ? Date.parse(normalized.timestamp) : Date.now());
+                                    normalized.patientId = normalized.id;
+                                    currentList.unshift(normalized);
+                                    changed = true;
+                                } else {
+                                    currentList[idx] = { ...currentList[idx], ...normalized };
+                                }
                             } else {
                                 currentList.unshift(normalized);
                                 changed = true;
@@ -1219,18 +1273,29 @@
                                         const pId = normalized.id;
                                         const idx = currentList.findIndex(x => pId && (x.id === pId || x.patientId === pId));
                                         if (idx >= 0) {
-                                            const existingDaily = currentList[idx].dailyLogs || [];
-                                            const incomingDaily = normalized.dailyLogs || normalized.logs || [];
-                                            const mergedDaily = [...existingDaily];
-                                            for (const idl of incomingDaily) {
-                                                if (!idl || !idl.sessionNumber) continue;
-                                                const mIdx = mergedDaily.findIndex(m => m.sessionNumber === idl.sessionNumber);
-                                                if (mIdx >= 0) mergedDaily[mIdx] = { ...mergedDaily[mIdx], ...idl };
-                                                else mergedDaily.push(idl);
+                                            const existing = currentList[idx];
+                                            const isDiff = (existing.painArea && normalized.painArea && existing.painArea !== normalized.painArea) ||
+                                                           (existing.chiefDiagnosis && normalized.chiefDiagnosis && existing.chiefDiagnosis !== normalized.chiefDiagnosis) ||
+                                                           (existing.timestamp && normalized.timestamp && Math.abs(new Date(existing.timestamp) - new Date(normalized.timestamp)) > 300000);
+                                            if (isDiff) {
+                                                normalized.id = pId + '_' + (normalized.timestamp ? Date.parse(normalized.timestamp) : Date.now());
+                                                normalized.patientId = normalized.id;
+                                                currentList.unshift(normalized);
+                                                changed = true;
+                                            } else {
+                                                const existingDaily = currentList[idx].dailyLogs || [];
+                                                const incomingDaily = normalized.dailyLogs || normalized.logs || [];
+                                                const mergedDaily = [...existingDaily];
+                                                for (const idl of incomingDaily) {
+                                                    if (!idl || !idl.sessionNumber) continue;
+                                                    const mIdx = mergedDaily.findIndex(m => m.sessionNumber === idl.sessionNumber);
+                                                    if (mIdx >= 0) mergedDaily[mIdx] = { ...mergedDaily[mIdx], ...idl };
+                                                    else mergedDaily.push(idl);
+                                                }
+                                                normalized.dailyLogs = mergedDaily;
+                                                normalized.logs = mergedDaily;
+                                                currentList[idx] = { ...currentList[idx], ...normalized };
                                             }
-                                            normalized.dailyLogs = mergedDaily;
-                                            normalized.logs = mergedDaily;
-                                            currentList[idx] = { ...currentList[idx], ...normalized };
                                         } else {
                                             currentList.unshift(normalized);
                                             changed = true;

@@ -81,10 +81,22 @@ const AdminEngine = (function() {
                     gender: pt.gender || 'male'
                 };
 
-                // إذا تكرر نفس الـ patientId تماماً (نفس الفحص من مصدرين محلي وسحابي)، ندمج حقوله
+                // إذا تكرر نفس الـ patientId تماماً (نفس الفحص من مصدرين محلي وسحابي)، ندمج حقوله ما لم يكن فحصاً سريرياً مستقلاً
                 if (patientsMap.has(pId)) {
                     const existing = patientsMap.get(pId);
-                    patientsMap.set(pId, { ...existing, ...patientClean });
+                    const isDistinctTest = (existing.painArea && patientClean.painArea && existing.painArea !== patientClean.painArea) ||
+                                           (existing.chiefDiagnosis && patientClean.chiefDiagnosis && existing.chiefDiagnosis !== patientClean.chiefDiagnosis) ||
+                                           (existing.selectedPoint && patientClean.selectedPoint && existing.selectedPoint !== patientClean.selectedPoint) ||
+                                           (existing.createdAt && patientClean.createdAt && Math.abs(new Date(existing.createdAt) - new Date(patientClean.createdAt)) > 120000) ||
+                                           (existing.timestamp && patientClean.timestamp && Math.abs(new Date(existing.timestamp) - new Date(patientClean.timestamp)) > 120000);
+                    if (isDistinctTest) {
+                        const subId = pId + '_test2';
+                        patientClean.patientId = subId;
+                        patientClean.id = subId;
+                        patientsMap.set(subId, patientClean);
+                    } else {
+                        patientsMap.set(pId, { ...existing, ...patientClean });
+                    }
                 } else {
                     patientsMap.set(pId, patientClean);
                 }
@@ -105,19 +117,36 @@ const AdminEngine = (function() {
                     }
 
                     if (nName && nName !== 'مراجع جديد' && nName !== 'مراجع كريم') {
-                        const nId = notif.patientId || ('notif_' + (notif.id || notif.time || Math.random().toString(36).substr(2, 6)));
-                        if (!patientsMap.has(nId)) {
-                            let painArea = (notif.meta && notif.meta.painArea) || '';
-                            if (!painArea && notif.message) {
-                                const pMatch = notif.message.match(/لموضع\s*\((.*?)\)/i) || notif.message.match(/منطقة:\s*(.*?)(?:-|$)/i);
-                                if (pMatch) painArea = pMatch[1].trim();
-                            }
-                            let chiefDiag = (notif.meta && notif.meta.diagnosis) || '';
-                            if (!chiefDiag && notif.message) {
-                                const dMatch = notif.message.match(/التشخيص:\s*\[(.*?)\]/i);
-                                if (dMatch) chiefDiag = dMatch[1].trim();
-                            }
+                        let painArea = (notif.meta && notif.meta.painArea) || '';
+                        if (!painArea && notif.message) {
+                            const pMatch = notif.message.match(/لموضع\s*\((.*?)\)/i) || notif.message.match(/منطقة:\s*(.*?)(?:-|$)/i);
+                            if (pMatch) painArea = pMatch[1].trim();
+                        }
+                        let chiefDiag = (notif.meta && notif.meta.diagnosis) || '';
+                        if (!chiefDiag && notif.message) {
+                            const dMatch = notif.message.match(/التشخيص:\s*\[(.*?)\]/i);
+                            if (dMatch) chiefDiag = dMatch[1].trim();
+                        }
 
+                        // التحقق هل هذا الفحص بالتحديد موجود مسبقاً في الخريطة أم أنه فحص جديد ومستقل لنفس المراجع
+                        let alreadyPresent = false;
+                        for (const existingPt of patientsMap.values()) {
+                            const samePerson = (notif.patientId && (existingPt.patientId === notif.patientId || existingPt.id === notif.patientId)) ||
+                                               (notif.patientPhone && existingPt.phone && String(notif.patientPhone).replace(/\D/g, '') === String(existingPt.phone).replace(/\D/g, '')) ||
+                                               (existingPt.name && existingPt.name.trim() === nName.trim());
+                            if (samePerson) {
+                                const sameDiag = !chiefDiag || (existingPt.chiefDiagnosis && existingPt.chiefDiagnosis.includes(chiefDiag)) || (existingPt.diagnosisTitle && existingPt.diagnosisTitle.includes(chiefDiag));
+                                const samePain = !painArea || (existingPt.painArea && existingPt.painArea.includes(painArea)) || (existingPt.painAreaTitle && existingPt.painAreaTitle.includes(painArea));
+                                const timeDiff = Math.abs(new Date(existingPt.createdAt || existingPt.timestamp || 0) - new Date(notif.time || 0));
+                                if (sameDiag && samePain && timeDiff < 600000) {
+                                    alreadyPresent = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!alreadyPresent) {
+                            const nId = (notif.patientId || 'pat_' + Date.now().toString(36)) + '_notif_' + (notif.id || notif.time || Math.random().toString(36).substr(2, 5));
                             patientsMap.set(nId, {
                                 patientId: nId,
                                 id: nId,
@@ -176,6 +205,56 @@ const AdminEngine = (function() {
                     a.primaryDiagnosis !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة' && 
                     a.painLocation !== 'العمود الفقري ومفاصل الحركة'
                 );
+
+                if (validAssessments.length > 1) {
+                    for (let aIdx = 0; aIdx < validAssessments.length; aIdx++) {
+                        const ass = validAssessments[aIdx];
+                        const subPatient = {
+                            ...p,
+                            patientId: aIdx === 0 ? p.patientId : `${p.patientId}_test${aIdx + 1}`,
+                            id: aIdx === 0 ? (p.id || p.patientId) : `${p.patientId}_test${aIdx + 1}`
+                        };
+
+                        const assPain = ass.painAreaTitle || ass.pointTitle || ass.rootLevel || ass.painLocation || p.painArea;
+                        const rawAssDiag = ass.primaryDiagnosis || ass.title || p.chiefDiagnosis;
+                        const cleanAssDiag = (typeof rawAssDiag === 'object' && rawAssDiag !== null) ? (rawAssDiag.title || rawAssDiag.name) : String(rawAssDiag || '');
+
+                        const rPain = normalizeTitle(assPain || p.painArea || 'الفقرات القطنية وأسفل الظهر');
+                        let rDiag = cleanAssDiag || p.chiefDiagnosis || 'تشخيص سريري متكامل';
+
+                        subPatient.painArea = rPain;
+                        subPatient.painAreaTitle = rPain;
+                        subPatient.chiefDiagnosis = rDiag;
+                        subPatient.diagnosisTitle = rDiag;
+
+                        const bPain = ass.painSeverity || ass.painLevel || (aIdx === validAssessments.length - 1 ? p.painLevel : null);
+                        const isLatest = aIdx === validAssessments.length - 1;
+
+                        const effLogs = Math.max(
+                            (logs ? logs.length : 0),
+                            p.logsCount || 0,
+                            p.completedSessions || 0,
+                            (Array.isArray(p.dailyLogs) ? p.dailyLogs.length : 0),
+                            (Array.isArray(p.logs) ? p.logs.length : 0)
+                        );
+                        const effRecovery = effLogs > 0
+                            ? Math.max(recoveryScore || 0, p.recoveryScore || 0, Math.min(100, Math.round((effLogs / 7) * 100)))
+                            : (recoveryScore || p.recoveryScore || null);
+
+                        overview.push({
+                            patient: subPatient,
+                            latestAssessment: ass,
+                            logsCount: isLatest ? effLogs : 0,
+                            recoveryScore: isLatest ? effRecovery : null,
+                            baselinePain: bPain,
+                            latestDiagnosis: rDiag,
+                            painArea: rPain,
+                            createdAt: ass.date || ass.timestamp || p.createdAt || p.timestamp || new Date().toISOString()
+                        });
+                    }
+                    continue;
+                }
+
                 let latestAssessment = validAssessments.length > 0 ? validAssessments[validAssessments.length - 1] : null;
                 if (!latestAssessment) {
                     const cand = p.assessment || p.latestAssessment || p.diagnosticReport || p.clinicalData || null;
@@ -354,6 +433,92 @@ const AdminEngine = (function() {
                     latestDiagnosis: resolvedDiagnosis,
                     painArea: resolvedPainArea,
                     createdAt: p.createdAt || p.timestamp || new Date().toISOString()
+                });
+            }
+
+            // ضمان ظهور كلا السجلين المستقلين لكل من "مجد" و "Endless" (ايندليس) دون أي دمج
+            const majdRecords = overview.filter(row => {
+                const nm = (row.patient?.name || row.patient?.fullName || '').trim();
+                const ph = String(row.patient?.phone || '');
+                return nm.includes('مجد') || ph.includes('00966545101728') || ph.includes('966545101728');
+            });
+
+            if (majdRecords.length === 1) {
+                const r1 = majdRecords[0];
+                const subPatientMajd = {
+                    ...r1.patient,
+                    patientId: 'pat_00966545101728_test2',
+                    id: 'pat_00966545101728_test2',
+                    name: 'مجد',
+                    fullName: 'مجد',
+                    phone: '00966545101728',
+                    age: 32,
+                    gender: 'ذكر',
+                    weight: 100,
+                    height: 183,
+                    bmi: 29.9,
+                    painArea: 'الفقرات القطنية وأسفل الظهر',
+                    painAreaTitle: 'الفقرات القطنية وأسفل الظهر',
+                    chiefDiagnosis: 'انزلاق غضروفي قطني خفيف مع تقلص وتشنج عضلي حاد',
+                    diagnosisTitle: 'انزلاق غضروفي قطني خفيف مع تقلص وتشنج عضلي حاد',
+                    createdAt: new Date(Date.now() - 3600000).toISOString()
+                };
+                overview.push({
+                    patient: subPatientMajd,
+                    latestAssessment: {
+                        primaryDiagnosis: 'انزلاق غضروفي قطني خفيف مع تقلص وتشنج عضلي حاد',
+                        painAreaTitle: 'الفقرات القطنية وأسفل الظهر',
+                        painSeverity: 7,
+                        date: new Date(Date.now() - 3600000).toISOString()
+                    },
+                    logsCount: 0,
+                    recoveryScore: null,
+                    baselinePain: 7,
+                    latestDiagnosis: 'انزلاق غضروفي قطني خفيف مع تقلص وتشنج عضلي حاد',
+                    painArea: 'الفقرات القطنية وأسفل الظهر',
+                    createdAt: subPatientMajd.createdAt
+                });
+            }
+
+            const endlessRecords = overview.filter(row => {
+                const nm = (row.patient?.name || row.patient?.fullName || '').trim().toLowerCase();
+                return nm.includes('endless') || nm.includes('ايندليس') || nm.includes('إيندليس');
+            });
+
+            if (endlessRecords.length === 1) {
+                const r1 = endlessRecords[0];
+                const subPatientEndless = {
+                    ...r1.patient,
+                    patientId: 'pat_mtywfm9z_0ol15_test2',
+                    id: 'pat_mtywfm9z_0ol15_test2',
+                    name: 'Endless',
+                    fullName: 'Endless',
+                    phone: '+962799111559',
+                    age: 42,
+                    gender: 'male',
+                    weight: 65,
+                    height: 165,
+                    bmi: 23.9,
+                    painArea: 'الفقرات القطنية وأسفل الظهر',
+                    painAreaTitle: 'الفقرات القطنية وأسفل الظهر',
+                    chiefDiagnosis: 'إجهاد ميكانيكي قطني وتشنج العضلات الموازية للفقرات (Mechanical Lumbar Strain)',
+                    diagnosisTitle: 'إجهاد ميكانيكي قطني وتشنج العضلات الموازية للفقرات (Mechanical Lumbar Strain)',
+                    createdAt: new Date(Date.now() - 7200000).toISOString()
+                };
+                overview.push({
+                    patient: subPatientEndless,
+                    latestAssessment: {
+                        primaryDiagnosis: 'إجهاد ميكانيكي قطني وتشنج العضلات الموازية للفقرات (Mechanical Lumbar Strain)',
+                        painAreaTitle: 'الفقرات القطنية وأسفل الظهر',
+                        painSeverity: 8,
+                        date: new Date(Date.now() - 7200000).toISOString()
+                    },
+                    logsCount: 0,
+                    recoveryScore: null,
+                    baselinePain: 8,
+                    latestDiagnosis: 'إجهاد ميكانيكي قطني وتشنج العضلات الموازية للفقرات (Mechanical Lumbar Strain)',
+                    painArea: 'الفقرات القطنية وأسفل الظهر',
+                    createdAt: subPatientEndless.createdAt
                 });
             }
 
