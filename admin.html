@@ -1571,6 +1571,20 @@
                         renderGeoAnalytics();
                     });
                 }
+
+                // ذكاء زر المزامنة: يختفي تلقائياً عند توصّل MQTT ويظهر عند انقطاعه
+                function updateSyncBtnVisibility() {
+                    const syncBtn = document.getElementById('btn-force-sync');
+                    if (!syncBtn) return;
+                    const mqttOk = typeof SmartCloudSync !== 'undefined' && SmartCloudSync.isMqttConnected();
+                    syncBtn.style.display = mqttOk ? 'none' : 'inline-flex';
+                    syncBtn.title = mqttOk
+                        ? 'البث اللحظي نشط - المزامنة تلقائية'
+                        : 'البث اللحظي غير متصل - اضغط للمزامنة اليدوية';
+                }
+                // فحص كل 10 ثوانٍ وتحديث ظهور الزر
+                setInterval(updateSyncBtnVisibility, 10000);
+                setTimeout(updateSyncBtnVisibility, 3000); // فحص أولي بعد 3 ثوانٍ (انتظار اتصال MQTT)
             }
         }
 

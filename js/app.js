@@ -905,6 +905,45 @@ function hideRoyalReportLoadingModal() {
 window.showRoyalReportLoadingModal = showRoyalReportLoadingModal;
 window.hideRoyalReportLoadingModal = hideRoyalReportLoadingModal;
 
+// ========================================================================
+// 🛡️ حارس السلامة الطبية: منع التشخيص بالذكاء الاصطناعي عند انقطاع الإنترنت
+// ========================================================================
+function updateOfflineDiagnosisUI() {
+    const isOnline = navigator.onLine;
+    const warning = document.getElementById('offline-diagnosis-warning');
+    const btn = document.getElementById('btn-run-diagnosis');
+    if (warning) warning.style.display = isOnline ? 'none' : 'block';
+    if (btn) {
+        if (isOnline) {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
+            btn.style.background = 'linear-gradient(135deg, var(--primary-gold) 0%, var(--primary-gold-dark) 100%)';
+        } else {
+            btn.disabled = true;
+            btn.style.opacity = '0.45';
+            btn.style.cursor = 'not-allowed';
+            btn.style.background = '#374151';
+        }
+    }
+}
+
+// مراقبة تغيرات حالة الشبكة لحظياً وتحديث الواجهة فوراً
+window.addEventListener('online',  updateOfflineDiagnosisUI);
+window.addEventListener('offline', updateOfflineDiagnosisUI);
+// تنفيذ فوري عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', updateOfflineDiagnosisUI);
+setTimeout(updateOfflineDiagnosisUI, 500);
+
+async function runDiagnosticAnalysisWithCheck() {
+    if (!navigator.onLine) {
+        updateOfflineDiagnosisUI();
+        return; // منع التشخيص تماماً عند انقطاع الإنترنت
+    }
+    await runDiagnosticAnalysis();
+}
+window.runDiagnosticAnalysisWithCheck = runDiagnosticAnalysisWithCheck;
+
 // تنفيذ الفحص السريري وتوليد التقرير الطبي الملكي
 async function runDiagnosticAnalysis() {
     showRoyalReportLoadingModal();
