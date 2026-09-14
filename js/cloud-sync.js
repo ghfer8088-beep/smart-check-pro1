@@ -1070,7 +1070,7 @@
         if (isMasterHubAllowed()) {
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 4000);
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // رفع timeout لـ 8 ثوانٍ للموبايل
                 const hubResp = await fetch(CLOUD_MASTER_HUB_ENDPOINT, { cache: 'no-store', signal: controller.signal });
                 clearTimeout(timeoutId);
                 if (hubResp.ok) {
@@ -1118,8 +1118,8 @@
         // 2. القناة الثانوية المضاعفة (Secondary ntfy Relay)
         try {
             const controller2 = new AbortController();
-            const timeoutId2 = setTimeout(() => controller2.abort(), 1500);
-            const pollUrl = `${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=24h`;
+            const timeoutId2 = setTimeout(() => controller2.abort(), 5000); // زيادة timeout
+            const pollUrl = `${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=all`; // جلب كل التاريخ وليس 24h
             const resp = await fetch(pollUrl, { signal: controller2.signal });
             clearTimeout(timeoutId2);
             if (resp.ok) {
@@ -1255,9 +1255,8 @@
             }
         } catch(e) {}
 
-        if (changed) {
-            saveCloudSyncedPatients(currentList);
-        }
+        // دائماً حفظ القائمة في localStorage حتى لو لم تتغير (مهم للأجهزة الجديدة كالموبايل)
+        saveCloudSyncedPatients(currentList);
         return currentList;
     }
 

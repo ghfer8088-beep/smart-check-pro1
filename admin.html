@@ -1521,29 +1521,46 @@
             if (lb) lb.style.display = 'none';
             if (mc) mc.style.display = 'block';
 
-            // تشغيل فوري ولحظي لعرض البيانات المحلية دون أي تأخير
+            // ========================================================
+            // 🌐 الخطوة 1: جلب البيانات السحابية أولاً قبل أي عرض
+            // (مهم جداً للموبايل وأي جهاز جديد - localStorage فارغ!)
+            // ========================================================
+            if (typeof SmartCloudSync !== 'undefined') {
+                try {
+                    // عرض مؤشر التحميل مؤقتاً
+                    const tbody = document.getElementById('patients-table-body');
+                    const mobileWrap = document.getElementById('patients-cards-container') || document.getElementById('patients-mobile-cards-wrap');
+                    const loadingHtml = '<div style="text-align:center;padding:30px;color:#94a3b8;font-size:1em;">⏳ جاري جلب البيانات من السحابة...</div>';
+                    if (tbody) tbody.innerHTML = `<tr><td colspan="10">${loadingHtml}</td></tr>`;
+                    if (mobileWrap) mobileWrap.innerHTML = loadingHtml;
+
+                    // انتظار جلب المرضى من السحابة (await - ليس then!)
+                    await SmartCloudSync.fetchCloudPatients();
+
+                    // جلب الزيارات في الخلفية دون انتظار
+                    SmartCloudSync.fetchCloudVisits().catch(() => {});
+                } catch(e) {
+                    console.warn('Cloud fetch warning:', e);
+                }
+            }
+
+            // ========================================================
+            // 🖥️ الخطوة 2: عرض البيانات المدمجة (محلي + سحابي)
+            // ========================================================
             try {
                 await loadAdminData(false);
             } catch(e) {
-                console.error('Error in initial loadAdminData:', e);
+                console.error('Error in loadAdminData:', e);
             }
 
             try {
                 loadNotificationsData(false);
-            } catch(e) {
-                console.error('Error in initial loadNotificationsData:', e);
-            }
+            } catch(e) {}
 
-            // ☁️ الاشتراك المباشر والمزامنة السحابية اللحظية للمرضى والزيارات حول العالم
+            // ========================================================
+            // 🔔 الخطوة 3: الاشتراك في التحديثات اللحظية
+            // ========================================================
             if (typeof SmartCloudSync !== 'undefined') {
-                SmartCloudSync.fetchCloudPatients().then(() => {
-                    loadAdminData(false);
-                    loadNotificationsData(false);
-                }).catch(() => {});
-                SmartCloudSync.fetchCloudVisits().then(() => {
-                    renderGeoAnalytics();
-                }).catch(() => {});
-
                 if (typeof SmartCloudSync.subscribe === 'function') {
                     SmartCloudSync.subscribe(async (newPatient) => {
                         await loadAdminData(false);
