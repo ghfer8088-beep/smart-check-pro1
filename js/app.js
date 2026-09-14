@@ -2579,23 +2579,85 @@ function formatBidiMedicalText(text) {
 function generateVertebralMappingCard(painArea, contextText = '') {
     const text = ((painArea || '') + ' ' + (contextText || '')).toLowerCase();
     
-    let isCervical = /عنق|رقب|cervical|neck|صداع|فك|كتف/.test(text);
-    let isThoracic = /صدر|أعلى\s*الظهر|منتصف\s*الظهر|thoracic|أبهر|ابهر|لوح|كتف/.test(text);
-    let isLumbar = /ظهر|قطن|lumbar|دسك|غضروف|نسا|سياتيكا|عرق|فخذ|ساق|ركب/.test(text);
-    let isSacral = /حوض|عجز|عصعص|ردف|كمثرية|مقعدة|sacr|pelvi|si\s*joint/.test(text);
-    
-    if (!isCervical && !isThoracic && !isLumbar && !isSacral) {
-        if (/ركب|قدم|كاحل/.test(text)) {
-            isLumbar = true;
-            isSacral = true;
-        } else if (/يد|رسغ|معصم|كوع/.test(text)) {
-            isCervical = true;
-        } else {
-            isLumbar = true;
-        }
+    // مناطق طرفية (غير فقرية) — تُعرض كروت تشريحية خاصة بها
+    let isElbow   = /كوع|مرفق|elbow|tennis.*elbow|epicondyl/.test(text);
+    let isWrist   = /رسغ|معصم|يد|carpal|wrist|hand/.test(text);
+    let isKnee    = /ركب|ركبه|رضف|صابون|patell|knee/.test(text);
+    let isAnkle   = /كاحل|قدم|كعب|عقب|أخمص|ankle|foot|plantar/.test(text);
+    let isShoulder = /كتف|كفة|كفه|shoulder|rotator/.test(text);
+    let isHip     = /حوض|فخذ|كمثرية|ورك|hip|sciatica/.test(text);
+
+    // المناطق الفقرية — فقط إذا كان الألم فقرياً فعلاً
+    let isCervical = /عنق|رقب|cervical|neck|صداع|فك/.test(text);
+    let isThoracic = /صدر|أعلى\s*الظهر|منتصف\s*الظهر|thoracic|أبهر|ابهر|لوح/.test(text);
+    let isLumbar   = /(?<!\w)ظهر(?!\w)|قطن|lumbar|دسك|غضروف|نسا|سياتيكا|عرق\s*النسا/.test(text);
+    let isSacral   = /عجز|عصعص|ردف|مقعدة|sacr|si\s*joint/.test(text);
+
+    // إذا لم تُكتشف أي منطقة → افتراضي قطني
+    if (!isCervical && !isThoracic && !isLumbar && !isSacral &&
+        !isElbow && !isWrist && !isKnee && !isAnkle && !isShoulder && !isHip) {
+        isLumbar = true;
     }
 
     const items = [];
+
+    // === الكروت الطرفية (مفاصل غير فقرية) ===
+    if (isElbow) {
+        items.push({
+            region: 'مفصل الكوع (Elbow Joint)',
+            icon: '💪',
+            vertebrae: 'العضلة الإشعاعية الأمامية والعضلة ثلاثية الرأس — الرأس اللقيمي الجانبي والإنسي',
+            nerves: 'العصب الكعبري (Radial N.) والعصب الزندي (Ulnar N.) — جذور C5-C8',
+            clinicalImpact: 'ألم المرفق (Tennis Elbow / Golfer\'s Elbow): التهاب أوتار اللقيمة الجانبية أو الإنسية مع تشنج عضلات الساعد. ينجم غالباً عن حركات تكرارية أو إجهاد رياضي.'
+        });
+    }
+    if (isWrist) {
+        items.push({
+            region: 'مفصل الرسغ ونفق الرسغ (Wrist & Carpal Tunnel)',
+            icon: '🤲',
+            vertebrae: 'عظام الرسغ الثماني (Carpal Bones) — المفصل الكعبري الرسغي',
+            nerves: 'العصب المتوسط (Median N.) داخل نفق الرسغ — جذور C6-C7',
+            clinicalImpact: 'متلازمة نفق الرسغ: خدر وتنميل في الإبهام والسبابة والوسطى، تشتد ليلاً. والتهاب الغمد الزلالي الوظيفي من الحركات التكرارية.'
+        });
+    }
+    if (isKnee) {
+        items.push({
+            region: 'مفصل الركبة وصابونة الرضفة (Knee & Patella)',
+            icon: '🦵',
+            vertebrae: 'الغضروف الرضفي الفخذي والغضروف الهلالي الإنسي والجانبي (Meniscus)',
+            nerves: 'العصب الصافن (Saphenous N.) والأعصاب الوركية الفرعية — جذور L3-S1',
+            clinicalImpact: 'احتكاك الرضفة الفخذي، تلف الغضروف الهلالي، أو التهاب كيسة الركبة؛ ألم عند النزول بالدرج أو الجلوس الطويل مع صوت فرقعة.'
+        });
+    }
+    if (isAnkle) {
+        items.push({
+            region: 'مفصل الكاحل واللفافة الأخمصية (Ankle & Plantar)',
+            icon: '🦶',
+            vertebrae: 'عظام الكاحل والعقب (Talus & Calcaneus) — الأربطة الشظوية والأخيلية',
+            nerves: 'العصب الظنبوبي الخلفي (Posterior Tibial N.) — جذور L4-S2',
+            clinicalImpact: 'التهاب اللفافة الأخمصية، التهاب وتر أخيل، أو إجهاد الرباط الشظوي؛ ألم حاد في باطن القدم عند أولى خطوات الصباح.'
+        });
+    }
+    if (isShoulder) {
+        items.push({
+            region: 'مفصل الكتف والكفة المدورة (Shoulder & Rotator Cuff)',
+            icon: '🏋️',
+            vertebrae: 'المفصل الحقاني العضدي — عظمة الترقوة ولوح الكتف والكفة المدورة الأربعة',
+            nerves: 'العصب الإبطي (Axillary N.) والعصب فوق الكتفي (Suprascapular N.) — جذور C5-C6',
+            clinicalImpact: 'انحشار الكفة المدورة (Impingement Syndrome)، التهاب الوتر، أو تيبس الكتف المتجمد (Frozen Shoulder)؛ ألم عند رفع الذراع للأمام أو الجانب.'
+        });
+    }
+    if (isHip) {
+        items.push({
+            region: 'مفصل الورك وعضلات الحوض (Hip & Pelvis)',
+            icon: '⚖️',
+            vertebrae: 'مفصل الورك الحقاني الفخذي — عضلة الكمثرية (Piriformis) والمفصل العجزي الحرقفي',
+            nerves: 'العصب الوركي (Sciatic N.) والعصب الجلدي الجانبي للفخذ — جذور L4-S3',
+            clinicalImpact: 'متلازمة عضلة الكمثرية، تهيج العصب الوركي، أو احتكاك مفصل الورك؛ ألم يمتد من الردف إلى الفخذ ويزداد عند الجلوس الطويل.'
+        });
+    }
+
+    // === الكروت الفقرية ===
     if (isCervical) {
         items.push({
             region: 'الفقرات العنقية (Cervical Spine)',
