@@ -1329,7 +1329,7 @@
                                 const normalized = normalizeCloudPatientRecord(pt);
                                 if (normalized) {
                                     const cList = getCloudSyncedPatients();
-                                    const pIdx = cList.findIndex(x => (normalized.id && x.id === normalized.id) || (normalized.phone && x.phone === normalized.phone));
+                                    const pIdx = cList.findIndex(x => normalized.id && (x.id === normalized.id || x.patientId === normalized.id));
                                     if (pIdx >= 0) cList[pIdx] = Object.assign({}, cList[pIdx], normalized);
                                     else cList.unshift(normalized);
                                     saveCloudSyncedPatients(cList);

@@ -1588,7 +1588,7 @@
             initAdminPage();
         }
 
-            // 🔄 فحص دوري هادئ كل 45 ثانية كاحتياطي، مع الاعتماد الكامل على البث اللحظي الفوري عبر MQTT
+            // 🔄 فحص دوري هادئ تلقائي كل 15 ثانية يضمن وصول أي مريض جديد حتى لو انقطع البث اللحظي
             setInterval(async () => {
                 try {
                     if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.fetchCloudPatients === 'function') {
@@ -1599,7 +1599,7 @@
                     renderTable(getFilteredPatientsList());
                     renderGeoAnalytics();
                 } catch (e) {}
-            }, 45000);
+            }, 15000);
 
         // ==========================================================================
         // دوال إدارة وتوثيق قصص النجاح بالفيديو (Success Stories Video Manager)
@@ -2345,6 +2345,7 @@
             renderTable(getFilteredPatientsList());
             renderGeoAnalytics();
         }
+        window.loadAdminData = loadAdminData;
 
         function updatePatientFilterCounts() {
             const countAll = allPatientsList.length;
@@ -2420,6 +2421,7 @@
             updateNotificationCounts();
             renderNotifications();
         }
+        window.loadNotificationsData = loadNotificationsData;
 
         function updateNotificationCounts() {
             const unreadCount = allNotificationsList.filter(n => !n.read).length;
@@ -2990,6 +2992,7 @@
                 }).join('');
             }
         }
+        window.renderGeoAnalytics = renderGeoAnalytics;
 
         let activeTargetSessionNum = 2;
         let activeTargetPatientPhone = '';
