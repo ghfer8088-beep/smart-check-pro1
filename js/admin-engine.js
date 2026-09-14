@@ -346,18 +346,9 @@ const AdminEngine = (function() {
                     }
                 }
 
-                // 4. مطابقة الاسم الصريح للحالات المعروفة
+                // 4. فحص الملاحظات والأعراض والمصطلحات السريرية — لا استنتاج بالاسم ولا توليد عشوائي
                 if (!resolvedPainArea) {
-                    if (p.name && p.name.includes('شادي')) {
-                        resolvedPainArea = 'مفصل الركبة وصابونة الرضفة';
-                    } else if (p.name && p.name.includes('نضال')) {
-                        resolvedPainArea = 'مفصل الكتف والكفة المدورة';
-                    }
-                }
-
-                // 5. فحص الملاحظات والأعراض والرنين
-                if (!resolvedPainArea) {
-                    const textSearch = `${p.notes || ''} ${p.mriReportText || ''} ${(Array.isArray(p.collectedSymptoms) ? p.collectedSymptoms.join(' ') : '')}`.toLowerCase();
+                    const textSearch = `${p.notes || ''} ${p.mriReportText || ''} ${(Array.isArray(p.collectedSymptoms) ? p.collectedSymptoms.join(' ') : '')} ${p.primaryComplaint || ''} ${p.complaint || ''}`.toLowerCase();
                     if (/ركب|ركبه|knee|patella|صابون|رضف/.test(textSearch)) resolvedPainArea = 'مفصل الركبة وصابونة الرضفة';
                     else if (/كتف|shoulder|كفة|كفه/.test(textSearch)) resolvedPainArea = 'مفصل الكتف والكفة المدورة';
                     else if (/عنق|رقب|رقبه|neck|cervical/.test(textSearch)) resolvedPainArea = 'الفقرات العنقية والرقبة';
@@ -367,19 +358,8 @@ const AdminEngine = (function() {
                     else if (/صدر|أعلى\s*الظهر|منتصف\s*الظهر|thoracic|أبهر|ابهر/.test(textSearch)) resolvedPainArea = 'الفقرات الصدرية وأعلى الظهر (الأبهر)';
                     else if (/ظهر|قطن|قطنية|lumbar|دسك|غضروف/.test(textSearch)) resolvedPainArea = 'الفقرات القطنية وأسفل الظهر';
                 }
-
-                // 6. توزيع ديموغرافي ذكي لتفادي التكرار
-                if (!resolvedPainArea) {
-                    const seedVal = (p.patientId || p.phone || p.name || 'pt').split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-                    const areas = [
-                        'الفقرات القطنية وأسفل الظهر',
-                        'مفصل الركبة وصابونة الرضفة',
-                        'مفصل الكتف والكفة المدورة',
-                        'الفقرات العنقية والرقبة',
-                        'عضلات الحوض وعرق النسا'
-                    ];
-                    resolvedPainArea = areas[seedVal % areas.length];
-                }
+                // إذا لم تُوجد بيانات حقيقية → لا توليد عشوائي، نترك الحقل فارغاً أو "لم يُحدد بعد"
+                if (!resolvedPainArea) resolvedPainArea = '';
 
                 // استخراج التشخيص السريري الحقيقي الموثق للمريض
                 let resolvedDiagnosis = '';
@@ -411,26 +391,9 @@ const AdminEngine = (function() {
                     }
                 }
 
-                // 4. توليد تشخيص سريري تخصصي دقيق ومطابق تماماً لموضع الألم
-                if (!resolvedDiagnosis) {
-                    if (resolvedPainArea.includes('ركب')) {
-                        resolvedDiagnosis = 'متلازمة الألم الرضفي الفخذي واحتكاك صابونة الركبة';
-                    } else if (resolvedPainArea.includes('كتف')) {
-                        resolvedDiagnosis = 'متلازمة انحشار أوتار الكفة المدورة وتيبس مفصل الكتف';
-                    } else if (resolvedPainArea.includes('عنق') || resolvedPainArea.includes('رقب')) {
-                        resolvedDiagnosis = 'متلازمة الإجهاد العنقي الوضعي وتشنج الفقرات';
-                    } else if (resolvedPainArea.includes('كاحل') || resolvedPainArea.includes('قدم')) {
-                        resolvedDiagnosis = 'إجهاد الأربطة الشظوية والتهاب اللفافة الأخمصية';
-                    } else if (resolvedPainArea.includes('رسغ') || resolvedPainArea.includes('معصم') || resolvedPainArea.includes('يد')) {
-                        resolvedDiagnosis = 'متلازمة نفق الرسغ والتهاب أوتار اليد الوظيفي';
-                    } else if (resolvedPainArea.includes('نسا') || resolvedPainArea.includes('حوض')) {
-                        resolvedDiagnosis = 'اعتلال الجذور العصبية القطنية (عرق النسا) ومتلازمة الكمثرية';
-                    } else if (resolvedPainArea.includes('صدر') || resolvedPainArea.includes('أبهر')) {
-                        resolvedDiagnosis = 'متلازمة الأبهر والشد العضلي بين لوحي الكتف';
-                    } else {
-                        resolvedDiagnosis = 'انزلاق غضروفي قطني خفيف مع تقلص وتشنج عضلي حاد';
-                    }
-                }
+                // 4. إذا لم يُوجد تشخيص حقيقي → لا توليد تلقائي، نترك فارغاً
+                // (لا نعرض تشخيصاً وهمياً أفضل من عدم التشخيص)
+                if (!resolvedDiagnosis) resolvedDiagnosis = '';
 
                 p.painArea = resolvedPainArea;
                 p.painAreaTitle = resolvedPainArea;

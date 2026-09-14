@@ -1255,12 +1255,15 @@ async function runDiagnosticAnalysis() {
         }
 
         if (!assessmentResult || !assessmentResult.primaryDiagnosis) {
+            // حساب درجة الثقة من اكتمال بيانات المريض الفعلية
+            const _filled = [age, gender, weight, height, q1Val, q2Val, q4Val, userNotes].filter(x => x && x !== '').length;
+            const _conf = Math.min(95, Math.max(60, Math.round((_filled / 8) * 100)));
             assessmentResult = {
                 primaryDiagnosis: `تقييم سريري وإجهاد وظيفي لموضع (${currentSelectedPoint?.title || 'المفصل المحدد'})`,
                 primaryDiagnosisKey: currentSelectedPoint?.id || 'general_strain',
                 secondaryDiagnosis: 'تشنج تعويضي في الأنسجة المحيطة ومحدودية حركية ميكانيكية',
-                probability: 93,
-                confidenceScore: 92,
+                probability: _conf + 3,
+                confidenceScore: _conf,
                 rootLevel: currentSelectedPoint?.title || 'موضع الألم',
                 biomechanicalMechanism: `تم رصد إجهاد ميكانيكي وضغط انضغاطي على الأنسجة والمفاصل في (${currentSelectedPoint?.title || 'المنطقة المحددة'}). تساعد خطة التمارين التأهيلية في تخفيف الألم واستعادة التوازن الطبيعي.`,
                 aggravatingFactors: ['الحركات المفاجئة وحمل الأوزان', 'الوضعيات الثابتة لفترات طويلة'],
