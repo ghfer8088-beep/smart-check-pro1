@@ -526,7 +526,8 @@
                 </div>
                 <div style="background: #111827; padding: 20px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3); text-align: center;">
                     <div id="stat-recovery-avg" style="font-size: 2.4em; font-weight: bold; color: #38bdf8;">0%</div>
-                    <div style="color: #94a3b8; font-size: 0.92em;">متوسط نسبة التعافي</div>
+                    <div style="color: #94a3b8; font-size: 0.92em;">متوسط نسبة التعافي للملتزمين</div>
+                    <div id="stat-recovery-avg-sub" style="color: #38bdf8; font-size: 0.78em; margin-top: 3px;">(للمراجعين المباشرين بالجلسات)</div>
                 </div>
             </div>
 
@@ -1593,10 +1594,7 @@
                     if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.fetchCloudPatients === 'function') {
                         await SmartCloudSync.fetchCloudPatients();
                     }
-                    allPatientsList = await AdminEngine.loadPatientsOverview();
-                    updatePatientFilterCounts();
-                    renderTable(getFilteredPatientsList());
-                    renderGeoAnalytics();
+                    await loadAdminData(false);
                 } catch (e) {}
             }, 15000);
 
@@ -2337,8 +2335,24 @@
             document.getElementById('stat-patients-count').textContent = allPatientsList.length;
             const totalLogs = allPatientsList.reduce((acc, p) => acc + (p.logsCount || 0), 0);
             document.getElementById('stat-sessions-count').textContent = totalLogs;
-            const avgRec = allPatientsList.length > 0 ? Math.round(allPatientsList.reduce((acc, p) => acc + (p.recoveryScore || 0), 0) / allPatientsList.length) : 0;
-            document.getElementById('stat-recovery-avg').textContent = avgRec + '%';
+            // احتساب متوسط نسبة التعافي سريرياً: للملتزمين بالجلسات فقط (ممن باشروا جلساتهم فعلياً)
+            const patientsWithActiveLogs = allPatientsList.filter(p => (p.logsCount || 0) > 0 && (p.recoveryScore || 0) > 0);
+            const subTitleEl = document.getElementById('stat-recovery-avg-sub');
+            if (patientsWithActiveLogs.length > 0) {
+                const avgRec = Math.round(patientsWithActiveLogs.reduce((acc, p) => acc + (p.recoveryScore || 0), 0) / patientsWithActiveLogs.length);
+                document.getElementById('stat-recovery-avg').textContent = avgRec + '%';
+                if (subTitleEl) subTitleEl.textContent = `(${patientsWithActiveLogs.length} مراجع ملتزم بالجلسات)`;
+            } else {
+                const anyWithScore = allPatientsList.filter(p => (p.recoveryScore || 0) > 0);
+                if (anyWithScore.length > 0) {
+                    const avgRec = Math.round(anyWithScore.reduce((acc, p) => acc + (p.recoveryScore || 0), 0) / anyWithScore.length);
+                    document.getElementById('stat-recovery-avg').textContent = avgRec + '%';
+                    if (subTitleEl) subTitleEl.textContent = `(${anyWithScore.length} مراجع مسجل للتعافي)`;
+                } else {
+                    document.getElementById('stat-recovery-avg').textContent = '—';
+                    if (subTitleEl) subTitleEl.textContent = '(بانتظار تسجيل أول جلسة للمراجعين)';
+                }
+            }
 
             updatePatientFilterCounts();
             renderTable(getFilteredPatientsList());

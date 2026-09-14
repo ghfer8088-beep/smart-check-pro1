@@ -170,10 +170,10 @@ const DEFAULT_FRONT_POINTS = [
 
 const DEFAULT_BACK_POINTS = [
     { id: "cervical_back", region: "cervical", title: "الفقرات العنقية (الرقبة الخلفية)", keywords: "ديسك رقبة, تشنج رقبة, فقرات عنقية, تصلب رقبة", x: 50, y: 19 },
-    { id: "trapezius_right", region: "cervical", title: "عضلة شبه المنحرفة وأعلى الكتف الأيمن", keywords: "أبهر يمين, عقدة عضلية, شبه منحرفة", x: 36, y: 23 },
-    { id: "trapezius_left", region: "cervical", title: "عضلة شبه المنحرفة وأعلى الكتف الأيسر", keywords: "أبهر يسار, عقدة عضلية, شبه منحرفة", x: 64, y: 23 },
-    { id: "scapula_right", region: "shoulder", title: "لوح الكتف الأيمن", keywords: "لوح كتف يمين, خلف الظهر", x: 36, y: 29 },
-    { id: "scapula_left", region: "shoulder", title: "لوح الكتف الأيسر", keywords: "لوح كتف يسار, خلف الظهر", x: 64, y: 29 },
+    { id: "trapezius_right", region: "shoulder", title: "أعلى الكتف الأيمن وعضلة شبه المنحرفة", keywords: "كتف يمين, أعلى الكتف, مفصل الكتف, كفة مدورة, أبهر يمين, عقدة عضلية, شبه منحرفة", x: 36, y: 23 },
+    { id: "trapezius_left", region: "shoulder", title: "أعلى الكتف الأيسر وعضلة شبه المنحرفة", keywords: "كتف يسار, أعلى الكتف, مفصل الكتف, كفة مدورة, أبهر يسار, عقدة عضلية, شبه منحرفة", x: 64, y: 23 },
+    { id: "scapula_right", region: "shoulder", title: "لوح الكتف الأيمن", keywords: "لوح كتف يمين, خلف الظهر, كفة مدورة", x: 36, y: 29 },
+    { id: "scapula_left", region: "shoulder", title: "لوح الكتف الأيسر", keywords: "لوح كتف يسار, خلف الظهر, كفة مدورة", x: 64, y: 29 },
     { id: "thoracic_spine", region: "general", title: "الفقرات الصدرية وأعلى الظهر", keywords: "أعلى الظهر, فقرات صدرية, بين الكتفين", x: 50, y: 34 },
     { id: "lumbar_spine", region: "lumbar", title: "الفقرات القطنية وأسفل الظهر", keywords: "ديسك أسفل الظهر, فقرات قطنية, لومبار, انزلاق غضروفي, ديسك", x: 50, y: 46 },
     { id: "sacroiliac_right", region: "lumbar", title: "المفصل العجزي الحوضي الأيمن", keywords: "مفصل عجزي يمين, عجز, حوض خلفي", x: 42, y: 50 },
@@ -217,11 +217,11 @@ function detectAnatomicalPointFromText(text) {
     if (/ركبة|ركبه|صابونة|طقطقة\s*ركبة|احتكاك\s*ركبة|patella|knee/i.test(tLower)) {
         return allPts.find(p => p.id === 'knee_right_f') || { id: 'knee_right_f', title: 'مفصل الركبة والصابونة', region: 'knee' };
     }
+    if (/كتف|كتفي|لوح\s*الكتف|كفة\s*مدورة|تجمد\s*كتف|شبه\s*منحرفة|shoulder|scapula/i.test(tLower)) {
+        return allPts.find(p => p.id === 'shoulder_right_f') || { id: 'shoulder_right_f', title: 'مفصل الكتف والكفة المدورة', region: 'shoulder' };
+    }
     if (/رقبة|رقبه|عنق|ديسك\s*رقبة|تصلب\s*رقبة|فقرات\s*عنقية|cervical|neck/i.test(tLower)) {
         return allPts.find(p => p.id === 'cervical_back') || { id: 'cervical_back', title: 'الفقرات العنقية (الرقبة الخلفية)', region: 'cervical' };
-    }
-    if (/كتف|كتفي|لوح\s*الكتف|أبهر|ابهر|كفة\s*مدورة|تجمد\s*كتف|shoulder|scapula/i.test(tLower)) {
-        return allPts.find(p => p.id === 'shoulder_right_f') || { id: 'shoulder_right_f', title: 'مفصل الكتف والكفة المدورة', region: 'shoulder' };
     }
     if (/كاحل|قدم|كعب|مشط|أكيليس|اكيليس|مسمار\s*كعب|لفافة\s*أخمصية|ankle|foot|heel/i.test(tLower)) {
         return allPts.find(p => p.id === 'ankle_right_f') || { id: 'ankle_right_f', title: 'الكاحل ومفصل القدم', region: 'knee' };

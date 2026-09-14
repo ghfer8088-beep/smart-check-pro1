@@ -463,6 +463,62 @@
         triggerAppUIRefresh();
     }
 
+    // إدارة طابور الترحيل السحابي المعلق (Offline & Mobile Dispatch Queue)
+    function enqueuePendingCloudPatient(patient) {
+        try {
+            const raw = localStorage.getItem('smart_pending_cloud_sync');
+            let q = raw ? JSON.parse(raw) : [];
+            if (!Array.isArray(q)) q = [];
+            const pId = patient.id || patient.patientId;
+            const idx = q.findIndex(x => (x.id === pId || x.patientId === pId));
+            if (idx >= 0) q[idx] = { ...q[idx], ...patient, queuedAt: Date.now() };
+            else q.push({ ...patient, queuedAt: Date.now() });
+            localStorage.setItem('smart_pending_cloud_sync', JSON.stringify(q));
+        } catch(e) {}
+    }
+
+    function dequeuePendingCloudPatient(pId) {
+        if (!pId) return;
+        try {
+            const raw = localStorage.getItem('smart_pending_cloud_sync');
+            if (!raw) return;
+            let q = JSON.parse(raw);
+            if (Array.isArray(q)) {
+                q = q.filter(x => x.id !== pId && x.patientId !== pId);
+                localStorage.setItem('smart_pending_cloud_sync', JSON.stringify(q));
+            }
+        } catch(e) {}
+    }
+
+    async function flushPendingCloudSyncQueue() {
+        try {
+            const raw = localStorage.getItem('smart_pending_cloud_sync');
+            if (!raw) return;
+            const q = JSON.parse(raw);
+            if (!Array.isArray(q) || q.length === 0) return;
+
+            for (const pt of q) {
+                const rawBody = JSON.stringify(pt);
+                try {
+                    const r = await fetch(CLOUD_SYNC_ENDPOINT, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: rawBody,
+                        keepalive: true
+                    });
+                    if (r && r.ok) {
+                        dequeuePendingCloudPatient(pt.id || pt.patientId);
+                    }
+                } catch(err) {}
+            }
+        } catch(e) {}
+    }
+
+    if (typeof window !== 'undefined') {
+        window.addEventListener('online', flushPendingCloudSyncQueue);
+        setInterval(flushPendingCloudSyncQueue, 6000);
+    }
+
     // دالة ترحيل مريض جديد سحابياً من أي مكان في العالم
     async function dispatchPatientToCloud(patientRecord) {
         if (!patientRecord) return null;
@@ -607,13 +663,16 @@
             } catch (e) {}
         }
 
+        // 3.4. حفظ في طابور الترحيل لضمان عدم ضياع أي سجل في حالة انقطاع اتصال الهاتف أو إغلاق المتصفح
+        enqueuePendingCloudPatient(enhancedRecord);
+
         // 3.5. بث فوري مباشر عبر شبكة MQTT لجميع الأجهزة واللابتوبات
         mqttPublish(MQTT_TOPICS.PATIENTS, { patient: enhancedRecord, timestamp: Date.now() }, { qos: 1 });
 
         // 4. ترحيل حقيقي سحابي فوري للسحابة المركزية العالمية (Master Cloud Hub) إن كانت متاحة
         if (isMasterHubAllowed()) {
             try {
-                fetch(CLOUD_MASTER_HUB_ENDPOINT, { cache: 'no-store' })
+                fetch(CLOUD_MASTER_HUB_ENDPOINT, { cache: 'no-store', keepalive: true })
                     .then(r => {
                         if (!r.ok) { recordMasterHubFailure(r.status); return null; }
                         return r.json();
@@ -637,20 +696,31 @@
                                     visits: (masterObj && masterObj.data && masterObj.data.visits) ? (masterObj.data.visits + 1) : 1,
                                     lastUpdated: new Date().toISOString()
                                 }
-                            })
+                            }),
+                            keepalive: true
                         });
                     })
                     .catch(() => {});
             } catch (e) {}
         }
 
-        // 5. ترحيل إضافي عبر جسر ntfy لضمان التكرار والموثوقية (Redundancy)
+        // 5. ترحيل إضافي عبر جسر ntfy لضمان التكرار والموثوقية (Redundancy) مع دعم خاص للموبايل
         try {
             const rawBody = JSON.stringify(enhancedRecord);
+            if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+                try {
+                    const blob = new Blob([rawBody], { type: 'application/json' });
+                    navigator.sendBeacon(CLOUD_SYNC_ENDPOINT, blob);
+                } catch(eBeacon) {}
+            }
+
             fetch(CLOUD_SYNC_ENDPOINT, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: rawBody
+                body: rawBody,
+                keepalive: true
+            }).then(() => {
+                dequeuePendingCloudPatient(enhancedRecord.id || enhancedRecord.patientId);
             }).catch(() => {});
 
             fetch('https://ntfy.sh', {
@@ -660,7 +730,8 @@
                     topic: 'wada3an_smart_check_clinic_sync_2026',
                     message: rawBody,
                     title: 'New Patient Record'
-                })
+                }),
+                keepalive: true
             }).catch(() => {});
         } catch (e) {}
 

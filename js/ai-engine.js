@@ -129,14 +129,14 @@ const Wada3anAiEngine = {
                 condition = 'متلازمة الألم الرضفي الفخذي واحتكاك صابونة الركبة (Patellofemoral Pain Syndrome)';
             } else if (pointId.includes('lumbar') || painAreaLower.includes('قطني') || painAreaLower.includes('أسفل الظهر')) {
                 condition = 'انزلاق غضروفي قطني واعتلال الجذور العصبية L4-S1 (Lumbar Disc Herniation & Radiculopathy)';
+            } else if (pointId.includes('shoulder') || painAreaLower.includes('كتف') || pointId.includes('trapezius')) {
+                condition = 'متلازمة ضغط واحتكاك أوتار الكفة المدورة وتيبس مفصل الكتف (Rotator Cuff Impingement)';
             } else if (pointId.includes('cervical') || painAreaLower.includes('عنق') || painAreaLower.includes('رقب')) {
                 condition = 'انزلاق غضروفي عنقي وانحباس مفاصل الفقرات C5-C7 (Cervical Disc & Facet Syndrome)';
-            } else if (pointId.includes('scapula') || pointId.includes('trapezius') || painAreaLower.includes('أبهر')) {
+            } else if (pointId.includes('scapula') || painAreaLower.includes('أبهر')) {
                 condition = 'متلازمة عقد الأبهر الليفية وتشنج العضلات المعينية واللوحية (Rhomboid & Scapular Trigger Points)';
             } else if (pointId.includes('sacroiliac') || pointId.includes('gluteal') || painAreaLower.includes('حوض') || painAreaLower.includes('عرق النسا')) {
                 condition = 'متلازمة العضلة الكمثرية وعرق النسا الانضغاطي (Piriformis Syndrome & Sciatica)';
-            } else if (pointId.includes('shoulder') || painAreaLower.includes('كتف')) {
-                condition = 'متلازمة ضغط واحتكاك أوتار الكفة المدورة وتيبس مفصل الكتف (Rotator Cuff Impingement)';
             } else if (pointId.includes('ankle') || painAreaLower.includes('كاحل') || painAreaLower.includes('الكاحل') || painAreaLower.includes('مفصل القدم')) {
                 // ✅ الكاحل مُنفصل تشريحياً عن الكعب
                 condition = 'خلل وعدم استقرار مفصل الكاحل مع إجهاد الرباط الخارجي الجانبي (Lateral Ankle Instability & Ligament Strain)';

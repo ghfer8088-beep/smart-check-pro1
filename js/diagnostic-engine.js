@@ -484,10 +484,10 @@ const ClinicalEngine = (function() {
 
     // تعيين التماثل للنقاط اليسرى والنقاط المشتركة
     ADVANCED_CLINICAL_KNOWLEDGE.cervical_front = ADVANCED_CLINICAL_KNOWLEDGE.cervical_back;
-    ADVANCED_CLINICAL_KNOWLEDGE.trapezius_right = ADVANCED_CLINICAL_KNOWLEDGE.cervical_back;
-    ADVANCED_CLINICAL_KNOWLEDGE.trapezius_left = ADVANCED_CLINICAL_KNOWLEDGE.cervical_back;
-    ADVANCED_CLINICAL_KNOWLEDGE.scapula_right = ADVANCED_CLINICAL_KNOWLEDGE.cervical_back;
-    ADVANCED_CLINICAL_KNOWLEDGE.scapula_left = ADVANCED_CLINICAL_KNOWLEDGE.cervical_back;
+    ADVANCED_CLINICAL_KNOWLEDGE.trapezius_right = ADVANCED_CLINICAL_KNOWLEDGE.shoulder_right_f;
+    ADVANCED_CLINICAL_KNOWLEDGE.trapezius_left = ADVANCED_CLINICAL_KNOWLEDGE.shoulder_right_f;
+    ADVANCED_CLINICAL_KNOWLEDGE.scapula_right = ADVANCED_CLINICAL_KNOWLEDGE.shoulder_right_f;
+    ADVANCED_CLINICAL_KNOWLEDGE.scapula_left = ADVANCED_CLINICAL_KNOWLEDGE.shoulder_right_f;
 
     // =====================================================================
     // ط. الفقرات الصدرية وأعلى الظهر (Thoracic Spine & Mid-Back)
@@ -691,10 +691,10 @@ const ClinicalEngine = (function() {
         if (!pData) {
             if (pointId.includes("wrist")) pData = ADVANCED_CLINICAL_KNOWLEDGE.wrist_right_f;
             else if (pointId.includes("elbow")) pData = ADVANCED_CLINICAL_KNOWLEDGE.elbow_right_f;
-            else if (pointId.includes("shoulder")) pData = ADVANCED_CLINICAL_KNOWLEDGE.shoulder_right_f;
+            else if (pointId.includes("shoulder") || pointId.includes("trapezius") || pointId.includes("scapula")) pData = ADVANCED_CLINICAL_KNOWLEDGE.shoulder_right_f;
             // ✅ إصلاح: head يحول للصداع، ليس للرقبة
             else if (pointId.includes("head") || pointId.includes("forehead")) pData = ADVANCED_CLINICAL_KNOWLEDGE.head_back;
-            else if (pointId.includes("cervical") || pointId.includes("neck") || pointId.includes("trapezius")) pData = ADVANCED_CLINICAL_KNOWLEDGE.cervical_back;
+            else if (pointId.includes("cervical") || pointId.includes("neck")) pData = ADVANCED_CLINICAL_KNOWLEDGE.cervical_back;
             // ✅ إصلاح: thoracic و chest لهما قواعد مستقلة
             else if (pointId.includes("thoracic")) pData = ADVANCED_CLINICAL_KNOWLEDGE.thoracic_spine;
             else if (pointId.includes("chest") || pointId.includes("sternum") || pointId.includes("rib")) pData = ADVANCED_CLINICAL_KNOWLEDGE.chest_sternum;
@@ -830,7 +830,51 @@ const ClinicalEngine = (function() {
                 chiropracticProtocol = "إطلاق نقاط الزناد العضلية في الأكتاف وقاعدة الجمجمة وموازنة محاذاة فقرات الرقبة.";
             }
         }
-        // تحليل حالات الرقبة
+        // تحليل حالات مفصل الكتف والكفة المدورة وأعلى الكتف (Shoulder & Rotator Cuff)
+        else if ((pointId || "").includes("shoulder") || (pointId || "").includes("trapezius") || (pointId || "").includes("scapula") || (painArea || "").includes("كتف") || notes.includes("كتف")) {
+            if (q1Val === "adhesive_capsulitis" || notes.includes("تجمد") || notes.includes("متجمد")) {
+                primaryDiagnosis = "الكتف المتجمد والتهاب المحفظة اللاصق (Adhesive Capsulitis - Frozen Shoulder)";
+                primaryDiagnosisKey = "shoulder_rotator_impingement";
+                secondaryDiagnosis = "محدودية وتيبس محفظة مفصل الكتف وتشنج العضلة شبه المنحرفة";
+                probability = 94;
+                rootLevel = "Glenohumeral Joint Capsule";
+                biomechanicalMechanism = "التهاب وتليف وانكماش في المحفظة الزلالية المحيطة برأس عظمة العضد يحد من حركة المفصل في كافة الاتجاهات وخاصة الدوران الخارجي والرفع.";
+                aggravatingFactors = ["محاولة رفع الذراع للأعلى أو خلف الظهر", "النوم على الكتف المصاب", "الحركات السريعة المفاجئة"];
+                relievingFactors = ["تمرين بندول كودمان المهدئ", "تطبيق الكمادات الدافئة", "الحركات اللطيفة المتدرجة"];
+                chiropracticProtocol = "تليين وتحريك محفظة مفصل الكتف يدوياً وتمديد الأنسجة الليفية لاستعادة المدى الحركي.";
+            } else if (q1Val === "biceps_tendon" || notes.includes("بايسبس") || notes.includes("وتر العضد")) {
+                primaryDiagnosis = "التهاب وتر العضلة ذات الرأسين العضدية ومقدمة الكتف (Biceps Tendinitis)";
+                primaryDiagnosisKey = "shoulder_rotator_impingement";
+                secondaryDiagnosis = "إجهاد الأوتار العضدية الأمامية واحتكاك الثلم بين الحديجتين";
+                probability = 93;
+                rootLevel = "Bicipital Groove & Glenohumeral";
+                biomechanicalMechanism = "احتكاك وإجهاد مستمر في وتر الرأس الطويل للعضلة ذات الرأسين أثناء حركته داخل مجراه العظمي في مقدمة مفصل الكتف.";
+                aggravatingFactors = ["حمل الأوزان وثني الكوع للأمام", "رفع الذراع الممتدة للأمام", "الضغط المباشر على مقدمة الكتف"];
+                relievingFactors = ["إراحة الذراع وتثبيتها خفيفاً", "تطبيق الكمادات المعتدلة", "تمارين التمديد اللطيفة للأوتار"];
+                chiropracticProtocol = "تحرير مسار وتر العضلة ذات الرأسين يدوياً وتخفيف الضغط الأخرمي الأمامي.";
+            } else if ((notes.includes("أبهر") || (pointId || "").includes("scapula")) && !notes.includes("كتف") && !q1Val.includes("subacromial")) {
+                primaryDiagnosis = "متلازمة تشنج الأبهر وعقد العضلات المعينية واللوحية (Rhomboid & Scapular Myofascial Trigger Points)";
+                primaryDiagnosisKey = "thoracic_scapular_strain";
+                secondaryDiagnosis = "خلل وظيفي في حركة لوح الكتف وتيبس العضلة الرافعة للوح الكتف";
+                probability = 95;
+                rootLevel = "T1-T6 & Levator Scapulae";
+                biomechanicalMechanism = "انكماش ليفي وعقد زنادية مؤلمة في عضلات ما بين لوحي الكتف نتيجة انحناء الظهر المستمر وضعف ثبات اللوح.";
+                aggravatingFactors = ["الجلوس المنحني أمام الكمبيوتر", "حمل الحقائب الثقيلة على جهة واحدة", "التعرض لتيارات التكييف الباردة"];
+                relievingFactors = ["تمرين ضم لوحي الكتف", "إطالة عضلات الصدر على المدخل", "تدليك نقاط الزناد"];
+                chiropracticProtocol = "تحرير عقد الأبهر الليفية وتعديل مفاصل الفقرات الصدرية والأضلاع يدوياً لإعادة التوازن للوح الكتف.";
+            } else {
+                primaryDiagnosis = "متلازمة انحشار الكتف واعتلال أوتار الكفة المدورة (Subacromial Impingement & Rotator Cuff Tendinopathy)";
+                primaryDiagnosisKey = "shoulder_rotator_impingement";
+                secondaryDiagnosis = "التهاب الجراب تحت الأخرمي وتشنج العضلة شبه المنحرفة وأعلى الكتف";
+                probability = 95;
+                rootLevel = "Glenohumeral & Supraspinatus Tendon";
+                biomechanicalMechanism = "انحشار واحتكاك وتر العضلة فوق الشوكية (Supraspinatus) تحت البروز الأخرمي العظمي عند رفع الذراع جانباً، ناتج عن ضعف ثبات لوح الكتف وتفاوت الحمل العضلي.";
+                aggravatingFactors = ["رفع الذراع فوق مستوى الرأس", "النوم على جهة الكتف المصاب", "الوصول السريع للخلف أو الجانب"];
+                relievingFactors = ["تمرين بندول كودمان المهدئ", "الانزلاق على الجدار", "تجنب الحركات المفاجئة"];
+                chiropracticProtocol = "إعادة ضبط تموضع رأس عظمة العضد داخل التجويف الحقاني وتحرير انحشار الأوتار يدوياً لتسكين الألم واستعادة المدى الحركي.";
+            }
+        }
+        // تحليل حالات الرقبة (Cervical Spine)
         else if ((pointId || "").includes("cervical") || (pointId || "").includes("neck")) {
             if (q1Val === "cerv_disc_radicular" || notes.includes("ديسك") || notes.includes("تنميل") || notes.includes("خدر") || q4Val.includes("arm")) {
                 primaryDiagnosis = "انزلاق غضروفي عنقي واعتلال الجذور العصبية C5-C7 (Cervical Disc Herniation & Radiculopathy)";
@@ -853,18 +897,6 @@ const ClinicalEngine = (function() {
                 relievingFactors = ["إطالة الرقبة الجانبية", "رفع مستوى الشاشة لمستوى العينين", "هز ورفع الأكتاف"];
                 chiropracticProtocol = "إعادة ضبط ميكانيكية الفقرات العنقية العلوية C1-C2 وفك العقد العضلية بين الرقبة ولوح الكتف.";
             }
-        }
-        // تحليل حالات أعلى الظهر ولوح الكتف وعضلات الأبهر
-        else if ((pointId || "").includes("trapezius") || (pointId || "").includes("scapula")) {
-            primaryDiagnosis = "متلازمة تشنج العضلات المعينية واللوحية وعقد الأبهر التوترية (Rhomboid & Scapular Myofascial Trigger Points)";
-            primaryDiagnosisKey = "thoracic_scapular_strain";
-            secondaryDiagnosis = "خلل وظيفي في حركة لوح الكتف وتيبس العضلة الرافعة للوح الكتف";
-            probability = 95;
-            rootLevel = "T1-T6 & Levator Scapulae";
-            biomechanicalMechanism = "انكماش ليفي وعقد زنادية مؤلمة (Trigger Points) في عضلات ما بين لوحي الكتف نتيجة انحناء الظهر المستمر وضعف ثبات اللوح، مما يسبب إحساساً بطعنة حادة عند التنفس العميق أو تدوير الرقبة.";
-            aggravatingFactors = ["الجلوس المنحني أمام الكمبيوتر", "حمل الحقائب الثقيلة على جهة واحدة", "التعرض لتيارات التكييف الباردة"];
-            relievingFactors = ["تمرين ضم لوحي الكتف", "إطالة عضلات الصدر على المدخل", "تدليك نقاط الزناد بالكرة الموضعية"];
-            chiropracticProtocol = "تحرير عقد الأبهر الليفية وتعديل مفاصل الفقرات الصدرية والأضلاع يدوياً لإعادة التوازن للوح الكتف.";
         }
         // تحليل حالات الفقرات الصدرية وأعلى وسط الظهر
         else if ((pointId || "").includes("thoracic")) {

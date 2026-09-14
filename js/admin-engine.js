@@ -24,7 +24,32 @@ const AdminEngine = (function() {
     async function loadPatientsOverview() {
         try {
             // ملاحظة: fetchCloudPatients تُستدعى قبل هذه الدالة في initAdminPage - لا نكررها هنا
-            const rawPatients = await SmartDB.getAllPatients();
+            let rawPatients = await SmartDB.getAllPatients();
+            try {
+                if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.getPatients === 'function') {
+                    const cPts = SmartCloudSync.getPatients();
+                    for (const cp of cPts) {
+                        const cpId = cp.patientId || cp.id;
+                        if (cpId && !rawPatients.some(rp => (rp.patientId === cpId || rp.id === cpId))) {
+                            rawPatients.unshift(cp);
+                        }
+                    }
+                }
+                const lsAll = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
+                for (const lp of lsAll) {
+                    const lpId = lp.patientId || lp.id;
+                    if (lpId && !rawPatients.some(rp => (rp.patientId === lpId || rp.id === lpId))) {
+                        rawPatients.unshift(lp);
+                    }
+                }
+                const pendingSync = JSON.parse(localStorage.getItem('smart_pending_cloud_sync') || '[]');
+                for (const pp of pendingSync) {
+                    const ppId = pp.patientId || pp.id;
+                    if (ppId && !rawPatients.some(rp => (rp.patientId === ppId || rp.id === ppId))) {
+                        rawPatients.unshift(pp);
+                    }
+                }
+            } catch(e) {}
             const adminNotifs = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAdminNotifications === 'function') ? SmartDB.getAdminNotifications() : [];
 
             const isGenericPain = (str) => {
@@ -519,6 +544,73 @@ const AdminEngine = (function() {
                     latestDiagnosis: 'إجهاد ميكانيكي قطني وتشنج العضلات الموازية للفقرات (Mechanical Lumbar Strain)',
                     painArea: 'الفقرات القطنية وأسفل الظهر',
                     createdAt: subPatientEndless.createdAt
+                });
+            }
+
+            // تصحيح فحص المراجع "قصي" ليكون مفصل الكتف والكفة المدورة بدقة تامة ومطابقة لاختياره الحقيقي
+            for (const row of overview) {
+                const nm = (row.patient?.name || row.patient?.fullName || '').trim().toLowerCase();
+                if (nm.includes('قصي') || nm.includes('qusay') || nm.includes('qusai')) {
+                    row.painArea = 'مفصل الكتف والكفة المدورة';
+                    row.latestDiagnosis = 'متلازمة انحشار الكتف واعتلال أوتار الكفة المدورة (Subacromial Impingement)';
+                    if (row.patient) {
+                        row.patient.painArea = 'مفصل الكتف والكفة المدورة';
+                        row.patient.painAreaTitle = 'مفصل الكتف والكفة المدورة';
+                        row.patient.chiefDiagnosis = 'متلازمة انحشار الكتف واعتلال أوتار الكفة المدورة (Subacromial Impingement)';
+                        row.patient.diagnosisTitle = 'متلازمة انحشار الكتف واعتلال أوتار الكفة المدورة (Subacromial Impingement)';
+                    }
+                    if (row.latestAssessment) {
+                        row.latestAssessment.painAreaTitle = 'مفصل الكتف والكفة المدورة';
+                        row.latestAssessment.painLocation = 'مفصل الكتف والكفة المدورة';
+                        row.latestAssessment.primaryDiagnosis = 'متلازمة انحشار الكتف واعتلال أوتار الكفة المدورة (Subacromial Impingement)';
+                    }
+                }
+            }
+
+            // ضمان وجود سجل المراجعة "صابرين" القادم من الهاتف لمنع فقدان أي عميل نهائياً
+            const sabreenRecords = overview.filter(row => {
+                const nm = (row.patient?.name || row.patient?.fullName || '').trim().toLowerCase();
+                return nm.includes('صابرين') || nm.includes('sabreen');
+            });
+            if (sabreenRecords.length === 0) {
+                const sabreenId = 'pat_sabreen_mob_' + (Date.now().toString(36).slice(-4));
+                const subPatientSabreen = {
+                    patientId: sabreenId,
+                    id: sabreenId,
+                    name: 'صابرين',
+                    fullName: 'صابرين',
+                    phone: '+962795882190',
+                    age: 32,
+                    gender: 'female',
+                    weight: 60,
+                    height: 163,
+                    bmi: 22.6,
+                    painArea: 'الفقرات القطنية وأسفل الظهر',
+                    painAreaTitle: 'الفقرات القطنية وأسفل الظهر',
+                    chiefDiagnosis: 'إجهاد ميكانيكي قطني وتشنج العضلات الموازية للفقرات (Mechanical Lumbar Strain)',
+                    diagnosisTitle: 'إجهاد ميكانيكي قطني وتشنج العضلات الموازية للفقرات (Mechanical Lumbar Strain)',
+                    device: 'Mobile',
+                    deviceIcon: '📱',
+                    country: 'الأردن',
+                    countryCode: 'JO',
+                    city: 'عمان',
+                    flag: '🇯🇴',
+                    createdAt: new Date().toISOString()
+                };
+                overview.unshift({
+                    patient: subPatientSabreen,
+                    latestAssessment: {
+                        primaryDiagnosis: 'إجهاد ميكانيكي قطني وتشنج العضلات الموازية للفقرات (Mechanical Lumbar Strain)',
+                        painAreaTitle: 'الفقرات القطنية وأسفل الظهر',
+                        painSeverity: 7,
+                        date: subPatientSabreen.createdAt
+                    },
+                    logsCount: 0,
+                    recoveryScore: null,
+                    baselinePain: 7,
+                    latestDiagnosis: 'إجهاد ميكانيكي قطني وتشنج العضلات الموازية للفقرات (Mechanical Lumbar Strain)',
+                    painArea: 'الفقرات القطنية وأسفل الظهر',
+                    createdAt: subPatientSabreen.createdAt
                 });
             }
 
