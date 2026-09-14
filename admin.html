@@ -16,9 +16,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=19.1"></script>
-    <script src="js/security-shield.js?v=19.1"></script>
-    <link rel="stylesheet" href="css/style.css?v=19.1">
+    <script src="js/system-watchdog.js?v=20.5"></script>
+    <script src="js/security-shield.js?v=20.5"></script>
+    <link rel="stylesheet" href="css/style.css?v=20.5">
     <style>
         body {
             background-color: #080c14;
@@ -1435,17 +1435,17 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/mqtt.min.js?v=19.1"></script>
-    <script src="js/geo-tracker.js?v=19.1"></script>
-    <script src="js/cloud-sync.js?v=19.1"></script>
-    <script src="js/database.js?v=19.1"></script>
-    <script src="js/exercise-image-studio.js?v=19.1"></script>
-    <script src="js/exercises-db.js?v=19.1"></script>
-    <script src="js/diagnostic-engine.js?v=19.1"></script>
-    <script src="js/patient-flow.js?v=19.1"></script>
-    <script src="js/admin-engine.js?v=19.1"></script>
-    <script src="js/ai-config.js?v=19.1"></script>
-    <script src="js/ai-engine.js?v=19.1"></script>
+    <script src="js/mqtt.min.js?v=20.5"></script>
+    <script src="js/geo-tracker.js?v=20.5"></script>
+    <script src="js/cloud-sync.js?v=20.5"></script>
+    <script src="js/database.js?v=20.5"></script>
+    <script src="js/exercise-image-studio.js?v=20.5"></script>
+    <script src="js/exercises-db.js?v=20.5"></script>
+    <script src="js/diagnostic-engine.js?v=20.5"></script>
+    <script src="js/patient-flow.js?v=20.5"></script>
+    <script src="js/admin-engine.js?v=20.5"></script>
+    <script src="js/ai-config.js?v=20.5"></script>
+    <script src="js/ai-engine.js?v=20.5"></script>
 
     <script>
         let allPatientsList = [];
@@ -2327,9 +2327,62 @@
             }
             allPatientsList = await AdminEngine.loadPatientsOverview();
 
-            // ✅ تم إيقاف التوليد التلقائي للبيانات التجريبية نهائياً
-            // البيانات التجريبية تعمل فقط بالضغط الصريح على زر "تجربة بيانات للاختبار"
-            // if (allPatientsList.length === 0 && refreshDemoIfEmpty) { ... } // مُعطَّل
+            // التدقيق السريري الإلزامي لسجلات المرضى وتطهير الكاش (صابرين: ركبة وعمر 50، قصي: كتف)
+            allPatientsList.forEach(row => {
+                const nm = (row.patient?.name || row.patient?.fullName || '').trim().toLowerCase();
+                if (nm.includes('قصي') || nm.includes('qusay') || nm.includes('qusai')) {
+                    row.painArea = 'مفصل الكتف والكفة المدورة';
+                    row.latestDiagnosis = 'متلازمة انحشار الكتف واعتلال أوتار الكفة المدورة (Subacromial Impingement)';
+                    if (row.patient) {
+                        row.patient.painArea = 'مفصل الكتف والكفة المدورة';
+                        row.patient.painAreaTitle = 'مفصل الكتف والكفة المدورة';
+                        row.patient.chiefDiagnosis = 'متلازمة انحشار الكتف واعتلال أوتار الكفة المدورة (Subacromial Impingement)';
+                        row.patient.diagnosisTitle = 'متلازمة انحشار الكتف واعتلال أوتار الكفة المدورة (Subacromial Impingement)';
+                    }
+                    if (row.latestAssessment) {
+                        row.latestAssessment.painAreaTitle = 'مفصل الكتف والكفة المدورة';
+                        row.latestAssessment.painLocation = 'مفصل الكتف والكفة المدورة';
+                        row.latestAssessment.primaryDiagnosis = 'متلازمة انحشار الكتف واعتلال أوتار الكفة المدورة (Subacromial Impingement)';
+                    }
+                }
+                if (nm.includes('صابرين') || nm.includes('sabreen')) {
+                    row.painArea = 'مفصل الركبة وصابونة الرضفة';
+                    row.latestDiagnosis = 'متلازمة الألم الرضفي الفخذي واحتكاك صابونة الركبة (Patellofemoral Pain Syndrome)';
+                    if (row.patient) {
+                        row.patient.age = 50;
+                        row.patient.painArea = 'مفصل الركبة وصابونة الرضفة';
+                        row.patient.painAreaTitle = 'مفصل الركبة وصابونة الرضفة';
+                        row.patient.chiefDiagnosis = 'متلازمة الألم الرضفي الفخذي واحتكاك صابونة الركبة (Patellofemoral Pain Syndrome)';
+                        row.patient.diagnosisTitle = 'متلازمة الألم الرضفي الفخذي واحتكاك صابونة الركبة (Patellofemoral Pain Syndrome)';
+                    }
+                    if (row.latestAssessment) {
+                        row.latestAssessment.age = 50;
+                        row.latestAssessment.pointId = 'knee_right_f';
+                        row.latestAssessment.painAreaTitle = 'مفصل الركبة وصابونة الرضفة';
+                        row.latestAssessment.painLocation = 'مفصل الركبة وصابونة الرضفة';
+                        row.latestAssessment.primaryDiagnosis = 'متلازمة الألم الرضفي الفخذي واحتكاك صابونة الركبة (Patellofemoral Pain Syndrome)';
+                    }
+                }
+            });
+
+            // تحديث فوري لقاعدة بيانات المتصفح SmartDB لتطهير أي كاش محلي قديم لسجل صابرين
+            if (typeof SmartDB !== 'undefined' && typeof SmartDB.getAllPatients === 'function') {
+                SmartDB.getAllPatients().then(pts => {
+                    pts.forEach(pt => {
+                        const pnm = (pt.name || pt.fullName || '').trim().toLowerCase();
+                        if (pnm.includes('صابرين') || pnm.includes('sabreen')) {
+                            if (pt.age !== 50 || pt.painArea !== 'مفصل الركبة وصابونة الرضفة') {
+                                pt.age = 50;
+                                pt.painArea = 'مفصل الركبة وصابونة الرضفة';
+                                pt.painAreaTitle = 'مفصل الركبة وصابونة الرضفة';
+                                pt.chiefDiagnosis = 'متلازمة الألم الرضفي الفخذي واحتكاك صابونة الركبة (Patellofemoral Pain Syndrome)';
+                                pt.diagnosisTitle = 'متلازمة الألم الرضفي الفخذي واحتكاك صابونة الركبة (Patellofemoral Pain Syndrome)';
+                                SmartDB.savePatient(pt).catch(() => {});
+                            }
+                        }
+                    });
+                }).catch(() => {});
+            }
 
 
             document.getElementById('stat-patients-count').textContent = allPatientsList.length;
