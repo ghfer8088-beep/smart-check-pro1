@@ -4467,8 +4467,7 @@
                     await loadAdminData(false);
                     renderGeoAnalytics();
                     loadNotificationsData(false);
-                    if (btn) {
-                        btn.innerHTML = `✅ تمت المزامنة (${count} مريض)`;
+                    btn.innerHTML = `✅ تمت المزامنة (${allPatientsList.length} سجل)`;
                         btn.style.background = 'rgba(16,185,129,0.25)';
                         btn.style.borderColor = '#10b981';
                         btn.style.color = '#6ee7b7';

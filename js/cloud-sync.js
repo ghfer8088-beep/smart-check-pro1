@@ -195,7 +195,7 @@
                 const normalized = normalizeCloudPatientRecord(pt);
                 if (normalized) {
                     const cList = getCloudSyncedPatients();
-                    const pIdx = cList.findIndex(x => (normalized.id && x.id === normalized.id) || (normalized.phone && x.phone === normalized.phone));
+                    const pIdx = cList.findIndex(x => normalized.id && (x.id === normalized.id || x.patientId === normalized.id));
                     if (pIdx >= 0) cList[pIdx] = Object.assign({}, cList[pIdx], normalized);
                     else cList.unshift(normalized);
                     saveCloudSyncedPatients(cList);
@@ -308,12 +308,23 @@
             if (raw) {
                 const parsed = JSON.parse(raw);
                 if (Array.isArray(parsed)) {
-                    // دمج السجلات المكررة لنفس المريض مع الحفاظ على جميع جلساته
-                    const phoneMap = new Map();  // مريض واحد لكل رقم هاتف
-                    const idMap    = new Map();  // مريض واحد لكل patientId بدون هاتف
+                    // الحفاظ على كافة السجلات والتشخيصات - كل فحص سريري هو سجل مستقل
+                    const list = [];
+                    const seenIds = new Set();
 
                     for (const pt of parsed) {
                         if (!pt) continue;
+
+                        const uniqueId = pt.patientId || pt.id || (pt.createdAt ? 'pat_' + pt.createdAt : null);
+                        if (uniqueId && seenIds.has(uniqueId)) {
+                            // تكرار متطابق لنفس المعرف تماماً: ندمج حقوله
+                            const idx = list.findIndex(x => (x.patientId === uniqueId || x.id === uniqueId));
+                            if (idx >= 0) {
+                                list[idx] = { ...list[idx], ...pt };
+                            }
+                            continue;
+                        }
+                        if (uniqueId) seenIds.add(uniqueId);
 
                         // تصحيح الاسم
                         let pName = (pt.fullName || pt.name || '').trim();
@@ -324,60 +335,19 @@
                         const w = parseFloat(pt.weight), h = parseFloat(pt.height);
                         let bmi = pt.bmi || (w > 0 && h > 0 ? parseFloat((w / Math.pow(h/100,2)).toFixed(1)) : '');
 
-                        const cleanedPt = { ...pt, name: pName, fullName: pName, bmi };
-                        const cleanPhone = (cleanedPt.phone || '').replace(/\D/g, '');
-                        const uniqueId   = cleanedPt.patientId || cleanedPt.id;
+                        const cleanedPt = {
+                            ...pt,
+                            patientId: uniqueId || ('pat_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 5)),
+                            id: uniqueId || pt.id,
+                            name: pName,
+                            fullName: pName,
+                            bmi: bmi
+                        };
 
-                        if (cleanPhone && cleanPhone.length >= 7) {
-                            if (phoneMap.has(cleanPhone)) {
-                                // ✅ دمج مع حفاظ على جميع الجلسات والتقييمات من كلا السجلين
-                                const existing = phoneMap.get(cleanPhone);
-                                const mergedLogs = mergeLogs(existing.dailyLogs, cleanedPt.dailyLogs, existing.logs, cleanedPt.logs);
-                                const mergedAssessments = mergeAssessments(existing.assessmentHistory, cleanedPt.assessmentHistory, existing.assessment, cleanedPt.assessment);
-                                const merged = {
-                                    ...existing,
-                                    ...cleanedPt,
-                                    // بيانات المريض: نفضل الأحدث والأكثر اكتمالاً
-                                    name:           (cleanedPt.name !== 'مراجع كريم') ? cleanedPt.name : existing.name,
-                                    fullName:       (cleanedPt.fullName !== 'مراجع كريم') ? cleanedPt.fullName : existing.fullName,
-                                    patientId:      existing.patientId || cleanedPt.patientId,
-                                    age:            cleanedPt.age || existing.age,
-                                    weight:         cleanedPt.weight || existing.weight,
-                                    height:         cleanedPt.height || existing.height,
-                                    bmi:            cleanedPt.bmi || existing.bmi,
-                                    // ✅ جمع كل الجلسات من كلا السجلين
-                                    dailyLogs:      mergedLogs,
-                                    logs:           mergedLogs,
-                                    // ✅ جمع كل التقييمات
-                                    assessmentHistory: mergedAssessments,
-                                    assessment:     cleanedPt.assessment || existing.assessment,
-                                    // موضع الألم والتشخيص: نأخذ الأحدث إن كان أدق
-                                    painArea:       (cleanedPt.painArea && cleanedPt.painArea !== 'العمود الفقري والمفاصل') ? cleanedPt.painArea : (existing.painArea || cleanedPt.painArea),
-                                    diagnosisTitle: cleanedPt.diagnosisTitle || existing.diagnosisTitle,
-                                    chiefDiagnosis: cleanedPt.chiefDiagnosis || existing.chiefDiagnosis,
-                                };
-                                phoneMap.set(cleanPhone, merged);
-                            } else {
-                                phoneMap.set(cleanPhone, cleanedPt);
-                            }
-                        } else if (uniqueId) {
-                            // ✅ مريض بدون هاتف: نحتفظ بكل سجل حسب patientId الفريد
-                            if (idMap.has(uniqueId)) {
-                                const existing = idMap.get(uniqueId);
-                                const mergedLogs = mergeLogs(existing.dailyLogs, cleanedPt.dailyLogs);
-                                idMap.set(uniqueId, { ...existing, ...cleanedPt, dailyLogs: mergedLogs, logs: mergedLogs });
-                            } else {
-                                idMap.set(uniqueId, cleanedPt);
-                            }
-                        } else {
-                            // سجل بدون هاتف ولا ID: أضفه فقط إن كان له اسم حقيقي
-                            if (pName !== 'مراجع كريم') {
-                                idMap.set('anon_' + (cleanedPt.createdAt || Date.now()), cleanedPt);
-                            }
-                        }
+                        list.push(cleanedPt);
                     }
 
-                    return [...Array.from(phoneMap.values()), ...Array.from(idMap.values())];
+                    return list;
                 }
             }
         } catch (e) {}
@@ -572,7 +542,7 @@
 
         // 1. التخزين في قاعدة البيانات الموحدة
         const currentPatients = getCloudSyncedPatients();
-        const existingIdx = currentPatients.findIndex(p => p.id === enhancedRecord.id || (p.phone && enhancedRecord.phone && p.phone === enhancedRecord.phone));
+        const existingIdx = currentPatients.findIndex(p => (p.id && (p.id === enhancedRecord.id || p.patientId === enhancedRecord.id)));
 
         if (existingIdx >= 0) {
             // تحديث سجل موجود مع الحفاظ على الجلسات الأكثر اكتمالاً
@@ -587,7 +557,7 @@
             enhancedRecord.logs = mergedLogs;
             currentPatients[existingIdx] = Object.assign({}, currentPatients[existingIdx], enhancedRecord);
         } else {
-            // إضافة مريض جديد
+            // إضافة مريض جديد كفحص مستقل
             currentPatients.unshift(enhancedRecord);
         }
 
@@ -627,7 +597,7 @@
                     .then(masterObj => {
                         if (!masterObj) return;
                         const currentCloudList = (masterObj && masterObj.data && Array.isArray(masterObj.data.patients)) ? masterObj.data.patients : [];
-                        const pIdx = currentCloudList.findIndex(p => (p.id && (p.id === enhancedRecord.id || p.patientId === enhancedRecord.id)) || (p.phone && enhancedRecord.phone && p.phone === enhancedRecord.phone));
+                        const pIdx = currentCloudList.findIndex(p => p.id && (p.id === enhancedRecord.id || p.patientId === enhancedRecord.id));
                         if (pIdx >= 0) {
                             currentCloudList[pIdx] = Object.assign({}, currentCloudList[pIdx], enhancedRecord);
                         } else {
@@ -805,17 +775,19 @@
     async function importFullClinicSnapshot(snapshot) {
         if (!snapshot) return false;
         try {
-            // 1. استيراد المرضى
-            const importedPatients = snapshot.patients || snapshot.allPatients || [];
-            if (Array.isArray(importedPatients) && importedPatients.length > 0) {
+            // 1. استيراد المرضى من كافة مصفوفات الحزمة
+            const importedPatients = [
+                ...(Array.isArray(snapshot.patients) ? snapshot.patients : []),
+                ...(Array.isArray(snapshot.allPatients) ? snapshot.allPatients : [])
+            ];
+            if (importedPatients.length > 0) {
                 const currentList = getCloudSyncedPatients();
                 for (const pt of importedPatients) {
                     if (!pt) continue;
                     const normalized = normalizeCloudPatientRecord(pt);
                     if (!normalized) continue;
                     const pId = normalized.id;
-                    const pPhone = (normalized.phone || '').replace(/\D/g, '');
-                    const idx = currentList.findIndex(x => (pId && (x.id === pId || x.patientId === pId)) || (pPhone && x.phone && x.phone.replace(/\D/g, '') === pPhone));
+                    const idx = currentList.findIndex(x => pId && (x.id === pId || x.patientId === pId));
                     if (idx >= 0) {
                         currentList[idx] = { ...currentList[idx], ...normalized };
                     } else {
@@ -1013,7 +985,7 @@
     // دالة توحيد وتدقيق السجل السحابي ومنع القيم الفارغة وتصحيح موضع الألم والتشخيص
     function normalizeCloudPatientRecord(pt) {
         if (!pt) return null;
-        const pId = pt.id || pt.patientId || ('pat_' + (pt.phone ? String(pt.phone).replace(/\D/g, '') : Date.now().toString(36)));
+        const pId = pt.patientId || pt.id || ('pat_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 5));
         let pName = (pt.fullName || pt.name || '').trim();
         if (/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)$/i.test(pName)) {
             pName = 'مراجع كريم';
@@ -1132,9 +1104,7 @@
                             if (!normalized) continue;
 
                             const pId = normalized.id;
-                            const pPhone = (normalized.phone || '').replace(/\D/g, '');
-
-                            const idx = currentList.findIndex(x => (pId && (x.id === pId || x.patientId === pId)) || (pPhone && x.phone && x.phone.replace(/\D/g, '') === pPhone));
+                            const idx = currentList.findIndex(x => pId && (x.id === pId || x.patientId === pId));
                             if (idx >= 0) {
                                 currentList[idx] = { ...currentList[idx], ...normalized };
                             } else {
@@ -1247,9 +1217,7 @@
                                         if (!normalized) continue;
 
                                         const pId = normalized.id;
-                                        const pPhone = (normalized.phone || '').replace(/\D/g, '');
-
-                                        const idx = currentList.findIndex(x => (pId && (x.id === pId || x.patientId === pId)) || (pPhone && x.phone && x.phone.replace(/\D/g, '') === pPhone));
+                                        const idx = currentList.findIndex(x => pId && (x.id === pId || x.patientId === pId));
                                         if (idx >= 0) {
                                             const existingDaily = currentList[idx].dailyLogs || [];
                                             const incomingDaily = normalized.dailyLogs || normalized.logs || [];

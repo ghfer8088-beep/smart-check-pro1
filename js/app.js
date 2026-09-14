@@ -1170,8 +1170,8 @@ async function runDiagnosticAnalysis() {
             });
         }
 
-        // ترحيل وتوثيق بيانات المريض والتشخيص إلى قاعدة بيانات الإدارة فوراً
-        const targetPatientId = activePatient?.patientId || ('pat_' + (pPhone ? pPhone.replace(/\D/g, '') : Date.now()));
+        // ترحيل وتوثيق بيانات المريض والتشخيص إلى قاعدة بيانات الإدارة فوراً بمعرف فريد لكل فحص
+        const targetPatientId = 'pat_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 6);
         const patientRecord = {
             patientId: targetPatientId,
             name: pName || 'مراجع جديد',

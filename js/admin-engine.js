@@ -53,13 +53,14 @@ const AdminEngine = (function() {
                 return str.trim();
             };
 
-            // تنظيف ودمج السجلات المكررة بالهاتف لمنع تكرار نفس المريض
-            const consolidatedMap = new Map();
-            const standaloneList = [];
+            // الحفاظ على كافة السجلات والتشخيصات بدون أي دمج بالهاتف
+            const patientsMap = new Map();
 
+            // 1. إضافة كافة السجلات من rawPatients - كل فحص سريري هو سجل مستقل بذاته
             for (const pt of rawPatients) {
-                // قبول أي مريض لديه patientId أو id (إصلاح: كان يتخطى من لديه id فقط)
-                if (!pt || (!pt.patientId && !pt.id)) continue;
+                if (!pt) continue;
+                const pId = pt.patientId || pt.id;
+                if (!pId) continue;
                 
                 let cName = (pt.fullName || pt.name || '').trim();
                 if (/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)$/i.test(cName)) {
@@ -67,10 +68,10 @@ const AdminEngine = (function() {
                 }
                 if (!cName) cName = 'مراجع كريم';
 
-                const cPhone = (pt.phone || '').replace(/\D/g, '');
                 const patientClean = {
                     ...pt,
-                    patientId: pt.patientId || pt.id,
+                    patientId: pId,
+                    id: pId,
                     name: cName,
                     fullName: cName,
                     age: pt.age || pt.patientVitals?.age || null,
@@ -80,53 +81,63 @@ const AdminEngine = (function() {
                     gender: pt.gender || 'male'
                 };
 
-                if (cPhone && cPhone.length >= 7) {
-                    if (consolidatedMap.has(cPhone)) {
-                        const existing = consolidatedMap.get(cPhone);
-                        const hasRealPain = !isGenericPain(patientClean.painArea);
-                        const hasRealDiag = !isGenericDiag(patientClean.chiefDiagnosis);
-                        const merged = {
-                            ...existing,
-                            ...patientClean,
-                            name: (patientClean.name && patientClean.name !== 'مراجع كريم') ? patientClean.name : existing.name,
-                            fullName: (patientClean.fullName && patientClean.fullName !== 'مراجع كريم') ? patientClean.fullName : existing.fullName,
-                            age: patientClean.age || existing.age,
-                            weight: patientClean.weight || existing.weight,
-                            height: patientClean.height || existing.height,
-                            bmi: patientClean.bmi || existing.bmi,
-                            painArea: hasRealPain ? patientClean.painArea : (existing.painArea || patientClean.painArea),
-                            painAreaTitle: hasRealPain ? patientClean.painAreaTitle : (existing.painAreaTitle || patientClean.painAreaTitle),
-                            selectedPoint: patientClean.selectedPoint || existing.selectedPoint,
-                            chiefDiagnosis: hasRealDiag ? patientClean.chiefDiagnosis : (existing.chiefDiagnosis || patientClean.chiefDiagnosis),
-                            diagnosisTitle: hasRealDiag ? patientClean.diagnosisTitle : (existing.diagnosisTitle || patientClean.diagnosisTitle),
-                            assessment: (patientClean.assessment && !patientClean.assessment.autoHealed) ? patientClean.assessment : (existing.assessment || patientClean.assessment)
-                        };
-                        consolidatedMap.set(cPhone, merged);
-                    } else {
-                        consolidatedMap.set(cPhone, patientClean);
-                    }
+                // إذا تكرر نفس الـ patientId تماماً (نفس الفحص من مصدرين محلي وسحابي)، ندمج حقوله
+                if (patientsMap.has(pId)) {
+                    const existing = patientsMap.get(pId);
+                    patientsMap.set(pId, { ...existing, ...patientClean });
                 } else {
-                    if (cName !== 'مراجع كريم' || pt.age || pt.weight || pt.height) {
-                        // إصلاح: استخدام patientId كمفتاح فريد بدلاً من بيانات حيوية قد تتشابه بين مرضى
-                        const uniqueId = patientClean.patientId || patientClean.id;
-                        const existingIdx = standaloneList.findIndex(s => 
-                            (s.patientId && s.patientId === uniqueId) || (s.id && s.id === uniqueId)
-                        );
-                        if (existingIdx >= 0) {
-                            const existing = standaloneList[existingIdx];
-                            const hasBetterPain = !isGenericPain(patientClean.painArea);
-                            if (hasBetterPain || isGenericPain(existing.painArea)) {
-                                standaloneList[existingIdx] = { ...existing, ...patientClean };
+                    patientsMap.set(pId, patientClean);
+                }
+            }
+
+            // 2. فحص الإشعارات السريرية لاستعادة أي تشخيص تم تسجيله وفُقد سجله
+            if (adminNotifs && Array.isArray(adminNotifs)) {
+                for (const notif of adminNotifs) {
+                    if (!notif) continue;
+                    let nName = (notif.patientName || '').trim();
+                    if (!nName && notif.title) {
+                        const m = notif.title.match(/:\s*(.*)$/);
+                        if (m) nName = m[1].trim();
+                    }
+                    if (!nName && notif.message) {
+                        const m2 = notif.message.match(/المراجع\s+([^\(\n]+)/i);
+                        if (m2) nName = m2[1].trim();
+                    }
+
+                    if (nName && nName !== 'مراجع جديد' && nName !== 'مراجع كريم') {
+                        const nId = notif.patientId || ('notif_' + (notif.id || notif.time || Math.random().toString(36).substr(2, 6)));
+                        if (!patientsMap.has(nId)) {
+                            let painArea = (notif.meta && notif.meta.painArea) || '';
+                            if (!painArea && notif.message) {
+                                const pMatch = notif.message.match(/لموضع\s*\((.*?)\)/i) || notif.message.match(/منطقة:\s*(.*?)(?:-|$)/i);
+                                if (pMatch) painArea = pMatch[1].trim();
                             }
-                        } else {
-                            standaloneList.push(patientClean);
+                            let chiefDiag = (notif.meta && notif.meta.diagnosis) || '';
+                            if (!chiefDiag && notif.message) {
+                                const dMatch = notif.message.match(/التشخيص:\s*\[(.*?)\]/i);
+                                if (dMatch) chiefDiag = dMatch[1].trim();
+                            }
+
+                            patientsMap.set(nId, {
+                                patientId: nId,
+                                id: nId,
+                                name: nName,
+                                fullName: nName,
+                                phone: notif.patientPhone || '',
+                                painArea: painArea || 'فحص واستشارة سريرية',
+                                painAreaTitle: painArea || 'فحص واستشارة سريرية',
+                                chiefDiagnosis: chiefDiag || 'تشخيص سريري متكامل',
+                                diagnosisTitle: chiefDiag || 'تشخيص سريري متكامل',
+                                createdAt: notif.time || new Date().toISOString()
+                            });
                         }
                     }
                 }
             }
 
-            const patients = [...Array.from(consolidatedMap.values()), ...standaloneList];
+            const patients = Array.from(patientsMap.values());
             const overview = [];
+
 
             for (const p of patients) {
                 if (!p || !p.patientId) continue;

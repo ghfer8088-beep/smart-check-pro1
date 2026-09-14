@@ -94,7 +94,7 @@ const SmartDB = (function() {
 
             localStorage.setItem('smart_patient_' + mergedPatient.patientId, JSON.stringify(mergedPatient));
             const allPts = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
-            const idx = allPts.findIndex(p => p.patientId === mergedPatient.patientId || (mergedPatient.phone && p.phone && p.phone === mergedPatient.phone));
+            const idx = allPts.findIndex(p => p.patientId === mergedPatient.patientId);
             if (idx >= 0) allPts[idx] = { ...allPts[idx], ...mergedPatient };
             else allPts.unshift(mergedPatient);
             localStorage.setItem('smart_all_patients', JSON.stringify(allPts));
