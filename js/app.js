@@ -3933,11 +3933,23 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
     container.innerHTML = `
         <div class="patient-recovery-master-card" style="background: #111827; border: 1px solid var(--primary-gold); border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
             
+        <!-- شريط العودة الآمن للأدمن أو الصفحة الرئيسية (يظهر دائماً لضمان عدم الحصار) -->
+            <div id="back-to-admin-nav" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; padding: 10px 14px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 10px;">
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" onclick="(function(){try{const u=new URLSearchParams(window.location.search);if(u.get('patient_id')){window.open('admin.html','_blank');}else{window.history.back();};}catch(e){window.location.href='index.html';}})()" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; padding: 7px 14px; border-radius: 8px; font-size: 0.83em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        🏠 لوحة التحكم
+                    </button>
+                    <button type="button" onclick="(function(){var u=new URLSearchParams(window.location.search);if(u.get('patient_id')){window.open('admin.html','_blank');}else{goToStep(3);}})()" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 7px 14px; border-radius: 8px; font-size: 0.83em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        ⬅️ الأدمن
+                    </button>
+                </div>
+                <button type="button" onclick="handleStepperClick(3)" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; padding: 7px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    📋 العودة لمراجعة التقرير الطبي وخطة العلاج (الخطوة 3)
+                </button>
+            </div>
+
             <!-- شريط التنقل السريع بين المراحل السابقة والمتابعة -->
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px dashed rgba(212, 175, 55, 0.3);">
-                <button type="button" onclick="handleStepperClick(3)" class="btn-header" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; padding: 7px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                    <span>📋</span> العودة لمراجعة التقرير الطبي وخطة العلاج (الخطوة 3)
-                </button>
                 ${(sessionData && sessionData.dailyLogs && sessionData.dailyLogs.length >= 1) ? `
                 <button type="button" onclick="handleStepperClick(5)" class="btn-header btn-header-emerald" style="padding: 7px 14px; font-size: 0.85em; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                     <span>📅</span> متابعة الجلسات (2 إلى 7) ⬅️
@@ -4476,11 +4488,23 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
     container.innerHTML = `
         <div class="patient-recovery-master-card" style="background: #111827; border: 1px solid var(--primary-gold); border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
             
-            <!-- شريط التنقل السريع بين المراحل السابقة -->
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px dashed rgba(212, 175, 55, 0.3);">
+            <!-- شريط العودة الآمن للأدمن أو الصفحة الرئيسية (يظهر دائماً لضمان عدم الحصار) -->
+            <div id="back-to-admin-nav-s5" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; padding: 10px 14px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 10px;">
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" onclick="(function(){try{const u=new URLSearchParams(window.location.search);if(u.get('patient_id')){window.open('admin.html','_blank');}else{window.history.back();};}catch(e){window.location.href='index.html';}})()" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; padding: 7px 14px; border-radius: 8px; font-size: 0.83em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        🏠 لوحة التحكم
+                    </button>
+                    <button type="button" onclick="(function(){var u=new URLSearchParams(window.location.search);if(u.get('patient_id')){window.open('admin.html','_blank');}else{goToStep(3);}})()" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 7px 14px; border-radius: 8px; font-size: 0.83em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        ⬅️ الأدمن
+                    </button>
+                </div>
                 <button type="button" onclick="handleStepperClick(3)" class="btn-header" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; padding: 7px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                     <span>📋</span> العودة لمراجعة التقرير الطبي وخطة العلاج (الخطوة 3)
                 </button>
+            </div>
+
+            <!-- شريط التنقل السريع بين المراحل السابقة -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px dashed rgba(212, 175, 55, 0.3);">
                 <button type="button" onclick="renderStep4IndependentDay1('${patientId}')" class="btn-header" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 7px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                     <span>🏋️</span> مراجعة تمارين الجلسة الأولى (اليوم 1)
                 </button>
@@ -4834,7 +4858,7 @@ async function loadPatientRecoveryDashboard(patientId, targetDay = null) {
         try {
             const allPts = await SmartDB.getAllPatients();
             if (Array.isArray(allPts) && allPts.length > 0) {
-                const latestP = allPts.find(p => p.name === 'نسرين') || allPts[allPts.length - 1];
+                const latestP = allPts[allPts.length - 1]; // آخر مريض مسجل حقيقي فقط
                 sessionData = await PatientFlow.initPatientSession(latestP.patientId || latestP.id);
             }
         } catch(e) {}
@@ -6566,7 +6590,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const allPts = await SmartDB.getAllPatients();
             if (Array.isArray(allPts) && allPts.length > 0) {
-                const target = allPts.find(pt => pt.name === 'نسرين') || allPts[allPts.length - 1];
+                const target = allPts[allPts.length - 1]; // آخر مريض مسجل حقيقي فقط
                 savedPatientId = target.patientId || target.id;
             }
         } catch(e) {}
@@ -6585,7 +6609,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const rawAct = localStorage.getItem('smart_active_patient');
                 if (rawAct) {
                     const parsed = JSON.parse(rawAct);
-                    if (parsed && (parsed.patientId === savedPatientId || parsed.id === savedPatientId || !savedPatientId || parsed.name === 'نسرين')) {
+                    if (parsed && (parsed.patientId === savedPatientId || parsed.id === savedPatientId)) {
                         p = parsed;
                         try { await SmartDB.savePatient(p); } catch(err) {}
                     }
@@ -6596,7 +6620,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const cloudList = window.SmartCloudSync.getPatients();
                 if (Array.isArray(cloudList)) {
-                    p = cloudList.find(pt => pt.id === savedPatientId || pt.patientId === savedPatientId || pt.name === 'نسرين') || (cloudList.length > 0 ? cloudList[0] : null);
+                    p = cloudList.find(pt => pt.id === savedPatientId || pt.patientId === savedPatientId) || (cloudList.length > 0 ? cloudList[0] : null);
                     if (p) {
                         try { await SmartDB.savePatient(p); } catch(err) {}
                     }
@@ -6622,19 +6646,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             // استرجاع وتوليد بيانات التقرير إن لم تكن مكتملة لضمان فتح التقرير فوراً دون السقوط للخطوة 1
             if (!currentAssessmentData && (p.chiefDiagnosis || p.painArea || p.diagnosisTitle)) {
+                // حساب درجة الثقة بناءً على اكتمال بيانات المريض الحقيقية (لا أرقام صلبة)
+                const dataCompleteness = [p.name, p.phone, p.age, p.gender, p.weight, p.height, p.painArea, p.painLevel].filter(Boolean).length;
+                const derivedConfidence = Math.min(98, Math.max(60, Math.round((dataCompleteness / 8) * 100)));
+                const derivedProbability = Math.min(99, Math.max(65, derivedConfidence + 3));
                 currentAssessmentData = {
                     patientId: savedPatientId,
                     patientName: p.name || 'المراجع المحترم',
                     primaryDiagnosis: p.chiefDiagnosis || p.diagnosisTitle || 'فحص واستشارة سريرية',
-                    painAreaTitle: p.painArea || 'العمود الفقري والمفاصل',
-                    probability: 95,
-                    confidenceScore: 92,
-                    painSeverity: p.painLevel || 7,
+                    painAreaTitle: p.painAreaTitle || p.painArea || 'العمود الفقري والمفاصل',
+                    pointId: p.painPointId || p.painArea || null,
+                    probability: p.probability || derivedProbability,
+                    confidenceScore: p.confidenceScore || derivedConfidence,
+                    painSeverity: p.painLevel || p.painSeverity || 7,
                     patientVitals: { age: p.age, gender: p.gender, weight: p.weight, height: p.height },
                     recommendations: p.treatmentPlan ? p.treatmentPlan.split('\n') : ['تطبيق تمارين الإطالة الموجهة', 'تجنب الجلوس الطويل والمحافظة على استقامة الظهر'],
                     rootLevel: p.painArea || 'العمود الفقري',
-                    secondaryDiagnosis: 'إجهاد ميكانيكي وظيفي في الأنسجة المحيطة',
-                    biomechanicalCause: 'اختلال في توازن الأحمال الميكانيكية الحركية وضغط على الأنسجة الداعمة.'
+                    secondaryDiagnosis: p.secondaryDiagnosis || 'إجهاد ميكانيكي وظيفي في الأنسجة المحيطة',
+                    biomechanicalCause: p.biomechanicalCause || 'اختلال في توازن الأحمال الميكانيكية الحركية وضغط على الأنسجة الداعمة.'
                 };
             }
 
