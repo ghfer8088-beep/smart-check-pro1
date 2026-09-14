@@ -1236,17 +1236,25 @@
                             const idx = currentList.findIndex(x => pId && (x.id === pId || x.patientId === pId));
                             if (idx >= 0) {
                                 const existing = currentList[idx];
-                                const isDiff = (existing.painArea && normalized.painArea && existing.painArea !== normalized.painArea) ||
-                                               (existing.chiefDiagnosis && normalized.chiefDiagnosis && existing.chiefDiagnosis !== normalized.chiefDiagnosis) ||
-                                               (existing.timestamp && normalized.timestamp && Math.abs(new Date(existing.timestamp) - new Date(normalized.timestamp)) > 300000);
-                                if (isDiff) {
-                                    normalized.id = pId + '_' + (normalized.timestamp ? Date.parse(normalized.timestamp) : Date.now());
-                                    normalized.patientId = normalized.id;
-                                    currentList.unshift(normalized);
-                                    changed = true;
-                                } else {
-                                    currentList[idx] = { ...currentList[idx], ...normalized };
+                                const existingDaily = existing.dailyLogs || [];
+                                const incomingDaily = normalized.dailyLogs || normalized.logs || [];
+                                const mergedDaily = [...existingDaily];
+                                for (const idl of incomingDaily) {
+                                    if (!idl || !idl.sessionNumber) continue;
+                                    const mIdx = mergedDaily.findIndex(m => m.sessionNumber === idl.sessionNumber);
+                                    if (mIdx >= 0) mergedDaily[mIdx] = { ...mergedDaily[mIdx], ...idl };
+                                    else mergedDaily.push(idl);
                                 }
+                                normalized.dailyLogs = mergedDaily;
+                                normalized.logs = mergedDaily;
+                                currentList[idx] = {
+                                    ...existing,
+                                    ...normalized,
+                                    createdAt: existing.createdAt || normalized.createdAt || existing.timestamp || normalized.timestamp,
+                                    logsCount: Math.max(existing.logsCount || 0, normalized.logsCount || 0, mergedDaily.length),
+                                    completedSessions: Math.max(existing.completedSessions || 0, normalized.completedSessions || 0, mergedDaily.length),
+                                    recoveryScore: Math.max(existing.recoveryScore || 0, normalized.recoveryScore || 0)
+                                };
                             } else {
                                 currentList.unshift(normalized);
                                 changed = true;
@@ -1360,28 +1368,25 @@
                                         const idx = currentList.findIndex(x => pId && (x.id === pId || x.patientId === pId));
                                         if (idx >= 0) {
                                             const existing = currentList[idx];
-                                            const isDiff = (existing.painArea && normalized.painArea && existing.painArea !== normalized.painArea) ||
-                                                           (existing.chiefDiagnosis && normalized.chiefDiagnosis && existing.chiefDiagnosis !== normalized.chiefDiagnosis) ||
-                                                           (existing.timestamp && normalized.timestamp && Math.abs(new Date(existing.timestamp) - new Date(normalized.timestamp)) > 300000);
-                                            if (isDiff) {
-                                                normalized.id = pId + '_' + (normalized.timestamp ? Date.parse(normalized.timestamp) : Date.now());
-                                                normalized.patientId = normalized.id;
-                                                currentList.unshift(normalized);
-                                                changed = true;
-                                            } else {
-                                                const existingDaily = currentList[idx].dailyLogs || [];
-                                                const incomingDaily = normalized.dailyLogs || normalized.logs || [];
-                                                const mergedDaily = [...existingDaily];
-                                                for (const idl of incomingDaily) {
-                                                    if (!idl || !idl.sessionNumber) continue;
-                                                    const mIdx = mergedDaily.findIndex(m => m.sessionNumber === idl.sessionNumber);
-                                                    if (mIdx >= 0) mergedDaily[mIdx] = { ...mergedDaily[mIdx], ...idl };
-                                                    else mergedDaily.push(idl);
-                                                }
-                                                normalized.dailyLogs = mergedDaily;
-                                                normalized.logs = mergedDaily;
-                                                currentList[idx] = { ...currentList[idx], ...normalized };
+                                            const existingDaily = existing.dailyLogs || [];
+                                            const incomingDaily = normalized.dailyLogs || normalized.logs || [];
+                                            const mergedDaily = [...existingDaily];
+                                            for (const idl of incomingDaily) {
+                                                if (!idl || !idl.sessionNumber) continue;
+                                                const mIdx = mergedDaily.findIndex(m => m.sessionNumber === idl.sessionNumber);
+                                                if (mIdx >= 0) mergedDaily[mIdx] = { ...mergedDaily[mIdx], ...idl };
+                                                else mergedDaily.push(idl);
                                             }
+                                            normalized.dailyLogs = mergedDaily;
+                                            normalized.logs = mergedDaily;
+                                            currentList[idx] = {
+                                                ...existing,
+                                                ...normalized,
+                                                createdAt: existing.createdAt || normalized.createdAt || existing.timestamp || normalized.timestamp,
+                                                logsCount: Math.max(existing.logsCount || 0, normalized.logsCount || 0, mergedDaily.length),
+                                                completedSessions: Math.max(existing.completedSessions || 0, normalized.completedSessions || 0, mergedDaily.length),
+                                                recoveryScore: Math.max(existing.recoveryScore || 0, normalized.recoveryScore || 0)
+                                            };
                                         } else {
                                             currentList.unshift(normalized);
                                             changed = true;

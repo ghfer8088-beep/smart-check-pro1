@@ -24,7 +24,14 @@ const AdminEngine = (function() {
     async function loadPatientsOverview() {
         try {
             // ملاحظة: fetchCloudPatients تُستدعى قبل هذه الدالة في initAdminPage - لا نكررها هنا
-            let rawPatients = await SmartDB.getAllPatients();
+            let rawPatients = [];
+            try {
+                if (typeof SmartDB !== 'undefined' && typeof SmartDB.getAllPatients === 'function') {
+                    rawPatients = await SmartDB.getAllPatients();
+                }
+            } catch(e) {
+                rawPatients = [];
+            }
             try {
                 if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.getPatients === 'function') {
                     const cPts = SmartCloudSync.getPatients();
@@ -78,56 +85,9 @@ const AdminEngine = (function() {
                 return str.trim();
             };
 
-            // الحفاظ على كافة السجلات والتشخيصات بدون أي دمج بالهاتف
-            const patientsMap = new Map();
+            // 1. تجميع كافة السجلات الواردة (محلي، سحابي، إشعارات سريرية)
+            const candidatePool = [...rawPatients];
 
-            // 1. إضافة كافة السجلات من rawPatients - كل فحص سريري هو سجل مستقل بذاته
-            for (const pt of rawPatients) {
-                if (!pt) continue;
-                const pId = pt.patientId || pt.id;
-                if (!pId) continue;
-                
-                let cName = (pt.fullName || pt.name || '').trim();
-                if (/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)$/i.test(cName)) {
-                    cName = 'مراجع كريم';
-                }
-                if (!cName) cName = 'مراجع كريم';
-
-                const patientClean = {
-                    ...pt,
-                    patientId: pId,
-                    id: pId,
-                    name: cName,
-                    fullName: cName,
-                    age: pt.age || pt.patientVitals?.age || null,
-                    weight: pt.weight || pt.patientVitals?.weight || null,
-                    height: pt.height || pt.patientVitals?.height || null,
-                    bmi: pt.bmi || (pt.weight && pt.height ? parseFloat((pt.weight / Math.pow(pt.height/100, 2)).toFixed(1)) : null),
-                    gender: pt.gender || 'male'
-                };
-
-                // إذا تكرر نفس الـ patientId تماماً (نفس الفحص من مصدرين محلي وسحابي)، ندمج حقوله ما لم يكن فحصاً سريرياً مستقلاً
-                if (patientsMap.has(pId)) {
-                    const existing = patientsMap.get(pId);
-                    const isDistinctTest = (existing.painArea && patientClean.painArea && existing.painArea !== patientClean.painArea) ||
-                                           (existing.chiefDiagnosis && patientClean.chiefDiagnosis && existing.chiefDiagnosis !== patientClean.chiefDiagnosis) ||
-                                           (existing.selectedPoint && patientClean.selectedPoint && existing.selectedPoint !== patientClean.selectedPoint) ||
-                                           (existing.createdAt && patientClean.createdAt && Math.abs(new Date(existing.createdAt) - new Date(patientClean.createdAt)) > 120000) ||
-                                           (existing.timestamp && patientClean.timestamp && Math.abs(new Date(existing.timestamp) - new Date(patientClean.timestamp)) > 120000);
-                    if (isDistinctTest) {
-                        const subId = pId + '_test2';
-                        patientClean.patientId = subId;
-                        patientClean.id = subId;
-                        patientsMap.set(subId, patientClean);
-                    } else {
-                        patientsMap.set(pId, { ...existing, ...patientClean });
-                    }
-                } else {
-                    patientsMap.set(pId, patientClean);
-                }
-            }
-
-            // 2. فحص الإشعارات السريرية لاستعادة أي تشخيص تم تسجيله وفُقد سجله
             if (adminNotifs && Array.isArray(adminNotifs)) {
                 for (const notif of adminNotifs) {
                     if (!notif) continue;
@@ -141,125 +101,211 @@ const AdminEngine = (function() {
                         if (m2) nName = m2[1].trim();
                     }
 
-                    if (nName && nName !== 'مراجع جديد' && nName !== 'مراجع كريم') {
-                        let painArea = (notif.meta && notif.meta.painArea) || '';
-                        if (!painArea && notif.message) {
-                            const pMatch = notif.message.match(/لموضع\s*\((.*?)\)/i) || notif.message.match(/منطقة:\s*(.*?)(?:-|$)/i);
-                            if (pMatch) painArea = pMatch[1].trim();
+                    let phoneVal = notif.patientPhone || '';
+                    if (!phoneVal && notif.message) {
+                        const phoneMatch = notif.message.match(/(?:هاتف|رقم|phone|tel)?[:\s]*\(?([0-9+]{8,15})\)?/i) || notif.message.match(/(07[789]\d{7})/);
+                        if (phoneMatch) phoneVal = phoneMatch[1].trim();
+                    }
+
+                    let painArea = (notif.meta && notif.meta.painArea) || '';
+                    if (!painArea && notif.message) {
+                        const pMatch = notif.message.match(/لموضع\s*\((.*?)\)/i) || notif.message.match(/منطقة:\s*(.*?)(?:-|$)/i) || notif.message.match(/شكوى سريرية في:\s*(.*?)(?:$|\n|\.)/i);
+                        if (pMatch) painArea = pMatch[1].trim();
+                    }
+                    let chiefDiag = (notif.meta && notif.meta.diagnosis) || '';
+                    if (!chiefDiag && notif.message) {
+                        const dMatch = notif.message.match(/التشخيص:\s*\[(.*?)\]/i);
+                        if (dMatch) chiefDiag = dMatch[1].trim();
+                    }
+
+                    let completedSess = 0;
+                    if (notif.type === 'session_done' || notif.type === 'session_completed' || (notif.message && notif.message.includes('الجلسة'))) {
+                        const sessMatch = (notif.message || '').match(/الجلسة\s*(الأولى|الثانية|الثالثة|الرابعة|الخامسة|السادسة|السابعة|[1-7])/i);
+                        if (sessMatch) {
+                            const word = sessMatch[1];
+                            if (word === 'الأولى' || word === '1') completedSess = 1;
+                            else if (word === 'الثانية' || word === '2') completedSess = 2;
+                            else if (word === 'الثالثة' || word === '3') completedSess = 3;
+                            else if (word === 'الرابعة' || word === '4') completedSess = 4;
+                            else if (word === 'الخامسة' || word === '5') completedSess = 5;
+                            else if (word === 'السادسة' || word === '6') completedSess = 6;
+                            else if (word === 'السابعة' || word === '7') completedSess = 7;
                         }
-                        let chiefDiag = (notif.meta && notif.meta.diagnosis) || '';
-                        if (!chiefDiag && notif.message) {
-                            const dMatch = notif.message.match(/التشخيص:\s*\[(.*?)\]/i);
-                            if (dMatch) chiefDiag = dMatch[1].trim();
-                        }
+                    }
 
-                        let phoneVal = notif.patientPhone || '';
-                        if (!phoneVal && notif.message) {
-                            const phoneMatch = notif.message.match(/(?:هاتف|رقم|phone|tel)?[:\s]*\(?([0-9+]{8,15})\)?/i) || notif.message.match(/(07[789]\d{7})/);
-                            if (phoneMatch) phoneVal = phoneMatch[1].trim();
-                        }
-
-                        // التحقق هل هذا الفحص بالتحديد موجود مسبقاً في الخريطة أم أنه فحص جديد ومستقل لنفس المراجع
-                        let alreadyPresent = false;
-                        for (const existingPt of patientsMap.values()) {
-                            const samePerson = (notif.patientId && (existingPt.patientId === notif.patientId || existingPt.id === notif.patientId)) ||
-                                               (phoneVal && existingPt.phone && String(phoneVal).replace(/\D/g, '') === String(existingPt.phone).replace(/\D/g, '')) ||
-                                               (existingPt.name && existingPt.name.trim() === nName.trim());
-                            if (samePerson) {
-                                const sameDiag = !chiefDiag || (existingPt.chiefDiagnosis && existingPt.chiefDiagnosis.includes(chiefDiag)) || (existingPt.diagnosisTitle && existingPt.diagnosisTitle.includes(chiefDiag));
-                                const samePain = !painArea || (existingPt.painArea && existingPt.painArea.includes(painArea)) || (existingPt.painAreaTitle && existingPt.painAreaTitle.includes(painArea));
-                                const timeDiff = Math.abs(new Date(existingPt.createdAt || existingPt.timestamp || 0) - new Date(notif.time || 0));
-                                if (sameDiag && samePain && timeDiff < 600000) {
-                                    alreadyPresent = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (!alreadyPresent) {
-                            const nId = (notif.patientId || 'pat_' + Date.now().toString(36)) + '_notif_' + (notif.id || notif.time || Math.random().toString(36).substr(2, 5));
-                            
-                            // استنتاج الدولة والمدينة وعلم الدولة فورياً من رقم الهاتف
-                            let geoFromPhone = null;
-                            if (typeof SmartGeoTracker !== 'undefined' && typeof SmartGeoTracker.inferCountryFromPhone === 'function') {
-                                geoFromPhone = SmartGeoTracker.inferCountryFromPhone(phoneVal);
-                            }
-                            if (!geoFromPhone && typeof SmartGeoTracker !== 'undefined' && typeof SmartGeoTracker.inferCountryFromTimezone === 'function') {
-                                geoFromPhone = SmartGeoTracker.inferCountryFromTimezone();
-                            }
-
-                            // استخراج عدد الجلسات المنفذة إن كان الإشعار لإتمام جلسة
-                            let completedSess = 0;
-                            let recoveredLogs = [];
-                            if (notif.type === 'session_done' || (notif.message && notif.message.includes('الجلسة'))) {
-                                const sessMatch = (notif.message || '').match(/الجلسة\s*(الأولى|الثانية|الثالثة|الرابعة|الخامسة|السادسة|السابعة|[1-7])/i);
-                                if (sessMatch) {
-                                    const word = sessMatch[1];
-                                    if (word === 'الأولى' || word === '1') completedSess = 1;
-                                    else if (word === 'الثانية' || word === '2') completedSess = 2;
-                                    else if (word === 'الثالثة' || word === '3') completedSess = 3;
-                                    else if (word === 'الرابعة' || word === '4') completedSess = 4;
-                                    else if (word === 'الخامسة' || word === '5') completedSess = 5;
-                                    else if (word === 'السادسة' || word === '6') completedSess = 6;
-                                    else if (word === 'السابعة' || word === '7') completedSess = 7;
-                                }
-                            }
-
-                            const recoveredPatient = {
-                                patientId: nId,
-                                id: nId,
-                                name: nName,
-                                fullName: nName,
-                                phone: phoneVal || '',
-                                painArea: painArea || 'فحص واستشارة سريرية',
-                                painAreaTitle: painArea || 'فحص واستشارة سريرية',
-                                chiefDiagnosis: chiefDiag || 'تشخيص سريري متكامل',
-                                diagnosisTitle: chiefDiag || 'تشخيص سريري متكامل',
-                                country: geoFromPhone ? geoFromPhone.country : 'الأردن',
-                                countryCode: geoFromPhone ? geoFromPhone.countryCode : 'JO',
-                                city: geoFromPhone ? geoFromPhone.city : 'عمّان',
-                                flag: geoFromPhone ? geoFromPhone.flag : '🇯🇴',
-                                device: 'Mobile',
-                                completedSessions: completedSess,
-                                logsCount: completedSess,
-                                createdAt: notif.time || new Date().toISOString()
-                            };
-
-                            patientsMap.set(nId, recoveredPatient);
-
-                            // حفظ السجل المستعاد في التخزين المحلي لضمان استمراريته وعدم فقدانه مجدداً
-                            try {
-                                if (typeof SmartDB !== 'undefined' && typeof SmartDB.savePatient === 'function') {
-                                    SmartDB.savePatient(recoveredPatient);
-                                }
-                            } catch(e) {}
-                        }
+                    if ((nName && nName !== 'مراجع جديد' && nName !== 'مراجع كريم') || phoneVal || notif.patientId) {
+                        candidatePool.push({
+                            patientId: notif.patientId || ('pat_notif_' + (phoneVal ? phoneVal.replace(/\D/g, '') : Date.now().toString(36))),
+                            id: notif.patientId,
+                            name: nName || 'مراجع كريم',
+                            fullName: nName || 'مراجع كريم',
+                            phone: phoneVal,
+                            painArea: painArea,
+                            painAreaTitle: painArea,
+                            chiefDiagnosis: chiefDiag,
+                            diagnosisTitle: chiefDiag,
+                            completedSessions: completedSess,
+                            logsCount: completedSess,
+                            createdAt: notif.time || new Date().toISOString(),
+                            timestamp: notif.time || new Date().toISOString(),
+                            _fromNotif: true
+                        });
                     }
                 }
             }
 
-            const patients = Array.from(patientsMap.values());
-            const overview = [];
+            // 2. دالة استخراج الهوية الفريدة للمريض (Patient Identity Key) لمنع أي تكرار نهائياً
+            function getPatientIdentityKey(pt) {
+                if (!pt) return null;
+                const cleanPhone = (pt.phone || '').replace(/\D/g, '');
+                if (cleanPhone.length >= 7) {
+                    // آخر 9 أرقام لتفادي فروقات 00962 أو +962 أو 07
+                    return 'phone_' + cleanPhone.slice(-9);
+                }
+                const rawId = pt.patientId || pt.id || '';
+                const baseId = rawId.replace(/(_notif_.*|_test\d*|_cloud_test.*|_\d{10,})$/, '');
+                if (baseId && baseId !== 'pat_notif') {
+                    return 'id_' + baseId;
+                }
+                const cleanName = (pt.fullName || pt.name || '').trim();
+                if (cleanName && !/^(?:الاسم|الآسم|الإسم|مراجع كريم|مراجع جديد|اسمي|اسمها|اسمك|اسم)$/i.test(cleanName)) {
+                    return 'name_' + cleanName;
+                }
+                return 'raw_' + (rawId || Math.random().toString(36));
+            }
 
-            for (const p of patients) {
-                if (!p || !p.patientId) continue;
+            // 3. تجميع كافة السجلات في مجموعات هوية واحدة
+            const groups = new Map();
+            for (const pt of candidatePool) {
+                if (!pt) continue;
+                const key = getPatientIdentityKey(pt);
+                if (!key) continue;
+                if (!groups.has(key)) groups.set(key, []);
+                groups.get(key).push(pt);
+            }
 
-                // تدقيق وضمان الدولة والمدينة لكل مريض
-                if (!p.country || p.country === 'غير محدد' || p.country === 'دولي') {
+            // 4. دمج كل مجموعة إلى سجل مريض موحد وحيد وخالي من التكرار
+            const unifiedPatients = [];
+            for (const [key, records] of groups.entries()) {
+                const nonNotif = records.filter(r => !r._fromNotif);
+                const listToMerge = nonNotif.length > 0 ? nonNotif : records;
+                const unified = { ...listToMerge[0] };
+
+                // تنظيف معرف المريض من أي لاحقة مشتقة
+                unified.patientId = (unified.patientId || unified.id || '').replace(/(_notif_.*|_test\d*|_cloud_test.*|_\d{10,})$/, '');
+                unified.id = unified.patientId;
+
+                let earliestDate = unified.createdAt || unified.timestamp || null;
+                let latestActiveDate = unified.createdAt || unified.timestamp || null;
+                let allDailyLogs = Array.isArray(unified.dailyLogs) ? [...unified.dailyLogs] : (Array.isArray(unified.logs) ? [...unified.logs] : []);
+
+                for (const r of records) {
+                    // الاسم
+                    const rName = (r.fullName || r.name || '').trim();
+                    if (rName && !/^(?:الاسم|الآسم|الإسم|مراجع كريم|مراجع جديد)$/i.test(rName)) {
+                        unified.name = rName;
+                        unified.fullName = rName;
+                    }
+
+                    // الهاتف
+                    if (!unified.phone && r.phone) unified.phone = r.phone;
+
+                    // المؤشرات الحيوية
+                    if (!unified.age && r.age) unified.age = r.age;
+                    if (!unified.weight && r.weight) unified.weight = r.weight;
+                    if (!unified.height && r.height) unified.height = r.height;
+                    if (!unified.bmi && r.bmi) unified.bmi = r.bmi;
+                    if ((!unified.gender || unified.gender === 'male') && r.gender) unified.gender = r.gender;
+
+                    // موضع الألم (نأخذ الأكثر تحديداً)
+                    const rPain = r.painArea || r.painAreaTitle || r.selectedPoint;
+                    if (rPain && !isGenericPain(rPain) && (isGenericPain(unified.painArea) || !unified.painArea)) {
+                        unified.painArea = normalizeTitle(rPain);
+                        unified.painAreaTitle = normalizeTitle(rPain);
+                    }
+
+                    // التشخيص
+                    const rDiag = r.chiefDiagnosis || r.diagnosisTitle;
+                    if (rDiag && !isGenericDiag(rDiag) && (isGenericDiag(unified.chiefDiagnosis) || !unified.chiefDiagnosis)) {
+                        unified.chiefDiagnosis = rDiag;
+                        unified.diagnosisTitle = rDiag;
+                    }
+
+                    // الجهاز: نفضل Mobile إن وُجد في أي سجل
+                    if (r.device === 'Mobile' || unified.device === 'Mobile') {
+                        unified.device = 'Mobile';
+                    } else if (r.device) {
+                        unified.device = r.device;
+                    }
+
+                    // التواريخ
+                    const rDate = r.createdAt || r.timestamp;
+                    if (rDate) {
+                        if (!earliestDate || new Date(rDate) < new Date(earliestDate)) earliestDate = rDate;
+                        if (!latestActiveDate || new Date(rDate) > new Date(latestActiveDate)) latestActiveDate = rDate;
+                    }
+
+                    // الجلسات اليومية المنفذة
+                    const rLogs = Array.isArray(r.dailyLogs) ? r.dailyLogs : (Array.isArray(r.logs) ? r.logs : []);
+                    for (const l of rLogs) {
+                        if (!l) continue;
+                        const sessNum = l.sessionNumber || l.day;
+                        if (sessNum && !allDailyLogs.some(existingL => (existingL.sessionNumber || existingL.day) === sessNum)) {
+                            allDailyLogs.push(l);
+                        }
+                    }
+
+                    unified.logsCount = Math.max(unified.logsCount || 0, r.logsCount || 0, r.completedSessions || 0, (r.dailyLogs?.length || 0));
+                    unified.completedSessions = Math.max(unified.completedSessions || 0, r.completedSessions || 0, unified.logsCount || 0);
+                    unified.recoveryScore = Math.max(unified.recoveryScore || 0, r.recoveryScore || 0);
+                }
+
+                allDailyLogs.sort((a, b) => (a.sessionNumber || a.day || 0) - (b.sessionNumber || b.day || 0));
+                unified.dailyLogs = allDailyLogs;
+                unified.logs = allDailyLogs;
+                if (allDailyLogs.length > 0) {
+                    unified.logsCount = Math.max(unified.logsCount || 0, allDailyLogs.length);
+                    unified.completedSessions = Math.max(unified.completedSessions || 0, allDailyLogs.length);
+                }
+
+                if (!unified.bmi && unified.weight && unified.height) {
+                    unified.bmi = parseFloat((unified.weight / Math.pow(unified.height / 100, 2)).toFixed(1));
+                }
+
+                unified.createdAt = earliestDate || new Date().toISOString();
+                unified.lastActiveAt = latestActiveDate || unified.createdAt;
+
+                // التحقق من صحة الاسم
+                if (!unified.name || /^(?:الاسم|الآسم|الإسم)$/i.test(unified.name.trim())) {
+                    unified.name = 'مراجع كريم';
+                    unified.fullName = 'مراجع كريم';
+                }
+
+                // استنتاج الدولة والمدينة إن لم تكن محددة
+                if (!unified.country || unified.country === 'غير محدد' || unified.country === 'دولي') {
                     let inferred = null;
-                    if (p.phone && typeof SmartGeoTracker !== 'undefined' && typeof SmartGeoTracker.inferCountryFromPhone === 'function') {
-                        inferred = SmartGeoTracker.inferCountryFromPhone(p.phone);
+                    if (unified.phone && typeof SmartGeoTracker !== 'undefined' && typeof SmartGeoTracker.inferCountryFromPhone === 'function') {
+                        inferred = SmartGeoTracker.inferCountryFromPhone(unified.phone);
                     }
                     if (!inferred && typeof SmartGeoTracker !== 'undefined' && typeof SmartGeoTracker.inferCountryFromTimezone === 'function') {
                         inferred = SmartGeoTracker.inferCountryFromTimezone();
                     }
                     if (inferred) {
-                        p.country = inferred.country;
-                        p.countryCode = inferred.countryCode;
-                        p.city = inferred.city;
-                        p.flag = inferred.flag;
+                        unified.country = inferred.country;
+                        unified.countryCode = inferred.countryCode;
+                        unified.city = inferred.city;
+                        unified.flag = inferred.flag;
                     }
                 }
+
+                unifiedPatients.push(unified);
+            }
+
+            // 5. بناء قائمة المراجعة النهائية (Overview) - سجل واحد وحيد لكل مريض حقيقي
+            const overview = [];
+
+            for (const p of unifiedPatients) {
+                if (!p || !p.patientId) continue;
 
                 let assessments = [];
                 let logs = [];
@@ -269,14 +315,14 @@ const AdminEngine = (function() {
                 if ((!assessments || assessments.length === 0) && p.id && p.id !== p.patientId) {
                     try { assessments = await SmartDB.getPatientAssessments(p.id); } catch(e) {}
                 }
-                
+
                 try {
                     logs = await SmartDB.getPatientDailyLogs(p.patientId);
                 } catch(e) { logs = []; }
                 if ((!logs || logs.length === 0) && p.id && p.id !== p.patientId) {
                     try { logs = await SmartDB.getPatientDailyLogs(p.id); } catch(e) {}
                 }
-                
+
                 if ((!logs || logs.length === 0) && Array.isArray(p.dailyLogs) && p.dailyLogs.length > 0) {
                     logs = p.dailyLogs;
                 } else if ((!logs || logs.length === 0) && Array.isArray(p.logs) && p.logs.length > 0) {
@@ -288,11 +334,11 @@ const AdminEngine = (function() {
                         if (cLogs && cLogs.length > 0) logs = cLogs;
                     } catch(e) {}
                 }
-                
-                // استخراج التقييم السريري الحقيقي مع استبعاد التقييمات الوهمية
-                const validAssessments = (assessments || []).filter(a => 
-                    !a.autoHealed && 
-                    a.primaryDiagnosis !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة' && 
+
+                // استخراج التقييم السريري الحقيقي واستبعاد الوهمي
+                const validAssessments = (assessments || []).filter(a =>
+                    !a.autoHealed &&
+                    a.primaryDiagnosis !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة' &&
                     a.painLocation !== 'العمود الفقري ومفاصل الحركة'
                 );
 
@@ -304,116 +350,40 @@ const AdminEngine = (function() {
                     }
                 }
 
-                // شدة الألم الأساسية - من بيانات حقيقية فقط، لا قيم افتراضية
+                // شدة الألم الأساسية
                 const baselinePain = latestAssessment
                     ? (latestAssessment.painSeverity || latestAssessment.painLevel || p.painLevel || null)
                     : (p.painLevel || null);
-                
-                // نسبة التعافي - محسوبة من الجلسات الحقيقية فقط، لا قيمة افتراضية
+
+                // احتساب عدد الجلسات المنفذة الحقيقية
+                const effectiveLogsCount = Math.max(
+                    (logs ? logs.length : 0),
+                    p.logsCount || 0,
+                    p.completedSessions || 0,
+                    (Array.isArray(p.dailyLogs) ? p.dailyLogs.length : 0),
+                    (Array.isArray(p.logs) ? p.logs.length : 0)
+                );
+
+                // نسبة التعافي
                 let recoveryScore = null;
-                if (logs && logs.length > 0) {
-                    if (typeof PatientFlow !== 'undefined' && typeof PatientFlow.calculateRecoveryScore === 'function' && baselinePain) {
+                if (effectiveLogsCount > 0) {
+                    if (typeof PatientFlow !== 'undefined' && typeof PatientFlow.calculateRecoveryScore === 'function' && baselinePain && logs && logs.length > 0) {
                         recoveryScore = PatientFlow.calculateRecoveryScore(baselinePain, logs);
-                    } else {
-                        recoveryScore = Math.min(100, Math.round((logs.length / 7) * 100));
                     }
-                } else if (p.recoveryScore && p.recoveryScore > 0) {
-                    recoveryScore = p.recoveryScore; // من بيانات المريض المحفوظة
-                }
-
-                if (validAssessments.length > 1) {
-                    for (let aIdx = 0; aIdx < validAssessments.length; aIdx++) {
-                        const ass = validAssessments[aIdx];
-                        const subPatient = {
-                            ...p,
-                            patientId: aIdx === 0 ? p.patientId : `${p.patientId}_test${aIdx + 1}`,
-                            id: aIdx === 0 ? (p.id || p.patientId) : `${p.patientId}_test${aIdx + 1}`
-                        };
-
-                        const assPain = ass.painAreaTitle || ass.pointTitle || ass.rootLevel || ass.painLocation || p.painArea;
-                        const rawAssDiag = ass.primaryDiagnosis || ass.title || p.chiefDiagnosis;
-                        const cleanAssDiag = (typeof rawAssDiag === 'object' && rawAssDiag !== null) ? (rawAssDiag.title || rawAssDiag.name) : String(rawAssDiag || '');
-
-                        const rPain = normalizeTitle(assPain || p.painArea || 'الفقرات القطنية وأسفل الظهر');
-                        let rDiag = cleanAssDiag || p.chiefDiagnosis || 'تشخيص سريري متكامل';
-
-                        subPatient.painArea = rPain;
-                        subPatient.painAreaTitle = rPain;
-                        subPatient.chiefDiagnosis = rDiag;
-                        subPatient.diagnosisTitle = rDiag;
-
-                        const bPain = ass.painSeverity || ass.painLevel || (aIdx === validAssessments.length - 1 ? p.painLevel : null);
-                        const isLatest = aIdx === validAssessments.length - 1;
-
-                        const effLogs = Math.max(
-                            (logs ? logs.length : 0),
-                            p.logsCount || 0,
-                            p.completedSessions || 0,
-                            (Array.isArray(p.dailyLogs) ? p.dailyLogs.length : 0),
-                            (Array.isArray(p.logs) ? p.logs.length : 0)
-                        );
-                        const effRecovery = effLogs > 0
-                            ? Math.max(recoveryScore || 0, p.recoveryScore || 0, Math.min(100, Math.round((effLogs / 7) * 100)))
-                            : (recoveryScore || p.recoveryScore || null);
-
-                        overview.push({
-                            patient: subPatient,
-                            latestAssessment: ass,
-                            logsCount: isLatest ? effLogs : 0,
-                            recoveryScore: isLatest ? effRecovery : null,
-                            baselinePain: bPain,
-                            latestDiagnosis: rDiag,
-                            painArea: rPain,
-                            createdAt: ass.date || ass.timestamp || p.createdAt || p.timestamp || new Date().toISOString()
-                        });
-                    }
-                    continue;
-                }
-
-
-                // استخراج موضع الشكوى الحقيقي بدقة متعددة المصادر (إشعارات، تقييم، اختيار المريض، أعراض)
-                let resolvedPainArea = '';
-                let matchingNotif = null;
-
-                // 1. فحص الإشعارات السريرية المرتبطة بالمريض
-                if (adminNotifs && adminNotifs.length > 0) {
-                    const pDigits = (p.phone || '').replace(/\D/g, '');
-                    matchingNotif = adminNotifs.find(n => {
-                        const nDigits = (n.patientPhone || '').replace(/\D/g, '');
-                        return (n.patientId && (n.patientId === p.patientId || n.patientId === p.id)) ||
-                               (pDigits && nDigits && pDigits === nDigits) ||
-                               (p.name && p.name !== 'مراجع كريم' && n.patientName && n.patientName.trim() === p.name.trim());
-                    });
-                    if (matchingNotif) {
-                        if (matchingNotif.meta && matchingNotif.meta.painArea && !isGenericPain(matchingNotif.meta.painArea)) {
-                            resolvedPainArea = normalizeTitle(matchingNotif.meta.painArea);
-                        } else {
-                            const msgMatch = (matchingNotif.message || '').match(/لموضع\s*\((.*?)\)/i) || (matchingNotif.message || '').match(/شكوى سريرية في:\s*(.*?)(?:$|\n|\.)/i);
-                            if (msgMatch && msgMatch[1] && !isGenericPain(msgMatch[1])) {
-                                resolvedPainArea = normalizeTitle(msgMatch[1]);
-                            }
-                        }
+                    if (!recoveryScore) {
+                        recoveryScore = Math.max(p.recoveryScore || 0, Math.min(100, Math.round((effectiveLogsCount / 7) * 100)));
                     }
                 }
 
-                // 2. فحص التقييم السريري المسجل
-                if (!resolvedPainArea) {
-                    const assPain = latestAssessment?.painAreaTitle || latestAssessment?.pointTitle || latestAssessment?.rootLevel || latestAssessment?.painLocation;
-                    if (assPain && !isGenericPain(assPain)) {
-                        resolvedPainArea = normalizeTitle(assPain);
+                // استخراج موضع الشكوى الحقيقي
+                let resolvedPainArea = p.painArea || p.painAreaTitle;
+                if (!resolvedPainArea || isGenericPain(resolvedPainArea)) {
+                    if (latestAssessment) {
+                        const assPain = latestAssessment.painAreaTitle || latestAssessment.pointTitle || latestAssessment.rootLevel || latestAssessment.painLocation;
+                        if (assPain && !isGenericPain(assPain)) resolvedPainArea = normalizeTitle(assPain);
                     }
                 }
-
-                // 3. فحص الخيارات المسجلة في ملف المريض
-                if (!resolvedPainArea) {
-                    const directPain = p.painAreaTitle || p.painArea || p.selectedPoint || p.condition;
-                    if (directPain && !isGenericPain(directPain)) {
-                        resolvedPainArea = normalizeTitle(directPain);
-                    }
-                }
-
-                // 4. فحص الملاحظات والأعراض والمصطلحات السريرية — لا استنتاج بالاسم ولا توليد عشوائي
-                if (!resolvedPainArea) {
+                if (!resolvedPainArea || isGenericPain(resolvedPainArea)) {
                     const textSearch = `${p.notes || ''} ${p.mriReportText || ''} ${(Array.isArray(p.collectedSymptoms) ? p.collectedSymptoms.join(' ') : '')} ${p.primaryComplaint || ''} ${p.complaint || ''}`.toLowerCase();
                     if (/ركب|ركبه|knee|patella|صابون|رضف/.test(textSearch)) resolvedPainArea = 'مفصل الركبة وصابونة الرضفة';
                     else if (/كتف|shoulder|كفة|كفه/.test(textSearch)) resolvedPainArea = 'مفصل الكتف والكفة المدورة';
@@ -423,76 +393,67 @@ const AdminEngine = (function() {
                     else if (/حوض|عرق\s*النسا|نسا|سياتيكا|كمثرية|sciatica/.test(textSearch)) resolvedPainArea = 'عضلات الحوض وعرق النسا';
                     else if (/صدر|أعلى\s*الظهر|منتصف\s*الظهر|thoracic|أبهر|ابهر/.test(textSearch)) resolvedPainArea = 'الفقرات الصدرية وأعلى الظهر (الأبهر)';
                     else if (/ظهر|قطن|قطنية|lumbar|دسك|غضروف/.test(textSearch)) resolvedPainArea = 'الفقرات القطنية وأسفل الظهر';
+                    else if (/كوع|مرفق|elbow/.test(textSearch)) resolvedPainArea = 'مفصل الكوع الأيمن';
                 }
-                // إذا لم تُوجد بيانات حقيقية → لا توليد عشوائي، نترك الحقل فارغاً أو "لم يُحدد بعد"
-                if (!resolvedPainArea) resolvedPainArea = '';
+                if (!resolvedPainArea || isGenericPain(resolvedPainArea)) resolvedPainArea = 'فحص واستشارة سريرية';
 
-                // استخراج التشخيص السريري الحقيقي الموثق للمريض
-                let resolvedDiagnosis = '';
-
-                // 1. من الإشعار السريري
-                if (matchingNotif) {
-                    const diagMatch = (matchingNotif.message || '').match(/التشخيص:\s*\[(.*?)\]/i);
-                    if (diagMatch && diagMatch[1] && !isGenericDiag(diagMatch[1])) {
-                        resolvedDiagnosis = diagMatch[1].trim();
+                // استخراج التشخيص السريري الحقيقي
+                let resolvedDiagnosis = p.chiefDiagnosis || p.diagnosisTitle;
+                if (!resolvedDiagnosis || isGenericDiag(resolvedDiagnosis)) {
+                    if (latestAssessment) {
+                        const assDiag = latestAssessment.primaryDiagnosis;
+                        const cleanAssDiag = (typeof assDiag === 'object' && assDiag !== null) ? (assDiag.title || assDiag.name) : assDiag;
+                        if (cleanAssDiag && !isGenericDiag(cleanAssDiag)) resolvedDiagnosis = cleanAssDiag.trim();
+                        else if (latestAssessment.title && !isGenericDiag(latestAssessment.title)) resolvedDiagnosis = latestAssessment.title.trim();
                     }
                 }
-
-                // 2. من التقييم السريري المسجل
-                if (!resolvedDiagnosis && latestAssessment) {
-                    const assDiag = latestAssessment.primaryDiagnosis;
-                    const cleanAssDiag = (typeof assDiag === 'object' && assDiag !== null) ? (assDiag.title || assDiag.name) : assDiag;
-                    if (cleanAssDiag && !isGenericDiag(cleanAssDiag)) {
-                        resolvedDiagnosis = cleanAssDiag.trim();
-                    } else if (latestAssessment.title && !isGenericDiag(latestAssessment.title)) {
-                        resolvedDiagnosis = latestAssessment.title.trim();
-                    }
-                }
-
-                // 3. من ملف المريض
-                if (!resolvedDiagnosis) {
-                    const ptDiag = p.chiefDiagnosis || p.diagnosisTitle;
-                    if (ptDiag && !isGenericDiag(ptDiag)) {
-                        resolvedDiagnosis = ptDiag.trim();
-                    }
-                }
-
-                // 4. إذا لم يُوجد تشخيص حقيقي → لا توليد تلقائي، نترك فارغاً
-                // (لا نعرض تشخيصاً وهمياً أفضل من عدم التشخيص)
-                if (!resolvedDiagnosis) resolvedDiagnosis = '';
+                if (!resolvedDiagnosis || isGenericDiag(resolvedDiagnosis)) resolvedDiagnosis = 'تشخيص سريري متكامل';
 
                 p.painArea = resolvedPainArea;
                 p.painAreaTitle = resolvedPainArea;
                 p.chiefDiagnosis = resolvedDiagnosis;
                 p.diagnosisTitle = resolvedDiagnosis;
-
-                const effectiveLogsCount = Math.max(
-                    (logs ? logs.length : 0),
-                    p.logsCount || 0,
-                    p.completedSessions || 0,
-                    (Array.isArray(p.dailyLogs) ? p.dailyLogs.length : 0),
-                    (Array.isArray(p.logs) ? p.logs.length : 0)
-                );
-                // نسبة التعافي: من بيانات حقيقية فقط - لا قيمة افتراضية
-                const effectiveRecoveryScore = effectiveLogsCount > 0
-                    ? Math.max(recoveryScore || 0, p.recoveryScore || 0, Math.min(100, Math.round((effectiveLogsCount / 7) * 100)))
-                    : (recoveryScore || p.recoveryScore || null);
+                p.logsCount = effectiveLogsCount;
+                p.completedSessions = effectiveLogsCount;
+                p.recoveryScore = recoveryScore;
 
                 overview.push({
                     patient: p,
                     latestAssessment,
                     logsCount: effectiveLogsCount,
-                    recoveryScore: effectiveRecoveryScore,
-                    baselinePain: baselinePain,   // شدة الألم الحقيقية من المريض
+                    recoveryScore: recoveryScore,
+                    baselinePain: baselinePain,
                     latestDiagnosis: resolvedDiagnosis,
                     painArea: resolvedPainArea,
-                    createdAt: p.createdAt || p.timestamp || new Date().toISOString()
+                    createdAt: p.createdAt,
+                    lastActiveAt: p.lastActiveAt || p.createdAt
                 });
             }
 
+            // 6. الترتيب الزمني السريري الدقيق: الأحدث تسجيلاً ونشاطاً يظهر أولاً في القمة
+            overview.sort((a, b) => {
+                const timeA = new Date(a.lastActiveAt || a.createdAt || 0).getTime();
+                const timeB = new Date(b.lastActiveAt || b.createdAt || 0).getTime();
+                return timeB - timeA;
+            });
 
+            // 7. تنظيف التخزين المحلي فورياً من السجلات المكررة والمفاتيح الزائدة
+            try {
+                const cleanForStorage = unifiedPatients.map(u => {
+                    const c = { ...u };
+                    delete c._fromNotif;
+                    return c;
+                });
+                localStorage.setItem('smart_all_patients', JSON.stringify(cleanForStorage));
 
-            overview.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                for (let i = localStorage.length - 1; i >= 0; i--) {
+                    const k = localStorage.key(i);
+                    if (k && (k.includes('_notif_') || k.includes('_test2') || k.includes('_cloud_test'))) {
+                        localStorage.removeItem(k);
+                    }
+                }
+            } catch(e) {}
+
             return overview;
         } catch (err) {
             console.error('Error in loadPatientsOverview:', err);

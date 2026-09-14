@@ -82,6 +82,10 @@ const SmartDB = (function() {
                 try { prevRecord = JSON.parse(existingRaw); } catch(e) {}
             }
             const mergedPatient = prevRecord ? { ...prevRecord, ...patient } : patient;
+            // الحفاظ الصارم على تاريخ التسجيل الأصلي للمريض وعدم تحديثه لتاريخ اليوم عند تعديل الجلسات
+            if (prevRecord && prevRecord.createdAt) {
+                mergedPatient.createdAt = prevRecord.createdAt;
+            }
 
             // تنظيف الاسم إن كان كلمة محظورة مثل 'الاسم' أو 'الآسم'
             if (mergedPatient.name === 'الاسم' || mergedPatient.name === 'الآسم' || mergedPatient.name === 'الإسم') {
@@ -203,27 +207,25 @@ const SmartDB = (function() {
                             map.set(pId, p);
                         } else {
                             const existing = map.get(pId);
-                            // إذا كان السجل يمثل فحصاً مختلفاً (موضع ألم مختلف أو تشخيص مختلف أو تاريخ فحص منفصل)، نحفظه كفحص مستقل ولا ندمجه قسراً!
-                            const isDistinctTest = (
-                                (!isGen(p.painArea) && !isGen(existing.painArea) && p.painArea !== existing.painArea) ||
-                                (p.chiefDiagnosis && existing.chiefDiagnosis && p.chiefDiagnosis !== existing.chiefDiagnosis && p.chiefDiagnosis !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة' && existing.chiefDiagnosis !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة') ||
-                                (p.createdAt && existing.createdAt && Math.abs(new Date(p.createdAt) - new Date(existing.createdAt)) > 300000)
-                            );
-                            if (isDistinctTest) {
-                                const subKey = pId + '_test2';
-                                map.set(subKey, { ...p, patientId: subKey, id: subKey });
-                            } else {
-                                map.set(pId, {
-                                    ...existing,
-                                    ...p,
-                                    painArea: !isGen(p.painArea) ? p.painArea : (!isGen(existing.painArea) ? existing.painArea : p.painArea),
-                                    painAreaTitle: !isGen(p.painAreaTitle) ? p.painAreaTitle : (!isGen(existing.painAreaTitle) ? existing.painAreaTitle : p.painAreaTitle),
-                                    selectedPoint: !isGen(p.selectedPoint) ? p.selectedPoint : (!isGen(existing.selectedPoint) ? existing.selectedPoint : p.selectedPoint),
-                                    chiefDiagnosis: (p.chiefDiagnosis && p.chiefDiagnosis !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة') ? p.chiefDiagnosis : (existing.chiefDiagnosis || p.chiefDiagnosis),
-                                    diagnosisTitle: (p.diagnosisTitle && p.diagnosisTitle !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة') ? p.diagnosisTitle : (existing.diagnosisTitle || p.diagnosisTitle),
-                                    assessment: (p.assessment && !p.assessment.autoHealed) ? p.assessment : (existing.assessment || p.assessment)
-                                });
-                            }
+                            const mergedLogsCount = Math.max(existing.logsCount || 0, p.logsCount || 0, existing.completedSessions || 0, p.completedSessions || 0);
+                            const mergedRecoveryScore = Math.max(existing.recoveryScore || 0, p.recoveryScore || 0);
+                            const mergedDailyLogs = (Array.isArray(p.dailyLogs) && p.dailyLogs.length > (existing.dailyLogs?.length || 0)) ? p.dailyLogs : (existing.dailyLogs || p.dailyLogs || []);
+
+                            map.set(pId, {
+                                ...existing,
+                                ...p,
+                                createdAt: existing.createdAt || p.createdAt,
+                                logsCount: mergedLogsCount,
+                                completedSessions: mergedLogsCount,
+                                recoveryScore: mergedRecoveryScore,
+                                dailyLogs: mergedDailyLogs,
+                                painArea: !isGen(p.painArea) ? p.painArea : (!isGen(existing.painArea) ? existing.painArea : p.painArea),
+                                painAreaTitle: !isGen(p.painAreaTitle) ? p.painAreaTitle : (!isGen(existing.painAreaTitle) ? existing.painAreaTitle : p.painAreaTitle),
+                                selectedPoint: !isGen(p.selectedPoint) ? p.selectedPoint : (!isGen(existing.selectedPoint) ? existing.selectedPoint : p.selectedPoint),
+                                chiefDiagnosis: (p.chiefDiagnosis && p.chiefDiagnosis !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة') ? p.chiefDiagnosis : (existing.chiefDiagnosis || p.chiefDiagnosis),
+                                diagnosisTitle: (p.diagnosisTitle && p.diagnosisTitle !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة') ? p.diagnosisTitle : (existing.diagnosisTitle || p.diagnosisTitle),
+                                assessment: (p.assessment && !p.assessment.autoHealed) ? p.assessment : (existing.assessment || p.assessment)
+                            });
                         }
                     });
 
@@ -286,46 +288,36 @@ const SmartDB = (function() {
                                     map.set(pId, fullCloudPatient);
                                 } else {
                                     const existing = map.get(pId);
-                                    // إذا كان السجل السحابي يمثل فحصاً مختلفاً، نحفظه كسجل مستقل تماماً
-                                    const isDistinctCloud = (
-                                        (!isGen(fullCloudPatient.painArea) && !isGen(existing.painArea) && fullCloudPatient.painArea !== existing.painArea) ||
-                                        (fullCloudPatient.chiefDiagnosis && existing.chiefDiagnosis && fullCloudPatient.chiefDiagnosis !== existing.chiefDiagnosis && fullCloudPatient.chiefDiagnosis !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة' && existing.chiefDiagnosis !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة') ||
-                                        (fullCloudPatient.createdAt && existing.createdAt && Math.abs(new Date(fullCloudPatient.createdAt) - new Date(existing.createdAt)) > 300000)
-                                    );
+                                    const mergedLogsCount = Math.max(existing.logsCount || 0, fullCloudPatient.logsCount || 0);
+                                    const mergedRecoveryScore = Math.max(existing.recoveryScore || 0, fullCloudPatient.recoveryScore || 0);
+                                    const mergedDailyLogs = (Array.isArray(fullCloudPatient.dailyLogs) && fullCloudPatient.dailyLogs.length > (existing.dailyLogs?.length || 0)) ? fullCloudPatient.dailyLogs : (existing.dailyLogs || fullCloudPatient.dailyLogs || []);
 
-                                    if (isDistinctCloud) {
-                                        const subKey = pId + '_cloud_test';
-                                        map.set(subKey, { ...fullCloudPatient, patientId: subKey, id: subKey });
-                                    } else {
-                                        const mergedLogsCount = Math.max(existing.logsCount || 0, fullCloudPatient.logsCount || 0);
-                                        const mergedRecoveryScore = Math.max(existing.recoveryScore || 0, fullCloudPatient.recoveryScore || 0);
-                                        const mergedDailyLogs = (Array.isArray(fullCloudPatient.dailyLogs) && fullCloudPatient.dailyLogs.length > (existing.dailyLogs?.length || 0)) ? fullCloudPatient.dailyLogs : (existing.dailyLogs || fullCloudPatient.dailyLogs || []);
-
-                                        map.set(pId, {
-                                            ...existing,
-                                            ...fullCloudPatient,
-                                            age: existing.age || fullCloudPatient.age,
-                                            weight: existing.weight || fullCloudPatient.weight,
-                                            height: existing.height || fullCloudPatient.height,
-                                            bmi: existing.bmi || fullCloudPatient.bmi,
-                                            logsCount: mergedLogsCount,
-                                            recoveryScore: mergedRecoveryScore,
-                                            dailyLogs: mergedDailyLogs,
-                                            customTimingHours: fullCloudPatient.customTimingHours ?? existing.customTimingHours,
-                                            customTimingMinutes: fullCloudPatient.customTimingMinutes ?? existing.customTimingMinutes,
-                                            customTimingSeconds: fullCloudPatient.customTimingSeconds ?? existing.customTimingSeconds,
-                                            customTargetTime: fullCloudPatient.customTargetTime ?? existing.customTargetTime,
-                                            customDurationMs: fullCloudPatient.customDurationMs ?? existing.customDurationMs,
-                                            forceUnlock: fullCloudPatient.forceUnlock ?? existing.forceUnlock,
-                                            nextSessionUnlocked: fullCloudPatient.nextSessionUnlocked ?? existing.nextSessionUnlocked,
-                                            painArea: !isGen(fullCloudPatient.painArea) ? fullCloudPatient.painArea : (!isGen(existing.painArea) ? existing.painArea : fullCloudPatient.painArea),
-                                            painAreaTitle: !isGen(fullCloudPatient.painAreaTitle) ? fullCloudPatient.painAreaTitle : (!isGen(existing.painAreaTitle) ? existing.painAreaTitle : fullCloudPatient.painAreaTitle),
-                                            selectedPoint: !isGen(fullCloudPatient.selectedPoint) ? fullCloudPatient.selectedPoint : (!isGen(existing.selectedPoint) ? existing.selectedPoint : fullCloudPatient.selectedPoint),
-                                            chiefDiagnosis: (fullCloudPatient.chiefDiagnosis && fullCloudPatient.chiefDiagnosis !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة') ? fullCloudPatient.chiefDiagnosis : (existing.chiefDiagnosis || fullCloudPatient.chiefDiagnosis),
-                                            diagnosisTitle: (fullCloudPatient.diagnosisTitle && fullCloudPatient.diagnosisTitle !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة') ? fullCloudPatient.diagnosisTitle : (existing.diagnosisTitle || fullCloudPatient.diagnosisTitle),
-                                            assessment: (fullCloudPatient.assessment && !fullCloudPatient.assessment.autoHealed) ? fullCloudPatient.assessment : (existing.assessment || fullCloudPatient.assessment)
-                                        });
-                                    }
+                                    map.set(pId, {
+                                        ...existing,
+                                        ...fullCloudPatient,
+                                        createdAt: existing.createdAt || fullCloudPatient.createdAt,
+                                        age: existing.age || fullCloudPatient.age,
+                                        weight: existing.weight || fullCloudPatient.weight,
+                                        height: existing.height || fullCloudPatient.height,
+                                        bmi: existing.bmi || fullCloudPatient.bmi,
+                                        logsCount: mergedLogsCount,
+                                        recoveryScore: mergedRecoveryScore,
+                                        dailyLogs: mergedDailyLogs,
+                                        customTimingHours: fullCloudPatient.customTimingHours ?? existing.customTimingHours,
+                                        customTimingMinutes: fullCloudPatient.customTimingMinutes ?? existing.customTimingMinutes,
+                                        customTimingSeconds: fullCloudPatient.customTimingSeconds ?? existing.customTimingSeconds,
+                                        customTargetTime: fullCloudPatient.customTargetTime ?? existing.customTargetTime,
+                                        customDurationMs: fullCloudPatient.customDurationMs ?? existing.customDurationMs,
+                                        forceUnlock: fullCloudPatient.forceUnlock ?? existing.forceUnlock,
+                                        nextSessionUnlocked: fullCloudPatient.nextSessionUnlocked ?? existing.nextSessionUnlocked,
+                                        painArea: !isGen(fullCloudPatient.painArea) ? fullCloudPatient.painArea : (!isGen(existing.painArea) ? existing.painArea : fullCloudPatient.painArea),
+                                        painAreaTitle: !isGen(fullCloudPatient.painAreaTitle) ? fullCloudPatient.painAreaTitle : (!isGen(existing.painAreaTitle) ? existing.painAreaTitle : fullCloudPatient.painAreaTitle),
+                                        selectedPoint: !isGen(fullCloudPatient.selectedPoint) ? fullCloudPatient.selectedPoint : (!isGen(existing.selectedPoint) ? existing.selectedPoint : fullCloudPatient.selectedPoint),
+                                        chiefDiagnosis: (fullCloudPatient.chiefDiagnosis && fullCloudPatient.chiefDiagnosis !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة') ? fullCloudPatient.chiefDiagnosis : (existing.chiefDiagnosis || fullCloudPatient.chiefDiagnosis),
+                                        diagnosisTitle: (fullCloudPatient.diagnosisTitle && fullCloudPatient.diagnosisTitle !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة') ? fullCloudPatient.diagnosisTitle : (existing.diagnosisTitle || fullCloudPatient.diagnosisTitle),
+                                        assessment: (fullCloudPatient.assessment && !fullCloudPatient.assessment.autoHealed) ? fullCloudPatient.assessment : (existing.assessment || fullCloudPatient.assessment)
+                                    });
+                                }
                                 }
                             });
                         }
@@ -342,16 +334,36 @@ const SmartDB = (function() {
 
     async function deletePatient(patientId) {
         try {
+            const baseId = (patientId || '').replace(/(_notif_.*|_test\d*|_cloud_test.*|_\d{10,})$/, '');
             localStorage.removeItem('smart_patient_' + patientId);
+            if (baseId) localStorage.removeItem('smart_patient_' + baseId);
             localStorage.removeItem('smart_daily_logs_' + patientId);
+            if (baseId) localStorage.removeItem('smart_daily_logs_' + baseId);
             localStorage.removeItem('smart_assessments_' + patientId);
+            if (baseId) localStorage.removeItem('smart_assessments_' + baseId);
+
+            // مسح أي مفاتيح فرعية للمريض في التخزين المحلي
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+                const k = localStorage.key(i);
+                if (k && (k.startsWith('smart_patient_' + baseId) || k.startsWith('smart_daily_logs_' + baseId) || k.startsWith('smart_assessments_' + baseId))) {
+                    localStorage.removeItem(k);
+                }
+            }
+
             const allPts = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
-            localStorage.setItem('smart_all_patients', JSON.stringify(allPts.filter(p => p.patientId !== patientId)));
+            const filteredPts = allPts.filter(p => {
+                const pId = p.patientId || p.id || '';
+                return pId !== patientId && (!baseId || !pId.startsWith(baseId));
+            });
+            localStorage.setItem('smart_all_patients', JSON.stringify(filteredPts));
 
             // إزالة المريض أيضاً من السجلات السحابية المتزامنة لضمان عدم عودته نهائياً
             try {
                 const cloudPts = JSON.parse(localStorage.getItem('smart_cloud_synced_patients') || '[]');
-                const filteredCloud = cloudPts.filter(cp => (cp.patientId || cp.id) !== patientId);
+                const filteredCloud = cloudPts.filter(cp => {
+                    const cpId = cp.patientId || cp.id || '';
+                    return cpId !== patientId && (!baseId || !cpId.startsWith(baseId));
+                });
                 localStorage.setItem('smart_cloud_synced_patients', JSON.stringify(filteredCloud));
             } catch(e) {}
         } catch(e) {}
