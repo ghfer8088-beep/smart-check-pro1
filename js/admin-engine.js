@@ -23,13 +23,7 @@ const AdminEngine = (function() {
     // استخراج تقرير إحصائي شامل وترتيب المرضى (الأحدث أولاً في أعلى القائمة)
     async function loadPatientsOverview() {
         try {
-            // جلب ومزامنة كافة الحالات السحابية والإشعارات الإدارية
-            try {
-                if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.fetchCloudPatients === 'function') {
-                    await SmartCloudSync.fetchCloudPatients();
-                }
-            } catch (e) {}
-
+            // ملاحظة: fetchCloudPatients تُستدعى قبل هذه الدالة في initAdminPage - لا نكررها هنا
             const rawPatients = await SmartDB.getAllPatients();
             const adminNotifs = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAdminNotifications === 'function') ? SmartDB.getAdminNotifications() : [];
 
@@ -64,6 +58,7 @@ const AdminEngine = (function() {
             const standaloneList = [];
 
             for (const pt of rawPatients) {
+                // قبول أي مريض لديه patientId أو id (إصلاح: كان يتخطى من لديه id فقط)
                 if (!pt || (!pt.patientId && !pt.id)) continue;
                 
                 let cName = (pt.fullName || pt.name || '').trim();
@@ -112,10 +107,10 @@ const AdminEngine = (function() {
                     }
                 } else {
                     if (cName !== 'مراجع كريم' || pt.age || pt.weight || pt.height) {
-                        // دمج الزوار المجهولين المتطابقين في المؤشرات الحيوية لمنع تكرار البطاقات المنسوخة
-                        const anonKey = `${cName}_${pt.age || ''}_${pt.height || ''}_${pt.weight || ''}_${pt.gender || ''}`;
+                        // إصلاح: استخدام patientId كمفتاح فريد بدلاً من بيانات حيوية قد تتشابه بين مرضى
+                        const uniqueId = patientClean.patientId || patientClean.id;
                         const existingIdx = standaloneList.findIndex(s => 
-                            `${s.name}_${s.age || ''}_${s.height || ''}_${s.weight || ''}_${s.gender || ''}` === anonKey
+                            (s.patientId && s.patientId === uniqueId) || (s.id && s.id === uniqueId)
                         );
                         if (existingIdx >= 0) {
                             const existing = standaloneList[existingIdx];
