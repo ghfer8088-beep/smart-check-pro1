@@ -421,6 +421,9 @@
                     <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header admin-btn-cache" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 9px 12px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
                         ⚡ تحديث الكاش (v19.1)
                     </button>
+                    <button type="button" id="btn-force-sync" onclick="handleForceFullSync()" style="background: linear-gradient(135deg,rgba(59,130,246,0.25),rgba(99,102,241,0.2)); border: 1px solid #6366f1; color: #a5b4fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="جلب كافة السجلات من السحابة قسرياً وبثها لجميع الأجهزة">
+                        🔄 مزامنة كاملة
+                    </button>
                     <a href="index.html" class="btn-header admin-btn-front" style="background: #1e293b; color: #fff; padding: 9px 14px; font-size: 0.86em; text-decoration: none; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid #334155;">
                         🌐 واجهة المراجعين
                     </a>
@@ -1530,15 +1533,15 @@
                     // عرض مؤشر التحميل مؤقتاً
                     const tbody = document.getElementById('patients-table-body');
                     const mobileWrap = document.getElementById('patients-cards-container') || document.getElementById('patients-mobile-cards-wrap');
-                    const loadingHtml = '<div style="text-align:center;padding:30px;color:#94a3b8;font-size:1em;">⏳ جاري جلب البيانات من السحابة...</div>';
+                    const loadingHtml = '<div style="text-align:center;padding:30px;color:#94a3b8;font-size:1em;">⏳ جاري جلب كافة البيانات من السحابة...</div>';
                     if (tbody) tbody.innerHTML = `<tr><td colspan="10">${loadingHtml}</td></tr>`;
                     if (mobileWrap) mobileWrap.innerHTML = loadingHtml;
 
-                    // انتظار جلب المرضى من السحابة (await - ليس then!)
-                    await SmartCloudSync.fetchCloudPatients();
-
-                    // جلب الزيارات في الخلفية دون انتظار
-                    SmartCloudSync.fetchCloudVisits().catch(() => {});
+                    // جلب المرضى والزيارات بالتوازي لأسرع تحميل ممكن
+                    await Promise.all([
+                        SmartCloudSync.fetchCloudPatients(),
+                        SmartCloudSync.fetchCloudVisits()
+                    ]);
                 } catch(e) {
                     console.warn('Cloud fetch warning:', e);
                 }
@@ -4440,6 +4443,45 @@
                 console.log('Cache clear error:', e);
             }
             window.location.reload(true);
+        }
+
+        // مزامنة كاملة قسرية: جلب كل السجلات من جميع مصادر السحابة وبثها لجميع الأجهزة
+        async function handleForceFullSync() {
+            const btn = document.getElementById('btn-force-sync');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '⏳ جارٍ المزامنة...';
+                btn.style.opacity = '0.7';
+            }
+            try {
+                if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.forceFullSync === 'function') {
+                    const count = await SmartCloudSync.forceFullSync();
+                    await loadAdminData(false);
+                    renderGeoAnalytics();
+                    loadNotificationsData(false);
+                    if (btn) {
+                        btn.innerHTML = `✅ تمت المزامنة (${count} مريض)`;
+                        btn.style.background = 'rgba(16,185,129,0.25)';
+                        btn.style.borderColor = '#10b981';
+                        btn.style.color = '#6ee7b7';
+                        setTimeout(() => {
+                            btn.disabled = false;
+                            btn.innerHTML = '🔄 مزامنة كاملة';
+                            btn.style.background = 'linear-gradient(135deg,rgba(59,130,246,0.25),rgba(99,102,241,0.2))';
+                            btn.style.borderColor = '#6366f1';
+                            btn.style.color = '#a5b4fc';
+                            btn.style.opacity = '1';
+                        }, 4000);
+                    }
+                }
+            } catch(e) {
+                console.error('Force sync error:', e);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '🔄 مزامنة كاملة';
+                    btn.style.opacity = '1';
+                }
+            }
         }
 
         // ==========================================================================

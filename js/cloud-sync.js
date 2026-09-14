@@ -53,6 +53,10 @@
         }
     }
 
+    function resetMasterHubCircuit() {
+        masterHubBlockedUntil = 0; // فتح دائرة الحماية يدوياً
+    }
+
     function updateMqttStatusBadge(connected) {
         try {
             const badge = document.getElementById('mqtt-live-badge');
@@ -2103,7 +2107,15 @@
         fetchRemoteTimingUpdates: fetchRemoteTimingUpdates,
         initTimingListener: initTimingListener,
         isMqttConnected: () => mqttConnected,
-        initMqttBus: initMqttBus
+        initMqttBus: initMqttBus,
+        resetCircuit: resetMasterHubCircuit,
+        // مزامنة كاملة قسرية: تجاوز الحواجز وجلب كل شيء من جميع المصادر ثم بث snapshot للأجهزة الأخرى
+        forceFullSync: async function() {
+            resetMasterHubCircuit(); // فتح دائرة الحماية أولاً
+            await Promise.all([fetchCloudPatients(), fetchCloudVisits()]); // جلب بالتوازي
+            await broadcastFullClinicSnapshot(); // بث للأجهزة الأخرى
+            return getCloudSyncedPatients().length;
+        }
     };
 
 })();
