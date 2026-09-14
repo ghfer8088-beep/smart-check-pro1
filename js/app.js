@@ -1378,6 +1378,8 @@ async function runDiagnosticAnalysis() {
             currentAssessmentData.patientId = targetPatientId;
             await SmartDB.saveAssessment(currentAssessmentData);
             SmartDB.setCurrentSessionPatientId(targetPatientId);
+            // حفظ ID المريض في sessionStorage (يُمسح عند إغلاق التبويب — يمنع تسرب البيانات)
+            try { sessionStorage.setItem('scp_active_patient_id', targetPatientId); } catch(e) {}
             activePatient = patientRecord;
 
             // إشعار الإدارة الفوري بإتمام الفحص السريري وتجهيز التقرير
@@ -6636,35 +6638,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch(e) {}
     }
 
-    let savedPatientId = queryPatientId || SmartDB.getCurrentSessionPatientId();
+    // ======================================================================
+    // استعادة بيانات المريض — قاعدة أمان صارمة:
+    // فقط إذا كان patient_id صريح في الرابط → نحمّل المريض المحدد
+    // أو إذا كان المستخدم في منتصف فحص حقيقي على هذا الجهاز (sessionStorage)
+    // ممنوع تحميل أي مريض من localStorage تلقائياً — هذا يسبب تسرب بيانات قصي
+    // ======================================================================
+    let savedPatientId = queryPatientId; // فقط من الرابط
+
     if (!savedPatientId) {
-        savedPatientId = localStorage.getItem('smart_last_active_patient_id') || localStorage.getItem('smart_current_patient_id');
+        // هل المستخدم في منتصف فحص فعلي على هذا الجهاز؟
+        // نستخدم sessionStorage (يُمسح تلقائياً عند إغلاق التبويب)
+        const sessionActiveId = sessionStorage.getItem('scp_active_patient_id');
+        if (sessionActiveId) {
+            savedPatientId = sessionActiveId;
+        }
     }
+
+    // إذا لم يُوجد patient_id صريح ولا جلسة فعلية → مريض جديد، جلسة نظيفة
     if (!savedPatientId) {
+        // تنظيف أي بقايا من الجلسة السابقة
         try {
-            const rawAct = localStorage.getItem('smart_active_patient');
-            if (rawAct) {
-                const parsed = JSON.parse(rawAct);
-                if (parsed && (parsed.patientId || parsed.id)) {
-                    savedPatientId = parsed.patientId || parsed.id;
-                }
-            }
+            localStorage.removeItem('smart_current_patient_id');
+            localStorage.removeItem('smart_last_active_patient_id');
+            SmartDB.setCurrentSessionPatientId('');
         } catch(e) {}
-    }
-    if (!savedPatientId) {
-        try {
-            const allPts = await SmartDB.getAllPatients();
-            if (Array.isArray(allPts) && allPts.length > 0) {
-                const target = allPts[allPts.length - 1]; // آخر مريض مسجل حقيقي فقط
-                savedPatientId = target.patientId || target.id;
-            }
-        } catch(e) {}
+        // انتقل للخطوة 1 مباشرة
+        goToStep(1);
+        return;
     }
 
     if (queryPatientId) {
         SmartDB.setCurrentSessionPatientId(queryPatientId);
-    } else if (savedPatientId) {
-        SmartDB.setCurrentSessionPatientId(savedPatientId);
+        sessionStorage.setItem('scp_active_patient_id', queryPatientId);
     }
 
     if (savedPatientId) {
