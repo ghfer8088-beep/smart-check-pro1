@@ -173,13 +173,21 @@ const AdminEngine = (function() {
                     }
                 }
 
-                const baselinePain = latestAssessment ? (latestAssessment.painSeverity || latestAssessment.painLevel || p.painLevel || 7) : (p.painLevel || 7);
+                // شدة الألم الأساسية - من بيانات حقيقية فقط، لا قيم افتراضية
+                const baselinePain = latestAssessment
+                    ? (latestAssessment.painSeverity || latestAssessment.painLevel || p.painLevel || null)
+                    : (p.painLevel || null);
                 
-                let recoveryScore = p.recoveryScore || 15;
-                if (typeof PatientFlow !== 'undefined' && typeof PatientFlow.calculateRecoveryScore === 'function') {
-                    recoveryScore = PatientFlow.calculateRecoveryScore(baselinePain, logs);
-                } else if (logs && logs.length > 0) {
-                    recoveryScore = Math.min(100, Math.round((logs.length / 7) * 100));
+                // نسبة التعافي - محسوبة من الجلسات الحقيقية فقط، لا قيمة افتراضية
+                let recoveryScore = null;
+                if (logs && logs.length > 0) {
+                    if (typeof PatientFlow !== 'undefined' && typeof PatientFlow.calculateRecoveryScore === 'function' && baselinePain) {
+                        recoveryScore = PatientFlow.calculateRecoveryScore(baselinePain, logs);
+                    } else {
+                        recoveryScore = Math.min(100, Math.round((logs.length / 7) * 100));
+                    }
+                } else if (p.recoveryScore && p.recoveryScore > 0) {
+                    recoveryScore = p.recoveryScore; // من بيانات المريض المحفوظة
                 }
 
                 // استخراج موضع الشكوى الحقيقي بدقة متعددة المصادر (إشعارات، تقييم، اختيار المريض، أعراض)
@@ -321,17 +329,17 @@ const AdminEngine = (function() {
                     (Array.isArray(p.dailyLogs) ? p.dailyLogs.length : 0),
                     (Array.isArray(p.logs) ? p.logs.length : 0)
                 );
-                const effectiveRecoveryScore = Math.max(
-                    recoveryScore || 0,
-                    p.recoveryScore || 0,
-                    effectiveLogsCount > 0 ? Math.min(100, Math.round((effectiveLogsCount / 7) * 100)) : 15
-                );
+                // نسبة التعافي: من بيانات حقيقية فقط - لا قيمة افتراضية
+                const effectiveRecoveryScore = effectiveLogsCount > 0
+                    ? Math.max(recoveryScore || 0, p.recoveryScore || 0, Math.min(100, Math.round((effectiveLogsCount / 7) * 100)))
+                    : (recoveryScore || p.recoveryScore || null);
 
                 overview.push({
                     patient: p,
                     latestAssessment,
                     logsCount: effectiveLogsCount,
                     recoveryScore: effectiveRecoveryScore,
+                    baselinePain: baselinePain,   // شدة الألم الحقيقية من المريض
                     latestDiagnosis: resolvedDiagnosis,
                     painArea: resolvedPainArea,
                     createdAt: p.createdAt || p.timestamp || new Date().toISOString()

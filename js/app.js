@@ -5046,8 +5046,8 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
         pInfo.completedSessions = Math.max(pInfo.completedSessions || 0, sessionNumber);
         pInfo.lastSessionNumber = sessionNumber;
         pInfo.lastLogDate = new Date().toISOString();
-        if (typeof PatientFlow !== 'undefined' && typeof PatientFlow.calculateRecoveryScore === 'function') {
-            pInfo.recoveryScore = PatientFlow.calculateRecoveryScore(pInfo.painLevel || 7, allLogs);
+        if (typeof PatientFlow !== 'undefined' && typeof PatientFlow.calculateRecoveryScore === 'function' && pInfo.painLevel) {
+            pInfo.recoveryScore = PatientFlow.calculateRecoveryScore(pInfo.painLevel, allLogs);
         } else {
             pInfo.recoveryScore = Math.min(100, Math.round((totalDone / 7) * 100));
         }
