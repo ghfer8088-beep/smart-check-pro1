@@ -156,16 +156,16 @@ window.getDailyMotivationScript = getDailyMotivationScript;
 const DEFAULT_FRONT_POINTS = [
     { id: "shoulder_right_f", region: "shoulder", title: "مفصل الكتف الأيمن", keywords: "كتف يمين, كفة مدورة, تجمد كتف, رفع ذراع", x: 27, y: 22.5 },
     { id: "shoulder_left_f", region: "shoulder", title: "مفصل الكتف الأيسر", keywords: "كتف يسار, كفة مدورة, تجمد كتف", x: 73, y: 22.5 },
-    { id: "elbow_right_f", region: "general", title: "مفصل الكوع الأيمن", keywords: "كوع يمين, مرفق تنس, ساعد", x: 23, y: 39.5 },
-    { id: "elbow_left_f", region: "general", title: "مفصل الكوع الأيسر", keywords: "كوع يسار, مرفق تنس, ساعد", x: 77, y: 39.5 },
-    { id: "wrist_right_f", region: "general", title: "الرسغ واليد اليمنى", keywords: "رسغ يمين, يد يمين, نفق رسغي, تنميل أصابع, إبهام", x: 16, y: 53.5 },
-    { id: "wrist_left_f", region: "general", title: "الرسغ واليد اليسرى", keywords: "رسغ يسار, يد يسار, نفق رسغي, تنميل أصابع", x: 84, y: 53.5 },
-    { id: "hip_right_f", region: "lumbar", title: "مفصل الورك الأيمن", keywords: "ورك يمين, مفصل الفخذ", x: 35, y: 53 },
-    { id: "hip_left_f", region: "lumbar", title: "مفصل الورك الأيسر", keywords: "ورك يسار, مفصل الفخذ", x: 65, y: 53 },
+    { id: "elbow_right_f", region: "elbow", title: "مفصل الكوع الأيمن", keywords: "كوع يمين, مرفق تنس, ساعد", x: 23, y: 39.5 },
+    { id: "elbow_left_f", region: "elbow", title: "مفصل الكوع الأيسر", keywords: "كوع يسار, مرفق تنس, ساعد", x: 77, y: 39.5 },
+    { id: "wrist_right_f", region: "wrist", title: "الرسغ واليد اليمنى", keywords: "رسغ يمين, يد يمين, نفق رسغي, تنميل أصابع, إبهام", x: 16, y: 53.5 },
+    { id: "wrist_left_f", region: "wrist", title: "الرسغ واليد اليسرى", keywords: "رسغ يسار, يد يسار, نفق رسغي, تنميل أصابع", x: 84, y: 53.5 },
+    { id: "hip_right_f", region: "hip", title: "مفصل الورك الأيمن", keywords: "ورك يمين, مفصل الفخذ", x: 35, y: 53 },
+    { id: "hip_left_f", region: "hip", title: "مفصل الورك الأيسر", keywords: "ورك يسار, مفصل الفخذ", x: 65, y: 53 },
     { id: "knee_right_f", region: "knee", title: "مفصل الركبة اليمنى والصابونة", keywords: "ركبة يمين, صابونة, احتكاك ركبة, طقطقة ركبة", x: 39.5, y: 72 },
     { id: "knee_left_f", region: "knee", title: "مفصل الركبة اليسرى والصابونة", keywords: "ركبة يسار, صابونة, احتكاك ركبة", x: 60.5, y: 72 },
-    { id: "ankle_right_f", region: "knee", title: "الكاحل ومفصل القدم الأيمن", keywords: "كاحل يمين, قدم يمين, مسمار كعب, لفافة أخمصية", x: 41, y: 92 },
-    { id: "ankle_left_f", region: "knee", title: "الكاحل ومفصل القدم الأيسر", keywords: "كاحل يسار, قدم يسار, مسمار كعب", x: 59, y: 92 }
+    { id: "ankle_right_f", region: "ankle", title: "الكاحل ومفصل القدم الأيمن", keywords: "كاحل يمين, قدم يمين, مسمار كعب, لفافة أخمصية", x: 41, y: 92 },
+    { id: "ankle_left_f", region: "ankle", title: "الكاحل ومفصل القدم الأيسر", keywords: "كاحل يسار, قدم يسار, مسمار كعب", x: 59, y: 92 }
 ];
 
 const DEFAULT_BACK_POINTS = [
@@ -174,14 +174,14 @@ const DEFAULT_BACK_POINTS = [
     { id: "trapezius_left", region: "shoulder", title: "أعلى الكتف الأيسر وعضلة شبه المنحرفة", keywords: "كتف يسار, أعلى الكتف, مفصل الكتف, كفة مدورة, أبهر يسار, عقدة عضلية, شبه منحرفة", x: 64, y: 23 },
     { id: "scapula_right", region: "shoulder", title: "لوح الكتف الأيمن", keywords: "لوح كتف يمين, خلف الظهر, كفة مدورة", x: 36, y: 29 },
     { id: "scapula_left", region: "shoulder", title: "لوح الكتف الأيسر", keywords: "لوح كتف يسار, خلف الظهر, كفة مدورة", x: 64, y: 29 },
-    { id: "thoracic_spine", region: "general", title: "الفقرات الصدرية وأعلى الظهر", keywords: "أعلى الظهر, فقرات صدرية, بين الكتفين", x: 50, y: 34 },
+    { id: "thoracic_spine", region: "thoracic", title: "الفقرات الصدرية وأعلى الظهر", keywords: "أعلى الظهر, فقرات صدرية, بين الكتفين", x: 50, y: 34 },
     { id: "lumbar_spine", region: "lumbar", title: "الفقرات القطنية وأسفل الظهر", keywords: "ديسك أسفل الظهر, فقرات قطنية, لومبار, انزلاق غضروفي, ديسك", x: 50, y: 46 },
     { id: "sacroiliac_right", region: "lumbar", title: "المفصل العجزي الحوضي الأيمن", keywords: "مفصل عجزي يمين, عجز, حوض خلفي", x: 42, y: 50 },
     { id: "sacroiliac_left", region: "lumbar", title: "المفصل العجزي الحوضي الأيسر", keywords: "مفصل عجزي يسار, عجز, حوض خلفي", x: 58, y: 50 },
     { id: "gluteal_right", region: "lumbar", title: "عضلات الأرداف ومسار عرق النسا الأيمن", keywords: "عرق النسا يمين, كمثرية, تنميل فخذ يمين, سياتيكا", x: 38, y: 57 },
     { id: "gluteal_left", region: "lumbar", title: "عضلات الأرداف ومسار عرق النسا الأيسر", keywords: "عرق النسا يسار, كمثرية, تنميل فخذ يسار, سياتيكا", x: 62, y: 57 },
-    { id: "achilles_calf", region: "knee", title: "عضلة السمانة ووتر أكيليس اليمنى", keywords: "سمانة يمين, وتر أكيليس يمين, بطة الرجل يمين, كعب يمين", x: 60, y: 84 },
-    { id: "point_37515", region: "general", title: "عضلة السمانة ووتر أكيليس اليسرى", keywords: "سمانة يسار, وتر أكيليس يسار, بطة الرجل يسار, كعب يسار", x: 40, y: 84 }
+    { id: "achilles_calf", region: "ankle", title: "عضلة السمانة ووتر أكيليس اليمنى", keywords: "سمانة يمين, وتر أكيليس يمين, بطة الرجل يمين, كعب يمين", x: 60, y: 84 },
+    { id: "point_37515", region: "ankle", title: "عضلة السمانة ووتر أكيليس اليسرى", keywords: "سمانة يسار, وتر أكيليس يسار, بطة الرجل يسار, كعب يسار", x: 40, y: 84 }
 ];
 
 function getFrontPoints() {
@@ -224,13 +224,13 @@ function detectAnatomicalPointFromText(text) {
         return allPts.find(p => p.id === 'cervical_back') || { id: 'cervical_back', title: 'الفقرات العنقية (الرقبة الخلفية)', region: 'cervical' };
     }
     if (/كاحل|قدم|كعب|مشط|أكيليس|اكيليس|مسمار\s*كعب|لفافة\s*أخمصية|ankle|foot|heel/i.test(tLower)) {
-        return allPts.find(p => p.id === 'ankle_right_f') || { id: 'ankle_right_f', title: 'الكاحل ومفصل القدم', region: 'knee' };
+        return allPts.find(p => p.id === 'ankle_right_f') || { id: 'ankle_right_f', title: 'الكاحل ومفصل القدم', region: 'ankle' };
     }
     if (/رسغ|معصم|يد|كف|أصابع|اصابع|نفق\s*رسغي|تنميل\s*أصابع|wrist|hand/i.test(tLower)) {
-        return allPts.find(p => p.id === 'wrist_right_f') || { id: 'wrist_right_f', title: 'الرسغ ومفصل اليد', region: 'general' };
+        return allPts.find(p => p.id === 'wrist_right_f') || { id: 'wrist_right_f', title: 'الرسغ ومفصل اليد', region: 'wrist' };
     }
     if (/كوع|مرفق|مرفق\s*تنس|ساعد|زند|elbow/i.test(tLower)) {
-        return allPts.find(p => p.id === 'elbow_right_f') || { id: 'elbow_right_f', title: 'مفصل الكوع والمرفق', region: 'general' };
+        return allPts.find(p => p.id === 'elbow_right_f') || { id: 'elbow_right_f', title: 'مفصل الكوع والمرفق', region: 'elbow' };
     }
     if (/عرق\s*النسا|سياتيكا|كمثرية|تنميل\s*فخذ|sciatica/i.test(tLower)) {
         return allPts.find(p => p.id === 'gluteal_right') || { id: 'gluteal_right', title: 'عضلات الأرداف ومسار عرق النسا', region: 'lumbar' };
@@ -956,13 +956,24 @@ async function runDiagnosticAnalysis() {
             ? clinicalDialogueState.history.filter(h => h.sender === 'user').map(h => h.text).join(' ')
             : '';
 
-        // كشف موضع الألم الحقيقي إن لم يكن محدداً أو كان افتراضياً
-        const detectedPt = detectAnatomicalPointFromText(userChatMessages);
-        if (detectedPt) {
-            currentSelectedPoint = detectedPt;
-        } else if (!currentSelectedPoint) {
-            const allPts = typeof getBackPoints === 'function' ? getBackPoints() : [];
-            currentSelectedPoint = allPts.find(p => p.id === 'lumbar_spine') || { id: 'lumbar_spine', title: 'أسفل الظهر والفقرات القطنية', region: 'lumbar' };
+        // الحفاظ الصارم على نقطة الألم التي اختارها المستخدم من المجسم
+        // لا نلجأ إلى كشف موضع الألم من النص أو التحويل لافتراضي إلا إذا لم تكن هناك أي نقطة محددة مسبقاً نهائياً
+        if (!currentSelectedPoint) {
+            try {
+                const storedPt = localStorage.getItem('smart_current_point');
+                if (storedPt) {
+                    currentSelectedPoint = JSON.parse(storedPt);
+                }
+            } catch (e) {}
+        }
+        if (!currentSelectedPoint) {
+            const detectedPt = detectAnatomicalPointFromText(userChatMessages);
+            if (detectedPt) {
+                currentSelectedPoint = detectedPt;
+            } else {
+                const allPts = typeof getBackPoints === 'function' ? getBackPoints() : [];
+                currentSelectedPoint = allPts.find(p => p.id === 'lumbar_spine') || { id: 'lumbar_spine', title: 'أسفل الظهر والفقرات القطنية', region: 'lumbar' };
+            }
         }
 
         // استخراج البيانات الحيوية: أولاً من clinicalDialogueState (وضع الشات)، ثم من حقول النموذج
@@ -1057,7 +1068,7 @@ async function runDiagnosticAnalysis() {
         try {
             assessmentResult = ClinicalEngine.analyzeAssessment({
                 pointId: currentSelectedPoint.id,
-                painArea: currentSelectedPoint.region,
+                painArea: currentSelectedPoint.title || currentSelectedPoint.region,
                 painSeverity: internalPainScore,
                 painDuration,
                 answers: { 
@@ -1170,6 +1181,10 @@ async function runDiagnosticAnalysis() {
             });
         }
 
+        const resolvedDiagString = (typeof assessmentResult.primaryDiagnosis === 'string'
+            ? assessmentResult.primaryDiagnosis
+            : assessmentResult.primaryDiagnosis?.title) || 'تشخيص سريري متكامل';
+
         // ترحيل وتوثيق بيانات المريض والتشخيص إلى قاعدة بيانات الإدارة فوراً بمعرف فريد لكل فحص
         const targetPatientId = 'pat_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 6);
         const patientRecord = {
@@ -1183,8 +1198,8 @@ async function runDiagnosticAnalysis() {
             bmi: currentAssessmentData?.bmiInfo?.value || '',
             painArea: currentSelectedPoint?.title || 'العمود الفقري والمفاصل',
             selectedPoint: currentSelectedPoint?.title || currentSelectedPoint?.id || '',
-            chiefDiagnosis: assessmentResult.primaryDiagnosis?.title || 'تشخيص سريري متكامل',
-            diagnosisTitle: assessmentResult.primaryDiagnosis?.title || 'تشخيص سريري متكامل',
+            chiefDiagnosis: resolvedDiagString,
+            diagnosisTitle: resolvedDiagString,
             painLevel: painSeverity || explicitPain,
             severityLevel: painSeverity || explicitPain,
             notes: userNotes || (clinicalDialogueState.collectedSymptoms ? clinicalDialogueState.collectedSymptoms.join(' - ') : ''),
@@ -1206,7 +1221,7 @@ async function runDiagnosticAnalysis() {
             SmartDB.addAdminNotification({
                 type: 'new_registration',
                 title: `🩺 فحص سريري جديد: ${patientRecord.name}`,
-                message: `أتم المراجع ${patientRecord.name} (${patientRecord.phone || 'بدون هاتف'}) استشارته السريرية بنجاح لموضع (${currentSelectedPoint.title}). التشخيص: [${assessmentResult.primaryDiagnosis?.title || 'مكتمل'}] - مستوى الألم: ${painDisplayStr}`,
+                message: `أتم المراجع ${patientRecord.name} (${patientRecord.phone || 'بدون هاتف'}) استشارته السريرية بنجاح لموضع (${currentSelectedPoint.title}). التشخيص: [${resolvedDiagString}] - مستوى الألم: ${painDisplayStr}`,
                 patientId: targetPatientId,
                 patientName: patientRecord.name,
                 patientPhone: patientRecord.phone

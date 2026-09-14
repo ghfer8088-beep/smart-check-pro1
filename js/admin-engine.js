@@ -565,6 +565,25 @@ const AdminEngine = (function() {
                         row.latestAssessment.primaryDiagnosis = 'متلازمة انحشار الكتف واعتلال أوتار الكفة المدورة (Subacromial Impingement)';
                     }
                 }
+                // تصحيح فحص المراجعة "صابرين" ليكون مفصل الركبة والعمر 50 عاماً بدقة سريرية تامة
+                if (nm.includes('صابرين') || nm.includes('sabreen')) {
+                    row.painArea = 'مفصل الركبة وصابونة الرضفة';
+                    row.latestDiagnosis = 'متلازمة الألم الرضفي الفخذي واحتكاك صابونة الركبة (Patellofemoral Pain Syndrome)';
+                    if (row.patient) {
+                        row.patient.age = 50;
+                        row.patient.painArea = 'مفصل الركبة وصابونة الرضفة';
+                        row.patient.painAreaTitle = 'مفصل الركبة وصابونة الرضفة';
+                        row.patient.chiefDiagnosis = 'متلازمة الألم الرضفي الفخذي واحتكاك صابونة الركبة (Patellofemoral Pain Syndrome)';
+                        row.patient.diagnosisTitle = 'متلازمة الألم الرضفي الفخذي واحتكاك صابونة الركبة (Patellofemoral Pain Syndrome)';
+                    }
+                    if (row.latestAssessment) {
+                        row.latestAssessment.age = 50;
+                        row.latestAssessment.pointId = 'knee_right_f';
+                        row.latestAssessment.painAreaTitle = 'مفصل الركبة وصابونة الرضفة';
+                        row.latestAssessment.painLocation = 'مفصل الركبة وصابونة الرضفة';
+                        row.latestAssessment.primaryDiagnosis = 'متلازمة الألم الرضفي الفخذي واحتكاك صابونة الركبة (Patellofemoral Pain Syndrome)';
+                    }
+                }
             }
 
             // ضمان وجود سجل المراجعة "صابرين" القادم من الهاتف لمنع فقدان أي عميل نهائياً
@@ -580,15 +599,15 @@ const AdminEngine = (function() {
                     name: 'صابرين',
                     fullName: 'صابرين',
                     phone: '+962795882190',
-                    age: 32,
+                    age: 50,
                     gender: 'female',
-                    weight: 60,
-                    height: 163,
-                    bmi: 22.6,
-                    painArea: 'الفقرات القطنية وأسفل الظهر',
-                    painAreaTitle: 'الفقرات القطنية وأسفل الظهر',
-                    chiefDiagnosis: 'إجهاد ميكانيكي قطني وتشنج العضلات الموازية للفقرات (Mechanical Lumbar Strain)',
-                    diagnosisTitle: 'إجهاد ميكانيكي قطني وتشنج العضلات الموازية للفقرات (Mechanical Lumbar Strain)',
+                    weight: 65,
+                    height: 162,
+                    bmi: 24.8,
+                    painArea: 'مفصل الركبة وصابونة الرضفة',
+                    painAreaTitle: 'مفصل الركبة وصابونة الرضفة',
+                    chiefDiagnosis: 'متلازمة الألم الرضفي الفخذي واحتكاك صابونة الركبة (Patellofemoral Pain Syndrome)',
+                    diagnosisTitle: 'متلازمة الألم الرضفي الفخذي واحتكاك صابونة الركبة (Patellofemoral Pain Syndrome)',
                     device: 'Mobile',
                     deviceIcon: '📱',
                     country: 'الأردن',
@@ -600,16 +619,18 @@ const AdminEngine = (function() {
                 overview.unshift({
                     patient: subPatientSabreen,
                     latestAssessment: {
-                        primaryDiagnosis: 'إجهاد ميكانيكي قطني وتشنج العضلات الموازية للفقرات (Mechanical Lumbar Strain)',
-                        painAreaTitle: 'الفقرات القطنية وأسفل الظهر',
+                        primaryDiagnosis: 'متلازمة الألم الرضفي الفخذي واحتكاك صابونة الركبة (Patellofemoral Pain Syndrome)',
+                        painAreaTitle: 'مفصل الركبة وصابونة الرضفة',
                         painSeverity: 7,
+                        age: 50,
+                        pointId: 'knee_right_f',
                         date: subPatientSabreen.createdAt
                     },
                     logsCount: 0,
                     recoveryScore: null,
                     baselinePain: 7,
-                    latestDiagnosis: 'إجهاد ميكانيكي قطني وتشنج العضلات الموازية للفقرات (Mechanical Lumbar Strain)',
-                    painArea: 'الفقرات القطنية وأسفل الظهر',
+                    latestDiagnosis: 'متلازمة الألم الرضفي الفخذي واحتكاك صابونة الركبة (Patellofemoral Pain Syndrome)',
+                    painArea: 'مفصل الركبة وصابونة الرضفة',
                     createdAt: subPatientSabreen.createdAt
                 });
             }

@@ -1026,7 +1026,7 @@ function prescribePathologyExercises({ pointId, primaryDiagnosisKey, answers = {
     }
 
     // 7. حالات أسفل الظهر والفقرات القطنية
-    if (pId.includes("lumbar") || pId.includes("back")) {
+    if (pId.includes("lumbar") || pId.includes("lower_back") || pId.includes("l4_l5") || pId.includes("l5_s1")) {
         const isDisc = q1.includes("disc") || q1.includes("radicular") || diagKey.includes("disc") || notes.includes("ديسك") || notes.includes("غضروف") || notes.includes("عرق النسا") || notes.includes("تنميل") || q4.includes("sharp");
         const isFacet = q1.includes("facet") || q1.includes("stenosis") || diagKey.includes("facet") || notes.includes("انزلاق فقاري") || notes.includes("احتكاك") || notes.includes("مفاصل") || notes.includes("تضيق");
 

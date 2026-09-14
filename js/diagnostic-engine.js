@@ -662,12 +662,17 @@ const ClinicalEngine = (function() {
     ADVANCED_CLINICAL_KNOWLEDGE.head_forehead = headache_knowledge;
 
     ADVANCED_CLINICAL_KNOWLEDGE.shoulder_left_f = ADVANCED_CLINICAL_KNOWLEDGE.shoulder_right_f;
+    ADVANCED_CLINICAL_KNOWLEDGE.trapezius_right = ADVANCED_CLINICAL_KNOWLEDGE.shoulder_right_f;
+    ADVANCED_CLINICAL_KNOWLEDGE.trapezius_left = ADVANCED_CLINICAL_KNOWLEDGE.shoulder_right_f;
+    ADVANCED_CLINICAL_KNOWLEDGE.scapula_right = ADVANCED_CLINICAL_KNOWLEDGE.shoulder_right_f;
+    ADVANCED_CLINICAL_KNOWLEDGE.scapula_left = ADVANCED_CLINICAL_KNOWLEDGE.shoulder_right_f;
     ADVANCED_CLINICAL_KNOWLEDGE.elbow_left_f = ADVANCED_CLINICAL_KNOWLEDGE.elbow_right_f;
     ADVANCED_CLINICAL_KNOWLEDGE.wrist_left_f = ADVANCED_CLINICAL_KNOWLEDGE.wrist_right_f;
     ADVANCED_CLINICAL_KNOWLEDGE.knee_left_f = ADVANCED_CLINICAL_KNOWLEDGE.knee_right_f;
     ADVANCED_CLINICAL_KNOWLEDGE.ankle_left_f = ADVANCED_CLINICAL_KNOWLEDGE.ankle_right_f;
     ADVANCED_CLINICAL_KNOWLEDGE.achilles_calf = ADVANCED_CLINICAL_KNOWLEDGE.ankle_right_f;
     ADVANCED_CLINICAL_KNOWLEDGE.point_37515 = ADVANCED_CLINICAL_KNOWLEDGE.ankle_right_f;
+    ADVANCED_CLINICAL_KNOWLEDGE.achilles_calf_left = ADVANCED_CLINICAL_KNOWLEDGE.ankle_right_f;
     ADVANCED_CLINICAL_KNOWLEDGE.hamstring_back = ADVANCED_CLINICAL_KNOWLEDGE.knee_right_f;
     ADVANCED_CLINICAL_KNOWLEDGE.sacroiliac_left = ADVANCED_CLINICAL_KNOWLEDGE.sacroiliac_right;
     ADVANCED_CLINICAL_KNOWLEDGE.gluteal_right = ADVANCED_CLINICAL_KNOWLEDGE.sacroiliac_right;
@@ -763,7 +768,7 @@ const ClinicalEngine = (function() {
             chiropracticProtocol = "فحص سريري يدوي متقدم في مركز «وداعاً للألم» لتقييم مدى حركة المفاصل ومحاذاة الفقرات بدقة متناهية وتحديد خطة علاجية مخصصة.";
         }
         // تحليل متقدم لحالات أسفل الظهر عند توفر بيانات
-        else if ((pointId || "").includes("lumbar") || (pointId || "").includes("back")) {
+        else if ((pointId || "").includes("lumbar") || (pointId || "").includes("lower_back") || (pointId || "").includes("l4_l5") || (pointId || "").includes("l5_s1") || ((painArea || "").includes("قطني") || (painArea || "").includes("أسفل الظهر") || (painArea || "").includes("اسفل الظهر"))) {
             if (q1Val === "disc_radicular" || notes.includes("ديسك") || notes.includes("غضروف") || notes.includes("عرق النسا") || q4Val.includes("sharp")) {
                 primaryDiagnosis = "انزلاق غضروفي قطني خلفي مع اعتلال الجذور العصبية L4-S1 (Lumbar Disc Herniation & Radiculopathy)";
                 primaryDiagnosisKey = "lumbar_disc_herniation";
@@ -983,7 +988,7 @@ const ClinicalEngine = (function() {
             chiropracticProtocol = "تعديل وموازنة عظام الرسغ الثمانية وتوسيع مسار النفق الرسغي يدوياً لتخفيف الخنق العصبي.";
         }
         // تحليل حالات الركبة
-        else if ((pointId || "").includes("knee") || (pointId || "").includes("hamstring")) {
+        else if ((pointId || "").includes("knee") || (pointId || "").includes("hamstring") || (pointId || "").includes("patella") || (painArea || "").includes("ركب") || (painArea || "").includes("صابون") || notes.includes("ركب") || notes.includes("صابون")) {
             primaryDiagnosis = "متلازمة الألم الرضفي الفخذي واحتكاك صابونة الركبة (Patellofemoral Pain Syndrome)";
             primaryDiagnosisKey = "knee_patellofemoral";
             secondaryDiagnosis = "إجهاد الغضروف الهلالي الإنسي وضعف العضلة المتسعة الإنسية VMO";
@@ -995,7 +1000,7 @@ const ClinicalEngine = (function() {
             chiropracticProtocol = "إعادة ضبط محاذاة صابونة الركبة وموازنة ميكانيكية مفصل الركبة والحوض والقدم.";
         }
         // تحليل حالات السمانة ووتر أكيليس (اليمنى واليسرى)
-        else if ((pointId || "").includes("achilles") || (pointId || "").includes("calf") || (pointId || "").includes("37515")) {
+        else if ((pointId || "").includes("achilles") || (pointId || "").includes("calf") || (pointId || "").includes("37515") || (pointId || "").includes("achilles_calf_left")) {
             primaryDiagnosis = "اعتلال وإجهاد وتر أكيليس وتشنج عضلة السمانة (Achilles Tendinopathy & Calf Strain)";
             primaryDiagnosisKey = "ankle_plantar_achilles";
             secondaryDiagnosis = "التهاب اللفافة الأخمصية وتيبس الحركة العكسية لمفصل الكاحل";
