@@ -770,6 +770,9 @@
                     patients[pIdx].dailyLogs.push(logEntry);
                 }
                 patients[pIdx].dailyLogs.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
+                patients[pIdx].logsCount = patients[pIdx].dailyLogs.length;
+                patients[pIdx].completedSessions = Math.max(patients[pIdx].completedSessions || 0, sNum, patients[pIdx].dailyLogs.length);
+                patients[pIdx].recoveryScore = Math.min(100, Math.round((patients[pIdx].dailyLogs.length / 7) * 100));
                 saveCloudSyncedPatients(patients);
             }
         } catch(e) {}
@@ -931,6 +934,18 @@
                     }
                     existing.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
                     localStorage.setItem(lsKey, JSON.stringify(existing));
+
+                    // تحديث فوري لإحصائيات المريض في القائمة السحابية
+                    try {
+                        const cList = getCloudSyncedPatients();
+                        const pFound = cList.find(x => x.id === pId || x.patientId === pId);
+                        if (pFound) {
+                            pFound.logsCount = existing.length;
+                            pFound.completedSessions = Math.max(pFound.completedSessions || 0, existing.length);
+                            pFound.recoveryScore = Math.min(100, Math.round((existing.length / 7) * 100));
+                            saveCloudSyncedPatients(cList);
+                        }
+                    } catch(e) {}
                 }
             }
 

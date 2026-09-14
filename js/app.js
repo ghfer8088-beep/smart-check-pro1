@@ -656,6 +656,20 @@ async function handleStepperClick(stepNum) {
         return;
     }
 
+    // التحقق الإلزامي من وجود رقم هاتف صحيح قبل الانتقال للتشخيص أو الخطوات التالية
+    if (stepNum >= 3) {
+        const verifiedPhone = (typeof getResolvedPatientPhone === 'function') ? getResolvedPatientPhone() : '';
+        if (!verifiedPhone) {
+            showToast('⚠️ يرجى إدخال رقم هاتفك المحمول أولاً لربط ملفك الطبي واستخراج التقرير', 'warning');
+            if (typeof promptMandatoryPhoneModal === 'function') {
+                promptMandatoryPhoneModal((validPhone, validName) => {
+                    goToStep(stepNum);
+                });
+            }
+            return;
+        }
+    }
+
     // السماح الفوري والانتقال لأي مرحلة منجزة أو سابقة بكل سلاسة
     const savedPatientId = (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : null) || activePatient?.patientId;
 
@@ -935,17 +949,164 @@ window.addEventListener('offline', updateOfflineDiagnosisUI);
 document.addEventListener('DOMContentLoaded', updateOfflineDiagnosisUI);
 setTimeout(updateOfflineDiagnosisUI, 500);
 
+// استخراج رقم الهاتف المحمول المعتمد بعد التحقق منه
+function getResolvedPatientPhone() {
+    const candidates = [
+        clinicalDialogueState?.patientPhone,
+        document.getElementById('patient-phone')?.value?.trim(),
+        document.getElementById('sub-phone')?.value?.trim(),
+        activePatient?.phone
+    ];
+    for (const cand of candidates) {
+        if (cand && isValidPhoneNumber(cand)) {
+            return cand;
+        }
+    }
+    return '';
+}
+window.getResolvedPatientPhone = getResolvedPatientPhone;
+
+let _pendingDiagnosisCallback = null;
+
+// إظهار نافذة إدخال رقم الهاتف الإلزامية ومنع أي تجاوز
+function promptMandatoryPhoneModal(callback) {
+    _pendingDiagnosisCallback = callback;
+    const modal = document.getElementById('mandatory-phone-gate-modal');
+    if (!modal) {
+        if (typeof callback === 'function') callback('', '');
+        return;
+    }
+    const nameInput = document.getElementById('gate-patient-name');
+    const phoneInput = document.getElementById('gate-patient-phone');
+    const errEl = document.getElementById('gate-phone-error');
+    if (errEl) errEl.style.display = 'none';
+
+    const existingName = clinicalDialogueState?.patientName || document.getElementById('patient-name')?.value?.trim() || activePatient?.name || '';
+    if (nameInput && !nameInput.value && existingName && existingName !== 'المراجع الكريم') {
+        nameInput.value = existingName;
+    }
+    const existingPhone = clinicalDialogueState?.patientPhone || document.getElementById('patient-phone')?.value?.trim() || '';
+    if (phoneInput && !phoneInput.value && existingPhone) {
+        phoneInput.value = existingPhone;
+    }
+
+    modal.style.display = 'flex';
+    if (phoneInput) setTimeout(() => phoneInput.focus(), 200);
+}
+window.promptMandatoryPhoneModal = promptMandatoryPhoneModal;
+
+function submitMandatoryPhoneGate() {
+    const prefixEl = document.getElementById('gate-phone-prefix');
+    const phoneInput = document.getElementById('gate-patient-phone');
+    const nameInput = document.getElementById('gate-patient-name');
+    const errEl = document.getElementById('gate-phone-error');
+
+    const prefix = prefixEl ? prefixEl.value : '+962';
+    let rawPhone = phoneInput ? phoneInput.value.trim() : '';
+    let rawName = nameInput ? nameInput.value.trim() : '';
+
+    rawPhone = rawPhone.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+
+    if (!rawPhone) {
+        if (errEl) {
+            errEl.textContent = '⚠️ يرجى إدخال رقم هاتفك المحمول أولاً للمتابعة.';
+            errEl.style.display = 'block';
+        }
+        return;
+    }
+
+    let fullPhone = rawPhone;
+    if (!rawPhone.startsWith('+') && !rawPhone.startsWith('00')) {
+        if (prefix === '+962') {
+            let digits = rawPhone.replace(/\D/g, '');
+            if (digits.startsWith('962')) digits = digits.slice(3);
+            if (digits.startsWith('0')) digits = digits.slice(1);
+            fullPhone = '+962' + digits;
+        } else if (prefix) {
+            let digits = rawPhone.replace(/\D/g, '');
+            if (digits.startsWith('0')) digits = digits.slice(1);
+            fullPhone = prefix + digits;
+        }
+    }
+
+    if (!isValidPhoneNumber(fullPhone) && !isValidPhoneNumber(rawPhone)) {
+        if (errEl) {
+            errEl.textContent = '⚠️ رقم الهاتف غير صحيح أو غير مكتمل. يرجى إدخال رقم صحيح (مثال: 079xxxxxxx للأردن أو رقم دولي مع الرمز).';
+            errEl.style.display = 'block';
+        }
+        return;
+    }
+
+    const validatedPhone = isValidPhoneNumber(fullPhone) ? fullPhone : rawPhone;
+    const validatedName = (rawName && rawName.length >= 2 && !/^(?:الاسم|الآسم|الإسم)$/i.test(rawName)) ? rawName : (clinicalDialogueState?.patientName || 'مراجع كريم');
+
+    clinicalDialogueState.patientPhone = validatedPhone;
+    clinicalDialogueState.patientName = validatedName;
+    if (activePatient) {
+        activePatient.phone = validatedPhone;
+        activePatient.name = validatedName;
+    }
+
+    const pPhoneEl = document.getElementById('patient-phone');
+    if (pPhoneEl) pPhoneEl.value = validatedPhone;
+    const pNameEl = document.getElementById('patient-name');
+    if (pNameEl) pNameEl.value = validatedName;
+    const sPhoneEl = document.getElementById('sub-phone');
+    if (sPhoneEl) sPhoneEl.value = validatedPhone.replace(/^\+?962/, '');
+    const sNameEl = document.getElementById('sub-name');
+    if (sNameEl) sNameEl.value = validatedName;
+
+    const modal = document.getElementById('mandatory-phone-gate-modal');
+    if (modal) modal.style.display = 'none';
+
+    if (typeof _pendingDiagnosisCallback === 'function') {
+        const cb = _pendingDiagnosisCallback;
+        _pendingDiagnosisCallback = null;
+        cb(validatedPhone, validatedName);
+    }
+}
+window.submitMandatoryPhoneGate = submitMandatoryPhoneGate;
+
 async function runDiagnosticAnalysisWithCheck() {
     if (!navigator.onLine) {
         updateOfflineDiagnosisUI();
         return; // منع التشخيص تماماً عند انقطاع الإنترنت
     }
+
+    // التحقق من المدخلات المباشرة في النموذج السريع
+    const formName = document.getElementById('patient-name')?.value?.trim();
+    const formPhone = document.getElementById('patient-phone')?.value?.trim();
+    if (formPhone && isValidPhoneNumber(formPhone)) {
+        clinicalDialogueState.patientPhone = formPhone;
+        if (formName) clinicalDialogueState.patientName = formName;
+    }
+
+    // شرط إلزامي صارم: لا يمكن الدخول للتشخيص دون رقم هاتف حقيقي صحيح
+    const verifiedPhone = getResolvedPatientPhone();
+    if (!verifiedPhone) {
+        showToast('⚠️ يرجى إدخال رقم هاتفك المحمول أولاً لربط ملفك الطبي واستخراج التقرير', 'warning');
+        promptMandatoryPhoneModal(async (validPhone, validName) => {
+            await runDiagnosticAnalysis();
+        });
+        return;
+    }
+
     await runDiagnosticAnalysis();
 }
 window.runDiagnosticAnalysisWithCheck = runDiagnosticAnalysisWithCheck;
 
 // تنفيذ الفحص السريري وتوليد التقرير الطبي الملكي
 async function runDiagnosticAnalysis() {
+    // التحقق الصارم من وجود رقم الهاتف
+    const verifiedPhone = getResolvedPatientPhone();
+    if (!verifiedPhone) {
+        showToast('⚠️ يرجى تزويدنا برقم هاتفك أولاً لربط ملفك الطبي السريري واستخراج التقرير', 'warning');
+        promptMandatoryPhoneModal(async (validPhone, validName) => {
+            await runDiagnosticAnalysis();
+        });
+        return;
+    }
+
     showRoyalReportLoadingModal();
     try {
         if (typeof SmartWatchdog !== 'undefined') {
@@ -958,7 +1119,7 @@ async function runDiagnosticAnalysis() {
 
         // الحفاظ الصارم على نقطة الألم التي اختارها المستخدم من المجسم
         // لا نلجأ إلى كشف موضع الألم من النص أو التحويل لافتراضي إلا إذا لم تكن هناك أي نقطة محددة مسبقاً نهائياً
-        if (!currentSelectedPoint) {
+        if (!currentSelectedPoint || !currentSelectedPoint.id) {
             try {
                 const storedPt = localStorage.getItem('smart_current_point');
                 if (storedPt) {
@@ -966,7 +1127,7 @@ async function runDiagnosticAnalysis() {
                 }
             } catch (e) {}
         }
-        if (!currentSelectedPoint) {
+        if (!currentSelectedPoint || !currentSelectedPoint.id) {
             const detectedPt = detectAnatomicalPointFromText(userChatMessages);
             if (detectedPt) {
                 currentSelectedPoint = detectedPt;
@@ -1121,8 +1282,7 @@ async function runDiagnosticAnalysis() {
         }
 
         const rawPName = clinicalDialogueState.patientName || activePatient?.name || document.getElementById('patient-name')?.value?.trim();
-        const pName = (rawPName && rawPName !== 'المراجع الكريم') ? rawPName : '';
-        const pPhone = clinicalDialogueState.patientPhone || activePatient?.phone || document.getElementById('sub-phone')?.value || '';
+        const pPhone = verifiedPhone || clinicalDialogueState.patientPhone || activePatient?.phone || document.getElementById('patient-phone')?.value || document.getElementById('sub-phone')?.value || '';
 
         currentAssessmentData = {
             ...assessmentResult,
@@ -8141,24 +8301,37 @@ function finishChatIntakeAndGenerateReport() {
         .map(h => h.text)
         .join(' ');
 
-    // التحقق الصارم من وجود نقطة ألم تشريحية مختارة، وإن لم توجد أو كانت افتراضية يتم استنتاجها من كلام المراجع
-    const detectedFromChat = detectAnatomicalPointFromText(userMessages);
-    if (detectedFromChat) {
-        currentSelectedPoint = detectedFromChat;
-    } else if (typeof currentSelectedPoint === 'undefined' || !currentSelectedPoint || !currentSelectedPoint.id) {
-        const allPts = typeof getBackPoints === 'function' ? getBackPoints() : [];
-        currentSelectedPoint = allPts.find(p => p.id === 'lumbar_spine') || { id: 'lumbar_spine', title: 'أسفل الظهر والفقرات القطنية', region: 'lumbar' };
+    // التحقق الصارم من وجود نقطة ألم تشريحية مختارة: الحفاظ على اختيار المريض الصريح من المجسم
+    if (typeof currentSelectedPoint === 'undefined' || !currentSelectedPoint || !currentSelectedPoint.id) {
+        try {
+            const storedPt = localStorage.getItem('smart_current_point');
+            if (storedPt) currentSelectedPoint = JSON.parse(storedPt);
+        } catch (e) {}
+    }
+    if (typeof currentSelectedPoint === 'undefined' || !currentSelectedPoint || !currentSelectedPoint.id) {
+        const detectedFromChat = detectAnatomicalPointFromText(userMessages);
+        if (detectedFromChat) {
+            currentSelectedPoint = detectedFromChat;
+        } else {
+            const allPts = typeof getBackPoints === 'function' ? getBackPoints() : [];
+            currentSelectedPoint = allPts.find(p => p.id === 'lumbar_spine') || { id: 'lumbar_spine', title: 'أسفل الظهر والفقرات القطنية', region: 'lumbar' };
+        }
     }
 
     // حارس رقم الهاتف الصارم: منع الانتقال للتشخيص بدون رقم هاتف معتمد
-    const hasPhoneStored = clinicalDialogueState.patientPhone && String(clinicalDialogueState.patientPhone).replace(/\D/g, '').length >= 7;
-    if (!hasPhoneStored && !isValidPhoneNumber(clinicalDialogueState.patientPhone)) {
+    const verifiedPhone = (typeof getResolvedPatientPhone === 'function') ? getResolvedPatientPhone() : (clinicalDialogueState.patientPhone || '');
+    if (!verifiedPhone || !isValidPhoneNumber(verifiedPhone)) {
         showToast('⚠️ يرجى تزويد الطبيب برقم هاتفك أولاً في المحادثة لحفظ ملفك وإصدار تقريرك الطبي.', 'warning');
         appendChatMessage('bot', '⚠️ عذراً يا غالي، لنتمكن من حفظ ملفك وربطه وإصدار تقرير حالتك وخطة تمارينك المخصصة بدقة، يرجى تزويدي برقم هاتفك أولاً (مثال: 079xxxxxxx):');
         const chatInput = document.getElementById('ai-chat-input');
         if (chatInput) {
             chatInput.placeholder = 'أدخل رقم هاتفك هنا (مثال: 079xxxxxxx)...';
             chatInput.focus();
+        }
+        if (typeof promptMandatoryPhoneModal === 'function') {
+            promptMandatoryPhoneModal((validPhone, validName) => {
+                finishChatIntakeAndGenerateReport();
+            });
         }
         return;
     }

@@ -562,6 +562,20 @@ const SmartDB = (function() {
                 }
                 existing.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
                 localStorage.setItem(lsKey, JSON.stringify(existing));
+
+                // تحديث إحصائيات المريض الحقيقية تلقائياً لمنع أي تضارب أو أرقام وهمية
+                try {
+                    const pt = await getPatient(log.patientId);
+                    if (pt) {
+                        pt.logsCount = existing.length;
+                        pt.completedSessions = Math.max(pt.completedSessions || 0, log.sessionNumber || 0, existing.length);
+                        pt.recoveryScore = Math.min(100, Math.round((existing.length / 7) * 100));
+                        pt.lastSessionDate = log.date || new Date().toISOString();
+                        pt.dailyLogs = existing;
+                        pt.logs = existing;
+                        await savePatient(pt, { skipCloudSync: options.skipCloudSync });
+                    }
+                } catch (ptErr) {}
             }
         } catch(e) {
             console.warn('LocalStorage saveDailyLog warning:', e);
