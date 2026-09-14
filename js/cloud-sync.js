@@ -301,76 +301,122 @@
         }
     }
 
-    // استرجاع كافة المرضى المرحلين سحابياً مع تنظيف ذكي وتوحيد السجلات المكررة
+    // استرجاع كافة المرضى السحابيين - كل مريض يظهر مرة واحدة لكن بجميع جلساته محفوظة
     function getCloudSyncedPatients() {
         try {
             const raw = localStorage.getItem(CLOUD_PATIENTS_KEY);
             if (raw) {
                 const parsed = JSON.parse(raw);
                 if (Array.isArray(parsed)) {
-                    // إزالة التكرارات الناتجة عن تكرار الإرسال وتوحيد السجلات بالهاتف
-                    const cleanList = [];
-                    const phoneMap = new Map();
+                    // دمج السجلات المكررة لنفس المريض مع الحفاظ على جميع جلساته
+                    const phoneMap = new Map();  // مريض واحد لكل رقم هاتف
+                    const idMap    = new Map();  // مريض واحد لكل patientId بدون هاتف
 
                     for (const pt of parsed) {
                         if (!pt) continue;
-                        // تصحيح الاسم إن كان "الاسم" أو "الآسم" أو "الإسم"
-                        let pName = pt.fullName || pt.name || '';
-                        if (pName === 'الاسم' || pName === 'الآسم' || pName === 'الإسم') {
-                            pName = 'مراجع كريم';
-                        }
 
-                        // احتساب BMI تلقائياً إن وجد الوزن والطول
-                        const w = parseFloat(pt.weight);
-                        const h = parseFloat(pt.height);
-                        let bmi = pt.bmi;
-                        if (!bmi && w > 0 && h > 0) {
-                            bmi = parseFloat((w / Math.pow(h / 100, 2)).toFixed(1));
-                        }
+                        // تصحيح الاسم
+                        let pName = (pt.fullName || pt.name || '').trim();
+                        if (/^(?:الاسم|الآسم|الإسم)$/.test(pName)) pName = 'مراجع كريم';
+                        if (!pName) pName = 'مراجع كريم';
 
-                        const cleanedPt = {
-                            ...pt,
-                            name: pName || 'مراجع كريم',
-                            fullName: pName || 'مراجع كريم',
-                            bmi: bmi || ''
-                        };
+                        // احتساب BMI
+                        const w = parseFloat(pt.weight), h = parseFloat(pt.height);
+                        let bmi = pt.bmi || (w > 0 && h > 0 ? parseFloat((w / Math.pow(h/100,2)).toFixed(1)) : '');
 
+                        const cleanedPt = { ...pt, name: pName, fullName: pName, bmi };
                         const cleanPhone = (cleanedPt.phone || '').replace(/\D/g, '');
+                        const uniqueId   = cleanedPt.patientId || cleanedPt.id;
+
                         if (cleanPhone && cleanPhone.length >= 7) {
                             if (phoneMap.has(cleanPhone)) {
-                                // دمج السجلين مع تفضيل السجل الأكثر اكتمالاً بالبيانات
+                                // ✅ دمج مع حفاظ على جميع الجلسات والتقييمات من كلا السجلين
                                 const existing = phoneMap.get(cleanPhone);
+                                const mergedLogs = mergeLogs(existing.dailyLogs, cleanedPt.dailyLogs, existing.logs, cleanedPt.logs);
+                                const mergedAssessments = mergeAssessments(existing.assessmentHistory, cleanedPt.assessmentHistory, existing.assessment, cleanedPt.assessment);
                                 const merged = {
-                                    ...cleanedPt,
                                     ...existing,
-                                    name: (existing.name !== 'مراجع كريم' && existing.name !== 'الاسم') ? existing.name : cleanedPt.name,
-                                    fullName: (existing.fullName !== 'مراجع كريم' && existing.fullName !== 'الاسم') ? existing.fullName : cleanedPt.fullName,
-                                    age: existing.age || cleanedPt.age,
-                                    weight: existing.weight || cleanedPt.weight,
-                                    height: existing.height || cleanedPt.height,
-                                    bmi: existing.bmi || cleanedPt.bmi,
-                                    painArea: (existing.painArea && existing.painArea !== 'العمود الفقري والمفاصل') ? existing.painArea : (cleanedPt.painArea || existing.painArea),
-                                    diagnosisTitle: existing.diagnosisTitle || cleanedPt.diagnosisTitle,
-                                    chiefDiagnosis: existing.chiefDiagnosis || cleanedPt.chiefDiagnosis,
-                                    assessment: existing.assessment || cleanedPt.assessment
+                                    ...cleanedPt,
+                                    // بيانات المريض: نفضل الأحدث والأكثر اكتمالاً
+                                    name:           (cleanedPt.name !== 'مراجع كريم') ? cleanedPt.name : existing.name,
+                                    fullName:       (cleanedPt.fullName !== 'مراجع كريم') ? cleanedPt.fullName : existing.fullName,
+                                    patientId:      existing.patientId || cleanedPt.patientId,
+                                    age:            cleanedPt.age || existing.age,
+                                    weight:         cleanedPt.weight || existing.weight,
+                                    height:         cleanedPt.height || existing.height,
+                                    bmi:            cleanedPt.bmi || existing.bmi,
+                                    // ✅ جمع كل الجلسات من كلا السجلين
+                                    dailyLogs:      mergedLogs,
+                                    logs:           mergedLogs,
+                                    // ✅ جمع كل التقييمات
+                                    assessmentHistory: mergedAssessments,
+                                    assessment:     cleanedPt.assessment || existing.assessment,
+                                    // موضع الألم والتشخيص: نأخذ الأحدث إن كان أدق
+                                    painArea:       (cleanedPt.painArea && cleanedPt.painArea !== 'العمود الفقري والمفاصل') ? cleanedPt.painArea : (existing.painArea || cleanedPt.painArea),
+                                    diagnosisTitle: cleanedPt.diagnosisTitle || existing.diagnosisTitle,
+                                    chiefDiagnosis: cleanedPt.chiefDiagnosis || existing.chiefDiagnosis,
                                 };
                                 phoneMap.set(cleanPhone, merged);
                             } else {
                                 phoneMap.set(cleanPhone, cleanedPt);
                             }
+                        } else if (uniqueId) {
+                            // ✅ مريض بدون هاتف: نحتفظ بكل سجل حسب patientId الفريد
+                            if (idMap.has(uniqueId)) {
+                                const existing = idMap.get(uniqueId);
+                                const mergedLogs = mergeLogs(existing.dailyLogs, cleanedPt.dailyLogs);
+                                idMap.set(uniqueId, { ...existing, ...cleanedPt, dailyLogs: mergedLogs, logs: mergedLogs });
+                            } else {
+                                idMap.set(uniqueId, cleanedPt);
+                            }
                         } else {
-                            // سجل بدون هاتف: لا نضيفه إذا كان اسماً محظوراً بدون بيانات حقيقية
-                            if (pName !== 'الاسم' && pName !== 'الآسم') {
-                                cleanList.push(cleanedPt);
+                            // سجل بدون هاتف ولا ID: أضفه فقط إن كان له اسم حقيقي
+                            if (pName !== 'مراجع كريم') {
+                                idMap.set('anon_' + (cleanedPt.createdAt || Date.now()), cleanedPt);
                             }
                         }
                     }
 
-                    return [...Array.from(phoneMap.values()), ...cleanList];
+                    return [...Array.from(phoneMap.values()), ...Array.from(idMap.values())];
                 }
             }
         } catch (e) {}
         return [];
+    }
+
+    // دمج مصفوفات الجلسات اليومية من مصادر متعددة مع إزالة التكرار الفعلي فقط
+    function mergeLogs(...arrays) {
+        const map = new Map();
+        for (const arr of arrays) {
+            if (!Array.isArray(arr)) continue;
+            for (const log of arr) {
+                if (!log) continue;
+                // مفتاح فريد: رقم الجلسة + التاريخ - لمنع نفس الجلسة من الظهور مرتين فقط
+                const key = `${log.sessionNumber || ''}_${log.date || log.timestamp || ''}`;
+                if (!map.has(key)) map.set(key, log);
+                else map.set(key, { ...map.get(key), ...log }); // دمج حقول الجلسة
+            }
+        }
+        return Array.from(map.values()).sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
+    }
+
+    // دمج تقييمات المرضى من مصادر متعددة مع الحفاظ على كل تقييم فريد
+    function mergeAssessments(...items) {
+        const list = [];
+        for (const item of items) {
+            if (!item) continue;
+            if (Array.isArray(item)) list.push(...item);
+            else if (typeof item === 'object') list.push(item);
+        }
+        // إزالة التكرار الحقيقي فقط (نفس التاريخ ونفس التشخيص)
+        const seen = new Set();
+        return list.filter(a => {
+            if (!a) return false;
+            const k = `${a.timestamp || a.date || ''}_${a.primaryDiagnosis || a.title || ''}`;
+            if (seen.has(k)) return false;
+            seen.add(k);
+            return true;
+        });
     }
 
     // حفظ وتحديث مصفوفة المرضى السحابية
