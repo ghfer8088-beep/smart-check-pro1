@@ -3933,23 +3933,23 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
     container.innerHTML = `
         <div class="patient-recovery-master-card" style="background: #111827; border: 1px solid var(--primary-gold); border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
             
-        <!-- شريط العودة الآمن للأدمن أو الصفحة الرئيسية (يظهر دائماً لضمان عدم الحصار) -->
-            <div id="back-to-admin-nav" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; padding: 10px 14px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 10px;">
+        <!-- شريط التنقل الثابت: الرئيسية والأدمن (يظهر دائماً) -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; padding: 10px 14px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 10px;">
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button type="button" onclick="(function(){try{const u=new URLSearchParams(window.location.search);if(u.get('patient_id')){window.open('admin.html','_blank');}else{window.history.back();};}catch(e){window.location.href='index.html';}})()" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; padding: 7px 14px; border-radius: 8px; font-size: 0.83em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        🏠 لوحة التحكم
+                    <button type="button" onclick="goToStep(1)" style="background: rgba(212, 175, 55, 0.2); border: 1px solid var(--primary-gold); color: #fef08a; padding: 8px 16px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;">
+                        🏠 الرئيسية
                     </button>
-                    <button type="button" onclick="(function(){var u=new URLSearchParams(window.location.search);if(u.get('patient_id')){window.open('admin.html','_blank');}else{goToStep(3);}})()" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 7px 14px; border-radius: 8px; font-size: 0.83em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        ⬅️ الأدمن
+                    <button type="button" onclick="window.location.href='admin.html'" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 16px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;">
+                        🛡️ لوحة الأدمن
                     </button>
                 </div>
-                <button type="button" onclick="handleStepperClick(3)" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; padding: 7px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                    📋 العودة لمراجعة التقرير الطبي وخطة العلاج (الخطوة 3)
+                <button type="button" onclick="handleStepperClick(3)" style="background: rgba(56, 189, 248, 0.1); border: 1px solid #38bdf8; color: #7dd3fc; padding: 8px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    📋 العودة للتقرير الطبي
                 </button>
             </div>
 
-            <!-- شريط التنقل السريع بين المراحل السابقة والمتابعة -->
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px dashed rgba(212, 175, 55, 0.3);">
+            <!-- شريط الجلسات -->
+            <div style="display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
                 ${(sessionData && sessionData.dailyLogs && sessionData.dailyLogs.length >= 1) ? `
                 <button type="button" onclick="handleStepperClick(5)" class="btn-header btn-header-emerald" style="padding: 7px 14px; font-size: 0.85em; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                     <span>📅</span> متابعة الجلسات (2 إلى 7) ⬅️
@@ -4488,23 +4488,23 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
     container.innerHTML = `
         <div class="patient-recovery-master-card" style="background: #111827; border: 1px solid var(--primary-gold); border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
             
-            <!-- شريط العودة الآمن للأدمن أو الصفحة الرئيسية (يظهر دائماً لضمان عدم الحصار) -->
-            <div id="back-to-admin-nav-s5" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; padding: 10px 14px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 10px;">
+            <!-- شريط التنقل الثابت: الرئيسية والأدمن (يظهر دائماً) -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; padding: 10px 14px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 10px;">
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button type="button" onclick="(function(){try{const u=new URLSearchParams(window.location.search);if(u.get('patient_id')){window.open('admin.html','_blank');}else{window.history.back();};}catch(e){window.location.href='index.html';}})()" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; padding: 7px 14px; border-radius: 8px; font-size: 0.83em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        🏠 لوحة التحكم
+                    <button type="button" onclick="goToStep(1)" style="background: rgba(212, 175, 55, 0.2); border: 1px solid var(--primary-gold); color: #fef08a; padding: 8px 16px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;">
+                        🏠 الرئيسية
                     </button>
-                    <button type="button" onclick="(function(){var u=new URLSearchParams(window.location.search);if(u.get('patient_id')){window.open('admin.html','_blank');}else{goToStep(3);}})()" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 7px 14px; border-radius: 8px; font-size: 0.83em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        ⬅️ الأدمن
+                    <button type="button" onclick="window.location.href='admin.html'" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 16px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;">
+                        🛡️ لوحة الأدمن
                     </button>
                 </div>
-                <button type="button" onclick="handleStepperClick(3)" class="btn-header" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; padding: 7px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                    <span>📋</span> العودة لمراجعة التقرير الطبي وخطة العلاج (الخطوة 3)
+                <button type="button" onclick="handleStepperClick(3)" style="background: rgba(56, 189, 248, 0.1); border: 1px solid #38bdf8; color: #7dd3fc; padding: 8px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    📋 العودة للتقرير الطبي
                 </button>
             </div>
 
             <!-- شريط التنقل السريع بين المراحل السابقة -->
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px dashed rgba(212, 175, 55, 0.3);">
+            <div style="display: flex; justify-content: flex-start; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
                 <button type="button" onclick="renderStep4IndependentDay1('${patientId}')" class="btn-header" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 7px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                     <span>🏋️</span> مراجعة تمارين الجلسة الأولى (اليوم 1)
                 </button>
