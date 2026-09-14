@@ -397,8 +397,9 @@ const SmartDB = (function() {
         }
     }
 
-    // تطهير وحذف أي تقييمات وهمية مكررة أو تالفة
+    // تطهير وحذف أي تقييمات وهمية مكررة أو تالفة وسجلات المرضى التجريبيين
     async function purgeDummyAssessments() {
+        const dummyPatientIds = ['P-104821', 'P-209143', 'P-308512', 'subPatientSabreen', 'subPatientMajd', 'subPatientEndless'];
         try {
             // 1. تنظيف التخزين المحلي LocalStorage
             for (let i = 0; i < localStorage.length; i++) {
@@ -412,7 +413,8 @@ const SmartDB = (function() {
                                 const clean = arr.filter(a => 
                                     !a.autoHealed && 
                                     a.primaryDiagnosis !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة' && 
-                                    a.painLocation !== 'العمود الفقري ومفاصل الحركة'
+                                    a.painLocation !== 'العمود الفقري ومفاصل الحركة' &&
+                                    !dummyPatientIds.includes(a.patientId)
                                 );
                                 if (clean.length !== arr.length) {
                                     localStorage.setItem(k, JSON.stringify(clean));
@@ -422,12 +424,20 @@ const SmartDB = (function() {
                     } catch(e) {}
                 }
             }
+            for (const dId of dummyPatientIds) {
+                try {
+                    localStorage.removeItem('smart_patient_' + dId);
+                    localStorage.removeItem('smart_assessments_' + dId);
+                    localStorage.removeItem('smart_daily_logs_' + dId);
+                    localStorage.removeItem('smart_plan_activated_' + dId);
+                } catch(e) {}
+            }
         } catch(e) {}
 
         try {
-            // 2. تنظيف IndexedDB
+            // 2. تنظيف IndexedDB - التقييمات والمرضى التجريبيين
             const db = await openDB();
-            return new Promise((resolve) => {
+            await new Promise((resolve) => {
                 const tx = db.transaction('assessments', 'readwrite');
                 const store = tx.objectStore('assessments');
                 const req = store.openCursor();
@@ -438,7 +448,8 @@ const SmartDB = (function() {
                         if (val && (
                             val.autoHealed === true || 
                             val.primaryDiagnosis === 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة' || 
-                            val.painLocation === 'العمود الفقري ومفاصل الحركة'
+                            val.painLocation === 'العمود الفقري ومفاصل الحركة' ||
+                            dummyPatientIds.includes(val.patientId)
                         )) {
                             cursor.delete();
                         }
@@ -448,6 +459,17 @@ const SmartDB = (function() {
                 tx.oncomplete = () => resolve(true);
                 tx.onerror = () => resolve(true);
             });
+
+            await new Promise((resolve) => {
+                const tx = db.transaction('patients', 'readwrite');
+                const store = tx.objectStore('patients');
+                for (const dId of dummyPatientIds) {
+                    try { store.delete(dId); } catch(err) {}
+                }
+                tx.oncomplete = () => resolve(true);
+                tx.onerror = () => resolve(true);
+            });
+            return true;
         } catch(e) {
             return true;
         }

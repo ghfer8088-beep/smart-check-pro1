@@ -554,155 +554,23 @@ const AdminEngine = (function() {
         }, null, 2);
     }
 
-    // توليد 3 حالات سريرية حقيقية تلقائياً لتجربة ومعاينة لوحة الإدارة
-    async function seedDemoPatients() {
-        const demoPatients = [
-            {
-                patientId: "P-104821",
-                name: "أحمد محمود الرواشدة",
-                phone: "+962791234567",
-                country: "الأردن",
-                city: "عمّان",
-                flag: "🇯🇴",
-                device: "Mobile",
-                painArea: "الفقرات القطنية وأسفل الظهر",
-                createdAt: new Date(Date.now() - 4 * 86400000).toISOString(),
-                assessment: {
-                    pointId: "lumbar_spine",
-                    painAreaTitle: "الفقرات القطنية وأسفل الظهر",
-                    primaryDiagnosis: "انزلاق غضروفي قطني L5-S1 وعرق النسا الحاد",
-                    probability: 96,
-                    painSeverity: 8,
-                    bmiInfo: { value: 27.8, status: "زيادة وزن", color: "#f59e0b", deltaText: "⚠️ وزن زائد بمقدار +8.5 كجم" }
-                },
-                logs: [
-                    { day: 1, painLevel: 8, stiffnessScore: 8, mobilityScore: 4, timestamp: new Date(Date.now() - 4 * 86400000).toISOString() },
-                    { day: 2, painLevel: 6, stiffnessScore: 6, mobilityScore: 6, timestamp: new Date(Date.now() - 3 * 86400000).toISOString() },
-                    { day: 3, painLevel: 4, stiffnessScore: 5, mobilityScore: 7, timestamp: new Date(Date.now() - 2 * 86400000).toISOString() },
-                    { day: 4, painLevel: 3, stiffnessScore: 3, mobilityScore: 9, timestamp: new Date(Date.now() - 1 * 86400000).toISOString() }
-                ]
-            },
-            {
-                patientId: "P-209143",
-                name: "سارة خليل العبادي",
-                phone: "+962788765432",
-                country: "المملكة العربية السعودية",
-                city: "الرياض",
-                flag: "🇸🇦",
-                device: "Mobile",
-                painArea: "الفقرات العنقية وقاعدة الرقبة",
-                createdAt: new Date(Date.now() - 6 * 86400000).toISOString(),
-                assessment: {
-                    pointId: "cervical_back",
-                    painAreaTitle: "الفقرات العنقية وقاعدة الرقبة",
-                    primaryDiagnosis: "انزلاق غضروفي عنقي C5-C6 والصداع التوتري",
-                    probability: 95,
-                    painSeverity: 7,
-                    bmiInfo: { value: 22.1, status: "وزن طبيعي", color: "#10b981", deltaText: "✅ وزن مثالي طبيعي" }
-                },
-                logs: [
-                    { day: 1, painLevel: 7, stiffnessScore: 8, mobilityScore: 4, timestamp: new Date(Date.now() - 6 * 86400000).toISOString() },
-                    { day: 2, painLevel: 5, stiffnessScore: 6, mobilityScore: 6, timestamp: new Date(Date.now() - 5 * 86400000).toISOString() },
-                    { day: 3, painLevel: 4, stiffnessScore: 4, mobilityScore: 7, timestamp: new Date(Date.now() - 4 * 86400000).toISOString() },
-                    { day: 4, painLevel: 3, stiffnessScore: 3, mobilityScore: 8, timestamp: new Date(Date.now() - 3 * 86400000).toISOString() },
-                    { day: 5, painLevel: 2, stiffnessScore: 2, mobilityScore: 9, timestamp: new Date(Date.now() - 2 * 86400000).toISOString() },
-                    { day: 6, painLevel: 1, stiffnessScore: 1, mobilityScore: 10, timestamp: new Date(Date.now() - 1 * 86400000).toISOString() }
-                ]
-            },
-            {
-                patientId: "P-308512",
-                name: "طارق زياد القاسم",
-                phone: "+962775551122",
-                country: "الإمارات العربية المتحدة",
-                city: "دبي",
-                flag: "🇦🇪",
-                device: "Desktop",
-                painArea: "المفصل العجزي الحرقفي والحوض",
-                createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
-                assessment: {
-                    pointId: "sacroiliac_right",
-                    painAreaTitle: "المفصل العجزي الحرقفي والحوض",
-                    primaryDiagnosis: "متلازمة العضلة الكمثرية وعرق النسا الحوضي",
-                    probability: 94,
-                    painSeverity: 8,
-                    bmiInfo: { value: 31.4, status: "سمنة مفرطة", color: "#ef4444", deltaText: "🚨 وزن زائد حرج بمقدار +18.2 كجم" }
-                },
-                logs: [
-                    { day: 1, painLevel: 8, stiffnessScore: 9, mobilityScore: 3, timestamp: new Date(Date.now() - 2 * 86400000).toISOString() },
-                    { day: 2, painLevel: 5, stiffnessScore: 6, mobilityScore: 6, timestamp: new Date(Date.now() - 1 * 86400000).toISOString() }
-                ]
-            }
-        ];
-
-        for (const dp of demoPatients) {
-            await SmartDB.savePatient({
-                patientId: dp.patientId,
-                name: dp.name,
-                phone: dp.phone,
-                country: dp.country,
-                city: dp.city,
-                flag: dp.flag,
-                device: dp.device,
-                painArea: dp.painArea,
-                createdAt: dp.createdAt
-            });
-
-            await SmartDB.saveAssessment({
-                patientId: dp.patientId,
-                ...dp.assessment,
-                date: dp.createdAt
-            });
-
-            for (const log of dp.logs) {
-                await SmartDB.saveDailyLog({
-                    patientId: dp.patientId,
-                    ...log
-                });
-            }
+    // تطهير وحذف كافة السجلات التجريبية والوهمية نهائياً تطبيقاً لحظر البيانات الوهمية
+    async function purgeDemoPatients() {
+        const dummyPatientIds = ['P-104821', 'P-209143', 'P-308512', 'subPatientSabreen', 'subPatientMajd', 'subPatientEndless'];
+        for (const pid of dummyPatientIds) {
+            try {
+                if (typeof SmartDB !== 'undefined' && typeof SmartDB.deletePatient === 'function') {
+                    await SmartDB.deletePatient(pid);
+                }
+                localStorage.removeItem('smart_patient_' + pid);
+                localStorage.removeItem('smart_assessments_' + pid);
+                localStorage.removeItem('smart_daily_logs_' + pid);
+                localStorage.removeItem('smart_plan_activated_' + pid);
+            } catch(e) {}
         }
-
-        // توليد إشعارات تجريبية متنوعة لتوضيح عمل مركز الإشعارات
-        SmartDB.clearAllNotifications();
-        SmartDB.addAdminNotification({
-            type: 'plan_completed',
-            title: `🏆 إتمام البرنامج (7 أيام): سارة خليل العبادي`,
-            message: `أتمت المريضة سارة خليل العبادي خطة الـ 7 أيام للفقرات العنقية بنجاح فائق! (انخفاض الألم من 7 إلى 1/10 - تحسن 90%). فرصة مثالية للتواصل وحجز جلسة الكايروبراكتيك السريرية مع المعالج جمال.`,
-            patientId: "P-209143",
-            patientName: "سارة خليل العبادي",
-            patientPhone: "+962788765432",
-            meta: { painScore: 1, mobilityRate: 95, totalLogs: 7 }
-        });
-
-        SmartDB.addAdminNotification({
-            type: 'new_registration',
-            title: `👤 مشترك جديد: طارق زياد القاسم`,
-            message: `انضم المريض طارق زياد القاسم لخطة الراحة الحركية (اليوم 1) - منطقة: المفصل العجزي الحرقفي والحوض - هاتف: +962775551122`,
-            patientId: "P-308512",
-            patientName: "طارq زياد القاسم",
-            patientPhone: "+962775551122",
-            meta: { painArea: "المفصل العجزي الحرقفي والحوض", diagnosis: "متلازمة العضلة الكمثرية" }
-        });
-
-        SmartDB.addAdminNotification({
-            type: 'red_flag',
-            title: `🚨 تنبيه طارئ (علامات حمراء): مراجع فحص سريري`,
-            message: `سجل مراجع أعراض تستوجب مراجعة طبية عاجلة: [خدران وتنميل حاد ممتد لأسفل القدمين] في منطقة أسفل الظهر - شدة الألم: 9/10`,
-            patientId: null,
-            patientName: "مراجع فحص سريري",
-            patientPhone: "+962791234567",
-            meta: { painArea: "أسفل الظهر والفقرات القطنية", flags: "خدران حاد", severity: 9 }
-        });
-
-        SmartDB.addAdminNotification({
-            type: 'session_done',
-            title: `📝 إنجاز الجلسة #4: أحمد محمود الرواشدة`,
-            message: `سجل المريض أحمد محمود الرواشدة تقييم الجلسة #4 بنجاح. انخفض الألم إلى 3/10 مع مرونة حركة 90%.`,
-            patientId: "P-104821",
-            patientName: "أحمد محمود الرواشدة",
-            patientPhone: "+962791234567",
-            meta: { sessionNumber: 4, painScore: 3, mobilityRate: 90 }
-        });
-
+        if (typeof SmartDB !== 'undefined' && typeof SmartDB.purgeDummyAssessments === 'function') {
+            await SmartDB.purgeDummyAssessments();
+        }
         return true;
     }
 
@@ -725,7 +593,7 @@ const AdminEngine = (function() {
         loadPatientsOverview,
         setPatientSessionTiming,
         exportAllData,
-        seedDemoPatients,
+        purgeDemoPatients,
         clearAllPatients
     };
 })();

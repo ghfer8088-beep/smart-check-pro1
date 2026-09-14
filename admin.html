@@ -16,9 +16,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=25.0"></script>
-    <script src="js/security-shield.js?v=25.0"></script>
-    <link rel="stylesheet" href="css/style.css?v=25.0">
+    <script src="js/system-watchdog.js?v=26.0"></script>
+    <script src="js/security-shield.js?v=26.0"></script>
+    <link rel="stylesheet" href="css/style.css?v=26.0">
     <style>
         body {
             background-color: #080c14;
@@ -551,9 +551,6 @@
                         </button>
                         <button type="button" onclick="openImportPatientModal()" class="btn-header" style="background: rgba(56, 189, 248, 0.2); border-color: #38bdf8; color: #7dd3fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
                             <span>📥</span> استيراد ملف
-                        </button>
-                        <button type="button" onclick="handleSeedDemoPatients()" class="btn-header" style="background: rgba(212, 175, 55, 0.15); border-color: var(--primary-gold); color: var(--primary-gold); font-size: 0.84em; padding: 9px 12px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
-                            <span>🧪</span> تجربة بيانات
                         </button>
                         <button type="button" onclick="handleClearAllRecords()" class="btn-header" style="background: rgba(239, 68, 68, 0.15); border-color: #ef4444; color: #fca5a5; font-size: 0.84em; padding: 9px 12px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
                             <span>🗑️</span> تفريغ
@@ -1435,17 +1432,17 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/mqtt.min.js?v=25.0"></script>
-    <script src="js/geo-tracker.js?v=25.0"></script>
-    <script src="js/cloud-sync.js?v=25.0"></script>
-    <script src="js/database.js?v=25.0"></script>
-    <script src="js/exercise-image-studio.js?v=25.0"></script>
-    <script src="js/exercises-db.js?v=25.0"></script>
-    <script src="js/diagnostic-engine.js?v=25.0"></script>
-    <script src="js/patient-flow.js?v=25.0"></script>
-    <script src="js/admin-engine.js?v=25.0"></script>
-    <script src="js/ai-config.js?v=25.0"></script>
-    <script src="js/ai-engine.js?v=25.0"></script>
+    <script src="js/mqtt.min.js?v=26.0"></script>
+    <script src="js/geo-tracker.js?v=26.0"></script>
+    <script src="js/cloud-sync.js?v=26.0"></script>
+    <script src="js/database.js?v=26.0"></script>
+    <script src="js/exercise-image-studio.js?v=26.0"></script>
+    <script src="js/exercises-db.js?v=26.0"></script>
+    <script src="js/diagnostic-engine.js?v=26.0"></script>
+    <script src="js/patient-flow.js?v=26.0"></script>
+    <script src="js/admin-engine.js?v=26.0"></script>
+    <script src="js/ai-config.js?v=26.0"></script>
+    <script src="js/ai-engine.js?v=26.0"></script>
 
     <script>
         let allPatientsList = [];
@@ -2618,13 +2615,6 @@
             }
         }
 
-        async function handleSeedDemoPatients() {
-            await AdminEngine.seedDemoPatients();
-            await loadAdminData();
-            loadNotificationsData();
-            alert('✅ تم توليد 3 حالات سريرية تجريبية وإشعارات حية بنجاح!');
-        }
-
         async function handleClearAllRecords() {
             if (confirm('هل أنت متأكد من رغبتك في مسح كافة السجلات؟')) {
                 await AdminEngine.clearAllPatients();
@@ -2677,9 +2667,6 @@
                         <div style="margin-top: 14px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
                             <button type="button" onclick="openSyncBridgeModal()" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #fff; border: 1px solid #38bdf8; padding: 10px 22px; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                                 📲 استيراد بيانات الموبايل عبر جسر المزامنة
-                            </button>
-                            <button type="button" onclick="handleSeedDemoPatients()" style="background: var(--primary-gold); color: #0a0e14; border: none; padding: 10px 22px; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                                ✨ توليد حالات تجريبية للاختبار
                             </button>
                         </div>
                     </div>`;
@@ -2742,10 +2729,7 @@
                 if (!list || list.length === 0) {
                     mobileCardsContainer.innerHTML = `
                         <div style="text-align: center; padding: 30px 15px; color: #94a3b8; background: #080c14; border-radius: 12px; border: 1px dashed #334155;">
-                            📂 لا يوجد مراجعين مسجلين حالياً.<br>
-                            <button type="button" onclick="handleSeedDemoPatients()" style="margin-top: 12px; background: var(--primary-gold); color: #0a0e14; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                                ✨ توليد حالات تجريبية لفحص اللوحة
-                            </button>
+                            📂 لا يوجد مراجعين مسجلين حالياً.
                         </div>`;
                 } else {
                     mobileCardsContainer.innerHTML = list.map((item, idx) => {
@@ -3947,7 +3931,6 @@
         }
 
         function loginAsPatient(patientId) {
-            SmartDB.setCurrentSessionPatientId(patientId);
             window.open(`index.html?patient_id=${encodeURIComponent(patientId)}&view_report=3`, '_blank');
         }
 

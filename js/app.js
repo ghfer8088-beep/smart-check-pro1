@@ -477,34 +477,33 @@ function playStep1AudioGuide() {
 // نظام حفظ واستعادة حالة الجلسة والتنقل العكسي الحر (State Persistence & Free Stage Navigation)
 // =========================================================================
 
-// حساب أعلى خطوة تم فتحها للمراجع (من 1 إلى 6)
+// حساب أعلى خطوة تم فتحها للمراجع (من 1 إلى 6) — حصرياً للجلسة الفعالة الحالية
 async function getMaxUnlockedStep() {
     let maxStep = 1;
     try {
-        const storedMax = parseInt(localStorage.getItem('smart_max_reached_step'), 10);
-        if (!isNaN(storedMax) && storedMax >= 1 && storedMax <= 6) {
-            maxStep = Math.max(maxStep, storedMax);
-        }
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryPid = urlParams.get('patient_id') || urlParams.get('id');
+        const sessionPid = sessionStorage.getItem('scp_active_patient_id');
+        const savedPatientId = queryPid || sessionPid || (activePatient && (activePatient.patientId || activePatient.id));
 
-        const savedPatientId = (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : null) || activePatient?.patientId;
         if (savedPatientId) {
             const logs = await SmartDB.getPatientDailyLogs(savedPatientId);
             if (logs && logs.length >= 7) {
                 maxStep = Math.max(maxStep, 6);
             } else if (logs && logs.length >= 1) {
                 maxStep = Math.max(maxStep, 5);
-            } else if (localStorage.getItem('smart_plan_activated') === 'true') {
+            } else if (localStorage.getItem('smart_plan_activated_' + savedPatientId) === 'true' || (activePatient && activePatient.isPlanActivated)) {
                 maxStep = Math.max(maxStep, 4);
             } else {
                 maxStep = Math.max(maxStep, 3);
             }
         }
 
-        if (currentAssessmentData || localStorage.getItem('smart_current_assessment')) {
+        if (currentAssessmentData && currentAssessmentData.primaryDiagnosis) {
             maxStep = Math.max(maxStep, 3);
         }
 
-        if (currentSelectedPoint || localStorage.getItem('smart_current_point')) {
+        if (currentSelectedPoint && currentSelectedPoint.id) {
             maxStep = Math.max(maxStep, 2);
         }
 
@@ -518,6 +517,10 @@ window.getMaxUnlockedStep = getMaxUnlockedStep;
 
 function getMaxUnlockedStepSync() {
     try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasSession = urlParams.get('patient_id') || sessionStorage.getItem('scp_active_patient_id') || activePatient || currentAssessmentData || currentSelectedPoint;
+        if (!hasSession) return 1;
+
         const stored = parseInt(localStorage.getItem('smart_max_reached_step'), 10);
         if (!isNaN(stored) && stored >= 1 && stored <= 6) return stored;
     } catch (e) {}
@@ -551,8 +554,17 @@ window.updateStepperVisuals = updateStepperVisuals;
 
 // استعادة بيانات الجلسة النشطة بالكامل عند تحديث المتصفح (F5 / Refresh)
 async function restoreActiveSessionState() {
-    const savedPatientId = (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : null);
-    if (savedPatientId && !activePatient) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryPid = urlParams.get('patient_id') || urlParams.get('id');
+    const sessionPid = sessionStorage.getItem('scp_active_patient_id');
+    const savedPatientId = queryPid || sessionPid;
+
+    // إذا لم تكن هناك جلسة نشطة موثقة لهذا التبويب، لا تسترجع أي مريض سابق نهائياً
+    if (!savedPatientId) {
+        return;
+    }
+
+    if (!activePatient) {
         try {
             activePatient = await SmartDB.getPatient(savedPatientId);
         } catch (e) {}
@@ -560,42 +572,23 @@ async function restoreActiveSessionState() {
 
     if (!currentAssessmentData) {
         try {
-            const storedAss = localStorage.getItem('smart_current_assessment');
-            if (storedAss) {
-                currentAssessmentData = JSON.parse(storedAss);
-            } else if (savedPatientId) {
-                const assessments = await SmartDB.getPatientAssessments(savedPatientId);
-                if (assessments && assessments.length > 0) {
-                    currentAssessmentData = assessments[assessments.length - 1];
-                    localStorage.setItem('smart_current_assessment', JSON.stringify(currentAssessmentData));
-                }
+            const assessments = await SmartDB.getPatientAssessments(savedPatientId);
+            if (assessments && assessments.length > 0) {
+                currentAssessmentData = assessments[assessments.length - 1];
+            } else if (activePatient && (activePatient.assessment || activePatient.latestAssessment)) {
+                currentAssessmentData = activePatient.assessment || activePatient.latestAssessment;
             }
         } catch (e) {}
     }
 
-    if (!currentSelectedPoint) {
+    if (!currentSelectedPoint && currentAssessmentData && currentAssessmentData.pointId) {
         try {
-            const storedPt = localStorage.getItem('smart_current_point');
-            if (storedPt) {
-                currentSelectedPoint = JSON.parse(storedPt);
-            } else if (currentAssessmentData && currentAssessmentData.pointId) {
-                const allPts = (typeof ANATOMY_POINTS !== 'undefined') ? (ANATOMY_POINTS.front.concat(ANATOMY_POINTS.back)) : [];
-                currentSelectedPoint = allPts.find(p => p.id === currentAssessmentData.pointId) || {
-                    id: currentAssessmentData.pointId,
-                    title: currentAssessmentData.painAreaTitle || 'المفصل المحدد',
-                    region: currentAssessmentData.painArea || 'spine'
-                };
-                localStorage.setItem('smart_current_point', JSON.stringify(currentSelectedPoint));
-            } else if (activePatient && (activePatient.painPointId || activePatient.painArea)) {
-                const ptId = activePatient.painPointId || activePatient.painArea;
-                const allPts = (typeof ANATOMY_POINTS !== 'undefined') ? (ANATOMY_POINTS.front.concat(ANATOMY_POINTS.back)) : [];
-                currentSelectedPoint = allPts.find(p => p.id === ptId) || {
-                    id: ptId,
-                    title: activePatient.painAreaTitle || activePatient.painArea || 'المفصل المحدد',
-                    region: 'spine'
-                };
-                localStorage.setItem('smart_current_point', JSON.stringify(currentSelectedPoint));
-            }
+            const allPts = (typeof ANATOMY_POINTS !== 'undefined') ? (ANATOMY_POINTS.front.concat(ANATOMY_POINTS.back)) : [];
+            currentSelectedPoint = allPts.find(p => p.id === currentAssessmentData.pointId) || {
+                id: currentAssessmentData.pointId,
+                title: currentAssessmentData.painAreaTitle || 'المفصل المحدد',
+                region: currentAssessmentData.painArea || 'spine'
+            };
         } catch (e) {}
     }
 
@@ -1284,8 +1277,20 @@ async function runDiagnosticAnalysis() {
             console.warn('getExercisesForPoint notice:', exErr);
         }
 
-        const rawPName = clinicalDialogueState.patientName || activePatient?.name || document.getElementById('patient-name')?.value?.trim();
-        const pPhone = verifiedPhone || clinicalDialogueState.patientPhone || activePatient?.phone || document.getElementById('patient-phone')?.value || document.getElementById('sub-phone')?.value || '';
+        // استخراج اسم وهاتف المريض الخاص بهذا الفحص حصرياً — ممنوع توريث أي بيانات من activePatient السابق
+        let pName = '';
+        if (clinicalDialogueState && clinicalDialogueState.patientName && !/^(?:الاسم|الآسم|الإسم|مراجع كريم|المراجع الكريم)$/i.test(clinicalDialogueState.patientName.trim())) {
+            pName = clinicalDialogueState.patientName.trim();
+        }
+        if (!pName) {
+            const formName = document.getElementById('patient-name')?.value?.trim() || document.getElementById('sub-name')?.value?.trim();
+            if (formName && !/^(?:الاسم|الآسم|الإسم|مراجع كريم|المراجع الكريم)$/i.test(formName)) {
+                pName = formName;
+            }
+        }
+        if (!pName) pName = 'مراجع كريم';
+
+        let pPhone = verifiedPhone || (clinicalDialogueState && clinicalDialogueState.patientPhone) || document.getElementById('patient-phone')?.value?.trim() || document.getElementById('sub-phone')?.value?.trim() || '';
 
         currentAssessmentData = {
             ...assessmentResult,
@@ -1315,15 +1320,16 @@ async function runDiagnosticAnalysis() {
             localStorage.setItem('smart_current_assessment', JSON.stringify(currentAssessmentData));
             const curMax = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
             localStorage.setItem('smart_max_reached_step', String(Math.max(curMax, 3)));
-            if (typeof updateStepperVisuals === 'function') updateStepperVisuals(2);
+            if (typeof updateStepperVisuals === 'function') updateStepperVisuals(3);
         } catch (e) {}
 
         const painDisplayStr = hasExplicitPain ? `${explicitPain}/10` : 'مستند للأعراض السريرية';
 
+        // ترحيل وتوثيق بيانات المريض والتشخيص إلى قاعدة بيانات الإدارة فوراً بمعرف فريد لكل فحص
+        const targetPatientId = 'pat_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 6);
+
         // إشعار طارئ للإدارة في حال وجود علامات حمراء تستوجب المتابعة
         if (redFlagsSelected && redFlagsSelected.length > 0) {
-            const pName = activePatient?.name || document.getElementById('sub-name')?.value?.trim() || 'مراجع (فحص سريري جديد)';
-            const pPhone = activePatient?.phone || '';
             const flagLabels = redFlagsSelected.map(id => {
                 const found = ClinicalEngine.RED_FLAGS_CRITERIA.find(rf => rf.id === id);
                 return found ? found.label : id;
@@ -1333,7 +1339,7 @@ async function runDiagnosticAnalysis() {
                 type: 'red_flag',
                 title: `🚨 تنبيه طارئ (علامات حمراء): ${pName}`,
                 message: `سجل المراجع ${pName} أعراض تستوجب مراجعة طبية عاجلة: [${flagLabels}] في منطقة ${currentSelectedPoint.title} - مستوى الألم: ${painDisplayStr}`,
-                patientId: activePatient?.id || null,
+                patientId: targetPatientId,
                 patientName: pName,
                 patientPhone: pPhone,
                 meta: {
@@ -1348,12 +1354,10 @@ async function runDiagnosticAnalysis() {
             ? assessmentResult.primaryDiagnosis
             : assessmentResult.primaryDiagnosis?.title) || 'تشخيص سريري متكامل';
 
-        // ترحيل وتوثيق بيانات المريض والتشخيص إلى قاعدة بيانات الإدارة فوراً بمعرف فريد لكل فحص
-        const targetPatientId = 'pat_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 6);
         const patientRecord = {
             patientId: targetPatientId,
-            name: pName || 'مراجع جديد',
-            phone: pPhone || '',
+            name: pName,
+            phone: pPhone,
             age: clinicalDialogueState.patientVitals?.age || age,
             gender: gender,
             weight: clinicalDialogueState.patientVitals?.weight || weight,
@@ -1370,7 +1374,7 @@ async function runDiagnosticAnalysis() {
             assessment: currentAssessmentData,
             latestAssessment: currentAssessmentData,
             treatmentPlan: assessmentResult.recommendations ? assessmentResult.recommendations.join('\n') : '',
-            createdAt: activePatient?.createdAt || new Date().toISOString(),
+            createdAt: new Date().toISOString(),
             lastUpdated: new Date().toISOString()
         };
         try {
@@ -2887,8 +2891,8 @@ function displayDiagnosticReport(data) {
     reportContainer.innerHTML = `
         <div class="clinical-report-printable" style="background: linear-gradient(135deg, #0d1522 0%, #152238 100%); border-radius: 16px; padding: 32px; border: 1.5px solid var(--primary-gold); box-shadow: 0 12px 40px rgba(0,0,0,0.6); margin-bottom: 30px;">
             
-            <!-- بنر العودة السريعة للجلسات إذا كانت الخطة مفعلة مسبقاً -->
-            ${(localStorage.getItem('smart_plan_activated') === 'true' || (typeof SmartDB !== 'undefined' && SmartDB.getCurrentSessionPatientId())) ? `
+            <!-- بنر العودة السريعة للجلسات إذا كانت الخطة مفعلة مسبقاً لهذا المريض تحديداً -->
+            ${((data.patientId && localStorage.getItem('smart_plan_activated_' + data.patientId) === 'true') || (data.dailyLogs && data.dailyLogs.length > 0) || (activePatient && activePatient.isPlanActivated && activePatient.patientId === data.patientId)) ? `
             <div class="no-print" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div style="color: #6ee7b7; font-size: 0.92em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
                     <span>🟢</span> أنت تراجع التقرير الطبي - خطتك العلاجية مفعلة وجلساتك الحركية جارية.
@@ -3680,6 +3684,7 @@ async function activateRecoveryPlanInstantly() {
             createdAt: activePatient?.createdAt || new Date().toISOString()
         };
 
+        patientObj.isPlanActivated = true;
         await SmartDB.savePatient(patientObj);
         if (currentAssessmentData) {
             await SmartDB.saveAssessment({
@@ -3692,9 +3697,10 @@ async function activateRecoveryPlanInstantly() {
         }
 
         SmartDB.setCurrentSessionPatientId(patientId);
+        try { sessionStorage.setItem('scp_active_patient_id', patientId); } catch(e) {}
         activePatient = patientObj;
         try {
-            localStorage.setItem('smart_plan_activated', 'true');
+            localStorage.setItem('smart_plan_activated_' + patientId, 'true');
             const curMax = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
             localStorage.setItem('smart_max_reached_step', String(Math.max(curMax, 4)));
         } catch (e) {}
@@ -3799,6 +3805,7 @@ async function submitPatientRegistrationAndStart() {
         createdAt: new Date().toISOString()
     };
 
+    patientObj.isPlanActivated = true;
     await SmartDB.savePatient(patientObj);
     if (currentAssessmentData) {
         await SmartDB.saveAssessment({
@@ -3811,9 +3818,10 @@ async function submitPatientRegistrationAndStart() {
     }
 
     SmartDB.setCurrentSessionPatientId(patientId);
+    try { sessionStorage.setItem('scp_active_patient_id', patientId); } catch(e) {}
     activePatient = patientObj;
     try {
-        localStorage.setItem('smart_plan_activated', 'true');
+        localStorage.setItem('smart_plan_activated_' + patientId, 'true');
         const curMax = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
         localStorage.setItem('smart_max_reached_step', String(Math.max(curMax, 4)));
     } catch (e) {}
@@ -5846,6 +5854,7 @@ function resetToInitialState(force = false) {
     }
     SmartDB.setCurrentSessionPatientId(null);
     activePatient = null;
+    window.activePatient = null;
     currentSelectedPoint = null;
     currentAssessmentData = null;
     try {
@@ -5853,7 +5862,15 @@ function resetToInitialState(force = false) {
         localStorage.removeItem('smart_current_assessment');
         localStorage.removeItem('smart_plan_activated');
         localStorage.removeItem('smart_max_reached_step');
+        localStorage.removeItem('smart_current_patient_id');
+        localStorage.removeItem('smart_last_active_patient_id');
+        localStorage.removeItem('smart_active_patient');
+        sessionStorage.removeItem('scp_active_patient_id');
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
     } catch (e) {}
+    updateStepperVisuals(1);
 
     document.querySelectorAll('.anatomy-hotspot').forEach(p => p.classList.remove('active'));
     const statusText = document.getElementById('selected-point-label');
@@ -6595,10 +6612,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         bottomContainer.innerHTML = getPromotionalContactHubHTML();
     }
 
-    // استعادة حالة الجلسة بالكامل وحساب أعلى مرحلة تم إنجازها
-    await restoreActiveSessionState();
-    const maxUnlocked = await getMaxUnlockedStep();
-
     // فحص وتطبيق أي مزامنة فيديوهات قادمة عبر الرابط ?sync_videos=
     if (typeof checkAndApplyVideoSyncFromUrl === 'function') {
         checkAndApplyVideoSyncFromUrl();
@@ -6615,7 +6628,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const querySession = parseInt(urlParams.get('session')) || 2;
     if (queryUnlock || queryTime !== null) {
         try {
-            const targetPid = queryPatientId || localStorage.getItem('smart_last_active_patient_id') || localStorage.getItem('smart_current_patient_id') || '';
+            const targetPid = queryPatientId || sessionStorage.getItem('scp_active_patient_id') || '';
             const totalSec = parseInt(queryTime) || 0;
             const now = Date.now();
             const keys = [targetPid, 'global'].filter(Boolean);
@@ -6639,31 +6652,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ======================================================================
-    // استعادة بيانات المريض — قاعدة أمان صارمة:
+    // استعادة بيانات المريض — قاعدة أمان صارمة ومطلقة:
     // فقط إذا كان patient_id صريح في الرابط → نحمّل المريض المحدد
-    // أو إذا كان المستخدم في منتصف فحص حقيقي على هذا الجهاز (sessionStorage)
-    // ممنوع تحميل أي مريض من localStorage تلقائياً — هذا يسبب تسرب بيانات قصي
+    // أو إذا كان المستخدم في منتصف فحص حقيقي في هذا التبويب حصرياً (sessionStorage)
+    // أي دخول مباشر بدون رابط يفتح فوراً فحصاً جديداً نظيفاً (الخطوة 1)
     // ======================================================================
-    let savedPatientId = queryPatientId; // فقط من الرابط
+    let savedPatientId = queryPatientId;
 
     if (!savedPatientId) {
-        // هل المستخدم في منتصف فحص فعلي على هذا الجهاز؟
-        // نستخدم sessionStorage (يُمسح تلقائياً عند إغلاق التبويب)
         const sessionActiveId = sessionStorage.getItem('scp_active_patient_id');
         if (sessionActiveId) {
             savedPatientId = sessionActiveId;
         }
     }
 
-    // إذا لم يُوجد patient_id صريح ولا جلسة فعلية → مريض جديد، جلسة نظيفة
+    // إذا لم يُوجد patient_id صريح ولا جلسة نشطة لهذا التبويب → فحص سريري جديد نظيف
     if (!savedPatientId) {
-        // تنظيف أي بقايا من الجلسة السابقة
+        activePatient = null;
+        window.activePatient = null;
+        currentAssessmentData = null;
+        currentSelectedPoint = null;
+        SmartDB.setCurrentSessionPatientId('');
         try {
             localStorage.removeItem('smart_current_patient_id');
             localStorage.removeItem('smart_last_active_patient_id');
-            SmartDB.setCurrentSessionPatientId('');
+            localStorage.removeItem('smart_active_patient');
+            localStorage.removeItem('smart_current_assessment');
+            localStorage.removeItem('smart_current_point');
+            localStorage.removeItem('smart_plan_activated');
+            localStorage.removeItem('smart_max_reached_step');
+            sessionStorage.removeItem('scp_active_patient_id');
         } catch(e) {}
-        // انتقل للخطوة 1 مباشرة
+        updateStepperVisuals(1);
         goToStep(1);
         return;
     }
@@ -6672,6 +6692,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         SmartDB.setCurrentSessionPatientId(queryPatientId);
         sessionStorage.setItem('scp_active_patient_id', queryPatientId);
     }
+
+    // استعادة حالة الجلسة الخاصة بهذا المريض المحدد فقط
+    await restoreActiveSessionState();
+    const maxUnlocked = await getMaxUnlockedStep();
 
     if (savedPatientId) {
         let p = await SmartDB.getPatient(savedPatientId);
