@@ -1570,15 +1570,14 @@
                 function updateSyncBtnVisibility() {
                     const syncBtn = document.getElementById('btn-force-sync');
                     if (!syncBtn) return;
+                    syncBtn.style.display = 'inline-flex';
                     const mqttOk = typeof SmartCloudSync !== 'undefined' && SmartCloudSync.isMqttConnected();
-                    syncBtn.style.display = mqttOk ? 'none' : 'inline-flex';
                     syncBtn.title = mqttOk
-                        ? 'البث اللحظي نشط - المزامنة تلقائية'
-                        : 'البث اللحظي غير متصل - اضغط للمزامنة اليدوية';
+                        ? 'البث اللحظي نشط (متصل) - اضغط في أي وقت للمزامنة القسرية'
+                        : 'البث اللحظي غير متصل - اضغط للمزامنة الكاملة';
                 }
-                // فحص كل 10 ثوانٍ وتحديث ظهور الزر
                 setInterval(updateSyncBtnVisibility, 10000);
-                setTimeout(updateSyncBtnVisibility, 3000); // فحص أولي بعد 3 ثوانٍ (انتظار اتصال MQTT)
+                setTimeout(updateSyncBtnVisibility, 1500);
             }
         }
 
@@ -4470,7 +4469,8 @@
                     await loadAdminData(false);
                     renderGeoAnalytics();
                     loadNotificationsData(false);
-                    btn.innerHTML = `✅ تمت المزامنة (${allPatientsList.length} سجل)`;
+                    if (btn) {
+                        btn.innerHTML = `✅ تمت المزامنة (${allPatientsList.length} سجل)`;
                         btn.style.background = 'rgba(16,185,129,0.25)';
                         btn.style.borderColor = '#10b981';
                         btn.style.color = '#6ee7b7';
