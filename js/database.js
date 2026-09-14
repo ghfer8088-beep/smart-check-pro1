@@ -92,6 +92,26 @@ const SmartDB = (function() {
                 }
             }
 
+            // استنتاج وتثبيت الدولة والمدينة وعلم الدولة فورياً من رقم هاتف المراجع أو التوقيت المحلي
+            if (!mergedPatient.country || mergedPatient.country === 'غير محدد' || mergedPatient.country === 'دولي') {
+                let geoInfo = null;
+                if (mergedPatient.phone && typeof SmartGeoTracker !== 'undefined' && typeof SmartGeoTracker.inferCountryFromPhone === 'function') {
+                    geoInfo = SmartGeoTracker.inferCountryFromPhone(mergedPatient.phone);
+                }
+                if (!geoInfo && typeof SmartGeoTracker !== 'undefined' && typeof SmartGeoTracker.inferCountryFromTimezone === 'function') {
+                    geoInfo = SmartGeoTracker.inferCountryFromTimezone();
+                }
+                if (geoInfo) {
+                    mergedPatient.country = geoInfo.country;
+                    mergedPatient.countryCode = geoInfo.countryCode;
+                    mergedPatient.city = geoInfo.city;
+                    mergedPatient.flag = geoInfo.flag;
+                }
+            }
+            if (!mergedPatient.device && typeof SmartGeoTracker !== 'undefined' && typeof SmartGeoTracker.getDeviceType === 'function') {
+                mergedPatient.device = SmartGeoTracker.getDeviceType().type;
+            }
+
             localStorage.setItem('smart_patient_' + mergedPatient.patientId, JSON.stringify(mergedPatient));
             const allPts = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
             const idx = allPts.findIndex(p => p.patientId === mergedPatient.patientId);

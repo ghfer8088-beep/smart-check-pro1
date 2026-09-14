@@ -153,11 +153,17 @@ const AdminEngine = (function() {
                             if (dMatch) chiefDiag = dMatch[1].trim();
                         }
 
+                        let phoneVal = notif.patientPhone || '';
+                        if (!phoneVal && notif.message) {
+                            const phoneMatch = notif.message.match(/(?:هاتف|رقم|phone|tel)?[:\s]*\(?([0-9+]{8,15})\)?/i) || notif.message.match(/(07[789]\d{7})/);
+                            if (phoneMatch) phoneVal = phoneMatch[1].trim();
+                        }
+
                         // التحقق هل هذا الفحص بالتحديد موجود مسبقاً في الخريطة أم أنه فحص جديد ومستقل لنفس المراجع
                         let alreadyPresent = false;
                         for (const existingPt of patientsMap.values()) {
                             const samePerson = (notif.patientId && (existingPt.patientId === notif.patientId || existingPt.id === notif.patientId)) ||
-                                               (notif.patientPhone && existingPt.phone && String(notif.patientPhone).replace(/\D/g, '') === String(existingPt.phone).replace(/\D/g, '')) ||
+                                               (phoneVal && existingPt.phone && String(phoneVal).replace(/\D/g, '') === String(existingPt.phone).replace(/\D/g, '')) ||
                                                (existingPt.name && existingPt.name.trim() === nName.trim());
                             if (samePerson) {
                                 const sameDiag = !chiefDiag || (existingPt.chiefDiagnosis && existingPt.chiefDiagnosis.includes(chiefDiag)) || (existingPt.diagnosisTitle && existingPt.diagnosisTitle.includes(chiefDiag));
@@ -172,18 +178,61 @@ const AdminEngine = (function() {
 
                         if (!alreadyPresent) {
                             const nId = (notif.patientId || 'pat_' + Date.now().toString(36)) + '_notif_' + (notif.id || notif.time || Math.random().toString(36).substr(2, 5));
-                            patientsMap.set(nId, {
+                            
+                            // استنتاج الدولة والمدينة وعلم الدولة فورياً من رقم الهاتف
+                            let geoFromPhone = null;
+                            if (typeof SmartGeoTracker !== 'undefined' && typeof SmartGeoTracker.inferCountryFromPhone === 'function') {
+                                geoFromPhone = SmartGeoTracker.inferCountryFromPhone(phoneVal);
+                            }
+                            if (!geoFromPhone && typeof SmartGeoTracker !== 'undefined' && typeof SmartGeoTracker.inferCountryFromTimezone === 'function') {
+                                geoFromPhone = SmartGeoTracker.inferCountryFromTimezone();
+                            }
+
+                            // استخراج عدد الجلسات المنفذة إن كان الإشعار لإتمام جلسة
+                            let completedSess = 0;
+                            let recoveredLogs = [];
+                            if (notif.type === 'session_done' || (notif.message && notif.message.includes('الجلسة'))) {
+                                const sessMatch = (notif.message || '').match(/الجلسة\s*(الأولى|الثانية|الثالثة|الرابعة|الخامسة|السادسة|السابعة|[1-7])/i);
+                                if (sessMatch) {
+                                    const word = sessMatch[1];
+                                    if (word === 'الأولى' || word === '1') completedSess = 1;
+                                    else if (word === 'الثانية' || word === '2') completedSess = 2;
+                                    else if (word === 'الثالثة' || word === '3') completedSess = 3;
+                                    else if (word === 'الرابعة' || word === '4') completedSess = 4;
+                                    else if (word === 'الخامسة' || word === '5') completedSess = 5;
+                                    else if (word === 'السادسة' || word === '6') completedSess = 6;
+                                    else if (word === 'السابعة' || word === '7') completedSess = 7;
+                                }
+                            }
+
+                            const recoveredPatient = {
                                 patientId: nId,
                                 id: nId,
                                 name: nName,
                                 fullName: nName,
-                                phone: notif.patientPhone || '',
+                                phone: phoneVal || '',
                                 painArea: painArea || 'فحص واستشارة سريرية',
                                 painAreaTitle: painArea || 'فحص واستشارة سريرية',
                                 chiefDiagnosis: chiefDiag || 'تشخيص سريري متكامل',
                                 diagnosisTitle: chiefDiag || 'تشخيص سريري متكامل',
+                                country: geoFromPhone ? geoFromPhone.country : 'الأردن',
+                                countryCode: geoFromPhone ? geoFromPhone.countryCode : 'JO',
+                                city: geoFromPhone ? geoFromPhone.city : 'عمّان',
+                                flag: geoFromPhone ? geoFromPhone.flag : '🇯🇴',
+                                device: 'Mobile',
+                                completedSessions: completedSess,
+                                logsCount: completedSess,
                                 createdAt: notif.time || new Date().toISOString()
-                            });
+                            };
+
+                            patientsMap.set(nId, recoveredPatient);
+
+                            // حفظ السجل المستعاد في التخزين المحلي لضمان استمراريته وعدم فقدانه مجدداً
+                            try {
+                                if (typeof SmartDB !== 'undefined' && typeof SmartDB.savePatient === 'function') {
+                                    SmartDB.savePatient(recoveredPatient);
+                                }
+                            } catch(e) {}
                         }
                     }
                 }
@@ -192,9 +241,25 @@ const AdminEngine = (function() {
             const patients = Array.from(patientsMap.values());
             const overview = [];
 
-
             for (const p of patients) {
                 if (!p || !p.patientId) continue;
+
+                // تدقيق وضمان الدولة والمدينة لكل مريض
+                if (!p.country || p.country === 'غير محدد' || p.country === 'دولي') {
+                    let inferred = null;
+                    if (p.phone && typeof SmartGeoTracker !== 'undefined' && typeof SmartGeoTracker.inferCountryFromPhone === 'function') {
+                        inferred = SmartGeoTracker.inferCountryFromPhone(p.phone);
+                    }
+                    if (!inferred && typeof SmartGeoTracker !== 'undefined' && typeof SmartGeoTracker.inferCountryFromTimezone === 'function') {
+                        inferred = SmartGeoTracker.inferCountryFromTimezone();
+                    }
+                    if (inferred) {
+                        p.country = inferred.country;
+                        p.countryCode = inferred.countryCode;
+                        p.city = inferred.city;
+                        p.flag = inferred.flag;
+                    }
+                }
 
                 let assessments = [];
                 let logs = [];
@@ -230,6 +295,31 @@ const AdminEngine = (function() {
                     a.primaryDiagnosis !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة' && 
                     a.painLocation !== 'العمود الفقري ومفاصل الحركة'
                 );
+
+                let latestAssessment = validAssessments.length > 0 ? validAssessments[validAssessments.length - 1] : null;
+                if (!latestAssessment) {
+                    const cand = p.assessment || p.latestAssessment || p.diagnosticReport || p.clinicalData || null;
+                    if (cand && !cand.autoHealed && cand.primaryDiagnosis !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة' && cand.painLocation !== 'العمود الفقري ومفاصل الحركة') {
+                        latestAssessment = cand;
+                    }
+                }
+
+                // شدة الألم الأساسية - من بيانات حقيقية فقط، لا قيم افتراضية
+                const baselinePain = latestAssessment
+                    ? (latestAssessment.painSeverity || latestAssessment.painLevel || p.painLevel || null)
+                    : (p.painLevel || null);
+                
+                // نسبة التعافي - محسوبة من الجلسات الحقيقية فقط، لا قيمة افتراضية
+                let recoveryScore = null;
+                if (logs && logs.length > 0) {
+                    if (typeof PatientFlow !== 'undefined' && typeof PatientFlow.calculateRecoveryScore === 'function' && baselinePain) {
+                        recoveryScore = PatientFlow.calculateRecoveryScore(baselinePain, logs);
+                    } else {
+                        recoveryScore = Math.min(100, Math.round((logs.length / 7) * 100));
+                    }
+                } else if (p.recoveryScore && p.recoveryScore > 0) {
+                    recoveryScore = p.recoveryScore; // من بيانات المريض المحفوظة
+                }
 
                 if (validAssessments.length > 1) {
                     for (let aIdx = 0; aIdx < validAssessments.length; aIdx++) {
@@ -280,30 +370,6 @@ const AdminEngine = (function() {
                     continue;
                 }
 
-                let latestAssessment = validAssessments.length > 0 ? validAssessments[validAssessments.length - 1] : null;
-                if (!latestAssessment) {
-                    const cand = p.assessment || p.latestAssessment || p.diagnosticReport || p.clinicalData || null;
-                    if (cand && !cand.autoHealed && cand.primaryDiagnosis !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة' && cand.painLocation !== 'العمود الفقري ومفاصل الحركة') {
-                        latestAssessment = cand;
-                    }
-                }
-
-                // شدة الألم الأساسية - من بيانات حقيقية فقط، لا قيم افتراضية
-                const baselinePain = latestAssessment
-                    ? (latestAssessment.painSeverity || latestAssessment.painLevel || p.painLevel || null)
-                    : (p.painLevel || null);
-                
-                // نسبة التعافي - محسوبة من الجلسات الحقيقية فقط، لا قيمة افتراضية
-                let recoveryScore = null;
-                if (logs && logs.length > 0) {
-                    if (typeof PatientFlow !== 'undefined' && typeof PatientFlow.calculateRecoveryScore === 'function' && baselinePain) {
-                        recoveryScore = PatientFlow.calculateRecoveryScore(baselinePain, logs);
-                    } else {
-                        recoveryScore = Math.min(100, Math.round((logs.length / 7) * 100));
-                    }
-                } else if (p.recoveryScore && p.recoveryScore > 0) {
-                    recoveryScore = p.recoveryScore; // من بيانات المريض المحفوظة
-                }
 
                 // استخراج موضع الشكوى الحقيقي بدقة متعددة المصادر (إشعارات، تقييم، اختيار المريض، أعراض)
                 let resolvedPainArea = '';

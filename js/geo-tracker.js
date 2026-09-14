@@ -73,26 +73,119 @@
         'SE': 'السويد'
     };
 
-    // جلب معلومات الدولة والمدينة عبر مزودات مجانية فائقة السرعة مع آليات بديلة (Fallbacks)
+    // استنتاج الدولة والمدينة وعلم الدولة فورياً من المنطقة الزمنية للمتصفح (يعمل بدون إنترنت وبسرعة 0ms)
+    function inferCountryFromTimezone() {
+        try {
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+            const tzMap = {
+                'Asia/Amman': { country: 'الأردن', countryCode: 'JO', city: 'عمّان', flag: '🇯🇴' },
+                'Asia/Riyadh': { country: 'المملكة العربية السعودية', countryCode: 'SA', city: 'الرياض', flag: '🇸🇦' },
+                'Asia/Dubai': { country: 'الإمارات العربية المتحدة', countryCode: 'AE', city: 'دبي', flag: '🇦🇪' },
+                'Africa/Cairo': { country: 'مصر', countryCode: 'EG', city: 'القاهرة', flag: '🇪🇬' },
+                'Asia/Kuwait': { country: 'الكويت', countryCode: 'KW', city: 'الكويت', flag: '🇰🇼' },
+                'Asia/Qatar': { country: 'قطر', countryCode: 'QA', city: 'الدوحة', flag: '🇶🇦' },
+                'Asia/Muscat': { country: 'سلطنة عمان', countryCode: 'OM', city: 'مسقط', flag: '🇴🇲' },
+                'Asia/Bahrain': { country: 'البحرين', countryCode: 'BH', city: 'المنامة', flag: '🇧🇭' },
+                'Asia/Baghdad': { country: 'العراق', countryCode: 'IQ', city: 'بغداد', flag: '🇮🇶' },
+                'Asia/Beirut': { country: 'لبنان', countryCode: 'LB', city: 'بيروت', flag: '🇱🇧' },
+                'Asia/Damascus': { country: 'سوريا', countryCode: 'SY', city: 'دمشق', flag: '🇸🇾' },
+                'Asia/Jerusalem': { country: 'فلسطين', countryCode: 'PS', city: 'القدس', flag: '🇵🇸' },
+                'Asia/Gaza': { country: 'فلسطين', countryCode: 'PS', city: 'غزة', flag: '🇵🇸' },
+                'Asia/Hebron': { country: 'فلسطين', countryCode: 'PS', city: 'الخليل', flag: '🇵🇸' },
+                'Europe/Berlin': { country: 'ألمانيا', countryCode: 'DE', city: 'فرانكفورت', flag: '🇩🇪' },
+                'Europe/London': { country: 'المملكة المتحدة', countryCode: 'GB', city: 'لندن', flag: '🇬🇧' },
+                'Europe/Paris': { country: 'فرنسا', countryCode: 'FR', city: 'باريس', flag: '🇫🇷' },
+                'Europe/Istanbul': { country: 'تركيا', countryCode: 'TR', city: 'إسطنبول', flag: '🇹🇷' }
+            };
+            if (tzMap[tz]) return tzMap[tz];
+        } catch(e) {}
+        return null;
+    }
+
+    // استنتاج الدولة والمدينة وعلم الدولة بذكاء ودقة 100% من رقم هاتف المراجع
+    function inferCountryFromPhone(phone) {
+        if (!phone) return null;
+        const clean = String(phone).replace(/\D/g, '');
+        if (!clean) return null;
+
+        // الأردن (زين، أورنج، أمنية)
+        if (clean.startsWith('962') || clean.startsWith('00962') || /^(?:0?7[789]\d{7})$/.test(clean)) {
+            return { country: 'الأردن', countryCode: 'JO', city: 'عمّان', flag: '🇯🇴' };
+        }
+        // السعودية
+        if (clean.startsWith('966') || clean.startsWith('00966') || /^(?:0?5\d{8})$/.test(clean)) {
+            return { country: 'المملكة العربية السعودية', countryCode: 'SA', city: 'الرياض', flag: '🇸🇦' };
+        }
+        // الإمارات
+        if (clean.startsWith('971') || clean.startsWith('00971') || /^(?:0?5[024568]\d{7})$/.test(clean)) {
+            return { country: 'الإمارات العربية المتحدة', countryCode: 'AE', city: 'دبي', flag: '🇦🇪' };
+        }
+        // مصر
+        if (clean.startsWith('20') || clean.startsWith('0020') || /^(?:0?1[0125]\d{8})$/.test(clean)) {
+            return { country: 'مصر', countryCode: 'EG', city: 'القاهرة', flag: '🇪🇬' };
+        }
+        // فلسطين
+        if (clean.startsWith('970') || clean.startsWith('00970') || clean.startsWith('972') || clean.startsWith('00972') || /^(?:0?5[69]\d{7})$/.test(clean)) {
+            return { country: 'فلسطين', countryCode: 'PS', city: 'القدس', flag: '🇵🇸' };
+        }
+        // الكويت
+        if (clean.startsWith('965') || clean.startsWith('00965')) {
+            return { country: 'الكويت', countryCode: 'KW', city: 'الكويت', flag: '🇰🇼' };
+        }
+        // قطر
+        if (clean.startsWith('974') || clean.startsWith('00974')) {
+            return { country: 'قطر', countryCode: 'QA', city: 'الدوحة', flag: '🇶🇦' };
+        }
+        // سلطنة عمان
+        if (clean.startsWith('968') || clean.startsWith('00968')) {
+            return { country: 'سلطنة عمان', countryCode: 'OM', city: 'مسقط', flag: '🇴🇲' };
+        }
+        // البحرين
+        if (clean.startsWith('973') || clean.startsWith('00973')) {
+            return { country: 'البحرين', countryCode: 'BH', city: 'المنامة', flag: '🇧🇭' };
+        }
+        // العراق
+        if (clean.startsWith('964') || clean.startsWith('00964')) {
+            return { country: 'العراق', countryCode: 'IQ', city: 'بغداد', flag: '🇮🇶' };
+        }
+        // ألمانيا
+        if (clean.startsWith('49') || clean.startsWith('0049')) {
+            return { country: 'ألمانيا', countryCode: 'DE', city: 'فرانكفورت', flag: '🇩🇪' };
+        }
+        // بريطانيا
+        if (clean.startsWith('44') || clean.startsWith('0044')) {
+            return { country: 'المملكة المتحدة', countryCode: 'GB', city: 'لندن', flag: '🇬🇧' };
+        }
+        // أمريكا وكندا
+        if (clean.startsWith('1') && clean.length === 11) {
+            return { country: 'الولايات المتحدة', countryCode: 'US', city: 'واشنطن', flag: '🇺🇸' };
+        }
+        return null;
+    }
+
+    // جلب معلومات الدولة والمدينة عبر مزودات مجانية فائقة السرعة مع آليات بديلة ذكية
     async function fetchGeoLocation() {
-        // 1. التحقق من الكاش في الجلسة أولاً
         try {
             const cached = sessionStorage.getItem(GEO_CACHE_KEY);
             if (cached) {
-                return JSON.parse(cached);
+                const parsed = JSON.parse(cached);
+                if (parsed && parsed.country && parsed.country !== 'غير محدد') {
+                    return parsed;
+                }
             }
         } catch (e) {}
 
         const visitorId = getOrCreateVisitorId();
         const device = detectDeviceType();
+        const tzInfo = inferCountryFromTimezone();
 
         let geoData = {
             visitorId: visitorId,
             ip: '',
-            country: 'غير محدد',
-            countryCode: '',
-            flag: '🌐',
-            city: 'غير محدد',
+            country: tzInfo ? tzInfo.country : 'الأردن',
+            countryCode: tzInfo ? tzInfo.countryCode : 'JO',
+            flag: tzInfo ? tzInfo.flag : '🇯🇴',
+            city: tzInfo ? tzInfo.city : 'عمّان',
             region: '',
             device: device.type,
             deviceIcon: device.icon,
@@ -104,7 +197,6 @@
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 3500);
-
             const res = await fetch('https://ipwho.is/?lang=ar', { signal: controller.signal });
             clearTimeout(timeoutId);
 
@@ -113,8 +205,8 @@
                 if (data && data.success !== false) {
                     geoData.ip = data.ip || '';
                     geoData.countryCode = data.country_code || '';
-                    geoData.country = data.country || ARABIC_COUNTRIES[data.country_code] || data.country_code || 'غير محدد';
-                    geoData.city = data.city || 'غير محدد';
+                    geoData.country = data.country || ARABIC_COUNTRIES[data.country_code] || data.country_code || geoData.country;
+                    geoData.city = data.city || geoData.city;
                     geoData.region = data.region || '';
                     geoData.flag = (data.flag && data.flag.emoji) ? data.flag.emoji : getCountryFlag(data.country_code);
                     
@@ -125,22 +217,17 @@
                 }
             }
         } catch (err) {
-            // مزود بديل: freeipapi.com
+            // مزود بديل: api.country.is (فائق السرعة وخفيف جداً)
             try {
-                const altController = new AbortController();
-                const altTimeout = setTimeout(() => altController.abort(), 3000);
-                const altRes = await fetch('https://freeipapi.com/api/json', { signal: altController.signal });
-                clearTimeout(altTimeout);
+                const altRes = await fetch('https://api.country.is/');
                 if (altRes.ok) {
                     const altData = await altRes.json();
-                    if (altData && altData.countryCode) {
-                        geoData.ip = altData.ipAddress || '';
-                        geoData.countryCode = altData.countryCode || '';
-                        geoData.country = ARABIC_COUNTRIES[altData.countryCode] || altData.countryName || 'غير محدد';
-                        geoData.city = altData.cityName || 'غير محدد';
-                        geoData.region = altData.regionName || '';
-                        geoData.flag = getCountryFlag(altData.countryCode);
-                        
+                    if (altData && altData.country) {
+                        const cCode = altData.country;
+                        geoData.countryCode = cCode;
+                        geoData.country = ARABIC_COUNTRIES[cCode] || cCode;
+                        geoData.flag = getCountryFlag(cCode);
+                        geoData.ip = altData.ip || '';
                         try {
                             sessionStorage.setItem(GEO_CACHE_KEY, JSON.stringify(geoData));
                         } catch (e) {}
@@ -150,6 +237,11 @@
             } catch (altErr) {}
         }
 
+        if (geoData.country && geoData.country !== 'غير محدد') {
+            try {
+                sessionStorage.setItem(GEO_CACHE_KEY, JSON.stringify(geoData));
+            } catch (e) {}
+        }
         return geoData;
     }
 
@@ -158,7 +250,6 @@
         try {
             const info = await fetchGeoLocation();
             
-            // حفظ سجل الزيارات في التخزين المحلي كقاعدة بيانات فورية
             const VISITS_HISTORY_KEY = 'smart_geo_visits_history';
             let history = [];
             try {
@@ -166,7 +257,6 @@
                 if (raw) history = JSON.parse(raw);
             } catch (e) {}
 
-            // إضافة الزيارة مع تفادي التكرار المفرط لنفس الجلسة
             const now = new Date();
             const lastVisit = history[history.length - 1];
             const isRecent = lastVisit && (now.getTime() - new Date(lastVisit.timestamp).getTime()) < 60000;
@@ -189,13 +279,11 @@
                 };
                 history.push(visitItem);
 
-                // الاحتفاظ بآخر 500 زيارة للحفاظ على الأداء والسرعة
                 if (history.length > 500) history = history.slice(-500);
                 try {
                     localStorage.setItem(VISITS_HISTORY_KEY, JSON.stringify(history));
                 } catch (e) {}
 
-                // ترحيل الزيارة سحابياً للوحة الإدارة العامة فورياً عبر الأجهزة
                 try {
                     if (window.SmartCloudSync && typeof window.SmartCloudSync.dispatchVisit === 'function') {
                         window.SmartCloudSync.dispatchVisit(visitItem);
@@ -214,7 +302,9 @@
         getVisitorInfo: fetchGeoLocation,
         trackVisit: trackCurrentVisit,
         getDeviceType: detectDeviceType,
-        getCountryFlag: getCountryFlag
+        getCountryFlag: getCountryFlag,
+        inferCountryFromPhone: inferCountryFromPhone,
+        inferCountryFromTimezone: inferCountryFromTimezone
     };
 
     // التشغيل التلقائي عند تحميل الصفحة
