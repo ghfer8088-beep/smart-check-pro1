@@ -221,7 +221,11 @@ const SmartWatchdog = (function() {
         let exercises = ['pelvic_tilt', 'cat_camel', 'child_pose'];
 
         const pLower = (painArea || '').toLowerCase();
-        if (pLower.includes('رسغ') || pLower.includes('يد') || pLower.includes('wrist') || pLower.includes('hand')) {
+        if (/ظهر|قطن|قطنية|lumbar|دسك|غضروف|l4|l5|أسفل|اسفل|عرق.*نسا|سياتيكا/i.test(pLower)) {
+            anatomicalCategory = 'spine';
+            primaryDiag = 'انزلاق غضروفي قطني خفيف مع شد عضلات أسفل الظهر';
+            exercises = ['pelvic_tilt', 'cat_camel', 'child_pose'];
+        } else if (/(?:^|\s|[،.؟!,])(?:معصم|رسغ|نفق\s*رسغي|نفق\s*الرسغ|كف\s*اليد|راحة\s*اليد|أصابع\s*اليد|wrist|carpal)(?:$|\s|[،.؟!,])/i.test(pLower)) {
             anatomicalCategory = 'wrist_hand';
             primaryDiag = 'إجهاد ميكانيكي وانضغاط في أوتار النفق الرسغي لليد';
             exercises = ['wrist_flexor_stretch', 'wrist_extensor_stretch', 'tendon_gliding'];

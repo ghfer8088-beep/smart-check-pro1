@@ -1135,24 +1135,24 @@
         let resolvedPain = pt.painArea || pt.painAreaTitle || pt.selectedPoint || '';
         if (!resolvedPain || resolvedPain === 'العمود الفقري والمفاصل' || resolvedPain === 'العمود الفقري ومفاصل الحركة') {
             const textToSearch = ((pt.notes || '') + ' ' + (pt.mriReportText || '') + ' ' + (Array.isArray(pt.collectedSymptoms) ? pt.collectedSymptoms.join(' ') : '')).toLowerCase();
-            if (/ركبة|ركبه|صابونة|طقطقة\s*ركبة|احتكاك\s*ركبة|patella|knee/.test(textToSearch)) {
-                resolvedPain = 'مفصل الركبة والصابونة';
-            } else if (/رقبة|رقبه|عنق|ديسك\s*رقبة|تصلب\s*رقبة|cervical|neck/.test(textToSearch)) {
-                resolvedPain = 'الفقرات العنقية (الرقبة الخلفية)';
-            } else if (/كتف|كتفي|لوح\s*الكتف|أبهر|ابهر|كفة\s*مدورة|shoulder/.test(textToSearch)) {
-                resolvedPain = 'مفصل الكتف والكفة المدورة';
-            } else if (/كاحل|قدم|كعب|مشط|أكيليس|مسمار\s*كعب|ankle|foot/.test(textToSearch)) {
-                resolvedPain = 'الكاحل ومفصل القدم';
-            } else if (/رسغ|معصم|يد|كف|نفق\s*رسغي|wrist|hand/.test(textToSearch)) {
-                resolvedPain = 'الرسغ ومفصل اليد';
+            if (/ظهر|قطنية|أسفل\s*الظهر|اسفل\s*الظهر|ديسك|غضروف/.test(textToSearch)) {
+                resolvedPain = 'الفقرات القطنية وأسفل الظهر';
             } else if (/عرق\s*النسا|سياتيكا|كمثرية|sciatica/.test(textToSearch)) {
                 resolvedPain = 'عضلات الأرداف ومسار عرق النسا';
             } else if (/عجز|عجزي|حوض|sacroiliac/.test(textToSearch)) {
                 resolvedPain = 'المفصل العجزي الحوضي';
-            } else if (/صدرية|بين\s*الكتفين|أعلى\s*الظهر|اعلى\s*الظهر|thoracic/.test(textToSearch)) {
+            } else if (/رقبة|رقبه|عنق|ديسك\s*رقبة|تصلب\s*رقبة|cervical|neck/.test(textToSearch)) {
+                resolvedPain = 'الفقرات العنقية (الرقبة الخلفية)';
+            } else if (/صدرية|بين\s*الكتفين|أعلى\s*الظهر|اعلى\s*الظهر|thoracic|أبهر|ابهر/.test(textToSearch)) {
                 resolvedPain = 'الفقرات الصدرية وأعلى الظهر (منطقة الأبهر)';
-            } else if (/ظهر|قطنية|أسفل\s*الظهر|اسفل\s*الظهر|ديسك/.test(textToSearch)) {
-                resolvedPain = 'الفقرات القطنية وأسفل الظهر';
+            } else if (/ركبة|ركبه|صابونة|طقطقة\s*ركبة|احتكاك\s*ركبة|patella|knee/.test(textToSearch)) {
+                resolvedPain = 'مفصل الركبة والصابونة';
+            } else if (/كتف|كتفي|لوح\s*الكتف|كفة\s*مدورة|shoulder/.test(textToSearch)) {
+                resolvedPain = 'مفصل الكتف والكفة المدورة';
+            } else if (/كاحل|قدم|كعب|مشط|أكيليس|مسمار\s*كعب|ankle|foot/.test(textToSearch)) {
+                resolvedPain = 'الكاحل ومفصل القدم';
+            } else if (/(?:^|\s|[،.؟!,])(?:معصم|معصمي|المعصم|رسغ|رسغي|الرسغ|نفق\s*رسغي|نفق\s*الرسغ|كف\s*اليد|راحة\s*اليد|أصابع\s*اليد|اصابع\s*اليد|إبهام|ابهام|wrist|carpal)(?:$|\s|[،.؟!,])/i.test(textToSearch)) {
+                resolvedPain = 'الرسغ ومفصل اليد';
             } else {
                 const ageNum = parseInt(pt.age) || 40;
                 const charCodeSum = (pName || '').split('').reduce((sum, c) => sum + c.charCodeAt(0), 0);

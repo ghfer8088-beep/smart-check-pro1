@@ -563,7 +563,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
      مثال: "وعودةً لفحص موضع ألمك في [${painPointTitle || 'موضع الشكوى'}] بدقة: هل تلاحظ ...؟"
 
 10. استخراج البيانات (بدقة متناهية):
-   - إذا ذكر المريض اسمه صراحة: [EXTRACTED_NAME: الاسم الأول فقط]. (ممنوع منعاً باتاً استخراج كلمات التحية مثل 'كيف' أو 'مرحبا' أو 'أهلا' أو أدوات السؤال كاسم، وإذا لم يذكر اسمه فاكتب: غير محدد).
+   - إذا ذكر المريض اسمه صراحة: [EXTRACTED_NAME: الاسم الأول فقط]. (ممنوع منعاً باتاً استخراج كلمات الشكوى أو الأفعال مثل 'اشعر' أو 'أشعر' أو 'احس' أو 'اعاني' أو كلمات التحية كاسم، وإذا لم يذكر اسمه فاكتب: غير محدد).
    - إذا كتب المريض رقم هاتفه: [EXTRACTED_PHONE: الرقم]
    - ممنوع منعاً باتاً إطلاق [READY_FOR_DIAGNOSIS] بدون وجود رقم هاتف مسجل صراحة أو استخراجه بـ [EXTRACTED_PHONE]. إذا لم يكتب المريض رقم هاتفه بعد، فاطلب رقم الهاتف فوراً واكتب فقط [ASK_PHONE].
 
@@ -594,7 +594,12 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                 const nameM = rawReply.match(/\[EXTRACTED_NAME:\s*([^\]]+)\]/);
                 if (nameM && nameM[1]) {
                     const cand = nameM[1].trim().replace(/^يا\s+/i, '').split(/\s+/)[0];
-                    const forbiddenNames = ['كيف', 'كيفك', 'مرحبا', 'أهلا', 'اهلا', 'سلام', 'تعبان', 'مريض', 'دكتور', 'طبيب', 'المريض', 'شو', 'ايش', 'عندي', 'وجع', 'الم', 'ظهر', 'ديسك', 'غير', 'غير محدد', 'لا يوجد', 'لم يذكر'];
+                    const forbiddenNames = [
+                        'اشعر', 'أشعر', 'احس', 'أحس', 'اعاني', 'أعاني', 'عندي', 'معي', 'فيه',
+                        'كيف', 'كيفك', 'مرحبا', 'أهلا', 'اهلا', 'سلام', 'هلا', 'صباح', 'مساء',
+                        'تعبان', 'مريض', 'دكتور', 'طبيب', 'المريض', 'شو', 'ايش', 'وجع', 'ألم', 'الم',
+                        'ظهر', 'ديسك', 'غضروف', 'شكرا', 'غير', 'غير محدد', 'لا يوجد', 'لم يذكر'
+                    ];
                     if (!forbiddenNames.includes(cand.toLowerCase()) && cand.length >= 2) {
                         extractedName = cand;
                     }
@@ -728,18 +733,20 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
         const tLower = (title + ' ' + ptId).toLowerCase();
 
         let anatCat = 'lower_back_pelvis';
-        if (/رسغ|معصم|يد|كف|أصابع|اصابع|إبهام|ابهام|wrist|hand|carpal/i.test(tLower)) {
-            anatCat = 'wrist_hand';
-        } else if (/كاحل|قدم|باطن\s*القدم|كعب|مشط|أكيليس|اكيليس|أخمص|اخمص|ankle|foot|plantar|heel/i.test(tLower)) {
-            anatCat = 'foot_ankle';
-        } else if (/ركبة|ركبه|صابونة|ساق|سمانة|بطة|فخذ|knee|calf|patella/i.test(tLower)) {
-            anatCat = 'knee_leg';
-        } else if (/كوع|مرفق|ساعد|ذراع|زند|كعبرة|elbow|forearm/i.test(tLower)) {
-            anatCat = 'elbow_arm';
-        } else if (/كتف|لوح\s*الكتف|أبهر|ابهر|ترقوة|كفة\s*مدورة|shoulder|scapula|trapezius/i.test(tLower)) {
-            anatCat = 'shoulder_scapula';
+        if (/ظهر|قطن|قطنية|lumbar|دسك|غضروف|l4|l5|أسفل\s*الظهر|اسفل\s*الظهر|عرق\s*النسا|سياتيكا|حوض|عجز|عصعص/i.test(tLower)) {
+            anatCat = 'lower_back_pelvis';
         } else if (/رقبة|رقبه|عنق|رأس|راس|صداع|فك|صدغ|جمجمة|cervical|neck|head/i.test(tLower)) {
             anatCat = 'neck_head';
+        } else if (/كتف|لوح\s*الكتف|أبهر|ابهر|ترقوة|كفة\s*مدورة|shoulder|scapula|trapezius/i.test(tLower)) {
+            anatCat = 'shoulder_scapula';
+        } else if (/ركبة|ركبه|صابونة|ساق|سمانة|بطة|فخذ|knee|calf|patella/i.test(tLower)) {
+            anatCat = 'knee_leg';
+        } else if (/كاحل|قدم|باطن\s*القدم|كعب|مشط|أكيليس|اكيليس|أخمص|اخمص|ankle|foot|plantar|heel/i.test(tLower)) {
+            anatCat = 'foot_ankle';
+        } else if (/كوع|مرفق|ساعد|ذراع|زند|كعبرة|elbow|forearm/i.test(tLower)) {
+            anatCat = 'elbow_arm';
+        } else if (/(?:^|\s|[،.؟!,])(?:معصم|معصمي|المعصم|رسغ|رسغي|الرسغ|نفق\s*رسغي|نفق\s*الرسغ|كف\s*اليد|راحة\s*اليد|أصابع\s*اليد|اصابع\s*اليد|إبهام|ابهام|wrist|carpal)(?:$|\s|[،.؟!,])/i.test(tLower)) {
+            anatCat = 'wrist_hand';
         } else {
             anatCat = 'lower_back_pelvis';
         }
@@ -1512,7 +1519,7 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
 6. لا تقترح أي خيارات أو أزرار جاهزة للمراجع.
 7. ضع في أسطر مستقلة في نهاية ردك بدقة تامة:
 [TRANSCRIPTION: النص الكامل والدقيق لكل ما قاله المراجع بصوته كلمة بكلمة باللغة العربية]
-[EXTRACTED_NAME: الاسم إن ذكره المراجع أو نادى به]
+[EXTRACTED_NAME: الاسم إن ذكره المراجع صراحة. ممنوع منعاً باتاً استخراج كلمات الشكوى أو الأفعال مثل 'اشعر' أو 'أحس' أو 'أعاني' أو التحيات كاسم]
 [EXTRACTED_PHONE: رقم الهاتف إن ذكره المراجع أو قاله بأي صيغة]
 `;
 
@@ -1571,7 +1578,12 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
                         const nameMatch = rawReply.match(/\[EXTRACTED_NAME:\s*(.*?)\]/);
                         if (nameMatch && nameMatch[1].trim() && nameMatch[1].trim() !== 'غير محدد') {
                             const candName = nameMatch[1].trim().replace(/^يا\s+/i, '').split(/\s+/)[0];
-                            const invalidNameWords = ['كيف', 'كيفك', 'مرحبا', 'أهلا', 'اهلا', 'سلام', 'تعبان', 'مريض', 'دكتور', 'طبيب', 'المريض', 'شو', 'ايش', 'عندي', 'وجع', 'الم', 'ظهر', 'ديسك', 'غير'];
+                            const invalidNameWords = [
+                                'اشعر', 'أشعر', 'احس', 'أحس', 'اعاني', 'أعاني', 'عندي', 'معي', 'فيه',
+                                'كيف', 'كيفك', 'مرحبا', 'أهلا', 'اهلا', 'سلام', 'هلا', 'صباح', 'مساء',
+                                'تعبان', 'مريض', 'دكتور', 'طبيب', 'المريض', 'شو', 'ايش', 'وجع', 'ألم', 'الم',
+                                'ظهر', 'ديسك', 'غضروف', 'شكرا', 'غير', 'غير محدد', 'لا يوجد', 'لم يذكر'
+                            ];
                             if (!invalidNameWords.includes(candName.toLowerCase())) {
                                 extractedName = candName;
                             }

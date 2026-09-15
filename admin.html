@@ -16,9 +16,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=27.3"></script>
-    <script src="js/security-shield.js?v=27.3"></script>
-    <link rel="stylesheet" href="css/style.css?v=27.3">
+    <script src="js/system-watchdog.js?v=27.4"></script>
+    <script src="js/security-shield.js?v=27.4"></script>
+    <link rel="stylesheet" href="css/style.css?v=27.4">
     <style>
         body {
             background-color: #080c14;
@@ -1432,17 +1432,17 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/mqtt.min.js?v=27.3"></script>
-    <script src="js/geo-tracker.js?v=27.3"></script>
-    <script src="js/cloud-sync.js?v=27.3"></script>
-    <script src="js/database.js?v=27.3"></script>
-    <script src="js/exercise-image-studio.js?v=27.3"></script>
-    <script src="js/exercises-db.js?v=27.3"></script>
-    <script src="js/diagnostic-engine.js?v=27.3"></script>
-    <script src="js/patient-flow.js?v=27.3"></script>
-    <script src="js/admin-engine.js?v=27.3"></script>
-    <script src="js/ai-config.js?v=27.3"></script>
-    <script src="js/ai-engine.js?v=27.3"></script>
+    <script src="js/mqtt.min.js?v=27.4"></script>
+    <script src="js/geo-tracker.js?v=27.4"></script>
+    <script src="js/cloud-sync.js?v=27.4"></script>
+    <script src="js/database.js?v=27.4"></script>
+    <script src="js/exercise-image-studio.js?v=27.4"></script>
+    <script src="js/exercises-db.js?v=27.4"></script>
+    <script src="js/diagnostic-engine.js?v=27.4"></script>
+    <script src="js/patient-flow.js?v=27.4"></script>
+    <script src="js/admin-engine.js?v=27.4"></script>
+    <script src="js/ai-config.js?v=27.4"></script>
+    <script src="js/ai-engine.js?v=27.4"></script>
 
     <script>
         let allPatientsList = [];
@@ -3214,7 +3214,7 @@
                 if (/ركب|قدم|كاحل/.test(text)) {
                     isLumbar = true;
                     isSacral = true;
-                } else if (/يد|رسغ|معصم|كوع/.test(text)) {
+                } else if (/(?:^|\s|[،.؟!,])(?:معصم|رسغ|نفق\s*الرسغ|كف\s*اليد|كوع|مرفق)(?:$|\s|[،.؟!,])/.test(text)) {
                     isCervical = true;
                 } else {
                     isLumbar = true;
@@ -3403,13 +3403,14 @@
             const device = p.device || 'Mobile';
 
             // الكشف التشريحي الذكي والدقيق
+            let pointId = String(assessment?.pointId || p.pointId || assessment?.point?.id || p.selectedPointId || '').toLowerCase();
             let rootLevel = assessment?.rootLevel 
                 || assessment?.anatomicalLevel 
                 || assessment?.painAreaTitle 
                 || assessment?.pointTitle
                 || (p.painArea && p.painArea !== 'العمود الفقري والمفاصل' && p.painArea !== 'العمود الفقري ومفاصل الحركة' ? p.painArea : null)
                 || (p.painAreaTitle && p.painAreaTitle !== 'العمود الفقري والمفاصل' && p.painAreaTitle !== 'العمود الفقري ومفاصل الحركة' ? p.painAreaTitle : null)
-                || (p.selectedPoint && p.selectedPoint !== 'العمود الفقري والمفاصل' && p.selectedPoint !== 'العمود الفقري ومفاصل الحركة' ? p.selectedPoint : null)
+                || (p.selectedPoint && p.selectedPoint !== 'العمود الفقري والمفاصل' && p.selectedPoint !== 'العمود الفقري ومفاصل الحركة' ? (typeof p.selectedPoint === 'string' ? p.selectedPoint : p.selectedPoint.title) : null)
                 || (item?.painArea && item?.painArea !== 'العمود الفقري والمفاصل' && item?.painArea !== 'العمود الفقري ومفاصل الحركة' ? item?.painArea : null)
                 || '';
 
@@ -3419,33 +3420,99 @@
                 }
             }
 
-            const fullContextText = `${rootLevel} ${p.painArea || ''} ${p.selectedPoint || ''} ${p.notes || ''} ${(p.collectedSymptoms || []).join(' ')} ${p.chiefDiagnosis || ''} ${p.diagnosisTitle || ''} ${assessment?.title || ''} ${item?.painArea || ''} ${item?.latestDiagnosis || ''}`.toLowerCase();
-
             let targetAreaType = null;
-            if (/ركب|ركبه|knee|patella|صابون|رضف/.test(fullContextText)) {
-                targetAreaType = 'knee';
-                rootLevel = 'مفصل الركبة وصابونة الرضفة';
-            } else if (/عنق|رقب|رقبه|neck|cervical/.test(fullContextText)) {
-                targetAreaType = 'neck';
-                rootLevel = 'الفقرات العنقية والرقبة (C3-C7)';
-            } else if (/كتف|shoulder|كفة|كفه/.test(fullContextText)) {
-                targetAreaType = 'shoulder';
-                rootLevel = 'مفصل الكتف والكفة المدورة';
-            } else if (/كاحل|قدم|كعب|عقب|ankle|foot|أخمص|مسمار/.test(fullContextText)) {
-                targetAreaType = 'ankle';
-                rootLevel = 'مفصل الكاحل واللفافة الأخمصية';
-            } else if (/معصم|يد|رسغ|wrist|hand/.test(fullContextText)) {
-                targetAreaType = 'wrist';
-                rootLevel = 'مفصل الرسغ ونفق الرسغ';
-            } else if (/حوض|عرق\s*النسا|نسا|سياتيكا|كمثرية|sciatica|عصعص|عجز/.test(fullContextText)) {
-                targetAreaType = 'sciatica';
-                rootLevel = 'الفقرات القطنية وعصب النسا والورك';
-            } else if (/صدر|أعلى\s*الظهر|منتصف\s*الظهر|thoracic|أبهر|ابهر/.test(fullContextText)) {
-                targetAreaType = 'thoracic';
-                rootLevel = 'الفقرات الصدرية وأعلى الظهر والأبهر';
-            } else if (/ظهر|قطن|قطنية|lumbar|دسك|غضروف/.test(fullContextText)) {
+
+            // 1. الفحص المباشر والمطلق لمعرف النقطة التشريحية (pointId)
+            if (/lumbar|l4|l5|s1|lower_back/.test(pointId)) {
                 targetAreaType = 'lumbar';
                 rootLevel = 'الفقرات القطنية وأسفل الظهر (L1-S1)';
+            } else if (/cervical|neck/.test(pointId)) {
+                targetAreaType = 'neck';
+                rootLevel = 'الفقرات العنقية والرقبة (C3-C7)';
+            } else if (/thoracic/.test(pointId)) {
+                targetAreaType = 'thoracic';
+                rootLevel = 'الفقرات الصدرية وأعلى الظهر والأبهر';
+            } else if (/knee/.test(pointId)) {
+                targetAreaType = 'knee';
+                rootLevel = 'مفصل الركبة وصابونة الرضفة';
+            } else if (/shoulder/.test(pointId)) {
+                targetAreaType = 'shoulder';
+                rootLevel = 'مفصل الكتف والكفة المدورة';
+            } else if (/ankle|foot/.test(pointId)) {
+                targetAreaType = 'ankle';
+                rootLevel = 'مفصل الكاحل واللفافة الأخمصية';
+            } else if (/wrist|carpal/.test(pointId)) {
+                targetAreaType = 'wrist';
+                rootLevel = 'مفصل الرسغ ونفق الرسغ';
+            } else if (/elbow/.test(pointId)) {
+                targetAreaType = 'elbow';
+                rootLevel = 'مفصل الكوع والمرفق';
+            } else if (/sciatica|gluteal|sacroiliac/.test(pointId)) {
+                targetAreaType = 'sciatica';
+                rootLevel = 'الفقرات القطنية وعصب النسا والورك';
+            }
+
+            // 2. فحص موضع الألم الصريح للمريض مع إعطاء الأولوية للعمود الفقري والقطنية قبل الأطراف
+            if (!targetAreaType && rootLevel) {
+                const areaLow = rootLevel.toLowerCase();
+                if (/ظهر|قطن|قطنية|lumbar|دسك|غضروف|l4|l5|أسفل\s*الظهر|اسفل\s*الظهر/.test(areaLow)) {
+                    targetAreaType = 'lumbar';
+                    rootLevel = 'الفقرات القطنية وأسفل الظهر (L1-S1)';
+                } else if (/عنق|رقب|رقبه|neck|cervical/.test(areaLow)) {
+                    targetAreaType = 'neck';
+                    rootLevel = 'الفقرات العنقية والرقبة (C3-C7)';
+                } else if (/صدر|أعلى\s*الظهر|اعلى\s*الظهر|منتصف\s*الظهر|thoracic|أبهر|ابهر/.test(areaLow)) {
+                    targetAreaType = 'thoracic';
+                    rootLevel = 'الفقرات الصدرية وأعلى الظهر والأبهر';
+                } else if (/حوض|عرق\s*النسا|نسا|سياتيكا|كمثرية|sciatica|عصعص|عجز/.test(areaLow)) {
+                    targetAreaType = 'sciatica';
+                    rootLevel = 'الفقرات القطنية وعصب النسا والورك';
+                } else if (/ركب|ركبه|knee|patella|صابون|رضف/.test(areaLow)) {
+                    targetAreaType = 'knee';
+                    rootLevel = 'مفصل الركبة وصابونة الرضفة';
+                } else if (/كتف|shoulder|كفة|كفه/.test(areaLow)) {
+                    targetAreaType = 'shoulder';
+                    rootLevel = 'مفصل الكتف والكفة المدورة';
+                } else if (/كاحل|قدم|كعب|عقب|ankle|foot|أخمص|اخمص|مسمار/.test(areaLow)) {
+                    targetAreaType = 'ankle';
+                    rootLevel = 'مفصل الكاحل واللفافة الأخمصية';
+                } else if (/كوع|مرفق|elbow/.test(areaLow)) {
+                    targetAreaType = 'elbow';
+                    rootLevel = 'مفصل الكوع والمرفق';
+                } else if (/(?:^|\s|[،.؟!,])(?:معصم|معصمي|المعصم|رسغ|رسغي|الرسغ|نفق\s*رسغي|نفق\s*الرسغ|كف\s*اليد|راحة\s*اليد|أصابع\s*اليد|اصابع\s*اليد|إبهام|ابهام|wrist|carpal)(?:$|\s|[،.؟!,])/i.test(areaLow)) {
+                    targetAreaType = 'wrist';
+                    rootLevel = 'مفصل الرسغ ونفق الرسغ';
+                }
+            }
+
+            // 3. فحص السياق العام عند الضرورة فقط مع الأولوية للظهر والحماية الكاملة من التطابق الجزئي
+            if (!targetAreaType) {
+                const fullContextText = `${rootLevel} ${p.painArea || ''} ${p.chiefDiagnosis || ''} ${p.diagnosisTitle || ''} ${assessment?.title || ''} ${item?.latestDiagnosis || ''}`.toLowerCase();
+                if (/ظهر|قطن|قطنية|lumbar|دسك|غضروف|l4|l5|أسفل\s*الظهر|اسفل\s*الظهر/.test(fullContextText)) {
+                    targetAreaType = 'lumbar';
+                    rootLevel = 'الفقرات القطنية وأسفل الظهر (L1-S1)';
+                } else if (/عنق|رقب|رقبه|neck|cervical/.test(fullContextText)) {
+                    targetAreaType = 'neck';
+                    rootLevel = 'الفقرات العنقية والرقبة (C3-C7)';
+                } else if (/حوض|عرق\s*النسا|نسا|سياتيكا|كمثرية|sciatica|عصعص|عجز/.test(fullContextText)) {
+                    targetAreaType = 'sciatica';
+                    rootLevel = 'الفقرات القطنية وعصب النسا والورك';
+                } else if (/صدر|أعلى\s*الظهر|منتصف\s*الظهر|thoracic|أبهر|ابهر/.test(fullContextText)) {
+                    targetAreaType = 'thoracic';
+                    rootLevel = 'الفقرات الصدرية وأعلى الظهر والأبهر';
+                } else if (/ركب|ركبه|knee|patella|صابون|رضف/.test(fullContextText)) {
+                    targetAreaType = 'knee';
+                    rootLevel = 'مفصل الركبة وصابونة الرضفة';
+                } else if (/كتف|shoulder|كفة|كفه/.test(fullContextText)) {
+                    targetAreaType = 'shoulder';
+                    rootLevel = 'مفصل الكتف والكفة المدورة';
+                } else if (/كاحل|قدم|كعب|عقب|ankle|foot|أخمص|مسمار/.test(fullContextText)) {
+                    targetAreaType = 'ankle';
+                    rootLevel = 'مفصل الكاحل واللفافة الأخمصية';
+                } else if (/(?:^|\s|[،.؟!,])(?:معصم|معصمي|المعصم|رسغ|رسغي|الرسغ|نفق\s*رسغي|نفق\s*الرسغ|كف\s*اليد|راحة\s*اليد|أصابع\s*اليد|اصابع\s*اليد|إبهام|ابهام|wrist|carpal)(?:$|\s|[،.؟!,])/i.test(fullContextText)) {
+                    targetAreaType = 'wrist';
+                    rootLevel = 'مفصل الرسغ ونفق الرسغ';
+                }
             }
 
             if (!targetAreaType) {
@@ -3595,9 +3662,12 @@
             const isInvalidSec = !cleanSecDiag || cleanSecDiag === 'تشنج تعويضي في الأنسجة المحيطة ومحدودية حركية ميكانيكية';
             const secDiag = !isInvalidSec ? cleanSecDiag : profile.defaultSecDiag;
 
-            const probability = assessment?.probability || 95;
-            const confidence = assessment?.confidenceScore || 92;
-            const painSeverity = assessment?.painSeverity || assessment?.painLevel || p.painLevel || null;
+            let painSeverity = assessment?.painSeverity ?? assessment?.painLevel ?? p.painLevel ?? p.painSeverity ?? null;
+            if (painSeverity === null || painSeverity === undefined || isNaN(Number(painSeverity))) {
+                painSeverity = 6;
+            } else {
+                painSeverity = Math.min(10, Math.max(1, parseInt(painSeverity)));
+            }
 
             // احتساب BMI
             let w = parseFloat(p.weight) || assessment?.patientVitals?.weight || 0;
@@ -3931,6 +4001,22 @@
         }
 
         function loginAsPatient(patientId) {
+            let targetPt = (activeAdminReportPatient && (activeAdminReportPatient.patientId === patientId || activeAdminReportPatient.id === patientId))
+                ? activeAdminReportPatient
+                : (window.allAdminPatients || []).find(p => p.patientId === patientId || p.id === patientId);
+            
+            if (targetPt) {
+                try {
+                    localStorage.setItem('smart_active_patient', JSON.stringify(targetPt));
+                    localStorage.setItem('smart_current_patient_id', targetPt.patientId || targetPt.id || patientId);
+                    if (activeAdminReportAssessment) {
+                        localStorage.setItem('smart_current_assessment', JSON.stringify(activeAdminReportAssessment));
+                    }
+                    if (targetPt.selectedPoint) {
+                        localStorage.setItem('smart_current_point', typeof targetPt.selectedPoint === 'string' ? targetPt.selectedPoint : JSON.stringify(targetPt.selectedPoint));
+                    }
+                } catch(e) {}
+            }
             window.open(`index.html?patient_id=${encodeURIComponent(patientId)}&view_report=3`, '_blank');
         }
 

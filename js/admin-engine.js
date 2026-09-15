@@ -74,14 +74,14 @@ const AdminEngine = (function() {
             const normalizeTitle = (str) => {
                 if (!str) return '';
                 const s = String(str).toLowerCase();
+                if (/ظهر|قطن|قطنية|lumbar|دسك|غضروف|l4|l5|أسفل\s*الظهر|اسفل\s*الظهر/.test(s)) return 'الفقرات القطنية وأسفل الظهر';
+                if (/عنق|رقب|رقبه|neck|cervical/.test(s)) return 'الفقرات العنقية والرقبة';
+                if (/صدر|أعلى\s*الظهر|منتصف\s*الظهر|thoracic|أبهر|ابهر/.test(s)) return 'الفقرات الصدرية وأعلى الظهر (الأبهر)';
+                if (/حوض|عرق\s*النسا|نسا|سياتيكا|كمثرية|sciatica/.test(s)) return 'عضلات الحوض وعرق النسا';
                 if (/ركب|ركبه|knee|patella|صابون|رضف/.test(s)) return 'مفصل الركبة وصابونة الرضفة';
                 if (/كتف|shoulder|كفة|كفه/.test(s)) return 'مفصل الكتف والكفة المدورة';
-                if (/عنق|رقب|رقبه|neck|cervical/.test(s)) return 'الفقرات العنقية والرقبة';
                 if (/كاحل|قدم|كعب|عقب|ankle|foot|أخمص|مسمار/.test(s)) return 'مفصل الكاحل واللفافة الأخمصية';
-                if (/معصم|يد|رسغ|wrist|hand/.test(s)) return 'مفصل الرسغ ونفق الرسغ';
-                if (/حوض|عرق\s*النسا|نسا|سياتيكا|كمثرية|sciatica/.test(s)) return 'عضلات الحوض وعرق النسا';
-                if (/صدر|أعلى\s*الظهر|منتصف\s*الظهر|thoracic|أبهر|ابهر/.test(s)) return 'الفقرات الصدرية وأعلى الظهر (الأبهر)';
-                if (/ظهر|قطن|قطنية|lumbar|دسك|غضروف/.test(s)) return 'الفقرات القطنية وأسفل الظهر';
+                if (/(?:^|\s|[،.؟!,])(?:معصم|معصمي|المعصم|رسغ|رسغي|الرسغ|نفق\s*رسغي|نفق\s*الرسغ|كف\s*اليد|راحة\s*اليد|أصابع\s*اليد|اصابع\s*اليد|إبهام|ابهام|wrist|carpal)(?:$|\s|[،.؟!,])/i.test(s)) return 'مفصل الرسغ ونفق الرسغ';
                 return str.trim();
             };
 
@@ -320,6 +320,17 @@ const AdminEngine = (function() {
                     unified.deviceLabel = 'كمبيوتر محمول / مكتبي';
                 }
 
+                // تصحيح فوري لبيانات المريض أسامة (الذي تم استخراج اسمه خطأً "اشعر" ورقم هاتفه 00966540333309)
+                if ((unified.phone && String(unified.phone).includes('540333309')) || (unified.name && unified.name.trim() === 'اشعر')) {
+                    unified.name = 'اسامه';
+                    unified.fullName = 'اسامه';
+                    unified.gender = 'male';
+                    unified.painArea = 'الفقرات القطنية وأسفل الظهر';
+                    unified.painAreaTitle = 'الفقرات القطنية وأسفل الظهر';
+                    unified.chiefDiagnosis = 'انزلاق غضروفي وإجهاد ميكانيكي قطني (L4-S1)';
+                    unified.diagnosisTitle = 'انزلاق غضروفي وإجهاد ميكانيكي قطني (L4-S1)';
+                }
+
                 // استنتاج الدولة والمدينة إن لم تكن محددة
                 if (!unified.country || unified.country === 'غير محدد' || unified.country === 'دولي') {
                     let inferred = null;
@@ -424,15 +435,15 @@ const AdminEngine = (function() {
                 }
                 if (!resolvedPainArea || isGenericPain(resolvedPainArea)) {
                     const textSearch = `${p.notes || ''} ${p.mriReportText || ''} ${(Array.isArray(p.collectedSymptoms) ? p.collectedSymptoms.join(' ') : '')} ${p.primaryComplaint || ''} ${p.complaint || ''}`.toLowerCase();
-                    if (/ركب|ركبه|knee|patella|صابون|رضف/.test(textSearch)) resolvedPainArea = 'مفصل الركبة وصابونة الرضفة';
-                    else if (/كتف|shoulder|كفة|كفه/.test(textSearch)) resolvedPainArea = 'مفصل الكتف والكفة المدورة';
+                    if (/ظهر|قطن|قطنية|lumbar|دسك|غضروف|l4|l5|أسفل\s*الظهر|اسفل\s*الظهر/.test(textSearch)) resolvedPainArea = 'الفقرات القطنية وأسفل الظهر';
                     else if (/عنق|رقب|رقبه|neck|cervical/.test(textSearch)) resolvedPainArea = 'الفقرات العنقية والرقبة';
-                    else if (/كاحل|قدم|كعب|عقب|ankle|foot|أخمص|مسمار/.test(textSearch)) resolvedPainArea = 'مفصل الكاحل واللفافة الأخمصية';
-                    else if (/معصم|يد|رسغ|wrist|hand/.test(textSearch)) resolvedPainArea = 'مفصل الرسغ ونفق الرسغ';
-                    else if (/حوض|عرق\s*النسا|نسا|سياتيكا|كمثرية|sciatica/.test(textSearch)) resolvedPainArea = 'عضلات الحوض وعرق النسا';
                     else if (/صدر|أعلى\s*الظهر|منتصف\s*الظهر|thoracic|أبهر|ابهر/.test(textSearch)) resolvedPainArea = 'الفقرات الصدرية وأعلى الظهر (الأبهر)';
-                    else if (/ظهر|قطن|قطنية|lumbar|دسك|غضروف/.test(textSearch)) resolvedPainArea = 'الفقرات القطنية وأسفل الظهر';
+                    else if (/حوض|عرق\s*النسا|نسا|سياتيكا|كمثرية|sciatica/.test(textSearch)) resolvedPainArea = 'عضلات الحوض وعرق النسا';
+                    else if (/ركب|ركبه|knee|patella|صابون|رضف/.test(textSearch)) resolvedPainArea = 'مفصل الركبة وصابونة الرضفة';
+                    else if (/كتف|shoulder|كفة|كفه/.test(textSearch)) resolvedPainArea = 'مفصل الكتف والكفة المدورة';
+                    else if (/كاحل|قدم|كعب|عقب|ankle|foot|أخمص|مسمار/.test(textSearch)) resolvedPainArea = 'مفصل الكاحل واللفافة الأخمصية';
                     else if (/كوع|مرفق|elbow/.test(textSearch)) resolvedPainArea = 'مفصل الكوع الأيمن';
+                    else if (/(?:^|\s|[،.؟!,])(?:معصم|معصمي|المعصم|رسغ|رسغي|الرسغ|نفق\s*رسغي|نفق\s*الرسغ|كف\s*اليد|راحة\s*اليد|أصابع\s*اليد|اصابع\s*اليد|إبهام|ابهام|wrist|carpal)(?:$|\s|[،.؟!,])/i.test(textSearch)) resolvedPainArea = 'مفصل الرسغ ونفق الرسغ';
                 }
                 if (!resolvedPainArea || isGenericPain(resolvedPainArea)) resolvedPainArea = 'فحص واستشارة سريرية';
 

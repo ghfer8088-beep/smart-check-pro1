@@ -34,8 +34,8 @@ function detectArabicGender(name, textContext = '') {
     const cleanName = (name || '').trim();
     const context = `${textContext || ''} ${cleanName}`;
 
-    // 1. فحص الكلمات الصريحة الدالة على الأنوثة في السياق السريري
-    if (/(?:^|\s)(?:أنثى|انثى|سيدة|سيده|امرأة|امراة|آنسة|انسه|فتاة|بنت|حامل|حمل|ولادة|ولاده|مرضعة|مرضعه|أخت|اخت|أم|ام|ابنة|ابنه|زوجة|زوجه)(?:\s|$)/i.test(context)) {
+    // 1. فحص الكلمات الصريحة الدالة على الأنوثة في السياق السريري (مع استبعاد الكلمات المشتركة مثل 'حمل' بمعنى رفع الأوزان أو 'أم' بمعنى أو)
+    if (/(?:^|\s|[،.؟!,])(?:أنثى|انثى|سيدة|سيده|امرأة|امراة|آنسة|انسه|فتاة|بنت|حامل\s*في|فترة\s*الحمل|ولادة\s*حديثة|مرضعة|مرضعه|أختي|اختي|والدتي|أمي|امي|ابنتي|زوجتي)(?:$|\s|[،.؟!,])/i.test(context)) {
         return 'female';
     }
 
@@ -214,23 +214,8 @@ function detectAnatomicalPointFromText(text) {
     const tLower = text.toLowerCase();
     const allPts = [...(typeof getFrontPoints === 'function' ? getFrontPoints() : []), ...(typeof getBackPoints === 'function' ? getBackPoints() : [])];
     
-    if (/ركبة|ركبه|صابونة|طقطقة\s*ركبة|احتكاك\s*ركبة|patella|knee/i.test(tLower)) {
-        return allPts.find(p => p.id === 'knee_right_f') || { id: 'knee_right_f', title: 'مفصل الركبة والصابونة', region: 'knee' };
-    }
-    if (/كتف|كتفي|لوح\s*الكتف|كفة\s*مدورة|تجمد\s*كتف|شبه\s*منحرفة|shoulder|scapula/i.test(tLower)) {
-        return allPts.find(p => p.id === 'shoulder_right_f') || { id: 'shoulder_right_f', title: 'مفصل الكتف والكفة المدورة', region: 'shoulder' };
-    }
-    if (/رقبة|رقبه|عنق|ديسك\s*رقبة|تصلب\s*رقبة|فقرات\s*عنقية|cervical|neck/i.test(tLower)) {
-        return allPts.find(p => p.id === 'cervical_back') || { id: 'cervical_back', title: 'الفقرات العنقية (الرقبة الخلفية)', region: 'cervical' };
-    }
-    if (/كاحل|قدم|كعب|مشط|أكيليس|اكيليس|مسمار\s*كعب|لفافة\s*أخمصية|ankle|foot|heel/i.test(tLower)) {
-        return allPts.find(p => p.id === 'ankle_right_f') || { id: 'ankle_right_f', title: 'الكاحل ومفصل القدم', region: 'ankle' };
-    }
-    if (/رسغ|معصم|يد|كف|أصابع|اصابع|نفق\s*رسغي|تنميل\s*أصابع|wrist|hand/i.test(tLower)) {
-        return allPts.find(p => p.id === 'wrist_right_f') || { id: 'wrist_right_f', title: 'الرسغ ومفصل اليد', region: 'wrist' };
-    }
-    if (/كوع|مرفق|مرفق\s*تنس|ساعد|زند|elbow/i.test(tLower)) {
-        return allPts.find(p => p.id === 'elbow_right_f') || { id: 'elbow_right_f', title: 'مفصل الكوع والمرفق', region: 'elbow' };
+    if (/ظهر|قطنية|أسفل\s*الظهر|اسفل\s*الظهر|ديسك\s*الظهر|فقرات\s*قطنية|لومبار|lumbar/i.test(tLower)) {
+        return allPts.find(p => p.id === 'lumbar_spine') || { id: 'lumbar_spine', title: 'الفقرات القطنية وأسفل الظهر', region: 'lumbar' };
     }
     if (/عرق\s*النسا|سياتيكا|كمثرية|تنميل\s*فخذ|sciatica/i.test(tLower)) {
         return allPts.find(p => p.id === 'gluteal_right') || { id: 'gluteal_right', title: 'عضلات الأرداف ومسار عرق النسا', region: 'lumbar' };
@@ -238,8 +223,23 @@ function detectAnatomicalPointFromText(text) {
     if (/عجز|عجزي|حوض\s*خلفي|sacroiliac/i.test(tLower)) {
         return allPts.find(p => p.id === 'sacroiliac_right') || { id: 'sacroiliac_right', title: 'المفصل العجزي الحوضي', region: 'lumbar' };
     }
-    if (/ظهر|قطنية|أسفل\s*الظهر|اسفل\s*الظهر|ديسك\s*الظهر|لومبار|lumbar/i.test(tLower)) {
-        return allPts.find(p => p.id === 'lumbar_spine') || { id: 'lumbar_spine', title: 'الفقرات القطنية وأسفل الظهر', region: 'lumbar' };
+    if (/رقبة|رقبه|عنق|ديسك\s*رقبة|تصلب\s*رقبة|فقرات\s*عنقية|cervical|neck/i.test(tLower)) {
+        return allPts.find(p => p.id === 'cervical_back') || { id: 'cervical_back', title: 'الفقرات العنقية (الرقبة الخلفية)', region: 'cervical' };
+    }
+    if (/كتف|كتفي|لوح\s*الكتف|كفة\s*مدورة|تجمد\s*كتف|شبه\s*منحرفة|shoulder|scapula/i.test(tLower)) {
+        return allPts.find(p => p.id === 'shoulder_right_f') || { id: 'shoulder_right_f', title: 'مفصل الكتف والكفة المدورة', region: 'shoulder' };
+    }
+    if (/ركبة|ركبه|صابونة|طقطقة\s*ركبة|احتكاك\s*ركبة|patella|knee/i.test(tLower)) {
+        return allPts.find(p => p.id === 'knee_right_f') || { id: 'knee_right_f', title: 'مفصل الركبة والصابونة', region: 'knee' };
+    }
+    if (/كاحل|قدم|كعب|مشط|أكيليس|اكيليس|مسمار\s*كعب|لفافة\s*أخمصية|ankle|foot|heel/i.test(tLower)) {
+        return allPts.find(p => p.id === 'ankle_right_f') || { id: 'ankle_right_f', title: 'الكاحل ومفصل القدم', region: 'ankle' };
+    }
+    if (/(?:^|\s|[،.؟!,])(?:معصم|معصمي|المعصم|رسغ|رسغي|الرسغ|نفق\s*رسغي|نفق\s*الرسغ|كف\s*اليد|راحة\s*اليد|أصابع\s*اليد|اصابع\s*اليد|إبهام|ابهام|wrist|carpal)(?:$|\s|[،.؟!,])/i.test(tLower)) {
+        return allPts.find(p => p.id === 'wrist_right_f') || { id: 'wrist_right_f', title: 'الرسغ ومفصل اليد', region: 'wrist' };
+    }
+    if (/كوع|مرفق|مرفق\s*تنس|ساعد|زند|elbow/i.test(tLower)) {
+        return allPts.find(p => p.id === 'elbow_right_f') || { id: 'elbow_right_f', title: 'مفصل الكوع والمرفق', region: 'elbow' };
     }
     return null;
 }
@@ -590,10 +590,37 @@ async function restoreActiveSessionState() {
         } catch (e) {}
     }
 
+    // إذا تم تمرير معرف مريض محدد في الرابط، ممنوع استرجاع مريض آخر من الذاكرة المحلية
     if (!activePatient) {
         try {
             const rawAct = localStorage.getItem('smart_active_patient');
-            if (rawAct) activePatient = JSON.parse(rawAct);
+            if (rawAct) {
+                const parsed = JSON.parse(rawAct);
+                if (parsed) {
+                    if (!savedPatientId || parsed.patientId === savedPatientId || parsed.id === savedPatientId) {
+                        activePatient = parsed;
+                    }
+                }
+            }
+        } catch(e) {}
+    }
+
+    // فحص المرضى السحابيين في حال كان المريض قادماً من رابط الإدارة ولم يُخزن بعد في IndexedDB
+    if (savedPatientId && !activePatient && typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.getPatients === 'function') {
+        try {
+            const cloudList = SmartCloudSync.getPatients();
+            const cleanTarget = String(savedPatientId).replace(/\D/g, '');
+            const found = (cloudList || []).find(pt => {
+                if (!pt) return false;
+                if (pt.patientId === savedPatientId || pt.id === savedPatientId) return true;
+                const ptPhone = (pt.phone || '').replace(/\D/g, '');
+                if (cleanTarget.length >= 7 && ptPhone.length >= 7 && (cleanTarget.endsWith(ptPhone) || ptPhone.endsWith(cleanTarget))) return true;
+                return false;
+            });
+            if (found) {
+                activePatient = found;
+                try { await SmartDB.savePatient(found); } catch(e) {}
+            }
         } catch(e) {}
     }
 
@@ -2639,7 +2666,7 @@ function generateVertebralMappingCard(painArea, contextText = '') {
     
     // مناطق طرفية (غير فقرية) — تُعرض كروت تشريحية خاصة بها
     let isElbow   = /كوع|مرفق|elbow|tennis.*elbow|epicondyl/.test(text);
-    let isWrist   = /رسغ|معصم|يد|carpal|wrist|hand/.test(text);
+    let isWrist   = /(?:^|\s|[،.؟!,])(?:معصم|معصمي|المعصم|رسغ|رسغي|الرسغ|نفق\s*رسغي|نفق\s*الرسغ|كف\s*اليد|راحة\s*اليد|أصابع\s*اليد|اصابع\s*اليد|إبهام|ابهام|wrist|carpal)(?:$|\s|[،.؟!,])/i.test(text);
     let isKnee    = /ركب|ركبه|رضف|صابون|patell|knee/.test(text);
     let isAnkle   = /كاحل|قدم|كعب|عقب|أخمص|ankle|foot|plantar/.test(text);
     let isShoulder = /كتف|كفة|كفه|shoulder|rotator/.test(text);
@@ -6848,7 +6875,33 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const cloudList = window.SmartCloudSync.getPatients();
                 if (Array.isArray(cloudList)) {
-                    p = cloudList.find(pt => pt.id === savedPatientId || pt.patientId === savedPatientId) || (cloudList.length > 0 ? cloudList[0] : null);
+                    const cleanSaved = String(savedPatientId).replace(/\D/g, '');
+                    p = cloudList.find(pt => {
+                        if (!pt) return false;
+                        if (pt.id === savedPatientId || pt.patientId === savedPatientId) return true;
+                        const ptPhone = (pt.phone || '').replace(/\D/g, '');
+                        if (cleanSaved.length >= 7 && ptPhone.length >= 7 && (cleanSaved.endsWith(ptPhone) || ptPhone.endsWith(cleanSaved))) return true;
+                        return false;
+                    }) || null;
+                    if (p) {
+                        try { await SmartDB.savePatient(p); } catch(err) {}
+                    }
+                }
+            } catch(e) {}
+        }
+        if (!p) {
+            try {
+                const allRaw = localStorage.getItem('smart_all_patients');
+                if (allRaw) {
+                    const allList = JSON.parse(allRaw);
+                    const cleanSaved = String(savedPatientId).replace(/\D/g, '');
+                    p = (allList || []).find(pt => {
+                        if (!pt) return false;
+                        if (pt.id === savedPatientId || pt.patientId === savedPatientId) return true;
+                        const ptPhone = (pt.phone || '').replace(/\D/g, '');
+                        if (cleanSaved.length >= 7 && ptPhone.length >= 7 && (cleanSaved.endsWith(ptPhone) || ptPhone.endsWith(cleanSaved))) return true;
+                        return false;
+                    }) || null;
                     if (p) {
                         try { await SmartDB.savePatient(p); } catch(err) {}
                     }
@@ -8322,15 +8375,15 @@ async function sendChatMessage() {
                     pBmi = parseFloat((pWeight / Math.pow(pHeight/100, 2)).toFixed(1));
                 }
 
-                // تحديد موضع الألم الحقيقي إن لم يكن محدداً أو كان افتراضياً
+                // الحفاظ الصارم على موضع الألم المختار من المريض ومنع استبداله مطلقاً
                 let resolvedPain = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint && currentSelectedPoint.title) ? currentSelectedPoint.title : '';
-                if (!resolvedPain || resolvedPain === 'الفقرات القطنية وأسفل الظهر') {
+                if (!resolvedPain) {
                     const detected = detectAnatomicalPointFromText((clinicalDialogueState.history || []).map(h => h.text).join(' '));
                     if (detected) {
                         resolvedPain = detected.title;
                         currentSelectedPoint = detected;
-                    } else if (!resolvedPain) {
-                        resolvedPain = 'استشارة وفحص سريري شامل';
+                    } else {
+                        resolvedPain = 'الفقرات القطنية وأسفل الظهر';
                     }
                 }
 
@@ -8497,13 +8550,13 @@ async function sendChatMessage() {
         }
 
         let resolvedPain2 = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint && currentSelectedPoint.title) ? currentSelectedPoint.title : '';
-        if (!resolvedPain2 || resolvedPain2 === 'الفقرات القطنية وأسفل الظهر') {
+        if (!resolvedPain2) {
             const detected2 = detectAnatomicalPointFromText((clinicalDialogueState.history || []).map(h => h.text).join(' '));
             if (detected2) {
                 resolvedPain2 = detected2.title;
                 currentSelectedPoint = detected2;
-            } else if (!resolvedPain2) {
-                resolvedPain2 = 'استشارة وفحص سريري شامل';
+            } else {
+                resolvedPain2 = 'الفقرات القطنية وأسفل الظهر';
             }
         }
 

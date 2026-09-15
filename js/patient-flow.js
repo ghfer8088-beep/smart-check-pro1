@@ -95,15 +95,19 @@ const PatientFlow = (function() {
     async function initPatientSession(patientId) {
         if (!patientId) return null;
         
+        const cleanTarget = String(patientId).replace(/\D/g, '');
         let patient = await SmartDB.getPatient(patientId);
         if (!patient) {
-            // خط دفاع أول: استرجاع المريض النشط من localStorage
+            // خط دفاع أول: استرجاع المريض النشط من localStorage مع التحقق الصارم من الهوية
             try {
                 const rawActive = localStorage.getItem('smart_active_patient');
                 if (rawActive) {
                     const parsed = JSON.parse(rawActive);
-                    if (parsed && (parsed.patientId === patientId || parsed.id === patientId || !patientId || parsed.name === 'نسرين')) {
-                        patient = parsed;
+                    if (parsed) {
+                        const parsedPhone = (parsed.phone || '').replace(/\D/g, '');
+                        if (parsed.patientId === patientId || parsed.id === patientId || (cleanTarget.length >= 7 && parsedPhone.length >= 7 && (cleanTarget.endsWith(parsedPhone) || parsedPhone.endsWith(cleanTarget)))) {
+                            patient = parsed;
+                        }
                     }
                 }
             } catch(e) {}
@@ -113,19 +117,28 @@ const PatientFlow = (function() {
             try {
                 const cloudList = window.SmartCloudSync.getPatients();
                 if (Array.isArray(cloudList)) {
-                    patient = cloudList.find(p => p.id === patientId || p.patientId === patientId || (p.phone && String(p.phone).replace(/\D/g, '') === String(patientId).replace(/\D/g, '')) || p.name === 'نسرين');
-                    if (!patient && cloudList.length > 0 && (!patientId || patientId === 'default')) {
-                        patient = cloudList[0];
-                    }
+                    patient = cloudList.find(p => {
+                        if (!p) return false;
+                        if (p.id === patientId || p.patientId === patientId) return true;
+                        const ptPhone = (p.phone || '').replace(/\D/g, '');
+                        if (cleanTarget.length >= 7 && ptPhone.length >= 7 && (cleanTarget.endsWith(ptPhone) || ptPhone.endsWith(cleanTarget))) return true;
+                        return false;
+                    }) || null;
                 }
             } catch(e) {}
         }
         if (!patient) {
-            // خط دفاع ثالث: استرجاع أحدث مريض مسجل في قاعدة البيانات بدلاً من الإخفاق
+            // خط دفاع ثالث: البحث في كافة المرضى المسجلين محلياً
             try {
                 const allPts = await SmartDB.getAllPatients();
                 if (Array.isArray(allPts) && allPts.length > 0) {
-                    patient = allPts.find(p => p.patientId === patientId || p.id === patientId || p.name === 'نسرين') || allPts[0];
+                    patient = allPts.find(p => {
+                        if (!p) return false;
+                        if (p.patientId === patientId || p.id === patientId) return true;
+                        const ptPhone = (p.phone || '').replace(/\D/g, '');
+                        if (cleanTarget.length >= 7 && ptPhone.length >= 7 && (cleanTarget.endsWith(ptPhone) || ptPhone.endsWith(cleanTarget))) return true;
+                        return false;
+                    }) || null;
                 }
             } catch(e) {}
         }
