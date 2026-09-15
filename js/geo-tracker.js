@@ -22,16 +22,36 @@
         return vid;
     }
 
-    // كشف نوع الجهاز بدقة (موبايل، تابلت، كمبيوتر)
+    // كشف نوع الجهاز بدقة متناهية (كمبيوتر محمول ولابتوب، هاتف، تابلت)
     function detectDeviceType() {
-        const ua = navigator.userAgent || '';
-        if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+        const ua = (typeof navigator !== 'undefined' && navigator.userAgent) ? navigator.userAgent : '';
+        
+        // 1. فحص أجهزة الكمبيوتر المحمول والمكتبي (Windows, Mac, Linux x86, ChromeOS)
+        // أجهزة اللابتوب بشاشات لمس (Touchscreen Laptops) تبقى مصنفة كلابتوب/كمبيوتر دائماً
+        const isDesktopOS = /Windows NT|Macintosh|Mac OS X|Linux x86_64|CrOS/i.test(ua);
+        const hasExplicitMobile = /Mobile|iP(hone|od)|Android.*Mobile|BlackBerry|IEMobile|Opera M(obi|ini)/i.test(ua);
+        
+        if (isDesktopOS && !hasExplicitMobile) {
+            return { type: 'Desktop', icon: '💻', label: 'كمبيوتر محمول / مكتبي' };
+        }
+
+        // 2. فحص الأجهزة اللوحية (تابلت، iPad بما فيه iPadOS الذي يرسل MacIntel مع لمس متعدد)
+        const isIPadOS = (typeof navigator !== 'undefined' && navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua) || isIPadOS) {
             return { type: 'Tablet', icon: '📟', label: 'جهاز لوحي (تابلت)' };
         }
-        if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/i.test(ua)) {
+
+        // 3. الهواتف الذكية المحمولة
+        if (hasExplicitMobile || /Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)) {
             return { type: 'Mobile', icon: '📱', label: 'هاتف محمول' };
         }
-        return { type: 'Desktop', icon: '💻', label: 'كمبيوتر مكتبي' };
+
+        // 4. في حال عدم وجود أي إشارة هاتف وعرض الشاشة كبير (أجهزة الكمبيوتر واللابتوب)
+        if (typeof window !== 'undefined' && window.innerWidth >= 992) {
+            return { type: 'Desktop', icon: '💻', label: 'كمبيوتر محمول / مكتبي' };
+        }
+
+        return { type: 'Desktop', icon: '💻', label: 'كمبيوتر محمول / مكتبي' };
     }
 
     // تحويل كود الدولة إلى إيموجي علم الدولة (مثلاً SA -> 🇸🇦)

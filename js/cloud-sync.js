@@ -603,8 +603,8 @@
             countryCode: (geoInfo && geoInfo.countryCode) ? geoInfo.countryCode : (patientRecord.countryCode || ''),
             city: (geoInfo && geoInfo.city) ? geoInfo.city : (patientRecord.city || 'غير محدد'),
             flag: (geoInfo && geoInfo.flag) ? geoInfo.flag : (patientRecord.flag || '🌐'),
-            device: (geoInfo && geoInfo.device) ? geoInfo.device : 'Mobile',
-            deviceIcon: (geoInfo && geoInfo.deviceIcon) ? geoInfo.deviceIcon : '📱',
+            device: patientRecord.device || ((geoInfo && geoInfo.device) ? geoInfo.device : ((typeof window !== 'undefined' && window.innerWidth >= 992) ? 'Desktop' : 'Mobile')),
+            deviceIcon: patientRecord.deviceIcon || ((geoInfo && geoInfo.deviceIcon) ? geoInfo.deviceIcon : ((typeof window !== 'undefined' && window.innerWidth >= 992) ? '💻' : '📱')),
             timestamp: patientRecord.timestamp || patientRecord.createdAt || new Date().toISOString(),
             status: patientRecord.status || 'new',
             sourceDomain: window.location.hostname || 'smartchecktools.com'

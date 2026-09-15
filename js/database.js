@@ -183,7 +183,12 @@ const SmartDB = (function() {
     async function getAllPatients() {
         let lsPatients = [];
         try {
-            lsPatients = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
+            const rawLs = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
+            lsPatients = (rawLs || []).filter(p => {
+                if (!p) return false;
+                const n = (p.fullName || p.name || '').trim();
+                return !n.includes('مريض الفحص الذاتي') && n !== 'فحص ذاتي';
+            });
         } catch(e) {}
 
         try {
@@ -193,7 +198,12 @@ const SmartDB = (function() {
                 const store = tx.objectStore('patients');
                 const req = store.getAll();
                 req.onsuccess = () => {
-                    const dbList = req.result || [];
+                    const rawDbList = req.result || [];
+                    const dbList = rawDbList.filter(p => {
+                        if (!p) return false;
+                        const n = (p.fullName || p.name || '').trim();
+                        return !n.includes('مريض الفحص الذاتي') && n !== 'فحص ذاتي';
+                    });
                     const map = new Map();
                     dbList.forEach(p => {
                         const k = p.patientId || p.id;
@@ -234,14 +244,21 @@ const SmartDB = (function() {
                         if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.getPatients === 'function') {
                             const cloudList = SmartCloudSync.getPatients();
                             cloudList.forEach(cp => {
+                                if (!cp) return;
                                 const pId = cp.patientId || cp.id;
                                 if (!pId) return;
 
-                                // تصحيح الاسم إن كان "الاسم" أو "الآسم"
+                                // تصحيح واستبعاد أي سجلات فحص ذاتي افتراضية أو وهمية
                                 let cleanName = cp.fullName || cp.name || 'مراجع جديد';
+                                if (cleanName.includes('مريض الفحص الذاتي') || cleanName === 'فحص ذاتي') {
+                                    return;
+                                }
                                 if (cleanName === 'الاسم' || cleanName === 'الآسم' || cleanName === 'الإسم') {
                                     cleanName = 'مراجع كريم';
                                 }
+
+                                const devType = cp.device || (typeof SmartGeoTracker !== 'undefined' ? SmartGeoTracker.getDeviceType().type : 'Desktop');
+                                const devIcon = cp.deviceIcon || (devType === 'Desktop' ? '💻' : (devType === 'Tablet' ? '📟' : '📱'));
 
                                 const fullCloudPatient = {
                                     ...cp,
@@ -279,8 +296,8 @@ const SmartDB = (function() {
                                     countryCode: cp.countryCode || '',
                                     city: cp.city || '',
                                     flag: cp.flag || '🌐',
-                                    device: cp.device || 'Mobile',
-                                    deviceIcon: cp.deviceIcon || '📱',
+                                    device: devType,
+                                    deviceIcon: devIcon,
                                     createdAt: cp.timestamp || cp.createdAt || new Date().toISOString()
                                 };
 
@@ -292,9 +309,15 @@ const SmartDB = (function() {
                                     const mergedRecoveryScore = Math.max(existing.recoveryScore || 0, fullCloudPatient.recoveryScore || 0);
                                     const mergedDailyLogs = (Array.isArray(fullCloudPatient.dailyLogs) && fullCloudPatient.dailyLogs.length > (existing.dailyLogs?.length || 0)) ? fullCloudPatient.dailyLogs : (existing.dailyLogs || fullCloudPatient.dailyLogs || []);
 
+                                    // الحفاظ على جهاز الـ Desktop إن كان مسجلاً ولا ندعه يتحول إلى Mobile
+                                    const finalDevice = existing.device === 'Desktop' ? 'Desktop' : (fullCloudPatient.device || existing.device || 'Desktop');
+                                    const finalDeviceIcon = finalDevice === 'Desktop' ? '💻' : (finalDevice === 'Tablet' ? '📟' : '📱');
+
                                     map.set(pId, {
                                         ...existing,
                                         ...fullCloudPatient,
+                                        device: finalDevice,
+                                        deviceIcon: finalDeviceIcon,
                                         createdAt: existing.createdAt || fullCloudPatient.createdAt,
                                         age: existing.age || fullCloudPatient.age,
                                         weight: existing.weight || fullCloudPatient.weight,
@@ -322,12 +345,20 @@ const SmartDB = (function() {
                         }
                     } catch(e) {}
 
-                    resolve(Array.from(map.values()));
+                    const filteredResults = Array.from(map.values()).filter(p => {
+                        if (!p) return false;
+                        const n = (p.fullName || p.name || '').trim();
+                        if (n.includes('مريض الفحص الذاتي') || n === 'فحص ذاتي') return false;
+                        const pId = p.patientId || p.id || '';
+                        if (pId.startsWith('pat_notif_') && !p.phone) return false;
+                        return true;
+                    });
+                    resolve(filteredResults);
                 };
-                req.onerror = () => resolve(lsPatients);
+                req.onerror = () => resolve(lsPatients.filter(p => !(p.fullName || p.name || '').includes('مريض الفحص الذاتي')));
             });
         } catch(e) {
-            return lsPatients;
+            return lsPatients.filter(p => !(p.fullName || p.name || '').includes('مريض الفحص الذاتي'));
         }
     }
 

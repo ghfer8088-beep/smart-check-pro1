@@ -281,7 +281,7 @@ const SmartWatchdog = (function() {
                     title: incident.title || '🚨 تنبيه خطر في المنظومة',
                     message: incident.message || 'تم رصد خلل برمجي أو تجمد في شاشة المريض.',
                     patientId: incident.patientId || null,
-                    patientName: incident.patientName || 'مريض الفحص الذاتي'
+                    patientName: incident.patientName || null
                 });
             }
 

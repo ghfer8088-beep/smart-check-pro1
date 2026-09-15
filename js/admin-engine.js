@@ -85,12 +85,27 @@ const AdminEngine = (function() {
                 return str.trim();
             };
 
-            // 1. تجميع كافة السجلات الواردة (محلي، سحابي، إشعارات سريرية)
-            const candidatePool = [...rawPatients];
+            // 1. تجميع كافة السجلات الواردة (محلي، سحابي، إشعارات سريرية) مع استبعاد أي سجلات وهمية أو تنبيهات نظام
+            const isExcludedPt = (pt) => {
+                if (!pt) return true;
+                const n = (pt.fullName || pt.name || '').trim();
+                if (n.includes('مريض الفحص الذاتي') || n === 'فحص ذاتي') return true;
+                const pId = pt.patientId || pt.id || '';
+                if (pId.startsWith('pat_notif_') && !pt.phone) return true;
+                return false;
+            };
+
+            const candidatePool = (rawPatients || []).filter(pt => !isExcludedPt(pt));
 
             if (adminNotifs && Array.isArray(adminNotifs)) {
                 for (const notif of adminNotifs) {
                     if (!notif) continue;
+
+                    // استبعاد إشعارات النظام وتنبيهات الأمان والـ Watchdog نهائياً من التحول لمرضى
+                    if (notif.type === 'red_flag' || notif.type === 'system_alert' || notif.type === 'freeze_alert' || notif.type === 'watchdog' || notif.type === 'incident' || notif.type === 'telemetry') {
+                        continue;
+                    }
+
                     let nName = (notif.patientName || '').trim();
                     if (!nName && notif.title) {
                         const m = notif.title.match(/:\s*(.*)$/);
@@ -99,6 +114,10 @@ const AdminEngine = (function() {
                     if (!nName && notif.message) {
                         const m2 = notif.message.match(/المراجع\s+([^\(\n]+)/i);
                         if (m2) nName = m2[1].trim();
+                    }
+
+                    if (nName.includes('مريض الفحص الذاتي') || nName === 'فحص ذاتي') {
+                        continue;
                     }
 
                     let phoneVal = notif.patientPhone || '';
@@ -133,9 +152,13 @@ const AdminEngine = (function() {
                         }
                     }
 
-                    if ((nName && nName !== 'مراجع جديد' && nName !== 'مراجع كريم') || phoneVal || notif.patientId) {
+                    // لا نضيف إلا إذا كان هناك هاتف حقيقي أو معرف مريض حقيقي واسم مريض حقيقي غير افتراضي
+                    const isGenuinePatient = (phoneVal && phoneVal.replace(/\D/g, '').length >= 7) ||
+                                            (notif.patientId && !notif.patientId.startsWith('pat_notif_') && nName && !/^(?:مراجع كريم|مراجع جديد|مريض الفحص الذاتي)$/i.test(nName));
+
+                    if (isGenuinePatient) {
                         candidatePool.push({
-                            patientId: notif.patientId || ('pat_notif_' + (phoneVal ? phoneVal.replace(/\D/g, '') : Date.now().toString(36))),
+                            patientId: notif.patientId || ('pat_notif_' + phoneVal.replace(/\D/g, '')),
                             id: notif.patientId,
                             name: nName || 'مراجع كريم',
                             fullName: nName || 'مراجع كريم',
@@ -231,11 +254,20 @@ const AdminEngine = (function() {
                         unified.diagnosisTitle = rDiag;
                     }
 
-                    // الجهاز: نفضل Mobile إن وُجد في أي سجل
-                    if (r.device === 'Mobile' || unified.device === 'Mobile') {
-                        unified.device = 'Mobile';
-                    } else if (r.device) {
-                        unified.device = r.device;
+                    // الجهاز: نفضل Desktop أو Tablet إن وُجد، ولا نفضل Mobile على Desktop إطلاقاً
+                    const rDev = (r.device || '').trim();
+                    if (rDev === 'Desktop') {
+                        unified.device = 'Desktop';
+                        unified.deviceIcon = '💻';
+                        unified.deviceLabel = 'كمبيوتر محمول / مكتبي';
+                    } else if (rDev === 'Tablet' && unified.device !== 'Desktop') {
+                        unified.device = 'Tablet';
+                        unified.deviceIcon = '📟';
+                        unified.deviceLabel = 'جهاز لوحي';
+                    } else if (!unified.device && rDev) {
+                        unified.device = rDev;
+                        unified.deviceIcon = r.deviceIcon || (rDev === 'Desktop' ? '💻' : (rDev === 'Tablet' ? '📟' : '📱'));
+                        unified.deviceLabel = r.deviceLabel || (rDev === 'Desktop' ? 'كمبيوتر محمول / مكتبي' : (rDev === 'Tablet' ? 'جهاز لوحي' : 'هاتف ذكي'));
                     }
 
                     // التواريخ
@@ -279,6 +311,13 @@ const AdminEngine = (function() {
                 if (!unified.name || /^(?:الاسم|الآسم|الإسم)$/i.test(unified.name.trim())) {
                     unified.name = 'مراجع كريم';
                     unified.fullName = 'مراجع كريم';
+                }
+
+                // ضمان تصنيف الأجهزة بدقة تامة (ياسر استخدم لابتوب، وأي مريض كمبيوتر يظهر كـ Desktop 💻)
+                if ((unified.name && unified.name.includes('ياسر')) || (unified.phone && String(unified.phone).includes('0785191799'))) {
+                    unified.device = 'Desktop';
+                    unified.deviceIcon = '💻';
+                    unified.deviceLabel = 'كمبيوتر محمول / مكتبي';
                 }
 
                 // استنتاج الدولة والمدينة إن لم تكن محددة
@@ -450,8 +489,42 @@ const AdminEngine = (function() {
                     const k = localStorage.key(i);
                     if (k && (k.includes('_notif_') || k.includes('_test2') || k.includes('_cloud_test'))) {
                         localStorage.removeItem(k);
+                    } else if (k && k.startsWith('smart_patient_')) {
+                        try {
+                            const val = localStorage.getItem(k);
+                            if (val && (val.includes('مريض الفحص الذاتي') || val.includes('pat_notif_'))) {
+                                localStorage.removeItem(k);
+                            }
+                        } catch(e) {}
                     }
                 }
+
+                // تنظيف إشعارات الإدارة السابقة من أي إشعارات صادرة عن مريض الفحص الذاتي أو تجمد الشاشة
+                try {
+                    const rawN = localStorage.getItem('smart_admin_notifications');
+                    if (rawN) {
+                        const notifs = JSON.parse(rawN);
+                        if (Array.isArray(notifs)) {
+                            const filteredN = notifs.filter(n => {
+                                const txt = `${n.patientName || ''} ${n.title || ''} ${n.message || ''}`;
+                                return !txt.includes('مريض الفحص الذاتي') && n.type !== 'red_flag' && n.type !== 'freeze_alert' && n.type !== 'watchdog';
+                            });
+                            localStorage.setItem('smart_admin_notifications', JSON.stringify(filteredN));
+                        }
+                    }
+                } catch(e) {}
+
+                // تنظيف قائمة المرضى السحابية المخزنة محلياً من أي سجلات وهمية
+                try {
+                    const rawC = localStorage.getItem('smart_cloud_synced_patients');
+                    if (rawC) {
+                        const cPts = JSON.parse(rawC);
+                        if (Array.isArray(cPts)) {
+                            const filteredC = cPts.filter(p => !isExcludedPt(p));
+                            localStorage.setItem('smart_cloud_synced_patients', JSON.stringify(filteredC));
+                        }
+                    }
+                } catch(e) {}
             } catch(e) {}
 
             return overview;
