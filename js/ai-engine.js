@@ -104,11 +104,11 @@ const Wada3anAiEngine = {
         const hasRealName = pNameClean && pNameClean !== 'المراجع الكريم' && pNameClean !== 'المراجع' && pNameClean !== 'المراجع المحترم';
         const patientName = hasRealName ? pNameClean : '';
         const notesSummary = (patientData.userNotes || '').slice(0, 40);
-        const cacheKey = `ai_insight_v104_${patientName || 'anon'}_${patientData.probableCondition || 'cond'}_${notesSummary}`;
+        const cacheKey = `ai_insight_v108_${patientName || 'anon'}_${patientData.probableCondition || 'cond'}_${notesSummary}`;
         try {
             const cached = sessionStorage.getItem(cacheKey);
-            // لا نستخدم الكاش إلا إذا كان يحتوي على اسم المراجع ومكتملاً
-            if (cached && (!patientName || cached.includes(patientName))) {
+            // لا نستخدم الكاش إلا إذا كان يحتوي على اسم المراجع وخالياً من أي شوائب ذكاء اصطناعي
+            if (cached && (!patientName || cached.includes(patientName)) && !cached.includes('No diacritics') && !cached.includes('Sentence ') && !cached.includes('-&gt;') && !cached.includes('Ends with')) {
                 return cached;
             }
         } catch (e) {}
@@ -209,8 +209,10 @@ ${greetingInstruction}
 اشرح للمراجع بدقة أصل المشكلة في منطقة (${painArea}) بناءً على حالته (${condition}) وتفاصيل حواره ووصفه الفعلي.
 ادمج المصطلحات الطبية اللاتينية الخاصة بمشكلته ومفصله حصراً بين قوسين (مثل مفاصل الفقرات أو الأوتار المعنية أو تفريغ الضغط اليدوي Manual Decompression).
 ممنوع منعاً باتاً ذكر تشخيصات أو مناطق تشريحية أخرى لا علاقة لها بشكواه (مثلاً: لا تذكر عرق النسا إن كانت الشكوى في الرقبة أو الكتف أو الركبة أو الرسغ، ولا تذكر فقرات الظهر إن كان الفحص لليد أو الكوع).
-قم بضبط الكلمات التي قد يلتبس نطقها لتسهيل قراءتها: (الظَّهْر - الفَقَرَات - الغُضْرُوف - المَفَاصِل - تَشَنُّج).
-ضابط تشكيل صارم: الكلمة الأخيرة في أي جملة أو فقرة قبل النقطة يجب أن تكون خالية من التشكيل لضمان الوقف الطبيعي بالسكون.
+- اكتب التقرير بلغة عربية فصيحة مباشرة ومترابطة دون تكلف أو تشكيل مفرط.
+- اكتب النص مباشرة موجهاً للمراجع كتقرير سريري نهائي دون أي ترقيم للجمل (ممنوع منعاً باتاً كتابة ترقيم للجمل مثل Sentence 1 أو Sentence 2).
+- ممنوع منعاً باتاً كتابة أي نصوص فحص أو مراجعة أو تحليل لغوي داخلي أو كلمات إنجليزية تقييمية مثل (Perfect, No diacritics, Last word, Ends with).
+- ممنوع وضع علامات تنصيص متفرقة حول الفقرات أو الجمل.
 
 ### ⚡ دور المعالجة اليدوية والكايروبراكتيك
 اشرح باختصار شديد وموجز (في سطرين إلى ثلاثة فقط) كيف يعمل تقويم الكايروبراكتيك اليدوي وتفريغ الضغط (Manual Decompression) على استعادة التوازن الحركي في (${painArea}) وتخفيف الشد العصبي والمفصلي بأمان تام دون جراحة أو مسكنات كيميائية.
@@ -243,8 +245,21 @@ ${greetingInstruction}
     formatMarkdownToHtml(text) {
         if (!text) return '';
 
-        // 1. تنظيف فواصل الأسطر
+        // 1. تنظيف فواصل الأسطر وإزالة أي شوائب تفكير أو هوامش تدقيق من الذكاء الاصطناعي (Chain of Thought / Meta-leak)
         let raw = text.replace(/\r\n/g, '\n').trim();
+
+        // تنقية صارمة لكافة أسطر هوامش التدقيق وشوائب التوليد
+        raw = raw.split('\n').filter(line => {
+            const l = line.trim();
+            if (!l) return true;
+            if (/^(?:->|–>|-->)\s*/i.test(l)) return false;
+            if (/^Sentence\s*\d+:?/i.test(l)) return false;
+            if (/\b(?:No diacritics|Ends with|Last word|Perfect\.)\b/i.test(l)) return false;
+            if (/^(?:Thought|Thinking|Check|Verification|Note):\s*$/i.test(l)) return false;
+            return true;
+        }).map(line => {
+            return line.replace(/^["'«“\s]+/, '').replace(/["'»”\s]+$/, '');
+        }).join('\n');
 
         // 2. عزل وإصلاح المصطلحات الطبية واللاتينية بين أقواس لمنع انقلاب الأقواس وتشوه الكلمات (BiDi Isolation)
         raw = raw.replace(/[\(（]\s*([A-Za-z0-9\s\-_/.,+*&]+)\s*[\)）]/g, (match, term) => {
@@ -696,7 +711,10 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
 
                 if (response.ok) {
                     const data = await response.json();
-                    const reply = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('').trim();
+                    const parts = data?.candidates?.[0]?.content?.parts || [];
+                    // استبعاد أجزاء التفكير الداخلي (Thinking/Reasoning parts) والاحتفاظ بالنص السريري الحقيقي فقط
+                    const realParts = parts.filter(p => !p.thought);
+                    const reply = (realParts.length > 0 ? realParts : parts).map(p => p.text || '').join('').trim();
                     if (reply && reply.trim()) {
                         return reply;
                     }
@@ -1564,8 +1582,9 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
                     clearTimeout(timeoutId);
 
                     if (res.ok) {
-                        const data = await res.json();
-                        const rawReply = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                        const parts = data?.candidates?.[0]?.content?.parts || [];
+                        const realPart = parts.find(p => !p.thought) || parts[0];
+                        const rawReply = realPart?.text || '';
                         
                         let message = rawReply;
                         let transcription = '';
