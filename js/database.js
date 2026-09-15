@@ -318,7 +318,6 @@ const SmartDB = (function() {
                                         assessment: (fullCloudPatient.assessment && !fullCloudPatient.assessment.autoHealed) ? fullCloudPatient.assessment : (existing.assessment || fullCloudPatient.assessment)
                                     });
                                 }
-                                }
                             });
                         }
                     } catch(e) {}
@@ -878,3 +877,5 @@ const SmartDB = (function() {
         purgeDummyAssessments
     };
 })();
+window.SmartDB = SmartDB;
+

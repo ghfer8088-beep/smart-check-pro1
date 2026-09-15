@@ -312,6 +312,17 @@ function renderAnatomyPoints(containerId, points) {
 
         container.appendChild(pointEl);
     });
+
+    // صمام أمان فوري: ربط استكمال تحميل صورة المجسم بإعادة التموضع الدقيق
+    const img = container.querySelector('img.skeleton-img');
+    if (img && !img._anatomyLoadBound) {
+        img._anatomyLoadBound = true;
+        if (!img.complete) {
+            img.addEventListener('load', () => {
+                renderAnatomyPoints(containerId, points);
+            }, { once: true });
+        }
+    }
 }
 
 // دالة فحص صلاحيات الأدمن والمدير العام
@@ -556,21 +567,37 @@ window.updateStepperVisuals = updateStepperVisuals;
 async function restoreActiveSessionState() {
     const urlParams = new URLSearchParams(window.location.search);
     const queryPid = urlParams.get('patient_id') || urlParams.get('id');
-    const sessionPid = sessionStorage.getItem('scp_active_patient_id');
-    const savedPatientId = queryPid || sessionPid;
+    let savedPatientId = queryPid 
+        || sessionStorage.getItem('scp_active_patient_id')
+        || localStorage.getItem('smart_current_patient_id')
+        || localStorage.getItem('smart_last_active_patient_id');
 
-    // إذا لم تكن هناك جلسة نشطة موثقة لهذا التبويب، لا تسترجع أي مريض سابق نهائياً
     if (!savedPatientId) {
-        return;
+        try {
+            const rawAct = localStorage.getItem('smart_active_patient');
+            if (rawAct) {
+                const parsed = JSON.parse(rawAct);
+                if (parsed && (parsed.patientId || parsed.id)) {
+                    savedPatientId = parsed.patientId || parsed.id;
+                }
+            }
+        } catch(e) {}
     }
 
-    if (!activePatient) {
+    if (savedPatientId && !activePatient) {
         try {
             activePatient = await SmartDB.getPatient(savedPatientId);
         } catch (e) {}
     }
 
-    if (!currentAssessmentData) {
+    if (!activePatient) {
+        try {
+            const rawAct = localStorage.getItem('smart_active_patient');
+            if (rawAct) activePatient = JSON.parse(rawAct);
+        } catch(e) {}
+    }
+
+    if (savedPatientId && !currentAssessmentData) {
         try {
             const assessments = await SmartDB.getPatientAssessments(savedPatientId);
             if (assessments && assessments.length > 0) {
@@ -579,6 +606,20 @@ async function restoreActiveSessionState() {
                 currentAssessmentData = activePatient.assessment || activePatient.latestAssessment;
             }
         } catch (e) {}
+    }
+
+    if (!currentAssessmentData) {
+        try {
+            const rawAss = localStorage.getItem('smart_current_assessment');
+            if (rawAss) currentAssessmentData = JSON.parse(rawAss);
+        } catch(e) {}
+    }
+
+    if (!currentSelectedPoint) {
+        try {
+            const rawPt = localStorage.getItem('smart_current_point');
+            if (rawPt) currentSelectedPoint = JSON.parse(rawPt);
+        } catch(e) {}
     }
 
     if (!currentSelectedPoint && currentAssessmentData && currentAssessmentData.pointId) {
@@ -948,7 +989,11 @@ function getResolvedPatientPhone() {
         clinicalDialogueState?.patientPhone,
         document.getElementById('patient-phone')?.value?.trim(),
         document.getElementById('sub-phone')?.value?.trim(),
-        activePatient?.phone
+        activePatient?.phone,
+        window.activePatient?.phone,
+        currentAssessmentData?.patientPhone,
+        window.currentAssessmentData?.patientPhone,
+        localStorage.getItem('smart_patient_phone')
     ];
     for (const cand of candidates) {
         if (cand && isValidPhoneNumber(cand)) {
@@ -3309,6 +3354,20 @@ function displayDiagnosticReport(data) {
 
     // تفعيل وتوليد التحليل السريري المخصص بالذكاء الاصطناعي واحتساب الـ BMI فوراً
     setTimeout(() => {
+        const btnRoyal = document.getElementById('btn-activate-plan-royal');
+        if (btnRoyal && !btnRoyal._boundMobileActivation) {
+            btnRoyal._boundMobileActivation = true;
+            const triggerActivation = (e) => {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                activateRecoveryPlanInstantly();
+            };
+            btnRoyal.addEventListener('touchend', triggerActivation, { passive: false });
+            btnRoyal.addEventListener('pointerup', triggerActivation);
+        }
+
         const wInput = document.getElementById('inline-report-weight');
         const hInput = document.getElementById('inline-report-height');
         if (wInput && hInput && wInput.value && hInput.value) {
@@ -3644,91 +3703,120 @@ function contactInternationalPatientCoordinator() {
 
 // تفعيل فوري لخطة التعافي بنقرة واحدة (أو إظهار النموذج إذا كانت البيانات غير مكتملة)
 async function activateRecoveryPlanInstantly() {
-    const existingName = clinicalDialogueState?.patientName || activePatient?.name || document.getElementById('sub-name')?.value?.trim();
-    const existingPhone = clinicalDialogueState?.patientPhone || activePatient?.phone || document.getElementById('sub-phone')?.value?.trim();
+    try {
+        const curPatient = (typeof activePatient !== 'undefined' && activePatient) || window.activePatient;
+        const curAssessment = (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) || window.currentAssessmentData;
 
-    // إذا كانت البيانات مسجلة مسبقاً في الشات السريري، تفعيل فوري بنقرة واحدة دون طلب تكرارها
-    if (existingName && existingPhone && existingPhone.length >= 7) {
-        const patientId = activePatient?.patientId || ('P-' + Date.now().toString().slice(-6));
-        const resolvedPainTitle = resolvePainAreaTitle(null, currentAssessmentData, currentSelectedPoint);
+        const resolvedPhone = (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '')
+            || clinicalDialogueState?.patientPhone
+            || curPatient?.phone
+            || curAssessment?.patientPhone
+            || localStorage.getItem('smart_patient_phone')
+            || document.getElementById('sub-phone')?.value?.trim()
+            || '';
 
-        const patientGender = (clinicalDialogueState?.patientVitals?.gender) || detectArabicGender(existingName);
-        const pWeight1 = clinicalDialogueState?.patientVitals?.weight || currentAssessmentData?.patientVitals?.weight || null;
-        const pHeight1 = clinicalDialogueState?.patientVitals?.height || currentAssessmentData?.patientVitals?.height || null;
-        let pBmi1 = currentAssessmentData?.bmiInfo?.value || '';
-        if (!pBmi1 && pWeight1 && pHeight1) {
-            pBmi1 = parseFloat((pWeight1 / Math.pow(pHeight1/100, 2)).toFixed(1));
+        let existingName = clinicalDialogueState?.patientName 
+            || curPatient?.name 
+            || curAssessment?.patientName 
+            || document.getElementById('sub-name')?.value?.trim() 
+            || '';
+
+        if (!existingName || existingName === 'المراجع الكريم') {
+            existingName = curAssessment?.patientName || curPatient?.name || 'المراجع الكريم';
         }
 
-        const patientObj = {
-            patientId,
-            id: patientId,
-            name: existingName,
-            fullName: clinicalDialogueState?.patientFullName || existingName,
-            phone: existingPhone,
-            gender: patientGender,
-            age: clinicalDialogueState?.patientVitals?.age || currentAssessmentData?.patientVitals?.age || null,
-            weight: pWeight1,
-            height: pHeight1,
-            bmi: pBmi1,
-            painArea: resolvedPainTitle,
-            painAreaTitle: resolvedPainTitle,
-            selectedPoint: resolvedPainTitle,
-            chiefDiagnosis: currentAssessmentData?.primaryDiagnosis?.title || currentAssessmentData?.title || 'تشخيص سريري متكامل',
-            diagnosisTitle: currentAssessmentData?.primaryDiagnosis?.title || currentAssessmentData?.title || 'تشخيص سريري متكامل',
-            treatmentPlan: currentAssessmentData?.treatmentPlan || (currentAssessmentData?.recommendations ? currentAssessmentData.recommendations.join('\n') : ''),
-            assessment: currentAssessmentData,
-            latestAssessment: currentAssessmentData,
-            notes: (clinicalDialogueState?.collectedSymptoms && clinicalDialogueState.collectedSymptoms.length > 0) ? clinicalDialogueState.collectedSymptoms.join(' - ') : (currentAssessmentData?.notes || ''),
-            collectedSymptoms: clinicalDialogueState?.collectedSymptoms || currentAssessmentData?.collectedSymptoms || [],
-            createdAt: activePatient?.createdAt || new Date().toISOString()
-        };
+        const cleanPhone = String(resolvedPhone).replace(/\D/g, '');
 
-        patientObj.isPlanActivated = true;
-        await SmartDB.savePatient(patientObj);
-        if (currentAssessmentData) {
-            await SmartDB.saveAssessment({
-                ...currentAssessmentData,
+        // إذا كانت البيانات مسجلة مسبقاً، تفعيل فوري بنقرة واحدة دون طلب تكرارها
+        if (cleanPhone.length >= 6) {
+            const patientId = curPatient?.patientId || curPatient?.id || ('P-' + Date.now().toString().slice(-6));
+            const resolvedPainTitle = resolvePainAreaTitle(null, curAssessment, currentSelectedPoint);
+
+            const patientGender = (clinicalDialogueState?.patientVitals?.gender) || (typeof detectArabicGender === 'function' ? detectArabicGender(existingName) : 'ذكر');
+            const pWeight1 = clinicalDialogueState?.patientVitals?.weight || curAssessment?.patientVitals?.weight || null;
+            const pHeight1 = clinicalDialogueState?.patientVitals?.height || curAssessment?.patientVitals?.height || null;
+            let pBmi1 = curAssessment?.bmiInfo?.value || '';
+            if (!pBmi1 && pWeight1 && pHeight1) {
+                pBmi1 = parseFloat((pWeight1 / Math.pow(pHeight1/100, 2)).toFixed(1));
+            }
+
+            const patientObj = {
+                patientId,
+                id: patientId,
+                name: existingName,
+                fullName: clinicalDialogueState?.patientFullName || existingName,
+                phone: resolvedPhone,
+                gender: patientGender,
+                age: clinicalDialogueState?.patientVitals?.age || curAssessment?.patientVitals?.age || null,
+                weight: pWeight1,
+                height: pHeight1,
+                bmi: pBmi1,
+                painArea: resolvedPainTitle,
+                painAreaTitle: resolvedPainTitle,
+                selectedPoint: resolvedPainTitle,
+                chiefDiagnosis: curAssessment?.primaryDiagnosis?.title || curAssessment?.primaryDiagnosis || curAssessment?.title || 'تشخيص سريري متكامل',
+                diagnosisTitle: curAssessment?.primaryDiagnosis?.title || curAssessment?.primaryDiagnosis || curAssessment?.title || 'تشخيص سريري متكامل',
+                treatmentPlan: curAssessment?.treatmentPlan || (curAssessment?.recommendations ? curAssessment.recommendations.join('\n') : ''),
+                assessment: curAssessment,
+                latestAssessment: curAssessment,
+                notes: (clinicalDialogueState?.collectedSymptoms && clinicalDialogueState.collectedSymptoms.length > 0) ? clinicalDialogueState.collectedSymptoms.join(' - ') : (curAssessment?.notes || ''),
+                collectedSymptoms: clinicalDialogueState?.collectedSymptoms || curAssessment?.collectedSymptoms || [],
+                createdAt: curPatient?.createdAt || new Date().toISOString(),
+                isPlanActivated: true
+            };
+
+            await SmartDB.savePatient(patientObj);
+            if (currentAssessmentData) {
+                currentAssessmentData.patientId = patientId;
+                currentAssessmentData.patientName = existingName;
+                currentAssessmentData.patientPhone = resolvedPhone;
+                currentAssessmentData.painAreaTitle = resolvedPainTitle;
+                await SmartDB.saveAssessment(currentAssessmentData);
+            }
+
+            SmartDB.setCurrentSessionPatientId(patientId);
+            try { sessionStorage.setItem('scp_active_patient_id', patientId); } catch(e) {}
+            activePatient = patientObj;
+            try {
+                localStorage.setItem('smart_patient_phone', String(resolvedPhone));
+                localStorage.setItem('smart_active_patient', JSON.stringify(patientObj));
+                localStorage.setItem('smart_current_patient_id', patientId);
+                localStorage.setItem('smart_plan_activated', 'true');
+                localStorage.setItem('smart_plan_activated_' + patientId, 'true');
+                localStorage.setItem('smart_current_step', '4');
+                const curMax = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
+                localStorage.setItem('smart_max_reached_step', String(Math.max(curMax, 4)));
+            } catch (e) {}
+
+            SmartDB.addAdminNotification({
+                type: 'new_registration',
+                title: `👤 تفعيل فوري للخطة: ${existingName}`,
+                message: `فعّل المراجع ${existingName} خطة التعافي الحركية (اليوم 1) بنقرة واحدة - منطقة: ${resolvedPainTitle} - هاتف: ${resolvedPhone}`,
                 patientId,
                 patientName: existingName,
-                patientPhone: existingPhone,
-                painAreaTitle: resolvedPainTitle
+                patientPhone: resolvedPhone,
+                meta: {
+                    painArea: resolvedPainTitle,
+                    diagnosis: currentAssessmentData?.primaryDiagnosis || ''
+                }
             });
+
+            // إظهار نافذة الإهداء والدعاء الملكي لضمان قراءتها والتأمين عليها
+            showRoyalDuaaModal(patientId);
+            return;
         }
 
-        SmartDB.setCurrentSessionPatientId(patientId);
-        try { sessionStorage.setItem('scp_active_patient_id', patientId); } catch(e) {}
-        activePatient = patientObj;
-        try {
-            localStorage.setItem('smart_plan_activated_' + patientId, 'true');
-            const curMax = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
-            localStorage.setItem('smart_max_reached_step', String(Math.max(curMax, 4)));
-        } catch (e) {}
-
-        SmartDB.addAdminNotification({
-            type: 'new_registration',
-            title: `👤 تفعيل فوري للخطة: ${existingName}`,
-            message: `فعّل المراجع ${existingName} خطة التعافي الحركية (اليوم 1) بنقرة واحدة - منطقة: ${resolvedPainTitle} - هاتف: ${existingPhone}`,
-            patientId,
-            patientName: existingName,
-            patientPhone: existingPhone,
-            meta: {
-                painArea: resolvedPainTitle,
-                diagnosis: currentAssessmentData?.primaryDiagnosis || ''
-            }
-        });
-
-        // إظهار نافذة الإهداء والدعاء الملكي لضمان قراءتها والتأمين عليها
-        showRoyalDuaaModal(patientId);
-        return;
+        // إذا لم تكن البيانات مكتملة، ملء ما هو متوفر وإظهار حقول الإدخال
+        if (existingName && existingName !== 'المراجع الكريم') {
+            const nameInput = document.getElementById('sub-name');
+            if (nameInput) nameInput.value = existingName;
+        }
+        revealRegistrationInputs();
+        showToast('يرجى تأكيد رقم الهاتف لتفعيل خطتك المجانية وبدء الجلسة الأولى 🎯', 'info');
+    } catch (err) {
+        console.error('Error activating plan instantly:', err);
+        revealRegistrationInputs();
     }
-
-    // إذا لم تكن البيانات مكتملة، ملء ما هو متوفر وإظهار حقول الإدخال
-    if (existingName) {
-        const nameInput = document.getElementById('sub-name');
-        if (nameInput) nameInput.value = existingName;
-    }
-    revealRegistrationInputs();
 }
 
 // إظهار حقول تسجيل خطة التعافي
@@ -3738,7 +3826,9 @@ function revealRegistrationInputs() {
     if (inputsBox) {
         inputsBox.style.display = 'block';
         if (btnWrapper) btnWrapper.style.display = 'none';
-        inputsBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => {
+            inputsBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 50);
     }
 }
 
@@ -3866,12 +3956,15 @@ function confirmRoyalDuaaAndProceed() {
     const pId = pendingDuaaPatientId || SmartDB.getCurrentSessionPatientId() || activePatient?.patientId;
     if (pId) {
         showToast('🌿 تقبّل الله دعاءكم وبارك في صحتكم وعافيتكم.. بدء خطة التعافي (اليوم الأول)', 'success');
+        // الانتقال الفوري للوحة تمارين اليوم الأول دون أي تأخير أو انتظار للصوت
+        loadPatientRecoveryDashboard(pId);
+        // تشغيل صوت المحطة في الخلفية دون حجز واجهة المستخدم أو تأخير الانتقال
         if (typeof playStationAudio === 'function') {
-            playStationAudio('recovery', () => {
-                loadPatientRecoveryDashboard(pId);
-            });
-        } else {
-            loadPatientRecoveryDashboard(pId);
+            try {
+                playStationAudio('recovery');
+            } catch (e) {
+                console.warn('Background recovery audio notice:', e);
+            }
         }
     }
 }
@@ -5716,6 +5809,25 @@ function goToStep(stepNum) {
         currentActiveStationAudio = null;
     }
 
+    // حفظ الخطوة الحالية فوراً في الذاكرة الدائمة لضمان عدم ضياع أي مرحلة تحت أي ظرف
+    try {
+        localStorage.setItem('smart_current_step', String(stepNum));
+        const curMax = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
+        localStorage.setItem('smart_max_reached_step', String(Math.max(curMax, stepNum)));
+        if (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) {
+            localStorage.setItem('smart_current_point', JSON.stringify(currentSelectedPoint));
+        }
+        if (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) {
+            localStorage.setItem('smart_current_assessment', JSON.stringify(currentAssessmentData));
+        }
+        if (typeof activePatient !== 'undefined' && activePatient) {
+            localStorage.setItem('smart_active_patient', JSON.stringify(activePatient));
+            if (activePatient.patientId || activePatient.id) {
+                localStorage.setItem('smart_current_patient_id', activePatient.patientId || activePatient.id);
+            }
+        }
+    } catch (e) {}
+
     document.querySelectorAll('.app-step-section').forEach(s => s.style.display = 'none');
 
     // إظهار قسم الخطوة المحددة بدقة (الخطوات 1 إلى 6 أصبحت مستقلة تماماً)
@@ -5927,6 +6039,8 @@ function switchAnatomyView(view) {
         if (btnFront) btnFront.classList.add('active');
         if (btnBack) btnBack.classList.remove('active');
         renderAnatomyPoints('front-anatomy-container', getFrontPoints());
+        requestAnimationFrame(() => renderAnatomyPoints('front-anatomy-container', getFrontPoints()));
+        setTimeout(() => renderAnatomyPoints('front-anatomy-container', getFrontPoints()), 120);
     } else {
         if (frontCont) {
             frontCont.style.display = 'none';
@@ -5939,8 +6053,47 @@ function switchAnatomyView(view) {
         if (btnFront) btnFront.classList.remove('active');
         if (btnBack) btnBack.classList.add('active');
         renderAnatomyPoints('back-anatomy-container', getBackPoints());
+        requestAnimationFrame(() => renderAnatomyPoints('back-anatomy-container', getBackPoints()));
+        setTimeout(() => renderAnatomyPoints('back-anatomy-container', getBackPoints()), 120);
     }
 }
+
+// مراقبة ذكية لتحميل أبعاد صور المجسم على الهواتف وإعادة ضبط النقاط فورياً
+function initMobileSkeletonObserver() {
+    const frontImg = document.querySelector('#front-anatomy-container img');
+    const backImg = document.querySelector('#back-anatomy-container img');
+    [frontImg, backImg].forEach(img => {
+        if (!img) return;
+        if (img.complete && img.naturalHeight > 0) {
+            // الصورة محملة وجاهزة
+        } else {
+            img.addEventListener('load', () => {
+                const activeView = document.getElementById('btn-view-back')?.classList.contains('active') ? 'back' : 'front';
+                switchAnatomyView(activeView);
+            }, { once: true });
+        }
+    });
+
+    if (typeof ResizeObserver !== 'undefined') {
+        const viewport = document.querySelector('.skeleton-viewport');
+        if (viewport && !window._skeletonResizeObserver) {
+            let resizeTimer = null;
+            window._skeletonResizeObserver = new ResizeObserver(() => {
+                if (resizeTimer) clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    const activeView = document.getElementById('btn-view-back')?.classList.contains('active') ? 'back' : 'front';
+                    if (activeView === 'front') {
+                        renderAnatomyPoints('front-anatomy-container', getFrontPoints());
+                    } else {
+                        renderAnatomyPoints('back-anatomy-container', getBackPoints());
+                    }
+                }, 80);
+            });
+            window._skeletonResizeObserver.observe(viewport);
+        }
+    }
+}
+window.initMobileSkeletonObserver = initMobileSkeletonObserver;
 
 // ==========================================================================
 // ميزات ترقية الاحترافية السريرية (Smart Check Pro Clinical Suite v4.5)
@@ -6571,6 +6724,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     switchAnatomyView('front');
+    if (typeof initMobileSkeletonObserver === 'function') {
+        initMobileSkeletonObserver();
+    }
+    setTimeout(() => {
+        const activeView = document.getElementById('btn-view-back')?.classList.contains('active') ? 'back' : 'front';
+        switchAnatomyView(activeView);
+    }, 150);
+    setTimeout(() => {
+        const activeView = document.getElementById('btn-view-back')?.classList.contains('active') ? 'back' : 'front';
+        switchAnatomyView(activeView);
+    }, 500);
     renderRedFlags();
 
     // الاستماع الفوري لتحديثات التوقيت من لوحة الإدارة
@@ -6652,53 +6816,51 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ======================================================================
-    // استعادة بيانات المريض — قاعدة أمان صارمة ومطلقة:
-    // فقط إذا كان patient_id صريح في الرابط → نحمّل المريض المحدد
-    // أو إذا كان المستخدم في منتصف فحص حقيقي في هذا التبويب حصرياً (sessionStorage)
-    // أي دخول مباشر بدون رابط يفتح فوراً فحصاً جديداً نظيفاً (الخطوة 1)
+    // استعادة بيانات ومراحل المريض — حفظ دائم وشامل تحت كافة الظروف:
+    // 1. البحث عن معرف المريض في الرابط أو الجلسة أو الذاكرة المحلية الدائمة
+    // 2. استرجاع نقطة الألم والتقييم السريري والمرحلة التي أنجزها المريض
+    // 3. منع أي مسح للبيانات عند التحديث؛ التصفير يتم حصرياً عبر "فحص جديد"
     // ======================================================================
     let savedPatientId = queryPatientId;
 
     if (!savedPatientId) {
-        const sessionActiveId = sessionStorage.getItem('scp_active_patient_id');
-        if (sessionActiveId) {
-            savedPatientId = sessionActiveId;
-        }
+        savedPatientId = sessionStorage.getItem('scp_active_patient_id')
+            || localStorage.getItem('smart_current_patient_id')
+            || localStorage.getItem('smart_last_active_patient_id');
     }
 
-    // إذا لم يُوجد patient_id صريح ولا جلسة نشطة لهذا التبويب → فحص سريري جديد نظيف
     if (!savedPatientId) {
-        activePatient = null;
-        window.activePatient = null;
-        currentAssessmentData = null;
-        currentSelectedPoint = null;
-        SmartDB.setCurrentSessionPatientId('');
         try {
-            localStorage.removeItem('smart_current_patient_id');
-            localStorage.removeItem('smart_last_active_patient_id');
-            localStorage.removeItem('smart_active_patient');
-            localStorage.removeItem('smart_current_assessment');
-            localStorage.removeItem('smart_current_point');
-            localStorage.removeItem('smart_plan_activated');
-            localStorage.removeItem('smart_max_reached_step');
-            sessionStorage.removeItem('scp_active_patient_id');
-        } catch(e) {}
-        updateStepperVisuals(1);
-        goToStep(1);
-        return;
+            const rawAct = localStorage.getItem('smart_active_patient');
+            if (rawAct) {
+                const parsed = JSON.parse(rawAct);
+                if (parsed && (parsed.patientId || parsed.id)) {
+                    savedPatientId = parsed.patientId || parsed.id;
+                }
+            }
+        } catch (e) {}
     }
 
-    if (queryPatientId) {
-        SmartDB.setCurrentSessionPatientId(queryPatientId);
-        sessionStorage.setItem('scp_active_patient_id', queryPatientId);
+    if (!savedPatientId && typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function') {
+        const curId = SmartDB.getCurrentSessionPatientId();
+        if (curId) savedPatientId = curId;
     }
-
-    // استعادة حالة الجلسة الخاصة بهذا المريض المحدد فقط
-    await restoreActiveSessionState();
-    const maxUnlocked = await getMaxUnlockedStep();
 
     if (savedPatientId) {
-        let p = await SmartDB.getPatient(savedPatientId);
+        SmartDB.setCurrentSessionPatientId(savedPatientId);
+        try {
+            sessionStorage.setItem('scp_active_patient_id', savedPatientId);
+            localStorage.setItem('smart_current_patient_id', savedPatientId);
+            localStorage.setItem('smart_last_active_patient_id', savedPatientId);
+        } catch (e) {}
+    }
+
+    // استعادة حالة الجلسة الخاصة بالمريض والنقاط
+    await restoreActiveSessionState();
+
+    let p = null;
+    if (savedPatientId) {
+        p = await SmartDB.getPatient(savedPatientId);
         if (!p) {
             try {
                 const rawAct = localStorage.getItem('smart_active_patient');
@@ -6741,7 +6903,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             // استرجاع وتوليد بيانات التقرير إن لم تكن مكتملة لضمان فتح التقرير فوراً دون السقوط للخطوة 1
             if (!currentAssessmentData && (p.chiefDiagnosis || p.painArea || p.diagnosisTitle)) {
-                // حساب درجة الثقة بناءً على اكتمال بيانات المريض الحقيقية (لا أرقام صلبة)
                 const dataCompleteness = [p.name, p.phone, p.age, p.gender, p.weight, p.height, p.painArea, p.painLevel].filter(Boolean).length;
                 const derivedConfidence = Math.min(98, Math.max(60, Math.round((dataCompleteness / 8) * 100)));
                 const derivedProbability = Math.min(99, Math.max(65, derivedConfidence + 3));
@@ -6761,37 +6922,67 @@ document.addEventListener('DOMContentLoaded', async () => {
                     biomechanicalCause: p.biomechanicalCause || 'اختلال في توازن الأحمال الميكانيكية الحركية وضغط على الأنسجة الداعمة.'
                 };
             }
-
-            if (forceViewReport && currentAssessmentData) {
-                displayDiagnosticReport(currentAssessmentData);
-                goToStep(3);
-                return;
-            }
-
-            const isPlanActive = localStorage.getItem('smart_plan_activated') === 'true';
-            const logs = await SmartDB.getPatientDailyLogs(savedPatientId);
-            if (isPlanActive || (logs && logs.length > 0) || maxUnlocked >= 4 || (p.currentSessionDay && p.currentSessionDay >= 2)) {
-                await loadPatientRecoveryDashboard(savedPatientId);
-                return;
-            } else if (currentAssessmentData) {
-                displayDiagnosticReport(currentAssessmentData);
-                goToStep(3);
-                return;
-            }
         }
     }
 
-    if (currentAssessmentData && maxUnlocked >= 3) {
+    const maxUnlocked = await getMaxUnlockedStep();
+    const savedTargetStep = parseInt(localStorage.getItem('smart_current_step') || '0', 10);
+
+    if (forceViewReport && currentAssessmentData) {
         displayDiagnosticReport(currentAssessmentData);
         goToStep(3);
         return;
-    } else if (currentSelectedPoint && maxUnlocked >= 2) {
+    }
+
+    // التوجيه الذكي الحافظ للمراحل مهما كانت الظروف
+    if (savedPatientId) {
+        const isPlanActive = localStorage.getItem('smart_plan_activated') === 'true' || localStorage.getItem('smart_plan_activated_' + savedPatientId) === 'true';
+        let logs = [];
+        try { logs = await SmartDB.getPatientDailyLogs(savedPatientId); } catch(e) {}
+
+        if (savedTargetStep === 6 || (logs && logs.length >= 7)) {
+            await loadPatientRecoveryDashboard(savedPatientId);
+            goToStep(6);
+            return;
+        } else if (savedTargetStep === 5 || (savedTargetStep === 0 && ((logs && logs.length > 0) || (p && p.currentSessionDay && p.currentSessionDay >= 2)))) {
+            await loadPatientRecoveryDashboard(savedPatientId);
+            return;
+        } else if (savedTargetStep === 4 || (savedTargetStep === 0 && isPlanActive)) {
+            await loadPatientRecoveryDashboard(savedPatientId);
+            return;
+        } else if (savedTargetStep === 3 && currentAssessmentData) {
+            displayDiagnosticReport(currentAssessmentData);
+            goToStep(3);
+            return;
+        } else if (savedTargetStep === 2 && currentSelectedPoint) {
+            renderAdaptiveQuestions(currentSelectedPoint.id);
+            goToStep(2);
+            return;
+        } else if (isPlanActive || (logs && logs.length > 0) || maxUnlocked >= 4) {
+            await loadPatientRecoveryDashboard(savedPatientId);
+            return;
+        } else if (currentAssessmentData) {
+            displayDiagnosticReport(currentAssessmentData);
+            goToStep(3);
+            return;
+        }
+    }
+
+    if (savedTargetStep === 3 && currentAssessmentData) {
+        displayDiagnosticReport(currentAssessmentData);
+        goToStep(3);
+        return;
+    } else if (currentAssessmentData && maxUnlocked >= 3) {
+        displayDiagnosticReport(currentAssessmentData);
+        goToStep(3);
+        return;
+    } else if ((savedTargetStep === 2 || maxUnlocked >= 2) && currentSelectedPoint) {
         renderAdaptiveQuestions(currentSelectedPoint.id);
         goToStep(2);
         return;
     }
 
-    goToStep(1);
+    goToStep(savedTargetStep >= 1 && savedTargetStep <= 6 ? savedTargetStep : 1);
 
     // تشغيل الصوت الترحيبي تلقائياً لمرة واحدة فقط لكل زيارة أو استخدام جديد
     if (sessionStorage.getItem('scp_welcome_audio_played') !== 'true') {
