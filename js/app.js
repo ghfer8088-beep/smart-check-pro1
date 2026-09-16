@@ -241,8 +241,152 @@ function detectAnatomicalPointFromText(text) {
     if (/كوع|مرفق|مرفق\s*تنس|ساعد|زند|elbow/i.test(tLower)) {
         return allPts.find(p => p.id === 'elbow_right_f') || { id: 'elbow_right_f', title: 'مفصل الكوع والمرفق', region: 'elbow' };
     }
+    if (/جلطة|جلطه|تأهيل\s*حركي|ضعف\s*نصفي|شلل\s*خفيف|stroke/i.test(tLower)) {
+        return { id: 'specialized_stroke', title: 'تأهيل ما بعد الجلطات والضعف الحركي', region: 'neuro', specialtyType: 'stroke' };
+    }
+    if (/سقوط\s*القدم|سقوط\s*مشط|عدم\s*رفع\s*المشط|foot\s*drop/i.test(tLower)) {
+        return { id: 'specialized_foot_drop', title: 'سقوط القدم وصعوبة رفع المشط', region: 'neuro', specialtyType: 'foot_drop' };
+    }
+    if (/جنف|انحراف\s*العمود|اعوجاج\s*العمود|scoliosis/i.test(tLower)) {
+        return { id: 'specialized_scoliosis', title: 'تقوس وانحراف العمود الفقري (الجنف Scoliosis)', region: 'spine', specialtyType: 'scoliosis' };
+    }
     return null;
 }
+
+// =========================================================================
+// مسار الحالات السريرية الخاصة والتأهيل المتقدم (جلطات، سقوط قدم، جنف)
+// =========================================================================
+function startSpecializedConsultation(specialtyKey) {
+    if (typeof stopAllActiveAudio === 'function') {
+        stopAllActiveAudio();
+    }
+    window._specializedConsultationType = specialtyKey;
+
+    let specPoint = {
+        id: "specialized_" + specialtyKey,
+        region: (specialtyKey === 'scoliosis') ? 'spine' : 'neuro',
+        title: (specialtyKey === 'stroke') ? 'تأهيل ما بعد الجلطات والضعف الحركي' :
+               (specialtyKey === 'foot_drop') ? 'سقوط القدم وصعوبة رفع المشط' :
+               'تقوس وانحراف العمود الفقري (الجنف Scoliosis)',
+        specialtyType: specialtyKey
+    };
+
+    currentSelectedPoint = specPoint;
+    try {
+        localStorage.setItem('smart_current_point', JSON.stringify(specPoint));
+    } catch(e) {}
+
+    const statusText = document.getElementById('selected-point-label');
+    if (statusText) {
+        statusText.textContent = `🎯 تم اختيار: ${specPoint.title}`;
+        statusText.style.color = '#38bdf8';
+    }
+
+    goToStep(2);
+    if (typeof switchIntakeMode === 'function') {
+        switchIntakeMode('chat');
+    }
+    if (typeof clinicalDialogueState !== 'undefined') {
+        clinicalDialogueState.hasStartedWelcome = false;
+        clinicalDialogueState.isStarting = false;
+    }
+    if (typeof initAiClinicalChat === 'function') {
+        initAiClinicalChat();
+    }
+}
+window.startSpecializedConsultation = startSpecializedConsultation;
+
+// عرض بطاقة الإحالة والاستشارة السريرية العاجلة للحالات الخاصة
+function renderSpecializedConsultationReferralCard(patientData) {
+    const messagesBox = document.getElementById('ai-chat-messages-box');
+    if (!messagesBox) return;
+
+    const specialty = window._specializedConsultationType;
+    let specTitle = 'التأهيل الحركي وما بعد الجلطات';
+    let specIcon = '🧠';
+    let specAdvice = 'حالات ما بعد الجلطات وضعف الحركة تحتاج تدخلاً سريرياً يدوياً مباشراً لإعادة تدريب المسارات العصبية، موازنة المشي، وتليين التصلب العضلي التشنجي. تطبيق تمارين عشوائية دون إشراف مباشر قد يؤدي لاختلال حركي أو السقوط.';
+    if (specialty === 'foot_drop') {
+        specTitle = 'سقوط القدم وصعوبة رفع المشط (Foot Drop)';
+        specIcon = '🦶';
+        specAdvice = 'سقوط القدم يستوجب كشفاً دقيقاً لسلامة العصب الشظوي وجذور الفقرات القطنية (L5) لتحديد إمكانية استعادة رفع المشط بالتقويم اليدوي والتحفيز العصبي المباشر.';
+    } else if (specialty === 'scoliosis') {
+        specTitle = 'تقوس وانحراف العمود الفقري (الجنف Scoliosis)';
+        specIcon = '📐';
+        specAdvice = 'الجنف انحراف ثلاثي الأبعاد لا تناسبه التمارين المنزلية المتناظرة نهائياً. يتطلب كشفاً يدوياً عيانياً لمستوى الكتفين والحوض وإجراء تقويم يدوي مخصص لإعادة توازن الأحمال الميكانيكية.';
+    }
+
+    const pName = patientData.fullName || patientData.name || 'المراجع المحترم';
+    const pPhone = patientData.phone || '';
+    const pAge = patientData.age ? `${patientData.age} سنة` : 'غير محدد';
+    const notes = patientData.notes || 'استشارة سريرية خاصة';
+
+    const waText = encodeURIComponent(
+`السلام عليكم دكتور جمال قبها،
+أنا المراجع: ${pName}
+العمر: ${pAge}
+رقم الهاتف: ${pPhone}
+نوع الاستشارة الخاصة: ${specTitle}
+تفاصيل الحالة المسجلة: ${notes}
+
+أرغب بترتيب موعد كشف سريري مباشر / استفسار عن إمكانية الزيارة المنزلية والتأهيل اليدوي في منصة «وداعاً للألم».`
+    );
+
+    const waUrl = `https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${waText}`;
+
+    const cardHTML = `
+        <div class="specialized-referral-card" style="background: linear-gradient(135deg, #0d1522 0%, #152238 100%); border: 2px solid var(--primary-gold); border-radius: 16px; padding: 22px 24px; margin-top: 15px; box-shadow: 0 10px 35px rgba(0,0,0,0.6); animation: fadeIn 0.4s ease;">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1.5px solid rgba(212, 175, 55, 0.35); padding-bottom: 14px; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 2.2em; background: rgba(212, 175, 55, 0.15); border: 1.5px solid var(--primary-gold); padding: 8px; border-radius: 12px;">${specIcon}</span>
+                    <div>
+                        <h3 style="color: #fef08a; margin: 0; font-size: 1.22em; font-weight: 800;">بطاقة التقييم والاستشارة السريرية العاجلة</h3>
+                        <div style="color: #38bdf8; font-size: 0.9em; font-weight: bold; margin-top: 3px;">${specTitle}</div>
+                    </div>
+                </div>
+                <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.8em; font-weight: bold; padding: 5px 14px; border-radius: 20px;">
+                    ✅ تم التوثيق والاعتماد
+                </span>
+            </div>
+
+            <!-- تفاصيل الملف -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 14px; margin-bottom: 16px; color: #cbd5e1; font-size: 0.9em;">
+                <div>👤 <strong>المراجع:</strong> <span style="color: #fff;">${pName}</span></div>
+                <div>🎂 <strong>العمر:</strong> <span style="color: #fff;">${pAge}</span></div>
+                <div>📱 <strong>الهاتف:</strong> <span style="color: #6ee7b7; direction: ltr; display: inline-block;">${pPhone}</span></div>
+                <div>🩺 <strong>التصنيف:</strong> <span style="color: #fef08a;">حالة تأهيل حركي خاصة</span></div>
+            </div>
+
+            <!-- التوجيه السريري للأمان -->
+            <div style="background: rgba(234, 179, 8, 0.12); border: 1.5px solid #eab308; border-radius: 10px; padding: 14px 16px; margin-bottom: 20px;">
+                <div style="color: #fef08a; font-weight: bold; font-size: 0.95em; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+                    <span>⚠️</span> توجيه أمان طبي وسريري خاص:
+                </div>
+                <div style="color: #f1f5f9; font-size: 0.88em; line-height: 1.6;">
+                    ${specAdvice}
+                </div>
+            </div>
+
+            <!-- زر الواتساب المباشر -->
+            <div style="text-align: center;">
+                <a href="${waUrl}" target="_blank" class="btn-whatsapp-cta" style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 28px; border-radius: 50px; font-size: 1.05em; font-weight: 900; background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); color: #fff; text-decoration: none; box-shadow: 0 6px 25px rgba(37, 211, 102, 0.45); border: 1.5px solid #a7f3d0; cursor: pointer;">
+                    <span style="font-size: 1.3em;">💬</span>
+                    <span>إرسال التقرير للمعالج جمال قبها مباشرة عبر واتساب</span>
+                    <span>➔</span>
+                </a>
+                <div style="color: #94a3b8; font-size: 0.82em; margin-top: 10px;">
+                    🌿 يتوفر خيار التنسيق لجلسات في العيادة أو زيارات تأهيل منزلية للحالات التي يصعب نقلها.
+                </div>
+            </div>
+        </div>
+    `;
+
+    appendChatMessage('bot', cardHTML);
+    const chatInput = document.getElementById('ai-chat-input');
+    if (chatInput) chatInput.disabled = true;
+    const sendBtn = document.getElementById('btn-chat-send');
+    if (sendBtn) sendBtn.disabled = true;
+}
+window.renderSpecializedConsultationReferralCard = renderSpecializedConsultationReferralCard;
 
 
 // دالة التنبيهات المخصصة الفاخرة
@@ -7724,8 +7868,17 @@ async function initAiClinicalChat() {
         </div>
     `;
 
-    // نص الترحيب الطبي الدقيق حسب طلب المستخدم تماماً
-    const instantWelcomeMsg = `أهلاً بك في «وداعاً للألم» للكايروبراكتيك.. سلامتك أولاً. أنا مساعدك السريري الذكي في «وداعاً للألم».\n\nنحن هنا لمساعدتك في علاج ${ptTitle} بتقويم الكايروبراكتيك الطبيعي الآمن وبدون جراحة أو مسكنات.\n\nيسعدني أولاً التعرف على اسمك الكريم، وعمرك، ووزنك، وطولك التقريبي، وما الذي تعاني منه تحديداً في **${ptTitle}**؟ (هذه البيانات الحيوية ضرورية لحساب مؤشر الأحمال البيوميكانيكية على المفاصل وتحديد سبب المشكلة بدقة).`;
+    // نص الترحيب الطبي الدقيق حسب طلب المستخدم ومسار الحالة
+    let instantWelcomeMsg = '';
+    if (window._specializedConsultationType === 'stroke') {
+        instantWelcomeMsg = `أهلاً بك في استشارات التأهيل الحركي وما بعد الجلطات في «وداعاً للألم».. سلامتك أولاً. أنا مساعدك السريري الذكي.\n\nنحن هنا لمساعدتك في استعادة التوازن، المشي الآمن، وتليين التصلب العضلي التشنجي عبر جلسات التقويم اليدوي والتأهيل العصبي المباشر مع المعالج جمال قبها.\n\nيسعدني أولاً التعرف على اسمك الكريم، وعمرك، والطرف المتأثر (يمين أم يسار)، ومنذ متى حدثت الجلطة وما هي قدرتك الحالية على المشي والوقوف؟`;
+    } else if (window._specializedConsultationType === 'foot_drop') {
+        instantWelcomeMsg = `أهلاً بك في استشارات سقوط القدم وضعف الأعصاب الحركية في «وداعاً للألم».. سلامتك أولاً. أنا مساعدك السريري الذكي.\n\nسقوط القدم وصعوبة رفع مشط القدم يستوجب فحصاً سريرياً دقيقاً لجذر العصب القطني (L5) والعصب الشظوي لإعادة تنشيط رافعات المشط ومنع تعثر المشي.\n\nيسعدني أولاً التعرف على اسمك الكريم، وعمرك، وهل سقوط القدم في الساق اليمنى أم اليسرى، وهل بدأ فجأة بعد ألم بالظهر أم بعد جراحة أو إصابة؟`;
+    } else if (window._specializedConsultationType === 'scoliosis') {
+        instantWelcomeMsg = `أهلاً بك في استشارات تقويم انحراف العمود الفقري (الجنف - Scoliosis) في «وداعاً للألم».. سلامتك أولاً. أنا مساعدك السريري الذكي.\n\nحالات الجنف وانحراف الفقرات تتطلب عناية يدوية وتقييماً سريرياً مخصصاً لمستوى الكتفين وتوازن الحوض، ولا تناسبها التمارين العشوائية.\n\nيسعدني أولاً التعرف على اسمك الكريم، وعمرك، وهل تم تشخيصك بأشعة سينية سابقة وقياس درجة الانحناء، وهل تشعر بآلام مصاحبة أو تفاوت في ارتفاع الكتفين؟`;
+    } else {
+        instantWelcomeMsg = `أهلاً بك في «وداعاً للألم» للكايروبراكتيك.. سلامتك أولاً. أنا مساعدك السريري الذكي في «وداعاً للألم».\n\nنحن هنا لمساعدتك في علاج ${ptTitle} بتقويم الكايروبراكتيك الطبيعي الآمن وبدون جراحة أو مسكنات.\n\nيسعدني أولاً التعرف على اسمك الكريم، وعمرك، ووزنك، وطولك التقريبي، وما الذي تعاني منه تحديداً في **${ptTitle}**؟ (هذه البيانات الحيوية ضرورية لحساب مؤشر الأحمال البيوميكانيكية على المفاصل وتحديد سبب المشكلة بدقة).`;
+    }
 
     // 2. إتمام الاتصال وعرض بطاقة الطبيب فوراً وتشغيل الصوت المحضر مسبقاً
     setTimeout(async () => {
@@ -8467,7 +8620,12 @@ async function sendChatMessage() {
 
                 // الحفاظ الصارم على موضع الألم المختار من المريض ومنع استبداله مطلقاً
                 let resolvedPain = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint && currentSelectedPoint.title) ? currentSelectedPoint.title : '';
-                if (!resolvedPain) {
+                if (window._specializedConsultationType) {
+                    const sType = window._specializedConsultationType;
+                    resolvedPain = (sType === 'stroke') ? 'تأهيل ما بعد الجلطات والضعف الحركي' :
+                                   (sType === 'foot_drop') ? 'سقوط القدم وصعوبة رفع المشط' :
+                                   'تقوس وانحراف العمود الفقري (الجنف Scoliosis)';
+                } else if (!resolvedPain) {
                     const detected = detectAnatomicalPointFromText((clinicalDialogueState.history || []).map(h => h.text).join(' '));
                     if (detected) {
                         resolvedPain = detected.title;
@@ -8479,6 +8637,8 @@ async function sendChatMessage() {
 
                 const pPhoneDigits = clinicalDialogueState.patientPhone ? clinicalDialogueState.patientPhone.replace(/\D/g, '') : '';
                 const pId = 'pat_' + (pPhoneDigits ? pPhoneDigits + '_' + Date.now().toString(36).slice(-4) : Date.now().toString(36));
+                const specType = window._specializedConsultationType || null;
+
                 SmartDB.savePatient({
                     patientId: pId,
                     id: pId,
@@ -8496,8 +8656,10 @@ async function sendChatMessage() {
                     painAreaTitle: resolvedPain,
                     selectedPoint: resolvedPain,
                     pointId: (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.id : '',
-                    chiefDiagnosis: `فحص وتشخيص سريري (${resolvedPain})`,
-                    diagnosisTitle: `فحص وتشخيص سريري (${resolvedPain})`,
+                    chiefDiagnosis: specType ? `استشارة سريرية متقدمة (${resolvedPain})` : `فحص وتشخيص سريري (${resolvedPain})`,
+                    diagnosisTitle: specType ? `استشارة سريرية متقدمة (${resolvedPain})` : `فحص وتشخيص سريري (${resolvedPain})`,
+                    isSpecializedConsultation: !!specType,
+                    specialtyType: specType,
                     assessment: typeof currentAssessmentData !== 'undefined' ? currentAssessmentData : null,
                     notes: (clinicalDialogueState.collectedSymptoms && clinicalDialogueState.collectedSymptoms.length > 0) ? clinicalDialogueState.collectedSymptoms.join(' - ') : 'تم توثيق رقم الهاتف والمؤشرات في الشات السريري',
                     collectedSymptoms: clinicalDialogueState.collectedSymptoms || []
@@ -8506,17 +8668,44 @@ async function sendChatMessage() {
                     // إرسال إشعار للوحة التحكم بوجود مريض جديد
                     if (typeof SmartDB.addAdminNotification === 'function') {
                         SmartDB.addAdminNotification({
-                            type: 'new_registration',
-                            title: `👤 مراجع جديد: ${savedName}`,
-                            message: `انضم ${savedName} للعيادة - منطقة: ${resolvedPain} - هاتف: ${clinicalDialogueState.patientPhone}`,
+                            type: specType ? 'specialized_lead' : 'new_registration',
+                            title: specType ? `🌟 مراجع حالة خاصة: ${savedName}` : `👤 مراجع جديد: ${savedName}`,
+                            message: specType ? `طلب استشارة سريرية مباشرة: ${resolvedPain} - هاتف: ${clinicalDialogueState.patientPhone}` : `انضم ${savedName} للعيادة - منطقة: ${resolvedPain} - هاتف: ${clinicalDialogueState.patientPhone}`,
                             patientName: savedName,
                             patientPhone: clinicalDialogueState.patientPhone,
-                            meta: { painArea: resolvedPain }
+                            meta: { painArea: resolvedPain, specialtyType: specType }
                         });
                     }
                 }).catch(e => console.warn('⚠️ SmartDB save error:', e));
             }
 
+            // إذا كانت الحالة استشارة خاصة (جلطات، سقوط قدم، جنف): عرض بطاقة الإحالة السريرية والواتساب فوراً دون تمارين آلية
+            if (window._specializedConsultationType) {
+                const indicator = document.getElementById(loadingId);
+                if (indicator) indicator.remove();
+
+                const patientInfo = {
+                    name: savedName,
+                    fullName: clinicalDialogueState.patientFullName || savedName,
+                    phone: clinicalDialogueState.patientPhone,
+                    age: pAge,
+                    weight: pWeight,
+                    height: pHeight,
+                    notes: (clinicalDialogueState.collectedSymptoms && clinicalDialogueState.collectedSymptoms.length > 0)
+                        ? clinicalDialogueState.collectedSymptoms.join(' - ')
+                        : (clinicalDialogueState.history || []).filter(h => h.sender === 'user').map(h => h.text).join(' | ')
+                };
+
+                renderSpecializedConsultationReferralCard(patientInfo);
+                renderChatQuickReplies([]);
+
+                if (typeof Wada3anAiEngine !== 'undefined') {
+                    Wada3anAiEngine.stopSpeaking();
+                    const closingVoice = `شكراً لك يا ${savedName}. لقد تم توثيق بيانات حالتك واعتمادها بنجاح. نظراً لأن هذه الحالة تتطلب عناية يدوية وتقييماً سريرياً مباشراً، نرجو منك إرسال التقرير للمعالج جمال قبها مباشرة عبر الواتساب لتحديد موعد الجلسة أو الزيارة المنزلية المناسبة. نسأل الله لك دوام الصحة والعافية.`;
+                    Wada3anAiEngine.speakDoctorResponse(closingVoice);
+                }
+                return;
+            }
 
             const patientGreeting = (clinicalDialogueState.patientName && clinicalDialogueState.patientName !== 'المراجع الكريم') ? ` يا ${clinicalDialogueState.patientName}` : '';
             const closingMsg = `✅ تم تسجيل رقم هاتفك بنجاح${patientGreeting}. نقوم الآن بإصدار تقريرك السريري المتكامل وتحويلك فوراً لصفحة التشخيص وخطة التعافي... ⏱️<div style="margin-top: 10px; text-align: center;"><button type="button" onclick="window.doDirectTransitionToReport && window.doDirectTransitionToReport()" class="btn-header btn-header-gold" style="padding: 7px 18px; font-size: 0.86em; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);">⚡ الانتقال المباشر للتقرير</button></div>`;

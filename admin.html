@@ -2697,7 +2697,10 @@
                 <tr style="border-bottom: 1px solid #1e293b; color: #e2e8f0;">
                     <td style="padding: 14px; font-weight: bold; color: var(--primary-gold);">${p.patientId}</td>
                     <td style="padding: 14px; font-weight: bold;">
-                        <div style="font-size: 1.05em; color: #ffffff;">${patientDisplayName}</div>
+                        <div style="font-size: 1.05em; color: #ffffff; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                            <span>${patientDisplayName}</span>
+                            ${(p.isSpecializedConsultation || p.specialtyType) ? `<span style="background: rgba(212, 175, 55, 0.2); border: 1px solid var(--primary-gold); color: #fef08a; padding: 1px 7px; border-radius: 4px; font-size: 0.72em; font-weight: bold;">🌟 حالة خاصة</span>` : ''}
+                        </div>
                         <div style="color: #94a3b8; font-size: 0.82em; margin-top: 4px; font-weight: normal; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                             <span style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 1px 6px; border-radius: 4px; color: #7dd3fc;">العمر: ${p.age ? p.age + ' سنة' : '-'}</span>
                             <span style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 1px 6px; border-radius: 4px; color: #6ee7b7;">الوزن: ${p.weight ? p.weight + ' كغ' : '-'}</span>
