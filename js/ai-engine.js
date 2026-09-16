@@ -475,6 +475,7 @@ ${greetingInstruction}
     // معالجة رد المريض وتوليد رد تفاعلي طبي وإنساني فائق الذكاء (Conversational Clinical Agent)
     async advanceClinicalDialogue(context) {
         const { currentStep, history, painPointTitle, patientName, patientPhone, patientVitals, lastUserMessage } = context;
+        const specType = context.specialtyType || (typeof window !== 'undefined' && window._specializedConsultationType) || null;
 
         const key = WADA3AN_AI_CONFIG.getApiKey();
         // في حال عدم توفر مفتاح أو تعذر الاتصال، الرد بذكاء تفاعلي يعالج ما قاله المراجع فعلياً بعد محاكاة التحليل الطبي
@@ -483,9 +484,45 @@ ${greetingInstruction}
             return this.generateFallbackDialogueStep(context);
         }
 
+        let specializedPromptSection = '';
+        if (specType === 'stroke') {
+            specializedPromptSection = `
+🌟 تنبيه طبي وسريري حاسم وخاص جداً (حالة تأهيل ما بعد الجلطات والضعف الحركي):
+- المراجع يطلب استشارة تأهيل ما بعد الجلطة (Stroke Neurological Rehabilitation).
+- ⛔ ممنوع منعاً باتاً ومطلقاً سؤال المريض أي سؤال عن "ألم الجلوس"، "ألم الانحناء"، "عرق النسا"، "الديسك"، أو تقييم ألم من 1 إلى 10! فهذه أسئلة غير مناسبة سريرياً لمريض الجلطة وتفقده الثقة بالنظام.
+- الأسئلة السريرية المتخصصة المطلوبة حصراً:
+  1. الطرف أو الجانب الأكثر تأثراً بالضعف أو التصلب (الجانب الأيمن أم الأيسر، يد أم قدم).
+  2. المدة الزمنية منذ حدوث الجلطة.
+  3. درجة التيبس والتشنج العضلي اللاإرادي (Spasticity) في حركة الأصابع والمفاصل.
+  4. القدرة الحالية على الوقوف والمشي بمفرده أو بمساعدة مرافق أو عكاز/مشاية.
+- هدف الاستشارة: إعداد بطاقة التقييم السريري لتحويله للمعالج جمال قبها للتأهيل الحركي السريري المباشر أو الزيارة المنزلية.
+`;
+        } else if (specType === 'foot_drop') {
+            specializedPromptSection = `
+🌟 تنبيه طبي وسريري حاسم وخاص جداً (حالة سقوط القدم Foot Drop):
+- المراجع يعاني من: سقوط القدم وصعوبة رفع المشط.
+- ⛔ ممنوع سؤال المراجع عن ألم الجلوس أو وصف تمارين عشوائية.
+- الأسئلة السريرية المتخصصة المطلوبة حصراً:
+  1. القدم المصابة (اليمنى أم اليسرى).
+  2. سبب سقوط القدم (هل بدأ بعد ألم ديسك قطني حاد L5، أم بعد جراحة، أم إصابة في الركبة ومفصل الساق)؟
+  3. هل يتعثر أثناء المشي، وهل يستخدم دعامة مشط قدم (AFO) حالياً؟
+`;
+        } else if (specType === 'scoliosis') {
+            specializedPromptSection = `
+🌟 تنبيه طبي وسريري حاسم وخاص جداً (حالة تقوس وانحراف العمود الفقري Scoliosis):
+- المراجع يعاني من: تقوس وانحراف العمود الفقري (الجنف Scoliosis).
+- ⛔ ممنوع سؤال المراجع عن الجلوس أو وصف تمارين عشوائية متناظرة.
+- الأسئلة السريرية المتخصصة المطلوبة حصراً:
+  1. هل تم إجراء تصوير أشعة سينية سابقة (X-Ray) وقياس زاوية كوب (Cobb Angle)؟
+  2. هل يلاحظ تفاوتاً في ارتفاع الكتفين، لوحي الظهر، أو ميلان الحوض؟
+  3. متى تم اكتشاف التقوس وهل يسبب إجهاداً في أحد جانبي الظهر أو صعوبة تنفس؟
+`;
+        }
+
         const systemPrompt = `
 أنت الاستشاري الذكي في «وداعاً للألم».
 أنت وكيل ذكاء اصطناعي تفاعلي سريري فائق الذكاء وحيوي 100% (Clinical AI Agent)، لست آلة ولا تكرر قوالب مسبقة!
+${specializedPromptSection}
 
 المراجع اختار موضع الشكوى على المجسم: [${painPointTitle || 'العمود الفقري والمفاصل'}].
 بيانات المريض المعروفة حتى الآن:
@@ -760,9 +797,16 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
         // تحديد التصنيف التشريحي الدقيق لنقطة الألم المختارة
         const ptId = (context.pointId || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint ? currentSelectedPoint.id : '') || '').toLowerCase();
         const tLower = (title + ' ' + ptId).toLowerCase();
+        const specType = context.specialtyType || (typeof window !== 'undefined' && window._specializedConsultationType) || null;
 
         let anatCat = 'lower_back_pelvis';
-        if (/ظهر|قطن|قطنية|lumbar|دسك|غضروف|l4|l5|أسفل\s*الظهر|اسفل\s*الظهر|عرق\s*النسا|سياتيكا|حوض|عجز|عصعص/i.test(tLower)) {
+        if (specType === 'stroke' || /stroke|جلطة|جلطات/i.test(tLower)) {
+            anatCat = 'specialized_stroke';
+        } else if (specType === 'foot_drop' || /foot_drop|سقوط\s*القدم|رفع\s*المشط/i.test(tLower)) {
+            anatCat = 'specialized_foot_drop';
+        } else if (specType === 'scoliosis' || /scoliosis|جنف|انحراف\s*العمود/i.test(tLower)) {
+            anatCat = 'specialized_scoliosis';
+        } else if (/ظهر|قطن|قطنية|lumbar|دسك|غضروف|l4|l5|أسفل\s*الظهر|اسفل\s*الظهر|عرق\s*النسا|سياتيكا|حوض|عجز|عصعص/i.test(tLower)) {
             anatCat = 'lower_back_pelvis';
         } else if (/رقبة|رقبه|عنق|رأس|راس|صداع|فك|صدغ|جمجمة|cervical|neck|head/i.test(tLower)) {
             anatCat = 'neck_head';
@@ -783,6 +827,27 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
         // أسئلة وفحوصات سريرية دقيقة متوافقة تشريحياً 100% مع العضو المصاب
         const getAnatomicalQuestions = (category, titleStr) => {
             switch(category) {
+                case 'specialized_stroke':
+                    return {
+                        provocation: `ما هو الجانب أو الطرف الأكثر تأثراً بالضعف أو التصلب (الجانب الأيمن أم الأيسر)، ومنذ متى حدثت الجلطة؟`,
+                        numbness: `هل تشعر بتشنج وتيبس عضلي لاإرادي (Spasticity) في حركة اليد والأصابع، أم ضعف وارتخاء في حركة الساق؟`,
+                        stiffness: `هل تستطيع الوقوف والمشي بمفردك بأمان، أم تحتاج لمساعدة مرافق أو استخدام عكاز/مشاية؟`,
+                        duration: `منذ متى بدأت مرحلة التأهيل، وهل تلقيت جلسات علاج طبيعي وتأهيل حركي سابقاً؟`
+                    };
+                case 'specialized_foot_drop':
+                    return {
+                        provocation: `في أي قدم تشتكي من صعوبة رفع المشط (اليمنى أم اليسرى)، وهل تسقط مقدمة القدم لأسفل عند المشي مسببة التعثر؟`,
+                        numbness: `هل ظهر سقوط القدم بعد ألم حاد أو ديسك في أسفل الظهر (L5)، أم بعد جراحة أو إصابة في الركبة؟`,
+                        stiffness: `هل تشعر بخدر أو تنميل يمتد على السطح الخارجي للساق وأعلى ظهر القدم؟`,
+                        duration: `منذ متى بدأت هذه المشكلة، وهل تستخدم دعامة مشط القدم (AFO) لمساعدتك على المشي حالياً؟`
+                    };
+                case 'specialized_scoliosis':
+                    return {
+                        provocation: `هل تلاحظ تفاوتاً ظاهراً في ارتفاع الكتفين، لوحي الظهر، أو ميلاً في الحوض عند الوقوف؟`,
+                        numbness: `هل تم إجراء تصوير أشعة سينية (X-Ray) سابقة وقياس زاوية الانحناء (زاوية كوب Cobb Angle)؟`,
+                        stiffness: `هل تشعر بإجهاد وتشنج عضلي في أحد جانبي الظهر أكثر من الآخر عند الوقوف الطويل أو المشي؟`,
+                        duration: `منذ متى لاحظت هذا التقوس، وهل يرافقه أي ألم في الظهر أو صعوبة في التنفس مع المجهود؟`
+                    };
                 case 'wrist_hand':
                     return {
                         provocation: `هل يزداد ألم **${titleStr}** عند استخدام الفأرة والكتابة، تصفح الهاتف بالإبهام، أو ثني المعصم أثناء النوم؟`,
@@ -909,6 +974,14 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             const weightInfo = patientVitals?.weight ? ` (الوزن: ${patientVitals.weight} كغم)` : '';
             const heightInfo = patientVitals?.height ? ` (الطول: ${patientVitals.height} سم)` : '';
 
+            if (anatCat === 'specialized_stroke' || anatCat === 'specialized_foot_drop' || anatCat === 'specialized_scoliosis') {
+                return {
+                    message: `أهلاً بك${nameSuffix}، تم تسجيل بياناتك الحيوية بنجاح${ageInfo}${weightInfo}${heightInfo}.\n\nوالآن لنبدأ الاستقصاء السريري الدقيق لـ **${title}**:\n1. ${anatQ.provocation}\n2. ${anatQ.stiffness}`,
+                    quickReplies: [],
+                    nextStep: 'chatting'
+                };
+            }
+
             return {
                 message: `أهلاً بك${nameSuffix}، تم تسجيل بياناتك الحيوية بنجاح${ageInfo}${weightInfo}${heightInfo}. هذه المؤشرات بالغة الأهمية لمعايرة الأحمال البيوميكانيكية على المفاصل بدقة وأمان.\n\nوالآن لتشخيص ميكانيكية المشكلة في **${title}** بدقة:\n1. ${anatQ.provocation}\n2. ${anatQ.numbness}\n3. ${anatQ.duration}`,
                 quickReplies: [],
@@ -952,10 +1025,19 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             };
         }
 
-        // 4. موقع العيادة
-        if (/(?:وين\s*(?:عيادتكم|موقعكم|مكانكم|عنوانكم|العيادة|المركز)|مكانكم|عنوانكم|موقعكم|كم\s*السعر|كم\s*التكلفة|تكلفة\s*الجلسة|حجز\s*موعد)/i.test(userText)) {
+        // 4. السؤال عن الرسوم والتكلفة
+        if (/كم\s*السعر|سعر|تكلفة|رسوم|كم\s*بتكلف|بكم|مجاني|فلوس|مصاري/i.test(userText)) {
             return {
-                message: `نحن في «وداعاً للألم» متواجدون في الأردن (عمان والزرقاء) مع المعالج جمال المتخصص في الكايروبراكتيك وتقويم الفقرات بدون جراحة أو أدوية، مع توفر خدمة زيارات منزلية لمن يتعذر عليه الحضور. خطة التمارين المرفقة هنا مجانية 100% لمساعدتك فوراً.\n\nطمني، هل يمتد الألم في **${title}** للأطراف أم يتركز في موضع الألم فقط؟`,
+                message: `الفحص السريري الذكي والتقرير الطبي وخطة التمارين التأهيلية المنزلية لمدة 7 أيام مجانية بالكامل 100%${nameSuffix} في «وداعاً للألم»! أما جلسات التقويم اليدوي المباشرة والزيارات المنزلية فأسعارها مدروسة وميسرة جداً.\n\nدعنا نكمل استشارتك أولاً: هل يزداد ألمك مع الحركة؟`,
+                quickReplies: [],
+                nextStep: 'chatting'
+            };
+        }
+
+        // 5. السؤال عن الموقع أو العنوان
+        if (/وين\s*موقعكم|مكانكم|عنوانكم|وين\s*انتو|فرعكم|العيادة\s*وين|وين\s*العيادة/i.test(userText)) {
+            return {
+                message: `مرحباً بك${nameSuffix}! مركز خدماتنا واستشاراتنا المعتمدة متوفر، مع خدمة الزيارات المنزلية المتكاملة داخل الأردن (عمان والزرقاء) لراحتك، وخدمة الاستشارات الدولية لقراءة الرنين المغناطيسي لمرضانا حول العالم.\n\nوالآن لنطمئن على حالتك في **${title}**: هل الألم مستمر أم يأتي ويذهب؟`,
                 quickReplies: [],
                 nextStep: 'chatting'
             };
@@ -980,7 +1062,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
         }
 
         // 6.1 السؤال عن سبب المشكلة وما إذا كانت عضلية أم عصبية
-        if (/(?:سبب\s*(?:المشكلة|الألم|الالم|المرض|الوجع)|شو\s*السبب|ايش\s*السبب|ليش\s*بوجعني|عضلية\s*أو\s*عصبية|عضلي\s*(?:ولا|او|أم)\s*عصبي|عصب\s*(?:ولا|او)\s*عضل)/i.test(userText)) {
+        if (/(?:سبب\s*(?:المشكلة|الألم|الالم|المرض|الوجع)|شو\s*السبب|ايش\s*السبب|ليش\s*بوجعني|عضلية\s*أو\s*عصبية|عضلي\s*(?:ولا|او|أم)\s*عصبي|عصب\s*(?:ولا|او|او)\s*عضل)/i.test(userText)) {
             return {
                 message: `سؤالك ممتاز وسريري في غاية الأهمية${nameSuffix}! لتحديد سبب المشكلة بدقة نميز بين 3 احتمالات رئيسية:\n\n1️⃣ **الاحتمال العضلي (Muscular):** ينجم عن نقاط الزناد العضلي (Trigger Points) والتشنج التعويضي الناتج عن إجهاد الجلوس أو حمل أوزان؛ ويكون الألم كوجع عميق أو ثقل ومحدودية تزداد مع الحركة ويخف بالتدليك والحرارة.\n2️⃣ **الاحتمال العصبي (Neurological / Radicular):** ينجم عن انضغاط أو تهيج جذور الأعصاب الخارجة من بين الفقرات (مثل انزلاق غضروفي أو احتكاك وجيهي)؛ وترافقه أعراض تنميل، خدر، لسعات كهربائية، أو ألم يمتد على طول مسار العصب للطرف.\n3️⃣ **الاحتمال الأيضي والتكاملي (نقص الفيتامينات):** نقص فيتامين B12 يسبب اعتلالاً عصبياً وتنميلاً، بينما نقص المغنيسيوم يسبب تقلصات وتشنجات عضلية مستمرة، ونقص فيتامين D والكالسيوم يضعف العظام والمفاصل.\n\nولتحديد أي هذه الاحتمالات ينطبق على حالتك في **${title}** بدقة:\n${anatQ.numbness}`,
                 quickReplies: [],
@@ -1015,6 +1097,41 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             acknowledgmentPrefix = `تماماً، تأكيد هذا العرض يساعدنا في استيضاح المسببات الدقيقة لـ **${title}**${nameSuffix}. `;
         } else if (isSimpleNegative) {
             acknowledgmentPrefix = `ممتاز، استبعاد هذا العرض مؤشر سريري طيب يؤكد أن الخلل يتركز ميكانيكياً في **${title}**${nameSuffix}. `;
+        }
+
+        // ✅ مسار خاص متقدم للحالات السريرية الخاصة (جلطات، سقوط قدم، جنف) دون أسئلة ديسك أو جلوس
+        if (anatCat === 'specialized_stroke' || anatCat === 'specialized_foot_drop' || anatCat === 'specialized_scoliosis') {
+            const hasSideOrOnset = /يمين|يسار|أيمن|ايمن|أيسر|ايسر|سنة|شهر|أسبوع|أيام|قدم|يد|ساق|رجل/i.test(allHistoryText);
+            const hasFunctional = /مشي|وقوف|مساعدة|عكاز|ووكر|مشاية|تعثر|أشعة|اشعة|كوب|cobb|كتف|حوض/i.test(allHistoryText);
+            const hasToneOrNerve = /تشنج|تيبس|تصلب|خدر|تنميل|عصب|ألم|الم|تنفس/i.test(allHistoryText);
+
+            if (!hasSideOrOnset) {
+                return {
+                    message: `${acknowledgmentPrefix}${anatQ.provocation}`,
+                    quickReplies: [],
+                    nextStep: 'chatting'
+                };
+            } else if (!hasFunctional) {
+                return {
+                    message: `${acknowledgmentPrefix}${anatQ.stiffness}`,
+                    quickReplies: [],
+                    nextStep: 'chatting'
+                };
+            } else if (!hasToneOrNerve) {
+                return {
+                    message: `${acknowledgmentPrefix}${anatQ.numbness}`,
+                    quickReplies: [],
+                    nextStep: 'chatting'
+                };
+            } else {
+                return {
+                    message: `اكتملت الآن كافة بيانات التقييم السريري لحالتك${nameSuffix}! نظراً لأن حالات **${title}** تتطلب عناية سريرية يدوية وتقييماً عيانياً مباشراً مع المعالج جمال قبها، يرجى إدخال رقم هاتفك المحمول لفتح بطاقة التقييم السريري والتواصل المباشر عبر الواتساب:`,
+                    quickReplies: [],
+                    nextStep: 'ask_phone',
+                    isPhonePrompt: true,
+                    isReady: false
+                };
+            }
         }
 
         // ✅ استجواب متسلسل متعمق بلا سقف للأسئلة — يستمر حتى تكتمل الصورة السريرية الكاملة
