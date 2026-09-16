@@ -475,7 +475,7 @@ ${greetingInstruction}
     // معالجة رد المريض وتوليد رد تفاعلي طبي وإنساني فائق الذكاء (Conversational Clinical Agent)
     async advanceClinicalDialogue(context) {
         const { currentStep, history, painPointTitle, patientName, patientPhone, patientVitals, lastUserMessage } = context;
-        const specType = context.specialtyType || (typeof window !== 'undefined' && window._specializedConsultationType) || null;
+        const specType = context.specialtyType || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint && currentSelectedPoint.specialtyType) || null;
 
         const key = WADA3AN_AI_CONFIG.getApiKey();
         // في حال عدم توفر مفتاح أو تعذر الاتصال، الرد بذكاء تفاعلي يعالج ما قاله المراجع فعلياً بعد محاكاة التحليل الطبي
@@ -797,7 +797,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
         // تحديد التصنيف التشريحي الدقيق لنقطة الألم المختارة
         const ptId = (context.pointId || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint ? currentSelectedPoint.id : '') || '').toLowerCase();
         const tLower = (title + ' ' + ptId).toLowerCase();
-        const specType = context.specialtyType || (typeof window !== 'undefined' && window._specializedConsultationType) || null;
+        const specType = context.specialtyType || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint && currentSelectedPoint.specialtyType) || null;
 
         let anatCat = 'lower_back_pelvis';
         if (specType === 'stroke' || /stroke|جلطة|جلطات/i.test(tLower)) {
@@ -806,13 +806,15 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             anatCat = 'specialized_foot_drop';
         } else if (specType === 'scoliosis' || /scoliosis|جنف|انحراف\s*العمود/i.test(tLower)) {
             anatCat = 'specialized_scoliosis';
+        } else if (/ورك|مفصل\s*الورك|فخذ|hip/i.test(tLower)) {
+            anatCat = 'hip_joint';
         } else if (/ظهر|قطن|قطنية|lumbar|دسك|غضروف|l4|l5|أسفل\s*الظهر|اسفل\s*الظهر|عرق\s*النسا|سياتيكا|حوض|عجز|عصعص/i.test(tLower)) {
             anatCat = 'lower_back_pelvis';
         } else if (/رقبة|رقبه|عنق|رأس|راس|صداع|فك|صدغ|جمجمة|cervical|neck|head/i.test(tLower)) {
             anatCat = 'neck_head';
         } else if (/كتف|لوح\s*الكتف|أبهر|ابهر|ترقوة|كفة\s*مدورة|shoulder|scapula|trapezius/i.test(tLower)) {
             anatCat = 'shoulder_scapula';
-        } else if (/ركبة|ركبه|صابونة|ساق|سمانة|بطة|فخذ|knee|calf|patella/i.test(tLower)) {
+        } else if (/ركبة|ركبه|صابونة|ساق|سمانة|بطة|knee|calf|patella/i.test(tLower)) {
             anatCat = 'knee_leg';
         } else if (/كاحل|قدم|باطن\s*القدم|كعب|مشط|أكيليس|اكيليس|أخمص|اخمص|ankle|foot|plantar|heel/i.test(tLower)) {
             anatCat = 'foot_ankle';
@@ -847,6 +849,13 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                         numbness: `هل تم إجراء تصوير أشعة سينية (X-Ray) سابقة وقياس زاوية الانحناء (زاوية كوب Cobb Angle)؟`,
                         stiffness: `هل تشعر بإجهاد وتشنج عضلي في أحد جانبي الظهر أكثر من الآخر عند الوقوف الطويل أو المشي؟`,
                         duration: `منذ متى لاحظت هذا التقوس، وهل يرافقه أي ألم في الظهر أو صعوبة في التنفس مع المجهود؟`
+                    };
+                case 'hip_joint':
+                    return {
+                        provocation: `هل يزداد ألم **${titleStr}** عند المشي وصعود الدرج، الجلوس ووضع ساق فوق الأخرى، أم عند النوم على جهة المفصل المصاب؟`,
+                        numbness: `هل تشعر بصلادة وتيبس عميق في ثنية الفخذ من الأمام أو في العضلة الجانبية ومسار عرق النسا؟`,
+                        stiffness: `هل تجد صعوبة في ثني الورك لربط الحذاء أو ارتداء الجوارب عند الاستيقاظ صباحاً؟`,
+                        duration: `منذ متى تعاني من ألم **${titleStr}** تحديداً، وهل يحد من قدرتك على المشي والانتقال بحرية؟`
                     };
                 case 'wrist_hand':
                     return {

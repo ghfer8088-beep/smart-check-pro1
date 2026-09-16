@@ -532,6 +532,11 @@ function selectAnatomyPoint(point, element) {
     }
 
     currentSelectedPoint = point;
+    window._specializedConsultationType = point.specialtyType || null;
+    if (!point.specialtyType) {
+        delete window._specializedConsultationType;
+        delete window._specializedConsultationData;
+    }
     if (typeof SmartWatchdog !== 'undefined') {
         SmartWatchdog.recordHeartbeat('point_selected', null, point?.title);
     }
@@ -550,12 +555,19 @@ function selectAnatomyPoint(point, element) {
 
     renderAdaptiveQuestions(point.id);
     
-    // إعادة تعيين الحوار السريري للبدء بنقطة الألم الجديدة
+    // إعادة تعيين الحوار السريري للبدء بنقطة الألم الجديدة بالكامل وتصفير أي محادثة سابقة
     if (typeof clinicalDialogueState !== 'undefined') {
         clinicalDialogueState.step = 'init';
         clinicalDialogueState.hasStartedWelcome = false;
         clinicalDialogueState.isStarting = false;
+        clinicalDialogueState.history = [];
+        clinicalDialogueState.collectedSymptoms = [];
     }
+    const chatMessagesBox = document.getElementById('ai-chat-messages-box');
+    if (chatMessagesBox) chatMessagesBox.innerHTML = '';
+    const chatQrBox = document.getElementById('ai-chat-quick-replies');
+    if (chatQrBox) chatQrBox.innerHTML = '';
+
     if (typeof Wada3anAiEngine !== 'undefined') {
         Wada3anAiEngine.unlockAudio();
     }
@@ -1720,8 +1732,9 @@ function sendWhatsAppDiagnosticReport() {
     const data = currentAssessmentData;
     const name = activePatient?.name || document.getElementById('sub-name')?.value.trim() || 'مراجع وداعاً للألم';
     
-    if (data.isSpecializedConsultation || window._specializedConsultationType) {
-        const specType = data.specialtyType || window._specializedConsultationType;
+    const activePointSpec = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint && currentSelectedPoint.specialtyType) ? currentSelectedPoint.specialtyType : null;
+    if (data.isSpecializedConsultation || activePointSpec) {
+        const specType = data.specialtyType || activePointSpec;
         const specName = (specType === 'stroke') ? 'تأهيل ما بعد الجلطات والضعف الحركي' :
                          (specType === 'foot_drop') ? 'سقوط القدم وصعوبة رفع المشط' :
                          'تقوس وانحراف العمود الفقري (الجنف Scoliosis)';
@@ -3461,7 +3474,8 @@ window.handleRegisterFromReport = handleRegisterFromReport;
 function renderSpecializedClinicalReportStep3(data, reportContainer) {
     if (!reportContainer) return;
 
-    const specialty = data.specialtyType || window._specializedConsultationType || 'stroke';
+    const activePointSpec = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint && currentSelectedPoint.specialtyType) ? currentSelectedPoint.specialtyType : null;
+    const specialty = data.specialtyType || activePointSpec || 'stroke';
     let specTitle = 'تأهيل ما بعد الجلطات والضعف الحركي';
     let specEnTitle = 'Stroke Neurological Rehabilitation & Gait Retraining';
     let specIcon = '🧠';
@@ -3659,7 +3673,8 @@ function displayDiagnosticReport(data) {
     const reportContainer = document.getElementById('clinical-report-container');
     if (!reportContainer) return;
 
-    if (data.isSpecializedConsultation || window._specializedConsultationType) {
+    const activePointSpec = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint && currentSelectedPoint.specialtyType) ? currentSelectedPoint.specialtyType : null;
+    if (data.isSpecializedConsultation || activePointSpec) {
         renderSpecializedClinicalReportStep3(data, reportContainer);
         return;
     }
@@ -6802,6 +6817,10 @@ function resetToInitialState(force = false) {
     window.activePatient = null;
     currentSelectedPoint = null;
     currentAssessmentData = null;
+    window._specializedConsultationType = null;
+    delete window._specializedConsultationType;
+    window._specializedConsultationData = null;
+    delete window._specializedConsultationData;
     try {
         localStorage.removeItem('smart_current_point');
         localStorage.removeItem('smart_current_assessment');
@@ -6831,10 +6850,22 @@ function resetToInitialState(force = false) {
     }
 
     if (typeof clinicalDialogueState !== 'undefined') {
-        clinicalDialogueState.step = 'init';
-        clinicalDialogueState.hasStartedWelcome = false;
-        clinicalDialogueState.isStarting = false;
+        clinicalDialogueState = {
+            isStarting: false,
+            hasStartedWelcome: false,
+            step: 'init',
+            history: [],
+            patientName: '',
+            patientPhone: '',
+            patientVitals: {},
+            collectedSymptoms: []
+        };
     }
+    const chatMessagesBox = document.getElementById('ai-chat-messages-box');
+    if (chatMessagesBox) chatMessagesBox.innerHTML = '';
+    const chatQrBox = document.getElementById('ai-chat-quick-replies');
+    if (chatQrBox) chatQrBox.innerHTML = '';
+
     if (typeof Wada3anAiEngine !== 'undefined') {
         Wada3anAiEngine._currentSessionStudioVoice = null;
         Wada3anAiEngine.stopSpeaking();
@@ -8435,6 +8466,12 @@ async function initAiClinicalChat() {
 
     const persona = (typeof Wada3anAiEngine !== 'undefined') ? Wada3anAiEngine.getSessionDoctorPersona() : { name: 'د. سارة العبادي', title: 'استشارية التقويم السريري' };
     const ptTitle = currentSelectedPoint.title || 'العمود الفقري والمفاصل';
+    const specType = (currentSelectedPoint && currentSelectedPoint.specialtyType) ? currentSelectedPoint.specialtyType : null;
+    window._specializedConsultationType = specType;
+    if (!specType) {
+        delete window._specializedConsultationType;
+        delete window._specializedConsultationData;
+    }
 
     clinicalDialogueState = {
         isStarting: true,
@@ -8469,11 +8506,11 @@ async function initAiClinicalChat() {
 
     // نص الترحيب الطبي الدقيق حسب طلب المستخدم ومسار الحالة
     let instantWelcomeMsg = '';
-    if (window._specializedConsultationType === 'stroke') {
+    if (specType === 'stroke') {
         instantWelcomeMsg = `أهلاً بك في استشارات التأهيل الحركي وما بعد الجلطات في «وداعاً للألم».. سلامتك أولاً. أنا مساعدك السريري الذكي.\n\nنحن هنا لمساعدتك في استعادة التوازن، المشي الآمن، وتليين التصلب العضلي التشنجي عبر جلسات التقويم اليدوي والتأهيل العصبي المباشر مع المعالج جمال قبها.\n\nيسعدني أولاً التعرف على اسمك الكريم، وعمرك، والطرف المتأثر (يمين أم يسار)، ومنذ متى حدثت الجلطة وما هي قدرتك الحالية على المشي والوقوف؟`;
-    } else if (window._specializedConsultationType === 'foot_drop') {
+    } else if (specType === 'foot_drop') {
         instantWelcomeMsg = `أهلاً بك في استشارات سقوط القدم وضعف الأعصاب الحركية في «وداعاً للألم».. سلامتك أولاً. أنا مساعدك السريري الذكي.\n\nسقوط القدم وصعوبة رفع مشط القدم يستوجب فحصاً سريرياً دقيقاً لجذر العصب القطني (L5) والعصب الشظوي لإعادة تنشيط رافعات المشط ومنع تعثر المشي.\n\nيسعدني أولاً التعرف على اسمك الكريم، وعمرك، وهل سقوط القدم في الساق اليمنى أم اليسرى، وهل بدأ فجأة بعد ألم بالظهر أم بعد جراحة أو إصابة؟`;
-    } else if (window._specializedConsultationType === 'scoliosis') {
+    } else if (specType === 'scoliosis') {
         instantWelcomeMsg = `أهلاً بك في استشارات تقويم انحراف العمود الفقري (الجنف - Scoliosis) في «وداعاً للألم».. سلامتك أولاً. أنا مساعدك السريري الذكي.\n\nحالات الجنف وانحراف الفقرات تتطلب عناية يدوية وتقييماً سريرياً مخصصاً لمستوى الكتفين وتوازن الحوض، ولا تناسبها التمارين العشوائية.\n\nيسعدني أولاً التعرف على اسمك الكريم، وعمرك، وهل تم تشخيصك بأشعة سينية سابقة وقياس درجة الانحناء، وهل تشعر بآلام مصاحبة أو تفاوت في ارتفاع الكتفين؟`;
     } else {
         instantWelcomeMsg = `أهلاً بك في «وداعاً للألم» للكايروبراكتيك.. سلامتك أولاً. أنا مساعدك السريري الذكي في «وداعاً للألم».\n\nنحن هنا لمساعدتك في علاج ${ptTitle} بتقويم الكايروبراكتيك الطبيعي الآمن وبدون جراحة أو مسكنات.\n\nيسعدني أولاً التعرف على اسمك الكريم، وعمرك، ووزنك، وطولك التقريبي، وما الذي تعاني منه تحديداً في **${ptTitle}**؟ (هذه البيانات الحيوية ضرورية لحساب مؤشر الأحمال البيوميكانيكية على المفاصل وتحديد سبب المشكلة بدقة).`;
@@ -8779,12 +8816,19 @@ window.submitChatRoyalVitals = function() {
 
     // رد الطبيب الفوري مع الصوت مخصص بدقة حسب مسار الحالة
     const ptTitle = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint?.title) ? currentSelectedPoint.title : 'موضع الألم';
+    const currentSpecType = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint && currentSelectedPoint.specialtyType) ? currentSelectedPoint.specialtyType : null;
+    window._specializedConsultationType = currentSpecType;
+    if (!currentSpecType) {
+        delete window._specializedConsultationType;
+        delete window._specializedConsultationData;
+    }
+
     let doctorReply = '';
-    if (window._specializedConsultationType === 'stroke') {
+    if (currentSpecType === 'stroke') {
         doctorReply = `أهلاً بك يا **${nameVal}**، تم توثيق مؤشراتك الحيوية بنجاح (${calculatedBmiInfo.deltaText}).\n\nوالآن لنبدأ الاستقصاء السريري الدقيق لمرحلة التأهيل الحركي وما بعد الجلطة:\n\n1. ما هو الطرف أو الجانب الأكثر تأثراً بالضعف أو التصلب (الجانب الأيمن أم الأيسر، يد أم قدم)؟\n2. منذ متى حدثت الجلطة تحديداً؟\n3. هل تستطيع الوقوف أو المشي بمفردك بأمان، أم تحتاج لمساعدة مرافق أو استخدام عكاز/مشاية؟`;
-    } else if (window._specializedConsultationType === 'foot_drop') {
+    } else if (currentSpecType === 'foot_drop') {
         doctorReply = `أهلاً بك يا **${nameVal}**، تم توثيق مؤشراتك الحيوية بنجاح (${calculatedBmiInfo.deltaText}).\n\nوالآن لنبدأ الاستقصاء السريري الدقيق لحالة سقوط القدم (Foot Drop):\n\n1. في أي قدم تشتكي من صعوبة رفع المشط (اليمنى أم اليسرى)؟\n2. هل ظهر سقوط القدم بعد ألم حاد أو ديسك في أسفل الظهر (L5)، أم بعد جراحة أو إصابة في الركبة؟\n3. هل تسقط مقدمة قدمك أثناء المشي مما يسبب التعثر، وهل تستخدم دعامة مشط (AFO) حالياً؟`;
-    } else if (window._specializedConsultationType === 'scoliosis') {
+    } else if (currentSpecType === 'scoliosis') {
         doctorReply = `أهلاً بك يا **${nameVal}**، تم توثيق مؤشراتك الحيوية بنجاح (${calculatedBmiInfo.deltaText}).\n\nوالآن لنبدأ الاستقصاء السريري الدقيق لانحراف وتقوس العمود الفقري (الجنف Scoliosis):\n\n1. هل تم إجراء تصوير أشعة سينية سابقة (X-Ray) وقياس زاوية الانحناء (زاوية كوب Cobb Angle)؟\n2. هل تلاحظ تفاوتاً ظاهراً في ارتفاع الكتفين، لوحي الظهر، أو ميلاً في الحوض عند الوقوف؟\n3. منذ متى لاحظت هذا التقوس وهل يرافقه أي ألم في الظهر أو صعوبة في التنفس مع المجهود؟`;
     } else {
         doctorReply = `أهلاً بك يا **${nameVal}**، تم توثيق مؤشراتك الحيوية بنجاح (${calculatedBmiInfo.deltaText}).\n\nوالآن لنبدأ الاستقصاء السريري الدقيق لموضع الألم في **${ptTitle}**:\n\nما الذي تعاني منه تحديداً في **${ptTitle}**؟ وهل تشعر بألم حاد مستمر، أم تشنج وثقل يشتد مع حركات معينة أو الجلوس؟`;
@@ -9226,10 +9270,10 @@ async function sendChatMessage() {
 
             // الحفاظ الصارم على موضع الألم المختار من المريض ومنع استبداله مطلقاً
             let resolvedPain = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint && currentSelectedPoint.title) ? currentSelectedPoint.title : '';
-            if (window._specializedConsultationType) {
-                const sType = window._specializedConsultationType;
-                resolvedPain = (sType === 'stroke') ? 'تأهيل ما بعد الجلطات والضعف الحركي' :
-                               (sType === 'foot_drop') ? 'سقوط القدم وصعوبة رفع المشط' :
+            const activeSpec = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint && currentSelectedPoint.specialtyType) ? currentSelectedPoint.specialtyType : null;
+            if (activeSpec) {
+                resolvedPain = (activeSpec === 'stroke') ? 'تأهيل ما بعد الجلطات والضعف الحركي' :
+                               (activeSpec === 'foot_drop') ? 'سقوط القدم وصعوبة رفع المشط' :
                                'تقوس وانحراف العمود الفقري (الجنف Scoliosis)';
             } else if (!resolvedPain) {
                 const detected = detectAnatomicalPointFromText((clinicalDialogueState.history || []).map(h => h.text).join(' '));
@@ -9243,7 +9287,7 @@ async function sendChatMessage() {
 
             const pPhoneDigits = clinicalDialogueState.patientPhone ? clinicalDialogueState.patientPhone.replace(/\D/g, '') : '';
             const pId = 'pat_' + (pPhoneDigits ? pPhoneDigits + '_' + Date.now().toString(36).slice(-4) : Date.now().toString(36));
-            const specType = window._specializedConsultationType || null;
+            const specType = activeSpec;
 
             // ✅ حفظ ملف المريض بشكل فوري في قاعدة بيانات العيادة مع معالجة الأخطاء
             if (window.SmartDB && typeof SmartDB.savePatient === 'function') {
@@ -9288,7 +9332,7 @@ async function sendChatMessage() {
             }
 
             // إذا كانت الحالة استشارة خاصة (جلطات، سقوط قدم، جنف): عرض بطاقة الإحالة السريرية والواتساب فوراً دون تمارين آلية والانتقال السلس للمرحلة 3
-            if (window._specializedConsultationType) {
+            if (activeSpec) {
                 const indicator = document.getElementById(loadingId);
                 if (indicator) indicator.remove();
 
@@ -9307,7 +9351,7 @@ async function sendChatMessage() {
                         ? clinicalDialogueState.collectedSymptoms.join(' - ')
                         : (clinicalDialogueState.history || []).filter(h => h.sender === 'user').map(h => h.text).join(' | '),
                     isSpecializedConsultation: true,
-                    specialtyType: window._specializedConsultationType,
+                    specialtyType: activeSpec,
                     condition: resolvedPain,
                     painArea: resolvedPain,
                     painAreaTitle: resolvedPain
@@ -9320,7 +9364,7 @@ async function sendChatMessage() {
                     patientPhone: clinicalDialogueState.patientPhone,
                     patientVitals: clinicalDialogueState.patientVitals || { age: pAge, weight: pWeight, height: pHeight, gender: pGender },
                     isSpecializedConsultation: true,
-                    specialtyType: window._specializedConsultationType,
+                    specialtyType: activeSpec,
                     title: resolvedPain,
                     primaryDiagnosis: resolvedPain,
                     rootLevel: 'تقييم وتأهيل سريري مباشر',
@@ -9422,7 +9466,7 @@ async function sendChatMessage() {
             patientPhone: clinicalDialogueState.patientPhone,
             patientVitals: clinicalDialogueState.patientVitals,
             lastUserMessage: text,
-            specialtyType: window._specializedConsultationType || (currentSelectedPoint && currentSelectedPoint.specialtyType) || null
+            specialtyType: (currentSelectedPoint && currentSelectedPoint.specialtyType) || null
         });
     } catch (dialogueErr) {
         console.warn('Fallback activated due to dialogue exception:', dialogueErr);
@@ -9434,7 +9478,7 @@ async function sendChatMessage() {
             patientPhone: clinicalDialogueState.patientPhone,
             patientVitals: clinicalDialogueState.patientVitals,
             lastUserMessage: text,
-            specialtyType: window._specializedConsultationType || (currentSelectedPoint && currentSelectedPoint.specialtyType) || null
+            specialtyType: (currentSelectedPoint && currentSelectedPoint.specialtyType) || null
         });
     } finally {
         const indicator = document.getElementById(loadingId);
@@ -9449,7 +9493,7 @@ async function sendChatMessage() {
             patientName: clinicalDialogueState.patientName,
             patientVitals: clinicalDialogueState.patientVitals,
             lastUserMessage: text,
-            specialtyType: window._specializedConsultationType || (currentSelectedPoint && currentSelectedPoint.specialtyType) || null
+            specialtyType: (currentSelectedPoint && currentSelectedPoint.specialtyType) || null
         });
     }
 
@@ -9964,7 +10008,7 @@ async function stopAndSendVoiceNote() {
             patientName: clinicalDialogueState.patientName,
             patientVitals: clinicalDialogueState.patientVitals,
             lastUserMessage: capturedText,
-            specialtyType: window._specializedConsultationType || (currentSelectedPoint && currentSelectedPoint.specialtyType) || null
+            specialtyType: (currentSelectedPoint && currentSelectedPoint.specialtyType) || null
         });
 
         result = {
@@ -9985,7 +10029,7 @@ async function stopAndSendVoiceNote() {
             currentStep: clinicalDialogueState.step,
             history: clinicalDialogueState.history,
             patientName: clinicalDialogueState.patientName,
-            specialtyType: window._specializedConsultationType || (currentSelectedPoint && currentSelectedPoint.specialtyType) || null
+            specialtyType: (currentSelectedPoint && currentSelectedPoint.specialtyType) || null
         });
 
         // استبدال نص الفقاعة المؤقت بالنص الصوتي المفرغ الحقيقي (تحويل كامل وموحد إلى نص)
