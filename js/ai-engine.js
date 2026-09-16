@@ -578,7 +578,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
      مثال: "وعودةً لفحص موضع ألمك في [${painPointTitle || 'موضع الشكوى'}] بدقة: هل تلاحظ ...؟"
 
 10. استخراج البيانات (بدقة متناهية):
-   - إذا ذكر المريض اسمه صراحة: [EXTRACTED_NAME: الاسم الأول فقط]. (ممنوع منعاً باتاً استخراج كلمات الشكوى أو الأفعال مثل 'اشعر' أو 'أشعر' أو 'احس' أو 'اعاني' أو كلمات التحية كاسم، وإذا لم يذكر اسمه فاكتب: غير محدد).
+   - إذا ذكر المريض اسمه صراحة: [EXTRACTED_NAME: الاسم الكامل للمريض كما ذكره (مثال: أسامة محمد أو ياسر أحمد)]. (ممنوع منعاً باتاً استخراج كلمات الشكوى أو الأفعال مثل 'اشعر' أو 'أشعر' أو 'احس' أو 'اعاني' أو كلمات التحية كاسم، وإذا لم يذكر اسمه فاكتب: غير محدد).
    - إذا كتب المريض رقم هاتفه: [EXTRACTED_PHONE: الرقم]
    - ممنوع منعاً باتاً إطلاق [READY_FOR_DIAGNOSIS] بدون وجود رقم هاتف مسجل صراحة أو استخراجه بـ [EXTRACTED_PHONE]. إذا لم يكتب المريض رقم هاتفه بعد، فاطلب رقم الهاتف فوراً واكتب فقط [ASK_PHONE].
 
@@ -606,17 +606,28 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                 let isReady = rawReply.includes('[READY_FOR_DIAGNOSIS]') && hasValidPhoneNow;
                 
                 let extractedName = null;
+                let extractedFullName = null;
                 const nameM = rawReply.match(/\[EXTRACTED_NAME:\s*([^\]]+)\]/);
                 if (nameM && nameM[1]) {
-                    const cand = nameM[1].trim().replace(/^يا\s+/i, '').split(/\s+/)[0];
+                    const rawCand = nameM[1].trim().replace(/^يا\s+/i, '');
+                    const candWords = rawCand.split(/\s+/).filter(w => w && w.length >= 2);
                     const forbiddenNames = [
                         'اشعر', 'أشعر', 'احس', 'أحس', 'اعاني', 'أعاني', 'عندي', 'معي', 'فيه',
                         'كيف', 'كيفك', 'مرحبا', 'أهلا', 'اهلا', 'سلام', 'هلا', 'صباح', 'مساء',
                         'تعبان', 'مريض', 'دكتور', 'طبيب', 'المريض', 'شو', 'ايش', 'وجع', 'ألم', 'الم',
                         'ظهر', 'ديسك', 'غضروف', 'شكرا', 'غير', 'غير محدد', 'لا يوجد', 'لم يذكر'
                     ];
-                    if (!forbiddenNames.includes(cand.toLowerCase()) && cand.length >= 2) {
-                        extractedName = cand;
+                    const validCandWords = [];
+                    for (const cw of candWords) {
+                        const lcw = cw.toLowerCase();
+                        if (forbiddenNames.includes(lcw) || lcw.startsWith('وعمر') || lcw.startsWith('ووزن') || lcw.startsWith('وطول') || lcw.startsWith('وسن')) {
+                            break;
+                        }
+                        validCandWords.push(cw);
+                    }
+                    if (validCandWords.length > 0) {
+                        extractedName = validCandWords[0];
+                        extractedFullName = validCandWords.join(' ');
                     }
                 }
 
@@ -665,7 +676,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
 
                 // ننتقل لطلب الهاتف فقط إذا طلب الطبيب الهاتف صراحة بعد اكتمال الاستقصاء، وإلا فإن الحوار الطبي السريري يستمر بحرية
                 const nextStep = isReady ? 'completed' : (isExplicitlyAskingPhone ? 'ask_phone' : 'chatting');
-                return { message, quickReplies: [], nextStep, isReady, extractedName, extractedPhone };
+                return { message, quickReplies: [], nextStep, isReady, extractedName, extractedFullName, extractedPhone };
             }
         } catch (e) {
             console.warn('Dialogue advance error:', e);
@@ -1594,17 +1605,28 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
                         const trMatch = rawReply.match(/\[TRANSCRIPTION:\s*(.*?)\]/);
                         if (trMatch) transcription = trMatch[1].trim();
 
+                        let extractedFullName = '';
                         const nameMatch = rawReply.match(/\[EXTRACTED_NAME:\s*(.*?)\]/);
                         if (nameMatch && nameMatch[1].trim() && nameMatch[1].trim() !== 'غير محدد') {
-                            const candName = nameMatch[1].trim().replace(/^يا\s+/i, '').split(/\s+/)[0];
+                            const rawCand = nameMatch[1].trim().replace(/^يا\s+/i, '');
+                            const candWords = rawCand.split(/\s+/).filter(w => w && w.length >= 2);
                             const invalidNameWords = [
                                 'اشعر', 'أشعر', 'احس', 'أحس', 'اعاني', 'أعاني', 'عندي', 'معي', 'فيه',
                                 'كيف', 'كيفك', 'مرحبا', 'أهلا', 'اهلا', 'سلام', 'هلا', 'صباح', 'مساء',
                                 'تعبان', 'مريض', 'دكتور', 'طبيب', 'المريض', 'شو', 'ايش', 'وجع', 'ألم', 'الم',
                                 'ظهر', 'ديسك', 'غضروف', 'شكرا', 'غير', 'غير محدد', 'لا يوجد', 'لم يذكر'
                             ];
-                            if (!invalidNameWords.includes(candName.toLowerCase())) {
-                                extractedName = candName;
+                            const validVoiceWords = [];
+                            for (const cw of candWords) {
+                                const lcw = cw.toLowerCase();
+                                if (invalidNameWords.includes(lcw) || lcw.startsWith('وعمر') || lcw.startsWith('ووزن') || lcw.startsWith('وطول') || lcw.startsWith('وسن')) {
+                                    break;
+                                }
+                                validVoiceWords.push(cw);
+                            }
+                            if (validVoiceWords.length > 0) {
+                                extractedName = validVoiceWords[0];
+                                extractedFullName = validVoiceWords.join(' ');
                             }
                         }
 
@@ -1646,6 +1668,7 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
                             quickReplies: [],
                             nextStep,
                             extractedName,
+                            extractedFullName,
                             extractedPhone,
                             audioUrl: null
                         };

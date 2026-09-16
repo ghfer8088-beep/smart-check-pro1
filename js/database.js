@@ -94,6 +94,8 @@ const SmartDB = (function() {
                 } else {
                     mergedPatient.name = 'مراجع كريم';
                 }
+            } else if (mergedPatient.fullName && mergedPatient.fullName.trim().length > (mergedPatient.name || '').trim().length) {
+                mergedPatient.name = mergedPatient.fullName.trim();
             }
 
             // استنتاج وتثبيت الدولة والمدينة وعلم الدولة فورياً من رقم هاتف المراجع أو التوقيت المحلي

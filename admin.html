@@ -2404,7 +2404,8 @@
             if (q) {
                 list = list.filter(item => {
                     const p = item.patient || {};
-                    return (p.name && p.name.toLowerCase().includes(q)) ||
+                    const patientDisplayName = p.fullName || p.name || '';
+                    return (patientDisplayName && patientDisplayName.toLowerCase().includes(q)) ||
                            (p.patientId && p.patientId.toLowerCase().includes(q)) ||
                            (p.phone && p.phone.includes(q)) ||
                            (p.country && p.country.toLowerCase().includes(q)) ||
@@ -2691,11 +2692,12 @@
                 const deviceIcon = p.device === 'Mobile' ? '📱' : (p.device === 'Tablet' ? '📟' : '💻');
                 const locationDisplay = city ? `${flag} ${city} (${country})` : `${flag} ${country}`;
 
+                const patientDisplayName = p.fullName || p.name || 'مراجع مجهول';
                 return `
                 <tr style="border-bottom: 1px solid #1e293b; color: #e2e8f0;">
                     <td style="padding: 14px; font-weight: bold; color: var(--primary-gold);">${p.patientId}</td>
                     <td style="padding: 14px; font-weight: bold;">
-                        <div style="font-size: 1.05em; color: #ffffff;">${p.name}</div>
+                        <div style="font-size: 1.05em; color: #ffffff;">${patientDisplayName}</div>
                         <div style="color: #94a3b8; font-size: 0.82em; margin-top: 4px; font-weight: normal; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                             <span style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 1px 6px; border-radius: 4px; color: #7dd3fc;">العمر: ${p.age ? p.age + ' سنة' : '-'}</span>
                             <span style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 1px 6px; border-radius: 4px; color: #6ee7b7;">الوزن: ${p.weight ? p.weight + ' كغ' : '-'}</span>
@@ -2714,7 +2716,7 @@
                     <td style="padding: 14px;">اليوم ${Math.min(7, item.logsCount + 1)} من 7</td>
                     <td style="padding: 14px; color: #10b981; font-weight: bold;">${item.recoveryScore != null ? item.recoveryScore + '%' : '<span style="color:#64748b">--</span>'}</td>
                     <td style="padding: 14px; text-align: center;">
-                        <button onclick="openPatientTimingModal('${p.patientId}', '${(p.name || '').replace(/['\\]/g, '')}', ${item.logsCount + 1}, '${p.phone || ''}')" style="background: #3b82f6; color: #fff; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 0.88em; font-weight: bold;">⏱️ تعديل التوقيت</button>
+                        <button onclick="openPatientTimingModal('${p.patientId}', '${patientDisplayName.replace(/['\\]/g, '')}', ${item.logsCount + 1}, '${p.phone || ''}')" style="background: #3b82f6; color: #fff; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 0.88em; font-weight: bold;">⏱️ تعديل التوقيت</button>
                     </td>
                     <td style="padding: 14px; text-align: center; white-space: nowrap;">
                         ${cleanPhone ? `<a href="https://wa.me/${cleanPhone}" target="_blank" style="display: inline-block; background: #25d366; color: #fff; text-decoration: none; padding: 7px 10px; border-radius: 6px; font-size: 0.88em; font-weight: bold; margin-left: 4px;">💬 واتساب</a>` : ''}
@@ -2749,11 +2751,11 @@
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 8px;">
                                 <div style="display: flex; align-items: center; gap: 10px;">
                                     <div style="width: 44px; height: 44px; border-radius: 50%; background: radial-gradient(circle, var(--primary-gold) 0%, #78350f 100%); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.25em; font-weight: bold; flex-shrink: 0; box-shadow: 0 0 12px rgba(212,175,55,0.4);">
-                                        ${(p.name || 'م')[0]}
+                                        ${((p.fullName || p.name) || 'م')[0]}
                                     </div>
                                     <div>
                                         <div style="color: #ffffff; font-size: 1.18em; font-weight: 800; display: flex; align-items: center; gap: 6px;">
-                                            <span>${p.name || 'مراجع مجهول'}</span>
+                                            <span>${p.fullName || p.name || 'مراجع مجهول'}</span>
                                             <span style="font-size: 0.85em; color: var(--primary-gold);">★</span>
                                         </div>
                                         <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 0.82em; color: #94a3b8; flex-wrap: wrap;">
@@ -2817,7 +2819,7 @@
                                     <button type="button" disabled style="background: #1e293b; color: #64748b; border: 1px solid #334155; padding: 10px; border-radius: 8px; font-size: 0.85em;">
                                         بلا هاتف مسجل
                                     </button>`}
-                                    <button type="button" onclick="openPatientTimingModal('${p.patientId}', '${(p.name || '').replace(/['\\]/g, '')}', ${item.logsCount + 1}, '${p.phone || ''}')" style="background: #2563eb; color: #fff; border: none; padding: 10px; border-radius: 8px; font-size: 0.9em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                                    <button type="button" onclick="openPatientTimingModal('${p.patientId}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}', ${item.logsCount + 1}, '${p.phone || ''}')" style="background: #2563eb; color: #fff; border: none; padding: 10px; border-radius: 8px; font-size: 0.9em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;">
                                         <span>⏱️ تعديل التوقيت</span>
                                     </button>
                                 </div>
@@ -2890,7 +2892,8 @@
             }
             const filtered = allPatientsList.filter(item => {
                 const p = item.patient || {};
-                return (p.name && p.name.toLowerCase().includes(q)) ||
+                const pDisplayName = p.fullName || p.name || '';
+                return (pDisplayName && pDisplayName.toLowerCase().includes(q)) ||
                        (p.patientId && p.patientId.toLowerCase().includes(q)) ||
                        (p.phone && p.phone.includes(q)) ||
                        (p.country && p.country.toLowerCase().includes(q)) ||
@@ -3390,7 +3393,7 @@
             activeAdminReportAssessment = assessment;
 
             // استخراج القيم السريرية بدقة فائقة
-            const pName = p.name || p.fullName || 'مراجع كريم';
+            const pName = (p.fullName && p.fullName.length > (p.name || '').length) ? p.fullName : (p.name || p.fullName || 'مراجع كريم');
             const cleanPhone = (p.phone || '').replace(/[^0-9]/g, '');
             const reportId = assessment?.reportId || ('SCP-' + (patientId.replace(/\D/g, '') || Math.floor(100000 + Math.random() * 900000)));
             const createdDate = new Date(p.createdAt || p.timestamp || Date.now()).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });

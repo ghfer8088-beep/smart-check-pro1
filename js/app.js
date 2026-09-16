@@ -3749,14 +3749,16 @@ async function activateRecoveryPlanInstantly() {
             || document.getElementById('sub-phone')?.value?.trim()
             || '';
 
-        let existingName = clinicalDialogueState?.patientName 
+        let existingName = clinicalDialogueState?.patientFullName 
+            || curPatient?.fullName
+            || clinicalDialogueState?.patientName 
             || curPatient?.name 
             || curAssessment?.patientName 
             || document.getElementById('sub-name')?.value?.trim() 
             || '';
 
         if (!existingName || existingName === 'المراجع الكريم') {
-            existingName = curAssessment?.patientName || curPatient?.name || 'المراجع الكريم';
+            existingName = curAssessment?.patientName || curPatient?.fullName || curPatient?.name || 'المراجع الكريم';
         }
 
         const cleanPhone = String(resolvedPhone).replace(/\D/g, '');
@@ -8124,29 +8126,34 @@ async function sendChatMessage() {
             const words = clean.split(/\s+/).filter(w => w && w.length >= 2);
             if (words.length === 0) return null;
 
-            // فحص الكلمة الأولى
+            // فحص واستخراج الكلمات الصالحة للاسم (قطع الاسم عند أي مؤشر حيوي أو كلمة محظورة)
+            let skipFirst = false;
             let firstWord = words[0];
             let lowerFirst = firstWord.toLowerCase();
             if (forbiddenWords.includes(lowerFirst) || lowerFirst.startsWith('وعمر') || lowerFirst.startsWith('ووزن') || lowerFirst.startsWith('وطول') || lowerFirst.startsWith('وسن')) {
                 // إذا كانت الكلمة الأولى من المحظورات (مثل كتابة "الاسم لجين") نتجاوزها للكلمة التالية
-                if (words.length > 1) {
-                    const secondWord = words[1];
-                    const lowerSecond = secondWord.toLowerCase();
-                    if (!forbiddenWords.includes(lowerSecond) && !lowerSecond.startsWith('وعمر') && !lowerSecond.startsWith('ووزن')) {
-                        return { first: secondWord, full: words.slice(1).join(' ') };
-                    }
-                }
-                return null;
+                skipFirst = true;
             }
-            return { first: firstWord, full: words.join(' ') };
+
+            const searchWords = skipFirst ? words.slice(1) : words;
+            const validWords = [];
+            for (let w of searchWords) {
+                let lw = w.toLowerCase();
+                if (forbiddenWords.includes(lw) || lw.startsWith('وعمر') || lw.startsWith('ووزن') || lw.startsWith('وطول') || lw.startsWith('وسن') || lw.startsWith('وعند') || lw.startsWith('اعان') || lw.startsWith('أعان')) {
+                    break;
+                }
+                validWords.push(w);
+            }
+            if (validWords.length === 0) return null;
+            return { first: validWords[0], full: validWords.join(' ') };
         };
 
         const namePatterns = [
             /(?:الاسم|الآسم|الإسم|اسم|اسمي\s+هو|اسمي)\s*[:=-]?\s*([^\d,.:؛!?\n]+)/i,
             /(?:أنا|انا)\s+(?:اسمي|المدعو|أدعى|الاسم|الآسم)\s*[:=-]?\s*([^\d,.:؛!?\n]+)/i,
-            /(?:اسمي\s+هو|اسمي|أدعى|ادعى)\s+([^\s\d,.:؛!?]+)/i,
-            /(?:أنا|انا)\s+([^\s\d,.:؛!?]+)/i,
-            /(?:معك|معاك|أخوك|اخوك|أختك|اختك)\s+([^\s\d,.:؛!?]+)/i
+            /(?:اسمي\s+هو|اسمي|أدعى|ادعى)\s+([^\d,.:؛!?\n]+)/i,
+            /(?:أنا|انا)\s+([^\d,.:؛!?\n]+)/i,
+            /(?:معك|معاك|أخوك|اخوك|أختك|اختك)\s+([^\d,.:؛!?\n]+)/i
         ];
         for (let pat of namePatterns) {
             const m = text.match(pat);
@@ -8358,12 +8365,13 @@ async function sendChatMessage() {
 
             // ✅ حفظ ملف المريض بشكل فوري في قاعدة بيانات العيادة مع معالجة الأخطاء
             if (window.SmartDB && typeof SmartDB.savePatient === 'function') {
-                let savedName = clinicalDialogueState.patientName && clinicalDialogueState.patientName.length > 1
-                    ? clinicalDialogueState.patientName
-                    : 'مراجع كريم';
-                if (/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)$/i.test(savedName)) {
-                    savedName = clinicalDialogueState.patientFullName || 'مراجع كريم';
+                let resolvedFullName = (clinicalDialogueState.patientFullName && clinicalDialogueState.patientFullName.length > 1)
+                    ? clinicalDialogueState.patientFullName
+                    : (clinicalDialogueState.patientName && clinicalDialogueState.patientName.length > 1 ? clinicalDialogueState.patientName : 'مراجع كريم');
+                if (/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)$/i.test(resolvedFullName)) {
+                    resolvedFullName = 'مراجع كريم';
                 }
+                let savedName = resolvedFullName;
 
                 const pVitals = clinicalDialogueState.patientVitals || {};
                 const pWeight = pVitals.weight || null;
@@ -8522,9 +8530,14 @@ async function sendChatMessage() {
     }
 
     // التقاط الاسم ورقم الهاتف في حال استخرجهما الذكاء الاصطناعي من سياق الحديث
-    if (!clinicalDialogueState.patientName && nextResponse.extractedName) {
+    if (nextResponse.extractedName && !clinicalDialogueState.patientName) {
         clinicalDialogueState.patientName = nextResponse.extractedName;
         refreshUserMessageHeaders(clinicalDialogueState.patientName);
+    }
+    if (nextResponse.extractedFullName) {
+        if (!clinicalDialogueState.patientFullName || nextResponse.extractedFullName.length > clinicalDialogueState.patientFullName.length) {
+            clinicalDialogueState.patientFullName = nextResponse.extractedFullName;
+        }
     }
     if (!clinicalDialogueState.patientPhone && nextResponse.extractedPhone && (isValidPhoneNumber(nextResponse.extractedPhone) || nextResponse.extractedPhone.length >= 7)) {
         clinicalDialogueState.patientPhone = nextResponse.extractedPhone;
@@ -8532,12 +8545,13 @@ async function sendChatMessage() {
 
     // حفظ فوري في قاعدة البيانات إذا توفر رقم الهاتف
     if (clinicalDialogueState.patientPhone && window.SmartDB && typeof SmartDB.savePatient === 'function') {
-        let savedName2 = clinicalDialogueState.patientName && clinicalDialogueState.patientName.length > 1
-            ? clinicalDialogueState.patientName
-            : 'مراجع كريم';
-        if (/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)$/i.test(savedName2)) {
-            savedName2 = clinicalDialogueState.patientFullName || 'مراجع كريم';
+        let resolvedFullName2 = (clinicalDialogueState.patientFullName && clinicalDialogueState.patientFullName.length > 1)
+            ? clinicalDialogueState.patientFullName
+            : (clinicalDialogueState.patientName && clinicalDialogueState.patientName.length > 1 ? clinicalDialogueState.patientName : 'مراجع كريم');
+        if (/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)$/i.test(resolvedFullName2)) {
+            resolvedFullName2 = 'مراجع كريم';
         }
+        let savedName2 = resolvedFullName2;
 
         const pVitals2 = clinicalDialogueState.patientVitals || {};
         const pWeight2 = pVitals2.weight || null;
@@ -8720,7 +8734,10 @@ function finishChatIntakeAndGenerateReport() {
         }
     }
 
-    const pName = clinicalDialogueState.patientName || 'المراجع الكريم';
+    const pFullName = (clinicalDialogueState.patientFullName && clinicalDialogueState.patientFullName.length > (clinicalDialogueState.patientName || '').length)
+        ? clinicalDialogueState.patientFullName
+        : (clinicalDialogueState.patientName || 'المراجع الكريم');
+    const pName = pFullName;
     const notes = clinicalDialogueState.collectedSymptoms.length > 0 
         ? clinicalDialogueState.collectedSymptoms.join(' - ') 
         : `استشارة وفحص سريري لموضع: ${currentSelectedPoint?.title || 'العمود الفقري والمفاصل'}`;
@@ -9062,6 +9079,9 @@ async function stopAndSendVoiceNote() {
         if (result.extractedName && !clinicalDialogueState.patientName) {
             clinicalDialogueState.patientName = result.extractedName;
             refreshUserMessageHeaders(clinicalDialogueState.patientName);
+        }
+        if (result.extractedFullName && (!clinicalDialogueState.patientFullName || result.extractedFullName.length > clinicalDialogueState.patientFullName.length)) {
+            clinicalDialogueState.patientFullName = result.extractedFullName;
         }
         if (result.extractedPhone && isValidPhoneNumber(result.extractedPhone)) {
             clinicalDialogueState.patientPhone = result.extractedPhone;
