@@ -1440,17 +1440,17 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/mqtt.min.js?v=28.0"></script>
-    <script src="js/geo-tracker.js?v=28.0"></script>
-    <script src="js/cloud-sync.js?v=28.0"></script>
-    <script src="js/database.js?v=28.0"></script>
-    <script src="js/exercise-image-studio.js?v=28.0"></script>
-    <script src="js/exercises-db.js?v=28.0"></script>
-    <script src="js/diagnostic-engine.js?v=28.0"></script>
-    <script src="js/patient-flow.js?v=28.0"></script>
-    <script src="js/admin-engine.js?v=28.0"></script>
-    <script src="js/ai-config.js?v=28.0"></script>
-    <script src="js/ai-engine.js?v=28.0"></script>
+    <script src="js/mqtt.min.js?v=28.1"></script>
+    <script src="js/geo-tracker.js?v=28.1"></script>
+    <script src="js/cloud-sync.js?v=28.1"></script>
+    <script src="js/database.js?v=28.1"></script>
+    <script src="js/exercise-image-studio.js?v=28.1"></script>
+    <script src="js/exercises-db.js?v=28.1"></script>
+    <script src="js/diagnostic-engine.js?v=28.1"></script>
+    <script src="js/patient-flow.js?v=28.1"></script>
+    <script src="js/admin-engine.js?v=28.1"></script>
+    <script src="js/ai-config.js?v=28.1"></script>
+    <script src="js/ai-engine.js?v=28.1"></script>
 
     <script>
         let allPatientsList = [];
@@ -2340,7 +2340,7 @@
             document.getElementById('stat-sessions-count').textContent = totalLogs;
             
             // إحصاء الحسابات المسجلة بـ PIN
-            const registeredPatients = allPatientsList.filter(p => (p.patient && p.patient.isRegistered) || p.isRegistered);
+            const registeredPatients = allPatientsList.filter(p => (p.patient && (p.patient.isRegistered || p.patient.accountPin)) || p.isRegistered || p.accountPin);
             if (document.getElementById('stat-registered-count')) {
                 document.getElementById('stat-registered-count').textContent = registeredPatients.length;
             }
@@ -2372,7 +2372,7 @@
 
         function updatePatientFilterCounts() {
             const countAll = allPatientsList.length;
-            const countRegistered = allPatientsList.filter(p => (p.patient && p.patient.isRegistered) || p.isRegistered).length;
+            const countRegistered = allPatientsList.filter(p => (p.patient && (p.patient.isRegistered || p.patient.accountPin)) || p.isRegistered || p.accountPin).length;
             const countActive = allPatientsList.filter(p => (p.logsCount || 0) < 7).length;
             const countCompleted = allPatientsList.filter(p => (p.logsCount || 0) >= 7).length;
             const countFlags = allPatientsList.filter(p => {
@@ -2407,7 +2407,7 @@
         function getFilteredPatientsList() {
             let list = allPatientsList;
             if (activePtFilter === 'registered') {
-                list = list.filter(p => (p.patient && p.patient.isRegistered) || p.isRegistered);
+                list = list.filter(p => (p.patient && (p.patient.isRegistered || p.patient.accountPin)) || p.isRegistered || p.accountPin);
             } else if (activePtFilter === 'active') {
                 list = list.filter(p => (p.logsCount || 0) < 7);
             } else if (activePtFilter === 'completed') {
@@ -2718,7 +2718,7 @@
                     <td style="padding: 14px; font-weight: bold;">
                         <div style="font-size: 1.05em; color: #ffffff; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                             <span>${patientDisplayName}</span>
-                            ${(p.isRegistered || item.isRegistered) ? `<span style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(245, 158, 11, 0.2)); border: 1px solid var(--primary-gold); color: #fef08a; padding: 2px 8px; border-radius: 4px; font-size: 0.72em; font-weight: bold; display: inline-flex; align-items: center; gap: 4px;">🔑 حساب مسجل</span>` : ''}
+                            ${(p.isRegistered || item.isRegistered || p.accountPin || item.accountPin) ? `<span style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(245, 158, 11, 0.2)); border: 1px solid var(--primary-gold); color: #fef08a; padding: 2px 8px; border-radius: 4px; font-size: 0.72em; font-weight: bold; display: inline-flex; align-items: center; gap: 4px;">🔑 حساب مسجل</span>` : ''}
                             ${(p.isSpecializedConsultation || p.specialtyType) ? `<span style="background: rgba(212, 175, 55, 0.2); border: 1px solid var(--primary-gold); color: #fef08a; padding: 1px 7px; border-radius: 4px; font-size: 0.72em; font-weight: bold;">🌟 حالة خاصة</span>` : ''}
                         </div>
                         <div style="color: #94a3b8; font-size: 0.82em; margin-top: 4px; font-weight: normal; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
@@ -2779,7 +2779,7 @@
                                     <div>
                                         <div style="color: #ffffff; font-size: 1.18em; font-weight: 800; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                                             <span>${p.fullName || p.name || 'مراجع مجهول'}</span>
-                                            ${(p.isRegistered || item.isRegistered) ? `<span style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(245, 158, 11, 0.2)); border: 1px solid var(--primary-gold); color: #fef08a; padding: 2px 7px; border-radius: 4px; font-size: 0.7em; font-weight: bold; display: inline-flex; align-items: center; gap: 3px;">🔑 مسجل</span>` : ''}
+                                            ${(p.isRegistered || item.isRegistered || p.accountPin || item.accountPin) ? `<span style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(245, 158, 11, 0.2)); border: 1px solid var(--primary-gold); color: #fef08a; padding: 2px 7px; border-radius: 4px; font-size: 0.7em; font-weight: bold; display: inline-flex; align-items: center; gap: 3px;">🔑 مسجل</span>` : ''}
                                             <span style="font-size: 0.85em; color: var(--primary-gold);">★</span>
                                         </div>
                                         <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 0.82em; color: #94a3b8; flex-wrap: wrap;">
@@ -2862,7 +2862,7 @@
                                         <span style="color: #94a3b8;">رقم الملف:</span> <strong style="color: var(--primary-gold);">${p.patientId}</strong>
                                     </div>
                                     <div style="background: #080c14; padding: 7px 10px; border-radius: 6px;">
-                                        <span style="color: #94a3b8;">حالة الحساب:</span> <strong style="${(p.isRegistered || item.isRegistered) ? 'color:#10b981;' : 'color:#94a3b8;'}">${(p.isRegistered || item.isRegistered) ? '🔑 حساب مسجل (محمي بـ PIN)' : 'زائر بدون تسجيل'}</strong>
+                                        <span style="color: #94a3b8;">حالة الحساب:</span> <strong style="${(p.isRegistered || item.isRegistered || p.accountPin || item.accountPin) ? 'color:#10b981;' : 'color:#94a3b8;'}">${(p.isRegistered || item.isRegistered || p.accountPin || item.accountPin) ? '🔑 حساب مسجل (محمي بـ PIN)' : 'زائر بدون تسجيل'}</strong>
                                     </div>
                                     <div style="background: #080c14; padding: 7px 10px; border-radius: 6px;">
                                         <span style="color: #94a3b8;">الجنس:</span> <strong>${p.gender === 'female' || p.gender === 'أنثى' ? 'أنثى' : 'ذكر'}</strong>

@@ -81,6 +81,43 @@ const SmartDB = (function() {
         return p;
     }
 
+    // دوال أمان التخزين المحلي والوقاية الصارمة من تجاوز مساحة الكوتا (QuotaExceededError)
+    function safeLocalStorageSet(key, value) {
+        try {
+            localStorage.setItem(key, value);
+            return true;
+        } catch(e) {
+            console.warn('[SmartDB] Storage quota warning on ' + key + ':', e.message);
+            // المرحلة الأولى: محاولة إخلاء المساحة تلقائياً من المفاتيح المؤقتة والإشعارات وتيليمتري
+            try {
+                for (let i = localStorage.length - 1; i >= 0; i--) {
+                    const k = localStorage.key(i);
+                    if (!k) continue;
+                    if (k.includes('_notif_') || k.includes('_test') || k.includes('smart_incident') || k.includes('wada3an_telemetry') || k.startsWith('smart_daily_logs_')) {
+                        localStorage.removeItem(k);
+                    }
+                }
+                localStorage.setItem(key, value);
+                return true;
+            } catch(retryErr) {
+                // المرحلة الثانية: إخلاء نسخ الكاش الفردية القديمة للمرضى من localStorage (لأنها محفوظة بشكل دائم في IndexedDB)
+                try {
+                    for (let i = localStorage.length - 1; i >= 0; i--) {
+                        const k = localStorage.key(i);
+                        if (k && k.startsWith('smart_patient_') && !k.startsWith('smart_patient_account_')) {
+                            localStorage.removeItem(k);
+                        }
+                    }
+                    localStorage.setItem(key, value);
+                    return true;
+                } catch(thirdErr) {
+                    console.error('[SmartDB] Storage quota critical - could not write ' + key + ':', thirdErr.message);
+                    return false;
+                }
+            }
+        }
+    }
+
     // دوال إدارة المرضى
     async function savePatient(patient, options = {}) {
         if (!patient) return null;
@@ -144,12 +181,27 @@ const SmartDB = (function() {
                 mergedPatient.device = SmartGeoTracker.getDeviceType().type;
             }
 
-            localStorage.setItem('smart_patient_' + mergedPatient.patientId, JSON.stringify(mergedPatient));
-            const allPts = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
-            const idx = allPts.findIndex(p => p.patientId === mergedPatient.patientId);
-            if (idx >= 0) allPts[idx] = { ...allPts[idx], ...mergedPatient };
-            else allPts.unshift(mergedPatient);
-            localStorage.setItem('smart_all_patients', JSON.stringify(allPts));
+            safeLocalStorageSet('smart_patient_' + mergedPatient.patientId, JSON.stringify(mergedPatient));
+            try {
+                const allPts = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
+                const idx = allPts.findIndex(p => p.patientId === mergedPatient.patientId);
+                // حفظ نسخة مقتضبة في smart_all_patients لمنع تضخم التخزين المحلي
+                const compactPatient = { ...mergedPatient };
+                if (compactPatient.assessment && typeof compactPatient.assessment === 'object') {
+                    compactPatient.assessment = {
+                        painLocation: compactPatient.assessment.painLocation || compactPatient.painLocation,
+                        primaryHypothesis: compactPatient.assessment.primaryHypothesis || compactPatient.diagnosis,
+                        urgencyLevel: compactPatient.assessment.urgencyLevel || compactPatient.urgencyLevel,
+                        date: compactPatient.assessment.date || compactPatient.createdAt
+                    };
+                }
+                if (compactPatient.latestAssessment && typeof compactPatient.latestAssessment === 'object') {
+                    compactPatient.latestAssessment = compactPatient.assessment;
+                }
+                if (idx >= 0) allPts[idx] = { ...allPts[idx], ...compactPatient };
+                else allPts.unshift(compactPatient);
+                safeLocalStorageSet('smart_all_patients', JSON.stringify(allPts.slice(0, 100)));
+            } catch(allPtsErr) {}
             patient = mergedPatient;
         } catch(e) {}
 
@@ -953,24 +1005,28 @@ const SmartDB = (function() {
 
             await savePatient(merged);
 
-            // حفظ فهرس الحساب محلياً
-            const accountRecord = {
-                phone: cleanPhone,
-                originalPhone: phone,
-                name: merged.fullName || merged.name || 'مراجع كريم',
-                patientId: patientId,
-                accountPin: cleanPin,
-                registeredAt: merged.registeredAt,
-                lastLoginAt: nowIso
-            };
-            localStorage.setItem('smart_patient_account_' + cleanPhone, JSON.stringify(accountRecord));
+            // حفظ فهرس الحساب محلياً بأمان تام ومقاومة تجاوز الكوتا
+            try {
+                const accountRecord = {
+                    phone: cleanPhone,
+                    originalPhone: phone,
+                    name: merged.fullName || merged.name || 'مراجع كريم',
+                    patientId: patientId,
+                    accountPin: cleanPin,
+                    registeredAt: merged.registeredAt,
+                    lastLoginAt: nowIso
+                };
+                safeLocalStorageSet('smart_patient_account_' + cleanPhone, JSON.stringify(accountRecord));
 
-            // تحديث قائمة الحسابات المسجلة
-            const accountsList = JSON.parse(localStorage.getItem('smart_registered_accounts') || '[]');
-            const accIdx = accountsList.findIndex(a => a.phone === cleanPhone);
-            if (accIdx >= 0) accountsList[accIdx] = accountRecord;
-            else accountsList.unshift(accountRecord);
-            localStorage.setItem('smart_registered_accounts', JSON.stringify(accountsList));
+                // تحديث قائمة الحسابات المسجلة
+                const accountsList = JSON.parse(localStorage.getItem('smart_registered_accounts') || '[]');
+                const accIdx = accountsList.findIndex(a => a.phone === cleanPhone);
+                if (accIdx >= 0) accountsList[accIdx] = accountRecord;
+                else accountsList.unshift(accountRecord);
+                safeLocalStorageSet('smart_registered_accounts', JSON.stringify(accountsList.slice(0, 100)));
+            } catch(storageErr) {
+                console.warn('[SmartDB] Local storage fast cache skipped due to quota, saved securely in IndexedDB:', storageErr);
+            }
 
             // تفعيل جلسة المراجع الحالية
             setAuthPatient({
@@ -1126,6 +1182,39 @@ const SmartDB = (function() {
         }
     }
 
+    async function getRegisteredAccounts() {
+        try {
+            const allPts = await getAllPatients();
+            const accountsList = JSON.parse(localStorage.getItem('smart_registered_accounts') || '[]');
+            const map = new Map();
+            
+            accountsList.forEach(a => {
+                if (a.phone) map.set(a.phone, a);
+            });
+
+            allPts.forEach(p => {
+                const phone = p.cleanPhone || (p.phone ? String(p.phone).replace(/\D/g, '') : null);
+                if (phone && (p.isRegistered || p.accountPin)) {
+                    if (!map.has(phone)) {
+                        map.set(phone, {
+                            phone: phone,
+                            originalPhone: p.phone,
+                            name: p.fullName || p.name || 'مراجع مسجل',
+                            patientId: p.patientId || p.id,
+                            registeredAt: p.registeredAt || p.createdAt,
+                            lastLoginAt: p.lastLoginAt || p.updatedAt
+                        });
+                    }
+                }
+            });
+
+            return Array.from(map.values());
+        } catch(e) {
+            console.error('Error in getRegisteredAccounts:', e);
+            return [];
+        }
+    }
+
     return {
         openDB,
         savePatient,
@@ -1157,7 +1246,8 @@ const SmartDB = (function() {
         getAuthPatient,
         logoutPatient,
         getPatientHistoryByPhone,
-        getRegisteredAccountsCount
+        getRegisteredAccountsCount,
+        getRegisteredAccounts
     };
 })();
 window.SmartDB = SmartDB;
