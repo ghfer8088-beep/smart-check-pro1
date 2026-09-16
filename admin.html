@@ -1440,17 +1440,17 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/mqtt.min.js?v=28.1"></script>
-    <script src="js/geo-tracker.js?v=28.1"></script>
-    <script src="js/cloud-sync.js?v=28.1"></script>
-    <script src="js/database.js?v=28.1"></script>
-    <script src="js/exercise-image-studio.js?v=28.1"></script>
-    <script src="js/exercises-db.js?v=28.1"></script>
-    <script src="js/diagnostic-engine.js?v=28.1"></script>
-    <script src="js/patient-flow.js?v=28.1"></script>
-    <script src="js/admin-engine.js?v=28.1"></script>
-    <script src="js/ai-config.js?v=28.1"></script>
-    <script src="js/ai-engine.js?v=28.1"></script>
+    <script src="js/mqtt.min.js?v=28.2"></script>
+    <script src="js/geo-tracker.js?v=28.2"></script>
+    <script src="js/cloud-sync.js?v=28.2"></script>
+    <script src="js/database.js?v=28.2"></script>
+    <script src="js/exercise-image-studio.js?v=28.2"></script>
+    <script src="js/exercises-db.js?v=28.2"></script>
+    <script src="js/diagnostic-engine.js?v=28.2"></script>
+    <script src="js/patient-flow.js?v=28.2"></script>
+    <script src="js/admin-engine.js?v=28.2"></script>
+    <script src="js/ai-config.js?v=28.2"></script>
+    <script src="js/ai-engine.js?v=28.2"></script>
 
     <script>
         let allPatientsList = [];
@@ -2332,10 +2332,43 @@
             }
             allPatientsList = await AdminEngine.loadPatientsOverview();
 
-
-
-
-            document.getElementById('stat-patients-count').textContent = allPatientsList.length;
+            // استشفاء وتصحيح ذاتي فوري لمنع أي تضخيم في عدد الجلسات المنفذة ومطابقتها للسجلات الحقيقية
+            try {
+                let healedCount = 0;
+                for (const item of allPatientsList) {
+                    const pt = item.patient;
+                    if (!pt) continue;
+                    const realLogs = (Array.isArray(pt.dailyLogs) && pt.dailyLogs.length > 0) ? pt.dailyLogs
+                                   : ((Array.isArray(pt.logs) && pt.logs.length > 0) ? pt.logs : []);
+                    if (realLogs.length > 0) {
+                        const uniqueSess = new Set();
+                        for (const l of realLogs) {
+                            if (l && (l.sessionNumber != null || l.day != null)) uniqueSess.add(Number(l.sessionNumber || l.day));
+                        }
+                        const count = uniqueSess.size > 0 ? uniqueSess.size : realLogs.length;
+                        if (item.logsCount !== count) {
+                            item.logsCount = count;
+                            pt.logsCount = count;
+                            pt.completedSessions = count;
+                            healedCount++;
+                        }
+                    } else if (item.logsCount > 0 && realLogs.length === 0) {
+                        const createdTs = new Date(pt.createdAt || 0).getTime();
+                        const daysAgo = (Date.now() - createdTs) / (1000 * 60 * 60 * 24);
+                        if (daysAgo < 5 || item.logsCount >= 7) {
+                            item.logsCount = 0;
+                            pt.logsCount = 0;
+                            pt.completedSessions = 0;
+                            healedCount++;
+                        }
+                    }
+                }
+                if (healedCount > 0 && typeof AdminEngine !== 'undefined' && typeof AdminEngine.saveAllPatients === 'function') {
+                    AdminEngine.saveAllPatients(allPatientsList.map(item => item.patient));
+                }
+            } catch (healErr) {
+                console.warn('Auto-heal session count warning:', healErr);
+            }
             const totalLogs = allPatientsList.reduce((acc, p) => acc + (p.logsCount || 0), 0);
             document.getElementById('stat-sessions-count').textContent = totalLogs;
             
@@ -2736,10 +2769,15 @@
                     </td>
                     <td style="padding: 14px;">${item.painArea}</td>
                     <td style="padding: 14px;">${item.latestDiagnosis}</td>
-                    <td style="padding: 14px;">اليوم ${Math.min(7, item.logsCount + 1)} من 7</td>
+                    <td style="padding: 14px;">
+                        ${item.logsCount >= 7 
+                            ? `<span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid #10b981; padding: 3px 8px; border-radius: 6px; font-weight: bold; font-size: 0.85em; display: inline-flex; align-items: center; gap: 4px;">🏆 أتم الـ 7 جلسات</span>`
+                            : `<span style="color: #38bdf8; font-weight: 600;">اليوم ${Math.min(7, (item.logsCount || 0) + 1)} من 7</span> <span style="color: #94a3b8; font-size: 0.8em;">(أنجز ${item.logsCount || 0})</span>`
+                        }
+                    </td>
                     <td style="padding: 14px; color: #10b981; font-weight: bold;">${item.recoveryScore != null ? item.recoveryScore + '%' : '<span style="color:#64748b">--</span>'}</td>
                     <td style="padding: 14px; text-align: center;">
-                        <button onclick="openPatientTimingModal('${p.patientId}', '${patientDisplayName.replace(/['\\]/g, '')}', ${item.logsCount + 1}, '${p.phone || ''}')" style="background: #3b82f6; color: #fff; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 0.88em; font-weight: bold;">⏱️ تعديل التوقيت</button>
+                        <button onclick="openPatientTimingModal('${p.patientId}', '${patientDisplayName.replace(/['\\]/g, '')}', ${Math.min(7, (item.logsCount || 0) + 1)}, '${p.phone || ''}')" style="background: #3b82f6; color: #fff; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 0.88em; font-weight: bold;">⏱️ تعديل التوقيت</button>
                     </td>
                     <td style="padding: 14px; text-align: center; white-space: nowrap;">
                         ${cleanPhone ? `<a href="https://wa.me/${cleanPhone}" target="_blank" style="display: inline-block; background: #25d366; color: #fff; text-decoration: none; padding: 7px 10px; border-radius: 6px; font-size: 0.88em; font-weight: bold; margin-left: 4px;">💬 واتساب</a>` : ''}
@@ -2821,7 +2859,12 @@
                                 </div>
                                 <div style="display: flex; justify-content: space-between;">
                                     <span style="color: #94a3b8;">🗓️ الجلسة الحالية:</span>
-                                    <span style="color: #38bdf8; font-weight: bold;">اليوم ${Math.min(7, item.logsCount + 1)} من 7</span>
+                                    <span style="color: #38bdf8; font-weight: bold;">
+                                        ${item.logsCount >= 7 
+                                            ? '<span style="color: #6ee7b7;">🏆 أتم الـ 7 جلسات (مكتمل)</span>' 
+                                            : `اليوم ${Math.min(7, (item.logsCount || 0) + 1)} من 7 <span style="color: #94a3b8; font-size: 0.85em; font-weight: normal;">(أنجز ${item.logsCount || 0})</span>`
+                                        }
+                                    </span>
                                 </div>
                                 ${p.phone ? `
                                 <div style="display: flex; justify-content: space-between;">
@@ -2843,7 +2886,7 @@
                                     <button type="button" disabled style="background: #1e293b; color: #64748b; border: 1px solid #334155; padding: 10px; border-radius: 8px; font-size: 0.85em;">
                                         بلا هاتف مسجل
                                     </button>`}
-                                    <button type="button" onclick="openPatientTimingModal('${p.patientId}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}', ${item.logsCount + 1}, '${p.phone || ''}')" style="background: #2563eb; color: #fff; border: none; padding: 10px; border-radius: 8px; font-size: 0.9em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                                    <button type="button" onclick="openPatientTimingModal('${p.patientId}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}', ${Math.min(7, (item.logsCount || 0) + 1)}, '${p.phone || ''}')" style="background: #2563eb; color: #fff; border: none; padding: 10px; border-radius: 8px; font-size: 0.9em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;">
                                         <span>⏱️ تعديل التوقيت</span>
                                     </button>
                                 </div>
@@ -3794,8 +3837,10 @@
             if (painSeverity >= 8) { painColor = '#ef4444'; painLabel = 'ألم شديد جداً وحاد'; }
             else if (painSeverity >= 5) { painColor = '#f59e0b'; painLabel = 'ألم متوسط إلى ملحوظ'; }
 
-            // اليوم ونسبة التعافي
-            let logsCount = item?.logsCount || (p.dailyLogs ? p.dailyLogs.length : 0);
+            // اليوم ونسبة التعافي بدقة حقيقية
+            const candidateLogs = (Array.isArray(p.dailyLogs) && p.dailyLogs.length > 0) ? p.dailyLogs 
+                                : ((Array.isArray(p.logs) && p.logs.length > 0) ? p.logs : []);
+            let logsCount = candidateLogs.length > 0 ? candidateLogs.length : (item?.logsCount || 0);
             let recoveryScore = item?.recoveryScore || p.recoveryScore || null;
 
             const probability = assessment?.probability || p.probability || 91;
@@ -3958,7 +4003,7 @@
                         <div>
                             <div style="color: #94a3b8; font-size: 0.8em;">حالة خطة الـ 7 أيام المجانية:</div>
                             <div style="color: #ffffff; font-weight: bold; font-size: 0.95em; margin-top: 2px;">
-                                اليوم ${Math.min(7, logsCount + 1)} من 7 • إنجاز ${logsCount} جلسات حركية
+                                ${logsCount >= 7 ? '🏆 أتم برنامج الـ 7 أيام بنجاح (7 جلسات مكتملة)' : `اليوم ${Math.min(7, logsCount + 1)} من 7 • إنجاز ${logsCount} جلسات حركية`}
                             </div>
                         </div>
                         <div style="text-align: left;">

@@ -167,8 +167,8 @@ const AdminEngine = (function() {
                             painAreaTitle: painArea,
                             chiefDiagnosis: chiefDiag,
                             diagnosisTitle: chiefDiag,
-                            completedSessions: completedSess,
-                            logsCount: completedSess,
+                            completedSessions: 0,
+                            logsCount: 0,
                             createdAt: notif.time || new Date().toISOString(),
                             timestamp: notif.time || new Date().toISOString(),
                             _fromNotif: true
@@ -292,8 +292,9 @@ const AdminEngine = (function() {
                         }
                     }
 
-                    unified.logsCount = Math.max(unified.logsCount || 0, r.logsCount || 0, r.completedSessions || 0, (r.dailyLogs?.length || 0));
-                    unified.completedSessions = Math.max(unified.completedSessions || 0, r.completedSessions || 0, unified.logsCount || 0);
+                    if (!r._fromNotif && Array.isArray(r.dailyLogs) && r.dailyLogs.length > 0) {
+                        unified.logsCount = Math.max(unified.logsCount || 0, r.dailyLogs.length);
+                    }
                     unified.recoveryScore = Math.max(unified.recoveryScore || 0, r.recoveryScore || 0);
                 }
 
@@ -301,8 +302,11 @@ const AdminEngine = (function() {
                 unified.dailyLogs = allDailyLogs;
                 unified.logs = allDailyLogs;
                 if (allDailyLogs.length > 0) {
-                    unified.logsCount = Math.max(unified.logsCount || 0, allDailyLogs.length);
-                    unified.completedSessions = Math.max(unified.completedSessions || 0, allDailyLogs.length);
+                    unified.logsCount = allDailyLogs.length;
+                    unified.completedSessions = allDailyLogs.length;
+                } else {
+                    unified.logsCount = Math.min(7, Math.max(0, unified.logsCount || 0));
+                    unified.completedSessions = unified.logsCount;
                 }
 
                 if (!unified.bmi && unified.weight && unified.height) {
@@ -415,14 +419,19 @@ const AdminEngine = (function() {
                     ? (latestAssessment.painSeverity || latestAssessment.painLevel || p.painLevel || null)
                     : (p.painLevel || null);
 
-                // احتساب عدد الجلسات المنفذة الحقيقية
-                const effectiveLogsCount = Math.max(
-                    (logs ? logs.length : 0),
-                    p.logsCount || 0,
-                    p.completedSessions || 0,
-                    (Array.isArray(p.dailyLogs) ? p.dailyLogs.length : 0),
-                    (Array.isArray(p.logs) ? p.logs.length : 0)
-                );
+                // احتساب عدد الجلسات المنفذة الحقيقية بدقة صارمة من السجلات الموثقة
+                const candidateLogs = (Array.isArray(logs) && logs.length > 0) ? logs 
+                                    : ((Array.isArray(p.dailyLogs) && p.dailyLogs.length > 0) ? p.dailyLogs 
+                                    : ((Array.isArray(p.logs) && p.logs.length > 0) ? p.logs : []));
+                
+                const uniqueSessions = new Set();
+                for (const l of candidateLogs) {
+                    if (l && (l.sessionNumber != null || l.day != null)) {
+                        uniqueSessions.add(Number(l.sessionNumber || l.day));
+                    }
+                }
+                const realLogsCount = uniqueSessions.size > 0 ? uniqueSessions.size : candidateLogs.length;
+                const effectiveLogsCount = realLogsCount > 0 ? realLogsCount : Math.min(7, Math.max(0, p.logsCount || 0));
 
                 // نسبة التعافي
                 let recoveryScore = null;

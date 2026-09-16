@@ -229,7 +229,7 @@
                     const pItem = ptList.find(x => x.id === log.patientId || x.patientId === log.patientId);
                     if (pItem) {
                         pItem.logsCount = existing.length;
-                        pItem.completedSessions = Math.max(pItem.completedSessions || 0, log.sessionNumber);
+                        pItem.completedSessions = existing.length;
                         pItem.recoveryScore = Math.min(100, Math.round((existing.length / 7) * 100));
                         saveCloudSyncedPatients(ptList);
                     }
@@ -237,7 +237,7 @@
                         const dbPt = await window.SmartDB.getPatient(log.patientId);
                         if (dbPt) {
                             dbPt.logsCount = existing.length;
-                            dbPt.completedSessions = Math.max(dbPt.completedSessions || 0, log.sessionNumber);
+                            dbPt.completedSessions = existing.length;
                             dbPt.recoveryScore = Math.min(100, Math.round((existing.length / 7) * 100));
                             await window.SmartDB.savePatient(dbPt, { skipCloudSync: true });
                         }
@@ -771,7 +771,7 @@
                 }
                 patients[pIdx].dailyLogs.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
                 patients[pIdx].logsCount = patients[pIdx].dailyLogs.length;
-                patients[pIdx].completedSessions = Math.max(patients[pIdx].completedSessions || 0, sNum, patients[pIdx].dailyLogs.length);
+                patients[pIdx].completedSessions = patients[pIdx].dailyLogs.length;
                 patients[pIdx].recoveryScore = Math.min(100, Math.round((patients[pIdx].dailyLogs.length / 7) * 100));
                 saveCloudSyncedPatients(patients);
             }
@@ -941,7 +941,7 @@
                         const pFound = cList.find(x => x.id === pId || x.patientId === pId);
                         if (pFound) {
                             pFound.logsCount = existing.length;
-                            pFound.completedSessions = Math.max(pFound.completedSessions || 0, existing.length);
+                            pFound.completedSessions = existing.length;
                             pFound.recoveryScore = Math.min(100, Math.round((existing.length / 7) * 100));
                             saveCloudSyncedPatients(cList);
                         }
@@ -1251,8 +1251,8 @@
                                     ...existing,
                                     ...normalized,
                                     createdAt: existing.createdAt || normalized.createdAt || existing.timestamp || normalized.timestamp,
-                                    logsCount: Math.max(existing.logsCount || 0, normalized.logsCount || 0, mergedDaily.length),
-                                    completedSessions: Math.max(existing.completedSessions || 0, normalized.completedSessions || 0, mergedDaily.length),
+                                    logsCount: (mergedDaily.length > 0) ? mergedDaily.length : Math.min(7, Math.max(existing.logsCount || 0, normalized.logsCount || 0)),
+                                    completedSessions: (mergedDaily.length > 0) ? mergedDaily.length : Math.min(7, Math.max(existing.completedSessions || 0, normalized.completedSessions || 0)),
                                     recoveryScore: Math.max(existing.recoveryScore || 0, normalized.recoveryScore || 0)
                                 };
                             } else {
@@ -1383,8 +1383,8 @@
                                                 ...existing,
                                                 ...normalized,
                                                 createdAt: existing.createdAt || normalized.createdAt || existing.timestamp || normalized.timestamp,
-                                                logsCount: Math.max(existing.logsCount || 0, normalized.logsCount || 0, mergedDaily.length),
-                                                completedSessions: Math.max(existing.completedSessions || 0, normalized.completedSessions || 0, mergedDaily.length),
+                                                logsCount: (mergedDaily.length > 0) ? mergedDaily.length : Math.min(7, Math.max(existing.logsCount || 0, normalized.logsCount || 0)),
+                                                completedSessions: (mergedDaily.length > 0) ? mergedDaily.length : Math.min(7, Math.max(existing.completedSessions || 0, normalized.completedSessions || 0)),
                                                 recoveryScore: Math.max(existing.recoveryScore || 0, normalized.recoveryScore || 0)
                                             };
                                         } else {

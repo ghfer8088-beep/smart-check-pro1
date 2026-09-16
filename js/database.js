@@ -297,9 +297,10 @@ const SmartDB = (function() {
                             map.set(pId, p);
                         } else {
                             const existing = map.get(pId);
-                            const mergedLogsCount = Math.max(existing.logsCount || 0, p.logsCount || 0, existing.completedSessions || 0, p.completedSessions || 0);
-                            const mergedRecoveryScore = Math.max(existing.recoveryScore || 0, p.recoveryScore || 0);
                             const mergedDailyLogs = (Array.isArray(p.dailyLogs) && p.dailyLogs.length > (existing.dailyLogs?.length || 0)) ? p.dailyLogs : (existing.dailyLogs || p.dailyLogs || []);
+                            const realLogsLen = Array.isArray(mergedDailyLogs) ? mergedDailyLogs.length : 0;
+                            const mergedLogsCount = realLogsLen > 0 ? realLogsLen : Math.min(7, Math.max(existing.logsCount || 0, p.logsCount || 0));
+                            const mergedRecoveryScore = Math.max(existing.recoveryScore || 0, p.recoveryScore || 0);
 
                             map.set(pId, {
                                 ...existing,
@@ -384,10 +385,11 @@ const SmartDB = (function() {
                                 if (!map.has(pId)) {
                                     map.set(pId, fullCloudPatient);
                                 } else {
-                                    const existing = map.get(pId);
-                                    const mergedLogsCount = Math.max(existing.logsCount || 0, fullCloudPatient.logsCount || 0);
-                                    const mergedRecoveryScore = Math.max(existing.recoveryScore || 0, fullCloudPatient.recoveryScore || 0);
-                                    const mergedDailyLogs = (Array.isArray(fullCloudPatient.dailyLogs) && fullCloudPatient.dailyLogs.length > (existing.dailyLogs?.length || 0)) ? fullCloudPatient.dailyLogs : (existing.dailyLogs || fullCloudPatient.dailyLogs || []);
+                                     const existing = map.get(pId);
+                                     const mergedDailyLogs = (Array.isArray(fullCloudPatient.dailyLogs) && fullCloudPatient.dailyLogs.length > (existing.dailyLogs?.length || 0)) ? fullCloudPatient.dailyLogs : (existing.dailyLogs || fullCloudPatient.dailyLogs || []);
+                                     const realCloudLogsCount = Array.isArray(mergedDailyLogs) ? mergedDailyLogs.length : 0;
+                                     const mergedLogsCount = realCloudLogsCount > 0 ? realCloudLogsCount : Math.min(7, Math.max(existing.logsCount || 0, fullCloudPatient.logsCount || 0));
+                                     const mergedRecoveryScore = Math.max(existing.recoveryScore || 0, fullCloudPatient.recoveryScore || 0);
 
                                     // الحفاظ على جهاز الـ Desktop إن كان مسجلاً ولا ندعه يتحول إلى Mobile
                                     const finalDevice = existing.device === 'Desktop' ? 'Desktop' : (fullCloudPatient.device || existing.device || 'Desktop');
@@ -732,7 +734,7 @@ const SmartDB = (function() {
                     const pt = await getPatient(log.patientId);
                     if (pt) {
                         pt.logsCount = existing.length;
-                        pt.completedSessions = Math.max(pt.completedSessions || 0, log.sessionNumber || 0, existing.length);
+                        pt.completedSessions = existing.length;
                         pt.recoveryScore = Math.min(100, Math.round((existing.length / 7) * 100));
                         pt.lastSessionDate = log.date || new Date().toISOString();
                         pt.dailyLogs = existing;

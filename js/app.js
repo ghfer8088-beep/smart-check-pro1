@@ -3237,7 +3237,7 @@ async function renderPatientPortalData(authPatient) {
         const pain = item.painAreaTitle || item.painArea || item.painLocation || 'العمود الفقري والمفاصل';
         const dateStr = item.date ? new Date(item.date).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' }) : 'سجل سابق';
         const pt = item.patient || {};
-        const logsCount = pt.logsCount || pt.completedSessions || (Array.isArray(pt.dailyLogs) ? pt.dailyLogs.length : 0);
+        const logsCount = (Array.isArray(pt.dailyLogs) && pt.dailyLogs.length > 0) ? pt.dailyLogs.length : (pt.logsCount || 0);
         const recovery = pt.recoveryScore != null ? `${pt.recoveryScore}%` : (logsCount > 0 ? `${Math.min(100, Math.round((logsCount / 7) * 100))}%` : '--');
 
         return `
@@ -3251,7 +3251,7 @@ async function renderPatientPortalData(authPatient) {
                 </div>
 
                 <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px; font-size: 0.82em; color: #cbd5e1; flex-wrap: wrap;">
-                    <span style="background: rgba(56, 189, 248, 0.12); color: #7dd3fc; padding: 2px 7px; border-radius: 4px;">الجلسات: اليوم ${Math.min(7, logsCount + 1)} من 7</span>
+                    <span style="background: rgba(56, 189, 248, 0.12); color: #7dd3fc; padding: 2px 7px; border-radius: 4px;">الجلسات: ${logsCount >= 7 ? '🏆 مكتمل (7 جلسات)' : `اليوم ${Math.min(7, logsCount + 1)} من 7 (أنجز ${logsCount})`}</span>
                     <span style="background: rgba(16, 185, 129, 0.12); color: #6ee7b7; padding: 2px 7px; border-radius: 4px;">التعافي: ${recovery}</span>
                 </div>
 
@@ -3295,7 +3295,7 @@ function resumePatientSessionsFromPortal(idx) {
         window.activePatient = item.patient;
     }
     const pt = item.patient || {};
-    const logsCount = pt.logsCount || pt.completedSessions || 0;
+    const logsCount = (Array.isArray(pt.dailyLogs) && pt.dailyLogs.length > 0) ? pt.dailyLogs.length : (pt.logsCount || 0);
     const targetSession = Math.min(7, logsCount + 1);
 
     if (targetSession <= 1) {
@@ -6242,7 +6242,7 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
     if (pInfo) {
         const totalDone = (allLogs && allLogs.length) ? allLogs.length : 1;
         pInfo.logsCount = totalDone;
-        pInfo.completedSessions = Math.max(pInfo.completedSessions || 0, sessionNumber);
+        pInfo.completedSessions = totalDone;
         pInfo.lastSessionNumber = sessionNumber;
         pInfo.lastLogDate = new Date().toISOString();
         if (typeof PatientFlow !== 'undefined' && typeof PatientFlow.calculateRecoveryScore === 'function' && pInfo.painLevel) {
@@ -6258,7 +6258,8 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
         playDailyMotivationAudio(sessionNumber, pName);
     }
 
-    if (allLogs.length >= 7 || sessionNumber >= 7) {
+    // التحقق الصارم من إتمام 7 جلسات فعلية كاملة
+    if (allLogs && allLogs.length >= 7) {
         SmartDB.addAdminNotification({
             type: 'plan_completed',
             title: `🏆 إتمام البرنامج (7 أيام): ${pName}`,
