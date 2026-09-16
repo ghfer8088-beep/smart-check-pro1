@@ -1440,17 +1440,17 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/mqtt.min.js?v=28.2"></script>
-    <script src="js/geo-tracker.js?v=28.2"></script>
-    <script src="js/cloud-sync.js?v=28.2"></script>
-    <script src="js/database.js?v=28.2"></script>
-    <script src="js/exercise-image-studio.js?v=28.2"></script>
-    <script src="js/exercises-db.js?v=28.2"></script>
-    <script src="js/diagnostic-engine.js?v=28.2"></script>
-    <script src="js/patient-flow.js?v=28.2"></script>
-    <script src="js/admin-engine.js?v=28.2"></script>
-    <script src="js/ai-config.js?v=28.2"></script>
-    <script src="js/ai-engine.js?v=28.2"></script>
+    <script src="js/mqtt.min.js?v=28.3"></script>
+    <script src="js/geo-tracker.js?v=28.3"></script>
+    <script src="js/cloud-sync.js?v=28.3"></script>
+    <script src="js/database.js?v=28.3"></script>
+    <script src="js/exercise-image-studio.js?v=28.3"></script>
+    <script src="js/exercises-db.js?v=28.3"></script>
+    <script src="js/diagnostic-engine.js?v=28.3"></script>
+    <script src="js/patient-flow.js?v=28.3"></script>
+    <script src="js/admin-engine.js?v=28.3"></script>
+    <script src="js/ai-config.js?v=28.3"></script>
+    <script src="js/ai-engine.js?v=28.3"></script>
 
     <script>
         let allPatientsList = [];
@@ -2330,7 +2330,51 @@
             if (typeof SmartDB !== 'undefined' && typeof SmartDB.purgeDummyAssessments === 'function') {
                 try { await SmartDB.purgeDummyAssessments(); } catch(e) {}
             }
-            allPatientsList = await AdminEngine.loadPatientsOverview();
+
+            try {
+                allPatientsList = await AdminEngine.loadPatientsOverview();
+            } catch (err) {
+                console.error('Error in AdminEngine.loadPatientsOverview:', err);
+                allPatientsList = [];
+            }
+
+            // شبكة أمان فورية: إذا كانت القائمة فارغة، نسترجع مباشرة من SmartDB أو التخزين المحلي لضمان عدم اختفاء أي مريض
+            if (!allPatientsList || allPatientsList.length === 0) {
+                try {
+                    let fallbackPts = [];
+                    if (typeof SmartDB !== 'undefined' && typeof SmartDB.getAllPatients === 'function') {
+                        fallbackPts = await SmartDB.getAllPatients();
+                    }
+                    if (!fallbackPts || fallbackPts.length === 0) {
+                        fallbackPts = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
+                    }
+                    if (fallbackPts && fallbackPts.length > 0) {
+                        allPatientsList = fallbackPts.map(pt => ({
+                            patient: pt,
+                            isRegistered: !!(pt.isRegistered || pt.accountPin),
+                            logsCount: (Array.isArray(pt.dailyLogs) ? pt.dailyLogs.length : (Array.isArray(pt.logs) ? pt.logs.length : (pt.logsCount || 0))),
+                            recoveryScore: pt.recoveryScore || null,
+                            baselinePain: pt.painLevel || null,
+                            latestDiagnosis: pt.chiefDiagnosis || pt.diagnosisTitle || 'تشخيص سريري متكامل',
+                            painArea: pt.painArea || pt.painAreaTitle || 'فحص واستشارة سريرية',
+                            createdAt: pt.createdAt || new Date().toISOString(),
+                            lastActiveAt: pt.lastActiveAt || pt.createdAt
+                        }));
+                    }
+                } catch(fbErr) {
+                    console.warn('Fallback patient loading warning:', fbErr);
+                }
+            }
+
+            if (!Array.isArray(allPatientsList)) {
+                allPatientsList = [];
+            }
+
+            // تحديث بطاقة إجمالي المراجعين فورياً ومباشرة
+            const statPtCountEl = document.getElementById('stat-patients-count');
+            if (statPtCountEl) {
+                statPtCountEl.textContent = allPatientsList.length;
+            }
 
             // استشفاء وتصحيح ذاتي فوري لمنع أي تضخيم في عدد الجلسات المنفذة ومطابقتها للسجلات الحقيقية
             try {
@@ -2363,53 +2407,63 @@
                         }
                     }
                 }
-                if (healedCount > 0 && typeof AdminEngine !== 'undefined' && typeof AdminEngine.saveAllPatients === 'function') {
-                    AdminEngine.saveAllPatients(allPatientsList.map(item => item.patient));
+                if (healedCount > 0) {
+                    try {
+                        const ptsToSave = allPatientsList.map(item => item.patient).filter(Boolean);
+                        localStorage.setItem('smart_all_patients', JSON.stringify(ptsToSave));
+                    } catch(e) {}
                 }
             } catch (healErr) {
                 console.warn('Auto-heal session count warning:', healErr);
             }
+
+            // إحصاء إجمالي الجلسات المنفذة الحقيقية
             const totalLogs = allPatientsList.reduce((acc, p) => acc + (p.logsCount || 0), 0);
-            document.getElementById('stat-sessions-count').textContent = totalLogs;
+            const statSessionsEl = document.getElementById('stat-sessions-count');
+            if (statSessionsEl) {
+                statSessionsEl.textContent = totalLogs;
+            }
             
             // إحصاء الحسابات المسجلة بـ PIN
             const registeredPatients = allPatientsList.filter(p => (p.patient && (p.patient.isRegistered || p.patient.accountPin)) || p.isRegistered || p.accountPin);
-            if (document.getElementById('stat-registered-count')) {
-                document.getElementById('stat-registered-count').textContent = registeredPatients.length;
+            const statRegEl = document.getElementById('stat-registered-count');
+            if (statRegEl) {
+                statRegEl.textContent = registeredPatients.length;
             }
 
             // احتساب متوسط نسبة التعافي سريرياً: للملتزمين بالجلسات فقط (ممن باشروا جلساتهم فعلياً)
             const patientsWithActiveLogs = allPatientsList.filter(p => (p.logsCount || 0) > 0 && (p.recoveryScore || 0) > 0);
             const subTitleEl = document.getElementById('stat-recovery-avg-sub');
+            const statRecEl = document.getElementById('stat-recovery-avg');
             if (patientsWithActiveLogs.length > 0) {
                 const avgRec = Math.round(patientsWithActiveLogs.reduce((acc, p) => acc + (p.recoveryScore || 0), 0) / patientsWithActiveLogs.length);
-                document.getElementById('stat-recovery-avg').textContent = avgRec + '%';
+                if (statRecEl) statRecEl.textContent = avgRec + '%';
                 if (subTitleEl) subTitleEl.textContent = `(${patientsWithActiveLogs.length} مراجع ملتزم بالجلسات)`;
             } else {
                 const anyWithScore = allPatientsList.filter(p => (p.recoveryScore || 0) > 0);
                 if (anyWithScore.length > 0) {
                     const avgRec = Math.round(anyWithScore.reduce((acc, p) => acc + (p.recoveryScore || 0), 0) / anyWithScore.length);
-                    document.getElementById('stat-recovery-avg').textContent = avgRec + '%';
+                    if (statRecEl) statRecEl.textContent = avgRec + '%';
                     if (subTitleEl) subTitleEl.textContent = `(${anyWithScore.length} مراجع مسجل للتعافي)`;
                 } else {
-                    document.getElementById('stat-recovery-avg').textContent = '—';
+                    if (statRecEl) statRecEl.textContent = '—';
                     if (subTitleEl) subTitleEl.textContent = '(بانتظار تسجيل أول جلسة للمراجعين)';
                 }
             }
 
-            updatePatientFilterCounts();
-            renderTable(getFilteredPatientsList());
-            renderGeoAnalytics();
+            try { updatePatientFilterCounts(); } catch(e) { console.warn(e); }
+            try { renderTable(getFilteredPatientsList()); } catch(e) { console.error('renderTable error:', e); }
+            try { renderGeoAnalytics(); } catch(e) { console.warn(e); }
         }
         window.loadAdminData = loadAdminData;
 
         function updatePatientFilterCounts() {
-            const countAll = allPatientsList.length;
-            const countRegistered = allPatientsList.filter(p => (p.patient && (p.patient.isRegistered || p.patient.accountPin)) || p.isRegistered || p.accountPin).length;
-            const countActive = allPatientsList.filter(p => (p.logsCount || 0) < 7).length;
-            const countCompleted = allPatientsList.filter(p => (p.logsCount || 0) >= 7).length;
-            const countFlags = allPatientsList.filter(p => {
-                const pat = p.patient || {};
+            const countAll = (allPatientsList || []).length;
+            const countRegistered = (allPatientsList || []).filter(p => (p.patient && (p.patient.isRegistered || p.patient.accountPin)) || p.isRegistered || p.accountPin).length;
+            const countActive = (allPatientsList || []).filter(p => (p.logsCount || 0) < 7).length;
+            const countCompleted = (allPatientsList || []).filter(p => (p.logsCount || 0) >= 7).length;
+            const countFlags = (allPatientsList || []).filter(p => {
+                const pat = (p && p.patient) || {};
                 return pat.redFlagsDetected || (p.latestDiagnosis && p.latestDiagnosis.includes('طارئ'));
             }).length;
 

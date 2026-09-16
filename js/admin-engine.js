@@ -186,7 +186,7 @@ const AdminEngine = (function() {
                     return 'phone_' + cleanPhone.slice(-9);
                 }
                 const rawId = pt.patientId || pt.id || '';
-                const baseId = rawId.replace(/(_notif_.*|_test\d*|_cloud_test.*|_\d{10,})$/, '');
+                const baseId = rawId.replace(/(_notif_.*|_test\d*|_cloud_test.*)$/, '');
                 if (baseId && baseId !== 'pat_notif') {
                     return 'id_' + baseId;
                 }
@@ -214,8 +214,8 @@ const AdminEngine = (function() {
                 const listToMerge = nonNotif.length > 0 ? nonNotif : records;
                 const unified = { ...listToMerge[0] };
 
-                // تنظيف معرف المريض من أي لاحقة مشتقة
-                unified.patientId = (unified.patientId || unified.id || '').replace(/(_notif_.*|_test\d*|_cloud_test.*|_\d{10,})$/, '');
+                // تنظيف معرف المريض من أي لاحقة مشتقة تجريبية فقط
+                unified.patientId = (unified.patientId || unified.id || '').replace(/(_notif_.*|_test\d*|_cloud_test.*)$/, '');
                 unified.id = unified.patientId;
 
                 let earliestDate = unified.createdAt || unified.timestamp || null;
