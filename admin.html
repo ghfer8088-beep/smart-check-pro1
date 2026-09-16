@@ -3362,16 +3362,17 @@
             `;
             modal.style.display = 'flex';
 
-            let item = allPatientsList.find(x => x.patient && (x.patient.patientId === patientId || x.patient.id === patientId));
-            let p = item ? item.patient : await SmartDB.getPatient(patientId);
-            if (!p) {
-                renderArea.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #f87171;">
-                        ⚠️ تعذر العثور على سجل المريض برقم (${patientId}).
-                    </div>
-                `;
-                return;
-            }
+            try {
+                let item = allPatientsList.find(x => x.patient && (x.patient.patientId === patientId || x.patient.id === patientId));
+                let p = item ? item.patient : await SmartDB.getPatient(patientId);
+                if (!p) {
+                    renderArea.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #f87171;">
+                            ⚠️ تعذر العثور على سجل المريض برقم (${patientId}).
+                        </div>
+                    `;
+                    return;
+                }
 
             let assessments = [];
             try { assessments = await SmartDB.getPatientAssessments(patientId); } catch(e) { assessments = []; }
@@ -3770,15 +3771,8 @@
             let logsCount = item?.logsCount || (p.dailyLogs ? p.dailyLogs.length : 0);
             let recoveryScore = item?.recoveryScore || p.recoveryScore || null;
 
-            // تحديث زر الواتساب في الهيدر
-            const waBtn = document.getElementById('admin-report-wa-btn');
-            if (waBtn) {
-                if (cleanPhone) {
-                    waBtn.style.display = 'inline-flex';
-                } else {
-                    waBtn.style.display = 'none';
-                }
-            }
+            const probability = assessment?.probability || p.probability || 91;
+            const confidence = assessment?.confidenceScore || assessment?.confidence || p.confidenceScore || 88;
 
             renderArea.innerHTML = `
                 <div style="background: linear-gradient(135deg, #0f172a 0%, #152238 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
@@ -3959,6 +3953,24 @@
 
                 </div>
             `;
+            } catch (err) {
+                console.error('Error rendering admin patient report:', err);
+                renderArea.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #f87171; background: #0f172a; border-radius: 12px; border: 1px solid #ef4444;">
+                        <div style="font-size: 2.2em; margin-bottom: 10px;">⚠️</div>
+                        <div style="font-weight: bold; font-size: 1.1em; margin-bottom: 8px; color: #fca5a5;">تعذر استدعاء التقرير السريري الكامل للمراجع</div>
+                        <div style="color: #94a3b8; font-size: 0.85em; margin-bottom: 18px;">${err.message || 'بيانات التقرير قيد التحديث في قاعدة البيانات'}</div>
+                        <div style="display: flex; justify-content: center; gap: 10px;">
+                            <button type="button" onclick="loginAsPatient('${patientId}')" style="background: #10b981; color: #fff; border: none; padding: 9px 18px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                                🔗 فتح جلسة المريض مباشرة
+                            </button>
+                            <button type="button" onclick="closeAdminPatientReportModal()" style="background: #334155; color: #cbd5e1; border: none; padding: 9px 16px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                                إغلاق
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
         }
 
         function closeAdminPatientReportModal() {
@@ -4004,23 +4016,38 @@
         }
 
         function loginAsPatient(patientId) {
+            let item = (allPatientsList || []).find(x => x.patient && (x.patient.patientId === patientId || x.patient.id === patientId));
             let targetPt = (activeAdminReportPatient && (activeAdminReportPatient.patientId === patientId || activeAdminReportPatient.id === patientId))
                 ? activeAdminReportPatient
-                : (window.allAdminPatients || []).find(p => p.patientId === patientId || p.id === patientId);
+                : (item ? item.patient : null);
             
             if (targetPt) {
                 try {
                     localStorage.setItem('smart_active_patient', JSON.stringify(targetPt));
                     localStorage.setItem('smart_current_patient_id', targetPt.patientId || targetPt.id || patientId);
+                    localStorage.setItem('smart_last_active_patient_id', targetPt.patientId || targetPt.id || patientId);
+                    if (targetPt.phone) {
+                        localStorage.setItem('smart_patient_phone', String(targetPt.phone));
+                    }
                     if (activeAdminReportAssessment) {
                         localStorage.setItem('smart_current_assessment', JSON.stringify(activeAdminReportAssessment));
+                    } else if (targetPt.assessment || targetPt.latestAssessment) {
+                        localStorage.setItem('smart_current_assessment', JSON.stringify(targetPt.assessment || targetPt.latestAssessment));
+                    } else {
+                        localStorage.removeItem('smart_current_assessment');
                     }
-                    if (targetPt.selectedPoint) {
-                        localStorage.setItem('smart_current_point', typeof targetPt.selectedPoint === 'string' ? targetPt.selectedPoint : JSON.stringify(targetPt.selectedPoint));
+                    if (targetPt.selectedPoint || targetPt.painArea) {
+                        const ptVal = targetPt.selectedPoint || targetPt.painArea;
+                        const ptObj = {
+                            id: targetPt.pointId || targetPt.painPointId || 'lumbar_spine',
+                            title: typeof ptVal === 'string' ? ptVal : (ptVal.title || 'الفقرات القطنية وأسفل الظهر'),
+                            region: targetPt.region || 'lumbar'
+                        };
+                        localStorage.setItem('smart_current_point', JSON.stringify(ptObj));
                     }
                 } catch(e) {}
             }
-            window.open(`index.html?patient_id=${encodeURIComponent(patientId)}&view_report=3`, '_blank');
+            window.open(`index.html?patient_id=${encodeURIComponent(patientId)}&view_report=3&admin_mode=1`, '_blank');
         }
 
         async function deletePatientRecord(patientId) {

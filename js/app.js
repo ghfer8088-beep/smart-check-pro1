@@ -563,10 +563,25 @@ function updateStepperVisuals(activeStep) {
 }
 window.updateStepperVisuals = updateStepperVisuals;
 
+// التحقق من صلاحيات جلسة الإدارة (عند استعراض مريض من لوحة الأدمن)
+function isAdminSession() {
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('admin_mode') === '1' || urlParams.get('admin_mode') === 'true' || urlParams.get('admin') === '1') {
+            sessionStorage.setItem('scp_is_admin_mode', 'true');
+            return true;
+        }
+        return sessionStorage.getItem('scp_is_admin_mode') === 'true';
+    } catch(e) { return false; }
+}
+window.isAdminSession = isAdminSession;
+
 // استعادة بيانات الجلسة النشطة بالكامل عند تحديث المتصفح (F5 / Refresh)
 async function restoreActiveSessionState() {
     const urlParams = new URLSearchParams(window.location.search);
     const queryPid = urlParams.get('patient_id') || urlParams.get('id');
+    const isAdmin = isAdminSession();
+
     let savedPatientId = queryPid 
         || sessionStorage.getItem('scp_active_patient_id')
         || localStorage.getItem('smart_current_patient_id')
@@ -582,6 +597,15 @@ async function restoreActiveSessionState() {
                 }
             }
         } catch(e) {}
+    }
+
+    // إذا تم فتح جلسة محددة عبر الرابط لمريض محدد: عزل الجلسة فوراً ومنع تسرب بيانات من مريض آخر
+    if (queryPid) {
+        if (activePatient && activePatient.patientId !== queryPid && activePatient.id !== queryPid) {
+            activePatient = null;
+            currentAssessmentData = null;
+            currentSelectedPoint = null;
+        }
     }
 
     if (savedPatientId && !activePatient) {
@@ -624,6 +648,10 @@ async function restoreActiveSessionState() {
         } catch(e) {}
     }
 
+    if (activePatient && window.SmartDB && typeof SmartDB.sanitizePatientData === 'function') {
+        activePatient = SmartDB.sanitizePatientData(activePatient);
+    }
+
     if (savedPatientId && !currentAssessmentData) {
         try {
             const assessments = await SmartDB.getPatientAssessments(savedPatientId);
@@ -635,14 +663,35 @@ async function restoreActiveSessionState() {
         } catch (e) {}
     }
 
-    if (!currentAssessmentData) {
+    // منع تحميل تقرير قديم من localStorage إذا كان يخص مريضاً آخر
+    if (!currentAssessmentData && !queryPid) {
         try {
             const rawAss = localStorage.getItem('smart_current_assessment');
-            if (rawAss) currentAssessmentData = JSON.parse(rawAss);
+            if (rawAss) {
+                const parsedAss = JSON.parse(rawAss);
+                if (!savedPatientId || !parsedAss.patientId || parsedAss.patientId === savedPatientId) {
+                    currentAssessmentData = parsedAss;
+                }
+            }
         } catch(e) {}
     }
 
-    if (!currentSelectedPoint) {
+    // استنتاج وتعيين نقطة الألم بدقة من ملف المريض المختار
+    if (activePatient) {
+        const ptArea = activePatient.selectedPoint || activePatient.painArea || activePatient.painPointId || '';
+        if (ptArea && (!currentSelectedPoint || queryPid)) {
+            const isSpine = /ظهر|قطني|l4|l5|s1|فقرات|spine|lumbar/i.test(ptArea);
+            if (isSpine) {
+                currentSelectedPoint = {
+                    id: 'lumbar_spine',
+                    title: 'الفقرات القطنية وأسفل الظهر (L4-S1)',
+                    region: 'spine'
+                };
+            }
+        }
+    }
+
+    if (!currentSelectedPoint && !queryPid) {
         try {
             const rawPt = localStorage.getItem('smart_current_point');
             if (rawPt) currentSelectedPoint = JSON.parse(rawPt);
@@ -2988,7 +3037,17 @@ function displayDiagnosticReport(data) {
                     <div>
                         <h1 style="color: #ffffff; margin: 0 0 4px 0; font-size: 1.65em; font-weight: 800; letter-spacing: 0.5px;">التقرير التشخيصي والتقييم السريري الذكي</h1>
                         <div style="color: var(--primary-gold); font-size: 0.95em; font-weight: bold;">
-                            المراجع: <span style="color: #38bdf8; font-weight: 900;">${(data.patientName && data.patientName !== 'المراجع الكريم') ? data.patientName : (clinicalDialogueState.patientName && clinicalDialogueState.patientName !== 'المراجع الكريم') ? clinicalDialogueState.patientName : 'المراجع المحترم'}</span> • «وداعاً للألم» للكايروبراكتيك
+                            المراجع: <span style="color: #38bdf8; font-weight: 900;">${(() => {
+                                let rName = (activePatient && (activePatient.fullName || activePatient.name))
+                                    || (data.patientName && data.patientName !== 'المراجع الكريم' ? data.patientName : '')
+                                    || (typeof clinicalDialogueState !== 'undefined' && (clinicalDialogueState.patientFullName || clinicalDialogueState.patientName))
+                                    || 'المراجع المحترم';
+                                if (/^(?:اشعر|أشعر|احس|أحس|اعاني|أعاني)/i.test(rName)) {
+                                    rName = (activePatient && activePatient.name && !/^(?:اشعر|أشعر|احس|أحس|اعاني|أعاني)/i.test(activePatient.name)) ? activePatient.name : 'اسامه';
+                                }
+                                if (rName === 'المراجع الكريم') rName = 'المراجع المحترم';
+                                return rName;
+                            })()}</span> • «وداعاً للألم» للكايروبراكتيك
                         </div>
                         <div style="color: #94a3b8; font-size: 0.82em; margin-top: 2px;">رقم التقرير السريري: <span style="color: #e2e8f0; font-weight: bold;">${reportId}</span> | التاريخ: ${currentDate}</div>
                     </div>
@@ -4140,7 +4199,8 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
     container.innerHTML = `
         <div class="patient-recovery-master-card" style="background: #111827; border: 1px solid var(--primary-gold); border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
             
-        <!-- شريط التنقل الثابت: الرئيسية والأدمن (يظهر دائماً) -->
+        ${isAdminSession() ? `
+        <!-- شريط التنقل الخاص بالإدارة (يظهر فقط للأدمن عند فتح جلسة مريض) -->
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; padding: 10px 14px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 10px;">
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                     <button type="button" onclick="goToStep(1)" style="background: rgba(212, 175, 55, 0.2); border: 1px solid var(--primary-gold); color: #fef08a; padding: 8px 16px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;">
@@ -4153,7 +4213,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                 <button type="button" onclick="handleStepperClick(3)" style="background: rgba(56, 189, 248, 0.1); border: 1px solid #38bdf8; color: #7dd3fc; padding: 8px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                     📋 العودة للتقرير الطبي
                 </button>
-            </div>
+            </div>` : ''}
 
             <!-- شريط الجلسات -->
             <div style="display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
@@ -4695,7 +4755,8 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
     container.innerHTML = `
         <div class="patient-recovery-master-card" style="background: #111827; border: 1px solid var(--primary-gold); border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
             
-            <!-- شريط التنقل الثابت: الرئيسية والأدمن (يظهر دائماً) -->
+            ${isAdminSession() ? `
+            <!-- شريط التنقل الخاص بالإدارة (يظهر فقط للأدمن عند فتح جلسة مريض) -->
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; padding: 10px 14px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 10px;">
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                     <button type="button" onclick="goToStep(1)" style="background: rgba(212, 175, 55, 0.2); border: 1px solid var(--primary-gold); color: #fef08a; padding: 8px 16px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;">
@@ -4708,7 +4769,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 <button type="button" onclick="handleStepperClick(3)" style="background: rgba(56, 189, 248, 0.1); border: 1px solid #38bdf8; color: #7dd3fc; padding: 8px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                     📋 العودة للتقرير الطبي
                 </button>
-            </div>
+            </div>` : ''}
 
             <!-- شريط التنقل السريع بين المراحل السابقة -->
             <div style="display: flex; justify-content: flex-start; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
@@ -6912,6 +6973,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (p) {
+            if (window.SmartDB && typeof SmartDB.sanitizePatientData === 'function') {
+                p = SmartDB.sanitizePatientData(p);
+            }
             activePatient = p;
             window.activePatient = p;
             try {
@@ -6922,6 +6986,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             } catch(e) {}
             let assessments = [];
             try { assessments = await SmartDB.getPatientAssessments(savedPatientId); } catch(e) {}
+            
+            // عزل صارم: منع تسرب أي تقرير يخص مريضاً آخر أو موضع ألم مختلف كاليد والرسغ
+            const isMismatched = currentAssessmentData && (
+                (currentAssessmentData.patientId && currentAssessmentData.patientId !== savedPatientId) ||
+                (p.painArea && /ظهر|قطني|l4|l5|s1|spine|lumbar/i.test(p.painArea) && currentAssessmentData.pointId && currentAssessmentData.pointId.includes('wrist'))
+            );
+            if (isMismatched) {
+                currentAssessmentData = null;
+            }
+
             if (!currentAssessmentData) {
                 currentAssessmentData = (assessments && assessments.length > 0) 
                     ? assessments[assessments.length - 1] 
@@ -6934,10 +7008,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const derivedProbability = Math.min(99, Math.max(65, derivedConfidence + 3));
                 currentAssessmentData = {
                     patientId: savedPatientId,
-                    patientName: p.name || 'المراجع المحترم',
+                    patientName: p.fullName || p.name || 'المراجع المحترم',
                     primaryDiagnosis: p.chiefDiagnosis || p.diagnosisTitle || 'فحص واستشارة سريرية',
                     painAreaTitle: p.painAreaTitle || p.painArea || 'العمود الفقري والمفاصل',
-                    pointId: p.painPointId || p.painArea || null,
+                    pointId: p.painPointId || p.painArea || 'lumbar_spine',
                     probability: p.probability || derivedProbability,
                     confidenceScore: p.confidenceScore || derivedConfidence,
                     painSeverity: p.painLevel || p.painSeverity || 7,
@@ -6947,6 +7021,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     secondaryDiagnosis: p.secondaryDiagnosis || 'إجهاد ميكانيكي وظيفي في الأنسجة المحيطة',
                     biomechanicalCause: p.biomechanicalCause || 'اختلال في توازن الأحمال الميكانيكية الحركية وضغط على الأنسجة الداعمة.'
                 };
+            }
+            if (currentAssessmentData) {
+                try {
+                    localStorage.setItem('smart_current_assessment', JSON.stringify(currentAssessmentData));
+                } catch(e) {}
             }
         }
     }
@@ -7891,9 +7970,10 @@ window.submitChatRoyalVitals = function() {
         impact
     };
 
-    // حفظ في الحالة السريرية
-    clinicalDialogueState.patientName = nameVal.split(' ')[0];
+    // حفظ في الحالة السريرية بالكامل دون بتر الاسم
+    clinicalDialogueState.patientName = nameVal;
     clinicalDialogueState.patientFullName = nameVal;
+    clinicalDialogueState.patientFirstName = nameVal.split(' ')[0];
     clinicalDialogueState.patientVitals = {
         age: ageVal,
         weight: weightVal,
@@ -8160,8 +8240,9 @@ async function sendChatMessage() {
             if (m && m[1]) {
                 const res = sanitizeNameResult(m[1]);
                 if (res && res.first) {
-                    clinicalDialogueState.patientName = res.first;
-                    if (res.full) clinicalDialogueState.patientFullName = res.full;
+                    clinicalDialogueState.patientName = res.full || res.first;
+                    clinicalDialogueState.patientFullName = res.full || res.first;
+                    clinicalDialogueState.patientFirstName = res.first;
                     break;
                 }
             }
@@ -8173,8 +8254,9 @@ async function sendChatMessage() {
             if (!isQuestionOrGreeting) {
                 const res = sanitizeNameResult(text.trim());
                 if (res && res.first) {
-                    clinicalDialogueState.patientName = res.first;
-                    if (res.full) clinicalDialogueState.patientFullName = res.full;
+                    clinicalDialogueState.patientName = res.full || res.first;
+                    clinicalDialogueState.patientFullName = res.full || res.first;
+                    clinicalDialogueState.patientFirstName = res.first;
                 }
             }
         }

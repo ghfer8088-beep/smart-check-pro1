@@ -321,12 +321,17 @@ const AdminEngine = (function() {
                 }
 
                 // تصحيح فوري لبيانات المريض أسامة (الذي تم استخراج اسمه خطأً "اشعر" ورقم هاتفه 00966540333309)
-                if ((unified.phone && String(unified.phone).includes('540333309')) || (unified.name && unified.name.trim() === 'اشعر')) {
+                if ((unified.phone && String(unified.phone).includes('540333309')) || 
+                    (unified.patientId && String(unified.patientId).includes('540333309')) || 
+                    (unified.id && String(unified.id).includes('540333309')) || 
+                    (unified.name && /^اشعر/i.test(unified.name.trim()))) {
                     unified.name = 'اسامه';
                     unified.fullName = 'اسامه';
                     unified.gender = 'male';
-                    unified.painArea = 'الفقرات القطنية وأسفل الظهر';
-                    unified.painAreaTitle = 'الفقرات القطنية وأسفل الظهر';
+                    unified.painArea = 'الفقرات القطنية وأسفل الظهر (L4-S1)';
+                    unified.painAreaTitle = 'الفقرات القطنية وأسفل الظهر (L4-S1)';
+                    unified.selectedPoint = 'الفقرات القطنية وأسفل الظهر (L4-S1)';
+                    unified.pointId = 'lumbar_spine';
                     unified.chiefDiagnosis = 'انزلاق غضروفي وإجهاد ميكانيكي قطني (L4-S1)';
                     unified.diagnosisTitle = 'انزلاق غضروفي وإجهاد ميكانيكي قطني (L4-S1)';
                 }
