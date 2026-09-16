@@ -909,6 +909,223 @@ const SmartDB = (function() {
         }
     }
 
+    // =========================================================================
+    // منظومة حسابات المراجعين والتسجيل الاختياري لحفظ السجلات (Patient Accounts)
+    // =========================================================================
+    async function registerPatientAccount(phone, pin, patientData = {}) {
+        if (!phone) return { success: false, message: 'رقم الهاتف مطلوب' };
+        const cleanPhone = String(phone).replace(/\D/g, '');
+        if (!cleanPhone || cleanPhone.length < 6) {
+            return { success: false, message: 'يرجى إدخال رقم هاتف صحيح' };
+        }
+        const cleanPin = String(pin || '').trim();
+        if (!cleanPin || cleanPin.length < 4) {
+            return { success: false, message: 'رمز PIN يجب أن يتكون من 4 أرقام على الأقل' };
+        }
+
+        try {
+            // جلب أو إنشاء سجل المريض
+            let patientId = patientData.patientId || patientData.id;
+            if (!patientId) {
+                patientId = 'pat_' + cleanPhone + '_' + Date.now().toString(36);
+            }
+
+            let existingPt = await getPatient(patientId);
+            if (!existingPt) {
+                const all = await getAllPatients();
+                existingPt = all.find(p => p.phone && String(p.phone).replace(/\D/g, '') === cleanPhone);
+                if (existingPt) patientId = existingPt.patientId || existingPt.id;
+            }
+
+            const nowIso = new Date().toISOString();
+            const merged = {
+                ...(existingPt || {}),
+                ...patientData,
+                patientId,
+                id: patientId,
+                phone: phone,
+                cleanPhone: cleanPhone,
+                isRegistered: true,
+                accountPin: cleanPin,
+                registeredAt: existingPt?.registeredAt || nowIso,
+                lastLoginAt: nowIso
+            };
+
+            await savePatient(merged);
+
+            // حفظ فهرس الحساب محلياً
+            const accountRecord = {
+                phone: cleanPhone,
+                originalPhone: phone,
+                name: merged.fullName || merged.name || 'مراجع كريم',
+                patientId: patientId,
+                accountPin: cleanPin,
+                registeredAt: merged.registeredAt,
+                lastLoginAt: nowIso
+            };
+            localStorage.setItem('smart_patient_account_' + cleanPhone, JSON.stringify(accountRecord));
+
+            // تحديث قائمة الحسابات المسجلة
+            const accountsList = JSON.parse(localStorage.getItem('smart_registered_accounts') || '[]');
+            const accIdx = accountsList.findIndex(a => a.phone === cleanPhone);
+            if (accIdx >= 0) accountsList[accIdx] = accountRecord;
+            else accountsList.unshift(accountRecord);
+            localStorage.setItem('smart_registered_accounts', JSON.stringify(accountsList));
+
+            // تفعيل جلسة المراجع الحالية
+            setAuthPatient({
+                phone: cleanPhone,
+                originalPhone: phone,
+                name: merged.fullName || merged.name || 'مراجع كريم',
+                patientId: patientId,
+                isRegistered: true,
+                loginTime: Date.now()
+            });
+
+            // إشعار للإدارة بوصول تسجيل حساب جديد
+            try {
+                addAdminNotification({
+                    type: 'new_registration',
+                    title: `🔑 تسجيل حساب مراجع: ${merged.fullName || merged.name || 'مراجع جديد'}`,
+                    message: `قام المراجع (${merged.fullName || merged.name || 'مراجع جديد'}) بتسجيل حساب طبي وتعيين رمز مرور برقم (${phone})، لتمكينه من حفظ ومتابعة سجلاته الطبية.`,
+                    patientId: patientId,
+                    patientName: merged.fullName || merged.name || 'مراجع جديد',
+                    patientPhone: phone
+                });
+            } catch(e) {}
+
+            return { success: true, patient: merged, message: 'تم إنشاء وحفظ ملفك الطبي بنجاح' };
+        } catch(err) {
+            console.error('Error in registerPatientAccount:', err);
+            return { success: false, message: 'حدث خطأ أثناء حفظ الملف: ' + err.message };
+        }
+    }
+
+    async function verifyPatientPin(phone, pin) {
+        if (!phone || !pin) return { success: false, message: 'يرجى إدخال الهاتف والرمز السري' };
+        const cleanPhone = String(phone).replace(/\D/g, '');
+        const cleanPin = String(pin).trim();
+
+        try {
+            // فحص في حسابات التخزين السريع
+            let accRaw = localStorage.getItem('smart_patient_account_' + cleanPhone);
+            let acc = accRaw ? JSON.parse(accRaw) : null;
+
+            if (!acc) {
+                const accountsList = JSON.parse(localStorage.getItem('smart_registered_accounts') || '[]');
+                acc = accountsList.find(a => a.phone === cleanPhone || (a.originalPhone && String(a.originalPhone).replace(/\D/g, '') === cleanPhone));
+            }
+
+            // فحص في جدول المرضى
+            let matchedPatient = null;
+            if (acc && acc.patientId) {
+                matchedPatient = await getPatient(acc.patientId);
+            }
+            if (!matchedPatient) {
+                const all = await getAllPatients();
+                matchedPatient = all.find(p => p.phone && String(p.phone).replace(/\D/g, '') === cleanPhone && p.accountPin);
+            }
+
+            const storedPin = acc?.accountPin || matchedPatient?.accountPin;
+            if (!storedPin) {
+                return { success: false, notRegistered: true, message: 'لا يوجد حساب مسجل مسبقاً بهذا الرقم. يمكنك إجراء الفحص السريري وحفظ تقريرك فوراً.' };
+            }
+
+            if (storedPin !== cleanPin) {
+                return { success: false, message: 'الرمز السري (PIN) غير صحيح، يرجى المحاولة ثانية' };
+            }
+
+            // نجاح تسجيل الدخول
+            const activePt = matchedPatient || {
+                patientId: acc.patientId,
+                name: acc.name,
+                phone: acc.originalPhone || acc.phone,
+                isRegistered: true
+            };
+
+            setAuthPatient({
+                phone: cleanPhone,
+                originalPhone: acc?.originalPhone || activePt.phone,
+                name: activePt.fullName || activePt.name || acc.name,
+                patientId: activePt.patientId || acc.patientId,
+                isRegistered: true,
+                loginTime: Date.now()
+            });
+
+            return { success: true, patient: activePt, message: 'تم تسجيل الدخول بنجاح' };
+        } catch(err) {
+            console.error('Error in verifyPatientPin:', err);
+            return { success: false, message: 'تعذر التحقق: ' + err.message };
+        }
+    }
+
+    function setAuthPatient(authData) {
+        if (!authData) {
+            localStorage.removeItem('smart_auth_patient');
+        } else {
+            localStorage.setItem('smart_auth_patient', JSON.stringify(authData));
+        }
+    }
+
+    function getAuthPatient() {
+        try {
+            const raw = localStorage.getItem('smart_auth_patient');
+            return raw ? JSON.parse(raw) : null;
+        } catch(e) {
+            return null;
+        }
+    }
+
+    function logoutPatient() {
+        localStorage.removeItem('smart_auth_patient');
+    }
+
+    async function getPatientHistoryByPhone(phone) {
+        const cleanPhone = String(phone).replace(/\D/g, '');
+        if (!cleanPhone) return [];
+        try {
+            const allPatients = await getAllPatients();
+            const matchingPatients = allPatients.filter(p => p.phone && String(p.phone).replace(/\D/g, '') === cleanPhone);
+
+            const allAssessments = [];
+            for (const pt of matchingPatients) {
+                const ptId = pt.patientId || pt.id;
+                if (ptId) {
+                    const ass = await getPatientAssessments(ptId);
+                    if (Array.isArray(ass)) {
+                        ass.forEach(a => {
+                            if (!allAssessments.some(ea => ea.assessmentId === a.assessmentId || ea.date === a.date)) {
+                                allAssessments.push({ ...a, patient: pt });
+                            }
+                        });
+                    }
+                }
+                if (pt.assessment || pt.latestAssessment) {
+                    const curAss = pt.assessment || pt.latestAssessment;
+                    if (!allAssessments.some(ea => ea.date === (curAss.date || pt.createdAt))) {
+                        allAssessments.push({ ...curAss, patient: pt, date: curAss.date || pt.createdAt });
+                    }
+                }
+            }
+
+            // ترتيب زمني من الأحدث إلى الأقدم
+            allAssessments.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+            return allAssessments;
+        } catch(e) {
+            console.error('Error in getPatientHistoryByPhone:', e);
+            return [];
+        }
+    }
+
+    function getRegisteredAccountsCount() {
+        try {
+            const accountsList = JSON.parse(localStorage.getItem('smart_registered_accounts') || '[]');
+            return accountsList.length;
+        } catch(e) {
+            return 0;
+        }
+    }
+
     return {
         openDB,
         savePatient,
@@ -933,7 +1150,14 @@ const SmartDB = (function() {
         markAllNotificationsAsRead,
         deleteNotification,
         clearAllNotifications,
-        purgeDummyAssessments
+        purgeDummyAssessments,
+        registerPatientAccount,
+        verifyPatientPin,
+        setAuthPatient,
+        getAuthPatient,
+        logoutPatient,
+        getPatientHistoryByPhone,
+        getRegisteredAccountsCount
     };
 })();
 window.SmartDB = SmartDB;

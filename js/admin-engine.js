@@ -233,6 +233,11 @@ const AdminEngine = (function() {
                     // الهاتف
                     if (!unified.phone && r.phone) unified.phone = r.phone;
 
+                    // الحساب والتسجيل الاختياري
+                    if (r.isRegistered) unified.isRegistered = true;
+                    if (r.accountPin && !unified.accountPin) unified.accountPin = r.accountPin;
+                    if (r.registeredAt && !unified.registeredAt) unified.registeredAt = r.registeredAt;
+
                     // المؤشرات الحيوية
                     if (!unified.age && r.age) unified.age = r.age;
                     if (!unified.weight && r.weight) unified.weight = r.weight;
@@ -474,6 +479,7 @@ const AdminEngine = (function() {
 
                 overview.push({
                     patient: p,
+                    isRegistered: !!p.isRegistered,
                     latestAssessment,
                     logsCount: effectiveLogsCount,
                     recoveryScore: recoveryScore,

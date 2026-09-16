@@ -169,6 +169,9 @@
             </button>
 
             <div class="header-actions" id="main-header-actions">
+                <button type="button" id="btn-patient-portal" class="btn-header btn-header-unified" onclick="openPatientPortalModal(); closeMobileMenu();" title="حسابي وسجل تقاريري الطبية" style="border: 1.5px solid var(--primary-gold); color: #fef08a; background: linear-gradient(135deg, rgba(212,175,55,0.18), rgba(15,23,42,0.85)); font-weight: bold;">
+                    <span id="portal-btn-icon">📁</span> <span id="portal-btn-label">ملفي الطبي</span>
+                </button>
                 <button type="button" class="btn-header btn-header-unified" onclick="openMriConsultationModal(); closeMobileMenu();" title="خدمة قراءة وتفسير صور الرنين المغناطيسي والأشعة مجاناً">🩻 قراءة صور الرنين</button>
                 <button type="button" class="btn-header btn-header-unified" onclick="openVideoSuccessStoriesModal(); closeMobileMenu();" title="شاهد بالفيديو تجارب تعافي حقيقية موثقة">📹 قصص نجاحنا بالفيديو</button>
                 <button type="button" class="btn-header btn-header-unified" onclick="openChiropracticExplainerModal(); closeMobileMenu();">✨ ما هو الكايروبراكتيك؟</button>
@@ -1419,6 +1422,106 @@
         </div>
     </div>
 
+    <!-- ========================================================================= -->
+    <!-- 📁 نافذة الملف الطبي للمراجع وتسجيل الدخول بالـ PIN (Patient Portal Modal) -->
+    <!-- ========================================================================= -->
+    <div id="patient-portal-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 99999; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;">
+        <div class="modal-inner" style="background: #0f172a; border: 2px solid var(--primary-gold); border-radius: 16px; max-width: 620px; width: 100%; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.85); box-sizing: border-box; text-align: right; position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(212, 175, 55, 0.3); padding-bottom: 14px; margin-bottom: 18px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8em;">📁</span>
+                    <div>
+                        <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.25em;" id="portal-modal-title">الملف الطبي وسجل الفحوصات</h3>
+                        <div style="color: #94a3b8; font-size: 0.82em;">منصة "وداعاً للألم" - الوصول السحابي للتقارير السريرية</div>
+                    </div>
+                </div>
+                <button type="button" onclick="closePatientPortalModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.8em; cursor: pointer; line-height: 1;">&times;</button>
+            </div>
+
+            <!-- عرض حالة عدم تسجيل الدخول: فورم الدخول السلس بالهاتف والـ PIN -->
+            <div id="portal-logged-out-view">
+                <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(15, 23, 42, 0.9)); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; color: #cbd5e1; font-size: 0.88em; line-height: 1.7;">
+                    🔒 <strong>أهلاً بك في ملفك الطبي:</strong> إذا قمت بحفظ تقريرك الطبي سابقاً وتعيين رمز مرور (PIN من 4 أرقام)، أدخل رقم هاتفك والرمز لتسجيل الدخول واستعراض كافة تقاريرك وخطط التعافي الخاصة بك من أي جهاز.
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;">
+                    <div>
+                        <label for="portal-input-phone" style="display: block; color: #e2e8f0; font-size: 0.88em; margin-bottom: 6px; font-weight: bold;">
+                            📱 رقم الهاتف / الواتساب:
+                        </label>
+                        <input type="tel" id="portal-input-phone" placeholder="مثال: 0790000000 أو 00962790000000" style="width: 100%; background: #080c14; border: 1.5px solid #334155; padding: 12px; border-radius: 8px; color: #fff; font-size: 1em; box-sizing: border-box; text-align: left; direction: ltr;">
+                    </div>
+
+                    <div>
+                        <label for="portal-input-pin" style="display: block; color: #e2e8f0; font-size: 0.88em; margin-bottom: 6px; font-weight: bold;">
+                            🔑 الرمز السري (PIN من 4 أرقام):
+                        </label>
+                        <input type="password" id="portal-input-pin" maxlength="6" placeholder="****" style="width: 100%; background: #080c14; border: 1.5px solid #334155; padding: 12px; border-radius: 8px; color: #fff; font-size: 1.2em; text-align: center; letter-spacing: 6px; box-sizing: border-box;">
+                    </div>
+
+                    <div id="portal-login-error" style="display: none; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; padding: 10px 14px; border-radius: 8px; font-size: 0.88em;"></div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                    <button type="button" onclick="handlePatientPortalLogin()" style="flex: 1; background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; border: none; padding: 13px; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer; box-shadow: 0 4px 15px rgba(212,175,55,0.35);">
+                        🔓 فتح ملفي وسجلاتي الطبية
+                    </button>
+                    <button type="button" onclick="closePatientPortalModal()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 13px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                        إغلاق
+                    </button>
+                </div>
+
+                <div style="text-align: center; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 14px; color: #94a3b8; font-size: 0.82em;">
+                    💡 لم تقم بإنشاء حساب بعد؟ يمكنك إجراء الفحص السريري مجاناً في أي وقت وحفظ ملفك في الخطوة 3 بنقرة واحدة.
+                </div>
+            </div>
+
+            <!-- عرض حالة تسجيل الدخول: قائمة التقارير والمتابعة -->
+            <div id="portal-logged-in-view" style="display: none;">
+                <!-- بطاقة هوية المراجع -->
+                <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(15, 23, 42, 0.9)); border: 1.5px solid #10b981; border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <div style="color: #fff; font-size: 1.15em; font-weight: bold; display: flex; align-items: center; gap: 6px;">
+                            <span>👤 أهلاً بك،</span>
+                            <span id="portal-user-name" style="color: var(--primary-gold);">المراجع الكريم</span>
+                        </div>
+                        <div style="color: #94a3b8; font-size: 0.84em; margin-top: 4px; display: flex; align-items: center; gap: 8px;">
+                            <span>📱 <span id="portal-user-phone">--</span></span>
+                            <span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid #10b981; padding: 1px 6px; border-radius: 4px; font-size: 0.78em;">حساب موثق ومحمي 🔑</span>
+                        </div>
+                    </div>
+                    <div>
+                        <button type="button" onclick="handlePatientPortalLogout()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; padding: 7px 14px; border-radius: 6px; font-size: 0.82em; font-weight: bold; cursor: pointer;">
+                            🚪 تسجيل الخروج
+                        </button>
+                    </div>
+                </div>
+
+                <!-- عنوان قائمة السجلات -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.95em;">
+                        📋 سجل التقارير والفحوصات السريرية السابقة:
+                    </div>
+                    <div style="color: #94a3b8; font-size: 0.8em;" id="portal-records-count">0 تقارير</div>
+                </div>
+
+                <!-- حاوية البطاقات الطبية للمراجع -->
+                <div id="portal-records-list" style="display: flex; flex-direction: column; gap: 12px; max-height: 380px; overflow-y: auto; padding-left: 4px; margin-bottom: 16px;">
+                    <!-- يتم بناؤها ديناميكياً -->
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" onclick="closePatientPortalModal(); resetToInitialState();" style="flex: 1; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.95em;">
+                        ➕ إجراء فحص سريري جديد وحفظه في ملفي
+                    </button>
+                    <button type="button" onclick="closePatientPortalModal()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                        إغلاق
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- دوال تسجيل الدخول والباب الخلفي السري -->
     <script>
         function openAiKeySettingsModal() {
@@ -1619,20 +1722,20 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=27.5"></script>
-    <script src="js/geo-tracker.js?v=27.5"></script>
-    <script src="js/cloud-sync.js?v=27.5"></script>
-    <script src="js/database.js?v=27.5"></script>
-    <script src="js/exercise-image-studio.js?v=27.5"></script>
-    <script src="js/exercises-db.js?v=27.5"></script>
-    <script src="js/diagnostic-engine.js?v=27.5"></script>
-    <script src="js/audio-pacer.js?v=27.5"></script>
-    <script src="js/patient-flow.js?v=27.5"></script>
-    <script src="js/admin-engine.js?v=27.5"></script>
-    <script src="js/ai-config.js?v=27.5"></script>
-    <script src="js/ai-engine.js?v=27.5"></script>
-    <script src="js/app.js?v=27.5"></script>
-    <script src="js/text-editor.js?v=27.5"></script>
+    <script src="js/mqtt.min.js?v=28.0"></script>
+    <script src="js/geo-tracker.js?v=28.0"></script>
+    <script src="js/cloud-sync.js?v=28.0"></script>
+    <script src="js/database.js?v=28.0"></script>
+    <script src="js/exercise-image-studio.js?v=28.0"></script>
+    <script src="js/exercises-db.js?v=28.0"></script>
+    <script src="js/diagnostic-engine.js?v=28.0"></script>
+    <script src="js/audio-pacer.js?v=28.0"></script>
+    <script src="js/patient-flow.js?v=28.0"></script>
+    <script src="js/admin-engine.js?v=28.0"></script>
+    <script src="js/ai-config.js?v=28.0"></script>
+    <script src="js/ai-engine.js?v=28.0"></script>
+    <script src="js/app.js?v=28.0"></script>
+    <script src="js/text-editor.js?v=28.0"></script>
 
     <script>
         // تشغيل عداد التفاعل الحي الاجتماعي (Live Online Social Proof) وكاشف الدولة والمدينة

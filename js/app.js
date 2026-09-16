@@ -3091,6 +3091,372 @@ function generateIntegrativeLabCard() {
     `;
 }
 
+// =========================================================================
+// منظومة حسابات المراجعين وبوابة الملف الطبي (Patient Portal & Accounts)
+// =========================================================================
+function updatePortalHeaderButton() {
+    const btn = document.getElementById('btn-patient-portal');
+    const label = document.getElementById('portal-btn-label');
+    const icon = document.getElementById('portal-btn-icon');
+    if (!btn || !label) return;
+
+    const auth = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+    if (auth && auth.isRegistered) {
+        const fullName = auth.name || 'المراجع الكريم';
+        const firstName = fullName.trim().split(' ')[0] || 'المراجع';
+        label.textContent = `أهلاً، ${firstName}`;
+        if (icon) icon.textContent = '👤';
+        btn.style.borderColor = '#10b981';
+        btn.style.color = '#6ee7b7';
+        btn.style.background = 'rgba(16, 185, 129, 0.15)';
+    } else {
+        label.textContent = 'ملفي الطبي';
+        if (icon) icon.textContent = '📁';
+        btn.style.borderColor = 'var(--primary-gold)';
+        btn.style.color = '#fef08a';
+        btn.style.background = 'linear-gradient(135deg, rgba(212,175,55,0.18), rgba(15,23,42,0.85))';
+    }
+}
+window.updatePortalHeaderButton = updatePortalHeaderButton;
+
+async function openPatientPortalModal() {
+    if (typeof stopAllActiveAudio === 'function') stopAllActiveAudio();
+    const modal = document.getElementById('patient-portal-modal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    const auth = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+    const loggedOutView = document.getElementById('portal-logged-out-view');
+    const loggedInView = document.getElementById('portal-logged-in-view');
+
+    if (auth && auth.isRegistered) {
+        if (loggedOutView) loggedOutView.style.display = 'none';
+        if (loggedInView) loggedInView.style.display = 'block';
+        await renderPatientPortalData(auth);
+    } else {
+        if (loggedOutView) loggedOutView.style.display = 'block';
+        if (loggedInView) loggedInView.style.display = 'none';
+        const phoneInput = document.getElementById('portal-input-phone');
+        if (phoneInput && !phoneInput.value) {
+            const curPhone = (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') || localStorage.getItem('smart_patient_phone') || '';
+            if (curPhone) phoneInput.value = curPhone;
+        }
+    }
+}
+window.openPatientPortalModal = openPatientPortalModal;
+
+function closePatientPortalModal() {
+    const modal = document.getElementById('patient-portal-modal');
+    if (modal) modal.style.display = 'none';
+    document.body.style.overflow = '';
+}
+window.closePatientPortalModal = closePatientPortalModal;
+
+async function handlePatientPortalLogin() {
+    const phoneInput = document.getElementById('portal-input-phone');
+    const pinInput = document.getElementById('portal-input-pin');
+    const errEl = document.getElementById('portal-login-error');
+
+    const phone = phoneInput ? phoneInput.value.trim() : '';
+    const pin = pinInput ? pinInput.value.trim() : '';
+
+    if (!phone || !pin) {
+        if (errEl) {
+            errEl.style.display = 'block';
+            errEl.textContent = 'يرجى إدخال رقم الهاتف والرمز السري (PIN)';
+        }
+        return;
+    }
+
+    if (errEl) errEl.style.display = 'none';
+
+    const res = await SmartDB.verifyPatientPin(phone, pin);
+    if (res.success) {
+        updatePortalHeaderButton();
+        const loggedOutView = document.getElementById('portal-logged-out-view');
+        const loggedInView = document.getElementById('portal-logged-in-view');
+        if (loggedOutView) loggedOutView.style.display = 'none';
+        if (loggedInView) loggedInView.style.display = 'block';
+        await renderPatientPortalData(res.patient);
+    } else {
+        if (errEl) {
+            errEl.style.display = 'block';
+            errEl.textContent = res.message;
+        }
+    }
+}
+window.handlePatientPortalLogin = handlePatientPortalLogin;
+
+function handlePatientPortalLogout() {
+    if (typeof SmartDB !== 'undefined' && typeof SmartDB.logoutPatient === 'function') {
+        SmartDB.logoutPatient();
+    }
+    updatePortalHeaderButton();
+    const loggedOutView = document.getElementById('portal-logged-out-view');
+    const loggedInView = document.getElementById('portal-logged-in-view');
+    if (loggedOutView) loggedOutView.style.display = 'block';
+    if (loggedInView) loggedInView.style.display = 'none';
+    const pinInput = document.getElementById('portal-input-pin');
+    if (pinInput) pinInput.value = '';
+}
+window.handlePatientPortalLogout = handlePatientPortalLogout;
+
+async function renderPatientPortalData(authPatient) {
+    const nameEl = document.getElementById('portal-user-name');
+    const phoneEl = document.getElementById('portal-user-phone');
+    const countEl = document.getElementById('portal-records-count');
+    const listContainer = document.getElementById('portal-records-list');
+
+    if (nameEl) nameEl.textContent = authPatient.name || authPatient.fullName || 'المراجع الكريم';
+    if (phoneEl) phoneEl.textContent = authPatient.originalPhone || authPatient.phone || '--';
+
+    if (!listContainer) return;
+
+    listContainer.innerHTML = `<div style="text-align:center;padding:20px;color:#94a3b8;">⏳ جاري جلب تقاريرك الطبية...</div>`;
+
+    const phone = authPatient.phone || authPatient.originalPhone;
+    const history = await SmartDB.getPatientHistoryByPhone(phone);
+
+    if (countEl) countEl.textContent = `${history.length} تقرير سريري`;
+
+    if (!history || history.length === 0) {
+        listContainer.innerHTML = `
+            <div style="text-align: center; padding: 25px; background: #080c14; border-radius: 10px; border: 1px dashed #334155; color: #94a3b8; font-size: 0.9em;">
+                📂 لا توجد تقارير سابقة محفوظة لهذا الرقم.<br>
+                <span style="color: #cbd5e1; font-size: 0.85em; margin-top: 6px; display: block;">قم بإجراء الفحص السريري وسيتم حفظ تقريرك تلقائياً في ملفك الطبي.</span>
+            </div>
+        `;
+        return;
+    }
+
+    window._portalHistoryCache = history;
+
+    listContainer.innerHTML = history.map((item, idx) => {
+        const diag = item.primaryDiagnosis?.title || item.primaryDiagnosis || item.chiefDiagnosis || item.title || 'تشخيص سريري متكامل';
+        const pain = item.painAreaTitle || item.painArea || item.painLocation || 'العمود الفقري والمفاصل';
+        const dateStr = item.date ? new Date(item.date).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' }) : 'سجل سابق';
+        const pt = item.patient || {};
+        const logsCount = pt.logsCount || pt.completedSessions || (Array.isArray(pt.dailyLogs) ? pt.dailyLogs.length : 0);
+        const recovery = pt.recoveryScore != null ? `${pt.recoveryScore}%` : (logsCount > 0 ? `${Math.min(100, Math.round((logsCount / 7) * 100))}%` : '--');
+
+        return `
+            <div style="background: #080c14; border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 10px; padding: 14px 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+                    <div>
+                        <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.98em;">${pain}</div>
+                        <div style="color: #ffffff; font-size: 0.9em; margin-top: 2px;">${diag}</div>
+                    </div>
+                    <span style="background: #1e293b; color: #94a3b8; font-size: 0.78em; padding: 3px 8px; border-radius: 4px;">📅 ${dateStr}</span>
+                </div>
+
+                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px; font-size: 0.82em; color: #cbd5e1; flex-wrap: wrap;">
+                    <span style="background: rgba(56, 189, 248, 0.12); color: #7dd3fc; padding: 2px 7px; border-radius: 4px;">الجلسات: اليوم ${Math.min(7, logsCount + 1)} من 7</span>
+                    <span style="background: rgba(16, 185, 129, 0.12); color: #6ee7b7; padding: 2px 7px; border-radius: 4px;">التعافي: ${recovery}</span>
+                </div>
+
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" onclick="loadSavedPortalReport(${idx})" style="flex: 1; background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: #fff; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                        <span>👁️</span> <span>استعراض التقرير الطبي</span>
+                    </button>
+                    ${logsCount > 0 ? `
+                    <button type="button" onclick="resumePatientSessionsFromPortal(${idx})" style="background: #2563eb; color: #fff; border: none; padding: 8px 14px; border-radius: 6px; font-size: 0.85em; font-weight: bold; cursor: pointer;">
+                        🏋️ متابعة خطة التعافي
+                    </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+window.renderPatientPortalData = renderPatientPortalData;
+
+function loadSavedPortalReport(idx) {
+    if (!window._portalHistoryCache || !window._portalHistoryCache[idx]) return;
+    const item = window._portalHistoryCache[idx];
+    closePatientPortalModal();
+
+    window.currentAssessmentData = item;
+    if (item.patient) {
+        window.activePatient = item.patient;
+    }
+    displayDiagnosticReport(item);
+    goToStep(3);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+window.loadSavedPortalReport = loadSavedPortalReport;
+
+function resumePatientSessionsFromPortal(idx) {
+    if (!window._portalHistoryCache || !window._portalHistoryCache[idx]) return;
+    const item = window._portalHistoryCache[idx];
+    closePatientPortalModal();
+
+    if (item.patient) {
+        window.activePatient = item.patient;
+    }
+    const pt = item.patient || {};
+    const logsCount = pt.logsCount || pt.completedSessions || 0;
+    const targetSession = Math.min(7, logsCount + 1);
+
+    if (targetSession <= 1) {
+        goToStep(4);
+    } else {
+        goToStep(5);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+window.resumePatientSessionsFromPortal = resumePatientSessionsFromPortal;
+
+function getReportSaveCardHTML(patientPhone = '', patientName = '') {
+    const auth = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+    const cleanPhone = String(patientPhone || auth?.phone || '').replace(/\D/g, '');
+    const isRegistered = !!(auth && auth.isRegistered);
+
+    if (isRegistered) {
+        return `
+            <div id="report-save-account-box" class="no-print" style="margin-top: 22px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(15, 23, 42, 0.95)); border: 1.5px solid #10b981; border-radius: 14px; padding: 18px 22px; text-align: right; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 2em;">📁</span>
+                        <div>
+                            <div style="color: #6ee7b7; font-weight: bold; font-size: 1.05em;">تم حفظ هذا التقرير في ملفك الطبي الشخصي ✅</div>
+                            <div style="color: #cbd5e1; font-size: 0.85em; margin-top: 3px;">مرتبط برقم هاتفك: <strong style="color: #fff; font-family: monospace;">${auth.originalPhone || auth.phone}</strong>. يمكنك الرجوع إليه دائماً عبر زر "ملفي الطبي" بأعلى الشاشة.</div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="openPatientPortalModal()" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.88em; cursor: pointer;">
+                        📂 فتح ملفي وسجلاتي
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    return `
+        <div id="report-save-account-box" class="no-print" style="margin-top: 22px; background: linear-gradient(135deg, rgba(212, 175, 55, 0.12), rgba(15, 23, 42, 0.98)); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 22px; text-align: right; box-shadow: 0 6px 25px rgba(0,0,0,0.5);">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <span style="font-size: 2.2em; background: rgba(212,175,55,0.2); border: 1px solid var(--primary-gold); border-radius: 12px; padding: 6px 12px;">🔒</span>
+                <div>
+                    <h3 style="color: var(--primary-gold); margin: 0 0 4px 0; font-size: 1.18em; font-weight: 800;">هل تود حفظ تقريرك الطبي وسجل متابعتك دائماً؟</h3>
+                    <div style="color: #cbd5e1; font-size: 0.86em; line-height: 1.5;">أنشئ ملفك الطبي الآن باختيار رمز سري (PIN من 4 أرقام) لتتمكن من مراجعة تقريرك واستكمال خطتك من أي هاتف أو جهاز آخر.</div>
+                </div>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; align-items: flex-end;">
+                    <div>
+                        <label style="display: block; color: #cbd5e1; font-size: 0.84em; margin-bottom: 5px; font-weight: bold;">📱 رقم الهاتف / الواتساب:</label>
+                        <input type="tel" id="report-save-phone-input" value="${cleanPhone}" placeholder="مثال: 0790000000" style="width: 100%; background: #080c14; border: 1px solid #334155; padding: 10px 12px; border-radius: 8px; color: #fff; font-size: 0.95em; box-sizing: border-box; text-align: left; direction: ltr;">
+                    </div>
+                    <div>
+                        <label style="display: block; color: #cbd5e1; font-size: 0.84em; margin-bottom: 5px; font-weight: bold;">🔑 أنشئ رمز سري خاص بك (PIN من 4 أرقام):</label>
+                        <input type="password" id="report-save-pin-input" maxlength="6" placeholder="مثال: 1234" style="width: 100%; background: #080c14; border: 1.5px solid var(--primary-gold); padding: 10px 12px; border-radius: 8px; color: #fef08a; font-size: 1.1em; text-align: center; letter-spacing: 4px; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <button type="button" onclick="handleRegisterFromReport()" style="width: 100%; background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; border: none; padding: 11px 16px; border-radius: 8px; font-weight: bold; font-size: 0.98em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(212,175,55,0.35);">
+                            <span>💾</span> <span>حفظ وإنشاء ملفي الطبي</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="report-save-status-msg" style="display: none; margin-top: 10px; padding: 8px 12px; border-radius: 6px; font-size: 0.85em; font-weight: bold;"></div>
+            </div>
+            <div style="color: #94a3b8; font-size: 0.8em; line-height: 1.5;">
+                ✨ <strong>اختياري ومجاني 100%:</strong> يضمن لك الوصول لتقاريرك السابقة فوراً بدون تكرار الفحص، ومتابعة نسبة التعافي يوماً بيوم.
+            </div>
+        </div>
+    `;
+}
+window.getReportSaveCardHTML = getReportSaveCardHTML;
+
+async function handleRegisterFromReport() {
+    const phoneInput = document.getElementById('report-save-phone-input');
+    const pinInput = document.getElementById('report-save-pin-input');
+    const msgEl = document.getElementById('report-save-status-msg');
+
+    const phone = phoneInput ? phoneInput.value.trim() : '';
+    const pin = pinInput ? pinInput.value.trim() : '';
+
+    if (!phone || phone.replace(/\D/g, '').length < 6) {
+        if (msgEl) {
+            msgEl.style.display = 'block';
+            msgEl.style.background = 'rgba(239, 68, 68, 0.15)';
+            msgEl.style.border = '1px solid #ef4444';
+            msgEl.style.color = '#fca5a5';
+            msgEl.textContent = 'يرجى كتابة رقم هاتف صحيح لحفظ الملف.';
+        }
+        return;
+    }
+
+    if (!pin || pin.length < 4) {
+        if (msgEl) {
+            msgEl.style.display = 'block';
+            msgEl.style.background = 'rgba(239, 68, 68, 0.15)';
+            msgEl.style.border = '1px solid #ef4444';
+            msgEl.style.color = '#fca5a5';
+            msgEl.textContent = 'الرمز السري (PIN) يجب أن يكون من 4 أرقام على الأقل.';
+        }
+        return;
+    }
+
+    if (msgEl) {
+        msgEl.style.display = 'block';
+        msgEl.style.background = 'rgba(56, 189, 248, 0.15)';
+        msgEl.style.border = '1px solid #38bdf8';
+        msgEl.style.color = '#7dd3fc';
+        msgEl.textContent = '⏳ جاري إنشاء وحفظ ملفك الطبي...';
+    }
+
+    const patientName = clinicalDialogueState?.patientFullName || clinicalDialogueState?.patientName || activePatient?.fullName || activePatient?.name || 'مراجع كريم';
+    const curAssessment = window.currentAssessmentData || {};
+    const patientData = {
+        ...(window.activePatient || {}),
+        phone: phone,
+        name: patientName,
+        fullName: patientName,
+        assessment: curAssessment,
+        latestAssessment: curAssessment
+    };
+
+    const res = await SmartDB.registerPatientAccount(phone, pin, patientData);
+    if (res && res.success) {
+        if (msgEl) {
+            msgEl.style.background = 'rgba(16, 185, 129, 0.2)';
+            msgEl.style.border = '1px solid #10b981';
+            msgEl.style.color = '#6ee7b7';
+            msgEl.innerHTML = `✅ ${res.message}! يمكنك الدخول دائماً لملفك الطبي من زر (ملفي الطبي) أعلى الشاشة.`;
+        }
+        updatePortalHeaderButton();
+        setTimeout(() => {
+            const box = document.getElementById('report-save-account-box');
+            if (box) {
+                box.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="font-size: 2em;">📁</span>
+                            <div>
+                                <div style="color: #6ee7b7; font-weight: bold; font-size: 1.05em;">تم حفظ هذا التقرير في ملفك الطبي الشخصي بنجاح ✅</div>
+                                <div style="color: #cbd5e1; font-size: 0.85em; margin-top: 3px;">مرتبط برقم: <strong style="color: #fff; font-family: monospace;">${phone}</strong>. يمكنك مراجعته دائماً من زر "ملفي الطبي".</div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="openPatientPortalModal()" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.88em; cursor: pointer;">
+                            📂 فتح ملفي وسجلاتي
+                        </button>
+                    </div>
+                `;
+                box.style.border = '1.5px solid #10b981';
+                box.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(15, 23, 42, 0.95))';
+            }
+        }, 1200);
+    } else {
+        if (msgEl) {
+            msgEl.style.background = 'rgba(239, 68, 68, 0.15)';
+            msgEl.style.border = '1px solid #ef4444';
+            msgEl.style.color = '#fca5a5';
+            msgEl.textContent = res ? res.message : 'تعذر حفظ الملف';
+        }
+    }
+}
+window.handleRegisterFromReport = handleRegisterFromReport;
+
 // عرض التقرير السريري الملكي وبطاقة التحويل المباشر للحالات الخاصة (جلطات، سقوط قدم، جنف) في المرحلة 3
 function renderSpecializedClinicalReportStep3(data, reportContainer) {
     if (!reportContainer) return;
@@ -3273,6 +3639,9 @@ function renderSpecializedClinicalReportStep3(data, reportContainer) {
                     🌿 رقم التواصل والعيادة المباشر: <strong style="color: #fef08a; direction: ltr; display: inline-block;">0790360440</strong> (الأردن - عمان والزرقاء)
                 </div>
             </div>
+
+            <!-- بطاقة حفظ التقرير في الملف الطبي للمراجع (اختياري 100%) -->
+            ${getReportSaveCardHTML(pPhone, pName)}
 
         </div>
     `;
@@ -3793,6 +4162,9 @@ function displayDiagnosticReport(data) {
                     </button>
                 </div>
             </div>
+
+            <!-- بطاقة حفظ التقرير في الملف الطبي للمراجع (اختياري 100%) -->
+            ${getReportSaveCardHTML(data.patientPhone || (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : ''), data.patientName || activePatient?.name)}
 
             <!-- ================= 8. الزيارات المنزلية وخدمة مرضى خارج الأردن ================= -->
             <div class="no-print">
@@ -7445,6 +7817,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     goToStep(savedTargetStep >= 1 && savedTargetStep <= 6 ? savedTargetStep : 1);
+
+    // تحديث حالة زر الملف الطبي للمراجع في الهيدر
+    try {
+        updatePortalHeaderButton();
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'smart_auth_patient' || e.key === 'smart_registered_accounts') {
+                updatePortalHeaderButton();
+            }
+        });
+    } catch(e) {}
 
     // تشغيل الصوت الترحيبي تلقائياً لمرة واحدة فقط لكل زيارة أو استخدام جديد
     if (sessionStorage.getItem('scp_welcome_audio_played') !== 'true') {
