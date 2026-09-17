@@ -3746,8 +3746,10 @@ function displayDiagnosticReport(data) {
     const reportId = "SCP-" + Math.floor(100000 + Math.random() * 900000);
     const currentDate = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
 
-    const resolvedReportPhone = (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') || data.patientPhone || '';
-    const resolvedReportName = (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || data.patientName || '';
+    const auth = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+    const isRegisteredPatient = !!(auth && (auth.isRegistered || auth.phone));
+    const resolvedReportPhone = (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') || auth?.originalPhone || auth?.phone || data.patientPhone || '';
+    const resolvedReportName = (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || auth?.fullName || auth?.name || data.patientName || '';
     const cleanDigitsPhone = resolvedReportPhone ? String(resolvedReportPhone).replace(/^\+?962/, '').replace(/^0/, '') : '';
 
     // استكمال واحتساب مؤشر كتلة الجسم والحمولة الميكانيكية تلقائياً من المحادثة أو المدخلات
@@ -4155,6 +4157,13 @@ function displayDiagnosticReport(data) {
                 </div>
 
                 <div id="plan-activation-btn-wrapper" style="text-align: center; margin: 24px auto 12px auto; max-width: 520px;">
+                    ${isRegisteredPatient ? `
+                    <div style="margin-bottom: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: rgba(16, 185, 129, 0.15); border: 1.5px solid #10b981; padding: 7px 20px; border-radius: 25px; color: #6ee7b7; font-size: 0.92em; font-weight: bold;">
+                        <span style="font-size: 1.2em;">👤</span>
+                        <span>ملف طبي معتمد: <strong>${resolvedReportName || auth?.name}</strong> (${resolvedReportPhone || auth?.phone})</span>
+                        <span style="color: #34d399;">✅</span>
+                    </div>
+                    ` : ''}
                     <button type="button" onclick="activateRecoveryPlanInstantly()" class="btn-plan-royal-card" id="btn-activate-plan-royal" aria-label="إضغط هنا لتفعيل الخطة المجانية">
                         <div class="royal-card-halo"></div>
                         <div class="royal-card-shimmer"></div>
@@ -4167,7 +4176,7 @@ function displayDiagnosticReport(data) {
                                     إضغط هنا
                                 </div>
                                 <div class="royal-cta-headline" style="font-size: 1.35em; font-weight: 900; color: #ffffff; text-shadow: 0 2px 8px rgba(0,0,0,0.8); letter-spacing: 0.4px; line-height: 1.25; text-align: center;">
-                                    لتفعيل الخطة المجانية
+                                    ${isRegisteredPatient ? 'لبدء جلسة اليوم الأول فوراً' : 'لتفعيل الخطة المجانية'}
                                 </div>
                             </div>
                             <div class="royal-arrow-box" style="width: 44px; height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
@@ -4188,6 +4197,7 @@ function displayDiagnosticReport(data) {
                     </div>
                 </div>
 
+                ${!isRegisteredPatient ? `
                 <div id="plan-registration-inputs" style="display: none; margin-top: 18px; background: #0f172a; padding: 20px; border-radius: 12px; border: 1px solid var(--primary-gold);">
                     <div style="color: #10b981; font-weight: bold; font-size: 1em; margin-bottom: 15px;">📝 أدخل بياناتك لحفظ ومتابعة خطة الراحة الذاتية:</div>
                     
@@ -4227,6 +4237,7 @@ function displayDiagnosticReport(data) {
                         ✅ تأكيد البيانات وبدء الجلسة الأولى الآن
                     </button>
                 </div>
+                ` : '<div id="plan-registration-inputs" style="display: none !important;"></div>'}
             </div>
 
             <!-- بطاقة حفظ التقرير في الملف الطبي للمراجع (اختياري 100%) -->
@@ -4591,8 +4602,11 @@ function contactInternationalPatientCoordinator() {
 
 // تفعيل فوري لخطة التعافي بنقرة واحدة (أو إظهار النموذج إذا كانت البيانات غير مكتملة)
 async function activateRecoveryPlanInstantly() {
+    let targetPatientId = null;
+    let auth = null;
+    let isRegistered = false;
     try {
-        const auth = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+        auth = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
         const curPatient = (typeof activePatient !== 'undefined' && activePatient) || window.activePatient;
         const curAssessment = (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) || window.currentAssessmentData;
 
@@ -4622,10 +4636,13 @@ async function activateRecoveryPlanInstantly() {
         }
 
         const cleanPhone = String(resolvedPhone).replace(/\D/g, '');
+        isRegistered = !!(auth && (auth.isRegistered || auth.phone)) || cleanPhone.length >= 6;
+
+        targetPatientId = auth?.patientId || curPatient?.patientId || curPatient?.id || (typeof SmartDB !== 'undefined' && SmartDB.getCurrentSessionPatientId ? SmartDB.getCurrentSessionPatientId() : null) || ('P-' + Date.now().toString().slice(-6));
 
         // إذا كانت البيانات مسجلة مسبقاً، تفعيل فوري بنقرة واحدة دون طلب تكرارها
-        if (cleanPhone.length >= 6) {
-            const patientId = curPatient?.patientId || curPatient?.id || ('P-' + Date.now().toString().slice(-6));
+        if (isRegistered || cleanPhone.length >= 6) {
+            const patientId = targetPatientId;
             const resolvedPainTitle = resolvePainAreaTitle(null, curAssessment, currentSelectedPoint);
 
             const patientGender = (clinicalDialogueState?.patientVitals?.gender) || (typeof detectArabicGender === 'function' ? detectArabicGender(existingName) : 'ذكر');
@@ -4636,12 +4653,17 @@ async function activateRecoveryPlanInstantly() {
                 pBmi1 = parseFloat((pWeight1 / Math.pow(pHeight1/100, 2)).toFixed(1));
             }
 
+            const cleanTreatmentPlan = curAssessment?.treatmentPlan || (Array.isArray(curAssessment?.recommendations) ? curAssessment.recommendations.join('\n') : (typeof curAssessment?.recommendations === 'string' ? curAssessment.recommendations : ''));
+            const cleanNotes = (Array.isArray(clinicalDialogueState?.collectedSymptoms) && clinicalDialogueState.collectedSymptoms.length > 0)
+                ? clinicalDialogueState.collectedSymptoms.join(' - ')
+                : (curAssessment?.notes || '');
+
             const patientObj = {
                 patientId,
                 id: patientId,
                 name: existingName,
-                fullName: clinicalDialogueState?.patientFullName || existingName,
-                phone: resolvedPhone,
+                fullName: clinicalDialogueState?.patientFullName || auth?.fullName || existingName,
+                phone: resolvedPhone || auth?.phone || '',
                 gender: patientGender,
                 age: clinicalDialogueState?.patientVitals?.age || curAssessment?.patientVitals?.age || null,
                 weight: pWeight1,
@@ -4652,11 +4674,11 @@ async function activateRecoveryPlanInstantly() {
                 selectedPoint: resolvedPainTitle,
                 chiefDiagnosis: curAssessment?.primaryDiagnosis?.title || curAssessment?.primaryDiagnosis || curAssessment?.title || 'تشخيص سريري متكامل',
                 diagnosisTitle: curAssessment?.primaryDiagnosis?.title || curAssessment?.primaryDiagnosis || curAssessment?.title || 'تشخيص سريري متكامل',
-                treatmentPlan: curAssessment?.treatmentPlan || (curAssessment?.recommendations ? curAssessment.recommendations.join('\n') : ''),
+                treatmentPlan: cleanTreatmentPlan,
                 assessment: curAssessment,
                 latestAssessment: curAssessment,
-                notes: (clinicalDialogueState?.collectedSymptoms && clinicalDialogueState.collectedSymptoms.length > 0) ? clinicalDialogueState.collectedSymptoms.join(' - ') : (curAssessment?.notes || ''),
-                collectedSymptoms: clinicalDialogueState?.collectedSymptoms || curAssessment?.collectedSymptoms || [],
+                notes: cleanNotes,
+                collectedSymptoms: (Array.isArray(clinicalDialogueState?.collectedSymptoms) ? clinicalDialogueState.collectedSymptoms : (curAssessment?.collectedSymptoms || [])),
                 device: curPatient?.device || ((window.SmartGeoTracker && typeof window.SmartGeoTracker.getDeviceType === 'function') ? window.SmartGeoTracker.getDeviceType().type : ((typeof window !== 'undefined' && window.innerWidth >= 992) ? 'Desktop' : 'Mobile')),
                 deviceIcon: curPatient?.deviceIcon || ((window.SmartGeoTracker && typeof window.SmartGeoTracker.getDeviceType === 'function') ? window.SmartGeoTracker.getDeviceType().icon : ((typeof window !== 'undefined' && window.innerWidth >= 992) ? '💻' : '📱')),
                 deviceLabel: curPatient?.deviceLabel || ((window.SmartGeoTracker && typeof window.SmartGeoTracker.getDeviceType === 'function') ? window.SmartGeoTracker.getDeviceType().label : 'جهاز'),
@@ -4664,20 +4686,31 @@ async function activateRecoveryPlanInstantly() {
                 isPlanActivated: true
             };
 
-            await SmartDB.savePatient(patientObj);
-            if (currentAssessmentData) {
-                currentAssessmentData.patientId = patientId;
-                currentAssessmentData.patientName = existingName;
-                currentAssessmentData.patientPhone = resolvedPhone;
-                currentAssessmentData.painAreaTitle = resolvedPainTitle;
-                await SmartDB.saveAssessment(currentAssessmentData);
+            try {
+                await SmartDB.savePatient(patientObj);
+            } catch (pErr) {
+                console.warn('SmartDB.savePatient non-fatal warning:', pErr);
             }
 
-            SmartDB.setCurrentSessionPatientId(patientId);
+            if (curAssessment) {
+                curAssessment.patientId = patientId;
+                curAssessment.patientName = existingName;
+                curAssessment.patientPhone = resolvedPhone || auth?.phone || '';
+                curAssessment.painAreaTitle = resolvedPainTitle;
+                try {
+                    await SmartDB.saveAssessment(curAssessment);
+                } catch (aErr) {
+                    console.warn('SmartDB.saveAssessment non-fatal warning:', aErr);
+                }
+            }
+
+            if (typeof SmartDB !== 'undefined' && typeof SmartDB.setCurrentSessionPatientId === 'function') {
+                SmartDB.setCurrentSessionPatientId(patientId);
+            }
             try { sessionStorage.setItem('scp_active_patient_id', patientId); } catch(e) {}
             activePatient = patientObj;
             try {
-                localStorage.setItem('smart_patient_phone', String(resolvedPhone));
+                if (resolvedPhone) localStorage.setItem('smart_patient_phone', String(resolvedPhone));
                 localStorage.setItem('smart_active_patient', JSON.stringify(patientObj));
                 localStorage.setItem('smart_current_patient_id', patientId);
                 localStorage.setItem('smart_plan_activated', 'true');
@@ -4687,18 +4720,22 @@ async function activateRecoveryPlanInstantly() {
                 localStorage.setItem('smart_max_reached_step', String(Math.max(curMax, 4)));
             } catch (e) {}
 
-            SmartDB.addAdminNotification({
-                type: 'new_registration',
-                title: `👤 تفعيل فوري للخطة: ${existingName}`,
-                message: `فعّل المراجع ${existingName} خطة التعافي الحركية (اليوم 1) بنقرة واحدة - منطقة: ${resolvedPainTitle} - هاتف: ${resolvedPhone}`,
-                patientId,
-                patientName: existingName,
-                patientPhone: resolvedPhone,
-                meta: {
-                    painArea: resolvedPainTitle,
-                    diagnosis: currentAssessmentData?.primaryDiagnosis || ''
-                }
-            });
+            try {
+                SmartDB.addAdminNotification({
+                    type: 'new_registration',
+                    title: `👤 تفعيل فوري للخطة: ${existingName}`,
+                    message: `فعّل المراجع ${existingName} خطة التعافي الحركية (اليوم 1) بنقرة واحدة - منطقة: ${resolvedPainTitle} - هاتف: ${resolvedPhone || auth?.phone || ''}`,
+                    patientId,
+                    patientName: existingName,
+                    patientPhone: resolvedPhone || auth?.phone || '',
+                    meta: {
+                        painArea: resolvedPainTitle,
+                        diagnosis: curAssessment?.primaryDiagnosis || ''
+                    }
+                });
+            } catch (nErr) {
+                console.warn('Notification non-fatal warning:', nErr);
+            }
 
             // إظهار نافذة الإهداء والدعاء الملكي لضمان قراءتها والتأمين عليها
             showRoyalDuaaModal(patientId);
@@ -4718,9 +4755,9 @@ async function activateRecoveryPlanInstantly() {
         showToast('يرجى تأكيد رقم الهاتف لتفعيل خطتك المجانية وبدء الجلسة الأولى 🎯', 'info');
     } catch (err) {
         console.error('Error activating plan instantly:', err);
-        const fallbackId = (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' && SmartDB.getCurrentSessionPatientId()) || activePatient?.patientId;
-        if (fallbackId) {
-            loadPatientRecoveryDashboard(fallbackId);
+        const fallbackId = targetPatientId || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' && SmartDB.getCurrentSessionPatientId()) || activePatient?.patientId;
+        if (isRegistered || fallbackId) {
+            showRoyalDuaaModal(fallbackId || targetPatientId || 'P-' + Date.now().toString().slice(-6));
         } else {
             revealRegistrationInputs();
         }
@@ -4729,6 +4766,12 @@ async function activateRecoveryPlanInstantly() {
 
 // إظهار حقول تسجيل خطة التعافي
 function revealRegistrationInputs() {
+    const auth = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+    if (auth && (auth.isRegistered || auth.phone)) {
+        const targetId = auth.patientId || (typeof SmartDB !== 'undefined' && SmartDB.getCurrentSessionPatientId ? SmartDB.getCurrentSessionPatientId() : null) || ('P-' + Date.now().toString().slice(-6));
+        showRoyalDuaaModal(targetId);
+        return;
+    }
     const inputsBox = document.getElementById('plan-registration-inputs');
     const btnWrapper = document.getElementById('plan-activation-btn-wrapper');
     if (inputsBox) {
@@ -4749,8 +4792,9 @@ function updatePhoneCodePrefix() {
 
 // تسجيل المريض وبدء خطة التعافي
 async function submitPatientRegistrationAndStart() {
-    const name = document.getElementById('sub-name')?.value.trim();
-    const phone = document.getElementById('sub-phone')?.value.trim();
+    const auth = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+    const name = document.getElementById('sub-name')?.value.trim() || auth?.name || auth?.fullName || '';
+    const phone = document.getElementById('sub-phone')?.value.trim() || auth?.phone || '';
     const countryCode = document.getElementById('sub-country')?.value || '+962';
 
     if (!name) {
@@ -4762,28 +4806,35 @@ async function submitPatientRegistrationAndStart() {
         return;
     }
 
-    const fullPhone = countryCode + phone;
-    const patientId = 'P-' + Date.now().toString().slice(-6);
-    const resolvedPainTitle = resolvePainAreaTitle(null, currentAssessmentData, currentSelectedPoint);
+    const fullPhone = phone.startsWith('+') ? phone : (countryCode + phone.replace(/^0/, ''));
+    const curPatient = (typeof activePatient !== 'undefined' && activePatient) || window.activePatient;
+    const curAssessment = (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) || window.currentAssessmentData;
+    const patientId = auth?.patientId || curPatient?.patientId || curPatient?.id || ('P-' + Date.now().toString().slice(-6));
+    const resolvedPainTitle = resolvePainAreaTitle(null, curAssessment, currentSelectedPoint);
 
     const selectedGender = document.querySelector('input[name="patient_gender"]:checked')?.value;
     const patientGender = (selectedGender && selectedGender !== 'ذكر') ? selectedGender : detectArabicGender(name);
-    const ageVal = parseInt(document.getElementById('patient-age')?.value) || (typeof currentAssessmentData !== 'undefined' ? currentAssessmentData?.patientVitals?.age : null);
-    const weightVal = parseFloat(document.getElementById('patient-weight')?.value) || (typeof currentAssessmentData !== 'undefined' ? currentAssessmentData?.patientVitals?.weight : null);
-    const heightVal = parseFloat(document.getElementById('patient-height')?.value) || (typeof currentAssessmentData !== 'undefined' ? currentAssessmentData?.patientVitals?.height : null);
+    const ageVal = parseInt(document.getElementById('patient-age')?.value) || (typeof curAssessment !== 'undefined' ? curAssessment?.patientVitals?.age : null);
+    const weightVal = parseFloat(document.getElementById('patient-weight')?.value) || (typeof curAssessment !== 'undefined' ? curAssessment?.patientVitals?.weight : null);
+    const heightVal = parseFloat(document.getElementById('patient-height')?.value) || (typeof curAssessment !== 'undefined' ? curAssessment?.patientVitals?.height : null);
 
     const pWeight2 = weightVal || clinicalDialogueState?.patientVitals?.weight || null;
     const pHeight2 = heightVal || clinicalDialogueState?.patientVitals?.height || null;
-    let pBmi2 = currentAssessmentData?.bmiInfo?.value || '';
+    let pBmi2 = curAssessment?.bmiInfo?.value || '';
     if (!pBmi2 && pWeight2 && pHeight2) {
         pBmi2 = parseFloat((pWeight2 / Math.pow(pHeight2/100, 2)).toFixed(1));
     }
+
+    const cleanTreatmentPlan = curAssessment?.treatmentPlan || (Array.isArray(curAssessment?.recommendations) ? curAssessment.recommendations.join('\n') : (typeof curAssessment?.recommendations === 'string' ? curAssessment.recommendations : ''));
+    const cleanNotes = (Array.isArray(clinicalDialogueState?.collectedSymptoms) && clinicalDialogueState.collectedSymptoms.length > 0)
+        ? clinicalDialogueState.collectedSymptoms.join(' - ')
+        : (curAssessment?.notes || '');
 
     const patientObj = {
         patientId,
         id: patientId,
         name,
-        fullName: name,
+        fullName: clinicalDialogueState?.patientFullName || auth?.fullName || name,
         phone: fullPhone,
         gender: patientGender,
         age: ageVal || clinicalDialogueState?.patientVitals?.age || null,
@@ -4793,50 +4844,66 @@ async function submitPatientRegistrationAndStart() {
         painArea: resolvedPainTitle,
         painAreaTitle: resolvedPainTitle,
         selectedPoint: resolvedPainTitle,
-        chiefDiagnosis: currentAssessmentData?.primaryDiagnosis?.title || currentAssessmentData?.title || 'تشخيص سريري متكامل',
-        diagnosisTitle: currentAssessmentData?.primaryDiagnosis?.title || currentAssessmentData?.title || 'تشخيص سريري متكامل',
-        treatmentPlan: currentAssessmentData?.treatmentPlan || (currentAssessmentData?.recommendations ? currentAssessmentData.recommendations.join('\n') : ''),
-        assessment: currentAssessmentData,
-        latestAssessment: currentAssessmentData,
-        notes: (clinicalDialogueState?.collectedSymptoms && clinicalDialogueState.collectedSymptoms.length > 0) ? clinicalDialogueState.collectedSymptoms.join(' - ') : (currentAssessmentData?.notes || ''),
-        collectedSymptoms: clinicalDialogueState?.collectedSymptoms || currentAssessmentData?.collectedSymptoms || [],
-        createdAt: new Date().toISOString()
+        chiefDiagnosis: curAssessment?.primaryDiagnosis?.title || curAssessment?.title || 'تشخيص سريري متكامل',
+        diagnosisTitle: curAssessment?.primaryDiagnosis?.title || curAssessment?.title || 'تشخيص سريري متكامل',
+        treatmentPlan: cleanTreatmentPlan,
+        assessment: curAssessment,
+        latestAssessment: curAssessment,
+        notes: cleanNotes,
+        collectedSymptoms: (Array.isArray(clinicalDialogueState?.collectedSymptoms) ? clinicalDialogueState.collectedSymptoms : (curAssessment?.collectedSymptoms || [])),
+        createdAt: curPatient?.createdAt || new Date().toISOString(),
+        isPlanActivated: true
     };
 
-    patientObj.isPlanActivated = true;
-    await SmartDB.savePatient(patientObj);
-    if (currentAssessmentData) {
-        await SmartDB.saveAssessment({
-            ...currentAssessmentData,
-            patientId,
-            patientName: name,
-            patientPhone: fullPhone,
-            painAreaTitle: resolvedPainTitle
-        });
+    try {
+        await SmartDB.savePatient(patientObj);
+    } catch (e) {
+        console.warn('SmartDB.savePatient warning:', e);
+    }
+    if (curAssessment) {
+        try {
+            await SmartDB.saveAssessment({
+                ...curAssessment,
+                patientId,
+                patientName: name,
+                patientPhone: fullPhone,
+                painAreaTitle: resolvedPainTitle
+            });
+        } catch (e) {
+            console.warn('SmartDB.saveAssessment warning:', e);
+        }
     }
 
-    SmartDB.setCurrentSessionPatientId(patientId);
+    if (typeof SmartDB !== 'undefined' && typeof SmartDB.setCurrentSessionPatientId === 'function') {
+        SmartDB.setCurrentSessionPatientId(patientId);
+    }
     try { sessionStorage.setItem('scp_active_patient_id', patientId); } catch(e) {}
     activePatient = patientObj;
     try {
+        localStorage.setItem('smart_patient_phone', fullPhone);
+        localStorage.setItem('smart_active_patient', JSON.stringify(patientObj));
+        localStorage.setItem('smart_current_patient_id', patientId);
+        localStorage.setItem('smart_plan_activated', 'true');
         localStorage.setItem('smart_plan_activated_' + patientId, 'true');
         const curMax = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
         localStorage.setItem('smart_max_reached_step', String(Math.max(curMax, 4)));
     } catch (e) {}
 
     // تسجيل إشعار فوري حي للإدارة
-    SmartDB.addAdminNotification({
-        type: 'new_registration',
-        title: `👤 مشترك جديد: ${name}`,
-        message: `سجل المريض ${name} بنجاح في خطة الراحة الحركية (اليوم 1) - منطقة: ${resolvedPainTitle} - هاتف: ${fullPhone}`,
-        patientId,
-        patientName: name,
-        patientPhone: fullPhone,
-        meta: {
-            painArea: resolvedPainTitle,
-            diagnosis: currentAssessmentData?.primaryDiagnosis || ''
-        }
-    });
+    try {
+        SmartDB.addAdminNotification({
+            type: 'new_registration',
+            title: `👤 مشترك جديد: ${name}`,
+            message: `سجل المريض ${name} بنجاح في خطة الراحة الحركية (اليوم 1) - منطقة: ${resolvedPainTitle} - هاتف: ${fullPhone}`,
+            patientId,
+            patientName: name,
+            patientPhone: fullPhone,
+            meta: {
+                painArea: resolvedPainTitle,
+                diagnosis: curAssessment?.primaryDiagnosis || ''
+            }
+        });
+    } catch (e) {}
 
     // إظهار نافذة الإهداء والدعاء الملكي لضمان قراءتها والتأمين عليها
     showRoyalDuaaModal(patientId);
