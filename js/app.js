@@ -9428,14 +9428,28 @@ async function sendChatMessage() {
     const cleanDigitsOnly = pureNumbers.replace(/\D/g, '');
     const nonDigitChars = text.replace(/[\d\+\-\s\(\)\.\,\/]/g, '').trim();
 
+    // فحص المراجع المسجل: إذا كان مسجلاً بالفعل ولديه رقم هاتف معتمد، لا يتم نقله لمسار طلب الهاتف إطلاقاً
+    const knownRegisteredPhone = (clinicalDialogueState.patientPhone && String(clinicalDialogueState.patientPhone).replace(/\D/g, '').length >= 7)
+        ? clinicalDialogueState.patientPhone
+        : ((typeof getResolvedPatientPhone === 'function') ? getResolvedPatientPhone() : '');
+    const isKnownRegistered = !!(knownRegisteredPhone && String(knownRegisteredPhone).replace(/\D/g, '').length >= 7);
+
+    // إذا كان الحوار ينتظر هاتف ولكن المستخدم مسجل مسبقاً، نعتمد هاتفه وننهي الحوار فوراً
+    if (isKnownRegistered && clinicalDialogueState.step === 'ask_phone') {
+        clinicalDialogueState.patientPhone = knownRegisteredPhone;
+        clinicalDialogueState.step = 'completed';
+        finishChatIntakeAndGenerateReport();
+        return;
+    }
+
     // إذا كان النص المدخل عبارة عن أرقام هاتف واضحة أو محاولة إدخال رقم هاتف
     const isPurePhoneInput = (cleanDigitsOnly.length >= 8 && cleanDigitsOnly.length <= 15 && nonDigitChars.length <= 8);
     const isExplicitPhoneAttempt = (cleanDigitsOnly.length >= 6 && nonDigitChars.length <= 10);
     const userMentionsPhoneExplicitly = /(?:هاتفي|تلفوني|موبايلي|جوالي|رقمي|رقم\s*الهاتف|رقم\s*المحمول)/i.test(text);
 
-    // الحوار يتوقع رقم هاتف فقط وفقط إذا كانت الخطوة السريرية الحالية صراحة هي طلب الهاتف وكان المدخل يحتوي على أرقام، أو كان المدخل أرقاماً صريحة
-    const isExpectingPhone = isPurePhoneInput || 
-        (clinicalDialogueState.step === 'ask_phone' && (cleanDigitsOnly.length >= 5 || userMentionsPhoneExplicitly || isExplicitPhoneAttempt));
+    // الحوار يتوقع رقم هاتف فقط وفقط إذا لم يكن المراجع مسجلاً، وكانت الخطوة السريرية الحالية صراحة هي طلب الهاتف وكان المدخل يحتوي على أرقام
+    const isExpectingPhone = !isKnownRegistered && (isPurePhoneInput || 
+        (clinicalDialogueState.step === 'ask_phone' && (cleanDigitsOnly.length >= 5 || userMentionsPhoneExplicitly || isExplicitPhoneAttempt)));
 
     if (isExpectingPhone) {
         const phoneCandidates = [];
@@ -9824,29 +9838,74 @@ async function sendChatMessage() {
         }
         clinicalDialogueState.step = 'completed';
 
-        // إعطاء وقت كافٍ لد. سارة لإنهاء نطق جملتها الأخيرة دون أن تنقطع في المنتصف
+        // تعطيل حقل الإدخال وزر الإرسال لمنع التشتيت وتوجيه المراجع للتقرير
+        const chatInput = document.getElementById('ai-chat-input');
+        const sendBtn = document.getElementById('ai-chat-send-btn');
+        if (chatInput) {
+            chatInput.disabled = true;
+            chatInput.placeholder = '✅ اكتمل الفحص السريري، اضغط على زر مشاهدة التقرير أعلاه...';
+        }
+        if (sendBtn) {
+            sendBtn.disabled = true;
+            sendBtn.style.opacity = '0.5';
+            sendBtn.style.cursor = 'not-allowed';
+        }
+
+        // إعداد دالة الانتقال المباشر للتقرير عند النقر على الزر
         let transitionExecuted = false;
         const executeTransition = () => {
             if (transitionExecuted) return;
             transitionExecuted = true;
+            if (typeof Wada3anAiEngine !== 'undefined') {
+                Wada3anAiEngine.stopSpeaking();
+            }
             playStationAudio('transition', () => {
                 finishChatIntakeAndGenerateReport();
             });
         };
+        window.doDirectTransitionToReport = executeTransition;
 
+        // عرض زر "اضغط هنا لمشاهدة التقرير" بشكل تفاعلي وبارز داخل الشات
+        const messagesBox = document.getElementById('ai-chat-messages-box');
+        if (messagesBox && !document.getElementById('chat-direct-report-button-box')) {
+            const btnCard = document.createElement('div');
+            btnCard.id = 'chat-direct-report-button-box';
+            btnCard.style.cssText = 'margin: 16px auto 12px auto; text-align: center; width: 100%; max-width: 360px; animation: pulse 2s infinite;';
+            btnCard.innerHTML = `
+                <button type="button" onclick="window.doDirectTransitionToReport && window.doDirectTransitionToReport()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: 2px solid #34d399; padding: 14px 24px; border-radius: 30px; font-size: 1.12rem; font-weight: bold; cursor: pointer; box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45); display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                    <span>📄 اضغط هنا لمشاهدة التقرير</span>
+                    <span style="font-size: 1.3rem;">⬅️</span>
+                </button>
+                <div style="font-size: 0.82rem; color: #a7f3d0; margin-top: 8px; font-weight: 500;">
+                    ✅ اكتمل التقييم السريري بنجاح، ملفك الطبي جاهز للعرض
+                </div>
+            `;
+            messagesBox.appendChild(btnCard);
+            messagesBox.scrollTop = messagesBox.scrollHeight;
+            if (window.innerWidth <= 768) {
+                btnCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        // إعطاء وقت كافٍ لد. سارة لإنهاء نطق جملتها الأخيرة، ثم تحويل تلقائي سلس بعد انتهاء الصوت إذا لم يضغط المراجع
         if (typeof Wada3anAiEngine !== 'undefined' && Wada3anAiEngine.isSpeaking) {
             const checkSpeakingInterval = setInterval(() => {
                 if (!Wada3anAiEngine.isSpeaking) {
                     clearInterval(checkSpeakingInterval);
-                    executeTransition();
+                    setTimeout(() => {
+                        if (!transitionExecuted) executeTransition();
+                    }, 3500);
                 }
             }, 400);
             setTimeout(() => {
                 clearInterval(checkSpeakingInterval);
-                executeTransition();
-            }, 6500);
+                if (!transitionExecuted) executeTransition();
+            }, 10000);
         } else {
-            setTimeout(executeTransition, 1500);
+            // إذا لم يكن الصوت مفعلاً، نترك مهلة مناسبة (7 ثوانٍ) للمراجع لقراءة الخاتمة والنقر على الزر بنفسه
+            setTimeout(() => {
+                if (!transitionExecuted) executeTransition();
+            }, 7000);
         }
         return;
     }

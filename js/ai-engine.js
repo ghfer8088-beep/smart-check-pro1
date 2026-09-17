@@ -519,6 +519,11 @@ ${greetingInstruction}
 `;
         }
 
+        const resolvedKnownPhone = (patientPhone && String(patientPhone).replace(/\D/g, '').length >= 7)
+            ? patientPhone
+            : ((typeof getResolvedPatientPhone === 'function') ? getResolvedPatientPhone() : '');
+        const hasValidPhoneNow = (resolvedKnownPhone && String(resolvedKnownPhone).replace(/\D/g, '').length >= 7);
+
         const systemPrompt = `
 أنت الاستشاري الذكي في «وداعاً للألم».
 أنت وكيل ذكاء اصطناعي تفاعلي سريري فائق الذكاء وحيوي 100% (Clinical AI Agent)، لست آلة ولا تكرر قوالب مسبقة!
@@ -528,6 +533,7 @@ ${specializedPromptSection}
 بيانات المريض المعروفة حتى الآن:
 - الاسم: ${patientName || 'لم يُذكر بعد'}
 - المؤشرات الحيوية: العمر [${patientVitals?.age || 'غير محدد'}] | الوزن [${patientVitals?.weight || 'غير محدد'}] | الطول [${patientVitals?.height || 'غير محدد'}]
+- حالة المراجع في النظام: ${hasValidPhoneNow ? `[مراجع مسجل رسمياً ولديه ملف طبي ورقم هاتف معتمد (${resolvedKnownPhone})]` : '[مراجع جديد غير مسجل ولم يوثق هاتفه بعد]'}
 - سجل الحوار حتى الآن:
 ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h.text}`).join('\n')}
 - رسالة المريض الأخيرة: "${lastUserMessage}"
@@ -586,12 +592,21 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
          * اسأل بحرية طبية كاملة عبر 4 إلى 5 أسئلة استقصائية متسلسلة؛ هدفك الوصول إلى تشخيص دقيق ويقيني لأصل الخلل البيوميكانيكي وتحديد الفقرات المتأثرة.
          * تفاعل مع كل إجابة يقدمها المريض واطرح أسئلة متابعة متخصصة: (كيف يتصرف الألم مع أوضاع الجلوس، المشي، الانحناء أو حمل الأوزان؟ هل تشعر بأي خدر، تنميل، حرارة أو لسعات كهربائية تمتد للأطراف؟ هل الألم ثابت أم متقطع؟ متى يشتد ومتى يخف؟ كيف يؤثر على نومك وطبيعة عملك وحركتك؟).
          * إذا كانت إجابات المريض مقتضبة، تعمق في السؤال واستوضح منه تفاصيل الأعراض.
-         * ممنوع منعاً باتاً استعجال طلب رقم الهاتف قبل استيفاء الفحص السريري وتغطية المحفزات والأعصاب والشدة وتأثير النوم والعمل!
+         * ممنوع منعاً باتاً استعجال إنهاء الحوار قبل استيفاء الفحص السريري وتغطية المحفزات والأعصاب والشدة وتأثير النوم والعمل!
      * المرحلة 2: بعد استيفاء الاستقصاء السريري العميق وتشكل الصورة التشخيصية المتكاملة:
        - لخص له سبب الألم البيوميكانيكي باختصار شديد ومريح في سطرين فقط دون تفاصيل مطولة.
+       ${hasValidPhoneNow ? `
+       - 🌟 تنبيه حاسم جداً للمراجع المسجل (${patientName}):
+         هذا المراجع مسجل رسمياً في النظام ولديه ملف طبي ورقم هاتف معتمد (${resolvedKnownPhone}).
+         ⛔ ممنوع منعاً باتاً ومطلقاً طلب رقم الهاتف منه نهائياً! لا تكتب "أدخل رقم هاتفك" أو "أدخلي رقم هاتفك" إطلاقاً.
+         بدلاً من طلب الهاتف، اكتب له في نهاية ردك:
+         "اكتمل الآن تقييمك السريري الشامل وتحددت طبيعة المشكلة بدقة! تم ربط هذه الاستشارة بملفك الطبي المعتمد، ويمكنك الآن مشاهدة تقرير حالتك وخطة تمارينك المخصصة مباشرة."
+         واختم ردك حصراً بـ [READY_FOR_DIAGNOSIS].
+       ` : `
        - اطلب رقم هاتفه بوضوح واطمئنان:
          "اكتمل الآن تقييمك السريري الشامل وتحددت طبيعة المشكلة والفقرات المتأثرة بدقة! أدخل رقم هاتفك لفتح التقرير السريري الخاص بك ولربط ملفك بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:"
-       - حدد الخطوة بـ [ASK_PHONE].
+         وحدد الخطوة بـ [ASK_PHONE].
+       `}
      * المرحلة 3: بعد استلام رقم الهاتف:
        - ممنوع منعاً باتاً كتابة أي تشخيص سريري أو تفاصيل طبية أو تحليلات بيوميكانيكية داخل الشات إطلاقاً! (التشخيص مكانه حصراً في التقرير الطبي بالخطوة التالية).
        - اكتب فقط جملة تأكيد استلام واحدة قصيرة ومباشرة (سطر واحد):
@@ -642,8 +657,8 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                 const hasValidPhoneNow = (resolvedKnownPhone && String(resolvedKnownPhone).replace(/\D/g, '').length >= 7) ||
                                          (extractedPhone && String(extractedPhone).replace(/\D/g, '').length >= 7);
 
-                // إشارة الانتقال للتشخيص لا تُقبل إلا إذا توفر رقم الهاتف
-                let isReady = rawReply.includes('[READY_FOR_DIAGNOSIS]') && hasValidPhoneNow;
+                // إشارة الانتقال للتشخيص تُقبل إذا كانت معلنة أو إذا توفر رقم الهاتف المعتمد وكان الرد ختامياً
+                let isReady = (rawReply.includes('[READY_FOR_DIAGNOSIS]') || (hasValidPhoneNow && rawReply.includes('[ASK_PHONE]'))) && hasValidPhoneNow;
                 
                 let extractedName = null;
                 let extractedFullName = null;
@@ -684,7 +699,11 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                 const userClinicalMessagesCount = (history || []).filter(h => h.sender === 'user').length;
                 const isConsultationThorough = userClinicalMessagesCount >= 3;
 
-                // هل الذكاء الاصطناعي يطلب رقم الهاتف صراحة بعد اكتمال الاستقصاء السريري؟
+                // هل الذكاء الاصطناعي يشير لاكتمال الفحص السريري أو يطلب رقم الهاتف صراحة؟
+                const signalsCompletion = rawReply.includes('[READY_FOR_DIAGNOSIS]') ||
+                                          rawReply.includes('[ASK_PHONE]') ||
+                                          /(?:اكتمل الآن تقييمك|تحددت طبيعة المشكلة|التقرير السريري|تقريرك السريري|التقرير الطبي|أدخل[ي]?\s*رقم|تزويدي\s*برقم|سجل[ي]?\s*رقم|تم (?:تسجيل|استلام) رقم)/i.test(rawReply);
+
                 let isExplicitlyAskingPhone = (rawReply.includes('[ASK_PHONE]') || rawReply.includes('[READY_FOR_DIAGNOSIS]')) && !hasValidPhoneNow;
 
                 // صمام أمان سريري: ممنوع منعاً باتاً طلب الهاتف قبل استيفاء 3 أسئلة وإجابات استقصائية متعمقة على الأقل
@@ -700,18 +719,27 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                     }
                 }
 
-                if (isExplicitlyAskingPhone) {
+                if (hasValidPhoneNow && (signalsCompletion || isReady || extractedPhone || /تم (?:تسجيل|استلام) رقم هاتفك/i.test(message))) {
+                    isReady = true;
+                    if (!extractedPhone && resolvedKnownPhone) extractedPhone = resolvedKnownPhone;
+                    // تنظيف وإزالة أي طلب لرقم الهاتف من رسالة الطبيب لأن المراجع مسجل وبياناته معتمدة
+                    message = message
+                        .replace(/(?:يرجى\s*)?(?:أدخل[ي]?|تزويدي\s*بـ?|اكتب[ي]?|سجل[ي]?)\s*رقم\s*هاتف[كِ][^.\n]*[.:؟!]?/gi, '')
+                        .replace(/(?:لفتح|لربط)\s*(?:التقرير|ملفك)[^.\n]*بإشراف\s*المعالج\s*جمال:?/gi, '')
+                        .replace(/(?:لفتح التقرير الطبي الشامل وربط ملفك بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:?)/gi, '')
+                        .trim();
+                    message = message.replace(/[:؛\-]\s*$/, '.').trim();
+                    const pNameStr = (patientName && patientName !== 'غير محدد') ? ` يا ${patientName}` : '';
+                    if (!message || message.length < 15) {
+                        message = `اكتمل الآن تقييمك السريري الشامل وتحددت طبيعة المشكلة بدقة${pNameStr}! تقريرك السريري جاهز للمشاهدة الآن.`;
+                    } else if (!message.includes('تقريرك') && !message.includes('التقرير')) {
+                        message += `\n\n✅ تقريرك السريري جاهز للمشاهدة الآن${pNameStr}.`;
+                    }
+                } else if (isExplicitlyAskingPhone) {
                     isReady = false;
                     const pNameStr = (patientName && patientName !== 'غير محدد') ? ` يا ${patientName}` : '';
                     if (!message || message.length < 10) {
                         message = `اكتمل الآن تقييمك السريري الشامل وتحددت طبيعة المشكلة بدقة${pNameStr}! يرجى تزويدي برقم هاتفك لفتح التقرير الطبي الشامل وربط ملفك بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:`;
-                    }
-                } else if (hasValidPhoneNow && (extractedPhone || isReady || rawReply.includes('[READY_FOR_DIAGNOSIS]') || /تم (?:تسجيل|استلام) رقم هاتفك/i.test(message))) {
-                    isReady = true;
-                    if (!extractedPhone && resolvedKnownPhone) extractedPhone = resolvedKnownPhone;
-                    const pNameStr = (patientName && patientName !== 'غير محدد') ? ` يا ${patientName}` : '';
-                    if (!message || message.length < 10) {
-                        message = `✅ تم اعتماد بياناتك بنجاح${pNameStr}. نقوم الآن بإصدار تقريرك السريري وتحويلك فوراً لصفحة التشخيص وخطة التعافي... ⏱️`;
                     }
                 }
 
