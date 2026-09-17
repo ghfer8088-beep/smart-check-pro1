@@ -3252,7 +3252,18 @@ window.handlePatientPortalLogin = handlePatientPortalLogin;
 function handlePatientPortalLogout() {
     if (typeof SmartDB !== 'undefined' && typeof SmartDB.logoutPatient === 'function') {
         SmartDB.logoutPatient();
+        if (typeof SmartDB.setCurrentSessionPatientId === 'function') {
+            SmartDB.setCurrentSessionPatientId(null);
+        }
     }
+    activePatient = null;
+    window.activePatient = null;
+    try {
+        localStorage.removeItem('smart_current_patient_id');
+        localStorage.removeItem('smart_last_active_patient_id');
+        localStorage.removeItem('smart_active_patient');
+        sessionStorage.removeItem('scp_active_patient_id');
+    } catch(e) {}
     updatePortalHeaderButton();
     const loggedOutView = document.getElementById('portal-logged-out-view');
     const loggedInView = document.getElementById('portal-logged-in-view');
@@ -9044,120 +9055,148 @@ window.setChatVitalsGender = function(g) {
 };
 
 window.submitChatRoyalVitals = function() {
-    const nameInput = document.getElementById('chat-vitals-name');
-    const ageInput = document.getElementById('chat-vitals-age');
-    const weightInput = document.getElementById('chat-vitals-weight');
-    const heightInput = document.getElementById('chat-vitals-height');
+    try {
+        const nameInput = document.getElementById('chat-vitals-name');
+        const ageInput = document.getElementById('chat-vitals-age');
+        const weightInput = document.getElementById('chat-vitals-weight');
+        const heightInput = document.getElementById('chat-vitals-height');
 
-    const nameVal = nameInput ? nameInput.value.trim() : '';
-    const ageVal = ageInput ? parseInt(ageInput.value, 10) : null;
-    const weightVal = weightInput ? parseFloat(weightInput.value) : null;
-    const heightVal = heightInput ? parseFloat(heightInput.value) : null;
-    const genderVal = window._chatVitalsSelectedGender || 'ذكر';
+        const nameVal = nameInput ? nameInput.value.trim() : '';
+        const ageVal = ageInput ? parseInt(ageInput.value, 10) : null;
+        const weightVal = weightInput ? parseFloat(weightInput.value) : null;
+        const heightVal = heightInput ? parseFloat(heightInput.value) : null;
+        const genderVal = window._chatVitalsSelectedGender || 'ذكر';
 
-    if (!nameVal || nameVal.length < 2) {
-        if (nameInput) { nameInput.style.borderColor = '#ef4444'; nameInput.focus(); }
-        showToast('⚠️ يرجى إدخال اسمك الكريم للمتابعة', 'warning');
-        return;
-    }
-    if (!ageVal || ageVal < 10 || ageVal > 110) {
-        if (ageInput) { ageInput.style.borderColor = '#ef4444'; ageInput.focus(); }
-        showToast('⚠️ يرجى إدخال عمر صحيح بين 10 و 110 سنة', 'warning');
-        return;
-    }
-    if (!weightVal || weightVal < 30 || weightVal > 250) {
-        if (weightInput) { weightInput.style.borderColor = '#ef4444'; weightInput.focus(); }
-        showToast('⚠️ يرجى إدخال وزن صحيح بين 30 و 250 كجم', 'warning');
-        return;
-    }
-    if (!heightVal || heightVal < 100 || heightVal > 230) {
-        if (heightInput) { heightInput.style.borderColor = '#ef4444'; heightInput.focus(); }
-        showToast('⚠️ يرجى إدخال طول تقريبي صحيح بين 100 و 230 سم', 'warning');
-        return;
-    }
+        if (!nameVal || nameVal.length < 2) {
+            if (nameInput) { nameInput.style.borderColor = '#ef4444'; nameInput.focus(); }
+            showToast('⚠️ يرجى إدخال اسمك الكريم للمتابعة', 'warning');
+            return;
+        }
+        if (!ageVal || ageVal < 10 || ageVal > 110) {
+            if (ageInput) { ageInput.style.borderColor = '#ef4444'; ageInput.focus(); }
+            showToast('⚠️ يرجى إدخال عمر صحيح بين 10 و 110 سنة', 'warning');
+            return;
+        }
+        if (!weightVal || weightVal < 30 || weightVal > 250) {
+            if (weightInput) { weightInput.style.borderColor = '#ef4444'; weightInput.focus(); }
+            showToast('⚠️ يرجى إدخال وزن صحيح بين 30 و 250 كجم', 'warning');
+            return;
+        }
+        if (!heightVal || heightVal < 100 || heightVal > 230) {
+            if (heightInput) { heightInput.style.borderColor = '#ef4444'; heightInput.focus(); }
+            showToast('⚠️ يرجى إدخال طول تقريبي صحيح بين 100 و 230 سم', 'warning');
+            return;
+        }
 
-    // حساب BMI
-    const calculatedBmiInfo = calculateBmiInfo(weightVal, heightVal);
+        // حساب BMI بأمان ودقة
+        const calculatedBmiInfo = calculateBmiInfo(weightVal, heightVal);
+        const bmiVal = (calculatedBmiInfo && calculatedBmiInfo.value) ? calculatedBmiInfo.value : (weightVal && heightVal ? (weightVal / Math.pow(heightVal/100, 2)).toFixed(1) : '22.0');
+        const bmiStatus = (calculatedBmiInfo && calculatedBmiInfo.status) ? calculatedBmiInfo.status : 'وزن طبيعي متوازن';
+        const bmiColor = (calculatedBmiInfo && calculatedBmiInfo.color) ? calculatedBmiInfo.color : '#10b981';
+        const deltaTextSnippet = (calculatedBmiInfo && calculatedBmiInfo.deltaText) ? ` (${calculatedBmiInfo.deltaText})` : '';
 
-    // حفظ في الحالة السريرية بالكامل دون بتر الاسم
-    clinicalDialogueState.patientName = nameVal;
-    clinicalDialogueState.patientFullName = nameVal;
-    clinicalDialogueState.patientFirstName = nameVal.split(' ')[0];
-    clinicalDialogueState.patientVitals = {
-        age: ageVal,
-        weight: weightVal,
-        height: heightVal,
-        gender: genderVal,
-        bmiInfo: calculatedBmiInfo
-    };
-    clinicalDialogueState.step = 'clinical_questions';
+        // حفظ في الحالة السريرية بالكامل دون بتر الاسم
+        if (typeof clinicalDialogueState === 'undefined' || !clinicalDialogueState) {
+            clinicalDialogueState = { history: [], collectedSymptoms: [] };
+        }
+        clinicalDialogueState.isStarting = false;
+        clinicalDialogueState.patientName = nameVal;
+        clinicalDialogueState.patientFullName = nameVal;
+        clinicalDialogueState.patientFirstName = nameVal.split(' ')[0];
+        clinicalDialogueState.patientVitals = {
+            age: ageVal,
+            weight: weightVal,
+            height: heightVal,
+            gender: genderVal,
+            bmiInfo: calculatedBmiInfo
+        };
+        clinicalDialogueState.step = 'clinical_questions';
 
-    // مزامنة مع حقول النموذج العامة لضمان تصديرها للوحة الإدارة
-    const domName = document.getElementById('patient-name');
-    if (domName) domName.value = nameVal;
-    const domSubName = document.getElementById('sub-name');
-    if (domSubName) domSubName.value = nameVal;
-    const domAge = document.getElementById('patient-age');
-    if (domAge) domAge.value = ageVal;
-    const domWeight = document.getElementById('patient-weight');
-    if (domWeight) domWeight.value = weightVal;
-    const domHeight = document.getElementById('patient-height');
-    if (domHeight) domHeight.value = heightVal;
-    const domGenderRadios = document.querySelectorAll('input[name="patient_gender"]');
-    domGenderRadios.forEach(r => { if (r.value === genderVal) r.checked = true; });
+        // مزامنة مع حقول النموذج العامة لضمان تصديرها للوحة الإدارة
+        const domName = document.getElementById('patient-name');
+        if (domName) domName.value = nameVal;
+        const domSubName = document.getElementById('sub-name');
+        if (domSubName) domSubName.value = nameVal;
+        const domAge = document.getElementById('patient-age');
+        if (domAge) domAge.value = ageVal;
+        const domWeight = document.getElementById('patient-weight');
+        if (domWeight) domWeight.value = weightVal;
+        const domHeight = document.getElementById('patient-height');
+        if (domHeight) domHeight.value = heightVal;
+        const domGenderRadios = document.querySelectorAll('input[name="patient_gender"]');
+        domGenderRadios.forEach(r => { if (r.value === genderVal) r.checked = true; });
 
-    if (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) {
-        currentAssessmentData.patientName = nameVal;
-        currentAssessmentData.patientVitals = clinicalDialogueState.patientVitals;
-        currentAssessmentData.bmiInfo = calculatedBmiInfo;
-    }
+        if (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) {
+            currentAssessmentData.patientName = nameVal;
+            currentAssessmentData.patientVitals = clinicalDialogueState.patientVitals;
+            currentAssessmentData.bmiInfo = calculatedBmiInfo;
+        }
 
-    // استبدال البطاقة ببادج التوثيق الملكي
-    const cardEl = document.getElementById('royal-chat-vitals-card');
-    if (cardEl) {
-        cardEl.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="color: #6ee7b7; font-weight: bold; font-size: 0.95em; display: flex; align-items: center; gap: 8px;">
-                    <span>✅</span> تم اعتماد وتوثيق مؤشراتك الحيوية بنجاح
+        // استبدال البطاقة ببادج التوثيق الملكي
+        const cardEl = document.getElementById('royal-chat-vitals-card');
+        if (cardEl) {
+            cardEl.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="color: #6ee7b7; font-weight: bold; font-size: 0.95em; display: flex; align-items: center; gap: 8px;">
+                        <span>✅</span> تم اعتماد وتوثيق مؤشراتك الحيوية بنجاح
+                    </div>
+                    <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.76em; padding: 2px 8px; border-radius: 10px; font-weight: bold;">
+                        موثق سريرياً
+                    </span>
                 </div>
-                <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.76em; padding: 2px 8px; border-radius: 10px; font-weight: bold;">
-                    موثق سريرياً
-                </span>
-            </div>
-            <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; color: #cbd5e1; font-size: 0.86em; background: rgba(0,0,0,0.25); padding: 8px 12px; border-radius: 8px;">
-                <span>👤 <strong>${nameVal}</strong> (${genderVal})</span>
-                <span>🎂 العمر: <strong>${ageVal} سنة</strong></span>
-                <span>⚖️ الوزن: <strong>${weightVal} كغم</strong></span>
-                <span>📏 الطول: <strong>${heightVal} سم</strong></span>
-                <span>📊 كتلة الجسم: <strong style="color: ${bmiColor};">${bmiVal} (${bmiStatus})</strong></span>
-            </div>
-        `;
-    }
+                <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; color: #cbd5e1; font-size: 0.86em; background: rgba(0,0,0,0.25); padding: 8px 12px; border-radius: 8px;">
+                    <span>👤 <strong>${nameVal}</strong> (${genderVal})</span>
+                    <span>🎂 العمر: <strong>${ageVal} سنة</strong></span>
+                    <span>⚖️ الوزن: <strong>${weightVal} كغم</strong></span>
+                    <span>📏 الطول: <strong>${heightVal} سم</strong></span>
+                    <span>📊 كتلة الجسم: <strong style="color: ${bmiColor};">${bmiVal} (${bmiStatus})</strong></span>
+                </div>
+            `;
+        }
 
-    // رد الطبيب الفوري مع الصوت مخصص بدقة حسب مسار الحالة
-    const ptTitle = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint?.title) ? currentSelectedPoint.title : 'موضع الألم';
-    const currentSpecType = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint && currentSelectedPoint.specialtyType) ? currentSelectedPoint.specialtyType : null;
-    window._specializedConsultationType = currentSpecType;
-    if (!currentSpecType) {
-        delete window._specializedConsultationType;
-        delete window._specializedConsultationData;
-    }
+        // رد الطبيب الفوري مع الصوت مخصص بدقة حسب مسار الحالة
+        const ptTitle = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint?.title) ? currentSelectedPoint.title : 'موضع الألم';
+        const currentSpecType = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint && currentSelectedPoint.specialtyType) ? currentSelectedPoint.specialtyType : null;
+        window._specializedConsultationType = currentSpecType;
+        if (!currentSpecType) {
+            delete window._specializedConsultationType;
+            delete window._specializedConsultationData;
+        }
 
-    let doctorReply = '';
-    if (currentSpecType === 'stroke') {
-        doctorReply = `أهلاً بك يا **${nameVal}**، تم توثيق مؤشراتك الحيوية بنجاح (${calculatedBmiInfo.deltaText}).\n\nوالآن لنبدأ الاستقصاء السريري الدقيق لمرحلة التأهيل الحركي وما بعد الجلطة:\n\n1. ما هو الطرف أو الجانب الأكثر تأثراً بالضعف أو التصلب (الجانب الأيمن أم الأيسر، يد أم قدم)؟\n2. منذ متى حدثت الجلطة تحديداً؟\n3. هل تستطيع الوقوف أو المشي بمفردك بأمان، أم تحتاج لمساعدة مرافق أو استخدام عكاز/مشاية؟`;
-    } else if (currentSpecType === 'foot_drop') {
-        doctorReply = `أهلاً بك يا **${nameVal}**، تم توثيق مؤشراتك الحيوية بنجاح (${calculatedBmiInfo.deltaText}).\n\nوالآن لنبدأ الاستقصاء السريري الدقيق لحالة سقوط القدم (Foot Drop):\n\n1. في أي قدم تشتكي من صعوبة رفع المشط (اليمنى أم اليسرى)؟\n2. هل ظهر سقوط القدم بعد ألم حاد أو ديسك في أسفل الظهر (L5)، أم بعد جراحة أو إصابة في الركبة؟\n3. هل تسقط مقدمة قدمك أثناء المشي مما يسبب التعثر، وهل تستخدم دعامة مشط (AFO) حالياً؟`;
-    } else if (currentSpecType === 'scoliosis') {
-        doctorReply = `أهلاً بك يا **${nameVal}**، تم توثيق مؤشراتك الحيوية بنجاح (${calculatedBmiInfo.deltaText}).\n\nوالآن لنبدأ الاستقصاء السريري الدقيق لانحراف وتقوس العمود الفقري (الجنف Scoliosis):\n\n1. هل تم إجراء تصوير أشعة سينية سابقة (X-Ray) وقياس زاوية الانحناء (زاوية كوب Cobb Angle)؟\n2. هل تلاحظ تفاوتاً ظاهراً في ارتفاع الكتفين، لوحي الظهر، أو ميلاً في الحوض عند الوقوف؟\n3. منذ متى لاحظت هذا التقوس وهل يرافقه أي ألم في الظهر أو صعوبة في التنفس مع المجهود؟`;
-    } else {
-        doctorReply = `أهلاً بك يا **${nameVal}**، تم توثيق مؤشراتك الحيوية بنجاح (${calculatedBmiInfo.deltaText}).\n\nوالآن لنبدأ الاستقصاء السريري الدقيق لموضع الألم في **${ptTitle}**:\n\nما الذي تعاني منه تحديداً في **${ptTitle}**؟ وهل تشعر بألم حاد مستمر، أم تشنج وثقل يشتد مع حركات معينة أو الجلوس؟`;
-    }
-    appendChatMessage('bot', doctorReply);
+        let doctorReply = '';
+        if (currentSpecType === 'stroke') {
+            doctorReply = `أهلاً بك يا **${nameVal}**، تم توثيق مؤشراتك الحيوية بنجاح${deltaTextSnippet}.\n\nوالآن لنبدأ الاستقصاء السريري الدقيق لمرحلة التأهيل الحركي وما بعد الجلطة:\n\n1. ما هو الطرف أو الجانب الأكثر تأثراً بالضعف أو التصلب (الجانب الأيمن أم الأيسر، يد أم قدم)؟\n2. منذ متى حدثت الجلطة تحديداً؟\n3. هل تستطيع الوقوف أو المشي بمفردك بأمان، أم تحتاج لمساعدة مرافق أو استخدام عكاز/مشاية؟`;
+        } else if (currentSpecType === 'foot_drop') {
+            doctorReply = `أهلاً بك يا **${nameVal}**، تم توثيق مؤشراتك الحيوية بنجاح${deltaTextSnippet}.\n\nوالآن لنبدأ الاستقصاء السريري الدقيق لحالة سقوط القدم (Foot Drop):\n\n1. في أي قدم تشتكي من صعوبة رفع المشط (اليمنى أم اليسرى)؟\n2. هل ظهر سقوط القدم بعد ألم حاد أو ديسك في أسفل الظهر (L5)، أم بعد جراحة أو إصابة في الركبة؟\n3. هل تسقط مقدمة قدمك أثناء المشي مما يسبب التعثر، وهل تستخدم دعامة مشط (AFO) حالياً؟`;
+        } else if (currentSpecType === 'scoliosis') {
+            doctorReply = `أهلاً بك يا **${nameVal}**، تم توثيق مؤشراتك الحيوية بنجاح${deltaTextSnippet}.\n\nوالآن لنبدأ الاستقصاء السريري الدقيق لانحراف وتقوس العمود الفقري (الجنف Scoliosis):\n\n1. هل تم إجراء تصوير أشعة سينية سابقة (X-Ray) وقياس زاوية الانحناء (زاوية كوب Cobb Angle)؟\n2. هل تلاحظ تفاوتاً ظاهراً في ارتفاع الكتفين، لوحي الظهر، أو ميلاً في الحوض عند الوقوف؟\n3. منذ متى لاحظت هذا التقوس وهل يرافقه أي ألم في الظهر أو صعوبة في التنفس مع المجهود؟`;
+        } else {
+            doctorReply = `أهلاً بك يا **${nameVal}**، تم توثيق مؤشراتك الحيوية بنجاح${deltaTextSnippet}.\n\nوالآن لنبدأ الاستقصاء السريري الدقيق لموضع الألم في **${ptTitle}**:\n\nما الذي تعاني منه تحديداً في **${ptTitle}**؟ وهل تشعر بألم حاد مستمر، أم تشنج وثقل يشتد مع حركات معينة أو الجلوس؟`;
+        }
+        appendChatMessage('bot', doctorReply);
 
-    if (typeof Wada3anAiEngine !== 'undefined') {
-        const token = ++Wada3anAiEngine._speechSessionToken;
-        Wada3anAiEngine.speakDoctorResponse(doctorReply, token);
+        // تمكين حقل الإدخال وزر الإرسال وضبط المؤشر
+        const chatInput = document.getElementById('ai-chat-input');
+        const sendBtn = document.getElementById('ai-chat-send-btn');
+        if (chatInput) {
+            chatInput.disabled = false;
+            chatInput.placeholder = `اكتب ردك للدكتور هنا يا ${nameVal.split(' ')[0]}...`;
+            setTimeout(() => {
+                chatInput.focus();
+            }, 250);
+        }
+        if (sendBtn) {
+            sendBtn.disabled = false;
+            sendBtn.style.opacity = '1';
+            sendBtn.style.pointerEvents = 'auto';
+        }
+
+        if (typeof Wada3anAiEngine !== 'undefined') {
+            const token = ++Wada3anAiEngine._speechSessionToken;
+            Wada3anAiEngine.speakDoctorResponse(doctorReply, token);
+        }
+    } catch (err) {
+        console.error('CRITICAL: Error in submitChatRoyalVitals:', err);
     }
 };
 
