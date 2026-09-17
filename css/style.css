@@ -684,24 +684,32 @@ body {
     .skeleton-viewport {
         position: relative !important;
         width: 100% !important;
-        max-width: 240px !important;
-        aspect-ratio: 328 / 760 !important;
-        min-height: 460px !important;
-        padding: 10px 8px !important;
+        max-width: 320px !important;
+        padding: 0 !important;
+        margin: 0 auto !important;
+        background: transparent !important;
+        border: none !important;
         overflow: visible !important;
         display: block !important;
-        margin: 0 auto !important;
+        min-height: unset !important;
+        aspect-ratio: unset !important;
     }
 
     .skeleton-container-layer {
         position: relative !important;
         width: 100% !important;
-        max-width: 100% !important;
-        height: 100% !important;
-        min-height: 460px !important;
-        aspect-ratio: 328 / 760 !important;
-        display: block !important;
+        max-width: 320px !important;
         margin: 0 auto !important;
+        background: #090e17 !important;
+        border-radius: 14px !important;
+        padding: 15px !important;
+        border: 1px solid rgba(212, 175, 55, 0.4) !important;
+        box-sizing: border-box !important;
+        user-select: none !important;
+        height: auto !important;
+        min-height: unset !important;
+        aspect-ratio: unset !important;
+        display: block !important;
     }
 
     .skeleton-container-layer[style*="display: none"],
@@ -711,22 +719,22 @@ body {
 
     .skeleton-img {
         width: 100% !important;
-        height: 100% !important;
+        height: auto !important;
         max-width: 100% !important;
-        aspect-ratio: 328 / 760 !important;
         display: block !important;
         margin: 0 auto !important;
-        object-fit: contain !important;
+        object-fit: unset !important;
+        aspect-ratio: unset !important;
         pointer-events: none !important;
         user-select: none !important;
     }
 
     .anatomy-hotspot {
-        width: 16px !important;
-        height: 16px !important;
-        border: 1.5px solid #ffffff !important;
-        box-shadow: 0 0 6px rgba(239, 68, 68, 0.85) !important;
-        animation: pulseHotspotMobile 2.2s infinite ease-in-out !important;
+        width: 24px !important;
+        height: 24px !important;
+        border: 2px solid #ffffff !important;
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.8), 0 0 16px rgba(212, 175, 55, 0.5) !important;
+        animation: pulseHotspot 2.2s infinite ease-in-out !important;
         will-change: transform;
     }
 
@@ -1182,24 +1190,30 @@ body {
 .skeleton-viewport {
     position: relative;
     width: 100%;
-    max-width: 360px;
+    max-width: 380px;
     margin: 0 auto;
-    background: #090e17;
-    border-radius: 14px;
-    padding: 15px;
-    border: 1px solid rgba(212, 175, 55, 0.3);
-    min-height: 520px;
-    aspect-ratio: 328 / 760;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    min-height: unset !important;
+    aspect-ratio: unset !important;
 }
 
 .skeleton-container-layer {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    min-height: 520px;
-    aspect-ratio: 328 / 760;
-    display: flex;
-    justify-content: center;
+    position: relative !important;
+    width: 100% !important;
+    max-width: 380px !important;
+    margin: 0 auto !important;
+    background: #090e17 !important;
+    border-radius: 14px !important;
+    padding: 15px !important;
+    border: 1px solid rgba(212, 175, 55, 0.4) !important;
+    box-sizing: border-box !important;
+    user-select: none !important;
+    height: auto !important;
+    min-height: unset !important;
+    aspect-ratio: unset !important;
+    display: block !important;
 }
 
 .skeleton-container-layer[style*="display: none"],
@@ -1208,11 +1222,14 @@ body {
 }
 
 .skeleton-img {
-    width: 100%;
-    height: auto;
-    display: block;
-    user-select: none;
-    pointer-events: none;
+    width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    margin: 0 auto !important;
+    user-select: none !important;
+    pointer-events: none !important;
+    object-fit: unset !important;
+    aspect-ratio: unset !important;
 }
 
 /* Vivid Red/Gold High-Visibility Hotspots */

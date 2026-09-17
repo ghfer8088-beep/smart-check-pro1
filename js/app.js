@@ -7757,6 +7757,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // إعادة رسم نقاط الألم فوراً عند عودة المستخدم للتطبيق الرئيسي من نافذة المعايرة
+    window.addEventListener('focus', () => {
+        const activeView = document.getElementById('btn-view-back')?.classList.contains('active') ? 'back' : 'front';
+        if (typeof switchAnatomyView === 'function') {
+            switchAnatomyView(activeView);
+        }
+    });
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            const activeView = document.getElementById('btn-view-back')?.classList.contains('active') ? 'back' : 'front';
+            if (typeof switchAnatomyView === 'function') {
+                switchAnatomyView(activeView);
+            }
+        }
+    });
+
     // استطلاع دوري خفيف كل 4 ثوانٍ لجلب أي تعديل في توقيت الجلسة من السحابة في حال كان التطبيق معروضاً
     setInterval(() => {
         if (!document.hidden && window.SmartCloudSync && typeof window.SmartCloudSync.fetchRemoteTimingUpdates === 'function') {
