@@ -117,9 +117,15 @@ const AdminEngine = (function() {
                 return str.trim();
             };
 
-            // 1. تجميع كافة السجلات الواردة (محلي، سحابي، إشعارات سريرية) مع استبعاد أي سجلات وهمية أو تنبيهات نظام
+            const deletedIds = new Set(JSON.parse(localStorage.getItem('smart_deleted_patient_ids') || '[]'));
+
+            // 1. تجميع كافة السجلات الواردة (محلي، سحابي، إشعارات سريرية) مع استبعاد أي سجلات وهمية أو محذوفة أو تنبيهات نظام
             const isExcludedPt = (pt) => {
                 if (!pt) return true;
+                const pId = pt.patientId || pt.id;
+                if (pId && deletedIds.has(pId)) return true;
+                const baseId = (pId || '').replace(/(_notif_.*|_test\d*|_cloud_test.*)$/, '');
+                if (baseId && deletedIds.has(baseId)) return true;
                 const n = (pt.fullName || pt.name || '').trim();
                 if (n.includes('مريض الفحص الذاتي') || n === 'فحص ذاتي') return true;
                 return false;
@@ -133,6 +139,10 @@ const AdminEngine = (function() {
 
                     // استبعاد إشعارات النظام وتنبيهات الأمان والـ Watchdog نهائياً من التحول لمرضى
                     if (notif.type === 'red_flag' || notif.type === 'system_alert' || notif.type === 'freeze_alert' || notif.type === 'watchdog' || notif.type === 'incident' || notif.type === 'telemetry') {
+                        continue;
+                    }
+
+                    if (notif.patientId && (deletedIds.has(notif.patientId) || deletedIds.has(notif.patientId.replace(/(_notif_.*|_test\d*|_cloud_test.*)$/, '')))) {
                         continue;
                     }
 
@@ -210,7 +220,8 @@ const AdminEngine = (function() {
                 }
             }
 
-            // 2. دالة استخراج الهوية الفريدة للمريض (Patient Identity Key) مع الحفاظ التام على الفحوصات والاستشارات الجديدة المستقلة
+            // 2. دالة استخراج الهوية الفريدة للمريض والشكوى السريرية (Patient & Complaint Identity Key)
+            // تضمن دمج كافة سجلات وإشعارات نفس المراجع لنفس موضع الألم في بطاقة واحدة خالية من التكرار
             function getPatientIdentityKey(pt) {
                 if (!pt) return null;
                 const cleanPhone = (pt.phone || '').replace(/\D/g, '');
@@ -222,31 +233,19 @@ const AdminEngine = (function() {
                 const rawPain = pt.painArea || pt.painAreaTitle || pt.selectedPoint || '';
                 const painKey = isGenericPain(rawPain) ? '' : normalizeTitle(rawPain);
 
-                // نافذة زمنية مدتها 45 دقيقة لدمج خطوات الفحص الواحد المتتالية (مؤشرات -> تقرير -> خطة)
-                const rawDate = pt.createdAt || pt.timestamp || pt.lastActiveAt || null;
-                const timeMs = rawDate ? new Date(rawDate).getTime() : 0;
-                const timeWindow = timeMs > 0 ? Math.floor(timeMs / 2700000) : 0;
-
-                // إذا توفر الهاتف وموضع الألم والتوقيت:
-                // تدمج الخطوات لنفس الشخص لنفس المنطقة بنفس نافذة الـ 45 دقيقة فقط
-                if (phoneKey && painKey && timeWindow > 0) {
-                    return `enc_${phoneKey}_${painKey}_${timeWindow}`;
-                }
                 if (phoneKey && painKey) {
                     return `enc_${phoneKey}_${painKey}`;
                 }
-                if (phoneKey && timeWindow > 0) {
-                    return `enc_${phoneKey}_${timeWindow}`;
-                }
                 if (phoneKey) {
-                    return `enc_${phoneKey}`;
+                    return `enc_${phoneKey}_gen`;
                 }
                 if (baseId && baseId !== 'pat_notif') {
+                    if (painKey) return `id_${baseId}_${painKey}`;
                     return `id_${baseId}`;
                 }
-                const cleanName = (pt.fullName || pt.name || '').trim();
+                const cleanName = (pt.fullName || pt.name || '').trim().toLowerCase();
                 if (cleanName && !/^(?:الاسم|الآسم|الإسم|مراجع كريم|مراجع جديد|اسمي|اسمها|اسمك|اسم)$/i.test(cleanName)) {
-                    return `name_${cleanName}_${painKey || 'gen'}_${timeWindow || 0}`;
+                    return `name_${cleanName}_${painKey || 'gen'}`;
                 }
                 return 'raw_' + (rawId || Math.random().toString(36));
             }
@@ -259,6 +258,24 @@ const AdminEngine = (function() {
                 if (!key) continue;
                 if (!groups.has(key)) groups.set(key, []);
                 groups.get(key).push(pt);
+            }
+
+            // دمج السجلات العامة (بدون موضع ألم) في السجل المتخصص لنفس رقم الهاتف إن وُجد
+            for (const [key, records] of groups.entries()) {
+                if (key.endsWith('_gen') && key.startsWith('enc_')) {
+                    const phonePrefix = key.replace(/_gen$/, '');
+                    let matchedKey = null;
+                    for (const otherKey of groups.keys()) {
+                        if (otherKey !== key && otherKey.startsWith(phonePrefix + '_')) {
+                            matchedKey = otherKey;
+                            break;
+                        }
+                    }
+                    if (matchedKey) {
+                        groups.get(matchedKey).push(...records);
+                        groups.delete(key);
+                    }
+                }
             }
 
             // 4. دمج كل مجموعة إلى سجل استشارة موحد وخالي من التكرار مع إعطاء الأولوية للبيانات الأحدث والأكمل
@@ -274,9 +291,10 @@ const AdminEngine = (function() {
                 const listToMerge = nonNotif.length > 0 ? nonNotif : records;
                 const unified = { ...listToMerge[0] };
 
-                // تنظيف معرف المريض من أي لاحقة مشتقة تجريبية فقط
+                // تنظيف معرف المريض وتوثيق جميع المعرفات المدمجة للحذف الشامل
                 unified.patientId = (unified.patientId || unified.id || '').replace(/(_notif_.*|_test\d*|_cloud_test.*)$/, '');
                 unified.id = unified.patientId;
+                unified.allMergedIds = Array.from(new Set(records.map(r => r.patientId || r.id).filter(Boolean)));
 
                 let earliestDate = unified.createdAt || unified.timestamp || null;
                 let latestActiveDate = unified.createdAt || unified.timestamp || null;
@@ -569,8 +587,53 @@ const AdminEngine = (function() {
                 });
             }
 
-            // 6. الترتيب الزمني السريري الدقيق: الأحدث تسجيلاً ونشاطاً يظهر أولاً في القمة
-            overview.sort((a, b) => {
+            // 6. تصفية نهائية حاسمة تمنع أي تكرار لنفس المريض ونفس موضع الألم
+            const finalOverviewMap = new Map();
+            for (const item of overview) {
+                const p = item.patient;
+                const cleanPhone = (p.phone || '').replace(/\D/g, '');
+                const phoneKey = cleanPhone.length >= 7 ? cleanPhone.slice(-9) : '';
+                const cleanName = (p.fullName || p.name || '').trim().toLowerCase();
+                const painKey = normalizeTitle(item.painArea || p.painArea || '');
+
+                let dedupKey = '';
+                if (phoneKey && painKey) {
+                    dedupKey = `ph_${phoneKey}_${painKey}`;
+                } else if (phoneKey) {
+                    dedupKey = `ph_${phoneKey}_gen`;
+                } else if (cleanName && painKey) {
+                    dedupKey = `nm_${cleanName}_${painKey}`;
+                } else {
+                    dedupKey = `id_${p.patientId || p.id}`;
+                }
+
+                if (!finalOverviewMap.has(dedupKey)) {
+                    finalOverviewMap.set(dedupKey, item);
+                } else {
+                    const existing = finalOverviewMap.get(dedupKey);
+                    const exMerged = existing.patient.allMergedIds || [existing.patient.patientId];
+                    const itemMerged = item.patient.allMergedIds || [item.patient.patientId];
+                    existing.patient.allMergedIds = Array.from(new Set([...exMerged, ...itemMerged]));
+
+                    const tExist = new Date(existing.lastActiveAt || existing.createdAt || 0).getTime();
+                    const tItem = new Date(item.lastActiveAt || item.createdAt || 0).getTime();
+                    if (tItem > tExist) {
+                        existing.lastActiveAt = item.lastActiveAt;
+                        existing.patient.lastActiveAt = item.lastActiveAt;
+                    }
+                    if ((item.logsCount || 0) > (existing.logsCount || 0)) {
+                        existing.logsCount = item.logsCount;
+                        existing.patient.logsCount = item.logsCount;
+                        existing.patient.completedSessions = item.logsCount;
+                        existing.recoveryScore = item.recoveryScore || existing.recoveryScore;
+                        existing.patient.recoveryScore = existing.recoveryScore;
+                    }
+                }
+            }
+            const cleanOverview = Array.from(finalOverviewMap.values());
+
+            // 7. الترتيب الزمني السريري الدقيق: الأحدث تسجيلاً ونشاطاً يظهر أولاً في القمة
+            cleanOverview.sort((a, b) => {
                 const timeA = new Date(a.lastActiveAt || a.patient?.lastActiveAt || a.patient?.lastUpdated || a.patient?.createdAt || a.createdAt || 0).getTime();
                 const timeB = new Date(b.lastActiveAt || b.patient?.lastActiveAt || b.patient?.lastUpdated || b.patient?.createdAt || b.createdAt || 0).getTime();
                 return timeB - timeA;
@@ -626,7 +689,7 @@ const AdminEngine = (function() {
                 } catch(e) {}
             } catch(e) {}
 
-            return overview;
+            return cleanOverview;
         } catch (err) {
             console.error('Error in loadPatientsOverview:', err);
             return [];

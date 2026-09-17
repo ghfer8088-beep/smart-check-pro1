@@ -16,9 +16,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=29.7"></script>
-    <script src="js/security-shield.js?v=29.7"></script>
-    <link rel="stylesheet" href="css/style.css?v=29.7">
+    <script src="js/system-watchdog.js?v=29.8"></script>
+    <script src="js/security-shield.js?v=29.8"></script>
+    <link rel="stylesheet" href="css/style.css?v=29.8">
     <style>
         body {
             background-color: #080c14;
@@ -1443,17 +1443,17 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/mqtt.min.js?v=29.7"></script>
-    <script src="js/geo-tracker.js?v=29.7"></script>
-    <script src="js/cloud-sync.js?v=29.7"></script>
-    <script src="js/database.js?v=29.7"></script>
-    <script src="js/exercise-image-studio.js?v=29.7"></script>
-    <script src="js/exercises-db.js?v=29.7"></script>
-    <script src="js/diagnostic-engine.js?v=29.7"></script>
-    <script src="js/patient-flow.js?v=29.7"></script>
-    <script src="js/admin-engine.js?v=29.7"></script>
-    <script src="js/ai-config.js?v=29.7"></script>
-    <script src="js/ai-engine.js?v=29.7"></script>
+    <script src="js/mqtt.min.js?v=29.8"></script>
+    <script src="js/geo-tracker.js?v=29.8"></script>
+    <script src="js/cloud-sync.js?v=29.8"></script>
+    <script src="js/database.js?v=29.8"></script>
+    <script src="js/exercise-image-studio.js?v=29.8"></script>
+    <script src="js/exercises-db.js?v=29.8"></script>
+    <script src="js/diagnostic-engine.js?v=29.8"></script>
+    <script src="js/patient-flow.js?v=29.8"></script>
+    <script src="js/admin-engine.js?v=29.8"></script>
+    <script src="js/ai-config.js?v=29.8"></script>
+    <script src="js/ai-engine.js?v=29.8"></script>
 
     <script>
         let allPatientsList = [];
@@ -2844,7 +2844,7 @@
                     <td style="padding: 14px; text-align: center; white-space: nowrap;">
                         ${cleanPhone ? `<a href="https://wa.me/${cleanPhone}" target="_blank" style="display: inline-block; background: #25d366; color: #fff; text-decoration: none; padding: 7px 10px; border-radius: 6px; font-size: 0.88em; font-weight: bold; margin-left: 4px;">💬 واتساب</a>` : ''}
                         <button onclick="openAdminPatientReportModal('${p.patientId}')" style="background: #10b981; color: #fff; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 0.88em; font-weight: bold;">👁️ التقرير</button>
-                        <button onclick="deletePatientRecord('${p.patientId}')" style="background: #ef4444; color: #fff; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 0.88em; margin-right: 4px;">حذف</button>
+                        <button onclick="deletePatientRecord('${p.patientId}', '${patientDisplayName.replace(/['\\]/g, '')}')" style="background: rgba(239, 68, 68, 0.18); border: 1px solid #ef4444; color: #fca5a5; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 0.88em; margin-right: 4px; font-weight: bold;" title="حذف هذا السجل نهائياً">🗑️ حذف</button>
                     </td>
                 </tr>
             `}).join('');
@@ -2888,10 +2888,13 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div style="text-align: left;">
+                                <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
                                     <span style="background: rgba(16, 185, 129, 0.18); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 10px; border-radius: 14px; font-size: 0.82em; font-weight: bold; display: inline-block;">
                                         ${item.recoveryScore != null ? item.recoveryScore + '% تعافي' : '<span style="color:#64748b">لا جلسات بعد</span>'}
                                     </span>
+                                    <button type="button" onclick="deletePatientRecord('${p.patientId}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}')" title="حذف هذا السجل نهائياً" style="background: rgba(239, 68, 68, 0.14); border: 1.5px solid #ef4444; color: #f87171; width: 34px; height: 34px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.1em; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);" onmouseover="this.style.background='#ef4444'; this.style.color='#fff';" onmouseout="this.style.background='rgba(239, 68, 68, 0.14)'; this.style.color='#f87171';">
+                                        🗑️
+                                    </button>
                                 </div>
                             </div>
 
@@ -4184,10 +4187,59 @@
             window.open(`index.html?patient_id=${encodeURIComponent(patientId)}&view_report=3&admin_mode=1`, '_blank');
         }
 
-        async function deletePatientRecord(patientId) {
-            if (confirm('هل أنت متأكد من رغبتك في حذف هذا المريض نهائياً؟')) {
-                await SmartDB.deletePatient(patientId);
-                loadAdminData();
+        async function deletePatientRecord(patientId, patientName = '') {
+            const nameStr = patientName ? ` (${patientName})` : '';
+            if (!confirm(`هل أنت متأكد من رغبتك في حذف سجل المراجع${nameStr} نهائياً ومسح كافة بياناته واستشاراته؟`)) {
+                return;
+            }
+            try {
+                // العثور على العنصر لمعرفة جميع المعرفات المدمجة إن وُجدت
+                const item = allPatientsList.find(it => (it.patient && (it.patient.patientId === patientId || it.patient.id === patientId)));
+                const allIds = (item && item.patient && Array.isArray(item.patient.allMergedIds) && item.patient.allMergedIds.length > 0)
+                    ? item.patient.allMergedIds
+                    : [patientId];
+
+                // حذف جميع المعرفات المرتبطة بهذا السجل من التخزين وقاعدة البيانات
+                for (const pid of allIds) {
+                    await SmartDB.deletePatient(pid);
+                }
+
+                // تسجيل المعرفات في قائمة المحذوفات لمنع استرجاعها بالسحابة
+                try {
+                    const deletedSet = JSON.parse(localStorage.getItem('smart_deleted_patient_ids') || '[]');
+                    const updatedDeleted = Array.from(new Set([...deletedSet, ...allIds]));
+                    localStorage.setItem('smart_deleted_patient_ids', JSON.stringify(updatedDeleted));
+                } catch(e) {}
+
+                // مسح أي إشعارات مرتبطة بهذا المريض من شريط الإشعارات
+                if (typeof SmartDB !== 'undefined' && typeof SmartDB.getAdminNotifications === 'function') {
+                    const notifs = SmartDB.getAdminNotifications();
+                    const filtered = notifs.filter(n => {
+                        if (!n) return false;
+                        if (allIds.includes(n.patientId)) return false;
+                        if (item && item.patient && item.patient.phone && n.patientPhone === item.patient.phone) return false;
+                        return true;
+                    });
+                    localStorage.setItem('smart_admin_notifications', JSON.stringify(filtered));
+                }
+
+                // بث التحديث الفوري بين التبويبات
+                if (typeof BroadcastChannel !== 'undefined') {
+                    try {
+                        const ch = new BroadcastChannel('smart_check_pro_global_sync_channel');
+                        ch.postMessage({ type: 'PATIENT_DELETED', patientId: patientId, allIds: allIds, timestamp: Date.now() });
+                        ch.close();
+                    } catch(e) {}
+                }
+
+                if (typeof showToast === 'function') {
+                    showToast(`✅ تم حذف سجل المراجع${nameStr} بنجاح.`, 'success');
+                }
+
+                await loadAdminData();
+            } catch (err) {
+                console.error('Error deleting patient record:', err);
+                alert('حدث خطأ أثناء محاولة الحذف، يرجى إعادة المحاولة.');
             }
         }
 

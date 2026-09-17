@@ -487,6 +487,21 @@ const SmartDB = (function() {
                 });
                 localStorage.setItem('smart_cloud_synced_patients', JSON.stringify(filteredCloud));
             } catch(e) {}
+
+            // إضافة المعرف لقائمة المحذوفات الصريحة
+            try {
+                const delList = JSON.parse(localStorage.getItem('smart_deleted_patient_ids') || '[]');
+                if (!delList.includes(patientId)) delList.push(patientId);
+                if (baseId && !delList.includes(baseId)) delList.push(baseId);
+                localStorage.setItem('smart_deleted_patient_ids', JSON.stringify(delList));
+            } catch(e) {}
+
+            // مسح أي إشعار مرتبط بهذا المعرف
+            try {
+                const notifs = JSON.parse(localStorage.getItem('smart_admin_notifications') || '[]');
+                const cleanNotifs = notifs.filter(n => n && n.patientId !== patientId && (!baseId || !n.patientId?.startsWith(baseId)));
+                localStorage.setItem('smart_admin_notifications', JSON.stringify(cleanNotifs));
+            } catch(e) {}
         } catch(e) {}
 
         try {
