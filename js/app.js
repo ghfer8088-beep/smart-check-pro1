@@ -9169,6 +9169,60 @@ window.submitChatRoyalVitals = function() {
             currentAssessmentData.bmiInfo = calculatedBmiInfo;
         }
 
+        // 🌟 حفظ وتوثيق فوري لملف المريض في قاعدة البيانات ولوحة التحكم بمجرد اعتماد المؤشرات
+        const ptTitle = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint?.title) ? currentSelectedPoint.title : 'العمود الفقري والمفاصل';
+        const pPhoneVal = clinicalDialogueState.patientPhone || (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') || localStorage.getItem('smart_patient_phone') || '';
+        const cleanDigits = pPhoneVal ? pPhoneVal.replace(/\D/g, '') : '';
+        const vitalsPtId = 'pat_' + (cleanDigits ? cleanDigits + '_' : '') + Date.now().toString(36);
+        clinicalDialogueState.patientId = vitalsPtId;
+
+        const currentDevInfo = (window.SmartGeoTracker && typeof window.SmartGeoTracker.getDeviceType === 'function')
+            ? window.SmartGeoTracker.getDeviceType()
+            : { type: ((typeof window !== 'undefined' && window.innerWidth >= 992) ? 'Desktop' : 'Mobile'), icon: ((typeof window !== 'undefined' && window.innerWidth >= 992) ? '💻' : '📱') };
+
+        const vitalsPatientRecord = {
+            patientId: vitalsPtId,
+            id: vitalsPtId,
+            name: nameVal,
+            fullName: nameVal,
+            phone: pPhoneVal,
+            age: ageVal,
+            weight: weightVal,
+            height: heightVal,
+            bmi: bmiVal,
+            gender: genderVal,
+            status: 'in_progress',
+            condition: ptTitle,
+            painArea: ptTitle,
+            painAreaTitle: ptTitle,
+            selectedPoint: ptTitle,
+            pointId: (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.id : '',
+            chiefDiagnosis: `استشارة سريرية جارية (${ptTitle})`,
+            diagnosisTitle: `استشارة سريرية جارية (${ptTitle})`,
+            device: currentDevInfo.type,
+            deviceIcon: currentDevInfo.icon,
+            deviceLabel: currentDevInfo.label || currentDevInfo.type,
+            createdAt: new Date().toISOString(),
+            lastActiveAt: new Date().toISOString(),
+            lastUpdated: new Date().toISOString(),
+            notes: `تم اعتماد المؤشرات الحيوية في العيادة الذكية (العمر: ${ageVal} سنة، الوزن: ${weightVal} كغم، الطول: ${heightVal} سم)`
+        };
+
+        if (typeof SmartDB !== 'undefined' && typeof SmartDB.savePatient === 'function') {
+            SmartDB.savePatient(vitalsPatientRecord).catch(e => console.warn('vitals save warning:', e));
+        }
+        if (typeof SmartDB !== 'undefined' && typeof SmartDB.addAdminNotification === 'function') {
+            SmartDB.addAdminNotification({
+                type: 'new_registration',
+                title: `👤 مراجع جديد: ${nameVal}`,
+                message: `بدأ المراجع ${nameVal} استشارة سريرية لمنطقة (${ptTitle}). المؤشرات: ${ageVal} سنة، ${weightVal} كغم. ${pPhoneVal ? 'هاتف: ' + pPhoneVal : ''}`,
+                patientId: vitalsPtId,
+                patientName: nameVal,
+                patientPhone: pPhoneVal,
+                meta: { painArea: ptTitle }
+            });
+        }
+
         // استبدال البطاقة ببادج التوثيق الملكي
         const cardEl = document.getElementById('royal-chat-vitals-card');
         if (cardEl) {

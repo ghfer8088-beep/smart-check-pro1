@@ -56,6 +56,38 @@ const AdminEngine = (function() {
                         rawPatients.unshift(pp);
                     }
                 }
+                const cloudSynced = JSON.parse(localStorage.getItem('smart_cloud_synced_patients') || '[]');
+                for (const cs of cloudSynced) {
+                    const csId = cs.patientId || cs.id;
+                    if (csId && !rawPatients.some(rp => (rp.patientId === csId || rp.id === csId))) {
+                        rawPatients.unshift(cs);
+                    }
+                }
+                // 🔍 فحص كافة مفاتيح المرضى الفردية smart_patient_* في التخزين المحلي لضمان عدم ضياع أي سجل
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (k && k.startsWith('smart_patient_')) {
+                        try {
+                            const pItem = JSON.parse(localStorage.getItem(k));
+                            if (pItem) {
+                                const pItemId = pItem.patientId || pItem.id;
+                                if (pItemId && !rawPatients.some(rp => (rp.patientId === pItemId || rp.id === pItemId))) {
+                                    rawPatients.unshift(pItem);
+                                }
+                            }
+                        } catch(e) {}
+                    }
+                }
+                // فحص المريض النشط الحالي إن وجد
+                try {
+                    const activeP = JSON.parse(localStorage.getItem('smart_active_patient') || 'null');
+                    if (activeP) {
+                        const actId = activeP.patientId || activeP.id;
+                        if (actId && !rawPatients.some(rp => (rp.patientId === actId || rp.id === actId))) {
+                            rawPatients.unshift(activeP);
+                        }
+                    }
+                } catch(e) {}
             } catch(e) {}
             const adminNotifs = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAdminNotifications === 'function') ? SmartDB.getAdminNotifications() : [];
 
@@ -152,14 +184,16 @@ const AdminEngine = (function() {
                         }
                     }
 
-                    // لا نضيف إلا إذا كان هناك هاتف حقيقي أو معرف مريض حقيقي واسم مريض حقيقي غير افتراضي
+                    // لا نضيف إلا إذا كان هناك هاتف حقيقي أو معرف مريض حقيقي أو اسم مراجع حقيقي
                     const isGenuinePatient = (phoneVal && phoneVal.replace(/\D/g, '').length >= 7) ||
-                                            (notif.patientId && !notif.patientId.startsWith('pat_notif_') && nName && !/^(?:مراجع كريم|مراجع جديد|مريض الفحص الذاتي)$/i.test(nName));
+                                            (notif.patientId && !notif.patientId.startsWith('pat_notif_')) ||
+                                            (nName && nName.length >= 2 && !/^(?:مريض الفحص الذاتي|فحص ذاتي)$/i.test(nName));
 
                     if (isGenuinePatient) {
+                        const notifPtId = notif.patientId || ('pat_notif_' + (phoneVal ? phoneVal.replace(/\D/g, '') : (Date.now().toString(36) + Math.random().toString(36).substr(2, 4))));
                         candidatePool.push({
-                            patientId: notif.patientId || ('pat_notif_' + phoneVal.replace(/\D/g, '')),
-                            id: notif.patientId,
+                            patientId: notifPtId,
+                            id: notifPtId,
                             name: nName || 'مراجع كريم',
                             fullName: nName || 'مراجع كريم',
                             phone: phoneVal,
@@ -167,10 +201,11 @@ const AdminEngine = (function() {
                             painAreaTitle: painArea,
                             chiefDiagnosis: chiefDiag,
                             diagnosisTitle: chiefDiag,
-                            completedSessions: 0,
-                            logsCount: 0,
+                            completedSessions: completedSess,
+                            logsCount: completedSess,
                             createdAt: notif.time || new Date().toISOString(),
                             timestamp: notif.time || new Date().toISOString(),
+                            lastActiveAt: notif.time || new Date().toISOString(),
                             _fromNotif: true
                         });
                     }
@@ -502,12 +537,12 @@ const AdminEngine = (function() {
 
             // 6. الترتيب الزمني السريري الدقيق: الأحدث تسجيلاً ونشاطاً يظهر أولاً في القمة
             overview.sort((a, b) => {
-                const timeA = new Date(a.lastActiveAt || a.createdAt || 0).getTime();
-                const timeB = new Date(b.lastActiveAt || b.createdAt || 0).getTime();
+                const timeA = new Date(a.lastActiveAt || a.patient?.lastActiveAt || a.patient?.lastUpdated || a.patient?.createdAt || a.createdAt || 0).getTime();
+                const timeB = new Date(b.lastActiveAt || b.patient?.lastActiveAt || b.patient?.lastUpdated || b.patient?.createdAt || b.createdAt || 0).getTime();
                 return timeB - timeA;
             });
 
-            // 7. تنظيف التخزين المحلي فورياً من السجلات المكررة والمفاتيح الزائدة
+            // 7. حفظ التخزين المحلي فورياً مع الحفاظ على كافة السجلات الحقيقية
             try {
                 const cleanForStorage = unifiedPatients.map(u => {
                     const c = { ...u };
@@ -516,14 +551,13 @@ const AdminEngine = (function() {
                 });
                 localStorage.setItem('smart_all_patients', JSON.stringify(cleanForStorage));
 
+                // تنظيف فقط السجلات الوهمية الصريحة لمريض الفحص الذاتي دون مسح أي مراجعين حقيقيين
                 for (let i = localStorage.length - 1; i >= 0; i--) {
                     const k = localStorage.key(i);
-                    if (k && (k.includes('_notif_') || k.includes('_test2') || k.includes('_cloud_test'))) {
-                        localStorage.removeItem(k);
-                    } else if (k && k.startsWith('smart_patient_')) {
+                    if (k && k.startsWith('smart_patient_')) {
                         try {
                             const val = localStorage.getItem(k);
-                            if (val && (val.includes('مريض الفحص الذاتي') || val.includes('pat_notif_'))) {
+                            if (val && val.includes('مريض الفحص الذاتي')) {
                                 localStorage.removeItem(k);
                             }
                         } catch(e) {}
