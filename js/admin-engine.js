@@ -122,8 +122,6 @@ const AdminEngine = (function() {
                 if (!pt) return true;
                 const n = (pt.fullName || pt.name || '').trim();
                 if (n.includes('مريض الفحص الذاتي') || n === 'فحص ذاتي') return true;
-                const pId = pt.patientId || pt.id || '';
-                if (pId.startsWith('pat_notif_') && !pt.phone) return true;
                 return false;
             };
 
@@ -212,22 +210,43 @@ const AdminEngine = (function() {
                 }
             }
 
-            // 2. دالة استخراج الهوية الفريدة للمريض (Patient Identity Key) لمنع أي تكرار نهائياً
+            // 2. دالة استخراج الهوية الفريدة للمريض (Patient Identity Key) مع الحفاظ التام على الفحوصات والاستشارات الجديدة المستقلة
             function getPatientIdentityKey(pt) {
                 if (!pt) return null;
                 const cleanPhone = (pt.phone || '').replace(/\D/g, '');
-                if (cleanPhone.length >= 7) {
-                    // آخر 9 أرقام لتفادي فروقات 00962 أو +962 أو 07
-                    return 'phone_' + cleanPhone.slice(-9);
-                }
-                const rawId = pt.patientId || pt.id || '';
+                const phoneKey = cleanPhone.length >= 7 ? cleanPhone.slice(-9) : '';
+                
+                const rawId = (pt.patientId || pt.id || '').trim();
                 const baseId = rawId.replace(/(_notif_.*|_test\d*|_cloud_test.*)$/, '');
+
+                const rawPain = pt.painArea || pt.painAreaTitle || pt.selectedPoint || '';
+                const painKey = isGenericPain(rawPain) ? '' : normalizeTitle(rawPain);
+
+                // نافذة زمنية مدتها 45 دقيقة لدمج خطوات الفحص الواحد المتتالية (مؤشرات -> تقرير -> خطة)
+                const rawDate = pt.createdAt || pt.timestamp || pt.lastActiveAt || null;
+                const timeMs = rawDate ? new Date(rawDate).getTime() : 0;
+                const timeWindow = timeMs > 0 ? Math.floor(timeMs / 2700000) : 0;
+
+                // إذا توفر الهاتف وموضع الألم والتوقيت:
+                // تدمج الخطوات لنفس الشخص لنفس المنطقة بنفس نافذة الـ 45 دقيقة فقط
+                if (phoneKey && painKey && timeWindow > 0) {
+                    return `enc_${phoneKey}_${painKey}_${timeWindow}`;
+                }
+                if (phoneKey && painKey) {
+                    return `enc_${phoneKey}_${painKey}`;
+                }
+                if (phoneKey && timeWindow > 0) {
+                    return `enc_${phoneKey}_${timeWindow}`;
+                }
+                if (phoneKey) {
+                    return `enc_${phoneKey}`;
+                }
                 if (baseId && baseId !== 'pat_notif') {
-                    return 'id_' + baseId;
+                    return `id_${baseId}`;
                 }
                 const cleanName = (pt.fullName || pt.name || '').trim();
                 if (cleanName && !/^(?:الاسم|الآسم|الإسم|مراجع كريم|مراجع جديد|اسمي|اسمها|اسمك|اسم)$/i.test(cleanName)) {
-                    return 'name_' + cleanName;
+                    return `name_${cleanName}_${painKey || 'gen'}_${timeWindow || 0}`;
                 }
                 return 'raw_' + (rawId || Math.random().toString(36));
             }
@@ -242,9 +261,15 @@ const AdminEngine = (function() {
                 groups.get(key).push(pt);
             }
 
-            // 4. دمج كل مجموعة إلى سجل مريض موحد وحيد وخالي من التكرار
+            // 4. دمج كل مجموعة إلى سجل استشارة موحد وخالي من التكرار مع إعطاء الأولوية للبيانات الأحدث والأكمل
             const unifiedPatients = [];
             for (const [key, records] of groups.entries()) {
+                // ترتيب السجلات في المجموعة من الأحدث للأقدم
+                records.sort((a, b) => {
+                    const tA = new Date(a.lastActiveAt || a.lastUpdated || a.createdAt || a.timestamp || 0).getTime();
+                    const tB = new Date(b.lastActiveAt || b.lastUpdated || b.createdAt || b.timestamp || 0).getTime();
+                    return tB - tA;
+                });
                 const nonNotif = records.filter(r => !r._fromNotif);
                 const listToMerge = nonNotif.length > 0 ? nonNotif : records;
                 const unified = { ...listToMerge[0] };
@@ -292,6 +317,15 @@ const AdminEngine = (function() {
                     if (rDiag && !isGenericDiag(rDiag) && (isGenericDiag(unified.chiefDiagnosis) || !unified.chiefDiagnosis)) {
                         unified.chiefDiagnosis = rDiag;
                         unified.diagnosisTitle = rDiag;
+                    }
+
+                    // التقييم السريري وخطة العلاج
+                    if (!unified.assessment && (r.assessment || r.latestAssessment)) {
+                        unified.assessment = r.assessment || r.latestAssessment;
+                        unified.latestAssessment = unified.assessment;
+                    }
+                    if (r.treatmentPlan && !unified.treatmentPlan) {
+                        unified.treatmentPlan = r.treatmentPlan;
                     }
 
                     // الجهاز: نفضل Desktop أو Tablet إن وُجد، ولا نفضل Mobile على Desktop إطلاقاً

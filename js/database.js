@@ -201,6 +201,15 @@ const SmartDB = (function() {
                 if (idx >= 0) allPts[idx] = { ...allPts[idx], ...compactPatient };
                 else allPts.unshift(compactPatient);
                 safeLocalStorageSet('smart_all_patients', JSON.stringify(allPts.slice(0, 100)));
+                safeLocalStorageSet('smart_last_notif_time', Date.now().toString());
+                safeLocalStorageSet('smart_last_cloud_sync_time', Date.now().toString());
+                try {
+                    if ('BroadcastChannel' in window) {
+                        const bc = new BroadcastChannel('smart_check_pro_global_sync_channel');
+                        bc.postMessage({ type: 'PATIENT_SAVED', patient: compactPatient, timestamp: Date.now() });
+                        setTimeout(() => { try { bc.close(); } catch(e) {} }, 1000);
+                    }
+                } catch(bcErr) {}
             } catch(allPtsErr) {}
             patient = mergedPatient;
         } catch(e) {}

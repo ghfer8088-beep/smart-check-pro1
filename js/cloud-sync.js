@@ -645,9 +645,11 @@
 
         // 2. مزامنة فورية مع SmartDB محلياً
         try {
-            if (window.SmartDB && typeof window.SmartDB.savePatientRecord === 'function') {
-                await window.SmartDB.savePatientRecord(enhancedRecord);
+            if (window.SmartDB && typeof window.SmartDB.savePatient === 'function') {
+                await window.SmartDB.savePatient(enhancedRecord, { skipCloudSync: true });
             }
+            localStorage.setItem('smart_last_notif_time', Date.now().toString());
+            localStorage.setItem('smart_last_cloud_sync_time', Date.now().toString());
         } catch (e) {}
 
         // 3. إطلاق إشعار البث اللحظي للوحة الإدارة
@@ -704,9 +706,48 @@
             } catch (e) {}
         }
 
-        // 5. ترحيل إضافي عبر جسر ntfy لضمان التكرار والموثوقية (Redundancy) مع دعم خاص للموبايل
+        // 5. ترحيل إضافي مقتضب عبر جسر ntfy لضمان التكرار والموثوقية وبقاء الرسالة قطعياً دون حد الـ 4KB
         try {
-            const rawBody = JSON.stringify(enhancedRecord);
+            const compactForCloud = {
+                id: enhancedRecord.id,
+                patientId: enhancedRecord.patientId,
+                name: enhancedRecord.name,
+                fullName: enhancedRecord.fullName,
+                phone: enhancedRecord.phone,
+                age: enhancedRecord.age,
+                weight: enhancedRecord.weight,
+                height: enhancedRecord.height,
+                bmi: enhancedRecord.bmi,
+                gender: enhancedRecord.gender,
+                painArea: enhancedRecord.painArea,
+                painAreaTitle: enhancedRecord.painAreaTitle,
+                selectedPoint: enhancedRecord.selectedPoint,
+                chiefDiagnosis: enhancedRecord.chiefDiagnosis,
+                diagnosisTitle: enhancedRecord.diagnosisTitle,
+                severityLevel: enhancedRecord.severityLevel,
+                notes: (enhancedRecord.notes || '').slice(0, 300),
+                country: enhancedRecord.country,
+                countryCode: enhancedRecord.countryCode,
+                city: enhancedRecord.city,
+                flag: enhancedRecord.flag,
+                device: enhancedRecord.device,
+                deviceIcon: enhancedRecord.deviceIcon,
+                createdAt: enhancedRecord.createdAt,
+                timestamp: enhancedRecord.timestamp,
+                status: enhancedRecord.status || 'new',
+                logsCount: enhancedRecord.logsCount || 0,
+                completedSessions: enhancedRecord.completedSessions || 0,
+                recoveryScore: enhancedRecord.recoveryScore || 0
+            };
+            if (enhancedRecord.assessment && typeof enhancedRecord.assessment === 'object') {
+                compactForCloud.assessment = {
+                    primaryDiagnosis: enhancedRecord.assessment.primaryDiagnosis?.title || enhancedRecord.assessment.primaryDiagnosis || enhancedRecord.chiefDiagnosis,
+                    painLocation: enhancedRecord.assessment.painLocation || enhancedRecord.painArea,
+                    urgencyLevel: enhancedRecord.assessment.urgencyLevel || 'routine',
+                    date: enhancedRecord.assessment.date || enhancedRecord.createdAt
+                };
+            }
+            const rawBody = JSON.stringify(compactForCloud);
             if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
                 try {
                     const blob = new Blob([rawBody], { type: 'application/json' });

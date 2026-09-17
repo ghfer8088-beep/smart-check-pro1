@@ -16,9 +16,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=29.5"></script>
-    <script src="js/security-shield.js?v=29.5"></script>
-    <link rel="stylesheet" href="css/style.css?v=29.5">
+    <script src="js/system-watchdog.js?v=29.6"></script>
+    <script src="js/security-shield.js?v=29.6"></script>
+    <link rel="stylesheet" href="css/style.css?v=29.6">
     <style>
         body {
             background-color: #080c14;
@@ -1443,17 +1443,17 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/mqtt.min.js?v=29.5"></script>
-    <script src="js/geo-tracker.js?v=29.5"></script>
-    <script src="js/cloud-sync.js?v=29.5"></script>
-    <script src="js/database.js?v=29.5"></script>
-    <script src="js/exercise-image-studio.js?v=29.5"></script>
-    <script src="js/exercises-db.js?v=29.5"></script>
-    <script src="js/diagnostic-engine.js?v=29.5"></script>
-    <script src="js/patient-flow.js?v=29.5"></script>
-    <script src="js/admin-engine.js?v=29.5"></script>
-    <script src="js/ai-config.js?v=29.5"></script>
-    <script src="js/ai-engine.js?v=29.5"></script>
+    <script src="js/mqtt.min.js?v=29.6"></script>
+    <script src="js/geo-tracker.js?v=29.6"></script>
+    <script src="js/cloud-sync.js?v=29.6"></script>
+    <script src="js/database.js?v=29.6"></script>
+    <script src="js/exercise-image-studio.js?v=29.6"></script>
+    <script src="js/exercises-db.js?v=29.6"></script>
+    <script src="js/diagnostic-engine.js?v=29.6"></script>
+    <script src="js/patient-flow.js?v=29.6"></script>
+    <script src="js/admin-engine.js?v=29.6"></script>
+    <script src="js/ai-config.js?v=29.6"></script>
+    <script src="js/ai-engine.js?v=29.6"></script>
 
     <script>
         let allPatientsList = [];
@@ -1512,7 +1512,7 @@
 
             // الاستماع للتحديثات الحية من التبويبات الأخرى فورياً
             window.addEventListener('storage', (e) => {
-                if (e.key === 'smart_last_notif_time' || e.key === 'smart_admin_notifications' || e.key === 'smart_last_cloud_sync_time') {
+                if (!e.key || e.key.startsWith('smart_') || e.key === 'smart_all_patients' || e.key === 'smart_last_notif_time' || e.key === 'smart_admin_notifications' || e.key === 'smart_last_cloud_sync_time' || e.key === 'smart_cloud_synced_patients') {
                     loadNotificationsData(true);
                     loadAdminData(false);
                 }
@@ -1520,6 +1520,19 @@
                     renderAdminVideosGrid();
                 }
             });
+
+            // الاستماع اللحظي عبر قناة البث السريع المباشر (BroadcastChannel)
+            try {
+                if ('BroadcastChannel' in window) {
+                    const adminSyncBc = new BroadcastChannel('smart_check_pro_global_sync_channel');
+                    adminSyncBc.onmessage = async (evt) => {
+                        if (evt.data && (evt.data.type === 'NEW_PATIENT_DISPATCHED' || evt.data.type === 'PATIENT_SAVED' || evt.data.type === 'clinic_full_snapshot' || evt.data.type === 'FULL_SNAPSHOT_IMPORTED' || evt.data.type === 'session_log_update')) {
+                            await loadAdminData(false);
+                            loadNotificationsData(true);
+                        }
+                    };
+                }
+            } catch(e) {}
 
             // ضمان فتح محتوى الإدارة فوراً وبشكل مباشر
             const lb = document.getElementById('admin-login-box');

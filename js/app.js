@@ -1670,8 +1670,13 @@ async function runDiagnosticAnalysis() {
 
         const painDisplayStr = hasExplicitPain ? `${explicitPain}/10` : 'مستند للأعراض السريرية';
 
-        // ترحيل وتوثيق بيانات المريض والتشخيص إلى قاعدة بيانات الإدارة فوراً بمعرف فريد لكل فحص
-        const targetPatientId = 'pat_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 6);
+        // ترحيل وتوثيق بيانات المريض والتشخيص إلى قاعدة بيانات الإدارة فوراً بمعرف الفحص
+        const targetPatientId = (clinicalDialogueState && clinicalDialogueState.patientId)
+            || (activePatient && activePatient.patientId)
+            || ('pat_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 6));
+        if (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState) {
+            clinicalDialogueState.patientId = targetPatientId;
+        }
 
         // إشعار طارئ للإدارة في حال وجود علامات حمراء تستوجب المتابعة
         if (redFlagsSelected && redFlagsSelected.length > 0) {
