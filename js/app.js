@@ -152,37 +152,43 @@ function playDailyMotivationAudio(dayNumber, patientName = '', onEndCallback = n
 window.playDailyMotivationAudio = playDailyMotivationAudio;
 window.getDailyMotivationScript = getDailyMotivationScript;
 
-// شبكة نقاط الألم التشريحية الافتراضية المحدثة والمعتمدة طبقاً للتشريح الدقيق
+// // شبكة نقاط الألم التشريحية الافتراضية المحدثة والمعتمدة طبقاً للمعايرة الدقيقة للمستخدم
 const DEFAULT_FRONT_POINTS = [
-    { id: "shoulder_right_f", region: "shoulder", title: "مفصل الكتف الأيمن", keywords: "كتف يمين, كفة مدورة, تجمد كتف, رفع ذراع", x: 35.7, y: 22.0 },
-    { id: "shoulder_left_f", region: "shoulder", title: "مفصل الكتف الأيسر", keywords: "كتف يسار, كفة مدورة, تجمد كتف", x: 63.8, y: 22.1 },
-    { id: "elbow_right_f", region: "elbow", title: "مفصل الكوع الأيمن", keywords: "كوع يمين, مرفق تنس, ساعد", x: 34.8, y: 39.4 },
-    { id: "elbow_left_f", region: "elbow", title: "مفصل الكوع الأيسر", keywords: "كوع يسار, مرفق تنس, ساعد", x: 65.5, y: 39.5 },
-    { id: "wrist_right_f", region: "wrist", title: "الرسغ واليد اليمنى", keywords: "رسغ يمين, يد يمين, نفق رسغي, تنميل أصابع, إبهام", x: 30.9, y: 52.3 },
-    { id: "wrist_left_f", region: "wrist", title: "الرسغ واليد اليسرى", keywords: "رسغ يسار, يد يسار, نفق رسغي, تنميل أصابع", x: 69.5, y: 52.7 },
-    { id: "hip_right_f", region: "hip", title: "مفصل الورك الأيمن", keywords: "ورك يمين, مفصل الفخذ", x: 40.3, y: 53.6 },
-    { id: "hip_left_f", region: "hip", title: "مفصل الورك الأيسر", keywords: "ورك يسار, مفصل الفخذ", x: 60.1, y: 53.8 },
-    { id: "knee_right_f", region: "knee", title: "مفصل الركبة اليمنى والصابونة", keywords: "ركبة يمين, صابونة, احتكاك ركبة, طقطقة ركبة", x: 44.5, y: 74.3 },
-    { id: "knee_left_f", region: "knee", title: "مفصل الركبة اليسرى والصابونة", keywords: "ركبة يسار, صابونة, احتكاك ركبة", x: 56.3, y: 74.3 },
-    { id: "ankle_right_f", region: "ankle", title: "الكاحل ومفصل القدم الأيمن", keywords: "كاحل يمين, قدم يمين, مسمار كعب, لفافة أخمصية", x: 44.3, y: 93.8 },
-    { id: "ankle_left_f", region: "ankle", title: "الكاحل ومفصل القدم الأيسر", keywords: "كاحل يسار, قدم يسار, مسمار كعب", x: 56.9, y: 94.2 }
+    { id: "shoulder_right_f", region: "shoulder", title: "مفصل الكتف الأيمن", keywords: "كتف يمين, كفة مدورة, تجمد كتف, رفع ذراع", x: 28, y: 23 },
+    { id: "shoulder_left_f", region: "shoulder", title: "مفصل الكتف الأيسر", keywords: "كتف يسار, كفة مدورة, تجمد كتف", x: 72, y: 23 },
+    { id: "elbow_right_f", region: "elbow", title: "مفصل الكوع الأيمن", keywords: "كوع يمين, مرفق تنس, ساعد", x: 26, y: 40 },
+    { id: "elbow_left_f", region: "elbow", title: "مفصل الكوع الأيسر", keywords: "كوع يسار, مرفق تنس, ساعد", x: 75, y: 40 },
+    { id: "wrist_right_f", region: "wrist", title: "الرسغ واليد اليمنى", keywords: "رسغ يمين, يد يمين, نفق رسغي, تنميل أصابع, إبهام", x: 20, y: 53 },
+    { id: "wrist_left_f", region: "wrist", title: "الرسغ واليد اليسرى", keywords: "رسغ يسار, يد يسار, نفق رسغي, تنميل أصابع", x: 82, y: 52 },
+    { id: "hip_right_f", region: "hip", title: "مفصل الورك الأيمن", keywords: "ورك يمين, مفصل الفخذ", x: 34, y: 54 },
+    { id: "hip_left_f", region: "hip", title: "مفصل الورك الأيسر", keywords: "ورك يسار, مفصل الفخذ", x: 66, y: 54 },
+    { id: "knee_right_f", region: "knee", title: "مفصل الركبة اليمنى والصابونة", keywords: "ركبة يمين, صابونة, احتكاك ركبة, طقطقة ركبة", x: 41, y: 74 },
+    { id: "knee_left_f", region: "knee", title: "مفصل الركبة اليسرى والصابونة", keywords: "ركبة يسار, صابونة, احتكاك ركبة", x: 61, y: 74 },
+    { id: "ankle_right_f", region: "ankle", title: "الكاحل ومفصل القدم الأيمن", keywords: "كاحل يمين, قدم يمين, مسمار كعب, لفافة أخمصية", x: 40, y: 92 },
+    { id: "ankle_left_f", region: "ankle", title: "الكاحل ومفصل القدم الأيسر", keywords: "كاحل يسار, قدم يسار, مسمار كعب", x: 61, y: 93 }
 ];
 
 const DEFAULT_BACK_POINTS = [
-    { id: "cervical_back", region: "cervical", title: "الفقرات العنقية (الرقبة الخلفية)", keywords: "ديسك رقبة, تشنج رقبة, فقرات عنقية, تصلب رقبة", x: 50.0, y: 15.9 },
-    { id: "trapezius_right", region: "shoulder", title: "أعلى الكتف الأيمن وعضلة شبه المنحرفة", keywords: "كتف يمين, أعلى الكتف, مفصل الكتف, كفة مدورة, أبهر يمين, عقدة عضلية, شبه منحرفة", x: 42.9, y: 17.9 },
-    { id: "trapezius_left", region: "shoulder", title: "أعلى الكتف الأيسر وعضلة شبه المنحرفة", keywords: "كتف يسار, أعلى الكتف, مفصل الكتف, كفة مدورة, أبهر يسار, عقدة عضلية, شبه منحرفة", x: 57.3, y: 18.4 },
-    { id: "scapula_right", region: "shoulder", title: "لوح الكتف الأيمن", keywords: "لوح كتف يمين, خلف الظهر, كفة مدورة", x: 43.5, y: 24.0 },
-    { id: "scapula_left", region: "shoulder", title: "لوح الكتف الأيسر", keywords: "لوح كتف يسار, خلف الظهر, كفة مدورة", x: 57.9, y: 24.8 },
-    { id: "thoracic_spine", region: "thoracic", title: "الفقرات الصدرية وأعلى الظهر", keywords: "أعلى الظهر, فقرات صدرية, بين الكتفين", x: 50.0, y: 28.0 },
+    { id: "cervical_back", region: "cervical", title: "الفقرات العنقية (الرقبة الخلفية)", keywords: "ديسك رقبة, تشنج رقبة, فقرات عنقية, تصلب رقبة", x: 50, y: 18 },
+    { id: "trapezius_right", region: "shoulder", title: "عضلة شبه المنحرفة وأعلى الكتف الأيمن", keywords: "كتف يمين, أعلى الكتف, مفصل الكتف, كفة مدورة, أبهر يمين, عقدة عضلية, شبه منحرفة", x: 39, y: 20 },
+    { id: "trapezius_left", region: "shoulder", title: "عضلة شبه المنحرفة وأعلى الكتف الأيسر", keywords: "كتف يسار, أعلى الكتف, مفصل الكتف, كفة مدورة, أبهر يسار, عقدة عضلية, شبه منحرفة", x: 62, y: 20 },
+    { id: "scapula_right", region: "shoulder", title: "لوح الكتف الأيمن", keywords: "لوح كتف يمين, خلف الظهر, كفة مدورة", x: 39, y: 30 },
+    { id: "scapula_left", region: "shoulder", title: "لوح الكتف الأيسر", keywords: "لوح كتف يسار, خلف الظهر, كفة مدورة", x: 62, y: 30 },
+    { id: "thoracic_spine", region: "thoracic", title: "الفقرات الصدرية وأعلى الظهر", keywords: "أعلى الظهر, فقرات صدرية, بين الكتفين", x: 50, y: 32 },
     { id: "lumbar_spine", region: "lumbar", title: "الفقرات القطنية وأسفل الظهر", keywords: "ديسك أسفل الظهر, فقرات قطنية, لومبار, انزلاق غضروفي, ديسك", x: 50.1, y: 43.7 },
-    { id: "sacroiliac_right", region: "lumbar", title: "المفصل العجزي الحوضي الأيمن", keywords: "مفصل عجزي يمين, عجز, حوض خلفي", x: 45.0, y: 50.0 },
-    { id: "sacroiliac_left", region: "lumbar", title: "المفصل العجزي الحوضي الأيسر", keywords: "مفصل عجزي يسار, عجز, حوض خلفي", x: 55.0, y: 50.0 },
-    { id: "gluteal_right", region: "lumbar", title: "عضلات الأرداف ومسار عرق النسا الأيمن", keywords: "عرق النسا يمين, كمثرية, تنميل فخذ يمين, سياتيكا", x: 43.0, y: 60.5 },
-    { id: "gluteal_left", region: "lumbar", title: "عضلات الأرداف ومسار عرق النسا الأيسر", keywords: "عرق النسا يسار, كمثرية, تنميل فخذ يسار, سياتيكا", x: 57.0, y: 60.5 },
-    { id: "achilles_calf", region: "ankle", title: "عضلة السمانة ووتر أكيليس اليمنى", keywords: "سمانة يمين, وتر أكيليس يمين, بطة الرجل يمين, كعب يمين", x: 53.2, y: 83.4 },
-    { id: "point_37515", region: "ankle", title: "عضلة السمانة ووتر أكيليس اليسرى", keywords: "سمانة يسار, وتر أكيليس يسار, بطة الرجل يسار, كعب يسار", x: 46.1, y: 83.4 }
+    { id: "sacroiliac_right", region: "lumbar", title: "المفصل العجزي الحوضي الأيمن", keywords: "مفصل عجزي يمين, عجز, حوض خلفي", x: 45, y: 52 },
+    { id: "sacroiliac_left", region: "lumbar", title: "المفصل العجزي الحوضي الأيسر", keywords: "مفصل عجزي يسار, عجز, حوض خلفي", x: 58, y: 52 },
+    { id: "gluteal_right", region: "lumbar", title: "عضلات الأرداف ومسار عرق النسا الأيمن", keywords: "عرق النسا يمين, كمثرية, تنميل فخذ يمين, سياتيكا", x: 40, y: 48 },
+    { id: "gluteal_left", region: "lumbar", title: "عضلات الأرداف ومسار عرق النسا الأيسر", keywords: "عرق النسا يسار, كمثرية, تنميل فخذ يسار, سياتيكا", x: 64, y: 47 },
+    { id: "achilles_calf", region: "ankle", title: "عضلة السمانة ووتر أكيليس اليمنى", keywords: "سمانة يمين, وتر أكيليس يمين, بطة الرجل يمين, كعب يمين", x: 61, y: 84 },
+    { id: "point_37515", region: "ankle", title: "عضلة السمانة ووتر أكيليس اليسرى", keywords: "سمانة يسار, وتر أكيليس يسار, بطة الرجل يسار, كعب يسار", x: 40, y: 83 }
 ];
+
+// تحديث التخزين المحلي فورياً بهذه الإحداثيات المعتمدة
+try {
+    localStorage.setItem('custom_front_points', JSON.stringify(DEFAULT_FRONT_POINTS));
+    localStorage.setItem('custom_back_points', JSON.stringify(DEFAULT_BACK_POINTS));
+} catch(e) {}
 
 function getFrontPoints() {
     try {
@@ -205,6 +211,21 @@ function getBackPoints() {
     } catch (e) {}
     return DEFAULT_BACK_POINTS;
 }
+
+// الاستماع الفوري لتعديلات أداة المعايرة عند الحفظ لتحديث المجسم مباشرة دون إعادة تحميل الصفحة
+window.addEventListener('storage', (e) => {
+    if (e.key === 'custom_front_points' || e.key === 'custom_back_points') {
+        const frontCont = document.getElementById('front-anatomy-container');
+        const isFront = frontCont && frontCont.style.display !== 'none';
+        if (typeof renderAnatomyPoints === 'function') {
+            if (isFront) {
+                renderAnatomyPoints('front-anatomy-container', getFrontPoints());
+            } else {
+                renderAnatomyPoints('back-anatomy-container', getBackPoints());
+            }
+        }
+    }
+});
 
 // استخراج واسترجاع مسمى منطقة الألم الحقيقية بدقة عالية
 function resolvePainAreaTitle(patient = null, assessment = null, point = null) {
