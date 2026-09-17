@@ -3150,8 +3150,9 @@ function updatePortalHeaderButton() {
     if (auth && auth.isRegistered) {
         const fullName = auth.name || 'المراجع الكريم';
         const firstName = fullName.trim().split(' ')[0] || 'المراجع';
-        label.textContent = `أهلاً، ${firstName}`;
+        label.textContent = `ملف ${firstName}`;
         if (icon) icon.textContent = '👤';
+        btn.title = `الملف الطبي: ${fullName}`;
         btn.style.borderColor = '#10b981';
         btn.style.color = '#6ee7b7';
         btn.style.background = 'rgba(16, 185, 129, 0.15)';
@@ -9905,12 +9906,17 @@ async function sendChatMessage() {
         }
         clinicalDialogueState.step = 'completed';
 
+        const auth = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+        const isRegisteredPatient = !!(auth && (auth.isRegistered || auth.phone));
+
         // تعطيل حقل الإدخال وزر الإرسال لمنع التشتيت وتوجيه المراجع للتقرير
         const chatInput = document.getElementById('ai-chat-input');
         const sendBtn = document.getElementById('ai-chat-send-btn');
         if (chatInput) {
             chatInput.disabled = true;
-            chatInput.placeholder = '✅ اكتمل الفحص السريري، اضغط على زر مشاهدة التقرير أعلاه...';
+            chatInput.placeholder = isRegisteredPatient
+                ? '⏳ جاري تجهيز ملفك الطبي المعتمد...'
+                : '✅ اكتمل الفحص السريري، اضغط على زر مشاهدة التقرير أعلاه...';
         }
         if (sendBtn) {
             sendBtn.disabled = true;
@@ -9932,19 +9938,24 @@ async function sendChatMessage() {
         };
         window.doDirectTransitionToReport = executeTransition;
 
-        // عرض زر "اضغط هنا لمشاهدة التقرير" بشكل تفاعلي وبارز داخل الشات
+        // عرض زر الانتقال أو انتظار تجهيز الملف بشكل تفاعلي وبارز داخل الشات
         const messagesBox = document.getElementById('ai-chat-messages-box');
         if (messagesBox && !document.getElementById('chat-direct-report-button-box')) {
             const btnCard = document.createElement('div');
             btnCard.id = 'chat-direct-report-button-box';
             btnCard.style.cssText = 'margin: 16px auto 12px auto; text-align: center; width: 100%; max-width: 360px; animation: pulse 2s infinite;';
+            const btnText = isRegisteredPatient ? '⏳ إنتظر لتجهيز ملفك' : '📄 اضغط هنا لمشاهدة التقرير';
+            const btnSubText = isRegisteredPatient
+                ? '✅ اكتمل التقييم السريري بنجاح، جاري تحويلك تلقائياً لملفك الطبي'
+                : '✅ اكتمل التقييم السريري بنجاح، ملفك الطبي جاهز للعرض';
+
             btnCard.innerHTML = `
                 <button type="button" onclick="window.doDirectTransitionToReport && window.doDirectTransitionToReport()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: 2px solid #34d399; padding: 14px 24px; border-radius: 30px; font-size: 1.12rem; font-weight: bold; cursor: pointer; box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45); display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                    <span>📄 اضغط هنا لمشاهدة التقرير</span>
+                    <span>${btnText}</span>
                     <span style="font-size: 1.3rem;">⬅️</span>
                 </button>
                 <div style="font-size: 0.82rem; color: #a7f3d0; margin-top: 8px; font-weight: 500;">
-                    ✅ اكتمل التقييم السريري بنجاح، ملفك الطبي جاهز للعرض
+                    ${btnSubText}
                 </div>
             `;
             messagesBox.appendChild(btnCard);
