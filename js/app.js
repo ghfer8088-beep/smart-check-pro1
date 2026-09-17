@@ -3453,11 +3453,22 @@ async function handleRegisterFromReport() {
 
     const patientName = clinicalDialogueState?.patientFullName || clinicalDialogueState?.patientName || activePatient?.fullName || activePatient?.name || 'مراجع كريم';
     const curAssessment = window.currentAssessmentData || {};
+    const patientGender = clinicalDialogueState?.patientVitals?.gender || window.activePatient?.gender || (typeof detectArabicGender === 'function' ? (detectArabicGender(patientName) === 'female' ? 'أنثى' : 'ذكر') : 'ذكر');
+    const patientAge = clinicalDialogueState?.patientVitals?.age || window.activePatient?.age || (document.getElementById('patient-age') ? parseInt(document.getElementById('patient-age').value, 10) : null);
+    const patientWeight = clinicalDialogueState?.patientVitals?.weight || window.activePatient?.weight || (document.getElementById('patient-weight') ? parseFloat(document.getElementById('patient-weight').value) : null);
+    const patientHeight = clinicalDialogueState?.patientVitals?.height || window.activePatient?.height || (document.getElementById('patient-height') ? parseFloat(document.getElementById('patient-height').value) : null);
+    const patientBmi = clinicalDialogueState?.patientVitals?.bmiInfo || window.activePatient?.bmi || curAssessment.bmiInfo;
+
     const patientData = {
         ...(window.activePatient || {}),
         phone: phone,
         name: patientName,
         fullName: patientName,
+        gender: patientGender,
+        age: patientAge,
+        weight: patientWeight,
+        height: patientHeight,
+        bmi: patientBmi,
         assessment: curAssessment,
         latestAssessment: curAssessment
     };
@@ -8495,6 +8506,115 @@ function playClinicalAudioFallback(stationKey, onDone) {
     if (onDone) onDone();
 }
 
+// دالة مساعدة لحساب مؤشر كتلة الجسم وتأثيره البيوميكانيكي
+function calculateBmiInfo(weightVal, heightVal) {
+    if (!weightVal || !heightVal || heightVal <= 0) return null;
+    const hM = heightVal / 100;
+    const bmiVal = parseFloat((weightVal / (hM * hM)).toFixed(1));
+    const minHealthyW = parseFloat((18.5 * hM * hM).toFixed(1));
+    const maxHealthyW = parseFloat((24.9 * hM * hM).toFixed(1));
+    const idealW = parseFloat((22.0 * hM * hM).toFixed(1));
+
+    let bmiStatus = "وزن طبيعي متوازن";
+    let bmiColor = "#10b981";
+    let deltaText = `✅ وزنك ضمن النطاق الصحي المثالي (${minHealthyW} - ${maxHealthyW} كجم)`;
+    let impact = "وزنك متناسق ولا يشكل حمولة ضغط إضافية على الغضاريف والفقرات.";
+
+    if (bmiVal < 18.5) {
+        const deltaKg = parseFloat((minHealthyW - weightVal).toFixed(1));
+        bmiStatus = "نحافة / نقص في الكتلة العضلية";
+        bmiColor = "#38bdf8";
+        deltaText = `⚠️ نقص في الوزن بمقدار -${deltaKg} كجم عن الحد الأدنى للوزن الصحي (${minHealthyW} كجم)`;
+        impact = "نقص الكتلة العضلية يقلل من الثبات الميكانيكي للمفاصل ويجعل الفقرات عرضة للإجهاد السريع.";
+    } else if (bmiVal >= 25 && bmiVal < 30) {
+        const deltaKg = parseFloat((weightVal - maxHealthyW).toFixed(1));
+        const excessVsIdeal = parseFloat((weightVal - idealW).toFixed(1));
+        const addedLoad = parseFloat((deltaKg * 4).toFixed(1));
+        bmiStatus = "زيادة وزن (Overweight)";
+        bmiColor = "#f59e0b";
+        deltaText = `⚠️ وزن زائد بمقدار +${deltaKg} كجم عن الحد الصحي (+${excessVsIdeal} كجم عن الوزن المثالي)`;
+        impact = `يضيف حوالي +${addedLoad} كجم حمولة ضغط إضافية على الركبتين وأسفل الظهر أثناء الحركة.`;
+    } else if (bmiVal >= 30) {
+        const deltaKg = parseFloat((weightVal - maxHealthyW).toFixed(1));
+        const excessVsIdeal = parseFloat((weightVal - idealW).toFixed(1));
+        const addedLoad = parseFloat((deltaKg * 4).toFixed(1));
+        bmiStatus = "سمنة مفرطة / حمولة ميكانيكية حرجة";
+        bmiColor = "#ef4444";
+        deltaText = `🚨 وزن زائد حرج بمقدار +${deltaKg} كجم (+${excessVsIdeal} كجم عن الوزن المثالي)`;
+        impact = `كل 1 كجم زيادة يضاعف الحمل 4 أضعاف، مما يشكل حمولة ضغط فائقة تصل إلى +${addedLoad} كجم على مفاصلك وفقراتك.`;
+    }
+
+    return {
+        value: bmiVal,
+        status: bmiStatus,
+        color: bmiColor,
+        minHealthyW,
+        maxHealthyW,
+        idealW,
+        deltaText,
+        impact
+    };
+}
+
+// دالة مساعدة لتحديد جنس المراجع بأعلى دقة
+function resolvePatientGender(name, explicitGender) {
+    if (explicitGender) {
+        const g = String(explicitGender).trim().toLowerCase();
+        if (g === 'female' || g === 'أنثى' || g === 'انثى') return 'أنثى';
+        if (g === 'male' || g === 'ذكر') return 'ذكر';
+    }
+    if (typeof detectArabicGender === 'function' && name) {
+        return detectArabicGender(name) === 'female' ? 'أنثى' : 'ذكر';
+    }
+    return 'ذكر';
+}
+
+// بادج اعتماد وتوثيق بيانات المراجع المسجل بدون إظهار نموذج مدخلات
+function renderVerifiedPatientVitalsBadge(box, vitals, name) {
+    if (!box) return;
+    const existing = document.getElementById('royal-chat-vitals-card');
+    if (existing) existing.remove();
+
+    const badgeEl = document.createElement('div');
+    badgeEl.id = 'royal-chat-vitals-card';
+    badgeEl.style.cssText = `
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.95) 100%);
+        border: 1.5px solid #10b981;
+        border-radius: 14px;
+        padding: 12px 16px;
+        margin: 10px 0 14px 0;
+        box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);
+        animation: fadeIn 0.3s ease;
+    `;
+
+    const genderText = vitals?.gender === 'أنثى' ? 'أنثى 👩' : 'ذكر 👨';
+    const bmiVal = vitals?.bmiInfo?.value;
+    const bmiColor = vitals?.bmiInfo?.color || '#10b981';
+    const bmiStatus = vitals?.bmiInfo?.status || 'متناسق';
+
+    badgeEl.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+            <div style="color: #6ee7b7; font-weight: bold; font-size: 0.92em; display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.25em;">✅</span>
+                <span>تم اعتماد وتوثيق ملفك الطبي ومؤشراتك الحيوية تلقائياً (ملف مراجع مسجل 📁)</span>
+            </div>
+            <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.75em; padding: 3px 10px; border-radius: 12px; font-weight: bold;">
+                ملف معتمد 🔒
+            </span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; color: #cbd5e1; font-size: 0.85em; background: rgba(0,0,0,0.25); padding: 8px 12px; border-radius: 8px;">
+            <span>👤 <strong>${name}</strong> (${genderText})</span>
+            ${vitals?.age ? `<span>🎂 العمر: <strong>${vitals.age} سنة</strong></span>` : ''}
+            ${vitals?.weight ? `<span>⚖️ الوزن: <strong>${vitals.weight} كغم</strong></span>` : ''}
+            ${vitals?.height ? `<span>📏 الطول: <strong>${vitals.height} سم</strong></span>` : ''}
+            ${bmiVal ? `<span>📊 كتلة الجسم: <strong style="color: ${bmiColor};">${bmiVal} (${bmiStatus})</strong></span>` : ''}
+        </div>
+    `;
+
+    box.appendChild(badgeEl);
+    box.scrollTop = box.scrollHeight;
+}
+
 // بدء جلسة الطبيب الافتراضي
 async function initAiClinicalChat() {
     if (!currentSelectedPoint) return;
@@ -8526,19 +8646,103 @@ async function initAiClinicalChat() {
     }
 
     const auth = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
-    const knownName = auth?.name || (activePatient?.name && activePatient.name !== 'المراجع الكريم' ? activePatient.name : '');
-    const knownPhone = auth?.originalPhone || auth?.phone || activePatient?.phone || '';
+    let existingPt = null;
+    if (auth?.patientId && typeof SmartDB !== 'undefined' && typeof SmartDB.getPatient === 'function') {
+        try { existingPt = await SmartDB.getPatient(auth.patientId); } catch(e) {}
+    }
+    if (!existingPt && activePatient?.patientId && typeof SmartDB !== 'undefined' && typeof SmartDB.getPatient === 'function') {
+        try { existingPt = await SmartDB.getPatient(activePatient.patientId); } catch(e) {}
+    }
+    const cleanAuthPhone = (auth?.phone || auth?.originalPhone || activePatient?.phone || '').replace(/\D/g, '');
+    if (!existingPt && cleanAuthPhone && typeof SmartDB !== 'undefined' && typeof SmartDB.getAllPatients === 'function') {
+        try {
+            const allPts = await SmartDB.getAllPatients();
+            existingPt = allPts.find(p => p.phone && String(p.phone).replace(/\D/g, '') === cleanAuthPhone);
+        } catch(e) {}
+    }
 
-    clinicalDialogueState = {
-        isStarting: true,
-        hasStartedWelcome: true,
-        step: 'vitals',
-        history: [],
-        patientName: knownName,
-        patientPhone: knownPhone,
-        patientVitals: {},
-        collectedSymptoms: []
-    };
+    const knownName = auth?.name || existingPt?.fullName || existingPt?.name || (activePatient?.name && activePatient.name !== 'المراجع الكريم' ? activePatient.name : '');
+    const knownPhone = auth?.originalPhone || auth?.phone || existingPt?.phone || activePatient?.phone || '';
+    
+    // كشف دقيق للجنس مع اعتماد اسم المراجع والملف المسجل
+    const explicitGender = auth?.gender || existingPt?.gender || activePatient?.gender || (document.querySelector('input[name="patient_gender"]:checked')?.value);
+    const knownGender = resolvePatientGender(knownName, explicitGender);
+
+    const knownAge = parseInt(auth?.age || existingPt?.age || activePatient?.age || document.getElementById('patient-age')?.value, 10) || null;
+    const knownWeight = parseFloat(auth?.weight || existingPt?.weight || activePatient?.weight || document.getElementById('patient-weight')?.value) || null;
+    const knownHeight = parseFloat(auth?.height || existingPt?.height || activePatient?.height || document.getElementById('patient-height')?.value) || null;
+
+    // حساب BMI المسبق إن توفر الوزن والطول
+    let bmiInfo = null;
+    if (knownWeight && knownHeight) {
+        bmiInfo = calculateBmiInfo(knownWeight, knownHeight);
+    } else if (auth?.bmi || existingPt?.bmi) {
+        bmiInfo = auth?.bmi || existingPt?.bmi;
+    }
+
+    // هل المراجع مسجل أو يملك ملفاً طبياً سابقاً معتمداً؟
+    const isRegisteredPatient = Boolean(
+        auth?.isRegistered || 
+        auth?.patientId || 
+        existingPt?.isRegistered || 
+        (auth && knownName && knownName !== 'المراجع الكريم') || 
+        (knownName && knownName !== 'المراجع الكريم' && (knownPhone || knownAge || existingPt))
+    );
+
+    if (isRegisteredPatient) {
+        clinicalDialogueState = {
+            isStarting: true,
+            hasStartedWelcome: true,
+            step: 'clinical_questions',
+            history: [],
+            patientName: knownName,
+            patientFullName: knownName,
+            patientFirstName: knownName.split(' ')[0],
+            patientPhone: knownPhone,
+            patientVitals: {
+                age: knownAge || 35,
+                weight: knownWeight || 65,
+                height: knownHeight || 165,
+                gender: knownGender,
+                bmiInfo: bmiInfo
+            },
+            collectedSymptoms: []
+        };
+
+        // مزامنة فورية مع الحقول العامة
+        const domName = document.getElementById('patient-name');
+        if (domName && knownName) domName.value = knownName;
+        const domSubName = document.getElementById('sub-name');
+        if (domSubName && knownName) domSubName.value = knownName;
+        const domAge = document.getElementById('patient-age');
+        if (domAge && knownAge) domAge.value = knownAge;
+        const domWeight = document.getElementById('patient-weight');
+        if (domWeight && knownWeight) domWeight.value = knownWeight;
+        const domHeight = document.getElementById('patient-height');
+        if (domHeight && knownHeight) domHeight.value = knownHeight;
+        const domGenderRadios = document.querySelectorAll('input[name="patient_gender"]');
+        domGenderRadios.forEach(r => { if (r.value === knownGender) r.checked = true; });
+
+        if (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) {
+            currentAssessmentData.patientName = knownName;
+            currentAssessmentData.patientPhone = knownPhone;
+            currentAssessmentData.patientVitals = clinicalDialogueState.patientVitals;
+            if (bmiInfo) currentAssessmentData.bmiInfo = bmiInfo;
+        }
+    } else {
+        clinicalDialogueState = {
+            isStarting: true,
+            hasStartedWelcome: true,
+            step: 'vitals',
+            history: [],
+            patientName: knownName,
+            patientFullName: knownName,
+            patientFirstName: knownName ? knownName.split(' ')[0] : '',
+            patientPhone: knownPhone,
+            patientVitals: {},
+            collectedSymptoms: []
+        };
+    }
 
     // 1. عرض شاشة "جاري الاتصال بالطبيب الافتراضي" البصرية الفخمة والمميزة
     messagesBox.innerHTML = `
@@ -8599,7 +8803,13 @@ async function initAiClinicalChat() {
             </div>
         `;
         appendChatMessage('bot', instantWelcomeMsg);
-        renderRoyalChatVitalsCard(messagesBox);
+
+        // إذا كان المراجع مسجلاً أو مؤشراته معروفة، يتم اعتمادها فوراً وإظهار بادج التوثيق
+        if (isRegisteredPatient) {
+            renderVerifiedPatientVitalsBadge(messagesBox, clinicalDialogueState.patientVitals, knownName);
+        } else {
+            renderRoyalChatVitalsCard(messagesBox);
+        }
         renderChatQuickReplies([]);
 
         // تشغيل التسجيل البشري الاستوديو الفوري للترحيب (د. سارة / د. جمال)
@@ -8617,7 +8827,7 @@ async function initAiClinicalChat() {
 }
 
 // =========================================================================
-// بطاقة المؤشرات الحيوية الملكية التفاعلية داخل الشات السريري
+// بطاقة المؤشرات الحيوية الملكية التفاعلية داخل الشات السريري (للزوار الجدد)
 // =========================================================================
 function renderRoyalChatVitalsCard(box) {
     if (!box) return;
@@ -8628,7 +8838,9 @@ function renderRoyalChatVitalsCard(box) {
     const defaultAge = clinicalDialogueState?.patientVitals?.age || document.getElementById('patient-age')?.value || '';
     const defaultWeight = clinicalDialogueState?.patientVitals?.weight || document.getElementById('patient-weight')?.value || '';
     const defaultHeight = clinicalDialogueState?.patientVitals?.height || document.getElementById('patient-height')?.value || '';
-    const defaultGender = clinicalDialogueState?.patientVitals?.gender || 'ذكر';
+    
+    // تصحيح الجنس التلقائي بناءً على الاسم المكتوب أو المخزن بدلاً من تعيين 'ذكر' إجبارياً
+    const defaultGender = clinicalDialogueState?.patientVitals?.gender || resolvePatientGender(defaultName);
 
     window._chatVitalsSelectedGender = defaultGender;
 
@@ -8705,6 +8917,19 @@ function renderRoyalChatVitalsCard(box) {
 
     box.appendChild(cardEl);
     box.scrollTop = box.scrollHeight;
+
+    // استماع فوري لتغيير الاسم لتعديل الجنس تلقائياً
+    setTimeout(() => {
+        const nameInput = document.getElementById('chat-vitals-name');
+        if (nameInput) {
+            nameInput.addEventListener('input', () => {
+                const val = nameInput.value.trim();
+                if (val.length >= 2 && typeof resolvePatientGender === 'function') {
+                    window.setChatVitalsGender(resolvePatientGender(val));
+                }
+            });
+        }
+    }, 60);
 }
 
 window.setChatVitalsGender = function(g) {
@@ -8770,51 +8995,7 @@ window.submitChatRoyalVitals = function() {
     }
 
     // حساب BMI
-    const hM = heightVal / 100;
-    const bmiVal = parseFloat((weightVal / (hM * hM)).toFixed(1));
-    const minHealthyW = parseFloat((18.5 * hM * hM).toFixed(1));
-    const maxHealthyW = parseFloat((24.9 * hM * hM).toFixed(1));
-    const idealW = parseFloat((22.0 * hM * hM).toFixed(1));
-
-    let bmiStatus = "وزن طبيعي متوازن";
-    let bmiColor = "#10b981";
-    let deltaText = `✅ وزنك ضمن النطاق الصحي المثالي (${minHealthyW} - ${maxHealthyW} كجم)`;
-    let impact = "وزنك متناسق ولا يشكل حمولة ضغط إضافية على الغضاريف والفقرات.";
-
-    if (bmiVal < 18.5) {
-        const deltaKg = parseFloat((minHealthyW - weightVal).toFixed(1));
-        bmiStatus = "نحافة / نقص في الكتلة العضلية";
-        bmiColor = "#38bdf8";
-        deltaText = `⚠️ نقص في الوزن بمقدار -${deltaKg} كجم عن الحد الأدنى للوزن الصحي (${minHealthyW} كجم)`;
-        impact = "نقص الكتلة العضلية يقلل من الثبات الميكانيكي للمفاصل ويجعل الفقرات عرضة للإجهاد السريع.";
-    } else if (bmiVal >= 25 && bmiVal < 30) {
-        const deltaKg = parseFloat((weightVal - maxHealthyW).toFixed(1));
-        const excessVsIdeal = parseFloat((weightVal - idealW).toFixed(1));
-        const addedLoad = parseFloat((deltaKg * 4).toFixed(1));
-        bmiStatus = "زيادة وزن (Overweight)";
-        bmiColor = "#f59e0b";
-        deltaText = `⚠️ وزن زائد بمقدار +${deltaKg} كجم عن الحد الصحي (+${excessVsIdeal} كجم عن الوزن المثالي)`;
-        impact = `يضيف حوالي +${addedLoad} كجم حمولة ضغط إضافية على الركبتين وأسفل الظهر أثناء الحركة.`;
-    } else if (bmiVal >= 30) {
-        const deltaKg = parseFloat((weightVal - maxHealthyW).toFixed(1));
-        const excessVsIdeal = parseFloat((weightVal - idealW).toFixed(1));
-        const addedLoad = parseFloat((deltaKg * 4).toFixed(1));
-        bmiStatus = "سمنة مفرطة / حمولة ميكانيكية حرجة";
-        bmiColor = "#ef4444";
-        deltaText = `🚨 وزن زائد حرج بمقدار +${deltaKg} كجم (+${excessVsIdeal} كجم عن الوزن المثالي)`;
-        impact = `كل 1 كجم زيادة يضاعف الحمل 4 أضعاف، مما يشكل حمولة ضغط فائقة تصل إلى +${addedLoad} كجم على مفاصلك وفقراتك.`;
-    }
-
-    const calculatedBmiInfo = {
-        value: bmiVal,
-        status: bmiStatus,
-        color: bmiColor,
-        minHealthyW,
-        maxHealthyW,
-        idealW,
-        deltaText,
-        impact
-    };
+    const calculatedBmiInfo = calculateBmiInfo(weightVal, heightVal);
 
     // حفظ في الحالة السريرية بالكامل دون بتر الاسم
     clinicalDialogueState.patientName = nameVal;

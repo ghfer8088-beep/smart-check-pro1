@@ -1014,6 +1014,11 @@ const SmartDB = (function() {
                     originalPhone: phone,
                     name: merged.fullName || merged.name || 'مراجع كريم',
                     patientId: patientId,
+                    gender: merged.gender,
+                    age: merged.age,
+                    weight: merged.weight,
+                    height: merged.height,
+                    bmi: merged.bmi,
                     accountPin: cleanPin,
                     registeredAt: merged.registeredAt,
                     lastLoginAt: nowIso
@@ -1036,6 +1041,11 @@ const SmartDB = (function() {
                 originalPhone: phone,
                 name: merged.fullName || merged.name || 'مراجع كريم',
                 patientId: patientId,
+                gender: merged.gender,
+                age: merged.age,
+                weight: merged.weight,
+                height: merged.height,
+                bmi: merged.bmi,
                 isRegistered: true,
                 loginTime: Date.now()
             });
@@ -1098,6 +1108,11 @@ const SmartDB = (function() {
                 patientId: acc.patientId,
                 name: acc.name,
                 phone: acc.originalPhone || acc.phone,
+                gender: acc.gender,
+                age: acc.age,
+                weight: acc.weight,
+                height: acc.height,
+                bmi: acc.bmi,
                 isRegistered: true
             };
 
@@ -1106,6 +1121,11 @@ const SmartDB = (function() {
                 originalPhone: acc?.originalPhone || activePt.phone,
                 name: activePt.fullName || activePt.name || acc.name,
                 patientId: activePt.patientId || acc.patientId,
+                gender: activePt.gender || acc?.gender,
+                age: activePt.age || acc?.age,
+                weight: activePt.weight || acc?.weight,
+                height: activePt.height || acc?.height,
+                bmi: activePt.bmi || acc?.bmi,
                 isRegistered: true,
                 loginTime: Date.now()
             });
