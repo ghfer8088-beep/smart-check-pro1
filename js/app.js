@@ -1217,14 +1217,17 @@ setTimeout(updateOfflineDiagnosisUI, 500);
 
 // استخراج رقم الهاتف المحمول المعتمد بعد التحقق منه
 function getResolvedPatientPhone() {
+    const auth = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
     const candidates = [
         clinicalDialogueState?.patientPhone,
-        document.getElementById('patient-phone')?.value?.trim(),
-        document.getElementById('sub-phone')?.value?.trim(),
+        auth?.originalPhone,
+        auth?.phone,
         activePatient?.phone,
         window.activePatient?.phone,
         currentAssessmentData?.patientPhone,
         window.currentAssessmentData?.patientPhone,
+        document.getElementById('patient-phone')?.value?.trim(),
+        document.getElementById('sub-phone')?.value?.trim(),
         localStorage.getItem('smart_patient_phone')
     ];
     for (const cand of candidates) {
@@ -1232,9 +1235,39 @@ function getResolvedPatientPhone() {
             return cand;
         }
     }
+    if (auth && (auth.originalPhone || auth.phone)) {
+        const p = auth.originalPhone || auth.phone;
+        if (p && String(p).replace(/\D/g, '').length >= 7) return p;
+    }
     return '';
 }
 window.getResolvedPatientPhone = getResolvedPatientPhone;
+
+// استخراج اسم المراجع المعتمد بعد التحقق منه
+function getResolvedPatientName() {
+    const auth = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+    const candidates = [
+        clinicalDialogueState?.patientFullName,
+        clinicalDialogueState?.patientName,
+        auth?.name,
+        auth?.fullName,
+        activePatient?.fullName,
+        activePatient?.name,
+        currentAssessmentData?.patientName,
+        document.getElementById('patient-name')?.value?.trim(),
+        document.getElementById('sub-name')?.value?.trim()
+    ];
+    for (const cand of candidates) {
+        if (cand && typeof cand === 'string') {
+            const clean = cand.trim();
+            if (clean.length > 1 && !/^(?:الاسم|الآسم|الإسم|اسمي|اسمك|مراجع كريم|المراجع الكريم)$/i.test(clean)) {
+                return clean;
+            }
+        }
+    }
+    return auth?.name || activePatient?.name || currentAssessmentData?.patientName || 'المراجع الكريم';
+}
+window.getResolvedPatientName = getResolvedPatientName;
 
 let _pendingDiagnosisCallback = null;
 
@@ -3702,6 +3735,10 @@ function displayDiagnosticReport(data) {
     const reportId = "SCP-" + Math.floor(100000 + Math.random() * 900000);
     const currentDate = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
 
+    const resolvedReportPhone = (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') || data.patientPhone || '';
+    const resolvedReportName = (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || data.patientName || '';
+    const cleanDigitsPhone = resolvedReportPhone ? String(resolvedReportPhone).replace(/^\+?962/, '').replace(/^0/, '') : '';
+
     // استكمال واحتساب مؤشر كتلة الجسم والحمولة الميكانيكية تلقائياً من المحادثة أو المدخلات
     const vitals = (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState?.patientVitals) 
         ? clinicalDialogueState.patientVitals 
@@ -4163,14 +4200,14 @@ function displayDiagnosticReport(data) {
 
                         <div>
                             <label style="color: #cbd5e1; font-size: 0.86em; display: block; margin-bottom: 6px;">الاسم الكامل:</label>
-                            <input type="text" id="sub-name" placeholder="أدخل اسمك الكريم" style="width: 100%; background: #111827; border: 1px solid #334155; padding: 10px; border-radius: 8px; color: #fff; font-size: 0.9em;">
+                            <input type="text" id="sub-name" value="${(resolvedReportName && resolvedReportName !== 'المراجع الكريم') ? resolvedReportName : ''}" placeholder="أدخل اسمك الكريم" style="width: 100%; background: #111827; border: 1px solid #334155; padding: 10px; border-radius: 8px; color: #fff; font-size: 0.9em;">
                         </div>
 
                         <div>
                             <label style="color: #cbd5e1; font-size: 0.86em; display: block; margin-bottom: 6px;">رقم الهاتف / الواتساب:</label>
                             <div style="display: flex; direction: ltr;">
                                 <span id="phone-prefix-display" style="background: #1e293b; color: var(--primary-gold); padding: 10px 12px; border: 1px solid #334155; border-right: none; border-radius: 8px 0 0 8px; font-weight: bold; font-size: 0.88em;">+962</span>
-                                <input type="tel" id="sub-phone" placeholder="790000000" style="flex: 1; background: #111827; border: 1px solid #334155; padding: 10px; border-radius: 0 8px 8px 0; color: #fff; font-size: 0.9em; outline: none;">
+                                <input type="tel" id="sub-phone" value="${cleanDigitsPhone}" placeholder="790000000" style="flex: 1; background: #111827; border: 1px solid #334155; padding: 10px; border-radius: 0 8px 8px 0; color: #fff; font-size: 0.9em; outline: none;">
                             </div>
                         </div>
                     </div>
@@ -4544,10 +4581,13 @@ function contactInternationalPatientCoordinator() {
 // تفعيل فوري لخطة التعافي بنقرة واحدة (أو إظهار النموذج إذا كانت البيانات غير مكتملة)
 async function activateRecoveryPlanInstantly() {
     try {
+        const auth = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
         const curPatient = (typeof activePatient !== 'undefined' && activePatient) || window.activePatient;
         const curAssessment = (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) || window.currentAssessmentData;
 
         const resolvedPhone = (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '')
+            || auth?.originalPhone
+            || auth?.phone
             || clinicalDialogueState?.patientPhone
             || curPatient?.phone
             || curAssessment?.patientPhone
@@ -4555,7 +4595,10 @@ async function activateRecoveryPlanInstantly() {
             || document.getElementById('sub-phone')?.value?.trim()
             || '';
 
-        let existingName = clinicalDialogueState?.patientFullName 
+        let existingName = (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '')
+            || auth?.name
+            || auth?.fullName
+            || clinicalDialogueState?.patientFullName 
             || curPatient?.fullName
             || clinicalDialogueState?.patientName 
             || curPatient?.name 
@@ -4563,8 +4606,8 @@ async function activateRecoveryPlanInstantly() {
             || document.getElementById('sub-name')?.value?.trim() 
             || '';
 
-        if (!existingName || existingName === 'المراجع الكريم') {
-            existingName = curAssessment?.patientName || curPatient?.fullName || curPatient?.name || 'المراجع الكريم';
+        if (!existingName || /^(?:الاسم|الآسم|الإسم|مراجع كريم|المراجع الكريم)$/i.test(existingName)) {
+            existingName = auth?.name || curAssessment?.patientName || curPatient?.fullName || curPatient?.name || 'المراجع الكريم';
         }
 
         const cleanPhone = String(resolvedPhone).replace(/\D/g, '');
@@ -4656,11 +4699,20 @@ async function activateRecoveryPlanInstantly() {
             const nameInput = document.getElementById('sub-name');
             if (nameInput) nameInput.value = existingName;
         }
+        if (resolvedPhone) {
+            const phoneInput = document.getElementById('sub-phone');
+            if (phoneInput) phoneInput.value = String(resolvedPhone).replace(/^\+?962/, '').replace(/^0/, '');
+        }
         revealRegistrationInputs();
         showToast('يرجى تأكيد رقم الهاتف لتفعيل خطتك المجانية وبدء الجلسة الأولى 🎯', 'info');
     } catch (err) {
         console.error('Error activating plan instantly:', err);
-        revealRegistrationInputs();
+        const fallbackId = (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' && SmartDB.getCurrentSessionPatientId()) || activePatient?.patientId;
+        if (fallbackId) {
+            loadPatientRecoveryDashboard(fallbackId);
+        } else {
+            revealRegistrationInputs();
+        }
     }
 }
 
@@ -8473,13 +8525,17 @@ async function initAiClinicalChat() {
         delete window._specializedConsultationData;
     }
 
+    const auth = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+    const knownName = auth?.name || (activePatient?.name && activePatient.name !== 'المراجع الكريم' ? activePatient.name : '');
+    const knownPhone = auth?.originalPhone || auth?.phone || activePatient?.phone || '';
+
     clinicalDialogueState = {
         isStarting: true,
         hasStartedWelcome: true,
         step: 'vitals',
         history: [],
-        patientName: '',
-        patientPhone: '',
+        patientName: knownName,
+        patientPhone: knownPhone,
         patientVitals: {},
         collectedSymptoms: []
     };
@@ -8506,14 +8562,15 @@ async function initAiClinicalChat() {
 
     // نص الترحيب الطبي الدقيق حسب طلب المستخدم ومسار الحالة
     let instantWelcomeMsg = '';
+    const greetingName = (knownName && knownName !== 'المراجع الكريم') ? ` يا ${knownName}` : '';
     if (specType === 'stroke') {
-        instantWelcomeMsg = `أهلاً بك في استشارات التأهيل الحركي وما بعد الجلطات في «وداعاً للألم».. سلامتك أولاً. أنا مساعدك السريري الذكي.\n\nنحن هنا لمساعدتك في استعادة التوازن، المشي الآمن، وتليين التصلب العضلي التشنجي عبر جلسات التقويم اليدوي والتأهيل العصبي المباشر مع المعالج جمال قبها.\n\nيسعدني أولاً التعرف على اسمك الكريم، وعمرك، والطرف المتأثر (يمين أم يسار)، ومنذ متى حدثت الجلطة وما هي قدرتك الحالية على المشي والوقوف؟`;
+        instantWelcomeMsg = `أهلاً بك${greetingName} في استشارات التأهيل الحركي وما بعد الجلطات في «وداعاً للألم».. سلامتك أولاً. أنا مساعدك السريري الذكي.\n\nنحن هنا لمساعدتك في استعادة التوازن، المشي الآمن، وتليين التصلب العضلي التشنجي عبر جلسات التقويم اليدوي والتأهيل العصبي المباشر مع المعالج جمال قبها.\n\n${knownName ? 'نود استكمال التقييم السريري الدقيق:' : 'يسعدني أولاً التعرف على اسمك الكريم، وعمرك،'} والطرف المتأثر (يمين أم يسار)، ومنذ متى حدثت الجلطة وما هي قدرتك الحالية على المشي والوقوف؟`;
     } else if (specType === 'foot_drop') {
-        instantWelcomeMsg = `أهلاً بك في استشارات سقوط القدم وضعف الأعصاب الحركية في «وداعاً للألم».. سلامتك أولاً. أنا مساعدك السريري الذكي.\n\nسقوط القدم وصعوبة رفع مشط القدم يستوجب فحصاً سريرياً دقيقاً لجذر العصب القطني (L5) والعصب الشظوي لإعادة تنشيط رافعات المشط ومنع تعثر المشي.\n\nيسعدني أولاً التعرف على اسمك الكريم، وعمرك، وهل سقوط القدم في الساق اليمنى أم اليسرى، وهل بدأ فجأة بعد ألم بالظهر أم بعد جراحة أو إصابة؟`;
+        instantWelcomeMsg = `أهلاً بك${greetingName} في استشارات سقوط القدم وضعف الأعصاب الحركية في «وداعاً للألم».. سلامتك أولاً. أنا مساعدك السريري الذكي.\n\nسقوط القدم وصعوبة رفع مشط القدم يستوجب فحصاً سريرياً دقيقاً لجذر العصب القطني (L5) والعصب الشظوي لإعادة تنشيط رافعات المشط ومنع تعثر المشي.\n\n${knownName ? 'نود استكمال التقييم السريري الدقيق:' : 'يسعدني أولاً التعرف على اسمك الكريم، وعمرك،'} وهل سقوط القدم في الساق اليمنى أم اليسرى، وهل بدأ فجأة بعد ألم بالظهر أم بعد جراحة أو إصابة؟`;
     } else if (specType === 'scoliosis') {
-        instantWelcomeMsg = `أهلاً بك في استشارات تقويم انحراف العمود الفقري (الجنف - Scoliosis) في «وداعاً للألم».. سلامتك أولاً. أنا مساعدك السريري الذكي.\n\nحالات الجنف وانحراف الفقرات تتطلب عناية يدوية وتقييماً سريرياً مخصصاً لمستوى الكتفين وتوازن الحوض، ولا تناسبها التمارين العشوائية.\n\nيسعدني أولاً التعرف على اسمك الكريم، وعمرك، وهل تم تشخيصك بأشعة سينية سابقة وقياس درجة الانحناء، وهل تشعر بآلام مصاحبة أو تفاوت في ارتفاع الكتفين؟`;
+        instantWelcomeMsg = `أهلاً بك${greetingName} في استشارات تقويم انحراف العمود الفقري (الجنف - Scoliosis) في «وداعاً للألم».. سلامتك أولاً. أنا مساعدك السريري الذكي.\n\nحالات الجنف وانحراف الفقرات تتطلب عناية يدوية وتقييماً سريرياً مخصصاً لمستوى الكتفين وتوازن الحوض، ولا تناسبها التمارين العشوائية.\n\n${knownName ? 'نود استكمال التقييم السريري الدقيق:' : 'يسعدني أولاً التعرف على اسمك الكريم، وعمرك،'} وهل تم تشخيصك بأشعة سينية سابقة وقياس درجة الانحناء، وهل تشعر بآلام مصاحبة أو تفاوت في ارتفاع الكتفين؟`;
     } else {
-        instantWelcomeMsg = `أهلاً بك في «وداعاً للألم» للكايروبراكتيك.. سلامتك أولاً. أنا مساعدك السريري الذكي في «وداعاً للألم».\n\nنحن هنا لمساعدتك في علاج ${ptTitle} بتقويم الكايروبراكتيك الطبيعي الآمن وبدون جراحة أو مسكنات.\n\nيسعدني أولاً التعرف على اسمك الكريم، وعمرك، ووزنك، وطولك التقريبي، وما الذي تعاني منه تحديداً في **${ptTitle}**؟ (هذه البيانات الحيوية ضرورية لحساب مؤشر الأحمال البيوميكانيكية على المفاصل وتحديد سبب المشكلة بدقة).`;
+        instantWelcomeMsg = `أهلاً بك${greetingName} في «وداعاً للألم» للكايروبراكتيك.. سلامتك أولاً. أنا مساعدك السريري الذكي في «وداعاً للألم».\n\nنحن هنا لمساعدتك في علاج ${ptTitle} بتقويم الكايروبراكتيك الطبيعي الآمن وبدون جراحة أو مسكنات.\n\n${knownName ? 'لنبدأ الاستقصاء السريري المباشر لموضع الألم:' : 'يسعدني أولاً التعرف على اسمك الكريم، وعمرك، ووزنك، وطولك التقريبي،'} ما الذي تعاني منه تحديداً في **${ptTitle}**؟ وهل تشعر بألم حاد مستمر، أم تشنج وثقل يشتد مع حركات معينة أو الجلوس؟`;
     }
 
     // 2. إتمام الاتصال وعرض بطاقة الطبيب فوراً وتشغيل الصوت المحضر مسبقاً

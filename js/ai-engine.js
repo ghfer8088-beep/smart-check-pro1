@@ -635,8 +635,11 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                     extractedPhone = phoneM[1].trim();
                 }
 
-                // التدقيق: هل رقم الهاتف متوفر حالياً في السياق أو تم استخراجه في هذا الرد؟
-                const hasValidPhoneNow = (patientPhone && String(patientPhone).replace(/\D/g, '').length >= 7) ||
+                // التدقيق: هل رقم الهاتف متوفر حالياً في السياق أو الحساب المسجل أو تم استخراجه في هذا الرد؟
+                const resolvedKnownPhone = (patientPhone && String(patientPhone).replace(/\D/g, '').length >= 7)
+                    ? patientPhone
+                    : ((typeof getResolvedPatientPhone === 'function') ? getResolvedPatientPhone() : '');
+                const hasValidPhoneNow = (resolvedKnownPhone && String(resolvedKnownPhone).replace(/\D/g, '').length >= 7) ||
                                          (extractedPhone && String(extractedPhone).replace(/\D/g, '').length >= 7);
 
                 // إشارة الانتقال للتشخيص لا تُقبل إلا إذا توفر رقم الهاتف
@@ -682,7 +685,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                 const isConsultationThorough = userClinicalMessagesCount >= 3;
 
                 // هل الذكاء الاصطناعي يطلب رقم الهاتف صراحة بعد اكتمال الاستقصاء السريري؟
-                let isExplicitlyAskingPhone = rawReply.includes('[ASK_PHONE]') || (rawReply.includes('[READY_FOR_DIAGNOSIS]') && !hasValidPhoneNow);
+                let isExplicitlyAskingPhone = (rawReply.includes('[ASK_PHONE]') || rawReply.includes('[READY_FOR_DIAGNOSIS]')) && !hasValidPhoneNow;
 
                 // صمام أمان سريري: ممنوع منعاً باتاً طلب الهاتف قبل استيفاء 3 أسئلة وإجابات استقصائية متعمقة على الأقل
                 if (isExplicitlyAskingPhone && !isConsultationThorough && !hasValidPhoneNow) {
@@ -703,15 +706,16 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                     if (!message || message.length < 10) {
                         message = `اكتمل الآن تقييمك السريري الشامل وتحددت طبيعة المشكلة بدقة${pNameStr}! يرجى تزويدي برقم هاتفك لفتح التقرير الطبي الشامل وربط ملفك بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:`;
                     }
-                } else if (hasValidPhoneNow && (extractedPhone || isReady || /تم (?:تسجيل|استلام) رقم هاتفك/i.test(message))) {
+                } else if (hasValidPhoneNow && (extractedPhone || isReady || rawReply.includes('[READY_FOR_DIAGNOSIS]') || /تم (?:تسجيل|استلام) رقم هاتفك/i.test(message))) {
                     isReady = true;
+                    if (!extractedPhone && resolvedKnownPhone) extractedPhone = resolvedKnownPhone;
                     const pNameStr = (patientName && patientName !== 'غير محدد') ? ` يا ${patientName}` : '';
                     if (!message || message.length < 10) {
-                        message = `✅ تم استلام رقم هاتفك بنجاح${pNameStr}. نقوم الآن بإصدار تقريرك السريري وتحويلك فوراً لصفحة التشخيص وخطة التعافي... ⏱️`;
+                        message = `✅ تم اعتماد بياناتك بنجاح${pNameStr}. نقوم الآن بإصدار تقريرك السريري وتحويلك فوراً لصفحة التشخيص وخطة التعافي... ⏱️`;
                     }
                 }
 
-                // ننتقل لطلب الهاتف فقط إذا طلب الطبيب الهاتف صراحة بعد اكتمال الاستقصاء، وإلا فإن الحوار الطبي السريري يستمر بحرية
+                // ننتقل لطلب الهاتف فقط إذا طلب الطبيب الهاتف صراحة بعد اكتمال الاستقصاء وكان الهاتف مفقوداً، وإلا فإن الحوار الطبي السريري يستمر بحرية
                 const nextStep = isReady ? 'completed' : (isExplicitlyAskingPhone ? 'ask_phone' : 'chatting');
                 return { message, quickReplies: [], nextStep, isReady, extractedName, extractedFullName, extractedPhone };
             }
@@ -783,6 +787,9 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
     // ردود تفاعلية سريرية ذكية تستجيب لمحتوى كلام المراجع الفعلي بمرونة إنسانية عالية
     generateFallbackDialogueStep(context) {
         const { currentStep, painPointTitle, patientName, patientVitals, lastUserMessage, history } = context;
+        const resolvedFallbackPhone = (context.patientPhone && String(context.patientPhone).replace(/\D/g, '').length >= 7)
+            ? context.patientPhone
+            : ((typeof getResolvedPatientPhone === 'function') ? getResolvedPatientPhone() : '');
         // تنظيف الاسم لمنع تكرار كلمة (يا يا) واستبعاد الكلمات غير الاسمية وأدوات الاستفهام والتحية
         const cleanName = (patientName || '')
             .replace(/^يا\s+/i, '')
@@ -1133,6 +1140,16 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                     nextStep: 'chatting'
                 };
             } else {
+                if (resolvedFallbackPhone) {
+                    return {
+                        message: `اكتملت الآن كافة بيانات التقييم السريري لحالتك${nameSuffix}! نقوم الآن بإصدار بطاقة التقييم السريري الشاملة وتحويلك فوراً لصفحة التقرير والتواصل... ⏱️`,
+                        quickReplies: [],
+                        nextStep: 'completed',
+                        isPhonePrompt: false,
+                        isReady: true,
+                        extractedPhone: resolvedFallbackPhone
+                    };
+                }
                 return {
                     message: `اكتملت الآن كافة بيانات التقييم السريري لحالتك${nameSuffix}! نظراً لأن حالات **${title}** تتطلب عناية سريرية يدوية وتقييماً عيانياً مباشراً مع المعالج جمال قبها، يرجى إدخال رقم هاتفك المحمول لفتح بطاقة التقييم السريري والتواصل المباشر عبر الواتساب:`,
                     quickReplies: [],
@@ -1195,7 +1212,17 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                 nextStep: 'chatting'
             };
         } else {
-            // اكتملت كل جوانب الصورة السريرية — طلب الهاتف
+            // اكتملت كل جوانب الصورة السريرية
+            if (resolvedFallbackPhone) {
+                return {
+                    message: `اكتملت الآن الصورة السريرية الشاملة وتحددت ميكانيكية الخلل في **${title}** بدقة${nameSuffix || ' يا غالي'}!\n\nنقوم الآن بإصدار تقريرك السريري المتكامل وتحويلك فوراً لصفحة التشخيص وخطة التعافي... ⏱️`,
+                    quickReplies: [],
+                    nextStep: 'completed',
+                    isPhonePrompt: false,
+                    isReady: true,
+                    extractedPhone: resolvedFallbackPhone
+                };
+            }
             return {
                 message: `اكتملت الآن الصورة السريرية الشاملة وتحددت ميكانيكية الخلل في **${title}** بدقة${nameSuffix || ' يا غالي'}!\n\nأدخل رقم هاتفك لفتح التقرير السريري الخاص بك ولربط ملفك بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:`,
                 quickReplies: [],
