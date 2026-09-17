@@ -131,7 +131,7 @@ body {
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.7);
-    z-index: 999990;
+    z-index: 999998;
     touch-action: manipulation;
 }
 
@@ -514,9 +514,9 @@ body {
         position: sticky !important;
         top: 0 !important;
         z-index: 999999 !important;
-        background: rgba(11, 16, 27, 0.98) !important;
-        backdrop-filter: blur(16px) !important;
-        -webkit-backdrop-filter: blur(16px) !important;
+        background: #0b101b !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
         padding-top: calc(14px + env(safe-area-inset-top, 0px)) !important;
         padding-bottom: 12px !important;
         padding-left: max(14px, env(safe-area-inset-left, 0px)) !important;
@@ -562,7 +562,7 @@ body {
         font-size: 1.4em !important;
         cursor: pointer !important;
         touch-action: manipulation !important;
-        z-index: 1001 !important;
+        z-index: 1000000 !important;
     }
 
     .btn-mobile-menu-toggle:active {
@@ -583,7 +583,7 @@ body {
     .header-actions {
         display: none;
         position: fixed !important;
-        top: calc(76px + env(safe-area-inset-top, 0px)) !important;
+        top: calc(72px + env(safe-area-inset-top, 0px)) !important;
         left: 12px !important;
         right: 12px !important;
         max-width: 440px;
@@ -593,9 +593,10 @@ body {
         border-radius: 16px;
         padding: 16px 12px;
         box-shadow: 0 20px 50px rgba(0,0,0,0.95), 0 0 25px rgba(212, 175, 55, 0.3) !important;
-        z-index: 1000000 !important;
+        z-index: 1000005 !important;
         max-height: calc(100vh - 90px - env(safe-area-inset-top, 0px));
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
         pointer-events: auto !important;
     }
 
@@ -610,8 +611,8 @@ body {
     .header-actions .btn-header {
         width: 100%;
         justify-content: center;
-        padding: 11px 10px !important;
-        font-size: 0.88em !important;
+        padding: 12px 10px !important;
+        font-size: 0.9em !important;
         font-weight: 800 !important;
         text-align: center;
         white-space: nowrap;
@@ -621,11 +622,11 @@ body {
         border-radius: 10px !important;
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(254, 240, 138, 0.3), 0 0 10px rgba(212, 175, 55, 0.2) !important;
-        backdrop-filter: blur(8px) !important;
-        -webkit-backdrop-filter: blur(8px) !important;
         cursor: pointer !important;
         pointer-events: auto !important;
-        transition: all 0.2s ease !important;
+        touch-action: manipulation !important;
+        -webkit-tap-highlight-color: transparent;
+        transition: all 0.15s ease !important;
     }
 
     .header-actions .btn-header:active {

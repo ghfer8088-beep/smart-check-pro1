@@ -6712,15 +6712,36 @@ function closeMobileMenu() {
     const icon = document.getElementById('hamburger-icon-char');
     if (menu) {
         menu.classList.remove('open');
-        if (window.innerWidth <= 960) {
-            menu.style.display = 'none';
-        } else {
-            menu.style.display = 'flex';
-        }
+        menu.style.display = '';
     }
     if (backdrop) backdrop.style.display = 'none';
     if (icon) icon.textContent = '☰';
 }
+
+function handleNewTestFromMenu() {
+    closeMobileMenu();
+    setTimeout(() => {
+        if (typeof resetToInitialState === 'function') {
+            resetToInitialState();
+        }
+    }, 80);
+}
+
+function handleAppUpdateFromMenu() {
+    closeMobileMenu();
+    setTimeout(() => {
+        if (typeof forceAppUpdateAndClearCache === 'function') {
+            forceAppUpdateAndClearCache();
+        } else {
+            window.location.reload();
+        }
+    }, 80);
+}
+
+window.toggleMobileMenu = toggleMobileMenu;
+window.closeMobileMenu = closeMobileMenu;
+window.handleNewTestFromMenu = handleNewTestFromMenu;
+window.handleAppUpdateFromMenu = handleAppUpdateFromMenu;
 
 // التبديل بين تبويب التثبيت وتبويب المشاركة
 function switchAppModalTab(tab) {
@@ -9251,7 +9272,10 @@ window.submitChatRoyalVitals = function() {
         }
 
         // رد الطبيب الفوري مع الصوت مخصص بدقة حسب مسار الحالة
-        const ptTitle = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint?.title) ? currentSelectedPoint.title : 'موضع الألم';
+        if (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint?.title) {
+            // تحديث ptTitle إن توفر عنوان أكثر دقة
+            // ptTitle تم تعريفها بالأعلى
+        }
         const currentSpecType = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint && currentSelectedPoint.specialtyType) ? currentSelectedPoint.specialtyType : null;
         window._specializedConsultationType = currentSpecType;
         if (!currentSpecType) {

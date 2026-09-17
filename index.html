@@ -39,7 +39,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=29.5">
+    <link rel="stylesheet" href="css/style.css?v=29.7">
     <script>
         // التحقق من تحديثات Service Worker وتحديث الكاش بسلاسة دون تفريغ أي بيانات للمرضى
         (function() {
@@ -180,15 +180,60 @@
                 <a href="https://wa.me/962790360440" target="_blank" class="btn-header btn-header-whatsapp">💬 واتساب المعالج</a>
                 <a href="tel:00962790360440" class="btn-header btn-header-call">📞 اتصل بالمعالج</a>
                 <button type="button" id="btn-header-text-editor" class="btn-header btn-header-unified" onclick="openTextEditorModal(); closeMobileMenu();" style="display: none;">✏️ تعديل النصوص</button>
-                <button type="button" class="btn-header btn-header-new-test" onclick="resetToInitialState(); closeMobileMenu();">🔄 فحص جديد</button>
+                <button type="button" class="btn-header btn-header-new-test" onclick="handleNewTestFromMenu()">🔄 فحص جديد</button>
                 <button type="button" class="btn-header btn-header-unified btn-span-full" onclick="openAppInstallShareModal(); closeMobileMenu();" title="تثبيت التطبيق على الموبايل أو مشاركته مع الأصدقاء">
                     <span>📲 تثبيت ومشاركة</span>
                 </button>
-                <button type="button" class="btn-header btn-header-unified btn-span-full" onclick="closeMobileMenu(); forceAppUpdateAndClearCache();" title="جلب أحدث التمارين والبيانات وتنشيط التطبيق">⚡ تنشيط وتحديث التطبيق</button>
+                <button type="button" class="btn-header btn-header-unified btn-span-full" onclick="handleAppUpdateFromMenu()" title="جلب أحدث التمارين والبيانات وتنشيط التطبيق">⚡ تنشيط وتحديث التطبيق</button>
             </div>
         </div>
     </header>
     <div id="mobile-menu-backdrop" class="mobile-backdrop" onclick="closeMobileMenu()"></div>
+    <script>
+        function toggleMobileMenu() {
+            var menu = document.getElementById('main-header-actions');
+            var backdrop = document.getElementById('mobile-menu-backdrop');
+            var icon = document.getElementById('hamburger-icon-char');
+            if (!menu) return;
+            if (menu.classList.contains('open')) {
+                closeMobileMenu();
+            } else {
+                menu.classList.add('open');
+                menu.style.display = 'grid';
+                if (backdrop) backdrop.style.display = 'block';
+                if (icon) icon.textContent = '✕';
+            }
+        }
+        function closeMobileMenu() {
+            var menu = document.getElementById('main-header-actions');
+            var backdrop = document.getElementById('mobile-menu-backdrop');
+            var icon = document.getElementById('hamburger-icon-char');
+            if (menu) {
+                menu.classList.remove('open');
+                menu.style.display = '';
+            }
+            if (backdrop) backdrop.style.display = 'none';
+            if (icon) icon.textContent = '☰';
+        }
+        function handleNewTestFromMenu() {
+            closeMobileMenu();
+            setTimeout(function() {
+                if (typeof resetToInitialState === 'function') {
+                    resetToInitialState();
+                }
+            }, 80);
+        }
+        function handleAppUpdateFromMenu() {
+            closeMobileMenu();
+            setTimeout(function() {
+                if (typeof forceAppUpdateAndClearCache === 'function') {
+                    forceAppUpdateAndClearCache();
+                } else {
+                    window.location.reload();
+                }
+            }, 80);
+        }
+    </script>
 
     <!-- 🟢 شريط التفاعل الحي والمصداقية اللحظية (Social Proof & Live Visitors Counter < 100) -->
     <div id="live-online-bar" class="no-print" style="background: linear-gradient(90deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.95) 50%, rgba(15, 23, 42, 0.98) 100%); border-bottom: 1.5px solid rgba(212, 175, 55, 0.35); padding: 9px 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 0.88em; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
@@ -1710,32 +1755,38 @@
                 if (window.location.protocol.startsWith('http') && 'serviceWorker' in navigator) {
                     const regs = await navigator.serviceWorker.getRegistrations();
                     for (let r of regs) {
-                        await r.unregister();
+                        try { await r.unregister(); } catch(err){}
                     }
                 }
-
             } catch (e) {
                 console.log('Cache clear error:', e);
             }
-            window.location.reload(true);
+            setTimeout(() => {
+                try {
+                    const baseUrl = window.location.href.split('?')[0].split('#')[0];
+                    window.location.replace(baseUrl + '?v=' + Date.now());
+                } catch(e) {
+                    window.location.reload();
+                }
+            }, 300);
         }
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=29.6"></script>
-    <script src="js/geo-tracker.js?v=29.6"></script>
-    <script src="js/cloud-sync.js?v=29.6"></script>
-    <script src="js/database.js?v=29.6"></script>
-    <script src="js/exercise-image-studio.js?v=29.6"></script>
-    <script src="js/exercises-db.js?v=29.6"></script>
-    <script src="js/diagnostic-engine.js?v=29.6"></script>
-    <script src="js/audio-pacer.js?v=29.6"></script>
-    <script src="js/patient-flow.js?v=29.6"></script>
-    <script src="js/admin-engine.js?v=29.6"></script>
-    <script src="js/ai-config.js?v=29.6"></script>
-    <script src="js/ai-engine.js?v=29.6"></script>
-    <script src="js/app.js?v=29.6"></script>
-    <script src="js/text-editor.js?v=29.6"></script>
+    <script src="js/mqtt.min.js?v=29.7"></script>
+    <script src="js/geo-tracker.js?v=29.7"></script>
+    <script src="js/cloud-sync.js?v=29.7"></script>
+    <script src="js/database.js?v=29.7"></script>
+    <script src="js/exercise-image-studio.js?v=29.7"></script>
+    <script src="js/exercises-db.js?v=29.7"></script>
+    <script src="js/diagnostic-engine.js?v=29.7"></script>
+    <script src="js/audio-pacer.js?v=29.7"></script>
+    <script src="js/patient-flow.js?v=29.7"></script>
+    <script src="js/admin-engine.js?v=29.7"></script>
+    <script src="js/ai-config.js?v=29.7"></script>
+    <script src="js/ai-engine.js?v=29.7"></script>
+    <script src="js/app.js?v=29.7"></script>
+    <script src="js/text-editor.js?v=29.7"></script>
 
     <script>
         // تشغيل عداد التفاعل الحي الاجتماعي (Live Online Social Proof) وكاشف الدولة والمدينة
