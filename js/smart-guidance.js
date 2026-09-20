@@ -1,8 +1,9 @@
 /**
- * Smart Check Pro 2.0 - محرك اليد الإرشادية الذكية والتمرير التلقائي لكبار السن
- * Smart Guidance & Auto-Focus System v29.12
- * يرافق المريض في جميع المراحل (المجسم، الأسئلة، البيانات، التقرير، الجلسات)
- * مع إعادة توجيه النقرات (Click-Forwarding) والمؤشرات التفاعلية لأشرطة المسار
+ * Smart Check Pro 2.0 - منظومة البالون التفاعلي الذكي والتوجيه السلس لكبار السن
+ * Smart Guidance Balloon & Spotlight Architecture v29.13
+ * يرافق المريض في جميع المراحل (المجسم، الاستشارة، التقرير، الجلسات)
+ * بتصميم زجاجي عائم (Floating Glassmorphism) لا يحجب النصوص أو التسميات
+ * مع قفل دقيق للتحليل الطبي في الشات وهندسة متسلسلة لمرحلة التقرير
  */
 
 const SmartGuidance = (function() {
@@ -15,25 +16,23 @@ const SmartGuidance = (function() {
     let currentStep = 1;
     let isDismissedByUser = false;
     let isTemporarilyHidden = false;
+    let isAiAnalyzing = false;
     let lastActionTime = Date.now();
     let currentGuidanceState = null;
 
-    const IDLE_DELAY_MS = 5000; // 5 ثوانٍ من عدم التفاعل لتفعيل التوجيه والتمرير التلقائي
+    const IDLE_DELAY_MS = 5000; // 5 ثوانٍ من عدم التفاعل لتفعيل التوجيه التلقائي
 
-    // تهيئة المحرك الإرشادي
     function init() {
         if (typeof window === 'undefined') return;
         createBeaconDOM();
         attachEventListeners();
-        
-        // بدء المراقبة للخطوة الحالية فور تحميل الصفحة
+
         setTimeout(() => {
             const savedStep = parseInt(localStorage.getItem('smart_current_step') || '1', 10);
             updateStep(savedStep);
         }, 800);
     }
 
-    // إنشاء عنصر اليد الإرشادية في DOM
     function createBeaconDOM() {
         if (document.getElementById('smart-guidance-beacon')) {
             beaconEl = document.getElementById('smart-guidance-beacon');
@@ -45,7 +44,7 @@ const SmartGuidance = (function() {
         beaconEl.className = 'smart-guidance-beacon';
         beaconEl.setAttribute('role', 'tooltip');
         beaconEl.setAttribute('aria-live', 'polite');
-        // الفقاعة في الأعلى، واليد المشيرة في الأسفل مباشرة فوق الزر
+        // تصميم البالون الزجاجي العائم الخفيف فوق اليد المشيرة
         beaconEl.innerHTML = `
             <div class="guidance-beacon-wrapper">
                 <div class="guidance-bubble" id="guidance-bubble">
@@ -57,27 +56,33 @@ const SmartGuidance = (function() {
         `;
         document.body.appendChild(beaconEl);
 
-        // إعادة توجيه النقرة تلقائياً للزر المستهدف في حال نقر المريض على اليد أو الفقاعة
+        // إعادة توجيه النقرة تلقائياً للزر أو الحقل المستهدف (Click-Forwarding)
         beaconEl.addEventListener('click', (e) => {
             if (e.target.closest('.guidance-dismiss-btn')) return;
-            if (currentTargetEl && typeof currentTargetEl.click === 'function') {
+            if (currentTargetEl) {
                 try {
-                    currentTargetEl.click();
+                    if (typeof currentTargetEl.focus === 'function' && (currentTargetEl.tagName === 'INPUT' || currentTargetEl.tagName === 'TEXTAREA')) {
+                        currentTargetEl.focus();
+                    } else if (typeof currentTargetEl.click === 'function') {
+                        currentTargetEl.click();
+                    }
                     hideBeaconForInteraction();
                 } catch (err) {
-                    console.warn('Guidance forward click error:', err);
+                    console.warn('Guidance forward click notice:', err);
                 }
             }
         });
     }
 
-    // ربط مستمعات الأحداث للتفاعل والتمرير
     function attachEventListeners() {
         const userActivityEvents = ['touchstart', 'mousedown', 'keydown', 'input'];
         userActivityEvents.forEach(evt => {
             window.addEventListener(evt, () => {
                 lastActionTime = Date.now();
-                hideBeaconForInteraction();
+                // أثناء تحليل الذكاء الاصطناعي لا نخفي اليد المشيرة للتحليل عند اللمس
+                if (!isAiAnalyzing) {
+                    hideBeaconForInteraction();
+                }
                 resetIdleTimer();
             }, { passive: true });
         });
@@ -106,6 +111,14 @@ const SmartGuidance = (function() {
 
     function onUserIdleTimeout() {
         if (isDismissedByUser) return;
+        // إذا كان الطبيب يحلل الإجابة في الشات، يبقى التركيز حصراً على مؤشر التحليل
+        if (isAiAnalyzing) {
+            const typingEl = document.getElementById('ai-typing-indicator') || document.getElementById('ai-audio-typing-indicator');
+            if (typingEl) {
+                guideAiTyping(typingEl);
+                return;
+            }
+        }
         isTemporarilyHidden = false;
         triggerCurrentStepGuidance(true);
     }
@@ -119,14 +132,14 @@ const SmartGuidance = (function() {
                 beaconEl.style.display = 'none';
                 beaconEl.classList.remove('guidance-fade-out');
             }
-        }, 250);
+        }, 220);
     }
 
     function dismissTemporarily(e) {
         if (e) e.stopPropagation();
         hideBeaconForInteraction();
         isDismissedByUser = true;
-        setTimeout(() => { isDismissedByUser = false; }, 120000);
+        setTimeout(() => { isDismissedByUser = false; }, 90000);
     }
 
     function pointTo(target, text, options = {}) {
@@ -134,21 +147,22 @@ const SmartGuidance = (function() {
         isTemporarilyHidden = false;
 
         const el = (typeof target === 'string') ? document.querySelector(target) : target;
-        if (!el) return;
+        if (!el || el.offsetParent === null) return;
 
         currentTargetEl = el;
         currentGuidanceState = { target, text, options };
 
+        // إزالة هالة التمييز السابقة وإضافتها للعنصر المستهدف الحالي
         document.querySelectorAll('.guidance-target-highlight').forEach(x => {
             x.classList.remove('guidance-target-highlight');
         });
-
         el.classList.add('guidance-target-highlight');
 
         const bubbleEl = document.getElementById('guidance-bubble');
         const textEl = document.getElementById('guidance-bubble-text');
         const iconEl = document.getElementById('guidance-hand-icon');
 
+        // دعم وضع اليد الصامتة بدون بالون نصي (مثل مؤشر تحليل الطبيب في الشات)
         if (options.noBubble || !text) {
             if (bubbleEl) bubbleEl.style.display = 'none';
         } else {
@@ -169,15 +183,15 @@ const SmartGuidance = (function() {
                 beaconEl.classList.remove('guidance-fade-out');
                 beaconEl.classList.add('guidance-fade-in');
             }
-        }, options.autoScroll ? 350 : 50);
+        }, options.autoScroll ? 300 : 40);
     }
 
     function scrollElementIntoViewIfNeeded(el) {
         if (!el) return;
         const rect = el.getBoundingClientRect();
         const isInViewport = (
-            rect.top >= 70 &&
-            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) - 70
+            rect.top >= 80 &&
+            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) - 80
         );
 
         if (!isInViewport) {
@@ -185,7 +199,7 @@ const SmartGuidance = (function() {
         }
     }
 
-    // حساب إحداثيات موضع اليد الإرشادية بالنسبة للعنصر (رأس الإصبع 2-4px فوق الزر مباشرة)
+    // حساب إحداثيات موضع البالون التفاعلي واليد دون حجب التسميات أو النصوص المجاورة
     function positionBeaconAt(el, options = {}) {
         if (!beaconEl || !el) return;
         const rect = el.getBoundingClientRect();
@@ -197,25 +211,31 @@ const SmartGuidance = (function() {
         let left = 0;
 
         if (placement === 'top') {
+            // رأس إصبع اليد يلامس الحافة العلوية للهدف بفارق 2 بكسل
             top = rect.top + scrollY - 2;
             left = rect.left + scrollX + (rect.width / 2);
         } else if (placement === 'bottom') {
-            top = rect.bottom + scrollY + 40;
+            top = rect.bottom + scrollY + 45;
             left = rect.left + scrollX + (rect.width / 2);
         } else {
-            top = rect.top + scrollY - 10;
+            top = rect.top + scrollY - 6;
             left = rect.left + scrollX + (rect.width / 2);
         }
 
-        const maxLeft = (window.innerWidth || 360) - 150;
-        left = Math.max(140, Math.min(left, maxLeft));
+        // إزاحة ذكية إذا كان الحقل مدخلاً نصياً لتفادي تغطية عنوان الحقل (Label)
+        if (options.labelAvoidance && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) {
+            // توجيه البالون ليكون مرتكناً بجانب الحقل أو بأعلى زاويته الجانبية
+            left = rect.left + scrollX + Math.min(rect.width * 0.75, rect.width - 40);
+        }
+
+        const maxLeft = (window.innerWidth || 360) - 140;
+        left = Math.max(130, Math.min(left, maxLeft));
         top = Math.max(10, top);
 
         beaconEl.style.top = `${Math.round(top)}px`;
         beaconEl.style.left = `${Math.round(left)}px`;
     }
 
-    // تحديث أشرطة مسار المرحلة
     function updateStageFlowBanner(stepNum, subStep) {
         const banner = document.getElementById(`stage-flow-banner-${stepNum}`);
         if (!banner) return;
@@ -232,19 +252,20 @@ const SmartGuidance = (function() {
     }
 
     // =========================================================================
-    // منطق التوجيه الذكي المخصص لكل خطوة من خطوات النظام
+    // التوجيه السريري المتسلسل الذكي لكل مرحلة من المراحل
     // =========================================================================
 
     function updateStep(stepNum) {
         currentStep = stepNum;
         isDismissedByUser = false;
         isTemporarilyHidden = false;
+        isAiAnalyzing = false;
         if (step3NudgeTimer) clearTimeout(step3NudgeTimer);
         resetIdleTimer();
 
         setTimeout(() => {
             triggerCurrentStepGuidance(false);
-        }, 500);
+        }, 450);
     }
 
     function triggerCurrentStepGuidance(isAutoScrollNudge = false) {
@@ -275,13 +296,13 @@ const SmartGuidance = (function() {
     }
 
     // -------------------------------------------------------------------------
-    // الخطوة 1: المجسم واختيار موضع الألم
+    // المرحلة 1: المجسم وتحديد موضع الألم
     // -------------------------------------------------------------------------
     function guideStep1(autoScroll = false) {
         const hasPoint = typeof window.currentSelectedPoint !== 'undefined' && window.currentSelectedPoint;
         const nextBtn = document.getElementById('btn-goto-step2');
 
-        if (hasPoint && nextBtn) {
+        if (hasPoint && nextBtn && nextBtn.offsetParent !== null) {
             removeHotspotsSynchronizedPulse();
             updateStageFlowBanner(1, 2);
             pointTo(nextBtn, 'ممتاز! اضغط هنا الآن لمتابعة الفحص السريري 👇', {
@@ -327,14 +348,29 @@ const SmartGuidance = (function() {
                     placement: 'top',
                     autoScroll: true
                 });
-            }, 250);
+            }, 200);
         }
     }
 
     // -------------------------------------------------------------------------
-    // الخطوة 2: الاستشارة السريرية وحوار الذكاء الاصطناعي
+    // المرحلة 2: الاستشارة السريرية وحوار الذكاء الاصطناعي
     // -------------------------------------------------------------------------
     function guideStep2(autoScroll = false) {
+        // إذا كان الطبيب يحلل الإجابة حالياً: قفل اليد حصراً على مؤشر التحليل داخل الشات
+        const typingEl = document.getElementById('ai-typing-indicator') || document.getElementById('ai-audio-typing-indicator');
+        if (isAiAnalyzing || (typingEl && typingEl.offsetParent !== null)) {
+            if (typingEl) {
+                isAiAnalyzing = true;
+                pointTo(typingEl, '', {
+                    handIcon: '👇',
+                    placement: 'top',
+                    noBubble: true,
+                    autoScroll: false
+                });
+            }
+            return;
+        }
+
         // 1. فحص بطاقة المؤشرات الحيوية الملكية في بداية الشات
         const vitalsCard = document.getElementById('royal-chat-vitals-card');
         if (vitalsCard && vitalsCard.offsetParent !== null) {
@@ -345,6 +381,7 @@ const SmartGuidance = (function() {
                 pointTo(nameIn, 'تفضل بكتابة اسمك الكريم هنا 👤', {
                     handIcon: '👇',
                     placement: 'top',
+                    labelAvoidance: true,
                     autoScroll: autoScroll
                 });
                 return;
@@ -358,7 +395,7 @@ const SmartGuidance = (function() {
             }
         }
 
-        // 2. فحص زر الانتقال المباشر للتقرير الطبي (عند انتهاء الفحص)
+        // 2. فحص زر الانتقال المباشر للتقرير الطبي (عند انتهاء الفحص السريري)
         const directReportBtn = document.querySelector('#chat-direct-report-button-box button');
         if (directReportBtn && directReportBtn.offsetParent !== null) {
             updateStageFlowBanner(2, 3);
@@ -370,7 +407,7 @@ const SmartGuidance = (function() {
             return;
         }
 
-        // 3. أثناء الحوار السريري: توجيه لحقل الكتابة أو زر الإرسال
+        // 3. أثناء الحوار السريري: توجيه لطيف دون إزعاج
         const chatInput = document.getElementById('ai-chat-input');
         const sendBtn = document.getElementById('ai-chat-send-btn');
         if (chatInput && chatInput.offsetParent !== null && !chatInput.disabled) {
@@ -385,13 +422,14 @@ const SmartGuidance = (function() {
                 pointTo(chatInput, 'أجب الطبيب هنا أو استخدم التسجيل الصوتي 🎙️', {
                     handIcon: '👇',
                     placement: 'top',
+                    labelAvoidance: true,
                     autoScroll: autoScroll
                 });
             }
             return;
         }
 
-        // 4. نمط الفحص السريع بالخيارات إن كان مفصولاً
+        // 4. نمط الفحص السريع بالخيارات
         const nextQBtn = document.getElementById('btn-next-clinical-q');
         const firstOption = document.querySelector('#step-section-2 .q-option-card, #step-section-2 .diagnostic-card');
         if (nextQBtn && nextQBtn.offsetParent !== null && !nextQBtn.disabled) {
@@ -409,8 +447,9 @@ const SmartGuidance = (function() {
         }
     }
 
-    // يد إرشادية بدون نص تشير إلى مؤشر تحضير الطبيب للإجابة
+    // يد إرشادية بدون نص تشير حصراً إلى مؤشر تحضير الطبيب للرد
     function guideAiTyping(typingEl) {
+        isAiAnalyzing = true;
         if (!typingEl) typingEl = document.getElementById('ai-typing-indicator') || document.getElementById('ai-audio-typing-indicator');
         if (!typingEl) return;
         pointTo(typingEl, '', {
@@ -422,28 +461,57 @@ const SmartGuidance = (function() {
     }
 
     function hideAiTyping() {
+        isAiAnalyzing = false;
         hideBeaconForInteraction();
     }
 
     // -------------------------------------------------------------------------
-    // الخطوة 3: التقرير الطبي الشامل وتفعيل الخطة
+    // المرحلة 3: التقرير الطبي والتشخيص (تسلسل ذكي من 3 خطوات)
     // -------------------------------------------------------------------------
     function guideStep3(autoScroll = false) {
-        const activateBtn = document.getElementById('btn-activate-plan-royal') || document.querySelector('.btn-plan-royal-card');
-        const reportHeader = document.querySelector('#clinical-report-container .report-master-card, #clinical-report-container h2, #clinical-report-container .royal-report-header, #clinical-report-container');
-
+        if (step3NudgeTimer) clearTimeout(step3NudgeTimer);
         updateStageFlowBanner(3, 1);
 
-        // توجيه المريض أولاً إلى أعلى التقرير لقراءة التشخيص
-        if (reportHeader) {
-            pointTo(reportHeader, 'هنا ملخص تقريرك الطبي وتشخيصك المعتمد 🩺 استعرض نتائج فحصك', {
+        // هل التقرير لا يزال قيد الإعداد والتحضير؟
+        const loadingCard = document.querySelector('#clinical-report-container h3, #clinical-report-container .loading-report-box');
+        const reportMasterCard = document.querySelector('#clinical-report-container .report-master-card');
+
+        if (loadingCard && !reportMasterCard) {
+            // توجيه اليد والبالون إلى مساحة تحضير التقرير
+            pointTo(loadingCard, '⏳ تقريرك الطبي وتشخيصك قيد التحضير هنا في هذه المساحة... لحظات قليلة', {
                 handIcon: '👇',
                 placement: 'top',
                 autoScroll: false
             });
+            return;
         }
 
-        // بعد مهلة 8 ثوانٍ لإتاحة الفرصة للمريض للاطلاع على التشخيص، نوجهه لزر تفعيل الخطة واليوم الأول
+        // إذا كان التقرير قد فُتح بالفعل، نوجه المريض لبطاقة التشخيص
+        focusOnReportDiagnosis();
+    }
+
+    // تركيز الإرشاد على بطاقة التشخيص الطبي المعتمد عند صدور التقرير
+    function onReportRendered(data) {
+        if (currentStep !== 3) return;
+        setTimeout(() => {
+            focusOnReportDiagnosis();
+        }, 200);
+    }
+
+    function focusOnReportDiagnosis() {
+        updateStageFlowBanner(3, 1);
+        const diagnosisBadge = document.querySelector('#clinical-report-container .report-master-card, #clinical-report-container h2, #clinical-report-container .report-diagnosis-badge, #clinical-report-container');
+        const activateBtn = document.getElementById('btn-activate-plan-royal') || document.querySelector('.btn-plan-royal-card');
+
+        if (diagnosisBadge) {
+            pointTo(diagnosisBadge, '🩺 هذا هو تشخيص حالتك وخلاصة فحصك السريري.. تفضل بقراءته بعناية', {
+                handIcon: '👇',
+                placement: 'top',
+                autoScroll: true
+            });
+        }
+
+        // منح المريض مهلة كافية (10 ثوانٍ) لقراءة التشخيص ثم توجيهه لزر تفعيل الخطة المجانية
         if (step3NudgeTimer) clearTimeout(step3NudgeTimer);
         step3NudgeTimer = setTimeout(() => {
             if (currentStep === 3 && activateBtn && activateBtn.offsetParent !== null) {
@@ -454,7 +522,7 @@ const SmartGuidance = (function() {
                     autoScroll: true
                 });
             }
-        }, 8000);
+        }, 10000);
     }
 
     // توجيه زر نافذة الدعاء والصدقة الجارية
@@ -470,7 +538,7 @@ const SmartGuidance = (function() {
     }
 
     // -------------------------------------------------------------------------
-    // الخطوة 4: الجلسة الأولى (مستقلة)
+    // المرحلة 4: تمارين اليوم الأول (مستقلة)
     // -------------------------------------------------------------------------
     function guideStep4(autoScroll = false) {
         const completeBtn = document.querySelector('#step-section-4 button[onclick*="openSessionAssessmentModal"]') || document.getElementById('btn-complete-day1-session');
@@ -498,7 +566,6 @@ const SmartGuidance = (function() {
             return;
         }
 
-        // إن لم يتوفر مؤقت، وجه لزر التوثيق
         if (completeBtn && completeBtn.offsetParent !== null) {
             updateStageFlowBanner(4, 2);
             pointTo(completeBtn, 'اضغط هنا لتوثيق إنجاز تمارين اليوم الأول وبدء الاستشفاء ✅', {
@@ -510,7 +577,7 @@ const SmartGuidance = (function() {
     }
 
     // -------------------------------------------------------------------------
-    // الخطوة 5: متابعة الجلسات (2 إلى 7)
+    // المرحلة 5: متابعة الجلسات (2 إلى 7)
     // -------------------------------------------------------------------------
     function guideStep5(autoScroll = false) {
         const activeDayBtn = document.querySelector('.btn-start-current-day, .day-session-active-btn, .btn-pacer-trigger');
@@ -524,7 +591,7 @@ const SmartGuidance = (function() {
     }
 
     // -------------------------------------------------------------------------
-    // الخطوة 6: وثيقة التعافي والإنهاء
+    // المرحلة 6: وثيقة التعافي والإنهاء
     // -------------------------------------------------------------------------
     function guideStep6(autoScroll = false) {
         const certBtn = document.querySelector('.btn-download-cert, .btn-whatsapp-consult-cert');
@@ -546,6 +613,7 @@ const SmartGuidance = (function() {
         guideAiTyping: guideAiTyping,
         hideAiTyping: hideAiTyping,
         guideDuaaModal: guideDuaaModal,
+        onReportRendered: onReportRendered,
         updateStageFlowBanner: updateStageFlowBanner,
         refreshCurrentGuidance: () => triggerCurrentStepGuidance(true)
     };

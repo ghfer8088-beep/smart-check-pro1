@@ -1273,26 +1273,18 @@ setTimeout(updateOfflineDiagnosisUI, 500);
 // استخراج رقم الهاتف المحمول المعتمد بعد التحقق منه
 function getResolvedPatientPhone() {
     const auth = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
-    const candidates = [
-        clinicalDialogueState?.patientPhone,
-        auth?.originalPhone,
-        auth?.phone,
-        activePatient?.phone,
-        window.activePatient?.phone,
-        currentAssessmentData?.patientPhone,
-        window.currentAssessmentData?.patientPhone,
-        document.getElementById('patient-phone')?.value?.trim(),
-        document.getElementById('sub-phone')?.value?.trim(),
-        localStorage.getItem('smart_patient_phone')
-    ];
-    for (const cand of candidates) {
-        if (cand && isValidPhoneNumber(cand)) {
-            return cand;
-        }
+    // إذا كان المريض مسجلاً رسمياً ومسجل دخوله حالياً في الجلسة:
+    if (auth && auth.isRegistered && (auth.phone || auth.originalPhone)) {
+        return auth.originalPhone || auth.phone;
     }
-    if (auth && (auth.originalPhone || auth.phone)) {
-        const p = auth.originalPhone || auth.phone;
-        if (p && String(p).replace(/\D/g, '').length >= 7) return p;
+    // في الجلسة السريرية الجارية: نعتمد فقط الرقم الذي زوده المراجع خلال هذه الاستشارة الحالية
+    if (clinicalDialogueState && clinicalDialogueState.patientPhone && isValidPhoneNumber(clinicalDialogueState.patientPhone)) {
+        return clinicalDialogueState.patientPhone;
+    }
+    // في صفحة التقرير أو التسجيل المباشر: إذا أدخل رقماً صحيحاً في الحقل
+    const inpt = document.getElementById('sub-phone') || document.getElementById('patient-phone');
+    if (inpt && inpt.value && isValidPhoneNumber(inpt.value.trim())) {
+        return inpt.value.trim();
     }
     return '';
 }
@@ -3792,6 +3784,9 @@ function displayDiagnosticReport(data) {
     const activePointSpec = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint && currentSelectedPoint.specialtyType) ? currentSelectedPoint.specialtyType : null;
     if (data.isSpecializedConsultation || activePointSpec) {
         renderSpecializedClinicalReportStep3(data, reportContainer);
+        if (typeof SmartGuidance !== 'undefined' && typeof SmartGuidance.onReportRendered === 'function') {
+            setTimeout(() => { SmartGuidance.onReportRendered(data); }, 150);
+        }
         return;
     }
 
@@ -4391,6 +4386,8 @@ function displayDiagnosticReport(data) {
                 console.warn('AI insight error:', err);
                 if (contentArea) contentArea.innerHTML = Wada3anAiEngine.generateOfflineClinicalFallback(data);
             });
+        if (typeof SmartGuidance !== 'undefined' && typeof SmartGuidance.onReportRendered === 'function') {
+            setTimeout(() => { SmartGuidance.onReportRendered(data); }, 150);
         }
     }, 60);
 }
@@ -7065,6 +7062,8 @@ function resetToInitialState(force = false) {
         localStorage.removeItem('smart_current_patient_id');
         localStorage.removeItem('smart_last_active_patient_id');
         localStorage.removeItem('smart_active_patient');
+        localStorage.removeItem('smart_patient_phone');
+        localStorage.removeItem('smart_patient_name');
         sessionStorage.removeItem('scp_active_patient_id');
         if (window.history && window.history.replaceState) {
             window.history.replaceState({}, document.title, window.location.pathname);
