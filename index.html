@@ -39,7 +39,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=29.11">
+    <link rel="stylesheet" href="css/style.css?v=29.12">
     <script>
         // التحقق من تحديثات Service Worker وتحديث الكاش بسلاسة دون تفريغ أي بيانات للمرضى
         (function() {
@@ -285,6 +285,22 @@
         <!-- ================= الخطوة 1: فحص وتحديد موضع الألم ================= -->
         <section id="step-section-1" class="app-step-section">
 
+            <!-- شريط مسار المرحلة 1 -->
+            <div class="stage-flow-banner no-print" id="stage-flow-banner-1">
+                <div class="stage-flow-title">
+                    <span>🧭</span> <strong>مسار المرحلة الأولى (تحديد موضع الألم):</strong>
+                </div>
+                <div class="stage-flow-steps">
+                    <div class="stage-flow-step active" id="sfb-1-1">
+                        <span>1️⃣</span> انقر على موضع ألمك من المجسم
+                    </div>
+                    <span class="stage-flow-arrow">➔</span>
+                    <div class="stage-flow-step" id="sfb-1-2">
+                        <span>2️⃣</span> اضغط زر المتابعة للفحص السريري
+                    </div>
+                </div>
+            </div>
+
             <!-- بنر استئناف الجلسة العلاجية الجارية تلقائياً لحماية المراجع من أي فقدان لجلسته -->
             <div id="step1-active-session-banner" class="no-print" style="display: none; background: linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(15, 23, 42, 0.95) 100%); border: 2px solid #10b981; border-radius: 14px; padding: 14px 18px; margin-bottom: 18px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.35); align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
                 <div style="display: flex; align-items: center; gap: 12px;">
@@ -508,6 +524,27 @@
 
         <!-- ================= الخطوة 2: التقييم السريري (العيادة الافتراضية الذكية) ================= -->
         <section id="step-section-2" class="app-step-section" style="display: none;">
+
+            <!-- شريط مسار المرحلة 2 -->
+            <div class="stage-flow-banner no-print" id="stage-flow-banner-2">
+                <div class="stage-flow-title">
+                    <span>🧭</span> <strong>مسار المرحلة الثانية (الاستشارة السريرية):</strong>
+                </div>
+                <div class="stage-flow-steps">
+                    <div class="stage-flow-step active" id="sfb-2-1">
+                        <span>1️⃣</span> توثيق مؤشراتك الحيوية
+                    </div>
+                    <span class="stage-flow-arrow">➔</span>
+                    <div class="stage-flow-step" id="sfb-2-2">
+                        <span>2️⃣</span> الإجابة على أسئلة الطبيب
+                    </div>
+                    <span class="stage-flow-arrow">➔</span>
+                    <div class="stage-flow-step" id="sfb-2-3">
+                        <span>3️⃣</span> إصدار التقرير الطبي والتشخيص
+                    </div>
+                </div>
+            </div>
+
             <div style="background: var(--bg-card); border: 1px solid var(--border-gold-subtle); border-radius: 16px; padding: 25px; box-shadow: var(--shadow-gold-glow);">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                     <div>
@@ -746,6 +783,23 @@
 
         <!-- ================= الخطوة 3: التقرير الطبي ================= -->
         <section id="step-section-3" class="app-step-section" style="display: none;">
+
+            <!-- شريط مسار المرحلة 3 -->
+            <div class="stage-flow-banner no-print" id="stage-flow-banner-3">
+                <div class="stage-flow-title">
+                    <span>🧭</span> <strong>مسار المرحلة الثالثة (التقرير والتشخيص):</strong>
+                </div>
+                <div class="stage-flow-steps">
+                    <div class="stage-flow-step active" id="sfb-3-1">
+                        <span>1️⃣</span> قراءة ملخص التشخيص السريري
+                    </div>
+                    <span class="stage-flow-arrow">➔</span>
+                    <div class="stage-flow-step" id="sfb-3-2">
+                        <span>2️⃣</span> تفعيل الخطة وبدء جلسة اليوم الأول
+                    </div>
+                </div>
+            </div>
+
             <div id="clinical-report-container">
                 <div style="text-align: center; padding: 45px 20px; background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.95) 100%); border-radius: 16px; border: 2px solid var(--primary-gold); margin: 25px auto; max-width: 620px; box-shadow: 0 10px 40px rgba(0,0,0,0.7);">
                     <div style="font-size: 3em; margin-bottom: 15px; animation: pulse 1.5s infinite;">⏳</div>
@@ -761,6 +815,23 @@
 
         <!-- ================= الخطوة 4: الجلسة الأولى (مستقلة) ================= -->
         <section id="step-section-4" class="app-step-section" style="display: none;">
+
+            <!-- شريط مسار المرحلة 4 -->
+            <div class="stage-flow-banner no-print" id="stage-flow-banner-4">
+                <div class="stage-flow-title">
+                    <span>🧭</span> <strong>مسار المرحلة الرابعة (تمارين اليوم الأول):</strong>
+                </div>
+                <div class="stage-flow-steps">
+                    <div class="stage-flow-step active" id="sfb-4-1">
+                        <span>1️⃣</span> أداء التمارين مع المؤقت والتوجيه الصوتي
+                    </div>
+                    <span class="stage-flow-arrow">➔</span>
+                    <div class="stage-flow-step" id="sfb-4-2">
+                        <span>2️⃣</span> توثيق إنجاز الجلسة وبدء الاستشفاء (24 س)
+                    </div>
+                </div>
+            </div>
+
             <div id="step4-day1-container"></div>
             <div id="patient-recovery-dashboard"></div>
         </section>
@@ -1788,9 +1859,9 @@
     <script src="js/admin-engine.js?v=29.10"></script>
     <script src="js/ai-config.js?v=29.10"></script>
     <script src="js/ai-engine.js?v=29.10"></script>
-    <script src="js/app.js?v=29.11"></script>
-    <script src="js/text-editor.js?v=29.11"></script>
-    <script src="js/smart-guidance.js?v=29.11"></script>
+    <script src="js/app.js?v=29.12"></script>
+    <script src="js/text-editor.js?v=29.12"></script>
+    <script src="js/smart-guidance.js?v=29.12"></script>
 
     <script>
         // تشغيل عداد التفاعل الحي الاجتماعي (Live Online Social Proof) وكاشف الدولة والمدينة

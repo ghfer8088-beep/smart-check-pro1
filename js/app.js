@@ -4994,6 +4994,11 @@ function showRoyalDuaaModal(patientId) {
         modal.style.display = 'flex';
         const inner = modal.querySelector('.modal-inner');
         if (inner) inner.scrollTop = 0;
+        if (window.SmartGuidance && typeof SmartGuidance.guideDuaaModal === 'function') {
+            setTimeout(() => {
+                SmartGuidance.guideDuaaModal();
+            }, 300);
+        }
     } else {
         loadPatientRecoveryDashboard(patientId);
     }
@@ -9367,6 +9372,9 @@ function appendChatMessage(sender, text, options = {}) {
     const audioUrl = (typeof options === 'object' && options !== null) ? (options.audioUrl || null) : null;
     const transcription = (typeof options === 'object' && options !== null) ? (options.transcription || null) : null;
     const isBot = sender === 'bot';
+    if (isBot && window.SmartGuidance && typeof SmartGuidance.hideAiTyping === 'function') {
+        SmartGuidance.hideAiTyping();
+    }
 
     const persona = (typeof Wada3anAiEngine !== 'undefined') ? Wada3anAiEngine.getSessionDoctorPersona() : { name: 'د. عمر', gender: 'male' };
     const docIcon = persona.gender === 'female' ? '👩‍⚕️' : '👨‍⚕️';
@@ -9484,6 +9492,9 @@ async function sendChatMessage() {
         typingEl.innerHTML = `<span style="animation: spin 1s linear infinite; display: inline-block;">⚙️</span> <span>${persona.name} يحلل إجابتك ويسجل رده...</span>`;
         messagesBox.appendChild(typingEl);
         messagesBox.scrollTop = messagesBox.scrollHeight;
+        if (window.SmartGuidance && typeof SmartGuidance.guideAiTyping === 'function') {
+            SmartGuidance.guideAiTyping(typingEl);
+        }
     }
 
     // استخراج الاسم الحقيقي بدقة وتجنب اعتبار الكلمات العادية كالضمائر أو الأسئلة أسماءً
@@ -10561,6 +10572,9 @@ async function stopAndSendVoiceNote() {
         typingEl.innerHTML = `<span style="animation: spin 1s linear infinite; display: inline-block;">👂</span> ${persona.name} يستمع لصوتك ويحلل كلامك بدقة...`;
         messagesBox.appendChild(typingEl);
         messagesBox.scrollTop = messagesBox.scrollHeight;
+        if (window.SmartGuidance && typeof SmartGuidance.guideAiTyping === 'function') {
+            SmartGuidance.guideAiTyping(typingEl);
+        }
     }
 
     let result = null;
