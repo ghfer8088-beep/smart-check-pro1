@@ -1445,17 +1445,17 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/mqtt.min.js?v=29.10"></script>
-    <script src="js/cloud-sync.js?v=29.10"></script>
-    <script src="js/geo-tracker.js?v=29.10"></script>
-    <script src="js/database.js?v=29.10"></script>
-    <script src="js/exercise-image-studio.js?v=29.10"></script>
-    <script src="js/exercises-db.js?v=29.10"></script>
-    <script src="js/diagnostic-engine.js?v=29.10"></script>
-    <script src="js/patient-flow.js?v=29.10"></script>
-    <script src="js/admin-engine.js?v=29.10"></script>
-    <script src="js/ai-config.js?v=29.10"></script>
-    <script src="js/ai-engine.js?v=29.10"></script>
+    <script src="js/mqtt.min.js?v=29.18"></script>
+    <script src="js/cloud-sync.js?v=29.18"></script>
+    <script src="js/geo-tracker.js?v=29.18"></script>
+    <script src="js/database.js?v=29.18"></script>
+    <script src="js/exercise-image-studio.js?v=29.18"></script>
+    <script src="js/exercises-db.js?v=29.18"></script>
+    <script src="js/diagnostic-engine.js?v=29.18"></script>
+    <script src="js/patient-flow.js?v=29.18"></script>
+    <script src="js/admin-engine.js?v=29.18"></script>
+    <script src="js/ai-config.js?v=29.18"></script>
+    <script src="js/ai-engine.js?v=29.18"></script>
 
     <script>
         let allPatientsList = [];
@@ -3132,75 +3132,26 @@
             const breakdownEl = document.getElementById('geo-countries-breakdown-list');
             const lastSyncEl = document.getElementById('geo-last-sync-time');
 
-            // تجميع وتوحيد الدول والمدن من السجلات المسجلة محلياً وسحابياً
-            const patientCountriesMap = {};
-            let mobilePatients = 0;
-            let desktopPatients = 0;
+            const totalVisits = analytics.totalVisits || (allPatientsList ? allPatientsList.length : 0);
+            const countriesList = (analytics.topCountries && analytics.topCountries.length > 0)
+                ? analytics.topCountries
+                : [];
 
-            allPatientsList.forEach(item => {
-                const p = item.patient || {};
-                let norm = null;
-                if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.normalizeCountryInfo === 'function') {
-                    norm = SmartCloudSync.normalizeCountryInfo(p.country, p.countryCode, p.flag);
-                }
-                const c = norm ? norm.name : (p.country || 'المملكة العربية السعودية');
-                const flag = norm ? norm.flag : (p.flag || '🇸🇦');
-                const city = p.city || 'الرياض';
-                const key = flag + ' ' + c;
-
-                if (!patientCountriesMap[key]) {
-                    patientCountriesMap[key] = { country: c, flag: flag, count: 0, cities: {} };
-                }
-                patientCountriesMap[key].count++;
-                patientCountriesMap[key].cities[city] = (patientCountriesMap[key].cities[city] || 0) + 1;
-
-                if (p.device === 'Mobile') mobilePatients++;
-                else desktopPatients++;
-            });
-
-            // دمج نتائج الزيارات والمتصفحين
-            if (analytics.topCountries && analytics.topCountries.length > 0) {
-                analytics.topCountries.forEach(tc => {
-                    let norm = null;
-                    if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.normalizeCountryInfo === 'function') {
-                        norm = SmartCloudSync.normalizeCountryInfo(tc.country, tc.countryCode, tc.flag);
-                    }
-                    const tcCountry = norm ? norm.name : tc.country;
-                    const tcFlag = norm ? norm.flag : (tc.flag || '🌐');
-                    const key = tcFlag + ' ' + tcCountry;
-                    if (!patientCountriesMap[key]) {
-                        patientCountriesMap[key] = { country: tcCountry, flag: tcFlag, count: tc.count, cities: tc.cities || {} };
-                    } else {
-                        patientCountriesMap[key].count += tc.count;
-                        Object.entries(tc.cities || {}).forEach(([city, count]) => {
-                            patientCountriesMap[key].cities[city] = (patientCountriesMap[key].cities[city] || 0) + count;
-                        });
-                    }
-                });
-            }
-
-            const mergedCountries = Object.values(patientCountriesMap).sort((a, b) => b.count - a.count);
-            const totalVisitsCount = Math.max(analytics.totalVisits + allPatientsList.length, allPatientsList.length, 1);
-
-            if (totalVisitsEl) totalVisitsEl.textContent = totalVisitsCount;
-            if (countriesCountEl) countriesCountEl.textContent = Math.max(mergedCountries.length, 1);
-            if (mobilePctEl) {
-                const totalDevices = analytics.mobileCount + mobilePatients + analytics.desktopCount + desktopPatients;
-                const mobPct = totalDevices > 0 ? Math.round(((analytics.mobileCount + mobilePatients) / totalDevices) * 100) : 85;
-                mobilePctEl.textContent = mobPct + '%';
-            }
-            if (cloudPatientsEl) cloudPatientsEl.textContent = allPatientsList.length;
+            if (totalVisitsEl) totalVisitsEl.textContent = totalVisits;
+            if (countriesCountEl) countriesCountEl.textContent = countriesList.length;
+            if (mobilePctEl) mobilePctEl.textContent = (analytics.mobilePercentage || 0) + '%';
+            if (cloudPatientsEl) cloudPatientsEl.textContent = allPatientsList ? allPatientsList.length : 0;
             if (lastSyncEl) lastSyncEl.textContent = 'محدث الآن: ' + new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
 
             if (breakdownEl) {
-                if (mergedCountries.length === 0) {
-                    breakdownEl.innerHTML = '<div style="color: #94a3b8; font-size: 0.9em; padding: 10px;">جاري رصد حركة الزيارات السحابية...</div>';
+                if (countriesList.length === 0) {
+                    breakdownEl.innerHTML = '<div style="color: #94a3b8; font-size: 0.9em; padding: 10px;">لا توجد زيارات مسجلة حتى الآن...</div>';
                     return;
                 }
 
-                breakdownEl.innerHTML = mergedCountries.map(item => {
-                    const citiesArr = Object.keys(item.cities || {});
-                    const citiesStr = citiesArr.length > 0 ? citiesArr.join('، ') : 'مدن متعددة';
+                breakdownEl.innerHTML = countriesList.map(item => {
+                    const citiesArr = (item.citiesList || item.cities || []).map(c => typeof c === 'object' ? (c.name || c.city) : c).filter(Boolean);
+                    const citiesStr = citiesArr.length > 0 ? citiesArr.slice(0, 4).join('، ') : 'مدن متعددة';
                     return `
                     <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
                         <div style="display: flex; align-items: center; gap: 10px;">
@@ -3212,7 +3163,7 @@
                         </div>
                         <div style="text-align: left;">
                             <span style="background: rgba(56, 189, 248, 0.15); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 10px; border-radius: 12px; font-size: 0.82em; font-weight: bold;">
-                                ${item.count} زيارة
+                                ${item.count || item.totalVisits || 0} زيارة
                             </span>
                         </div>
                     </div>`;

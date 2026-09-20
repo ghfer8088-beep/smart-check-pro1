@@ -77,6 +77,22 @@
         } catch(e) {}
     })();
 
+    // تطهير فوري من أي زيارات وهمية مسبقة (vis_seed_) لضمان مصداقية ودقة سجل الزوار 100%
+    (function sanitizeFakeSeedVisits() {
+        try {
+            const raw = localStorage.getItem('smart_geo_visits_history');
+            if (raw) {
+                const list = JSON.parse(raw);
+                if (Array.isArray(list)) {
+                    const cleaned = list.filter(v => v && v.visitorId && !String(v.visitorId).startsWith('vis_seed_') && (!v.page || (!v.page.includes('admin') && !v.page.includes('calibrator'))));
+                    if (cleaned.length !== list.length) {
+                        localStorage.setItem('smart_geo_visits_history', JSON.stringify(cleaned));
+                    }
+                }
+            }
+        } catch(e) {}
+    })();
+
     // التحقق الصارم من قائمة المحذوفات لمنع إعادة استيراد أي مريض محذوف
     function isDeletedPatient(patientId) {
         if (!patientId) return false;
@@ -1162,7 +1178,7 @@
                         if (idx >= 0) existing[idx] = { ...existing[idx], ...l };
                         else existing.push(l);
                         if (window.SmartDB && typeof window.SmartDB.saveDailyLog === 'function') {
-                            await window.SmartDB.saveDailyLog(l, { skipCloudSync: true });
+                            window.SmartDB.saveDailyLog(l, { skipCloudSync: true }).catch(() => {});
                         }
                     }
                     existing.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
@@ -1182,14 +1198,14 @@
                 }
             }
 
-            // 3. استيراد الزيارات
+            // 3. استيراد الزيارات الحقيقية فقط
             if (Array.isArray(snapshot.visits) && snapshot.visits.length > 0) {
                 const VISITS_KEY = 'smart_geo_visits_history';
                 let localVisits = [];
                 try { localVisits = JSON.parse(localStorage.getItem(VISITS_KEY) || '[]'); } catch(e) {}
                 const seen = new Set(localVisits.map(v => v.visitorId));
                 for (const v of snapshot.visits) {
-                    if (v && v.visitorId && !seen.has(v.visitorId)) {
+                    if (v && v.visitorId && !String(v.visitorId).startsWith('vis_seed_') && !seen.has(v.visitorId)) {
                         seen.add(v.visitorId);
                         localVisits.push(v);
                     }
@@ -1304,10 +1320,16 @@
         } catch (e) {}
     }
 
-    // جلب كافة الزيارات المسجلة سحابياً من كافة الهواتف والكمبيوترات حول العالم
+    // جلب كافة الزيارات المسجلة سحابياً من كافة الهواتف والكمبيوترات حول العالم (مع مهلة أمان قصوى 2 ثانية)
     async function fetchCloudVisits() {
         try {
-            const resp = await fetch(`${CLOUD_VISITS_ENDPOINT}/json?poll=1&since=all`);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2000);
+            const resp = await fetch(`${CLOUD_VISITS_ENDPOINT}/json?poll=1&since=24h`, {
+                cache: 'no-store',
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
             if (!resp.ok) return;
             const text = await resp.text();
             if (!text) return;
@@ -1327,6 +1349,7 @@
                     if (item.event === 'message' && item.message) {
                         const v = JSON.parse(item.message);
                         if (v && (v.visitorId || v.timestamp)) {
+                            if (String(v.visitorId).startsWith('vis_seed_')) continue;
                             const exists = localVisits.some(lv => lv.visitorId === v.visitorId && Math.abs(new Date(lv.timestamp) - new Date(v.timestamp)) < 120000);
                             if (!exists) {
                                 localVisits.push(v);
@@ -1450,7 +1473,7 @@
         const currentList = getCloudSyncedPatients();
         let changed = false;
 
-        // تشغيل قناتي السحابة (Master Hub و NTFY) بالتوازي الكامل بدلاً من الانتظار التسلسلي
+        // تشغيل قناتي السحابة (Master Hub و NTFY) بالتوازي الفوري بمهلة أمان قصوى 2.5 ثانية لمنع أي تعليق
         const tasks = [];
 
         // 1. القناة الأساسية السريعة (Master Cloud Hub) إن كانت متاحة
@@ -1458,7 +1481,7 @@
             tasks.push((async () => {
                 try {
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 4500);
+                    const timeoutId = setTimeout(() => controller.abort(), 1500);
                     const hubResp = await fetch(CLOUD_MASTER_HUB_ENDPOINT, { cache: 'no-store', signal: controller.signal });
                     clearTimeout(timeoutId);
                     if (hubResp.ok) {
@@ -1474,27 +1497,20 @@
             })());
         }
 
-        // 2. القناة الثانوية المضاعفة (Secondary ntfy Relay) مع استرجاع كافة الرسائل دون تفويت أي سجل
+        // 2. القناة الثانوية المضاعفة (Secondary ntfy Relay) بمهلة أمان قصوى 2.5 ثانية
         tasks.push((async () => {
             try {
                 const controller2 = new AbortController();
-                const timeoutId2 = setTimeout(() => controller2.abort(), 4500);
-                const pollUrl = `${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=all`;
-                const resp = await fetch(pollUrl, { signal: controller2.signal });
+                const timeoutId2 = setTimeout(() => controller2.abort(), 2500);
+                const hasExistingData = currentList && currentList.length > 0;
+                const pollUrl = `${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=${hasExistingData ? '24h' : 'all'}`;
+                const resp = await fetch(pollUrl, { cache: 'no-store', signal: controller2.signal });
                 clearTimeout(timeoutId2);
                 if (resp.ok) {
                     const text = await resp.text();
                     return { type: 'ntfy', text: text };
                 }
-            } catch(errNtfy) {
-                try {
-                    const c3 = new AbortController();
-                    const t3 = setTimeout(() => c3.abort(), 3500);
-                    const r3 = await fetch(`${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=7d`, { signal: c3.signal });
-                    clearTimeout(t3);
-                    if (r3.ok) return { type: 'ntfy', text: await r3.text() };
-                } catch(e3) {}
-            }
+            } catch(errNtfy) {}
             return null;
         })());
 
@@ -1654,6 +1670,7 @@
                 };
 
                 let latestAttachmentItem = null;
+                let latestInlineSnapshot = null;
 
                 for (const line of lines) {
                     if (!line.trim()) continue;
@@ -1668,8 +1685,7 @@
                         }
                         if (pt) {
                             if (pt.type === 'clinic_full_snapshot' && pt.snapshot) {
-                                await importFullClinicSnapshot(pt.snapshot);
-                                changed = true;
+                                latestInlineSnapshot = pt.snapshot;
                             } else {
                                 processPatientRecord(pt);
                             }
@@ -1685,14 +1701,17 @@
                     } catch(e) {}
                 }
 
-                // تنزيل أحدث ملف مرفق فقط إذا لم يكن قد تم استيراده مسبقاً (يوفر 20+ ثانية من الانتظار المكرر)
-                if (latestAttachmentItem && latestAttachmentItem.attachment && latestAttachmentItem.attachment.url) {
+                // استيراد أحدث حزمة سحابية مدمجة لمرة واحدة فقط لتوفير الوقت ومنع التعليق
+                if (latestInlineSnapshot) {
+                    await importFullClinicSnapshot(latestInlineSnapshot);
+                    changed = true;
+                } else if (latestAttachmentItem && latestAttachmentItem.attachment && latestAttachmentItem.attachment.url) {
                     const attUrl = latestAttachmentItem.attachment.url;
                     const lastImportedUrl = localStorage.getItem('smart_last_imported_att_url');
                     if (attUrl !== lastImportedUrl) {
                         try {
                             const attController = new AbortController();
-                            const attTimer = setTimeout(() => attController.abort(), 4000);
+                            const attTimer = setTimeout(() => attController.abort(), 2500);
                             const attResp = await fetch(attUrl, { signal: attController.signal });
                             clearTimeout(attTimer);
                             if (attResp.ok) {
@@ -1854,10 +1873,15 @@
             if (rawVisits) visitsHistory = JSON.parse(rawVisits);
         } catch (e) {}
 
-        // استبعاد أي زيارات لصفحات الإدارة (admin.html) لضمان أن الإحصاءات تعكس مراجعي الأداة الحقيقيين فقط
-        visitsHistory = visitsHistory.filter(v => !v.page || (!v.page.includes('admin') && !v.page.includes('calibrator')));
+        // استبعاد أي زيارات لصفحات الإدارة واستبعاد أي سجلات وهمية سابقة (vis_seed_) لضمان مصداقية الأرقام 100%
+        visitsHistory = (Array.isArray(visitsHistory) ? visitsHistory : []).filter(v => {
+            if (!v || !v.visitorId) return false;
+            if (String(v.visitorId).startsWith('vis_seed_')) return false;
+            if (v.page && (v.page.includes('admin') || v.page.includes('calibrator'))) return false;
+            return true;
+        });
 
-        // دمج زيارات كافة المرضى والمراجعين المتاحين سحابياً ومحلياً
+        // دمج زيارات المراجعين الفعليين المتاحين سحابياً ومحلياً
         const candidatePatients = [
             ...getCloudSyncedPatients(),
             ...JSON.parse(localStorage.getItem('smart_all_patients') || '[]')
@@ -1875,60 +1899,31 @@
 
             if (!pCountry) {
                 const ph = (p.phone || '').replace(/\D/g, '');
-                if (ph.startsWith('962') || ph.startsWith('07')) { pCountry = 'الأردن'; pFlag = '🇯🇴'; pCity = pCity || 'عمان'; }
+                if (ph.startsWith('962') || ph.startsWith('07')) { pCountry = 'الأردن'; pFlag = '🇯🇴'; pCity = pCity || 'عمّان'; }
                 else if (ph.startsWith('966') || ph.startsWith('05')) { pCountry = 'المملكة العربية السعودية'; pFlag = '🇸🇦'; pCity = pCity || 'الرياض'; }
                 else if (ph.startsWith('49')) { pCountry = 'ألمانيا'; pFlag = '🇩🇪'; pCity = pCity || 'فرانكفورت'; }
                 else if (ph.startsWith('970') || ph.startsWith('972')) { pCountry = 'فلسطين'; pFlag = '🇵🇸'; pCity = pCity || 'القدس'; }
                 else if (ph.startsWith('971')) { pCountry = 'الإمارات'; pFlag = '🇦🇪'; pCity = pCity || 'دبي'; }
                 else if (ph.startsWith('964')) { pCountry = 'العراق'; pFlag = '🇮🇶'; pCity = pCity || 'بغداد'; }
-                else { pCountry = 'الأردن'; pFlag = '🇯🇴'; pCity = pCity || 'عمان'; }
+                else if (ph.startsWith('20')) { pCountry = 'مصر'; pFlag = '🇪🇬'; pCity = pCity || 'القاهرة'; }
+                else if (ph.startsWith('965')) { pCountry = 'الكويت'; pFlag = '🇰🇼'; pCity = pCity || 'الكويت'; }
+                else if (ph.startsWith('974')) { pCountry = 'قطر'; pFlag = '🇶🇦'; pCity = pCity || 'الدوحة'; }
+                else if (ph.startsWith('968')) { pCountry = 'سلطنة عمان'; pFlag = '🇴🇲'; pCity = pCity || 'مسقط'; }
+                else if (ph.startsWith('973')) { pCountry = 'البحرين'; pFlag = '🇧🇭'; pCity = pCity || 'المنامة'; }
+                else { pCountry = 'دولي'; pFlag = '🌐'; pCity = pCity || 'غير محدد'; }
             }
 
             visitsHistory.unshift({
                 visitorId: 'vis_' + pId,
                 country: pCountry,
                 countryCode: p.countryCode || (pFlag === '🇯🇴' ? 'JO' : (pFlag === '🇩🇪' ? 'DE' : (pFlag === '🇸🇦' ? 'SA' : '🌐'))),
-                city: pCity || 'عمان',
+                city: pCity || 'غير محدد',
                 flag: pFlag,
                 device: p.device || 'Mobile',
                 deviceIcon: p.deviceIcon || (p.device === 'Desktop' ? '💻' : '📱'),
                 timestamp: p.createdAt || p.timestamp || new Date().toISOString(),
                 page: '/'
             });
-        }
-
-        // في حال كانت الزيارات قليلة أو غير متوازنة، إضافة زيارات المنظومة الحقيقية الموزعة (أغلبها هواتف ذكية 88%)
-        const mobileVisitsCount = visitsHistory.filter(v => (v.device || '').toLowerCase() === 'mobile').length;
-        if (visitsHistory.length === 0 || mobileVisitsCount === 0) {
-            const baseline = [
-                { country: 'الأردن', flag: '🇯🇴', city: 'عمان', device: 'Mobile', count: 22 },
-                { country: 'الأردن', flag: '🇯🇴', city: 'الزرقاء', device: 'Mobile', count: 9 },
-                { country: 'الأردن', flag: '🇯🇴', city: 'إربد', device: 'Mobile', count: 6 },
-                { country: 'فلسطين', flag: '🇵🇸', city: 'القدس', device: 'Mobile', count: 8 },
-                { country: 'فلسطين', flag: '🇵🇸', city: 'رام الله', device: 'Mobile', count: 5 },
-                { country: 'المملكة العربية السعودية', flag: '🇸🇦', city: 'الرياض', device: 'Mobile', count: 12 },
-                { country: 'المملكة العربية السعودية', flag: '🇸🇦', city: 'جدة', device: 'Mobile', count: 7 },
-                { country: 'ألمانيا', flag: '🇩🇪', city: 'فرانكفورت', device: 'Desktop', count: 4 },
-                { country: 'ألمانيا', flag: '🇩🇪', city: 'برلين', device: 'Mobile', count: 3 },
-                { country: 'الإمارات', flag: '🇦🇪', city: 'دبي', device: 'Mobile', count: 6 },
-                { country: 'العراق', flag: '🇮🇶', city: 'بغداد', device: 'Mobile', count: 7 }
-            ];
-            let seed = 1;
-            for (const b of baseline) {
-                for (let k = 0; k < b.count; k++) {
-                    visitsHistory.push({
-                        visitorId: 'vis_seed_' + (seed++),
-                        country: b.country,
-                        countryCode: b.flag === '🇯🇴' ? 'JO' : (b.flag === '🇩🇪' ? 'DE' : 'SA'),
-                        city: b.city,
-                        flag: b.flag,
-                        device: b.device,
-                        deviceIcon: b.device === 'Desktop' ? '💻' : '📱',
-                        timestamp: new Date(Date.now() - (seed * 3600000)).toISOString(),
-                        page: '/'
-                    });
-                }
-            }
         }
 
         const countryMap = {};
@@ -1964,7 +1959,7 @@
 
             countryMap[key].count++;
 
-            const cityName = (v.city && v.city !== 'غير محدد') ? v.city : 'عمان';
+            const cityName = (v.city && v.city !== 'غير محدد' && v.city !== '—') ? v.city : 'غير محدد';
             countryMap[key].cities[cityName] = (countryMap[key].cities[cityName] || 0) + 1;
 
             const dev = (v.device || 'Mobile').toLowerCase();
@@ -2598,10 +2593,9 @@
             }
         },
         flushPendingVisits: flushPendingCloudVisits,
-        // مزامنة كاملة قسرية: تجاوز الحواجز وجلب كل شيء من جميع المصادر ثم بث snapshot للأجهزة الأخرى
+        // مزامنة كاملة قسرية فائقة السرعة: جلب كل شيء من جميع المصادر بالتوازي ثم بث snapshot للأجهزة الأخرى
         forceFullSync: async function() {
-            resetMasterHubCircuit(); // فتح دائرة الحماية أولاً
-            await Promise.all([fetchCloudPatients(), fetchCloudVisits()]); // جلب بالتوازي
+            await Promise.all([fetchCloudPatients(), fetchCloudVisits()]); // جلب بالتوازي السريع
             await broadcastFullClinicSnapshot(); // بث للأجهزة الأخرى
             return getCloudSyncedPatients().length;
         }

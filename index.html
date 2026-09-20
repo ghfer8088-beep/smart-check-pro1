@@ -240,7 +240,7 @@
             <div style="display: flex; align-items: center; gap: 8px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.45); padding: 4px 14px; border-radius: 20px;">
                 <span style="display: inline-block; width: 9px; height: 9px; background: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981; animation: pulseOnline 1.8s infinite;"></span>
                 <span style="color: #6ee7b7; font-weight: 700;">أونلاين الآن:</span>
-                <span id="live-online-users-count" style="color: #fff; font-weight: 800; font-size: 1.1em; min-width: 26px; text-align: center;">67</span>
+                <span id="live-online-users-count" style="color: #fff; font-weight: 800; font-size: 1.1em; min-width: 26px; text-align: center;">1</span>
                 <span style="color: #cbd5e1; font-size: 0.92em;">مراجعاً في الفحص والاستشارة</span>
             </div>
             <div id="visitor-geo-badge" style="display: inline-flex; align-items: center; gap: 6px; color: #94a3b8; font-size: 0.88em;">
@@ -1853,64 +1853,64 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=29.10"></script>
-    <script src="js/cloud-sync.js?v=29.10"></script>
-    <script src="js/geo-tracker.js?v=29.10"></script>
-    <script src="js/database.js?v=29.10"></script>
-    <script src="js/exercise-image-studio.js?v=29.10"></script>
-    <script src="js/exercises-db.js?v=29.10"></script>
-    <script src="js/diagnostic-engine.js?v=29.10"></script>
-    <script src="js/audio-pacer.js?v=29.10"></script>
-    <script src="js/patient-flow.js?v=29.10"></script>
-    <script src="js/admin-engine.js?v=29.10"></script>
-    <script src="js/ai-config.js?v=29.10"></script>
-    <script src="js/ai-engine.js?v=29.10"></script>
-    <script src="js/app.js?v=29.17"></script>
-    <script src="js/text-editor.js?v=29.15"></script>
-    <script src="js/smart-guidance.js?v=29.17"></script>
+    <script src="js/mqtt.min.js?v=29.18"></script>
+    <script src="js/cloud-sync.js?v=29.18"></script>
+    <script src="js/geo-tracker.js?v=29.18"></script>
+    <script src="js/database.js?v=29.18"></script>
+    <script src="js/exercise-image-studio.js?v=29.18"></script>
+    <script src="js/exercises-db.js?v=29.18"></script>
+    <script src="js/diagnostic-engine.js?v=29.18"></script>
+    <script src="js/audio-pacer.js?v=29.18"></script>
+    <script src="js/patient-flow.js?v=29.18"></script>
+    <script src="js/admin-engine.js?v=29.18"></script>
+    <script src="js/ai-config.js?v=29.18"></script>
+    <script src="js/ai-engine.js?v=29.18"></script>
+    <script src="js/app.js?v=29.18"></script>
+    <script src="js/text-editor.js?v=29.18"></script>
+    <script src="js/smart-guidance.js?v=29.18"></script>
 
     <script>
-        // تشغيل عداد التفاعل الحي الاجتماعي (Live Online Social Proof) وكاشف الدولة والمدينة
+        // تشغيل مؤشر المراجعين المتفاعلين وكاشف الدولة والمدينة الحقيقي بدقة 100% دون أي توليد عشوائي
         (function initLiveSocialProof() {
             const countEl = document.getElementById('live-online-users-count');
             const locEl = document.getElementById('visitor-detected-location');
 
-            // رقم أولي عشوائي طبيعي جداً (أقل من 100 قطعاً: بين 58 و 83)
-            let baseOnline = 58 + Math.floor(Math.random() * 26);
-            if (countEl) countEl.textContent = baseOnline;
+            function updateLiveCount() {
+                if (!countEl) return;
+                let activeCount = 1;
+                try {
+                    const rawVisits = localStorage.getItem('smart_geo_visits_history');
+                    if (rawVisits) {
+                        const visits = JSON.parse(rawVisits);
+                        if (Array.isArray(visits)) {
+                            const todayStr = new Date().toISOString().slice(0, 10);
+                            const todayVisits = visits.filter(v => v && v.timestamp && v.timestamp.startsWith(todayStr) && !String(v.visitorId).startsWith('vis_seed_'));
+                            const uniqueToday = new Set(todayVisits.map(v => v.visitorId));
+                            activeCount = Math.max(1, uniqueToday.size);
+                        }
+                    }
+                } catch(e) {}
+                countEl.textContent = activeCount;
+            }
+            updateLiveCount();
 
-            // كشف الموقع الجغرافي للزائر
+            // كشف الموقع الجغرافي للزائر بدقة
             if (window.SmartGeoTracker && typeof window.SmartGeoTracker.getVisitorInfo === 'function') {
                 window.SmartGeoTracker.getVisitorInfo().then(info => {
                     if (locEl && info) {
                         const flag = info.flag || '🌐';
-                        const cityText = (info.city && info.city !== 'غير محدد') ? `${info.city} - ` : '';
+                        const cityText = (info.city && info.city !== 'غير محدد' && info.city !== '—') ? `${info.city} - ` : '';
                         const countryText = (info.country && info.country !== 'غير محدد') ? info.country : 'زائر معتمد';
                         const deviceIcon = info.deviceIcon || '📱';
                         locEl.textContent = `${flag} ${cityText}${countryText} (${deviceIcon})`;
                     }
                 }).catch(() => {
-                    if (locEl) locEl.textContent = '🇸🇦 المملكة العربية السعودية (📱)';
+                    if (locEl) locEl.textContent = '🌐 زائر معتمد (📱)';
                 });
             }
 
-            // تموج وتذبذب ديناميكي طبيعي كل 13 ثانية (يبقى دائماً محصوراً أقل من 100)
-            setInterval(() => {
-                if (!countEl) return;
-                const delta = (Math.random() > 0.48 ? 1 : -1) * (Math.floor(Math.random() * 3) + 1);
-                baseOnline += delta;
-                if (baseOnline > 89) baseOnline = 87;
-                if (baseOnline < 52) baseOnline = 55;
-                
-                countEl.style.transition = 'transform 0.3s ease, color 0.3s ease';
-                countEl.style.transform = 'scale(1.2)';
-                countEl.style.color = delta >= 0 ? '#6ee7b7' : '#fef08a';
-                countEl.textContent = baseOnline;
-                setTimeout(() => {
-                    countEl.style.transform = 'scale(1)';
-                    countEl.style.color = '#fff';
-                }, 350);
-            }, 13000);
+            // تحديث دوري هادئ لمطابقة الزيارات الفعلية
+            setInterval(updateLiveCount, 60000);
         })();
     </script>
 </body>
