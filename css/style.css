@@ -2670,3 +2670,168 @@ body {
         gap: 8px !important;
     }
 }
+
+/* ==========================================================================
+   نظام اليد الإرشادية الذكية والتمرير التلقائي لكبار السن (Smart Guidance Engine)
+   ========================================================================== */
+.smart-guidance-beacon {
+    position: absolute;
+    transform: translate(-50%, -100%);
+    z-index: 999999;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: top 0.25s ease-out, left 0.25s ease-out;
+}
+
+.guidance-beacon-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.guidance-bubble {
+    background: linear-gradient(135deg, #0b111e 0%, #1e293b 100%);
+    border: 2px solid #d4af37;
+    border-radius: 30px;
+    padding: 8px 18px;
+    box-shadow: 0 8px 30px rgba(212, 175, 55, 0.45), 0 4px 15px rgba(0, 0, 0, 0.85);
+    color: #ffffff;
+    font-weight: 900;
+    font-size: 0.98em;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+.guidance-bubble-text {
+    color: #fef08a;
+    font-weight: 900;
+}
+
+.guidance-dismiss-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: #cbd5e1;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    line-height: 1;
+    transition: 0.2s ease;
+    margin-right: -4px;
+}
+
+.guidance-dismiss-btn:hover {
+    background: rgba(239, 68, 68, 0.4);
+    color: #ffffff;
+}
+
+.guidance-hand-anim {
+    font-size: 2.6em;
+    line-height: 1;
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.8));
+    animation: guidanceHandBounce 1.2s infinite ease-in-out;
+    transform-origin: bottom center;
+}
+
+@keyframes guidanceHandBounce {
+    0%, 100% {
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        transform: translateY(10px) scale(1.14);
+    }
+}
+
+/* هالة التمييز الضوئية حول الزر أو الموضع المستهدف */
+.guidance-target-highlight {
+    animation: guidanceTargetHalo 1.4s infinite alternate !important;
+    position: relative !important;
+    z-index: 10 !important;
+}
+
+@keyframes guidanceTargetHalo {
+    0% {
+        box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.6), 0 0 16px rgba(212, 175, 55, 0.45) !important;
+    }
+    100% {
+        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.95), 0 0 32px rgba(16, 185, 129, 0.75) !important;
+    }
+}
+
+/* نبض موحد لكافة نقاط المجسم أثناء التوجيه المبدئي */
+.anatomy-hotspot.guidance-pulse-all {
+    animation: pulseHotspotGuidanceSync 1.4s infinite ease-in-out !important;
+}
+
+@keyframes pulseHotspotGuidanceSync {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.8), 0 0 10px #ef4444;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.3);
+        box-shadow: 0 0 0 12px rgba(212, 175, 55, 0), 0 0 22px #f59e0b;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        box-shadow: 0 0 0 0 rgba(212, 175, 55, 0), 0 0 10px #ef4444;
+    }
+}
+
+/* تأثيرات الظهور والتلاشي الناعمة */
+.guidance-fade-in {
+    animation: guidanceFadeInAnim 0.3s forwards cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.guidance-fade-out {
+    animation: guidanceFadeOutAnim 0.25s forwards ease-in;
+}
+
+@keyframes guidanceFadeInAnim {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -85%) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -100%) scale(1);
+    }
+}
+
+@keyframes guidanceFadeOutAnim {
+    from {
+        opacity: 1;
+        transform: translate(-50%, -100%) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translate(-50%, -85%) scale(0.9);
+    }
+}
+
+@media (max-width: 480px) {
+    .guidance-bubble {
+        font-size: 0.86em;
+        padding: 6px 14px;
+        max-width: 270px;
+        white-space: normal;
+        text-align: center;
+    }
+    .guidance-hand-anim {
+        font-size: 2.2em;
+    }
+}

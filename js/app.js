@@ -612,7 +612,27 @@ function selectAnatomyPoint(point, element) {
         proceedBtn.disabled = false;
         proceedBtn.style.opacity = '1';
     }
+
+    if (typeof SmartGuidance !== 'undefined' && typeof SmartGuidance.onPointSelected === 'function') {
+        SmartGuidance.onPointSelected(point);
+    }
 }
+
+window.handleStep1ProceedClick = function() {
+    if (!currentSelectedPoint) {
+        if (typeof SmartGuidance !== 'undefined' && typeof SmartGuidance.pointTo === 'function') {
+            const viewport = document.querySelector('.skeleton-viewport') || document.querySelector('.anatomy-card');
+            SmartGuidance.pointTo(viewport, 'يا غالي، انقر أولاً على موضع ألمك من النقاط المضيئة على المجسم لنبدأ معك 👇', {
+                handIcon: '👇',
+                placement: 'top',
+                autoScroll: true
+            });
+        }
+        return;
+    }
+    if (window.Wada3anAiEngine) Wada3anAiEngine.unlockAudio();
+    goToStep(2);
+};
 
 // البحث الذكي عن موضع الشكوى (Smart Pain Search)
 function handleSmartPainSearch(query) {
@@ -4305,6 +4325,9 @@ function displayDiagnosticReport(data) {
 
     // تفعيل وتوليد التحليل السريري المخصص بالذكاء الاصطناعي واحتساب الـ BMI فوراً
     setTimeout(() => {
+        if (typeof SmartGuidance !== 'undefined' && typeof SmartGuidance.updateStep === 'function') {
+            SmartGuidance.updateStep(3);
+        }
         const btnRoyal = document.getElementById('btn-activate-plan-royal');
         if (btnRoyal && !btnRoyal._boundMobileActivation) {
             btnRoyal._boundMobileActivation = true;
@@ -6887,6 +6910,11 @@ function goToStep(stepNum) {
 
     // تحديث مؤشرات شريط الخطوات الذكي مع المحافظة على جميع الخطوات المنجزة
     updateStepperVisuals(stepNum);
+
+    // تفعيل نظام اليد الإرشادية والتمرير الذكي للمرحلة الجديدة
+    if (typeof SmartGuidance !== 'undefined' && typeof SmartGuidance.updateStep === 'function') {
+        SmartGuidance.updateStep(stepNum);
+    }
 
     // إذا دخل المراجع الخطوة 1 (المجسم)، إظهار شريط التوجيه وبنر استئناف الجلسة الجارية
     if (stepNum === 1) {
