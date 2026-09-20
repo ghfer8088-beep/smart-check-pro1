@@ -16,9 +16,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=29.8"></script>
-    <script src="js/security-shield.js?v=29.8"></script>
-    <link rel="stylesheet" href="css/style.css?v=29.8">
+    <script src="js/system-watchdog.js?v=29.9"></script>
+    <script src="js/security-shield.js?v=29.9"></script>
+    <link rel="stylesheet" href="css/style.css?v=29.9">
     <style>
         body {
             background-color: #080c14;
@@ -627,6 +627,8 @@
                 <!-- حاوية بطاقات المراجعين الملكية الفاخرة (للموبايل، وللكمبيوتر عند اختيار وضع البطاقات) -->
                 <div id="patients-cards-container" class="patients-cards-grid">
                 </div>
+                <!-- أشرطة وأزرار تقسيم الصفحات (20 سجل لكل صفحة) -->
+                <div id="patients-cards-pagination"></div>
             </div>
         </div>
 
@@ -1443,17 +1445,17 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/mqtt.min.js?v=29.8"></script>
-    <script src="js/geo-tracker.js?v=29.8"></script>
-    <script src="js/cloud-sync.js?v=29.8"></script>
-    <script src="js/database.js?v=29.8"></script>
-    <script src="js/exercise-image-studio.js?v=29.8"></script>
-    <script src="js/exercises-db.js?v=29.8"></script>
-    <script src="js/diagnostic-engine.js?v=29.8"></script>
-    <script src="js/patient-flow.js?v=29.8"></script>
-    <script src="js/admin-engine.js?v=29.8"></script>
-    <script src="js/ai-config.js?v=29.8"></script>
-    <script src="js/ai-engine.js?v=29.8"></script>
+    <script src="js/mqtt.min.js?v=29.9"></script>
+    <script src="js/cloud-sync.js?v=29.9"></script>
+    <script src="js/geo-tracker.js?v=29.9"></script>
+    <script src="js/database.js?v=29.9"></script>
+    <script src="js/exercise-image-studio.js?v=29.9"></script>
+    <script src="js/exercises-db.js?v=29.9"></script>
+    <script src="js/diagnostic-engine.js?v=29.9"></script>
+    <script src="js/patient-flow.js?v=29.9"></script>
+    <script src="js/admin-engine.js?v=29.9"></script>
+    <script src="js/ai-config.js?v=29.9"></script>
+    <script src="js/ai-engine.js?v=29.9"></script>
 
     <script>
         let allPatientsList = [];
@@ -2849,15 +2851,27 @@
                 </tr>
             `}).join('');
 
-            // توليد بطاقات المراجعين الملكية الفاخرة المريحة للمدير (على الموبايل والكمبيوتر)
+            // توليد بطاقات المراجعين الملكية الفاخرة المريحة للمدير مع التقسيم إلى صفحات (20 سجل لكل صفحة)
             if (mobileCardsContainer) {
+                const paginationEl = document.getElementById('patients-cards-pagination');
                 if (!list || list.length === 0) {
                     mobileCardsContainer.innerHTML = `
                         <div style="text-align: center; padding: 30px 15px; color: #94a3b8; background: #080c14; border-radius: 12px; border: 1px dashed #334155;">
                             📂 لا يوجد مراجعين مسجلين حالياً.
                         </div>`;
+                    if (paginationEl) paginationEl.innerHTML = '';
                 } else {
-                    mobileCardsContainer.innerHTML = list.map((item, idx) => {
+                    const totalItems = list.length;
+                    const totalPages = Math.max(1, Math.ceil(totalItems / cardsPerPage));
+                    if (currentCardsPage > totalPages) currentCardsPage = totalPages;
+                    if (currentCardsPage < 1) currentCardsPage = 1;
+
+                    const startIdx = (currentCardsPage - 1) * cardsPerPage;
+                    const endIdx = Math.min(startIdx + cardsPerPage, totalItems);
+                    const pagedList = list.slice(startIdx, endIdx);
+
+                    mobileCardsContainer.innerHTML = pagedList.map((item, localIdx) => {
+                        const idx = startIdx + localIdx;
                         const p = item.patient || {};
                         const cleanPhone = (p.phone || '').replace(/[^0-9]/g, '');
                         const flag = p.flag || '🌍';
@@ -2994,16 +3008,80 @@
                                     <div style="color: #e2e8f0; font-size: 0.9em;">${p.mriReportText}</div>
                                 </div>` : ''}
                                 <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
-                                    <button type="button" onclick="deletePatientRecord('${p.patientId}')" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; padding: 6px 14px; border-radius: 6px; font-size: 0.82em; cursor: pointer;">
+                                    <button type="button" onclick="deletePatientRecord('${p.patientId}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}')" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; padding: 6px 14px; border-radius: 6px; font-size: 0.82em; cursor: pointer;">
                                         🗑️ حذف سجل المراجع
                                     </button>
                                 </div>
                             </div>
                         </div>`;
                     }).join('');
+
+                    // توليد عناصر التنقل بين الصفحات لبطاقات المراجعين
+                    if (paginationEl) {
+                        if (totalPages <= 1) {
+                            paginationEl.innerHTML = `
+                                <div style="color: #94a3b8; font-size: 0.88em; text-align: center; padding: 8px;">
+                                    إجمالي السجلات: <strong style="color: var(--primary-gold);">${totalItems}</strong> سجل
+                                </div>`;
+                        } else {
+                            let pageBtnsHtml = '';
+                            const maxButtonsToShow = 5;
+                            let startPage = Math.max(1, currentCardsPage - 2);
+                            let endPage = Math.min(totalPages, startPage + maxButtonsToShow - 1);
+                            if (endPage - startPage < maxButtonsToShow - 1) {
+                                startPage = Math.max(1, endPage - maxButtonsToShow + 1);
+                            }
+
+                            for (let pNum = startPage; pNum <= endPage; pNum++) {
+                                const isActive = pNum === currentCardsPage;
+                                pageBtnsHtml += `
+                                    <button type="button" onclick="setCardsPage(${pNum})" style="min-width: 38px; height: 38px; border-radius: 8px; font-weight: bold; font-size: 0.95em; cursor: pointer; transition: all 0.2s; border: ${isActive ? '2px solid var(--primary-gold)' : '1px solid #334155'}; background: ${isActive ? 'var(--primary-gold)' : 'rgba(15, 23, 42, 0.8)'}; color: ${isActive ? '#0a0e14' : '#e2e8f0'};">
+                                        ${pNum}
+                                    </button>`;
+                            }
+
+                            paginationEl.innerHTML = `
+                                <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; margin: 15px 0 25px 0;">
+                                    <div style="color: #94a3b8; font-size: 0.9em; text-align: center;">
+                                        عرض السجلات <strong style="color: #38bdf8;">${startIdx + 1}</strong> إلى <strong style="color: #38bdf8;">${endIdx}</strong> من إجمالي <strong style="color: var(--primary-gold);">${totalItems}</strong> سجل (صفحة ${currentCardsPage} من ${totalPages})
+                                    </div>
+                                    <div style="display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;">
+                                        <button type="button" onclick="setCardsPage(1)" ${currentCardsPage === 1 ? 'disabled' : ''} style="height: 38px; padding: 0 12px; border-radius: 8px; border: 1px solid #334155; background: ${currentCardsPage === 1 ? '#1e293b' : 'rgba(15, 23, 42, 0.8)'}; color: ${currentCardsPage === 1 ? '#64748b' : '#e2e8f0'}; cursor: ${currentCardsPage === 1 ? 'not-allowed' : 'pointer'}; font-weight: bold; font-size: 0.88em;">
+                                            « الأولى
+                                        </button>
+                                        <button type="button" onclick="setCardsPage(${currentCardsPage - 1})" ${currentCardsPage === 1 ? 'disabled' : ''} style="height: 38px; padding: 0 12px; border-radius: 8px; border: 1px solid #334155; background: ${currentCardsPage === 1 ? '#1e293b' : 'rgba(15, 23, 42, 0.8)'}; color: ${currentCardsPage === 1 ? '#64748b' : '#e2e8f0'}; cursor: ${currentCardsPage === 1 ? 'not-allowed' : 'pointer'}; font-weight: bold; font-size: 0.88em;">
+                                            ‹ السابق
+                                        </button>
+                                        ${pageBtnsHtml}
+                                        <button type="button" onclick="setCardsPage(${currentCardsPage + 1})" ${currentCardsPage === totalPages ? 'disabled' : ''} style="height: 38px; padding: 0 12px; border-radius: 8px; border: 1px solid #334155; background: ${currentCardsPage === totalPages ? '#1e293b' : 'rgba(15, 23, 42, 0.8)'}; color: ${currentCardsPage === totalPages ? '#64748b' : '#e2e8f0'}; cursor: ${currentCardsPage === totalPages ? 'not-allowed' : 'pointer'}; font-weight: bold; font-size: 0.88em;">
+                                            التالي ›
+                                        </button>
+                                        <button type="button" onclick="setCardsPage(${totalPages})" ${currentCardsPage === totalPages ? 'disabled' : ''} style="height: 38px; padding: 0 12px; border-radius: 8px; border: 1px solid #334155; background: ${currentCardsPage === totalPages ? '#1e293b' : 'rgba(15, 23, 42, 0.8)'}; color: ${currentCardsPage === totalPages ? '#64748b' : '#e2e8f0'}; cursor: ${currentCardsPage === totalPages ? 'not-allowed' : 'pointer'}; font-weight: bold; font-size: 0.88em;">
+                                            الأخيرة »
+                                        </button>
+                                    </div>
+                                </div>`;
+                        }
+                    }
                 }
             }
         }
+
+        // متغيرات ودوال تقسيم كروت المراجعين إلى صفحات (20 سجل لكل صفحة)
+        let currentCardsPage = 1;
+        const cardsPerPage = 20;
+
+        function setCardsPage(pageNum) {
+            currentCardsPage = parseInt(pageNum) || 1;
+            const q = document.getElementById('search-patients') ? document.getElementById('search-patients').value.trim() : '';
+            if (q) filterPatients(false);
+            else renderTable(allPatientsList);
+            const container = document.getElementById('patients-cards-container');
+            if (container) {
+                container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+        window.setCardsPage = setCardsPage;
 
         // دالة تبديل طي وفرد أكورديون بطاقة المريض على الموبايل
         function togglePatientAccordion(id) {
@@ -3019,7 +3097,8 @@
             }
         }
 
-        function filterPatients() {
+        function filterPatients(resetPage = true) {
+            if (resetPage) currentCardsPage = 1;
             const q = document.getElementById('search-patients').value.trim().toLowerCase();
             if (!q) {
                 renderTable(allPatientsList);
@@ -3055,8 +3134,12 @@
 
             allPatientsList.forEach(item => {
                 const p = item.patient || {};
-                const c = p.country || 'المملكة العربية السعودية';
-                const flag = p.flag || '🇸🇦';
+                let norm = null;
+                if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.normalizeCountryInfo === 'function') {
+                    norm = SmartCloudSync.normalizeCountryInfo(p.country, p.countryCode, p.flag);
+                }
+                const c = norm ? norm.name : (p.country || 'المملكة العربية السعودية');
+                const flag = norm ? norm.flag : (p.flag || '🇸🇦');
                 const city = p.city || 'الرياض';
                 const key = flag + ' ' + c;
 
@@ -3073,9 +3156,15 @@
             // دمج نتائج الزيارات والمتصفحين
             if (analytics.topCountries && analytics.topCountries.length > 0) {
                 analytics.topCountries.forEach(tc => {
-                    const key = (tc.flag || '🌐') + ' ' + tc.country;
+                    let norm = null;
+                    if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.normalizeCountryInfo === 'function') {
+                        norm = SmartCloudSync.normalizeCountryInfo(tc.country, tc.countryCode, tc.flag);
+                    }
+                    const tcCountry = norm ? norm.name : tc.country;
+                    const tcFlag = norm ? norm.flag : (tc.flag || '🌐');
+                    const key = tcFlag + ' ' + tcCountry;
                     if (!patientCountriesMap[key]) {
-                        patientCountriesMap[key] = { country: tc.country, flag: tc.flag, count: tc.count, cities: tc.cities || {} };
+                        patientCountriesMap[key] = { country: tcCountry, flag: tcFlag, count: tc.count, cities: tc.cities || {} };
                     } else {
                         patientCountriesMap[key].count += tc.count;
                         Object.entries(tc.cities || {}).forEach(([city, count]) => {
@@ -4196,22 +4285,49 @@
                 // العثور على العنصر لمعرفة جميع المعرفات المدمجة إن وُجدت
                 const item = allPatientsList.find(it => (it.patient && (it.patient.patientId === patientId || it.patient.id === patientId)));
                 const allIds = (item && item.patient && Array.isArray(item.patient.allMergedIds) && item.patient.allMergedIds.length > 0)
-                    ? item.patient.allMergedIds
+                    ? Array.from(new Set([patientId, ...item.patient.allMergedIds]))
                     : [patientId];
 
-                // حذف جميع المعرفات المرتبطة بهذا السجل من التخزين وقاعدة البيانات
-                for (const pid of allIds) {
-                    await SmartDB.deletePatient(pid);
-                }
-
-                // تسجيل المعرفات في قائمة المحذوفات لمنع استرجاعها بالسحابة
+                // 1. تسجيل المعرفات في قائمة المحذوفات الصريحة (Tombstones) لمنع أي استرجاع مستقبلي
                 try {
                     const deletedSet = JSON.parse(localStorage.getItem('smart_deleted_patient_ids') || '[]');
                     const updatedDeleted = Array.from(new Set([...deletedSet, ...allIds]));
                     localStorage.setItem('smart_deleted_patient_ids', JSON.stringify(updatedDeleted));
                 } catch(e) {}
 
-                // مسح أي إشعارات مرتبطة بهذا المريض من شريط الإشعارات
+                // 2. تنظيف فوري ومباشر من الذاكرة الحية وتحديث واجهة المستخدم فوراً بدون أي تأخير
+                allPatientsList = allPatientsList.filter(it => {
+                    const pid = it.patient ? (it.patient.patientId || it.patient.id) : null;
+                    return !allIds.includes(pid);
+                });
+                renderTable(allPatientsList);
+
+                // 3. حذف جميع المعرفات المرتبطة بهذا السجل من التخزين وقاعدة البيانات المحلية
+                for (const pid of allIds) {
+                    if (typeof SmartDB !== 'undefined' && typeof SmartDB.deletePatient === 'function') {
+                        await SmartDB.deletePatient(pid);
+                    }
+                    try {
+                        localStorage.removeItem(`smart_patient_${pid}`);
+                        localStorage.removeItem(`smart_patient_sessions_${pid}`);
+                        localStorage.removeItem(`smart_patient_timing_${pid}`);
+                        localStorage.removeItem(`smart_patient_logs_${pid}`);
+                    } catch(e) {}
+                }
+
+                // 4. حذف السجل من smart_cloud_synced_patients
+                try {
+                    const cloudRaw = localStorage.getItem('smart_cloud_synced_patients');
+                    if (cloudRaw) {
+                        const cloudPts = JSON.parse(cloudRaw);
+                        if (Array.isArray(cloudPts)) {
+                            const cleanCloudPts = cloudPts.filter(cp => !allIds.includes(cp.patientId) && !allIds.includes(cp.id));
+                            localStorage.setItem('smart_cloud_synced_patients', JSON.stringify(cleanCloudPts));
+                        }
+                    }
+                } catch(e) {}
+
+                // 5. مسح أي إشعارات مرتبطة بهذا المريض من شريط الإشعارات
                 if (typeof SmartDB !== 'undefined' && typeof SmartDB.getAdminNotifications === 'function') {
                     const notifs = SmartDB.getAdminNotifications();
                     const filtered = notifs.filter(n => {
@@ -4223,7 +4339,12 @@
                     localStorage.setItem('smart_admin_notifications', JSON.stringify(filtered));
                 }
 
-                // بث التحديث الفوري بين التبويبات
+                // 6. بث الحذف سحابياً للمزامنة المباشرة الفورية لكافة الأجهزة
+                if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.broadcastPatientDeletion === 'function') {
+                    SmartCloudSync.broadcastPatientDeletion(patientId, allIds);
+                }
+
+                // 7. بث التحديث الفوري بين التبويبات عبر BroadcastChannel
                 if (typeof BroadcastChannel !== 'undefined') {
                     try {
                         const ch = new BroadcastChannel('smart_check_pro_global_sync_channel');
@@ -4236,6 +4357,7 @@
                     showToast(`✅ تم حذف سجل المراجع${nameStr} بنجاح.`, 'success');
                 }
 
+                // إعادة تحميل نهائي هادئ لضمان دقة الإحصائيات
                 await loadAdminData();
             } catch (err) {
                 console.error('Error deleting patient record:', err);

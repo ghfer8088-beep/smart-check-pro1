@@ -307,6 +307,24 @@
                 try {
                     if (window.SmartCloudSync && typeof window.SmartCloudSync.dispatchVisit === 'function') {
                         window.SmartCloudSync.dispatchVisit(visitItem);
+                    } else {
+                        // تخزين الزيارة مؤقتاً لحين اكتمال تحميل سكربت المزامنة السحابية
+                        try {
+                            const pendingVisits = JSON.parse(localStorage.getItem('smart_pending_cloud_visits') || '[]');
+                            pendingVisits.push(visitItem);
+                            localStorage.setItem('smart_pending_cloud_visits', JSON.stringify(pendingVisits.slice(-50)));
+                        } catch(pe) {}
+                        // محاولات إعادة بث متتالية عند توفر SmartCloudSync
+                        let retries = 0;
+                        const retryTimer = setInterval(() => {
+                            retries++;
+                            if (window.SmartCloudSync && typeof window.SmartCloudSync.dispatchVisit === 'function') {
+                                window.SmartCloudSync.dispatchVisit(visitItem);
+                                clearInterval(retryTimer);
+                            } else if (retries >= 10) {
+                                clearInterval(retryTimer);
+                            }
+                        }, 500);
                     }
                 } catch (e) {}
             }

@@ -220,6 +220,38 @@ const AdminEngine = (function() {
                 }
             }
 
+            // دوال تطبيع أسماء المرضى واحتساب نقاط التفاعل السريري
+            function normalizePatientName(name) {
+                if (!name) return '';
+                let n = String(name).trim().toLowerCase();
+                n = n.replace(/^(السيد|السيدة|الآنسة|الدكتور|الدكتورة|د\.|أ\.|م\.|الأستاذ|الاستاذ)\s+/gi, '');
+                n = n.replace(/[إأآ]/g, 'ا');
+                n = n.replace(/ة/g, 'ه');
+                n = n.replace(/ى/g, 'ي');
+                n = n.replace(/\s+/g, ' ');
+                return n.trim();
+            }
+
+            function isGenericPatientName(name) {
+                const n = normalizePatientName(name);
+                return !n || /^(مريض الفحص الذاتي|فحص ذاتي|مراجع كريم|مراجع جديد|الاسم|الاسم الكريم|اسم المراجع|زائر|مجهول|مراجع مجهول)$/.test(n);
+            }
+
+            function getInteractionScore(r) {
+                if (!r) return 0;
+                let score = 0;
+                const logs = Array.isArray(r.dailyLogs) ? r.dailyLogs.length : (Array.isArray(r.logs) ? r.logs.length : (r.logsCount || r.completedSessions || 0));
+                score += logs * 100;
+                if (r.isRegistered || r.accountPin) score += 50;
+                const phClean = String(r.phone || '').replace(/\D/g, '');
+                if (phClean.length >= 7) score += 35;
+                if (r.assessment || r.latestAssessment) score += 25;
+                if (r.mriReportText && r.mriReportText.trim().length > 5) score += 15;
+                if (r.age || r.weight || r.height) score += 10;
+                if (!r._fromNotif) score += 5;
+                return score;
+            }
+
             // 2. دالة استخراج الهوية الفريدة للمريض والشكوى السريرية (Patient & Complaint Identity Key)
             // تضمن دمج كافة سجلات وإشعارات نفس المراجع لنفس موضع الألم في بطاقة واحدة خالية من التكرار
             function getPatientIdentityKey(pt) {
@@ -234,18 +266,19 @@ const AdminEngine = (function() {
                 const painKey = isGenericPain(rawPain) ? '' : normalizeTitle(rawPain);
 
                 if (phoneKey && painKey) {
-                    return `enc_${phoneKey}_${painKey}`;
+                    return `enc_ph_${phoneKey}_${painKey}`;
                 }
                 if (phoneKey) {
-                    return `enc_${phoneKey}_gen`;
+                    return `enc_ph_${phoneKey}_gen`;
+                }
+                const rawName = (pt.fullName || pt.name || '').trim();
+                const cleanName = normalizePatientName(rawName);
+                if (!isGenericPatientName(cleanName)) {
+                    return `enc_nm_${cleanName}_${painKey || 'gen'}`;
                 }
                 if (baseId && baseId !== 'pat_notif') {
                     if (painKey) return `id_${baseId}_${painKey}`;
                     return `id_${baseId}`;
-                }
-                const cleanName = (pt.fullName || pt.name || '').trim().toLowerCase();
-                if (cleanName && !/^(?:الاسم|الآسم|الإسم|مراجع كريم|مراجع جديد|اسمي|اسمها|اسمك|اسم)$/i.test(cleanName)) {
-                    return `name_${cleanName}_${painKey || 'gen'}`;
                 }
                 return 'raw_' + (rawId || Math.random().toString(36));
             }
@@ -261,8 +294,8 @@ const AdminEngine = (function() {
             }
 
             // دمج السجلات العامة (بدون موضع ألم) في السجل المتخصص لنفس رقم الهاتف إن وُجد
-            for (const [key, records] of groups.entries()) {
-                if (key.endsWith('_gen') && key.startsWith('enc_')) {
+            for (const [key, records] of Array.from(groups.entries())) {
+                if (key.endsWith('_gen') && key.startsWith('enc_ph_')) {
                     const phonePrefix = key.replace(/_gen$/, '');
                     let matchedKey = null;
                     for (const otherKey of groups.keys()) {
@@ -278,11 +311,34 @@ const AdminEngine = (function() {
                 }
             }
 
-            // 4. دمج كل مجموعة إلى سجل استشارة موحد وخالي من التكرار مع إعطاء الأولوية للبيانات الأحدث والأكمل
+            // دمج مجموعات الأسماء غير المرفقة بهاتف في المجموعة التي تحمل نفس الاسم ورقم الهاتف
+            for (const [key, records] of Array.from(groups.entries())) {
+                if (key.startsWith('enc_nm_')) {
+                    const namePart = key.replace(/^enc_nm_/, '').replace(/_(?:gen|[^_]+)$/, '');
+                    let matchedPhoneGroupKey = null;
+                    for (const [otherKey, otherRecords] of groups.entries()) {
+                        if (otherKey.startsWith('enc_ph_')) {
+                            const hasSameName = otherRecords.some(r => normalizePatientName(r.fullName || r.name) === namePart);
+                            if (hasSameName) {
+                                matchedPhoneGroupKey = otherKey;
+                                break;
+                            }
+                        }
+                    }
+                    if (matchedPhoneGroupKey) {
+                        groups.get(matchedPhoneGroupKey).push(...records);
+                        groups.delete(key);
+                    }
+                }
+            }
+
+            // 4. دمج كل مجموعة إلى سجل استشارة موحد وخالي من التكرار مع إعطاء الأولوية للسجل الأكثر تفاعلاً وإنجازاً
             const unifiedPatients = [];
             for (const [key, records] of groups.entries()) {
-                // ترتيب السجلات في المجموعة من الأحدث للأقدم
+                // ترتيب السجلات في المجموعة: السجل الأكثر إنجازاً وتفاعلاً يظهر أولاً
                 records.sort((a, b) => {
+                    const scoreDiff = getInteractionScore(b) - getInteractionScore(a);
+                    if (scoreDiff !== 0) return scoreDiff;
                     const tA = new Date(a.lastActiveAt || a.lastUpdated || a.createdAt || a.timestamp || 0).getTime();
                     const tB = new Date(b.lastActiveAt || b.lastUpdated || b.createdAt || b.timestamp || 0).getTime();
                     return tB - tA;
@@ -587,33 +643,116 @@ const AdminEngine = (function() {
                 });
             }
 
-            // 6. تصفية نهائية حاسمة تمنع أي تكرار لنفس المريض ونفس موضع الألم
-            const finalOverviewMap = new Map();
+            // 6. تصفية نهائية حاسمة تمنع أي تكرار لنفس المراجع لنفس موضع الألم والتشخيص
+            const finalOverviewList = [];
             for (const item of overview) {
                 const p = item.patient;
                 const cleanPhone = (p.phone || '').replace(/\D/g, '');
                 const phoneKey = cleanPhone.length >= 7 ? cleanPhone.slice(-9) : '';
-                const cleanName = (p.fullName || p.name || '').trim().toLowerCase();
+                const cleanName = normalizePatientName(p.fullName || p.name || '');
+                const isRealName = !isGenericPatientName(cleanName);
                 const painKey = normalizeTitle(item.painArea || p.painArea || '');
+                const diagKey = normalizeTitle(item.latestDiagnosis || p.chiefDiagnosis || '');
 
-                let dedupKey = '';
-                if (phoneKey && painKey) {
-                    dedupKey = `ph_${phoneKey}_${painKey}`;
-                } else if (phoneKey) {
-                    dedupKey = `ph_${phoneKey}_gen`;
-                } else if (cleanName && painKey) {
-                    dedupKey = `nm_${cleanName}_${painKey}`;
-                } else {
-                    dedupKey = `id_${p.patientId || p.id}`;
+                // البحث عما إذا كان هذا المراجع موجوداً مسبقاً بنفس الشكوى والتشخيص
+                let existing = null;
+                for (const exItem of finalOverviewList) {
+                    const exP = exItem.patient;
+                    const exPhone = (exP.phone || '').replace(/\D/g, '');
+                    const exPhoneKey = exPhone.length >= 7 ? exPhone.slice(-9) : '';
+                    const exName = normalizePatientName(exP.fullName || exP.name || '');
+                    const exPainKey = normalizeTitle(exItem.painArea || exP.painArea || '');
+                    const exDiagKey = normalizeTitle(exItem.latestDiagnosis || exP.chiefDiagnosis || '');
+
+                    const samePainOrDiag = (!painKey && !exPainKey) || (painKey === exPainKey) || (diagKey && exDiagKey && diagKey === exDiagKey) || isGenericPain(painKey) || isGenericPain(exPainKey);
+                    const samePhone = phoneKey && exPhoneKey && phoneKey === exPhoneKey;
+                    const sameRealName = isRealName && exName && cleanName === exName;
+
+                    if ((samePhone && samePainOrDiag) || (sameRealName && samePainOrDiag) || (samePhone && sameRealName)) {
+                        existing = exItem;
+                        break;
+                    }
                 }
 
-                if (!finalOverviewMap.has(dedupKey)) {
-                    finalOverviewMap.set(dedupKey, item);
+                if (!existing) {
+                    finalOverviewList.push(item);
                 } else {
-                    const existing = finalOverviewMap.get(dedupKey);
-                    const exMerged = existing.patient.allMergedIds || [existing.patient.patientId];
-                    const itemMerged = item.patient.allMergedIds || [item.patient.patientId];
-                    existing.patient.allMergedIds = Array.from(new Set([...exMerged, ...itemMerged]));
+                    // دمج السجل المكرر مع إبقاء السجل الأكثر تفاعلاً وإنجازاً للمراحل
+                    const exMerged = existing.patient.allMergedIds || [existing.patient.patientId || existing.patient.id];
+                    const itemMerged = item.patient.allMergedIds || [item.patient.patientId || item.patient.id];
+                    existing.patient.allMergedIds = Array.from(new Set([...exMerged, ...itemMerged].filter(Boolean)));
+
+                    // الحفاظ على الهاتف إن لم يكن موجوداً
+                    if (!existing.patient.phone && p.phone) {
+                        existing.patient.phone = p.phone;
+                    }
+                    if (!p.phone && existing.patient.phone) {
+                        item.patient.phone = existing.patient.phone;
+                    }
+
+                    // الحساب والتسجيل
+                    if (p.isRegistered || p.accountPin) {
+                        existing.isRegistered = true;
+                        existing.patient.isRegistered = true;
+                        existing.patient.accountPin = p.accountPin || existing.patient.accountPin;
+                    }
+
+                    // المؤشرات الحيوية
+                    if (!existing.patient.age && p.age) existing.patient.age = p.age;
+                    if (!existing.patient.weight && p.weight) existing.patient.weight = p.weight;
+                    if (!existing.patient.height && p.height) existing.patient.height = p.height;
+                    if (!existing.patient.bmi && p.bmi) existing.patient.bmi = p.bmi;
+
+                    // تقرير الرنين
+                    if (!existing.patient.mriReportText && p.mriReportText) {
+                        existing.patient.mriReportText = p.mriReportText;
+                    }
+
+                    // مقارنة مستوى التفاعل والإنجاز
+                    const scoreExisting = getInteractionScore(existing.patient);
+                    const scoreItem = getInteractionScore(p);
+
+                    // إذا كان السجل الجديد أكثر إنجازاً أو فيه جلسات أكثر، نتبنى بياناته السريرية كبيانات رئيسية
+                    if (scoreItem > scoreExisting || (item.logsCount || 0) > (existing.logsCount || 0)) {
+                        existing.logsCount = Math.max(existing.logsCount || 0, item.logsCount || 0);
+                        existing.patient.logsCount = existing.logsCount;
+                        existing.patient.completedSessions = existing.logsCount;
+                        existing.recoveryScore = Math.max(existing.recoveryScore || 0, item.recoveryScore || 0);
+                        existing.patient.recoveryScore = existing.recoveryScore;
+
+                        if (item.painArea && !isGenericPain(item.painArea)) {
+                            existing.painArea = item.painArea;
+                            existing.patient.painArea = item.painArea;
+                            existing.patient.painAreaTitle = item.painArea;
+                        }
+                        if (item.latestDiagnosis && !isGenericDiag(item.latestDiagnosis)) {
+                            existing.latestDiagnosis = item.latestDiagnosis;
+                            existing.patient.chiefDiagnosis = item.latestDiagnosis;
+                            existing.patient.diagnosisTitle = item.latestDiagnosis;
+                        }
+                        if (item.latestAssessment) {
+                            existing.latestAssessment = item.latestAssessment;
+                            existing.patient.assessment = item.latestAssessment;
+                            existing.patient.latestAssessment = item.latestAssessment;
+                        }
+                    } else {
+                        existing.logsCount = Math.max(existing.logsCount || 0, item.logsCount || 0);
+                        existing.patient.logsCount = existing.logsCount;
+                        existing.patient.completedSessions = existing.logsCount;
+                        existing.recoveryScore = Math.max(existing.recoveryScore || 0, item.recoveryScore || 0);
+                        existing.patient.recoveryScore = existing.recoveryScore;
+                    }
+
+                    // دمج الجلسات اليومية
+                    const exLogs = Array.isArray(existing.patient.dailyLogs) ? existing.patient.dailyLogs : [];
+                    const itLogs = Array.isArray(p.dailyLogs) ? p.dailyLogs : [];
+                    for (const il of itLogs) {
+                        if (!il || !il.sessionNumber) continue;
+                        if (!exLogs.some(el => el.sessionNumber === il.sessionNumber)) {
+                            exLogs.push(il);
+                        }
+                    }
+                    existing.patient.dailyLogs = exLogs;
 
                     const tExist = new Date(existing.lastActiveAt || existing.createdAt || 0).getTime();
                     const tItem = new Date(item.lastActiveAt || item.createdAt || 0).getTime();
@@ -621,16 +760,9 @@ const AdminEngine = (function() {
                         existing.lastActiveAt = item.lastActiveAt;
                         existing.patient.lastActiveAt = item.lastActiveAt;
                     }
-                    if ((item.logsCount || 0) > (existing.logsCount || 0)) {
-                        existing.logsCount = item.logsCount;
-                        existing.patient.logsCount = item.logsCount;
-                        existing.patient.completedSessions = item.logsCount;
-                        existing.recoveryScore = item.recoveryScore || existing.recoveryScore;
-                        existing.patient.recoveryScore = existing.recoveryScore;
-                    }
                 }
             }
-            const cleanOverview = Array.from(finalOverviewMap.values());
+            const cleanOverview = finalOverviewList;
 
             // 7. الترتيب الزمني السريري الدقيق: الأحدث تسجيلاً ونشاطاً يظهر أولاً في القمة
             cleanOverview.sort((a, b) => {

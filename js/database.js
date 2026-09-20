@@ -121,6 +121,23 @@ const SmartDB = (function() {
     // دوال إدارة المرضى
     async function savePatient(patient, options = {}) {
         if (!patient) return null;
+
+        // التحقق الصارم من قائمة المحذوفات لمنع إعادة إحياء أي مريض محذوف إطلاقاً
+        const checkId = patient.patientId || patient.id;
+        if (checkId) {
+            try {
+                const delList = JSON.parse(localStorage.getItem('smart_deleted_patient_ids') || '[]');
+                if (Array.isArray(delList) && delList.length > 0) {
+                    const strId = String(checkId);
+                    const baseId = strId.replace(/(_notif_.*|_test\d*|_cloud_test.*|_\d{10,})$/, '');
+                    if (delList.includes(strId) || (baseId && delList.includes(baseId))) {
+                        console.log('[SmartDB] Rejecting save for tombstoned/deleted patient:', checkId);
+                        return null;
+                    }
+                }
+            } catch(e) {}
+        }
+
         patient = sanitizePatientData(patient);
 
         // تأكد من وجود patientId فريد وموثوق دائماً لمنع أخطاء IndexedDB والتخزين المحلي
@@ -270,11 +287,35 @@ const SmartDB = (function() {
     }
 
     async function getAllPatients() {
+        let deletedIds = new Set();
+        try {
+            const rawDel = JSON.parse(localStorage.getItem('smart_deleted_patient_ids') || '[]');
+            if (Array.isArray(rawDel)) {
+                rawDel.forEach(id => {
+                    if (id) {
+                        deletedIds.add(String(id));
+                        const bId = String(id).replace(/(_notif_.*|_test\d*|_cloud_test.*|_\d{10,})$/, '');
+                        if (bId) deletedIds.add(bId);
+                    }
+                });
+            }
+        } catch(e) {}
+
+        const isDeleted = (pId) => {
+            if (!pId) return false;
+            const sId = String(pId);
+            if (deletedIds.has(sId)) return true;
+            const bId = sId.replace(/(_notif_.*|_test\d*|_cloud_test.*|_\d{10,})$/, '');
+            return bId && deletedIds.has(bId);
+        };
+
         let lsPatients = [];
         try {
             const rawLs = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
             lsPatients = (rawLs || []).filter(p => {
                 if (!p) return false;
+                const pId = p.patientId || p.id;
+                if (isDeleted(pId)) return false;
                 const n = (p.fullName || p.name || '').trim();
                 return !n.includes('مريض الفحص الذاتي') && n !== 'فحص ذاتي';
             });
@@ -290,13 +331,15 @@ const SmartDB = (function() {
                     const rawDbList = req.result || [];
                     const dbList = rawDbList.filter(p => {
                         if (!p) return false;
+                        const pId = p.patientId || p.id;
+                        if (isDeleted(pId)) return false;
                         const n = (p.fullName || p.name || '').trim();
                         return !n.includes('مريض الفحص الذاتي') && n !== 'فحص ذاتي';
                     });
                     const map = new Map();
                     dbList.forEach(p => {
                         const k = p.patientId || p.id;
-                        if (k) map.set(k, p);
+                        if (k && !isDeleted(k)) map.set(k, p);
                     });
                     const isGen = (str) => !str || str === 'العمود الفقري ومفاصل الحركة' || str === 'العمود الفقري والمفاصل' || str === 'استشارة وفحص سريري شامل';
                     lsPatients.forEach(p => {
@@ -336,7 +379,7 @@ const SmartDB = (function() {
                             cloudList.forEach(cp => {
                                 if (!cp) return;
                                 const pId = cp.patientId || cp.id;
-                                if (!pId) return;
+                                if (!pId || isDeleted(pId)) return;
 
                                 // تصحيح واستبعاد أي سجلات فحص ذاتي افتراضية أو وهمية
                                 let cleanName = cp.fullName || cp.name || 'مراجع جديد';
@@ -438,18 +481,19 @@ const SmartDB = (function() {
 
                     const filteredResults = Array.from(map.values()).filter(p => {
                         if (!p) return false;
+                        const pId = p.patientId || p.id || '';
+                        if (isDeleted(pId)) return false;
                         const n = (p.fullName || p.name || '').trim();
                         if (n.includes('مريض الفحص الذاتي') || n === 'فحص ذاتي') return false;
-                        const pId = p.patientId || p.id || '';
                         if (pId.startsWith('pat_notif_') && !p.phone) return false;
                         return true;
                     });
                     resolve(filteredResults);
                 };
-                req.onerror = () => resolve(lsPatients.filter(p => !(p.fullName || p.name || '').includes('مريض الفحص الذاتي')));
+                req.onerror = () => resolve(lsPatients.filter(p => !isDeleted(p.patientId || p.id) && !(p.fullName || p.name || '').includes('مريض الفحص الذاتي')));
             });
         } catch(e) {
-            return lsPatients.filter(p => !(p.fullName || p.name || '').includes('مريض الفحص الذاتي'));
+            return lsPatients.filter(p => !isDeleted(p.patientId || p.id) && !(p.fullName || p.name || '').includes('مريض الفحص الذاتي'));
         }
     }
 
