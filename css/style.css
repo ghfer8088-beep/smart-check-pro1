@@ -2794,6 +2794,12 @@ body {
 
 /* نبض موحد لكافة نقاط المجسم أثناء التوجيه المبدئي */
 .anatomy-hotspot.guidance-pulse-all {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background: radial-gradient(circle, #ef4444 20%, #b91c1c 80%) !important;
+    border: 2px solid #ffffff !important;
+    z-index: 500 !important;
     animation: pulseHotspotGuidanceSync 1.4s infinite ease-in-out !important;
 }
 

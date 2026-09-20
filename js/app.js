@@ -4386,6 +4386,7 @@ function displayDiagnosticReport(data) {
                 console.warn('AI insight error:', err);
                 if (contentArea) contentArea.innerHTML = Wada3anAiEngine.generateOfflineClinicalFallback(data);
             });
+        }
         if (typeof SmartGuidance !== 'undefined' && typeof SmartGuidance.onReportRendered === 'function') {
             setTimeout(() => { SmartGuidance.onReportRendered(data); }, 150);
         }
@@ -6918,8 +6919,12 @@ function goToStep(stepNum) {
         SmartGuidance.updateStep(stepNum);
     }
 
-    // إذا دخل المراجع الخطوة 1 (المجسم)، إظهار شريط التوجيه وبنر استئناف الجلسة الجارية
+    // إذا دخل المراجع الخطوة 1 (المجسم)، إظهار شريط التوجيه وبنر استئناف الجلسة الجارية وضمان رسم النقاط فوراً
     if (stepNum === 1) {
+        const activeView = document.getElementById('btn-view-back')?.classList.contains('active') ? 'back' : 'front';
+        if (typeof switchAnatomyView === 'function') {
+            switchAnatomyView(activeView);
+        }
         const guidanceBar = document.getElementById('welcome-audio-guidance-bar');
         if (guidanceBar) guidanceBar.style.display = 'flex';
 

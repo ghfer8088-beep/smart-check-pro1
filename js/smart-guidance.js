@@ -156,7 +156,9 @@ const SmartGuidance = (function() {
         document.querySelectorAll('.guidance-target-highlight').forEach(x => {
             x.classList.remove('guidance-target-highlight');
         });
-        el.classList.add('guidance-target-highlight');
+        if (!options.noTargetHighlight) {
+            el.classList.add('guidance-target-highlight');
+        }
 
         const bubbleEl = document.getElementById('guidance-bubble');
         const textEl = document.getElementById('guidance-bubble-text');
@@ -314,12 +316,19 @@ const SmartGuidance = (function() {
         }
 
         updateStageFlowBanner(1, 1);
+        // التحقق وضمان رسم النقاط على المجسم فوراً إن لم تكن مرسومة
+        if (document.querySelectorAll('.anatomy-hotspot').length === 0 && typeof switchAnatomyView === 'function') {
+            const activeView = document.getElementById('btn-view-back')?.classList.contains('active') ? 'back' : 'front';
+            switchAnatomyView(activeView);
+        }
+
         const anatomyViewport = document.querySelector('.skeleton-viewport') || document.querySelector('.anatomy-card');
         if (anatomyViewport) {
             triggerHotspotsSynchronizedPulse();
             pointTo(anatomyViewport, 'انقر على موضع ألمك من النقاط المضيئة على المجسم 👇', {
                 handIcon: '👇',
                 placement: 'top',
+                noTargetHighlight: true,
                 autoScroll: autoScroll
             });
         }
