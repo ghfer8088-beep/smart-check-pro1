@@ -39,14 +39,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=29.16">
+    <link rel="stylesheet" href="css/style.css?v=29.17">
     <script>
         // التحقق من تحديثات Service Worker وتحديث الكاش بسلاسة دون تفريغ أي بيانات للمرضى
         (function() {
-            const APP_TARGET_VER = '29.0';
+            const APP_TARGET_VER = '29.17';
             const currentVer = localStorage.getItem('smart_app_version');
             if (currentVer !== APP_TARGET_VER) {
-                try { sessionStorage.clear(); } catch(e) {}
                 if ('caches' in window) {
                     caches.keys().then(function(keys) {
                         return Promise.all(keys.map(k => caches.delete(k)));
@@ -803,11 +802,14 @@
             <div id="clinical-report-container">
                 <div style="text-align: center; padding: 45px 20px; background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.95) 100%); border-radius: 16px; border: 2px solid var(--primary-gold); margin: 25px auto; max-width: 620px; box-shadow: 0 10px 40px rgba(0,0,0,0.7);">
                     <div style="font-size: 3em; margin-bottom: 15px; animation: pulse 1.5s infinite;">⏳</div>
-                    <h3 style="color: #ffffff; font-size: 1.5em; font-weight: 900; margin: 0 0 10px 0; text-shadow: 0 2px 6px rgba(0,0,0,0.6);">تقريرك قيد التحضير يرجى الانتظار</h3>
-                    <p style="color: var(--primary-gold); font-size: 1.05em; font-weight: 600; margin: 0 0 15px 0;">يقوم الطبيب الافتراضي بمعالجة بيانات فحصك السريري وإعداد التشخيص الدقيق وخطة التعافي المخصصة...</p>
-                    <div style="width: 80%; height: 6px; background: #1e293b; border-radius: 3px; margin: 0 auto; overflow: hidden;">
+                    <h3 style="color: #ffffff; font-size: 1.5em; font-weight: 900; margin: 0 0 10px 0; text-shadow: 0 2px 6px rgba(0,0,0,0.6);">تقريرك قيد التحضير والتجهيز</h3>
+                    <p style="color: var(--primary-gold); font-size: 1.05em; font-weight: 600; margin: 0 0 15px 0;">يقوم النظام بمعالجة بيانات فحصك السريري وإعداد التشخيص الدقيق وخطة التعافي المخصصة...</p>
+                    <div style="width: 80%; height: 6px; background: #1e293b; border-radius: 3px; margin: 0 auto 20px auto; overflow: hidden;">
                         <div style="height: 100%; width: 60%; background: linear-gradient(90deg, #d4af37, #10b981); border-radius: 3px; animation: pulse 1.2s infinite;"></div>
                     </div>
+                    <button type="button" onclick="if(typeof currentAssessmentData!=='undefined'&&currentAssessmentData){displayDiagnosticReport(currentAssessmentData);}else if(typeof runDiagnosticAnalysis==='function'){runDiagnosticAnalysis();}" style="background: linear-gradient(135deg, var(--primary-gold) 0%, #b8860b 100%); color: #0a0e14; border: none; padding: 10px 24px; border-radius: 20px; font-weight: 800; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);">
+                        🔄 عرض التقرير والتشخيص الآن
+                    </button>
                 </div>
             </div>
         </section>
@@ -1818,9 +1820,13 @@
 
         async function forceAppUpdateAndClearCache() {
             try {
+                // حفظ حالة الجلسة الحالية قبل التحديث لمنع العودة للمرحلة 1
+                const curPid = sessionStorage.getItem('scp_active_patient_id') || localStorage.getItem('smart_current_patient_id');
+                if (curPid) localStorage.setItem('smart_current_patient_id', curPid);
+
                 sessionStorage.setItem('just_refreshed_toast', 'true');
                 if (typeof showToast === 'function') {
-                    showToast('🔄 جاري تنشيط التطبيق وتحديث البيانات...', 'info');
+                    showToast('🔄 جاري تنشيط التطبيق وتحديث البيانات مع الحفاظ على مرحلتك...', 'info');
                 }
                 if ('caches' in window) {
                     const keys = await caches.keys();
@@ -1859,9 +1865,9 @@
     <script src="js/admin-engine.js?v=29.10"></script>
     <script src="js/ai-config.js?v=29.10"></script>
     <script src="js/ai-engine.js?v=29.10"></script>
-    <script src="js/app.js?v=29.16"></script>
+    <script src="js/app.js?v=29.17"></script>
     <script src="js/text-editor.js?v=29.15"></script>
-    <script src="js/smart-guidance.js?v=29.16"></script>
+    <script src="js/smart-guidance.js?v=29.17"></script>
 
     <script>
         // تشغيل عداد التفاعل الحي الاجتماعي (Live Online Social Proof) وكاشف الدولة والمدينة

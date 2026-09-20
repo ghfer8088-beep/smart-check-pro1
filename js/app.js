@@ -874,14 +874,22 @@ async function restoreActiveSessionState() {
         } catch (e) {}
     }
 
-    // منع تحميل تقرير قديم من localStorage إذا كان يخص مريضاً آخر
+    // استرجاع تقرير الجلسة الحالية من التخزين المحلي مع مزامنة هوية المريض تلقائياً
     if (!currentAssessmentData && !queryPid) {
         try {
             const rawAss = localStorage.getItem('smart_current_assessment');
             if (rawAss) {
                 const parsedAss = JSON.parse(rawAss);
-                if (!savedPatientId || !parsedAss.patientId || parsedAss.patientId === savedPatientId) {
+                if (parsedAss) {
                     currentAssessmentData = parsedAss;
+                    if (parsedAss.patientId) {
+                        savedPatientId = parsedAss.patientId;
+                        try {
+                            sessionStorage.setItem('scp_active_patient_id', parsedAss.patientId);
+                            localStorage.setItem('smart_current_patient_id', parsedAss.patientId);
+                            localStorage.setItem('smart_last_active_patient_id', parsedAss.patientId);
+                        } catch(e) {}
+                    }
                 }
             }
         } catch(e) {}
@@ -1156,7 +1164,7 @@ function showRoyalReportLoadingModal() {
             top: 0; left: 0; right: 0; bottom: 0;
             width: 100vw; height: 100vh;
             z-index: 9999999;
-            background: rgba(5, 10, 20, 0.90);
+            background: rgba(5, 10, 20, 0.92);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             display: flex;
@@ -1165,7 +1173,7 @@ function showRoyalReportLoadingModal() {
             padding: 20px;
             box-sizing: border-box;
             opacity: 0;
-            transition: opacity 0.4s ease;
+            transition: opacity 0.35s ease;
             font-family: inherit;
         `;
 
@@ -1173,7 +1181,7 @@ function showRoyalReportLoadingModal() {
             <div style="background: linear-gradient(135deg, #0b1320 0%, #16243b 50%, #0d1a2d 100%); border: 2px solid var(--primary-gold, #d4af37); box-shadow: 0 0 50px rgba(212, 175, 55, 0.4), 0 25px 60px rgba(0,0,0,0.85); border-radius: 22px; padding: 36px 28px; max-width: 480px; width: 100%; text-align: center; color: #fff; position: relative; overflow: hidden;">
                 <div style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, transparent 60%); pointer-events: none;"></div>
                 
-                <div style="font-size: 3.8rem; margin-bottom: 16px; line-height: 1; display: inline-block; filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.7)); animation: royalHourglassSpin 3s cubic-bezier(0.65, 0, 0.35, 1) infinite;">
+                <div style="font-size: 3.8rem; margin-bottom: 16px; line-height: 1; display: inline-block; filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.7)); animation: royalHourglassSpin 2.5s cubic-bezier(0.65, 0, 0.35, 1) infinite;">
                     ⏳
                 </div>
                 
@@ -1187,16 +1195,22 @@ function showRoyalReportLoadingModal() {
                     تقريرك السريري قيد التحضير والتجهيز
                 </h3>
                 
-                <p style="color: #cbd5e1; font-size: 0.92rem; line-height: 1.7; margin: 0 0 20px 0;">
+                <p style="color: #cbd5e1; font-size: 0.92rem; line-height: 1.7; margin: 0 0 18px 0;">
                     يرجى الانتظار ثوانٍ معدودة... يقوم النظام بتحليل كافة الأعراض وصياغة التفسير البيوميكانيكي وخطة التعافي المخصصة لك بدقة.
                 </p>
                 
                 <div style="background: rgba(15, 23, 42, 0.8); height: 8px; border-radius: 10px; overflow: hidden; border: 1px solid rgba(212, 175, 55, 0.35); margin-bottom: 14px; position: relative;">
-                    <div id="royal-loading-bar-inner" style="background: linear-gradient(90deg, #d4af37 0%, #10b981 50%, #38bdf8 100%); height: 100%; width: 20%; border-radius: 10px; transition: width 0.4s ease; box-shadow: 0 0 12px rgba(212, 175, 55, 0.8);"></div>
+                    <div id="royal-loading-bar-inner" style="background: linear-gradient(90deg, #d4af37 0%, #10b981 50%, #38bdf8 100%); height: 100%; width: 25%; border-radius: 10px; transition: width 0.35s ease; box-shadow: 0 0 12px rgba(212, 175, 55, 0.8);"></div>
                 </div>
                 
                 <div id="royal-loading-status-text" style="font-size: 0.84rem; color: #38bdf8; font-weight: 600; min-height: 20px;">
                     🔍 جاري مضاهاة المعايير السريرية وتحديد المستوى التشريحي...
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <button type="button" onclick="hideRoyalReportLoadingModal(); goToStep(3);" style="background: rgba(212, 175, 55, 0.15); border: 1.5px solid rgba(212, 175, 55, 0.4); color: #fef08a; padding: 7px 20px; border-radius: 20px; font-size: 0.86rem; font-weight: bold; cursor: pointer; transition: 0.2s;">
+                        ⚡ تخطي الانتظار وعرض التقرير فوراً ❯
+                    </button>
                 </div>
             </div>
             <style>
@@ -1213,37 +1227,55 @@ function showRoyalReportLoadingModal() {
     }
 
     modal.style.display = 'flex';
+    modal.style.pointerEvents = 'auto';
     requestAnimationFrame(() => {
         modal.style.opacity = '1';
     });
 
     const bar = document.getElementById('royal-loading-bar-inner');
     const statusText = document.getElementById('royal-loading-status-text');
-    if (bar) bar.style.width = '20%';
+    if (bar) bar.style.width = '30%';
 
     setTimeout(() => {
-        if (bar) bar.style.width = '55%';
+        if (bar) bar.style.width = '65%';
         if (statusText) statusText.textContent = '🧬 جاري احتساب مؤشر الإجهاد البيوميكانيكي والحمولة الميكانيكية...';
-    }, 600);
+    }, 450);
 
     setTimeout(() => {
-        if (bar) bar.style.width = '85%';
+        if (bar) bar.style.width = '90%';
         if (statusText) statusText.textContent = '🎁 جاري تجهيز خطة التمارين التأهيلية المنزلية والتقرير النهائي...';
-    }, 1200);
+    }, 850);
 
     setTimeout(() => {
         if (bar) bar.style.width = '100%';
         if (statusText) statusText.textContent = '✅ اكتمل تجهيز التقرير بنجاح! جاري فتح النتائج...';
-    }, 1700);
+    }, 1150);
+
+    // صمام أمان قاطع: إغلاق النافذة والانتقال للتقرير حتماً خلال مهلة أقصاها 2.8 ثانية لمنع أي تعليق إطلاقاً
+    if (window._royalLoadingFailsafeTimer) {
+        clearTimeout(window._royalLoadingFailsafeTimer);
+    }
+    window._royalLoadingFailsafeTimer = setTimeout(() => {
+        hideRoyalReportLoadingModal();
+        if (typeof goToStep === 'function') goToStep(3);
+        if (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) {
+            try { displayDiagnosticReport(currentAssessmentData); } catch(e) {}
+        }
+    }, 2800);
 }
 
 function hideRoyalReportLoadingModal() {
+    if (window._royalLoadingFailsafeTimer) {
+        clearTimeout(window._royalLoadingFailsafeTimer);
+        window._royalLoadingFailsafeTimer = null;
+    }
     const modal = document.getElementById('royal-report-loading-modal');
     if (!modal) return;
     modal.style.opacity = '0';
+    modal.style.pointerEvents = 'none';
     setTimeout(() => {
         modal.style.display = 'none';
-    }, 450);
+    }, 350);
 }
 window.showRoyalReportLoadingModal = showRoyalReportLoadingModal;
 window.hideRoyalReportLoadingModal = hideRoyalReportLoadingModal;
@@ -1755,9 +1787,15 @@ async function runDiagnosticAnalysis() {
             lastUpdated: new Date().toISOString()
         };
         try {
-            await SmartDB.savePatient(patientRecord);
-            currentAssessmentData.patientId = targetPatientId;
-            await SmartDB.saveAssessment(currentAssessmentData);
+            const savePromise = (async () => {
+                await SmartDB.savePatient(patientRecord);
+                currentAssessmentData.patientId = targetPatientId;
+                await SmartDB.saveAssessment(currentAssessmentData);
+            })();
+            await Promise.race([
+                savePromise,
+                new Promise(r => setTimeout(r, 600))
+            ]);
             SmartDB.setCurrentSessionPatientId(targetPatientId);
             // حفظ ID المريض في sessionStorage (يُمسح عند إغلاق التبويب — يمنع تسرب البيانات)
             try { sessionStorage.setItem('scp_active_patient_id', targetPatientId); } catch(e) {}
@@ -1794,8 +1832,8 @@ async function runDiagnosticAnalysis() {
             }
             setTimeout(() => {
                 playStationAudio('diagnosis_guide');
-            }, 400);
-        }, 1800);
+            }, 300);
+        }, 1100);
     } catch (err) {
         console.error('Error in runDiagnosticAnalysis:', err);
         hideRoyalReportLoadingModal();
@@ -1815,6 +1853,10 @@ async function runDiagnosticAnalysis() {
             }
         } catch (subErr) {}
         goToStep(3);
+    } finally {
+        setTimeout(() => {
+            hideRoyalReportLoadingModal();
+        }, 2200);
     }
 }
 
@@ -8032,12 +8074,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             let assessments = [];
             try { assessments = await SmartDB.getPatientAssessments(savedPatientId); } catch(e) {}
             
-            // عزل صارم: منع تسرب أي تقرير يخص مريضاً آخر أو موضع ألم مختلف كاليد والرسغ
-            const isMismatched = currentAssessmentData && (
-                (currentAssessmentData.patientId && currentAssessmentData.patientId !== savedPatientId) ||
-                (p.painArea && /ظهر|قطني|l4|l5|s1|spine|lumbar/i.test(p.painArea) && currentAssessmentData.pointId && currentAssessmentData.pointId.includes('wrist'))
-            );
-            if (isMismatched) {
+            // عزل صارم: منع تسرب أي تقرير يخص مريضاً آخر فقط في حال كان الرابط محدد لمعرف مريض صريح
+            if (queryPatientId && currentAssessmentData && currentAssessmentData.patientId && currentAssessmentData.patientId !== savedPatientId) {
                 currentAssessmentData = null;
             }
 
@@ -8084,32 +8122,58 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // التوجيه الذكي الحافظ للمراحل مهما كانت الظروف
-    if (savedPatientId) {
-        const isPlanActive = localStorage.getItem('smart_plan_activated') === 'true' || localStorage.getItem('smart_plan_activated_' + savedPatientId) === 'true';
-        let logs = [];
-        try { logs = await SmartDB.getPatientDailyLogs(savedPatientId); } catch(e) {}
+    // تجهيز التقرير في الخلفية دائماً إذا وُجدت بياناته لضمان عدم ظهور أي ساعة رملية فارغة
+    if (currentAssessmentData) {
+        try { displayDiagnosticReport(currentAssessmentData); } catch(e) {}
+    }
 
-        if (savedTargetStep === 6 || (logs && logs.length >= 7)) {
-            await loadPatientRecoveryDashboard(savedPatientId);
+    const effectivePatientId = savedPatientId || (currentAssessmentData && currentAssessmentData.patientId) || (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : null);
+
+    // توجيه صارم وموثوق لجميع الخطوات على اللابتوب والموبايل دون استثناء
+    if (savedTargetStep === 6) {
+        if (effectivePatientId) await loadPatientRecoveryDashboard(effectivePatientId);
+        goToStep(6);
+        return;
+    } else if (savedTargetStep === 5) {
+        if (effectivePatientId) await loadPatientRecoveryDashboard(effectivePatientId);
+        goToStep(5);
+        return;
+    } else if (savedTargetStep === 4) {
+        if (effectivePatientId) {
+            await renderStep4IndependentDay1(effectivePatientId);
+        } else {
+            goToStep(4);
+        }
+        return;
+    } else if (savedTargetStep === 3) {
+        if (currentAssessmentData) {
+            displayDiagnosticReport(currentAssessmentData);
+        }
+        goToStep(3);
+        return;
+    } else if (savedTargetStep === 2) {
+        if (currentSelectedPoint) {
+            renderAdaptiveQuestions(currentSelectedPoint.id);
+        }
+        goToStep(2);
+        return;
+    }
+
+    // التوجيه الاستدلالي في حال لم تكن الخطوة محددة في التخزين (savedTargetStep === 0)
+    if (effectivePatientId) {
+        const isPlanActive = localStorage.getItem('smart_plan_activated') === 'true' || localStorage.getItem('smart_plan_activated_' + effectivePatientId) === 'true';
+        let logs = [];
+        try { logs = await SmartDB.getPatientDailyLogs(effectivePatientId); } catch(e) {}
+
+        if (logs && logs.length >= 7) {
+            await loadPatientRecoveryDashboard(effectivePatientId);
             goToStep(6);
             return;
-        } else if (savedTargetStep === 5 || (savedTargetStep === 0 && ((logs && logs.length > 0) || (p && p.currentSessionDay && p.currentSessionDay >= 2)))) {
-            await loadPatientRecoveryDashboard(savedPatientId);
+        } else if ((logs && logs.length > 0) || (p && p.currentSessionDay && p.currentSessionDay >= 2)) {
+            await loadPatientRecoveryDashboard(effectivePatientId);
             return;
-        } else if (savedTargetStep === 4 || (savedTargetStep === 0 && isPlanActive)) {
-            await loadPatientRecoveryDashboard(savedPatientId);
-            return;
-        } else if (savedTargetStep === 3 && currentAssessmentData) {
-            displayDiagnosticReport(currentAssessmentData);
-            goToStep(3);
-            return;
-        } else if (savedTargetStep === 2 && currentSelectedPoint) {
-            renderAdaptiveQuestions(currentSelectedPoint.id);
-            goToStep(2);
-            return;
-        } else if (isPlanActive || (logs && logs.length > 0) || maxUnlocked >= 4) {
-            await loadPatientRecoveryDashboard(savedPatientId);
+        } else if (isPlanActive || maxUnlocked >= 4) {
+            await loadPatientRecoveryDashboard(effectivePatientId);
             return;
         } else if (currentAssessmentData) {
             displayDiagnosticReport(currentAssessmentData);
@@ -8118,21 +8182,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    if (savedTargetStep === 3 && currentAssessmentData) {
+    if (currentAssessmentData && maxUnlocked >= 3) {
         displayDiagnosticReport(currentAssessmentData);
         goToStep(3);
         return;
-    } else if (currentAssessmentData && maxUnlocked >= 3) {
-        displayDiagnosticReport(currentAssessmentData);
-        goToStep(3);
-        return;
-    } else if ((savedTargetStep === 2 || maxUnlocked >= 2) && currentSelectedPoint) {
+    } else if (currentSelectedPoint && maxUnlocked >= 2) {
         renderAdaptiveQuestions(currentSelectedPoint.id);
         goToStep(2);
         return;
     }
 
-    goToStep(savedTargetStep >= 1 && savedTargetStep <= 6 ? savedTargetStep : 1);
+    goToStep(1);
 
     // تحديث حالة زر الملف الطبي للمراجع في الهيدر
     try {
@@ -9937,6 +9997,11 @@ async function sendChatMessage() {
                 renderSpecializedConsultationReferralCard(patientInfo);
                 renderChatQuickReplies([]);
 
+                window._isDialogueConcluding = true;
+                if (typeof SmartGuidance !== 'undefined' && typeof SmartGuidance.guideStep2 === 'function') {
+                    SmartGuidance.guideStep2();
+                }
+
                 const pGreeting = savedName ? ` يا ${savedName}` : '';
                 const closingMsg = `✅ تم اعتماد رقم هاتفك وبياناتك بنجاح${pGreeting}. نقوم الآن بإصدار بطاقة التقييم السريري الشاملة وتحويلك فوراً لصفحة التقرير والتأهيل المباشر... ⏱️<div style="margin-top: 10px; text-align: center;"><button type="button" onclick="window.doDirectTransitionToSpecializedReport && window.doDirectTransitionToSpecializedReport()" class="btn-header btn-header-gold" style="padding: 7px 18px; font-size: 0.86em; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);">⚡ الانتقال المباشر لتقرير الحالة</button></div>`;
                 appendChatMessage('bot', closingMsg);
@@ -9951,6 +10016,7 @@ async function sendChatMessage() {
                 const doSpecTransition = () => {
                     if (transitionedSpec) return;
                     transitionedSpec = true;
+                    window._isDialogueConcluding = false;
                     if (typeof Wada3anAiEngine !== 'undefined') Wada3anAiEngine.stopSpeaking();
                     goToStep(3);
                     displayDiagnosticReport(currentAssessmentData);
@@ -9960,6 +10026,11 @@ async function sendChatMessage() {
                 // تحويل تلقائي بعد 2 ثانية
                 setTimeout(doSpecTransition, 2200);
                 return;
+            }
+
+            window._isDialogueConcluding = true;
+            if (typeof SmartGuidance !== 'undefined' && typeof SmartGuidance.guideStep2 === 'function') {
+                SmartGuidance.guideStep2();
             }
 
             const patientGreeting = (clinicalDialogueState.patientName && clinicalDialogueState.patientName !== 'المراجع الكريم') ? ` يا ${clinicalDialogueState.patientName}` : '';
@@ -9975,6 +10046,7 @@ async function sendChatMessage() {
             const doTransition = () => {
                 if (transitioned) return;
                 transitioned = true;
+                window._isDialogueConcluding = false;
                 if (typeof Wada3anAiEngine !== 'undefined') Wada3anAiEngine.stopSpeaking();
                 finishChatIntakeAndGenerateReport();
             };
@@ -10233,6 +10305,7 @@ async function sendChatMessage() {
 
 // إنهاء الحوار وبناء التقرير الطبي فوراً
 function finishChatIntakeAndGenerateReport() {
+    window._isDialogueConcluding = false;
     const userMessages = (clinicalDialogueState.history || [])
         .filter(h => h.sender === 'user')
         .map(h => h.text)

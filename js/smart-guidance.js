@@ -223,10 +223,25 @@ const SmartGuidance = (function() {
 
         if (!btn) return;
 
+        const isDialogueConcluding = window._isDialogueConcluding 
+            || (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState && (clinicalDialogueState.step === 'completed' || clinicalDialogueState.step === 'ask_phone_success'))
+            || !!window.doDirectTransitionToReport
+            || !!window.doDirectTransitionToSpecializedReport;
+
         const btnRunDiag = document.getElementById('btn-run-diagnosis');
         const isDiagBtnReady = btnRunDiag && btnRunDiag.offsetParent !== null;
 
-        if (isAiAnalyzing) {
+        if (isDialogueConcluding) {
+            activeSubState = 'step2_concluding';
+            updateStageFlowBanner(2, 3);
+            if (iconEl) iconEl.textContent = '⏳';
+            if (subEl) subEl.textContent = 'المرحلة 2 من 6: اكتمال الاستشارة السريرية';
+            if (mainEl) mainEl.textContent = 'د. سارة تُنهي التوصيات الختامية.. جاري تجهيز تقريرك الطبي والتشخيص السريري';
+
+            btn.className = 'sticky-guidance-action-btn state-pending';
+            if (btnIcon) btnIcon.textContent = '⏳';
+            if (btnText) btnText.textContent = 'جاري تحضير التقرير...';
+        } else if (isAiAnalyzing) {
             activeSubState = 'step2_analyzing';
             updateStageFlowBanner(2, 2);
             if (iconEl) iconEl.textContent = '⏳';
@@ -626,7 +641,15 @@ const SmartGuidance = (function() {
             }
 
             case 2: {
-                if (activeSubState === 'step2_ready_diagnosis') {
+                if (activeSubState === 'step2_concluding') {
+                    if (typeof window.doDirectTransitionToReport === 'function') {
+                        window.doDirectTransitionToReport();
+                    } else if (typeof window.doDirectTransitionToSpecializedReport === 'function') {
+                        window.doDirectTransitionToSpecializedReport();
+                    } else if (typeof finishChatIntakeAndGenerateReport === 'function') {
+                        finishChatIntakeAndGenerateReport();
+                    }
+                } else if (activeSubState === 'step2_ready_diagnosis') {
                     if (typeof runDiagnosticAnalysisWithCheck === 'function') {
                         runDiagnosticAnalysisWithCheck();
                     } else if (typeof runDiagnosticAnalysis === 'function') {
