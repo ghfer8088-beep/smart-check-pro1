@@ -16,9 +16,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=29.9"></script>
-    <script src="js/security-shield.js?v=29.9"></script>
-    <link rel="stylesheet" href="css/style.css?v=29.9">
+    <script src="js/system-watchdog.js?v=29.10"></script>
+    <script src="js/security-shield.js?v=29.10"></script>
+    <link rel="stylesheet" href="css/style.css?v=29.10">
     <style>
         body {
             background-color: #080c14;
@@ -1445,17 +1445,17 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/mqtt.min.js?v=29.9"></script>
-    <script src="js/cloud-sync.js?v=29.9"></script>
-    <script src="js/geo-tracker.js?v=29.9"></script>
-    <script src="js/database.js?v=29.9"></script>
-    <script src="js/exercise-image-studio.js?v=29.9"></script>
-    <script src="js/exercises-db.js?v=29.9"></script>
-    <script src="js/diagnostic-engine.js?v=29.9"></script>
-    <script src="js/patient-flow.js?v=29.9"></script>
-    <script src="js/admin-engine.js?v=29.9"></script>
-    <script src="js/ai-config.js?v=29.9"></script>
-    <script src="js/ai-engine.js?v=29.9"></script>
+    <script src="js/mqtt.min.js?v=29.10"></script>
+    <script src="js/cloud-sync.js?v=29.10"></script>
+    <script src="js/geo-tracker.js?v=29.10"></script>
+    <script src="js/database.js?v=29.10"></script>
+    <script src="js/exercise-image-studio.js?v=29.10"></script>
+    <script src="js/exercises-db.js?v=29.10"></script>
+    <script src="js/diagnostic-engine.js?v=29.10"></script>
+    <script src="js/patient-flow.js?v=29.10"></script>
+    <script src="js/admin-engine.js?v=29.10"></script>
+    <script src="js/ai-config.js?v=29.10"></script>
+    <script src="js/ai-engine.js?v=29.10"></script>
 
     <script>
         let allPatientsList = [];
@@ -1603,15 +1603,20 @@
             initAdminPage();
         }
 
-            // 🔄 فحص دوري هادئ تلقائي كل 15 ثانية يضمن وصول أي مريض جديد حتى لو انقطع البث اللحظي
+            // 🔄 فحص دوري هادئ تلقائي كل 20 ثانية يضمن وصول أي مريض جديد حتى لو انقطع البث اللحظي دون أي تعليق
+            let isAutoSyncRunning = false;
             setInterval(async () => {
+                if (isAutoSyncRunning) return;
+                isAutoSyncRunning = true;
                 try {
                     if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.fetchCloudPatients === 'function') {
                         await SmartCloudSync.fetchCloudPatients();
                     }
                     await loadAdminData(false);
-                } catch (e) {}
-            }, 15000);
+                } catch (e) {} finally {
+                    isAutoSyncRunning = false;
+                }
+            }, 20000);
 
         // ==========================================================================
         // دوال إدارة وتوثيق قصص النجاح بالفيديو (Success Stories Video Manager)

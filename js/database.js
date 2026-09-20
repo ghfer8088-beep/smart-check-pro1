@@ -128,11 +128,17 @@ const SmartDB = (function() {
             try {
                 const delList = JSON.parse(localStorage.getItem('smart_deleted_patient_ids') || '[]');
                 if (Array.isArray(delList) && delList.length > 0) {
-                    const strId = String(checkId);
-                    const baseId = strId.replace(/(_notif_.*|_test\d*|_cloud_test.*|_\d{10,})$/, '');
-                    if (delList.includes(strId) || (baseId && delList.includes(baseId))) {
-                        console.log('[SmartDB] Rejecting save for tombstoned/deleted patient:', checkId);
-                        return null;
+                    const strId = String(checkId).trim();
+                    if (strId && strId !== 'pat' && strId !== 'pat_notif') {
+                        if (delList.includes(strId)) {
+                            console.log('[SmartDB] Rejecting save for tombstoned/deleted patient:', checkId);
+                            return null;
+                        }
+                        const baseId = strId.replace(/(_notif_.*|_test\d*|_cloud_test.*|_\d{10,})$/, '');
+                        if (baseId && baseId !== 'pat' && baseId !== 'pat_notif' && baseId.length > 5 && delList.includes(baseId)) {
+                            console.log('[SmartDB] Rejecting save for tombstoned/deleted patient base:', baseId);
+                            return null;
+                        }
                     }
                 }
             } catch(e) {}
@@ -292,10 +298,13 @@ const SmartDB = (function() {
             const rawDel = JSON.parse(localStorage.getItem('smart_deleted_patient_ids') || '[]');
             if (Array.isArray(rawDel)) {
                 rawDel.forEach(id => {
-                    if (id) {
-                        deletedIds.add(String(id));
-                        const bId = String(id).replace(/(_notif_.*|_test\d*|_cloud_test.*|_\d{10,})$/, '');
-                        if (bId) deletedIds.add(bId);
+                    const str = String(id || '').trim();
+                    if (str && str !== 'pat' && str !== 'pat_notif' && str !== 'null' && str !== 'undefined' && str.length > 3) {
+                        deletedIds.add(str);
+                        const bId = str.replace(/(_notif_.*|_test\d*|_cloud_test.*|_\d{10,})$/, '');
+                        if (bId && bId !== 'pat' && bId !== 'pat_notif' && bId.length > 5) {
+                            deletedIds.add(bId);
+                        }
                     }
                 });
             }
@@ -303,10 +312,11 @@ const SmartDB = (function() {
 
         const isDeleted = (pId) => {
             if (!pId) return false;
-            const sId = String(pId);
+            const sId = String(pId).trim();
+            if (!sId || sId === 'pat' || sId === 'pat_notif' || sId === 'null' || sId === 'undefined') return false;
             if (deletedIds.has(sId)) return true;
             const bId = sId.replace(/(_notif_.*|_test\d*|_cloud_test.*|_\d{10,})$/, '');
-            return bId && deletedIds.has(bId);
+            return bId && bId !== 'pat' && bId !== 'pat_notif' && bId.length > 5 && deletedIds.has(bId);
         };
 
         let lsPatients = [];

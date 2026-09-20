@@ -40,32 +40,58 @@
 
     let mqttClient = null;
     let mqttConnected = false;
-    let masterHubBlockedUntil = 0; // دائرة حماية لمنع إغراق restful-api.dev عند تجاوز الحصة
-
+    const MASTER_HUB_CIRCUIT_KEY = 'smart_master_hub_circuit_blocked';
     function isMasterHubAllowed() {
-        return Date.now() > masterHubBlockedUntil;
+        try {
+            const blockedUntil = parseInt(localStorage.getItem(MASTER_HUB_CIRCUIT_KEY) || '0', 10);
+            return Date.now() > blockedUntil;
+        } catch(e) { return true; }
     }
 
     function recordMasterHubFailure(status) {
-        if (status === 405 || status === 429 || status === 500) {
-            masterHubBlockedUntil = Date.now() + (60 * 60 * 1000); // إيقاف لمدة ساعة كاملة
-            console.warn(`[CloudSync] Master Hub returned ${status}. Circuit open for 1 hour; relying on MQTT & NTFY.`);
+        if (status === 405 || status === 429 || status === 500 || status === 404) {
+            try {
+                localStorage.setItem(MASTER_HUB_CIRCUIT_KEY, (Date.now() + 24 * 60 * 60 * 1000).toString());
+            } catch(e) {}
+            console.warn(`[CloudSync] Master Hub returned ${status}. Circuit open for 24h; relying on MQTT & NTFY.`);
         }
     }
 
     function resetMasterHubCircuit() {
-        masterHubBlockedUntil = 0; // فتح دائرة الحماية يدوياً
+        try { localStorage.removeItem(MASTER_HUB_CIRCUIT_KEY); } catch(e) {}
     }
+
+    // تنظيف استباقي لقائمة المحذوفات من أي رموز عامة مثل 'pat' أو 'pat_notif' لمنع حجب المرضى الجدد
+    (function sanitizeDeletedPatientIds() {
+        try {
+            const raw = localStorage.getItem('smart_deleted_patient_ids');
+            if (raw) {
+                const list = JSON.parse(raw);
+                if (Array.isArray(list)) {
+                    const cleaned = list.filter(id => id && id !== 'pat' && id !== 'pat_notif' && id !== 'null' && id !== 'undefined' && String(id).trim().length > 3);
+                    if (cleaned.length !== list.length) {
+                        localStorage.setItem('smart_deleted_patient_ids', JSON.stringify(cleaned));
+                    }
+                }
+            }
+        } catch(e) {}
+    })();
 
     // التحقق الصارم من قائمة المحذوفات لمنع إعادة استيراد أي مريض محذوف
     function isDeletedPatient(patientId) {
         if (!patientId) return false;
         try {
+            const strId = String(patientId).trim();
+            if (!strId || strId === 'pat' || strId === 'pat_notif' || strId === 'null' || strId === 'undefined') return false;
             const delList = JSON.parse(localStorage.getItem('smart_deleted_patient_ids') || '[]');
             if (!Array.isArray(delList) || delList.length === 0) return false;
-            const strId = String(patientId);
+            if (delList.includes(strId)) return true;
+
             const baseId = strId.replace(/(_notif_.*|_test\d*|_cloud_test.*|_\d{10,})$/, '');
-            return delList.includes(strId) || (baseId && delList.includes(baseId));
+            if (baseId && baseId !== 'pat' && baseId !== 'pat_notif' && baseId.length > 5 && delList.includes(baseId)) {
+                return true;
+            }
+            return false;
         } catch(e) {
             return false;
         }
@@ -1086,8 +1112,11 @@
                 const currentList = getCloudSyncedPatients();
                 for (const pt of importedPatients) {
                     if (!pt) continue;
+                    const pIdRaw = pt.id || pt.patientId;
+                    if (isDeletedPatient(pIdRaw)) continue;
+
                     const normalized = normalizeCloudPatientRecord(pt);
-                    if (!normalized) continue;
+                    if (!normalized || isDeletedPatient(normalized.id)) continue;
                     const pId = normalized.id;
                     const idx = currentList.findIndex(x => pId && (x.id === pId || x.patientId === pId));
                     if (idx >= 0) {
@@ -1106,15 +1135,15 @@
                         currentList.unshift(normalized);
                     }
                     if (window.SmartDB && typeof window.SmartDB.savePatient === 'function') {
-                        await window.SmartDB.savePatient(normalized, { skipCloudSync: true });
+                        window.SmartDB.savePatient(normalized, { skipCloudSync: true }).catch(() => {});
                     }
                     const rawAss = pt.assessment || pt.latestAssessment;
                     if (rawAss && window.SmartDB && typeof window.SmartDB.saveAssessment === 'function') {
                         try {
-                            await window.SmartDB.saveAssessment({
+                            window.SmartDB.saveAssessment({
                                 patientId: normalized.id || pId,
                                 ...rawAss
-                            });
+                            }).catch(() => {});
                         } catch(e) {}
                     }
                 }
@@ -1528,125 +1557,163 @@
             // معالجة بيانات NTFY Relay
             if (itemVal.type === 'ntfy' && itemVal.text) {
                 const lines = itemVal.text.trim().split('\n');
+
+                const processPatientRecord = (pt) => {
+                    if (!pt) return;
+                    if (pt.type === 'session_log_update' || (pt.log && pt.log.sessionNumber)) {
+                        const logData = pt.log || pt;
+                        if (logData && logData.patientId && logData.sessionNumber) {
+                            if (isDeletedPatient(logData.patientId)) return;
+                            try {
+                                if (window.SmartDB && typeof window.SmartDB.saveDailyLog === 'function') {
+                                    window.SmartDB.saveDailyLog(logData, { skipCloudSync: true }).catch(() => {});
+                                }
+                                const lsKey = 'smart_daily_logs_' + logData.patientId;
+                                const existing = JSON.parse(localStorage.getItem(lsKey) || '[]');
+                                const lIdx = existing.findIndex(l => l.sessionNumber === logData.sessionNumber);
+                                if (lIdx >= 0) existing[lIdx] = { ...existing[lIdx], ...logData };
+                                else existing.push(logData);
+                                existing.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
+                                localStorage.setItem(lsKey, JSON.stringify(existing));
+
+                                const targetP = currentList.find(x => x.id === logData.patientId || x.patientId === logData.patientId);
+                                if (targetP) {
+                                    targetP.dailyLogs = targetP.dailyLogs || [];
+                                    const plIdx = targetP.dailyLogs.findIndex(l => l.sessionNumber === logData.sessionNumber);
+                                    if (plIdx >= 0) targetP.dailyLogs[plIdx] = { ...targetP.dailyLogs[plIdx], ...logData };
+                                    else targetP.dailyLogs.push(logData);
+                                    targetP.dailyLogs.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
+                                    changed = true;
+                                }
+                            } catch(e) {}
+                        }
+                        return;
+                    }
+
+                    if (pt.id || pt.patientId || pt.phone || pt.fullName || pt.name) {
+                        const pIdRaw = pt.id || pt.patientId;
+                        if (isDeletedPatient(pIdRaw)) return;
+
+                        const normalized = normalizeCloudPatientRecord(pt);
+                        if (!normalized || isDeletedPatient(normalized.id)) return;
+
+                        const pId = normalized.id;
+                        const idx = currentList.findIndex(x => pId && (x.id === pId || x.patientId === pId));
+                        if (idx >= 0) {
+                            const existing = currentList[idx];
+                            const existingDaily = existing.dailyLogs || [];
+                            const incomingDaily = normalized.dailyLogs || normalized.logs || [];
+                            const mergedDaily = [...existingDaily];
+                            for (const idl of incomingDaily) {
+                                if (!idl || !idl.sessionNumber) continue;
+                                const mIdx = mergedDaily.findIndex(m => m.sessionNumber === idl.sessionNumber);
+                                if (mIdx >= 0) mergedDaily[mIdx] = { ...mergedDaily[mIdx], ...idl };
+                                else mergedDaily.push(idl);
+                            }
+                            normalized.dailyLogs = mergedDaily;
+                            normalized.logs = mergedDaily;
+                            currentList[idx] = {
+                                ...existing,
+                                ...normalized,
+                                createdAt: existing.createdAt || normalized.createdAt || existing.timestamp || normalized.timestamp,
+                                logsCount: (mergedDaily.length > 0) ? mergedDaily.length : Math.min(7, Math.max(existing.logsCount || 0, normalized.logsCount || 0)),
+                                completedSessions: (mergedDaily.length > 0) ? mergedDaily.length : Math.min(7, Math.max(existing.completedSessions || 0, normalized.completedSessions || 0)),
+                                recoveryScore: Math.max(existing.recoveryScore || 0, normalized.recoveryScore || 0)
+                            };
+                        } else {
+                            currentList.unshift(normalized);
+                            changed = true;
+                        }
+
+                        try {
+                            if (window.SmartDB && typeof window.SmartDB.savePatient === 'function') {
+                                window.SmartDB.savePatient(normalized, { skipCloudSync: true }).catch(() => {});
+                            }
+                            const rawAss = pt.assessment || pt.latestAssessment;
+                            if (rawAss && window.SmartDB && typeof window.SmartDB.saveAssessment === 'function') {
+                                window.SmartDB.saveAssessment({ patientId: pId, ...rawAss }).catch(() => {});
+                            }
+                            const allPtLogs = normalized.dailyLogs || normalized.logs || [];
+                            if (allPtLogs.length > 0) {
+                                const lsKey = 'smart_daily_logs_' + pId;
+                                const existing = JSON.parse(localStorage.getItem(lsKey) || '[]');
+                                for (const dl of allPtLogs) {
+                                    if (!dl || !dl.sessionNumber) continue;
+                                    const dlIdx = existing.findIndex(x => x.sessionNumber === dl.sessionNumber);
+                                    if (dlIdx >= 0) existing[dlIdx] = { ...existing[dlIdx], ...dl };
+                                    else existing.push(dl);
+                                    if (window.SmartDB && typeof window.SmartDB.saveDailyLog === 'function') {
+                                        window.SmartDB.saveDailyLog(dl, { skipCloudSync: true }).catch(() => {});
+                                    }
+                                }
+                                existing.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
+                                localStorage.setItem(lsKey, JSON.stringify(existing));
+                            }
+                        } catch(e) {}
+                    }
+                };
+
+                let latestAttachmentItem = null;
+
                 for (const line of lines) {
                     if (!line.trim()) continue;
                     try {
                         const item = JSON.parse(line);
-                        if (item.event === 'message') {
-                            let pt = null;
-                            if (item.attachment && item.attachment.url) {
-                                try {
-                                    const attController = new AbortController();
-                                    const attTimer = setTimeout(() => attController.abort(), 3500);
-                                    const attResp = await fetch(item.attachment.url, { signal: attController.signal });
-                                    clearTimeout(attTimer);
-                                    if (attResp.ok) pt = await attResp.json();
-                                } catch(errAtt) {}
-                            }
-                            if (!pt && item.message && item.message.trim().startsWith('{')) {
-                                try { pt = JSON.parse(item.message); } catch(e) {}
-                            }
-                            if (!pt) continue;
+                        if (item.event !== 'message') continue;
 
+                        // 1. رسائل فورية نصية مدمجة
+                        let pt = null;
+                        if (item.message && item.message.trim().startsWith('{')) {
+                            try { pt = JSON.parse(item.message); } catch(e) {}
+                        }
+                        if (pt) {
                             if (pt.type === 'clinic_full_snapshot' && pt.snapshot) {
                                 await importFullClinicSnapshot(pt.snapshot);
                                 changed = true;
-                                continue;
+                            } else {
+                                processPatientRecord(pt);
                             }
+                            continue;
+                        }
 
-                            if (pt.type === 'session_log_update' || (pt.log && pt.log.sessionNumber)) {
-                                const logData = pt.log || pt;
-                                if (logData && logData.patientId && logData.sessionNumber) {
-                                    if (isDeletedPatient(logData.patientId)) continue;
-                                    try {
-                                        if (window.SmartDB && typeof window.SmartDB.saveDailyLog === 'function') {
-                                            await window.SmartDB.saveDailyLog(logData, { skipCloudSync: true });
-                                        }
-                                        const lsKey = 'smart_daily_logs_' + logData.patientId;
-                                        const existing = JSON.parse(localStorage.getItem(lsKey) || '[]');
-                                        const lIdx = existing.findIndex(l => l.sessionNumber === logData.sessionNumber);
-                                        if (lIdx >= 0) existing[lIdx] = { ...existing[lIdx], ...logData };
-                                        else existing.push(logData);
-                                        existing.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
-                                        localStorage.setItem(lsKey, JSON.stringify(existing));
-
-                                        const targetP = currentList.find(x => x.id === logData.patientId || x.patientId === logData.patientId);
-                                        if (targetP) {
-                                            targetP.dailyLogs = targetP.dailyLogs || [];
-                                            const plIdx = targetP.dailyLogs.findIndex(l => l.sessionNumber === logData.sessionNumber);
-                                            if (plIdx >= 0) targetP.dailyLogs[plIdx] = { ...targetP.dailyLogs[plIdx], ...logData };
-                                            else targetP.dailyLogs.push(logData);
-                                            targetP.dailyLogs.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
-                                            changed = true;
-                                        }
-                                    } catch(e) {}
-                                }
-                                continue;
-                            }
-
-                            if (pt.id || pt.patientId || pt.phone || pt.fullName || pt.name) {
-                                const pIdRaw = pt.id || pt.patientId;
-                                if (isDeletedPatient(pIdRaw)) continue;
-
-                                const normalized = normalizeCloudPatientRecord(pt);
-                                if (!normalized || isDeletedPatient(normalized.id)) continue;
-
-                                const pId = normalized.id;
-                                const idx = currentList.findIndex(x => pId && (x.id === pId || x.patientId === pId));
-                                if (idx >= 0) {
-                                    const existing = currentList[idx];
-                                    const existingDaily = existing.dailyLogs || [];
-                                    const incomingDaily = normalized.dailyLogs || normalized.logs || [];
-                                    const mergedDaily = [...existingDaily];
-                                    for (const idl of incomingDaily) {
-                                        if (!idl || !idl.sessionNumber) continue;
-                                        const mIdx = mergedDaily.findIndex(m => m.sessionNumber === idl.sessionNumber);
-                                        if (mIdx >= 0) mergedDaily[mIdx] = { ...mergedDaily[mIdx], ...idl };
-                                        else mergedDaily.push(idl);
-                                    }
-                                    normalized.dailyLogs = mergedDaily;
-                                    normalized.logs = mergedDaily;
-                                    currentList[idx] = {
-                                        ...existing,
-                                        ...normalized,
-                                        createdAt: existing.createdAt || normalized.createdAt || existing.timestamp || normalized.timestamp,
-                                        logsCount: (mergedDaily.length > 0) ? mergedDaily.length : Math.min(7, Math.max(existing.logsCount || 0, normalized.logsCount || 0)),
-                                        completedSessions: (mergedDaily.length > 0) ? mergedDaily.length : Math.min(7, Math.max(existing.completedSessions || 0, normalized.completedSessions || 0)),
-                                        recoveryScore: Math.max(existing.recoveryScore || 0, normalized.recoveryScore || 0)
-                                    };
-                                } else {
-                                    currentList.unshift(normalized);
-                                    changed = true;
-                                }
-
-                                try {
-                                    if (window.SmartDB && typeof window.SmartDB.savePatient === 'function') {
-                                        window.SmartDB.savePatient(normalized, { skipCloudSync: true });
-                                    }
-                                    const rawAss = pt.assessment || pt.latestAssessment;
-                                    if (rawAss && window.SmartDB && typeof window.SmartDB.saveAssessment === 'function') {
-                                        window.SmartDB.saveAssessment({ patientId: pId, ...rawAss });
-                                    }
-                                    const allPtLogs = normalized.dailyLogs || normalized.logs || [];
-                                    if (allPtLogs.length > 0) {
-                                        const lsKey = 'smart_daily_logs_' + pId;
-                                        const existing = JSON.parse(localStorage.getItem(lsKey) || '[]');
-                                        for (const dl of allPtLogs) {
-                                            if (!dl || !dl.sessionNumber) continue;
-                                            const dlIdx = existing.findIndex(x => x.sessionNumber === dl.sessionNumber);
-                                            if (dlIdx >= 0) existing[dlIdx] = { ...existing[dlIdx], ...dl };
-                                            else existing.push(dl);
-                                            if (window.SmartDB && typeof window.SmartDB.saveDailyLog === 'function') {
-                                                window.SmartDB.saveDailyLog(dl, { skipCloudSync: true });
-                                            }
-                                        }
-                                        existing.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
-                                        localStorage.setItem(lsKey, JSON.stringify(existing));
-                                    }
-                                } catch(e) {}
+                        // 2. تتبع أحدث ملف مرفق زمني (Full Snapshot) لتنزيله مرة واحدة فقط
+                        if (item.attachment && item.attachment.url) {
+                            if (!latestAttachmentItem || (item.time || 0) >= (latestAttachmentItem.time || 0)) {
+                                latestAttachmentItem = item;
                             }
                         }
                     } catch(e) {}
+                }
+
+                // تنزيل أحدث ملف مرفق فقط إذا لم يكن قد تم استيراده مسبقاً (يوفر 20+ ثانية من الانتظار المكرر)
+                if (latestAttachmentItem && latestAttachmentItem.attachment && latestAttachmentItem.attachment.url) {
+                    const attUrl = latestAttachmentItem.attachment.url;
+                    const lastImportedUrl = localStorage.getItem('smart_last_imported_att_url');
+                    if (attUrl !== lastImportedUrl) {
+                        try {
+                            const attController = new AbortController();
+                            const attTimer = setTimeout(() => attController.abort(), 4000);
+                            const attResp = await fetch(attUrl, { signal: attController.signal });
+                            clearTimeout(attTimer);
+                            if (attResp.ok) {
+                                const attJson = await attResp.json();
+                                if (attJson) {
+                                    if (attJson.type === 'clinic_full_snapshot' && attJson.snapshot) {
+                                        await importFullClinicSnapshot(attJson.snapshot);
+                                        changed = true;
+                                    } else if (Array.isArray(attJson.patients) || Array.isArray(attJson.allPatients)) {
+                                        await importFullClinicSnapshot(attJson);
+                                        changed = true;
+                                    } else {
+                                        processPatientRecord(attJson);
+                                    }
+                                    localStorage.setItem('smart_last_imported_att_url', attUrl);
+                                }
+                            }
+                        } catch(errAtt) {
+                            console.warn('Snapshot attachment fetch warning:', errAtt);
+                        }
+                    }
                 }
             }
         }

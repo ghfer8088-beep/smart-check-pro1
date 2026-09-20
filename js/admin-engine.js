@@ -117,15 +117,17 @@ const AdminEngine = (function() {
                 return str.trim();
             };
 
-            const deletedIds = new Set(JSON.parse(localStorage.getItem('smart_deleted_patient_ids') || '[]'));
+            const deletedRaw = JSON.parse(localStorage.getItem('smart_deleted_patient_ids') || '[]');
+            const deletedIds = new Set(Array.isArray(deletedRaw) ? deletedRaw.filter(id => id && id !== 'pat' && id !== 'pat_notif' && String(id).length > 3) : []);
 
             // 1. تجميع كافة السجلات الواردة (محلي، سحابي، إشعارات سريرية) مع استبعاد أي سجلات وهمية أو محذوفة أو تنبيهات نظام
             const isExcludedPt = (pt) => {
                 if (!pt) return true;
                 const pId = pt.patientId || pt.id;
-                if (pId && deletedIds.has(pId)) return true;
+                if (!pId || pId === 'pat' || pId === 'pat_notif') return false;
+                if (deletedIds.has(pId)) return true;
                 const baseId = (pId || '').replace(/(_notif_.*|_test\d*|_cloud_test.*)$/, '');
-                if (baseId && deletedIds.has(baseId)) return true;
+                if (baseId && baseId !== 'pat' && baseId !== 'pat_notif' && baseId.length > 5 && deletedIds.has(baseId)) return true;
                 const n = (pt.fullName || pt.name || '').trim();
                 if (n.includes('مريض الفحص الذاتي') || n === 'فحص ذاتي') return true;
                 return false;
