@@ -49,12 +49,10 @@
     }
 
     function recordMasterHubFailure(status) {
-        if (status === 405 || status === 429 || status === 500 || status === 404) {
-            try {
-                localStorage.setItem(MASTER_HUB_CIRCUIT_KEY, (Date.now() + 24 * 60 * 60 * 1000).toString());
-            } catch(e) {}
-            console.warn(`[CloudSync] Master Hub returned ${status}. Circuit open for 24h; relying on MQTT & NTFY.`);
-        }
+        try {
+            localStorage.setItem(MASTER_HUB_CIRCUIT_KEY, (Date.now() + 24 * 60 * 60 * 1000).toString());
+        } catch(e) {}
+        console.warn(`[CloudSync] Master Hub failure (${status}). Circuit open for 24h; relying on MQTT & NTFY.`);
     }
 
     function resetMasterHubCircuit() {
@@ -891,6 +889,8 @@
 
         // 3.5. بث فوري مباشر عبر شبكة MQTT لجميع الأجهزة واللابتوبات
         mqttPublish(MQTT_TOPICS.PATIENTS, { patient: enhancedRecord, timestamp: Date.now() }, { qos: 1 });
+        // ✅ v29.20: تحديث اللقطة السحابية المحتفظ بها (Retained Snapshot) فوراً لضمان وصول المريض للابتوب في أي وقت
+        setTimeout(() => { broadcastFullClinicSnapshot(); }, 100);
 
         // 4. ترحيل حقيقي سحابي فوري للسحابة المركزية العالمية (Master Cloud Hub) إن كانت متاحة
         if (isMasterHubAllowed()) {
@@ -1048,6 +1048,8 @@
 
         // 2.5. بث فوري مباشر عبر شبكة MQTT لجميع الأجهزة واللابتوبات
         mqttPublish(MQTT_TOPICS.SESSIONS, payload, { qos: 1 });
+        // ✅ v29.20: تحديث اللقطة السحابية المحتفظ بها (Retained Snapshot) فوراً لتوحيد جلسات المريض
+        setTimeout(() => { broadcastFullClinicSnapshot(); }, 100);
 
         // 3. بث سحابي عبر NTFY لكافة الأجهزة حول العالم
         const jsonStr = JSON.stringify(payload);
@@ -1491,11 +1493,23 @@
     }
 
     // جلب كافة المرضى المرحلين من السحابة بالتوازي الفوري لتقليل زمن الاستجابة وضمان جلب كافة السجلات
+    // جلب كافة المرضى المرحلين من السحابة بالتوازي الفوري لتقليل زمن الاستجابة وضمان جلب كافة السجلات
     async function fetchCloudPatients() {
         const currentList = getCloudSyncedPatients();
         let changed = false;
 
-        // تشغيل قناتي السحابة (Master Hub و NTFY) بالتوازي الفوري بمهلة أمان قصوى 2.5 ثانية لمنع أي تعليق
+        // ✅ v29.20: إطلاق طلب مزامنة فوري عبر MQTT لطلب اللقطة من أي جهاز نشط (الموبايل)
+        try {
+            if (mqttClient && mqttConnected) {
+                mqttPublish(MQTT_TOPICS.SYNC_REQ, {
+                    sender: 'admin_fetch_' + Date.now(),
+                    device: 'admin',
+                    requestedAt: Date.now()
+                });
+            }
+        } catch(e) {}
+
+        // تشغيل قناتي السحابة (Master Hub و NTFY) بالتوازي الفوري
         const tasks = [];
 
         // 1. القناة الأساسية السريعة (Master Cloud Hub) إن كانت متاحة
@@ -1503,12 +1517,14 @@
             tasks.push((async () => {
                 try {
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 1500);
+                    const timeoutId = setTimeout(() => controller.abort(), 1800);
                     const hubResp = await fetch(CLOUD_MASTER_HUB_ENDPOINT, { cache: 'no-store', signal: controller.signal });
                     clearTimeout(timeoutId);
                     if (hubResp.ok) {
                         const hubData = await hubResp.json();
-                        if (hubData && hubData.data && Array.isArray(hubData.data.patients)) {
+                        if (hubData && hubData.error) {
+                            recordMasterHubFailure(429);
+                        } else if (hubData && hubData.data && Array.isArray(hubData.data.patients)) {
                             return { type: 'hub', patients: hubData.data.patients };
                         }
                     } else {
@@ -1519,13 +1535,12 @@
             })());
         }
 
-        // 2. القناة الثانوية المضاعفة (Secondary ntfy Relay) بمهلة أمان قصوى 2.5 ثانية
+        // 2. القناة الثانوية المضاعفة (Secondary ntfy Relay) بمهلة أمان مناسبة لجلب السجلات المتاحة
         tasks.push((async () => {
             try {
                 const controller2 = new AbortController();
-                const timeoutId2 = setTimeout(() => controller2.abort(), 2500);
-                const hasExistingData = currentList && currentList.length > 0;
-                const pollUrl = `${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=${hasExistingData ? '24h' : 'all'}`;
+                const timeoutId2 = setTimeout(() => controller2.abort(), 4500);
+                const pollUrl = `${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=all`;
                 const resp = await fetch(pollUrl, { cache: 'no-store', signal: controller2.signal });
                 clearTimeout(timeoutId2);
                 if (resp.ok) {
