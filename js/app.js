@@ -944,6 +944,14 @@ async function handleStepperClick(stepNum) {
     await restoreActiveSessionState();
     const maxUnlocked = await getMaxUnlockedStep();
 
+    // صمام أمان فوري: إذا كان التقرير الطبي موجوداً ومُنشأً بالفعل في الصفحة أو بيانات الفحص متوفرة، فإن المرحلة 3 مفتوحة دائماً
+    const hasReportRendered = !!document.querySelector('#clinical-report-container .clinical-report-printable');
+    if (stepNum === 3 && (hasReportRendered || currentAssessmentData)) {
+        if (currentAssessmentData) displayDiagnosticReport(currentAssessmentData);
+        goToStep(3);
+        return;
+    }
+
     // التحقق من الصلاحية: هل المرحلة منجزة أو مفتوحة للمستخدم؟
     if (stepNum > maxUnlocked) {
         if (stepNum === 2) {
@@ -4993,9 +5001,7 @@ function showRoyalDuaaModal(patientId) {
         const inner = modal.querySelector('.modal-inner');
         if (inner) inner.scrollTop = 0;
         if (window.SmartGuidance && typeof SmartGuidance.guideDuaaModal === 'function') {
-            setTimeout(() => {
-                SmartGuidance.guideDuaaModal();
-            }, 300);
+            SmartGuidance.guideDuaaModal();
         }
     } else {
         loadPatientRecoveryDashboard(patientId);
@@ -5006,6 +5012,9 @@ window.showRoyalDuaaModal = showRoyalDuaaModal;
 function confirmRoyalDuaaAndProceed() {
     const modal = document.getElementById('royal-duaa-modal');
     if (modal) modal.style.display = 'none';
+    if (window.SmartGuidance && typeof SmartGuidance.onDuaaModalClosed === 'function') {
+        SmartGuidance.onDuaaModalClosed();
+    }
     const pId = pendingDuaaPatientId || SmartDB.getCurrentSessionPatientId() || activePatient?.patientId;
     if (pId) {
         showToast('🌿 تقبّل الله دعاءكم وبارك في صحتكم وعافيتكم.. بدء خطة التعافي (اليوم الأول)', 'success');
@@ -6380,12 +6389,18 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
     `;
 
     modal.style.display = 'flex';
+    if (window.SmartGuidance && typeof SmartGuidance.guideAssessmentModal === 'function') {
+        SmartGuidance.guideAssessmentModal(sessionNumber);
+    }
 }
 window.openSessionAssessmentModal = openSessionAssessmentModal;
 
 function closeSessionAssessmentModal() {
     const modal = document.getElementById('session-assessment-modal');
     if (modal) modal.style.display = 'none';
+    if (window.SmartGuidance && typeof SmartGuidance.onAssessmentModalClosed === 'function') {
+        SmartGuidance.onAssessmentModalClosed();
+    }
 }
 window.closeSessionAssessmentModal = closeSessionAssessmentModal;
 
@@ -6917,6 +6932,16 @@ function goToStep(stepNum) {
     // تفعيل نظام اليد الإرشادية والتمرير الذكي للمرحلة الجديدة
     if (typeof SmartGuidance !== 'undefined' && typeof SmartGuidance.updateStep === 'function') {
         SmartGuidance.updateStep(stepNum);
+    }
+
+    // إذا دخل المراجع الخطوة 3 (التقرير الطبي)، تركيز الشاشة بنعومة على مكان إصدار التقرير
+    if (stepNum === 3) {
+        setTimeout(() => {
+            const reportEl = document.getElementById('clinical-report-container');
+            if (reportEl) {
+                reportEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 100);
     }
 
     // إذا دخل المراجع الخطوة 1 (المجسم)، إظهار شريط التوجيه وبنر استئناف الجلسة الجارية وضمان رسم النقاط فوراً

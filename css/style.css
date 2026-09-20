@@ -2684,8 +2684,8 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 999990 !important;
-    background: rgba(11, 17, 30, 0.94);
+    z-index: 2000090 !important;
+    background: rgba(11, 17, 30, 0.95);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-top: 2px solid rgba(212, 175, 55, 0.65);
@@ -2695,6 +2695,7 @@ body {
     justify-content: center;
     align-items: center;
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+    cursor: pointer;
 }
 
 .sticky-guidance-container {
@@ -2794,6 +2795,15 @@ body {
     animation: stickyBtnReadyPulse 1.6s infinite ease-in-out;
 }
 
+/* حالة التوجيه الذهبي الفخم للبدء بالتمارين أو تحميل الشهادة */
+.sticky-guidance-action-btn.state-gold {
+    background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+    border-color: #fef08a;
+    color: #0a0e14;
+    box-shadow: 0 0 24px rgba(212, 175, 55, 0.65), 0 4px 14px rgba(0, 0, 0, 0.6);
+    animation: stickyBtnReadyPulse 1.6s infinite ease-in-out;
+}
+
 @keyframes stickyBtnReadyPulse {
     0%, 100% {
         transform: scale(1);
@@ -2818,6 +2828,27 @@ body {
     font-size: 1.15em;
     font-weight: 900;
     transition: transform 0.2s ease;
+}
+
+.sticky-guidance-action-btn:hover .sticky-btn-arrow {
+    transform: translateX(-4px);
+}
+
+/* هالة تمييز لافتة للأزرار الهدف مثل زر التأمين والدعاء */
+.guidance-target-highlight {
+    animation: targetGlowPulse 1.5s infinite ease-in-out !important;
+    position: relative !important;
+}
+
+@keyframes targetGlowPulse {
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.6), 0 0 30px rgba(212, 175, 55, 0.4);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 35px rgba(16, 185, 129, 0.95), 0 0 50px rgba(212, 175, 55, 0.8);
+        transform: scale(1.04);
+    }
 }
 
 .sticky-guidance-action-btn:hover .sticky-btn-arrow {
