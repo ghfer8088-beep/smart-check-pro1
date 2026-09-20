@@ -33,10 +33,21 @@ const SmartGuidance = (function() {
             }
         } catch (e) {}
 
+        // ✅ v29.19: استرجاع hasExercisedInSession من localStorage بدل تصفيره دائماً
+        try {
+            const savedDate = localStorage.getItem('smart_exercised_date');
+            const today = new Date().toDateString();
+            if (savedDate === today) {
+                hasExercisedInSession = true;
+            }
+        } catch(e) {}
+
         // مراقبة نقرات مؤقتات التمارين لتسجيل تفاعل المريض مع التمارين
         document.addEventListener('click', function(e) {
             if (e.target && (e.target.closest('.btn-exercise-timer') || e.target.classList.contains('btn-exercise-timer'))) {
                 hasExercisedInSession = true;
+                // ✅ v29.19: حفظ حالة الانتهاء من التمرين مع تاريخ اليوم
+                try { localStorage.setItem('smart_exercised_date', new Date().toDateString()); } catch(e) {}
             }
         }, true);
 
@@ -45,9 +56,9 @@ const SmartGuidance = (function() {
             updateStep(savedStep);
         }, 250);
 
-        // تشغيل مراقب الحالة الحية فائق الحساسية لضمان التزامن السلس مع الواجهة
+        // ✅ v29.19: رفع مؤقت المراقب من 350ms إلى 500ms لتوفير الموارد
         if (!liveWatcherInterval) {
-            liveWatcherInterval = setInterval(checkLiveGuidanceState, 350);
+            liveWatcherInterval = setInterval(checkLiveGuidanceState, 500);
         }
     }
 
@@ -93,7 +104,23 @@ const SmartGuidance = (function() {
     function updateStep(stepNum) {
         currentStep = stepNum;
         isAiAnalyzing = false;
-        hasExercisedInSession = false;
+        // ✅ v29.19: لا نُصفّر hasExercisedInSession عند الانتقال — بل نستعيده من localStorage
+        try {
+            const savedDate = localStorage.getItem('smart_exercised_date');
+            const today = new Date().toDateString();
+            hasExercisedInSession = (savedDate === today);
+        } catch(e) { hasExercisedInSession = false; }
+
+        // ✅ v29.19: إيقاف المراقب بعد إتمام المرحلة 6 لتوفير الموارد
+        if (stepNum >= 6 && liveWatcherInterval) {
+            // تأخير قصير ثم إيقاف المراقب بعد عرض شريط المرحلة 6
+            setTimeout(() => {
+                if (currentStep >= 6) {
+                    clearInterval(liveWatcherInterval);
+                    liveWatcherInterval = null;
+                }
+            }, 3000);
+        }
 
         // مزامنة أشرطة المسار السريري العلوية
         updateStageFlowBanner(stepNum, 1);
@@ -505,11 +532,20 @@ const SmartGuidance = (function() {
         const isRunning = !!document.querySelector('#step-section-5 button.btn-exercise-timer[data-running="true"]');
         const isDone = hasExercisedInSession || !!document.querySelector('#step-section-5 button.btn-exercise-timer[style*="10b981"]');
 
+        // ✅ v29.19: استخراج رقم الجلسة الحالية لعرضه في الشريط
+        let sessionLabel = '';
+        try {
+            const sessNumEl = document.getElementById('current-session-number') || document.querySelector('[data-session-number]');
+            const sessNumRaw = sessNumEl ? (sessNumEl.textContent || sessNumEl.getAttribute('data-session-number') || '') : '';
+            const sessNum = parseInt(sessNumRaw, 10);
+            if (!isNaN(sessNum) && sessNum > 0) sessionLabel = ` (جلسة ${sessNum} من 7)`;
+        } catch(e) {}
+
         if (isLocked) {
             // الجلسة في فترة استشفاء الـ 24 ساعة
             activeSubState = 'step5_locked';
             if (iconEl) iconEl.textContent = '⏳';
-            if (subEl) subEl.textContent = 'المرحلة 5: فترة استشفاء حيوي جارية للأنسجة (24 ساعة)';
+            if (subEl) subEl.textContent = `المرحلة 5${sessionLabel}: فترة استشفاء حيوي جارية للأنسجة (24 ساعة)`;
             if (mainEl) mainEl.textContent = 'أنسجة مفاصلك في طور الاستشفاء.. التزم بإرشادات الراحة حتى انتهاء العداد';
 
             btn.className = 'sticky-guidance-action-btn state-pending';
@@ -518,7 +554,7 @@ const SmartGuidance = (function() {
         } else if (isRunning) {
             activeSubState = 'step5_exercising';
             if (iconEl) iconEl.textContent = '⏱️';
-            if (subEl) subEl.textContent = 'المرحلة 5: جاري أداء التمرين الحركي';
+            if (subEl) subEl.textContent = `المرحلة 5${sessionLabel}: جاري أداء التمرين الحركي`;
             if (mainEl) mainEl.textContent = 'تنفس بانتظام وهدوء مع كل حركة.. لا تضغط على المفصل بقوة';
 
             btn.className = 'sticky-guidance-action-btn state-pending';
@@ -527,7 +563,7 @@ const SmartGuidance = (function() {
         } else if (isDone) {
             activeSubState = 'step5_ready_record';
             if (iconEl) iconEl.textContent = '✅';
-            if (subEl) subEl.textContent = 'المرحلة 5: توثيق إنجاز الجلسة الحالية';
+            if (subEl) subEl.textContent = `المرحلة 5${sessionLabel}: توثيق إنجاز الجلسة الحالية`;
             if (mainEl) mainEl.textContent = 'أتممت تمارين اليوم؟ اضغط أدناه لحفظ تسجيل الجلسة وتوثيق التقييم والانتقال للتالية';
 
             btn.className = 'sticky-guidance-action-btn state-ready';
@@ -536,7 +572,7 @@ const SmartGuidance = (function() {
         } else {
             activeSubState = 'step5_initial';
             if (iconEl) iconEl.textContent = '🏋️';
-            if (subEl) subEl.textContent = 'المرحلة 5: الجلسة متاحة ومفتوحة للأداء';
+            if (subEl) subEl.textContent = `المرحلة 5${sessionLabel}: الجلسة متاحة ومفتوحة للأداء`;
             if (mainEl) mainEl.textContent = 'جلسة اليوم جاهزة! تفضل بأداء التمارين المخصصة لتليين المفصل وتفريغ الضغط';
 
             btn.className = 'sticky-guidance-action-btn state-gold';
@@ -778,9 +814,16 @@ const SmartGuidance = (function() {
     }
 
     function updateStageFlowBanner(stepNum, subStep) {
-        const banner = document.getElementById(`stage-flow-banner-${stepNum}`);
-        if (!banner) return;
+        // ✅ v29.19: بحث أوسع عند غياب العنصر بالـ ID المباشر
+        let banner = document.getElementById(`stage-flow-banner-${stepNum}`);
+        if (!banner) {
+            // محاولة البحث بـ class أو أي selector بديل
+            banner = document.querySelector(`.stage-flow-banner[data-step="${stepNum}"]`) ||
+                     document.querySelector(`[data-stage-banner="${stepNum}"]`);
+        }
+        if (!banner) return; // لا يوجد banner لهذه المرحلة — تجاهل بأمان
         const steps = banner.querySelectorAll('.stage-flow-step');
+        if (!steps || steps.length === 0) return;
         steps.forEach((st, idx) => {
             const stepIndex = idx + 1;
             st.classList.remove('active', 'completed');

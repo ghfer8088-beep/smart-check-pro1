@@ -965,6 +965,17 @@ const SmartDB = (function() {
             if (list.length > 100) list.length = 100;
             localStorage.setItem('smart_admin_notifications', JSON.stringify(list));
             localStorage.setItem('smart_last_notif_time', Date.now().toString());
+
+            // ✅ v29.19: إرسال BroadcastChannel لإبلاغ admin.html فوراً بالإشعار الجديد
+            // (storage event لا يعمل في نفس المتصفح — BroadcastChannel يصل لجميع التبويبات)
+            try {
+                if ('BroadcastChannel' in window) {
+                    const bc = new BroadcastChannel('smart_check_pro_global_sync_channel');
+                    bc.postMessage({ type: 'NEW_NOTIFICATION', notif: newNotif });
+                    bc.close();
+                }
+            } catch(bcErr) {}
+
             return newNotif;
         } catch (e) {
             console.error('Error adding admin notification:', e);

@@ -257,8 +257,8 @@
             mqttClient = mqttLib.connect(MQTT_BROKER_URL, {
                 clientId: clientId,
                 clean: true,
-                connectTimeout: 8000,
-                reconnectPeriod: 4000,
+                connectTimeout: 3000,    // ✅ v29.19: تقليص من 8000 إلى 3000 لمنع التجميد
+                reconnectPeriod: 8000,   // ✅ v29.19: تمديد من 4000 إلى 8000 لتقليل محاولات الاتصال المتكررة
                 keepalive: 30
             });
 
@@ -400,6 +400,7 @@
                 if (normalized && !isDeletedPatient(normalized.id)) {
                     const cList = getCloudSyncedPatients();
                     const pIdx = cList.findIndex(x => normalized.id && (x.id === normalized.id || x.patientId === normalized.id));
+                    const isNewPatient = pIdx < 0; // ✅ v29.19: تحديد إذا كان مريض جديد
                     if (pIdx >= 0) cList[pIdx] = Object.assign({}, cList[pIdx], normalized);
                     else cList.unshift(normalized);
                     saveCloudSyncedPatients(cList);
@@ -407,6 +408,21 @@
                     if (window.SmartDB && typeof window.SmartDB.savePatient === 'function') {
                         await window.SmartDB.savePatient(normalized, { skipCloudSync: true });
                     }
+
+                    // ✅ v29.19: إنشاء إشعار تلقائي عند وصول مريض جديد من السحابة
+                    if (isNewPatient && window.SmartDB && typeof window.SmartDB.addAdminNotification === 'function') {
+                        try {
+                            window.SmartDB.addAdminNotification({
+                                type: 'new_registration',
+                                title: `👤 مراجع جديد: ${normalized.fullName || normalized.name || 'مراجع كريم'}`,
+                                message: `وصل ملف طبي جديد عبر المزامنة السحابية — موضع الشكوى: ${normalized.painArea || normalized.painAreaTitle || 'غير محدد'}`,
+                                patientId: normalized.patientId || normalized.id,
+                                patientName: normalized.fullName || normalized.name || 'مراجع كريم',
+                                patientPhone: normalized.phone || ''
+                            });
+                        } catch(e) {}
+                    }
+
                     triggerAppUIRefresh();
                 }
             }
@@ -1168,22 +1184,28 @@
 
             // 2. استيراد سجلات الجلسات اليومية
             if (snapshot.dailyLogsMap && typeof snapshot.dailyLogsMap === 'object') {
-                for (const [pId, logs] of Object.entries(snapshot.dailyLogsMap)) {
-                    if (!pId || !Array.isArray(logs)) continue;
+                // ✅ v29.19: تحويل الحفظ من تسلسلي إلى متوازٍ (Promise.all) لمنع تجميد 3 دقائق
+                const logsEntries = Object.entries(snapshot.dailyLogsMap);
+                await Promise.all(logsEntries.map(async ([pId, logs]) => {
+                    if (!pId || !Array.isArray(logs)) return;
                     const lsKey = 'smart_daily_logs_' + pId;
                     const existing = JSON.parse(localStorage.getItem(lsKey) || '[]');
+                    const dbSavePromises = [];
                     for (const l of logs) {
                         if (!l || !l.sessionNumber) continue;
                         const idx = existing.findIndex(x => x.sessionNumber === l.sessionNumber);
                         if (idx >= 0) existing[idx] = { ...existing[idx], ...l };
                         else existing.push(l);
                         if (window.SmartDB && typeof window.SmartDB.saveDailyLog === 'function') {
-                            window.SmartDB.saveDailyLog(l, { skipCloudSync: true }).catch(() => {});
+                            dbSavePromises.push(window.SmartDB.saveDailyLog(l, { skipCloudSync: true }).catch(() => {}));
                         }
                     }
                     existing.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
                     localStorage.setItem(lsKey, JSON.stringify(existing));
-
+                    // حفظ IndexedDB بالتوازي الكامل لمنع أي تعليق
+                    if (dbSavePromises.length > 0) {
+                        await Promise.all(dbSavePromises);
+                    }
                     // تحديث فوري لإحصائيات المريض في القائمة السحابية
                     try {
                         const cList = getCloudSyncedPatients();
@@ -1195,7 +1217,7 @@
                             saveCloudSyncedPatients(cList);
                         }
                     } catch(e) {}
-                }
+                }));
             }
 
             // 3. استيراد الزيارات الحقيقية فقط
