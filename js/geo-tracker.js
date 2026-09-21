@@ -279,7 +279,7 @@
 
             const now = new Date();
             const lastVisit = history[history.length - 1];
-            const isRecent = lastVisit && (now.getTime() - new Date(lastVisit.timestamp).getTime()) < 60000;
+            const isRecent = lastVisit && (now.getTime() - new Date(lastVisit.timestamp).getTime()) < 30000;
 
             if (window.location.pathname.includes('admin') || window.location.pathname.includes('calibrator')) {
                 return info;
@@ -287,6 +287,7 @@
 
             if (!isRecent) {
                 const visitItem = {
+                    visitId: 'vis_' + (info.visitorId || 'v') + '_' + now.getTime().toString(36),
                     visitorId: info.visitorId,
                     country: info.country,
                     countryCode: info.countryCode,

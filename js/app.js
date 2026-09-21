@@ -1674,7 +1674,9 @@ async function runDiagnosticAnalysis() {
             console.warn('getExercisesForPoint notice:', exErr);
         }
 
-        // استخراج اسم وهاتف المريض الخاص بهذا الفحص حصرياً — ممنوع توريث أي بيانات من activePatient السابق
+        // استخراج اسم وهاتف المريض الخاص بهذا الفحص حصرياً مع ربطه بالحساب الموثق المسجل حالياً
+        const authPatientData = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+
         let pName = '';
         if (clinicalDialogueState && clinicalDialogueState.patientName && !/^(?:الاسم|الآسم|الإسم|مراجع كريم|المراجع الكريم)$/i.test(clinicalDialogueState.patientName.trim())) {
             pName = clinicalDialogueState.patientName.trim();
@@ -1685,9 +1687,18 @@ async function runDiagnosticAnalysis() {
                 pName = formName;
             }
         }
+        if (!pName && authPatientData && (authPatientData.name || authPatientData.fullName)) {
+            pName = authPatientData.name || authPatientData.fullName;
+        }
         if (!pName) pName = 'مراجع كريم';
 
         let pPhone = verifiedPhone || (clinicalDialogueState && clinicalDialogueState.patientPhone) || document.getElementById('patient-phone')?.value?.trim() || document.getElementById('sub-phone')?.value?.trim() || '';
+        if (!pPhone && authPatientData && (authPatientData.phone || authPatientData.originalPhone)) {
+            pPhone = authPatientData.phone || authPatientData.originalPhone;
+        }
+        if (!pPhone) {
+            pPhone = localStorage.getItem('smart_patient_phone') || '';
+        }
 
         currentAssessmentData = {
             ...assessmentResult,
@@ -1722,10 +1733,11 @@ async function runDiagnosticAnalysis() {
 
         const painDisplayStr = hasExplicitPain ? `${explicitPain}/10` : 'مستند للأعراض السريرية';
 
-        // ترحيل وتوثيق بيانات المريض والتشخيص إلى قاعدة بيانات الإدارة فوراً بمعرف الفحص
+        // ترحيل وتوثيق بيانات المريض والتشخيص إلى قاعدة بيانات الإدارة فوراً بمعرف الفحص أو الحساب المسجل
         const targetPatientId = (clinicalDialogueState && clinicalDialogueState.patientId)
+            || (authPatientData && (authPatientData.patientId || authPatientData.id))
             || (activePatient && activePatient.patientId)
-            || ('pat_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 6));
+            || ('pat_' + (pPhone ? String(pPhone).replace(/\D/g, '') : Date.now().toString(36)) + '_' + Math.random().toString(36).substr(2, 5));
         if (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState) {
             clinicalDialogueState.patientId = targetPatientId;
         }
@@ -1783,6 +1795,8 @@ async function runDiagnosticAnalysis() {
             device: currentDevInfo.type,
             deviceIcon: currentDevInfo.icon,
             deviceLabel: currentDevInfo.label || currentDevInfo.type,
+            isRegistered: !!(authPatientData && authPatientData.isRegistered),
+            accountPin: (authPatientData && authPatientData.accountPin) || '',
             createdAt: new Date().toISOString(),
             lastUpdated: new Date().toISOString()
         };
@@ -3376,7 +3390,7 @@ async function renderPatientPortalData(authPatient) {
     listContainer.innerHTML = `<div style="text-align:center;padding:20px;color:#94a3b8;">⏳ جاري جلب تقاريرك الطبية...</div>`;
 
     const phone = authPatient.phone || authPatient.originalPhone;
-    const history = await SmartDB.getPatientHistoryByPhone(phone);
+    const history = await SmartDB.getPatientHistoryByPhone(phone, authPatient.patientId || authPatient.id);
 
     if (countEl) countEl.textContent = `${history.length} تقرير سريري`;
 
@@ -5181,16 +5195,40 @@ function getVitalsSummaryCardHTML(patient, assessment) {
 // خالية تماماً وبشكل قاطع من أي أسئلة أو مؤشرات مئوية أو رسوم بيانية
 // =========================================================================
 async function renderStep4IndependentDay1(patientId, sessionData = null) {
-    if (!sessionData) {
-        sessionData = await PatientFlow.initPatientSession(patientId);
+    // الانتقال الحتمي للخطوة 4 فوراً لضمان عدم السقوط للخطوة 1 أبداً
+    goToStep(4);
+
+    if (!sessionData && patientId) {
+        try {
+            sessionData = await PatientFlow.initPatientSession(patientId);
+        } catch(e) {
+            console.warn('initPatientSession error in Step 4:', e);
+        }
     }
+
     if (!sessionData || !sessionData.patient) {
-        console.warn('Patient sessionData unavailable in Step 4; preserving active state.');
-        return;
+        const curAss = currentAssessmentData || (function() {
+            try { return JSON.parse(localStorage.getItem('smart_current_assessment')); } catch(e) { return null; }
+        })();
+        const authP = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+        const pObj = {
+            patientId: patientId || authP?.patientId || curAss?.patientId || 'pat_guest',
+            name: authP?.name || curAss?.patientName || 'المراجع المحترم',
+            phone: authP?.phone || curAss?.patientPhone || '',
+            painArea: curAss?.painAreaTitle || curAss?.pointId || 'lumbar_spine',
+            painPointId: curAss?.pointId || 'lumbar_spine',
+            painLevel: curAss?.painSeverity || 7
+        };
+        sessionData = {
+            patient: pObj,
+            latestAssessment: curAss || { pointId: 'lumbar_spine', primaryDiagnosisKey: '' },
+            dailyLogs: [],
+            currentSessionDay: 1,
+            isPlanCompleted: false
+        };
     }
 
     activePatient = sessionData.patient;
-    goToStep(4);
 
     const container = document.getElementById('step4-day1-container') || document.getElementById('patient-recovery-dashboard');
     if (!container) return;
@@ -5979,7 +6017,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 clearInterval(window.step5TimingPollInterval);
                 window.step5TimingPollInterval = null;
             }
-        }, 3000);
+        }, 25000);
     }
 }
 
@@ -7903,12 +7941,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // استطلاع دوري خفيف كل 4 ثوانٍ لجلب أي تعديل في توقيت الجلسة من السحابة في حال كان التطبيق معروضاً
+    // استطلاع دوري هادئ كل 60 ثانية لجلب أي تعديل في توقيت الجلسة من السحابة كخط احتياطي لـ MQTT
     setInterval(() => {
         if (!document.hidden && window.SmartCloudSync && typeof window.SmartCloudSync.fetchRemoteTimingUpdates === 'function') {
             window.SmartCloudSync.fetchRemoteTimingUpdates();
         }
-    }, 4000);
+    }, 60000);
 
     // إظهار أزرار الإدارة حصرياً في حال توفر صلاحيات الأدمن
     if (typeof isUserAdmin === 'function' && isUserAdmin()) {
@@ -8127,22 +8165,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         try { displayDiagnosticReport(currentAssessmentData); } catch(e) {}
     }
 
-    const effectivePatientId = savedPatientId || (currentAssessmentData && currentAssessmentData.patientId) || (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : null);
+    const authPatientObj = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+    const effectivePatientId = savedPatientId || (currentAssessmentData && currentAssessmentData.patientId) || (authPatientObj && (authPatientObj.patientId || authPatientObj.id)) || (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : null);
 
     // توجيه صارم وموثوق لجميع الخطوات على اللابتوب والموبايل دون استثناء
     if (savedTargetStep === 6) {
-        if (effectivePatientId) await loadPatientRecoveryDashboard(effectivePatientId);
         goToStep(6);
+        if (effectivePatientId) await loadPatientRecoveryDashboard(effectivePatientId);
         return;
     } else if (savedTargetStep === 5) {
-        if (effectivePatientId) await loadPatientRecoveryDashboard(effectivePatientId);
         goToStep(5);
+        if (effectivePatientId) await loadPatientRecoveryDashboard(effectivePatientId);
         return;
     } else if (savedTargetStep === 4) {
+        goToStep(4);
         if (effectivePatientId) {
             await renderStep4IndependentDay1(effectivePatientId);
-        } else {
-            goToStep(4);
         }
         return;
     } else if (savedTargetStep === 3) {

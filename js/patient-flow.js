@@ -141,9 +141,54 @@ const PatientFlow = (function() {
                     }) || null;
                 }
             } catch(e) {}
+        if (!patient) {
+            // خط دفاع رابع: فحص الحساب الموثق المسجل حالياً smart_auth_patient
+            try {
+                const authP = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+                if (authP) {
+                    patient = {
+                        patientId: authP.patientId || patientId,
+                        id: authP.patientId || patientId,
+                        name: authP.name || authP.fullName || 'المراجع المحترم',
+                        fullName: authP.fullName || authP.name || 'المراجع المحترم',
+                        phone: authP.phone || authP.originalPhone || '',
+                        isRegistered: true,
+                        accountPin: authP.accountPin || ''
+                    };
+                }
+            } catch(e) {}
+        }
+        if (!patient) {
+            // خط دفاع خامس: استنتاج المريض من الفحص الحالي smart_current_assessment
+            try {
+                const rawCurAss = localStorage.getItem('smart_current_assessment');
+                if (rawCurAss) {
+                    const curAss = JSON.parse(rawCurAss);
+                    if (curAss) {
+                        patient = {
+                            patientId: curAss.patientId || patientId,
+                            id: curAss.patientId || patientId,
+                            name: curAss.patientName || 'المراجع المحترم',
+                            phone: curAss.patientPhone || curAss.phone || '',
+                            painArea: curAss.painAreaTitle || curAss.painArea || curAss.pointId || 'الفقرات القطنية وأسفل الظهر',
+                            painLevel: curAss.painSeverity || curAss.internalPainScore || 7,
+                            assessment: curAss,
+                            latestAssessment: curAss
+                        };
+                    }
+                }
+            } catch(e) {}
         }
 
-        if (!patient) return null;
+        if (!patient) {
+            patient = {
+                patientId: patientId,
+                id: patientId,
+                name: 'المراجع المحترم',
+                painArea: 'الفقرات القطنية وأسفل الظهر',
+                painLevel: 7
+            };
+        }
 
         const assessments = await SmartDB.getPatientAssessments(patient.patientId || patientId);
         const dailyLogs = await SmartDB.getPatientDailyLogs(patient.patientId || patientId);

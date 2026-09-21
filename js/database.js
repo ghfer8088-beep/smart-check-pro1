@@ -1247,12 +1247,74 @@ const SmartDB = (function() {
         localStorage.removeItem('smart_auth_patient');
     }
 
-    async function getPatientHistoryByPhone(phone) {
-        const cleanPhone = String(phone).replace(/\D/g, '');
-        if (!cleanPhone) return [];
+    async function getPatientHistoryByPhone(phone, targetPatientId = null) {
+        const cleanPhone = String(phone || '').replace(/\D/g, '');
+        const cleanTargetId = targetPatientId ? String(targetPatientId).trim() : '';
+        if (!cleanPhone && !cleanTargetId) return [];
+
+        function isPhoneMatch(p1, p2) {
+            if (!p1 || !p2) return false;
+            const s1 = String(p1).replace(/\D/g, '');
+            const s2 = String(p2).replace(/\D/g, '');
+            if (!s1 || !s2) return false;
+            if (s1 === s2) return true;
+            if (s1.length >= 7 && s2.length >= 7) {
+                const tail1 = s1.slice(-8);
+                const tail2 = s2.slice(-8);
+                if (tail1 === tail2) return true;
+                if (s1.endsWith(s2) || s2.endsWith(s1)) return true;
+            }
+            return false;
+        }
+
         try {
-            const allPatients = await getAllPatients();
-            const matchingPatients = allPatients.filter(p => p.phone && String(p.phone).replace(/\D/g, '') === cleanPhone);
+            // تجميع كافة المرضى من IndexedDB ومن التخزين المحلي وقائمة المزامنة السحابية
+            let allPatients = [];
+            try { allPatients = await getAllPatients(); } catch(e) {}
+            if (!Array.isArray(allPatients)) allPatients = [];
+
+            try {
+                const lsAll = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
+                if (Array.isArray(lsAll)) {
+                    for (const lp of lsAll) {
+                        const lpId = lp.patientId || lp.id;
+                        if (!allPatients.some(ap => (ap.patientId === lpId || ap.id === lpId))) {
+                            allPatients.push(lp);
+                        }
+                    }
+                }
+            } catch(e) {}
+
+            try {
+                const cloudPts = JSON.parse(localStorage.getItem('smart_cloud_synced_patients') || '[]');
+                if (Array.isArray(cloudPts)) {
+                    for (const cp of cloudPts) {
+                        const cpId = cp.patientId || cp.id;
+                        if (!allPatients.some(ap => (ap.patientId === cpId || ap.id === cpId))) {
+                            allPatients.push(cp);
+                        }
+                    }
+                }
+            } catch(e) {}
+
+            // إضافة المريض النشط الحالي إن وجد
+            try {
+                const actP = JSON.parse(localStorage.getItem('smart_active_patient') || 'null');
+                if (actP) {
+                    const actId = actP.patientId || actP.id;
+                    if (!allPatients.some(ap => (ap.patientId === actId || ap.id === actId))) {
+                        allPatients.push(actP);
+                    }
+                }
+            } catch(e) {}
+
+            const matchingPatients = allPatients.filter(p => {
+                if (!p) return false;
+                const pId = p.patientId || p.id;
+                if (cleanTargetId && (pId === cleanTargetId || String(pId).includes(cleanTargetId))) return true;
+                if (cleanPhone && isPhoneMatch(p.phone, cleanPhone)) return true;
+                return false;
+            });
 
             const allAssessments = [];
             for (const pt of matchingPatients) {
@@ -1261,7 +1323,7 @@ const SmartDB = (function() {
                     const ass = await getPatientAssessments(ptId);
                     if (Array.isArray(ass)) {
                         ass.forEach(a => {
-                            if (!allAssessments.some(ea => ea.assessmentId === a.assessmentId || ea.date === a.date)) {
+                            if (!allAssessments.some(ea => ea.assessmentId === a.assessmentId || (ea.date && ea.date === a.date))) {
                                 allAssessments.push({ ...a, patient: pt });
                             }
                         });
@@ -1269,11 +1331,38 @@ const SmartDB = (function() {
                 }
                 if (pt.assessment || pt.latestAssessment) {
                     const curAss = pt.assessment || pt.latestAssessment;
-                    if (!allAssessments.some(ea => ea.date === (curAss.date || pt.createdAt))) {
-                        allAssessments.push({ ...curAss, patient: pt, date: curAss.date || pt.createdAt });
+                    const curDate = curAss.date || pt.createdAt || new Date().toISOString();
+                    if (!allAssessments.some(ea => ea.date === curDate || (ea.assessmentId && ea.assessmentId === curAss.assessmentId))) {
+                        allAssessments.push({ ...curAss, patient: pt, date: curDate });
                     }
                 }
             }
+
+            // فحص smart_current_assessment في localStorage كخط دفاع مباشر للمريض المسجل حالياً
+            try {
+                const rawCurAss = localStorage.getItem('smart_current_assessment');
+                if (rawCurAss) {
+                    const curAss = JSON.parse(rawCurAss);
+                    if (curAss) {
+                        const curPhone = curAss.patientPhone || curAss.phone;
+                        const curId = curAss.patientId;
+                        const matchPhone = cleanPhone && isPhoneMatch(curPhone, cleanPhone);
+                        const matchId = cleanTargetId && (curId === cleanTargetId);
+                        const isAuth = !!localStorage.getItem('smart_auth_patient');
+                        if (matchPhone || matchId || isAuth) {
+                            const curDate = curAss.date || new Date().toISOString();
+                            if (!allAssessments.some(ea => ea.date === curDate || (ea.assessmentId && ea.assessmentId === curAss.assessmentId))) {
+                                const ptForAss = matchingPatients[0] || {
+                                    name: curAss.patientName || 'المراجع المحترم',
+                                    phone: phone || curPhone,
+                                    patientId: curId || cleanTargetId
+                                };
+                                allAssessments.unshift({ ...curAss, patient: ptForAss, date: curDate });
+                            }
+                        }
+                    }
+                }
+            } catch(e) {}
 
             // ترتيب زمني من الأحدث إلى الأقدم
             allAssessments.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));

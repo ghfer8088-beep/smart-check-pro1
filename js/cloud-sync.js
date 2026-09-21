@@ -474,7 +474,11 @@
                 const VISITS_KEY = 'smart_geo_visits_history';
                 let localVisits = [];
                 try { localVisits = JSON.parse(localStorage.getItem(VISITS_KEY) || '[]'); } catch(e) {}
-                if (!localVisits.some(x => x.visitorId === v.visitorId)) {
+                const isDuplicate = localVisits.some(x => {
+                    if (v.visitId && x.visitId && x.visitId === v.visitId) return true;
+                    return x.visitorId === v.visitorId && Math.abs(new Date(x.timestamp || 0).getTime() - new Date(v.timestamp || 0).getTime()) < 120000;
+                });
+                if (!isDuplicate) {
                     localVisits.push(v);
                     if (localVisits.length > 1000) localVisits = localVisits.slice(-1000);
                     localStorage.setItem(VISITS_KEY, JSON.stringify(localVisits));
@@ -1227,10 +1231,13 @@
                 const VISITS_KEY = 'smart_geo_visits_history';
                 let localVisits = [];
                 try { localVisits = JSON.parse(localStorage.getItem(VISITS_KEY) || '[]'); } catch(e) {}
-                const seen = new Set(localVisits.map(v => v.visitorId));
                 for (const v of snapshot.visits) {
-                    if (v && v.visitorId && !String(v.visitorId).startsWith('vis_seed_') && !seen.has(v.visitorId)) {
-                        seen.add(v.visitorId);
+                    if (!v || !v.visitorId || String(v.visitorId).startsWith('vis_seed_')) continue;
+                    const isDup = localVisits.some(lv => {
+                        if (v.visitId && lv.visitId && lv.visitId === v.visitId) return true;
+                        return lv.visitorId === v.visitorId && Math.abs(new Date(lv.timestamp || 0).getTime() - new Date(v.timestamp || 0).getTime()) < 120000;
+                    });
+                    if (!isDup) {
                         localVisits.push(v);
                     }
                 }
@@ -1344,11 +1351,11 @@
         } catch (e) {}
     }
 
-    // جلب كافة الزيارات المسجلة سحابياً من كافة الهواتف والكمبيوترات حول العالم (مع مهلة أمان قصوى 2 ثانية)
+    // جلب كافة الزيارات المسجلة سحابياً من كافة الهواتف والكمبيوترات حول العالم (مع مهلة أمان قصوى 4 ثوانٍ)
     async function fetchCloudVisits() {
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 2000);
+            const timeoutId = setTimeout(() => controller.abort(), 4000);
             const resp = await fetch(`${CLOUD_VISITS_ENDPOINT}/json?poll=1&since=24h`, {
                 cache: 'no-store',
                 signal: controller.signal
@@ -2441,86 +2448,99 @@
         return true;
     }
 
-    // جلب التعديلات السحابية للتوقيت (عبر NTFY وقنوات البث السحابي والسحابة المركزية Master Hub)
+    // جلب التعديلات السحابية للتوقيت مع حماية صارمة من التراكم والتأخير
+    let isFetchingTiming = false;
+    let lastTimingFetchTime = 0;
     async function fetchRemoteTimingUpdates() {
+        if (isFetchingTiming) return;
+        if (Date.now() - lastTimingFetchTime < 15000) return; // منع التكرار المتتالي في أقل من 15 ثانية
+        isFetchingTiming = true;
+        lastTimingFetchTime = Date.now();
+
         const candidateUpdates = [];
 
-        // 1. جلب من قناة التوقيت المخصصة عبر NTFY مع حماية AbortController
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 7500);
-            const resp = await fetch(`${CLOUD_TIMING_ENDPOINT}/json?poll=1&since=all`, {
-                cache: 'no-store',
-                signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-            if (resp.ok) {
-                const text = await resp.text();
-                if (text) {
-                    const lines = text.trim().split('\n');
-                    for (const line of lines) {
-                        if (!line.trim()) continue;
-                        try {
-                            const item = JSON.parse(line);
-                            if (item.event === 'message' && item.message) {
-                                let parsed = null;
-                                try { parsed = JSON.parse(item.message); } catch(e) { parsed = item.message; }
-                                if (parsed && (parsed.type === 'session_timing_update' || parsed.forceUnlock !== undefined || parsed.targetTime !== undefined)) {
-                                    candidateUpdates.push(parsed);
+            // 1. جلب من قناة التوقيت المخصصة عبر NTFY مع حماية AbortController سريعة (2 ثانية)
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 2000);
+                const resp = await fetch(`${CLOUD_TIMING_ENDPOINT}/json?poll=1&since=all`, {
+                    cache: 'no-store',
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                if (resp.ok) {
+                    const text = await resp.text();
+                    if (text) {
+                        const lines = text.trim().split('\n');
+                        for (const line of lines) {
+                            if (!line.trim()) continue;
+                            try {
+                                const item = JSON.parse(line);
+                                if (item.event === 'message' && item.message) {
+                                    let parsed = null;
+                                    try { parsed = JSON.parse(item.message); } catch(e) { parsed = item.message; }
+                                    if (parsed && (parsed.type === 'session_timing_update' || parsed.forceUnlock !== undefined || parsed.targetTime !== undefined)) {
+                                        candidateUpdates.push(parsed);
+                                    }
                                 }
-                            }
-                        } catch(e) {}
+                            } catch(e) {}
+                        }
                     }
                 }
-            }
-        } catch(e) {}
+            } catch(e) {}
 
-        // 2. جلب أيضاً من القناة المركزية للعيادة كاحتياطي دائم
-        try {
-            const controller2 = new AbortController();
-            const timeoutId2 = setTimeout(() => controller2.abort(), 7500);
-            const resp2 = await fetch(`${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=all`, {
-                cache: 'no-store',
-                signal: controller2.signal
-            });
-            clearTimeout(timeoutId2);
-            if (resp2.ok) {
-                const text2 = await resp2.text();
-                if (text2) {
-                    const lines2 = text2.trim().split('\n');
-                    for (const line of lines2) {
-                        if (!line.trim()) continue;
-                        try {
-                            const item = JSON.parse(line);
-                            if (item.event === 'message' && item.message) {
-                                let parsed = null;
-                                try { parsed = JSON.parse(item.message); } catch(e) { parsed = item.message; }
-                                if (parsed && (parsed.type === 'session_timing_update' || parsed.forceUnlock !== undefined || parsed.targetTime !== undefined)) {
-                                    candidateUpdates.push(parsed);
+            // 2. جلب أيضاً من القناة المركزية للعيادة كاحتياطي دائم بمهلة قصوى 2 ثانية
+            try {
+                const controller2 = new AbortController();
+                const timeoutId2 = setTimeout(() => controller2.abort(), 2000);
+                const resp2 = await fetch(`${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=all`, {
+                    cache: 'no-store',
+                    signal: controller2.signal
+                });
+                clearTimeout(timeoutId2);
+                if (resp2.ok) {
+                    const text2 = await resp2.text();
+                    if (text2) {
+                        const lines2 = text2.trim().split('\n');
+                        for (const line of lines2) {
+                            if (!line.trim()) continue;
+                            try {
+                                const item = JSON.parse(line);
+                                if (item.event === 'message' && item.message) {
+                                    let parsed = null;
+                                    try { parsed = JSON.parse(item.message); } catch(e) { parsed = item.message; }
+                                    if (parsed && (parsed.type === 'session_timing_update' || parsed.forceUnlock !== undefined || parsed.targetTime !== undefined)) {
+                                        candidateUpdates.push(parsed);
+                                    }
                                 }
-                            }
-                        } catch(e) {}
+                            } catch(e) {}
+                        }
                     }
                 }
-            }
-        } catch(e) {}
+            } catch(e) {}
 
-        // 3. جلب من السحابة المركزية العالمية Master Cloud Hub كخط دعم مؤكد فائق الموثوقية
-        try {
-            const controller3 = new AbortController();
-            const timeoutId3 = setTimeout(() => controller3.abort(), 7500);
-            const resp3 = await fetch(CLOUD_MASTER_HUB_ENDPOINT, {
-                cache: 'no-store',
-                signal: controller3.signal
-            });
-            clearTimeout(timeoutId3);
-            if (resp3.ok) {
-                const masterObj = await resp3.json();
-                if (masterObj && masterObj.data && masterObj.data.latestTimingUpdate) {
-                    candidateUpdates.push(masterObj.data.latestTimingUpdate);
-                }
+            // 3. جلب من السحابة المركزية العالمية Master Cloud Hub إن كانت متاحة
+            if (isMasterHubAllowed()) {
+                try {
+                    const controller3 = new AbortController();
+                    const timeoutId3 = setTimeout(() => controller3.abort(), 1800);
+                    const resp3 = await fetch(CLOUD_MASTER_HUB_ENDPOINT, {
+                        cache: 'no-store',
+                        signal: controller3.signal
+                    });
+                    clearTimeout(timeoutId3);
+                    if (resp3.ok) {
+                        const masterObj = await resp3.json();
+                        if (masterObj && masterObj.data && masterObj.data.latestTimingUpdate) {
+                            candidateUpdates.push(masterObj.data.latestTimingUpdate);
+                        }
+                    }
+                } catch(e) {}
             }
-        } catch(e) {}
+        } finally {
+            isFetchingTiming = false;
+        }
 
         // فرز كافة التحديثات وتطبيق الأحدث
         if (candidateUpdates.length > 0) {
@@ -2632,7 +2652,18 @@
         flushPendingVisits: flushPendingCloudVisits,
         // مزامنة كاملة قسرية فائقة السرعة: جلب كل شيء من جميع المصادر بالتوازي ثم بث snapshot للأجهزة الأخرى
         forceFullSync: async function() {
+            try {
+                if (mqttClient && mqttConnected) {
+                    mqttPublish(MQTT_TOPICS.SYNC_REQ, {
+                        sender: 'admin_force_' + Date.now(),
+                        device: 'admin',
+                        requestedAt: Date.now()
+                    });
+                }
+            } catch(e) {}
+
             await Promise.all([fetchCloudPatients(), fetchCloudVisits()]); // جلب بالتوازي السريع
+            await new Promise(r => setTimeout(r, 800)); // نافذة استقبال لرد MQTT
             await broadcastFullClinicSnapshot(); // بث للأجهزة الأخرى
             return getCloudSyncedPatients().length;
         }

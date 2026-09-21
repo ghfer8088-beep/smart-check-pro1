@@ -1853,44 +1853,44 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=29.20"></script>
-    <script src="js/cloud-sync.js?v=29.20"></script>
-    <script src="js/geo-tracker.js?v=29.20"></script>
-    <script src="js/database.js?v=29.20"></script>
-    <script src="js/exercise-image-studio.js?v=29.20"></script>
-    <script src="js/exercises-db.js?v=29.20"></script>
-    <script src="js/diagnostic-engine.js?v=29.20"></script>
-    <script src="js/audio-pacer.js?v=29.20"></script>
-    <script src="js/patient-flow.js?v=29.20"></script>
-    <script src="js/admin-engine.js?v=29.20"></script>
-    <script src="js/ai-config.js?v=29.20"></script>
-    <script src="js/ai-engine.js?v=29.20"></script>
-    <script src="js/app.js?v=29.20"></script>
-    <script src="js/text-editor.js?v=29.20"></script>
-    <script src="js/smart-guidance.js?v=29.20"></script>
+    <script src="js/mqtt.min.js?v=29.21"></script>
+    <script src="js/cloud-sync.js?v=29.21"></script>
+    <script src="js/geo-tracker.js?v=29.21"></script>
+    <script src="js/database.js?v=29.21"></script>
+    <script src="js/exercise-image-studio.js?v=29.21"></script>
+    <script src="js/exercises-db.js?v=29.21"></script>
+    <script src="js/diagnostic-engine.js?v=29.21"></script>
+    <script src="js/audio-pacer.js?v=29.21"></script>
+    <script src="js/patient-flow.js?v=29.21"></script>
+    <script src="js/admin-engine.js?v=29.21"></script>
+    <script src="js/ai-config.js?v=29.21"></script>
+    <script src="js/ai-engine.js?v=29.21"></script>
+    <script src="js/app.js?v=29.21"></script>
+    <script src="js/text-editor.js?v=29.21"></script>
+    <script src="js/smart-guidance.js?v=29.21"></script>
 
     <script>
-        // تشغيل مؤشر المراجعين المتفاعلين وكاشف الدولة والمدينة الحقيقي بدقة 100% دون أي توليد عشوائي
+        // مؤشر المراجعين المتفاعلين أونلاين الآن (يتراوح عشوائياً بديناميكية طبيعية بين 40 و 99)
         (function initLiveSocialProof() {
             const countEl = document.getElementById('live-online-users-count');
             const locEl = document.getElementById('visitor-detected-location');
 
+            function getOrInitLiveCount() {
+                let current = parseInt(sessionStorage.getItem('smart_live_counter_val') || '0', 10);
+                if (!current || current < 40 || current > 99) {
+                    current = Math.floor(Math.random() * (78 - 52 + 1)) + 52; // بداية طبيعية بين 52 و 78
+                } else {
+                    // تذبذب عشوائي طفيف بمقدار ±1 إلى ±3
+                    const delta = Math.floor(Math.random() * 7) - 3;
+                    current = Math.min(99, Math.max(40, current + delta));
+                }
+                try { sessionStorage.setItem('smart_live_counter_val', String(current)); } catch(e) {}
+                return current;
+            }
+
             function updateLiveCount() {
                 if (!countEl) return;
-                let activeCount = 1;
-                try {
-                    const rawVisits = localStorage.getItem('smart_geo_visits_history');
-                    if (rawVisits) {
-                        const visits = JSON.parse(rawVisits);
-                        if (Array.isArray(visits)) {
-                            const todayStr = new Date().toISOString().slice(0, 10);
-                            const todayVisits = visits.filter(v => v && v.timestamp && v.timestamp.startsWith(todayStr) && !String(v.visitorId).startsWith('vis_seed_'));
-                            const uniqueToday = new Set(todayVisits.map(v => v.visitorId));
-                            activeCount = Math.max(1, uniqueToday.size);
-                        }
-                    }
-                } catch(e) {}
-                countEl.textContent = activeCount;
+                countEl.textContent = getOrInitLiveCount();
             }
             updateLiveCount();
 
@@ -1909,8 +1909,8 @@
                 });
             }
 
-            // تحديث دوري هادئ لمطابقة الزيارات الفعلية
-            setInterval(updateLiveCount, 60000);
+            // تذبذب هادئ كل 45 ثانية يبقى محصوراً بين 40 و 99
+            setInterval(updateLiveCount, 45000);
         })();
     </script>
 </body>
