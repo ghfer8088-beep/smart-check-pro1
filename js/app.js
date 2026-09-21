@@ -7840,6 +7840,13 @@ window.addEventListener('touchstart', onFirstUserGestureWelcome, { passive: true
 
 // تهيئة التطبيق والـ PWA
 document.addEventListener('DOMContentLoaded', async () => {
+    // 🧹 تنظيف متغيرات الجلسة القديمة عند كل تحميل جديد للصفحة لمنع إرباك شريط التوجيه
+    try {
+        delete window.doDirectTransitionToReport;
+        delete window.doDirectTransitionToSpecializedReport;
+        window._isDialogueConcluding = false;
+    } catch(e) {}
+
     await SmartDB.openDB();
 
     if (window.location.protocol.startsWith('http') && 'serviceWorker' in navigator) {

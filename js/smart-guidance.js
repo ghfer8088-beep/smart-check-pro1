@@ -251,12 +251,12 @@ const SmartGuidance = (function() {
         if (!btn) return;
 
         const isDialogueConcluding = window._isDialogueConcluding 
-            || (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState && (clinicalDialogueState.step === 'completed' || clinicalDialogueState.step === 'ask_phone_success'))
-            || !!window.doDirectTransitionToReport
-            || !!window.doDirectTransitionToSpecializedReport;
+            || (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState && (clinicalDialogueState.step === 'completed' || clinicalDialogueState.step === 'ask_phone_success'));
 
         const btnRunDiag = document.getElementById('btn-run-diagnosis');
-        const isDiagBtnReady = btnRunDiag && btnRunDiag.offsetParent !== null;
+        const rapidFormContainer = document.getElementById('rapid-form-intake-container');
+        const isRapidFormVisible = rapidFormContainer && rapidFormContainer.style.display !== 'none' && window.getComputedStyle(rapidFormContainer).display !== 'none';
+        const isDiagBtnReady = btnRunDiag && btnRunDiag.offsetParent !== null && isRapidFormVisible;
 
         if (isDialogueConcluding) {
             activeSubState = 'step2_concluding';
