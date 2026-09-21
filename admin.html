@@ -34,24 +34,12 @@
             box-shadow: 0 10px 40px rgba(0,0,0,0.6);
         }
         /* ========================================================================= */
-        /* منظومة التبديل بين البطاقات الملكية والجدول الكلاسيكي للكمبيوتر */
+        /* تصميم شبكة البطاقات الملكية الفاخرة المعتمدة */
         /* ========================================================================= */
-        .desktop-only-toggle {
-            display: flex;
-        }
-        body.admin-view-cards #patients-desktop-table-wrap {
-            display: none !important;
-        }
-        body.admin-view-cards #patients-cards-container {
+        #patients-cards-container {
             display: grid !important;
             grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)) !important;
             gap: 16px !important;
-        }
-        body.admin-view-table #patients-desktop-table-wrap {
-            display: block !important;
-        }
-        body.admin-view-table #patients-cards-container {
-            display: none !important;
         }
 
         /* تنسيقات نافذة التقرير الطبي الملكي والطباعة الرسمية */
@@ -587,42 +575,13 @@
                     </div>
 
                     <div style="display: flex; align-items: center; gap: 10px; flex: 1; justify-content: flex-end; flex-wrap: wrap;">
-                        <!-- محول طريقة العرض للكمبيوتر واللابتوب (بطاقات ملكية فاخرة أو جدول كلاسيكي) -->
-                        <div id="desktop-view-mode-bar" class="desktop-only-toggle" style="background: #0b111e; border: 1px solid #334155; border-radius: 8px; padding: 3px; gap: 4px;">
-                            <button type="button" id="btn-toggle-view-cards" onclick="setDesktopViewMode('cards')" style="padding: 6px 12px; border-radius: 6px; border: none; font-size: 0.84em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; background: var(--primary-gold); color: #0a0e14;">
-                                🗂️ بطاقات ملكية
-                            </button>
-                            <button type="button" id="btn-toggle-view-table" onclick="setDesktopViewMode('table')" style="padding: 6px 12px; border-radius: 6px; border: none; font-size: 0.84em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; background: transparent; color: #94a3b8;">
-                                📊 جدول كلاسيكي
-                            </button>
-                        </div>
-
-                        <div style="position: relative; min-width: 220px; max-width: 360px; flex: 1;">
+                        <div style="position: relative; min-width: 240px; max-width: 400px; flex: 1;">
                             <input type="text" id="search-patients" oninput="filterPatients()" placeholder="🔍 ابحث بالاسم، الجوال، المدينة..." style="width: 100%; background: #0b111e; border: 1px solid #334155; padding: 10px 14px; border-radius: 8px; color: #fff; font-size: 0.9em; box-sizing: border-box;">
                         </div>
                     </div>
                 </div>
 
-                <!-- جدول إدارة المرضى مرتبين الأحدث في القمة (شاشات الكمبيوتر عند اختيار وضع الجدول) -->
-                <div id="patients-desktop-table-wrap" style="background: #080c14; border-radius: 10px; border: 1px solid rgba(51, 65, 85, 0.6); overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; text-align: right; font-size: 0.92em;">
-                        <thead>
-                            <tr style="border-bottom: 2px solid var(--primary-gold); color: var(--primary-gold); background: #0b111e;">
-                                <th style="padding: 14px;">رقم الملف</th>
-                                <th style="padding: 14px;">اسم المريض</th>
-                                <th style="padding: 14px;">الجوال</th>
-                                <th style="padding: 14px;">الدولة والمدينة</th>
-                                <th style="padding: 14px;">موضع الشكوى</th>
-                                <th style="padding: 14px;">التشخيص السريري</th>
-                                <th style="padding: 14px;">الجلسة الحالية</th>
-                                <th style="padding: 14px;">مؤشر التعافي</th>
-                                <th style="padding: 14px; text-align: center;">التحكم اليدوي بالتوقيت</th>
-                                <th style="padding: 14px; text-align: center;">إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="patients-table-body"></tbody>
-                    </table>
-                </div>
+                <!-- حاوية بطاقات المراجعين الملكية الفاخرة المعتمدة (عرض ملكي فاخر لجميع الشاشات) -->
 
                 <!-- حاوية بطاقات المراجعين الملكية الفاخرة (للموبايل، وللكمبيوتر عند اختيار وضع البطاقات) -->
                 <div id="patients-cards-container" class="patients-cards-grid">
@@ -1445,17 +1404,14 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/mqtt.min.js?v=29.21"></script>
-    <script src="js/cloud-sync.js?v=29.21"></script>
-    <script src="js/geo-tracker.js?v=29.21"></script>
-    <script src="js/database.js?v=29.21"></script>
-    <script src="js/exercise-image-studio.js?v=29.21"></script>
-    <script src="js/exercises-db.js?v=29.21"></script>
-    <script src="js/diagnostic-engine.js?v=29.21"></script>
-    <script src="js/patient-flow.js?v=29.21"></script>
-    <script src="js/admin-engine.js?v=29.21"></script>
-    <script src="js/ai-config.js?v=29.21"></script>
-    <script src="js/ai-engine.js?v=29.21"></script>
+    <script src="js/mqtt.min.js?v=29.22"></script>
+    <script src="js/cloud-sync.js?v=29.22"></script>
+    <script src="js/geo-tracker.js?v=29.22"></script>
+    <script src="js/database.js?v=29.22"></script>
+    <script src="js/exercise-image-studio.js?v=29.22"></script>
+    <script src="js/admin-engine.js?v=29.22"></script>
+    <script src="js/ai-config.js?v=29.22"></script>
+    <script src="js/ai-engine.js?v=29.22"></script>
 
     <script>
         let allPatientsList = [];
@@ -1608,10 +1564,13 @@
             initAdminPage();
         }
 
-            // 🔄 فحص دوري هادئ تلقائي كل 45 ثانية يضمن وصول أي مريض جديد حتى لو انقطع البث اللحظي دون أي تعليق
+            // 🔄 فحص دوري تكيفي ذكي: إذا كان البث اللحظي (MQTT) متصلاً لا داعي لطلب HTTP دوري لتوفير استهلاك الشبكة
             let isAutoSyncRunning = false;
             setInterval(async () => {
                 if (document.hidden || isAutoSyncRunning) return;
+                const isMqttLive = typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.isMqttConnected === 'function' && SmartCloudSync.isMqttConnected();
+                if (isMqttLive) return; // توفير موارد الشبكة طالما البث اللحظي نشط
+
                 isAutoSyncRunning = true;
                 try {
                     if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.fetchCloudPatients === 'function') {
@@ -1621,7 +1580,7 @@
                 } catch (e) {} finally {
                     isAutoSyncRunning = false;
                 }
-            }, 45000);
+            }, 25000);
 
         // ==========================================================================
         // دوال إدارة وتوثيق قصص النجاح بالفيديو (Success Stories Video Manager)
@@ -2755,111 +2714,17 @@
             }
         }
 
-        // نظام التبديل بين طريقة عرض البطاقات الملكية الفاخرة وعرض الجدول الكلاسيكي على الكمبيوتر
-        function setDesktopViewMode(mode) {
-            const validMode = (mode === 'table') ? 'table' : 'cards';
-            try {
-                localStorage.setItem('smart_admin_desktop_view', validMode);
-            } catch(e) {}
+        // منظومة عرض البطاقات الملكية الفاخرة المعتمدة مع التصفح بالصفحات (20 سجل بالصفحة)
+        let currentCardsPage = 1;
+        const cardsPerPage = 20;
 
-            document.body.classList.remove('admin-view-cards', 'admin-view-table');
-            document.body.classList.add('admin-view-' + validMode);
-
-            const btnCards = document.getElementById('btn-toggle-view-cards');
-            const btnTable = document.getElementById('btn-toggle-view-table');
-            if (btnCards && btnTable) {
-                if (validMode === 'cards') {
-                    btnCards.style.background = 'var(--primary-gold)';
-                    btnCards.style.color = '#0a0e14';
-                    btnTable.style.background = 'transparent';
-                    btnTable.style.color = '#94a3b8';
-                } else {
-                    btnTable.style.background = 'var(--primary-gold)';
-                    btnTable.style.color = '#0a0e14';
-                    btnCards.style.background = 'transparent';
-                    btnCards.style.color = '#94a3b8';
-                }
-            }
+        function setDesktopViewMode() {
+            // معتمد دائماً: وضع البطاقات الملكية الفاخرة
         }
         window.setDesktopViewMode = setDesktopViewMode;
 
         function renderTable(list) {
-            const tbody = document.getElementById('patients-table-body');
-            const mobileCardsContainer = document.getElementById('patients-cards-container') || document.getElementById('patients-mobile-cards-wrap');
-
-            if (!list || list.length === 0) {
-                const emptyHtml = `
-                    <div style="text-align: center; padding: 35px 20px; color: #94a3b8; font-size: 1.05em;">
-                        📂 لا يوجد مراجعين مسجلين حالياً على هذا الجهاز.<br>
-                        <div style="margin-top: 14px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
-                            <button type="button" onclick="openSyncBridgeModal()" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #fff; border: 1px solid #38bdf8; padding: 10px 22px; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                                📲 استيراد بيانات الموبايل عبر جسر المزامنة
-                            </button>
-                        </div>
-                    </div>`;
-
-                if (tbody) {
-                    tbody.innerHTML = `<tr><td colspan="10">${emptyHtml}</td></tr>`;
-                }
-                if (mobileCardsContainer) {
-                    mobileCardsContainer.innerHTML = emptyHtml;
-                }
-                return;
-            }
-
-            tbody.innerHTML = list.map(item => {
-                const p = item.patient || {};
-                const cleanPhone = (p.phone || '').replace(/[^0-9]/g, '');
-
-                // بيانات الموقع الجغرافي والجهاز
-                const flag = p.flag || '🌍';
-                const country = p.country || 'دولي';
-                const city = (p.city && p.city !== 'غير محدد') ? p.city : '';
-                const deviceIcon = p.device === 'Mobile' ? '📱' : (p.device === 'Tablet' ? '📟' : '💻');
-                const locationDisplay = city ? `${flag} ${city} (${country})` : `${flag} ${country}`;
-
-                const patientDisplayName = p.fullName || p.name || 'مراجع مجهول';
-                return `
-                <tr style="border-bottom: 1px solid #1e293b; color: #e2e8f0;">
-                    <td style="padding: 14px; font-weight: bold; color: var(--primary-gold);">${p.patientId}</td>
-                    <td style="padding: 14px; font-weight: bold;">
-                        <div style="font-size: 1.05em; color: #ffffff; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                            <span>${patientDisplayName}</span>
-                            ${(p.isRegistered || item.isRegistered || p.accountPin || item.accountPin) ? `<span style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(245, 158, 11, 0.2)); border: 1px solid var(--primary-gold); color: #fef08a; padding: 2px 8px; border-radius: 4px; font-size: 0.72em; font-weight: bold; display: inline-flex; align-items: center; gap: 4px;">🔑 حساب مسجل</span>` : ''}
-                            ${(p.isSpecializedConsultation || p.specialtyType) ? `<span style="background: rgba(212, 175, 55, 0.2); border: 1px solid var(--primary-gold); color: #fef08a; padding: 1px 7px; border-radius: 4px; font-size: 0.72em; font-weight: bold;">🌟 حالة خاصة</span>` : ''}
-                        </div>
-                        <div style="color: #94a3b8; font-size: 0.82em; margin-top: 4px; font-weight: normal; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                            <span style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 1px 6px; border-radius: 4px; color: #7dd3fc;">العمر: ${p.age ? p.age + ' سنة' : '-'}</span>
-                            <span style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 1px 6px; border-radius: 4px; color: #6ee7b7;">الوزن: ${p.weight ? p.weight + ' كغ' : '-'}</span>
-                            <span style="color: #cbd5e1;">${p.gender === 'female' || p.gender === 'أنثى' ? 'أنثى ♀' : 'ذكر ♂'}</span>
-                        </div>
-                    </td>
-                    <td style="padding: 14px;">${p.phone || '-'}</td>
-                    <td style="padding: 14px;">
-                        <span style="display: inline-flex; align-items: center; gap: 5px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25); padding: 3px 8px; border-radius: 6px; font-size: 0.85em; color: #bae6fd; white-space: nowrap;">
-                            <span>${locationDisplay}</span>
-                            <span title="${p.device || 'جهاز'}">${deviceIcon}</span>
-                        </span>
-                    </td>
-                    <td style="padding: 14px;">${item.painArea}</td>
-                    <td style="padding: 14px;">${item.latestDiagnosis}</td>
-                    <td style="padding: 14px;">
-                        ${item.logsCount >= 7 
-                            ? `<span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid #10b981; padding: 3px 8px; border-radius: 6px; font-weight: bold; font-size: 0.85em; display: inline-flex; align-items: center; gap: 4px;">🏆 أتم الـ 7 جلسات</span>`
-                            : `<span style="color: #38bdf8; font-weight: 600;">اليوم ${Math.min(7, (item.logsCount || 0) + 1)} من 7</span> <span style="color: #94a3b8; font-size: 0.8em;">(أنجز ${item.logsCount || 0})</span>`
-                        }
-                    </td>
-                    <td style="padding: 14px; color: #10b981; font-weight: bold;">${item.recoveryScore != null ? item.recoveryScore + '%' : '<span style="color:#64748b">--</span>'}</td>
-                    <td style="padding: 14px; text-align: center;">
-                        <button onclick="openPatientTimingModal('${p.patientId}', '${patientDisplayName.replace(/['\\]/g, '')}', ${Math.min(7, (item.logsCount || 0) + 1)}, '${p.phone || ''}')" style="background: #3b82f6; color: #fff; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 0.88em; font-weight: bold;">⏱️ تعديل التوقيت</button>
-                    </td>
-                    <td style="padding: 14px; text-align: center; white-space: nowrap;">
-                        ${cleanPhone ? `<a href="https://wa.me/${cleanPhone}" target="_blank" style="display: inline-block; background: #25d366; color: #fff; text-decoration: none; padding: 7px 10px; border-radius: 6px; font-size: 0.88em; font-weight: bold; margin-left: 4px;">💬 واتساب</a>` : ''}
-                        <button onclick="openAdminPatientReportModal('${p.patientId}')" style="background: #10b981; color: #fff; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 0.88em; font-weight: bold;">👁️ التقرير</button>
-                        <button onclick="deletePatientRecord('${p.patientId}', '${patientDisplayName.replace(/['\\]/g, '')}')" style="background: rgba(239, 68, 68, 0.18); border: 1px solid #ef4444; color: #fca5a5; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-size: 0.88em; margin-right: 4px; font-weight: bold;" title="حذف هذا السجل نهائياً">🗑️ حذف</button>
-                    </td>
-                </tr>
-            `}).join('');
+            const mobileCardsContainer = document.getElementById('patients-cards-container');
 
             // توليد بطاقات المراجعين الملكية الفاخرة المريحة للمدير مع التقسيم إلى صفحات (20 سجل لكل صفحة)
             if (mobileCardsContainer) {
