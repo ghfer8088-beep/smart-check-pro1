@@ -3,7 +3,7 @@
 // استراتيجية Network-First لضمان وصول المريض لأحدث التحديثات فوراً
 // ==========================================================================
 
-const CACHE_NAME = 'wada3an-alam-v29.31';
+const CACHE_NAME = 'wada3an-alam-v29.32';
 const STATIC_ASSETS = [
     './',
     './index.html',
@@ -132,6 +132,14 @@ self.addEventListener('activate', (event) => {
                 })
             );
         }).then(() => self.clients.claim())
+          .then(() => {
+              // 🔄 إبلاغ جميع الصفحات المفتوحة بوجود نسخة جديدة نشطة → ستُعيد التحميل تلقائياً
+              return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+                  clients.forEach((client) => {
+                      client.postMessage({ type: 'SW_ACTIVATED_NEW_VERSION', version: CACHE_NAME });
+                  });
+              });
+          })
     );
 });
 

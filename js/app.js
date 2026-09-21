@@ -6717,7 +6717,7 @@ function closeChiropracticExplainerModal() {
 // إدارة تثبيت تطبيق الويب التقدمي (PWA) والمشاركة الشاملة (Install & Share Hub)
 // ==========================================================================
 
-// إظهار شريط تنبيه التحديث الذكي عند توفر نسخة أحدث
+// إظهار شريط تنبيه التحديث الذكي عند توفر نسخة أحدث (احتياطي يدوي)
 function showAppUpdateNoticeBanner() {
     if (document.getElementById('pwa-update-available-banner')) return;
     const banner = document.createElement('div');
@@ -6738,6 +6738,67 @@ function showAppUpdateNoticeBanner() {
     document.body.appendChild(banner);
 }
 window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
+
+// ============================================================
+// 🔄 إعادة تحميل تلقائية عند تفعيل نسخة جديدة من Service Worker
+// يضمن أن جميع المستخدمين يحصلون على آخر إصدار فور نشره بدون أي تدخل
+// ============================================================
+let _autoReloadTriggered = false;
+function _triggerAutoReloadCountdown() {
+    if (_autoReloadTriggered) return; // منع التكرار
+    _autoReloadTriggered = true;
+
+    // إذا لم تكن الصفحة في مرحلة حساسة (خطوة 1 فقط) → أعد التحميل فوراً بهدوء
+    const currentStep = parseInt(localStorage.getItem('smart_current_step') || '1', 10);
+    const isSensitiveStep = currentStep >= 2; // المريض في منتصف الاستشارة أو العلاج
+
+    // إنشاء overlay عداد التحديث
+    const overlay = document.createElement('div');
+    overlay.id = 'auto-update-overlay';
+    overlay.style.cssText = `
+        position: fixed; inset: 0; z-index: 99999999;
+        background: rgba(7, 11, 22, 0.97);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 20px; text-align: center; padding: 30px;
+        backdrop-filter: blur(8px);
+    `;
+
+    const countdownStart = isSensitiveStep ? 8 : 4;
+    overlay.innerHTML = `
+        <div style="font-size: 3em;">🔄</div>
+        <div style="color: #d4af37; font-size: 1.4em; font-weight: 900; line-height: 1.4;">
+            تم إطلاق تحديث جديد للمنظومة!
+        </div>
+        <div style="color: #e2e8f0; font-size: 0.95em; line-height: 1.7; max-width: 380px;">
+            ${isSensitiveStep
+                ? 'سيتم تحديث النظام تلقائياً في لحظات.<br>ستحتفظ ببياناتك وملفك الطبي كاملاً.'
+                : 'جاري تحميل أحدث إصدار من النظام تلقائياً.'}
+        </div>
+        <div style="background: #0f172a; border: 2px solid #d4af37; border-radius: 50%; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center;">
+            <span id="auto-update-countdown" style="color: #d4af37; font-size: 2em; font-weight: 900;">${countdownStart}</span>
+        </div>
+        <div style="color: #64748b; font-size: 0.82em;">يتم التحديث خلال ثوانٍ...</div>
+        <button type="button" onclick="sessionStorage.setItem('just_refreshed_toast','true'); window.location.reload(true);"
+            style="background: #d4af37; color: #0a0e14; border: none; padding: 11px 28px; border-radius: 10px; font-weight: 900; font-size: 1em; cursor: pointer; margin-top: 6px;">
+            تحديث الآن ⚡
+        </button>
+    `;
+    document.body.appendChild(overlay);
+
+    // عداد تنازلي
+    let remaining = countdownStart;
+    const countdownEl = document.getElementById('auto-update-countdown');
+    const timer = setInterval(() => {
+        remaining--;
+        if (countdownEl) countdownEl.textContent = remaining;
+        if (remaining <= 0) {
+            clearInterval(timer);
+            sessionStorage.setItem('just_refreshed_toast', 'true');
+            window.location.reload(true);
+        }
+    }, 1000);
+}
+window._triggerAutoReloadCountdown = _triggerAutoReloadCountdown;
 
 function setupPwaInstallListener() {
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -7855,13 +7916,31 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const installingWorker = registration.installing;
                 if (installingWorker) {
                     installingWorker.onstatechange = () => {
+                        // ℹ️ SW الجديد انتهى من التثبيت — سيأتي postMessage من activate لإعادة التحميل
                         if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            showAppUpdateNoticeBanner();
+                            console.log('[App] New SW installed, awaiting activation...');
                         }
                     };
                 }
             };
         }).catch(() => {});
+
+        // ✅ الاستماع لرسالة SW_ACTIVATED_NEW_VERSION — يُطلق إعادة تحميل تلقائية بعداد مرئي
+        navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'SW_ACTIVATED_NEW_VERSION') {
+                _triggerAutoReloadCountdown();
+            }
+        });
+
+        // ✅ خط احتياطي: إذا تغيّر الـ controller (SW جديد سيطر) → إعادة تحميل فورية
+        let isFirstControllerSet = !navigator.serviceWorker.controller;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (isFirstControllerSet) {
+                isFirstControllerSet = false;
+                return; // أول مرة يُضبط الـ controller عند تحميل الصفحة — لا نعيد التحميل
+            }
+            _triggerAutoReloadCountdown();
+        });
 
         // فحص وجود تحديثات فور فتح أو تنشيط التطبيق
         window.addEventListener('focus', () => {
