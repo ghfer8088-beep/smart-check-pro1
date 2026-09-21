@@ -192,6 +192,9 @@
         if (/france|فرنسا|باريس/i.test(raw) || code === 'FR') {
             return { name: 'فرنسا', flag: '🇫🇷', code: 'FR' };
         }
+        if (/china|الصين|بكين|شنغهاي|zhengzhou/i.test(raw) || code === 'CN') {
+            return { name: 'الصين', flag: '🇨🇳', code: 'CN' };
+        }
 
         if (code === 'JO' || flag === '🇯🇴') return { name: 'الأردن', flag: '🇯🇴', code: 'JO' };
         if (code === 'SA' || flag === '🇸🇦') return { name: 'المملكة العربية السعودية', flag: '🇸🇦', code: 'SA' };
@@ -1364,7 +1367,7 @@
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 4000);
-            const resp = await fetch(`${CLOUD_VISITS_ENDPOINT}/json?poll=1&since=24h`, {
+            const resp = await fetch(`${CLOUD_VISITS_ENDPOINT}/json?poll=1&since=all`, {
                 cache: 'no-store',
                 signal: controller.signal
             });
@@ -1552,12 +1555,8 @@
         // 2. القناة الثانوية المضاعفة (Secondary ntfy Relay) — جلب الجديد فقط منذ آخر استطلاع ناجح
         tasks.push((async () => {
             try {
-                // ✅ v29.23: إذا كانت القائمة فارغة محلياً، نجلب 'all' لضمان تحميل أحدث لقطة سريرية كاملة فوراً
-                const hasLocalData = currentList && currentList.length > 0;
-                const lastFetch = parseInt(localStorage.getItem('smart_ntfy_last_fetch_ts') || '0', 10);
-                const sinceParam = (hasLocalData && lastFetch > 0)
-                    ? Math.floor(lastFetch / 1000)   // NTFY يقبل Unix seconds
-                    : 'all';
+                // ✅ v29.30: جلب 'all' دائماً لضمان تحميل أي مريض تم تسجيله أو تحديثه سحابياً وعدم تفويته
+                const sinceParam = 'all';
                 const controller2 = new AbortController();
                 const timeoutId2 = setTimeout(() => controller2.abort(), 8000);
                 const pollUrl = `${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=${sinceParam}`;

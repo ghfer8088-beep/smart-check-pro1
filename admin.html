@@ -40,9 +40,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=29.10"></script>
-    <script src="js/security-shield.js?v=29.10"></script>
-    <link rel="stylesheet" href="css/style.css?v=29.10">
+    <script src="js/system-watchdog.js?v=29.30"></script>
+    <script src="js/security-shield.js?v=29.30"></script>
+    <link rel="stylesheet" href="css/style.css?v=29.30">
     <style>
         body {
             background-color: #080c14;
@@ -1428,15 +1428,15 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/clinic-patients-data.js?v=29.29"></script>
-    <script src="js/mqtt.min.js?v=29.29"></script>
-    <script src="js/cloud-sync.js?v=29.29"></script>
-    <script src="js/geo-tracker.js?v=29.29"></script>
-    <script src="js/database.js?v=29.29"></script>
-    <script src="js/exercise-image-studio.js?v=29.29"></script>
-    <script src="js/admin-engine.js?v=29.29"></script>
-    <script src="js/ai-config.js?v=29.29"></script>
-    <script src="js/ai-engine.js?v=29.29"></script>
+    <script src="js/clinic-patients-data.js?v=29.30"></script>
+    <script src="js/mqtt.min.js?v=29.30"></script>
+    <script src="js/cloud-sync.js?v=29.30"></script>
+    <script src="js/geo-tracker.js?v=29.30"></script>
+    <script src="js/database.js?v=29.30"></script>
+    <script src="js/exercise-image-studio.js?v=29.30"></script>
+    <script src="js/admin-engine.js?v=29.30"></script>
+    <script src="js/ai-config.js?v=29.30"></script>
+    <script src="js/ai-engine.js?v=29.30"></script>
 
     <script>
         let allPatientsList = [];
@@ -1621,12 +1621,15 @@
             document.addEventListener('DOMContentLoaded', () => initAdminPage());
         }
 
-            // 🔄 فحص دوري تكيفي ذكي: إذا كان البث اللحظي (MQTT) متصلاً لا داعي لطلب HTTP دوري لتوفير استهلاك الشبكة
+            // 🔄 فحص دوري تكيفي ذكي: مزامنة دورية لضمان تطابق البيانات وسحب أي سجل جديد من السحابة حتى لو كان MQTT متصلاً
             let isAutoSyncRunning = false;
+            let syncCounter = 0;
             setInterval(async () => {
                 if (document.hidden || isAutoSyncRunning) return;
                 const isMqttLive = typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.isMqttConnected === 'function' && SmartCloudSync.isMqttConnected();
-                if (isMqttLive) return; // توفير موارد الشبكة طالما البث اللحظي نشط
+                syncCounter++;
+                // إذا كان البث اللحظي متصلاً، نفحص السحابة كل 50 ثانية (كل دورتين) لضمان عدم تفويت أي مريض سحابي
+                if (isMqttLive && syncCounter % 2 !== 0) return;
 
                 isAutoSyncRunning = true;
                 try {

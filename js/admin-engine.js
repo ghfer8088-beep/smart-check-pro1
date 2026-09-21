@@ -292,6 +292,10 @@ const AdminEngine = (function() {
                     if (canonicalName === 'اسامه' || canonicalName === 'أسامة') canonicalName = 'اسامه';
                     if (canonicalName === 'مجد') canonicalName = 'مجد';
                     if (canonicalName === 'فارس') canonicalName = 'فارس';
+                    if (canonicalName.includes('فاروق')) canonicalName = 'فاروق ميم';
+                    if (canonicalName.includes('عدنان')) canonicalName = 'عدنان محمد';
+                    if (canonicalName.includes('رشا')) canonicalName = 'رشا';
+                    if (canonicalName.includes('شادي')) canonicalName = 'شادي';
                     return 'pt_nm_' + canonicalName;
                 }
 

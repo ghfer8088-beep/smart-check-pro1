@@ -90,7 +90,8 @@
         'DE': 'ألمانيا',
         'FR': 'فرنسا',
         'CA': 'كندا',
-        'SE': 'السويد'
+        'SE': 'السويد',
+        'CN': 'الصين'
     };
 
     // استنتاج الدولة والمدينة وعلم الدولة فورياً من المنطقة الزمنية للمتصفح (يعمل بدون إنترنت وبسرعة 0ms)
@@ -112,6 +113,9 @@
                 'Asia/Jerusalem': { country: 'فلسطين', countryCode: 'PS', city: 'القدس', flag: '🇵🇸' },
                 'Asia/Gaza': { country: 'فلسطين', countryCode: 'PS', city: 'غزة', flag: '🇵🇸' },
                 'Asia/Hebron': { country: 'فلسطين', countryCode: 'PS', city: 'الخليل', flag: '🇵🇸' },
+                'Asia/Shanghai': { country: 'الصين', countryCode: 'CN', city: 'بكين', flag: '🇨🇳' },
+                'Asia/Chongqing': { country: 'الصين', countryCode: 'CN', city: 'شنغهاي', flag: '🇨🇳' },
+                'Asia/Urumqi': { country: 'الصين', countryCode: 'CN', city: 'أورومتشي', flag: '🇨🇳' },
                 'Europe/Berlin': { country: 'ألمانيا', countryCode: 'DE', city: 'فرانكفورت', flag: '🇩🇪' },
                 'Europe/London': { country: 'المملكة المتحدة', countryCode: 'GB', city: 'لندن', flag: '🇬🇧' },
                 'Europe/Paris': { country: 'فرنسا', countryCode: 'FR', city: 'باريس', flag: '🇫🇷' },
@@ -175,6 +179,10 @@
         // بريطانيا
         if (clean.startsWith('44') || clean.startsWith('0044')) {
             return { country: 'المملكة المتحدة', countryCode: 'GB', city: 'لندن', flag: '🇬🇧' };
+        }
+        // الصين
+        if (clean.startsWith('86') || clean.startsWith('0086')) {
+            return { country: 'الصين', countryCode: 'CN', city: 'بكين', flag: '🇨🇳' };
         }
         // أمريكا وكندا
         if (clean.startsWith('1') && clean.length === 11) {
