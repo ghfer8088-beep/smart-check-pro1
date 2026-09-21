@@ -6740,19 +6740,100 @@ function showAppUpdateNoticeBanner() {
 window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 
 // ============================================================
-// 🔄 إعادة تحميل تلقائية عند تفعيل نسخة جديدة من Service Worker
-// يضمن أن جميع المستخدمين يحصلون على آخر إصدار فور نشره بدون أي تدخل
+// 🔄 نظام التحديث الذكي — يحترم جلسة المريض ولا يقطعها أبداً
 // ============================================================
 let _autoReloadTriggered = false;
+let _updatePendingAfterSession = false; // علامة: هناك تحديث ينتظر انتهاء الجلسة
+
+// الكشف عما إذا كان المريض في منتصف محادثة نشطة مع الطبيب الافتراضي
+function _isActiveAiChatSession() {
+    // فحص 1: هل المريض في خطوة 2 أم لا؟
+    const currentStep = parseInt(localStorage.getItem('smart_current_step') || '1', 10);
+    if (currentStep < 2) return false;
+
+    // فحص 2: هل حاوية المحادثة ظاهرة؟
+    const chatContainer = document.getElementById('ai-chat-intake-container');
+    if (!chatContainer) return false;
+    const isVisible = chatContainer.style.display !== 'none' &&
+                      window.getComputedStyle(chatContainer).display !== 'none';
+    if (!isVisible) return false;
+
+    // فحص 3: هل يوجد رسائل فعلية في صندوق المحادثة؟
+    const chatBox = document.getElementById('ai-chat-messages-box');
+    if (!chatBox) return false;
+    const hasMessages = chatBox.children.length > 0;
+
+    return hasMessages;
+}
+
+// إعادة التحميل الآمنة مع إشعار بسيط
+function _doSafeReload() {
+    sessionStorage.setItem('just_refreshed_toast', 'true');
+    window.location.reload(true);
+}
+
+// إظهار بانر "تحديث متاح — سيُطبق بعد انتهاء المحادثة"
+function _showDeferredUpdateBanner() {
+    if (document.getElementById('deferred-update-banner')) return;
+    _updatePendingAfterSession = true;
+
+    const banner = document.createElement('div');
+    banner.id = 'deferred-update-banner';
+    banner.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; z-index: 99999999;
+        background: linear-gradient(90deg, #0b1322 0%, #17253d 100%);
+        border-bottom: 2px solid #d4af37;
+        padding: 8px 18px;
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+        animation: slideDownBanner 0.4s ease;
+    `;
+    banner.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 1.3em;">⚡</span>
+            <div>
+                <strong style="color: #d4af37; font-size: 0.9em; display: block;">تحديث جديد للنظام جاهز</strong>
+                <span style="color: #94a3b8; font-size: 0.77em;">سيُطبق تلقائياً بعد انتهاء المحادثة الحالية — لن تفقد أي بيانات</span>
+            </div>
+        </div>
+        <button type="button" onclick="window._applyUpdateNow()" style="background: #d4af37; color: #0a0e14; border: none; padding: 6px 14px; border-radius: 7px; font-weight: 900; font-size: 0.82em; cursor: pointer; white-space: nowrap;">
+            تطبيق الآن ⚡
+        </button>
+    `;
+    document.body.appendChild(banner);
+
+    // مراقب: ينتظر انتقال المستخدم لخطوة التقرير أو التمارين (خطوة 3 أو أكثر) ثم يُعيد التحميل
+    const stepWatcher = setInterval(() => {
+        const step = parseInt(localStorage.getItem('smart_current_step') || '1', 10);
+        if (step >= 3 || !_isActiveAiChatSession()) {
+            clearInterval(stepWatcher);
+            // انتظر 3 ثوان إضافية لمنح المستخدم وقتاً لرؤية أي محتوى انتقالي
+            setTimeout(() => {
+                if (_updatePendingAfterSession) _doSafeReload();
+            }, 3000);
+        }
+    }, 2000);
+}
+
+// تطبيق التحديث فوراً بطلب من المستخدم (زر "تطبيق الآن")
+window._applyUpdateNow = function() {
+    _updatePendingAfterSession = false;
+    const banner = document.getElementById('deferred-update-banner');
+    if (banner) banner.remove();
+    _doSafeReload();
+};
+
 function _triggerAutoReloadCountdown() {
-    if (_autoReloadTriggered) return; // منع التكرار
+    if (_autoReloadTriggered) return;
     _autoReloadTriggered = true;
 
-    // إذا لم تكن الصفحة في مرحلة حساسة (خطوة 1 فقط) → أعد التحميل فوراً بهدوء
-    const currentStep = parseInt(localStorage.getItem('smart_current_step') || '1', 10);
-    const isSensitiveStep = currentStep >= 2; // المريض في منتصف الاستشارة أو العلاج
+    // 🛡️ إذا كان المريض في محادثة نشطة → لا تقطعها، أخبره بلطف
+    if (_isActiveAiChatSession()) {
+        _showDeferredUpdateBanner();
+        return;
+    }
 
-    // إنشاء overlay عداد التحديث
+    // ✅ المريض في خطوة آمنة → أعد التحميل مع عداد مرئي
     const overlay = document.createElement('div');
     overlay.id = 'auto-update-overlay';
     overlay.style.cssText = `
@@ -6762,20 +6843,16 @@ function _triggerAutoReloadCountdown() {
         gap: 20px; text-align: center; padding: 30px;
         backdrop-filter: blur(8px);
     `;
-
-    const countdownStart = isSensitiveStep ? 8 : 4;
     overlay.innerHTML = `
         <div style="font-size: 3em;">🔄</div>
         <div style="color: #d4af37; font-size: 1.4em; font-weight: 900; line-height: 1.4;">
             تم إطلاق تحديث جديد للمنظومة!
         </div>
         <div style="color: #e2e8f0; font-size: 0.95em; line-height: 1.7; max-width: 380px;">
-            ${isSensitiveStep
-                ? 'سيتم تحديث النظام تلقائياً في لحظات.<br>ستحتفظ ببياناتك وملفك الطبي كاملاً.'
-                : 'جاري تحميل أحدث إصدار من النظام تلقائياً.'}
+            جاري تحميل أحدث إصدار من النظام تلقائياً.
         </div>
         <div style="background: #0f172a; border: 2px solid #d4af37; border-radius: 50%; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center;">
-            <span id="auto-update-countdown" style="color: #d4af37; font-size: 2em; font-weight: 900;">${countdownStart}</span>
+            <span id="auto-update-countdown" style="color: #d4af37; font-size: 2em; font-weight: 900;">5</span>
         </div>
         <div style="color: #64748b; font-size: 0.82em;">يتم التحديث خلال ثوانٍ...</div>
         <button type="button" onclick="sessionStorage.setItem('just_refreshed_toast','true'); window.location.reload(true);"
@@ -6785,16 +6862,14 @@ function _triggerAutoReloadCountdown() {
     `;
     document.body.appendChild(overlay);
 
-    // عداد تنازلي
-    let remaining = countdownStart;
+    let remaining = 5;
     const countdownEl = document.getElementById('auto-update-countdown');
     const timer = setInterval(() => {
         remaining--;
         if (countdownEl) countdownEl.textContent = remaining;
         if (remaining <= 0) {
             clearInterval(timer);
-            sessionStorage.setItem('just_refreshed_toast', 'true');
-            window.location.reload(true);
+            _doSafeReload();
         }
     }, 1000);
 }
