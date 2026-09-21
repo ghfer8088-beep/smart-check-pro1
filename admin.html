@@ -3,6 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <script>
+        // إزالة أي كاش قديم للوحة التحكم لضمان تحميل أحدث نسخة دائماً
+        if ('caches' in window) {
+            caches.keys().then(function(keys) {
+                keys.forEach(function(k) {
+                    if (k.startsWith('wada3an-alam-')) caches.delete(k);
+                });
+            });
+        }
+    </script>
     <title>لوحة الإدارة السريرية - وداعاً للألم</title>
     <link rel="icon" type="image/png" href="assets/logo.png">
     <link rel="shortcut icon" href="assets/logo.png">
@@ -1404,14 +1417,14 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/mqtt.min.js?v=29.22"></script>
-    <script src="js/cloud-sync.js?v=29.22"></script>
-    <script src="js/geo-tracker.js?v=29.22"></script>
-    <script src="js/database.js?v=29.22"></script>
-    <script src="js/exercise-image-studio.js?v=29.22"></script>
-    <script src="js/admin-engine.js?v=29.22"></script>
-    <script src="js/ai-config.js?v=29.22"></script>
-    <script src="js/ai-engine.js?v=29.22"></script>
+    <script src="js/mqtt.min.js?v=29.23"></script>
+    <script src="js/cloud-sync.js?v=29.23"></script>
+    <script src="js/geo-tracker.js?v=29.23"></script>
+    <script src="js/database.js?v=29.23"></script>
+    <script src="js/exercise-image-studio.js?v=29.23"></script>
+    <script src="js/admin-engine.js?v=29.23"></script>
+    <script src="js/ai-config.js?v=29.23"></script>
+    <script src="js/ai-engine.js?v=29.23"></script>
 
     <script>
         let allPatientsList = [];

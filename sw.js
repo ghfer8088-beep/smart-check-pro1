@@ -3,12 +3,10 @@
 // استراتيجية Network-First لضمان وصول المريض لأحدث التحديثات فوراً
 // ==========================================================================
 
-const CACHE_NAME = 'wada3an-alam-v29.17';
+const CACHE_NAME = 'wada3an-alam-v29.23';
 const STATIC_ASSETS = [
     './',
     './index.html',
-    './admin.html',
-    './calibrator.html',
     './css/style.css',
     './manifest.json',
     './assets/logo.png',
@@ -141,6 +139,11 @@ self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
     const reqUrl = event.request.url || '';
     if (!reqUrl.startsWith('http')) return;
+
+    // ✅ عدم اعتراض لوحة التحكم أو المعايرة لضمان تحميلها دائماً مباشرة ومحدثة من الخادم
+    if (reqUrl.includes('admin.html') || reqUrl.includes('calibrator.html')) {
+        return;
+    }
 
     // ✅ عدم اعتراض طلبات الذكاء الاصطناعي وجوجل الخارجية لتفادي أخطاء CORS والكاش في iOS Safari
     if (reqUrl.includes('generativelanguage.googleapis.com') || reqUrl.includes('googletagmanager.com') || reqUrl.includes('google-analytics.com')) {

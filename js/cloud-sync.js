@@ -1548,13 +1548,14 @@
         // 2. القناة الثانوية المضاعفة (Secondary ntfy Relay) — جلب الجديد فقط منذ آخر استطلاع ناجح
         tasks.push((async () => {
             try {
-                // ✅ v29.22: استخدام since=<timestamp> بدلاً من since=all لجلب الجديد فقط
+                // ✅ v29.23: إذا كانت القائمة فارغة محلياً، نجلب 'all' لضمان تحميل أحدث لقطة سريرية كاملة فوراً
+                const hasLocalData = currentList && currentList.length > 0;
                 const lastFetch = parseInt(localStorage.getItem('smart_ntfy_last_fetch_ts') || '0', 10);
-                const sinceParam = lastFetch > 0
+                const sinceParam = (hasLocalData && lastFetch > 0)
                     ? Math.floor(lastFetch / 1000)   // NTFY يقبل Unix seconds
-                    : Math.floor((Date.now() - 24 * 3600 * 1000) / 1000); // أول مرة: آخر 24 ساعة فقط
+                    : 'all';
                 const controller2 = new AbortController();
-                const timeoutId2 = setTimeout(() => controller2.abort(), 4500);
+                const timeoutId2 = setTimeout(() => controller2.abort(), 8000);
                 const pollUrl = `${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=${sinceParam}`;
                 const resp = await fetch(pollUrl, { cache: 'no-store', signal: controller2.signal });
                 clearTimeout(timeoutId2);
@@ -1765,7 +1766,7 @@
                     if (attUrl !== lastImportedUrl) {
                         try {
                             const attController = new AbortController();
-                            const attTimer = setTimeout(() => attController.abort(), 2500);
+                            const attTimer = setTimeout(() => attController.abort(), 15000);
                             const attResp = await fetch(attUrl, { signal: attController.signal });
                             clearTimeout(attTimer);
                             if (attResp.ok) {
