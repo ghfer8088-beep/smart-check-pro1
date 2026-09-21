@@ -63,6 +63,17 @@ const AdminEngine = (function() {
                         rawPatients.unshift(cs);
                     }
                 }
+                // ⚡ استرجاع فوري من النسخة المتزامنة في الذاكرة لضمان تحميل الـ 51 مريضاً بدون أي تأخير
+                if (rawPatients.length === 0 && typeof window !== 'undefined' && window.CLINIC_BACKUP_SNAPSHOT) {
+                    const snap = window.CLINIC_BACKUP_SNAPSHOT.snapshot || window.CLINIC_BACKUP_SNAPSHOT;
+                    const bPts = snap.patients || snap.allPatients || [];
+                    for (const bp of bPts) {
+                        const bpId = bp.patientId || bp.id;
+                        if (bpId && !rawPatients.some(rp => (rp.patientId === bpId || rp.id === bpId))) {
+                            rawPatients.push(bp);
+                        }
+                    }
+                }
                 // 🔍 فحص كافة مفاتيح المرضى الفردية smart_patient_* في التخزين المحلي لضمان عدم ضياع أي سجل
                 for (let i = 0; i < localStorage.length; i++) {
                     const k = localStorage.key(i);
@@ -255,15 +266,26 @@ const AdminEngine = (function() {
             }
 
             // 2. دالة استخراج الهوية الفريدة للمريض والشكوى السريرية (Patient & Complaint Identity Key)
-            // تضمن دمج كافة سجلات وإشعارات نفس المراجع لنفس موضع الألم في بطاقة واحدة خالية من التكرار
+            // تضمن الاحتفاظ بكافة السجلات السريرية الأصلية المعتمدة (51 مريضاً) دون دمج قسري، مع دمج إشعارات النظام في سجلاتها المطابقة
             function getPatientIdentityKey(pt) {
                 if (!pt) return null;
+                const rawId = (pt.patientId || pt.id || '').trim();
+                const isNotif = rawId.startsWith('pat_notif_') || !!pt._fromNotif;
+
+                // ⚡ السجلات السريرية الأصلية المعتمدة لها معرف فريد مستقل وتظهر كبطاقة استشارة سريرية متكاملة
+                if (!isNotif && rawId && rawId !== 'pat_notif') {
+                    const dKey = (pt.createdAt || pt.timestamp || '').slice(0, 19);
+                    return `pt_record_${rawId}_${dKey}`;
+                }
+
+                // للإشعارات المؤقتة: نحاول ربطها بالسجل الأصلي بناءً على معرف المريض إن كان يشير لسجل حقيقي
+                if (isNotif && pt.patientId && !pt.patientId.startsWith('pat_notif_')) {
+                    const dKey = (pt.createdAt || pt.timestamp || '').slice(0, 19);
+                    return `pt_record_${pt.patientId}_${dKey}`;
+                }
+
                 const cleanPhone = (pt.phone || '').replace(/\D/g, '');
                 const phoneKey = cleanPhone.length >= 7 ? cleanPhone.slice(-9) : '';
-                
-                const rawId = (pt.patientId || pt.id || '').trim();
-                const baseId = rawId.replace(/(_notif_.*|_test\d*|_cloud_test.*)$/, '');
-
                 const rawPain = pt.painArea || pt.painAreaTitle || pt.selectedPoint || '';
                 const painKey = isGenericPain(rawPain) ? '' : normalizeTitle(rawPain);
 
@@ -278,9 +300,9 @@ const AdminEngine = (function() {
                 if (!isGenericPatientName(cleanName)) {
                     return `enc_nm_${cleanName}_${painKey || 'gen'}`;
                 }
-                if (baseId && baseId !== 'pat_notif') {
-                    if (painKey) return `id_${baseId}_${painKey}`;
-                    return `id_${baseId}`;
+                if (rawId && rawId !== 'pat_notif') {
+                    if (painKey) return `id_${rawId}_${painKey}`;
+                    return `id_${rawId}`;
                 }
                 return 'raw_' + (rawId || Math.random().toString(36));
             }
@@ -295,40 +317,25 @@ const AdminEngine = (function() {
                 groups.get(key).push(pt);
             }
 
-            // دمج السجلات العامة (بدون موضع ألم) في السجل المتخصص لنفس رقم الهاتف إن وُجد
+            // دمج إشعارات الهواتف العامة في السجل المعتمد لنفس المريض إن وُجد
             for (const [key, records] of Array.from(groups.entries())) {
-                if (key.endsWith('_gen') && key.startsWith('enc_ph_')) {
-                    const phonePrefix = key.replace(/_gen$/, '');
-                    let matchedKey = null;
-                    for (const otherKey of groups.keys()) {
-                        if (otherKey !== key && otherKey.startsWith(phonePrefix + '_')) {
-                            matchedKey = otherKey;
-                            break;
-                        }
-                    }
-                    if (matchedKey) {
-                        groups.get(matchedKey).push(...records);
-                        groups.delete(key);
-                    }
-                }
-            }
-
-            // دمج مجموعات الأسماء غير المرفقة بهاتف في المجموعة التي تحمل نفس الاسم ورقم الهاتف
-            for (const [key, records] of Array.from(groups.entries())) {
-                if (key.startsWith('enc_nm_')) {
-                    const namePart = key.replace(/^enc_nm_/, '').replace(/_(?:gen|[^_]+)$/, '');
-                    let matchedPhoneGroupKey = null;
+                if (key.startsWith('enc_ph_')) {
+                    const phonePart = key.replace(/^enc_ph_/, '').split('_')[0];
+                    let matchedRecordKey = null;
                     for (const [otherKey, otherRecords] of groups.entries()) {
-                        if (otherKey.startsWith('enc_ph_')) {
-                            const hasSameName = otherRecords.some(r => normalizePatientName(r.fullName || r.name) === namePart);
-                            if (hasSameName) {
-                                matchedPhoneGroupKey = otherKey;
+                        if (otherKey.startsWith('pt_record_')) {
+                            const hasSamePhone = otherRecords.some(r => {
+                                const p = (r.phone || '').replace(/\D/g, '');
+                                return p.length >= 7 && p.endsWith(phonePart);
+                            });
+                            if (hasSamePhone) {
+                                matchedRecordKey = otherKey;
                                 break;
                             }
                         }
                     }
-                    if (matchedPhoneGroupKey) {
-                        groups.get(matchedPhoneGroupKey).push(...records);
+                    if (matchedRecordKey) {
+                        groups.get(matchedRecordKey).push(...records);
                         groups.delete(key);
                     }
                 }
@@ -517,31 +524,25 @@ const AdminEngine = (function() {
                 if (!p || !p.patientId) continue;
 
                 let assessments = [];
-                let logs = [];
-                try {
-                    assessments = await SmartDB.getPatientAssessments(p.patientId);
-                } catch(e) { assessments = []; }
-                if ((!assessments || assessments.length === 0) && p.id && p.id !== p.patientId) {
-                    try { assessments = await SmartDB.getPatientAssessments(p.id); } catch(e) {}
-                }
+                if (p.assessment) assessments.push(p.assessment);
+                else if (p.latestAssessment) assessments.push(p.latestAssessment);
 
-                try {
-                    logs = await SmartDB.getPatientDailyLogs(p.patientId);
-                } catch(e) { logs = []; }
-                if ((!logs || logs.length === 0) && p.id && p.id !== p.patientId) {
-                    try { logs = await SmartDB.getPatientDailyLogs(p.id); } catch(e) {}
-                }
+                let logs = (Array.isArray(p.dailyLogs) && p.dailyLogs.length > 0) ? p.dailyLogs 
+                         : ((Array.isArray(p.logs) && p.logs.length > 0) ? p.logs : []);
 
-                if ((!logs || logs.length === 0) && Array.isArray(p.dailyLogs) && p.dailyLogs.length > 0) {
-                    logs = p.dailyLogs;
-                } else if ((!logs || logs.length === 0) && Array.isArray(p.logs) && p.logs.length > 0) {
-                    logs = p.logs;
-                }
-                if ((!logs || logs.length === 0) && typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.getPatientLogs === 'function') {
+                if (logs.length === 0 && typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.getPatientLogs === 'function') {
                     try {
                         const cLogs = SmartCloudSync.getPatientLogs(p.patientId) || SmartCloudSync.getPatientLogs(p.id);
                         if (cLogs && cLogs.length > 0) logs = cLogs;
                     } catch(e) {}
+                }
+
+                if (assessments.length === 0 && typeof SmartDB !== 'undefined' && typeof SmartDB.getPatientAssessments === 'function') {
+                    try { assessments = await SmartDB.getPatientAssessments(p.patientId); } catch(e) { assessments = []; }
+                }
+
+                if (logs.length === 0 && typeof SmartDB !== 'undefined' && typeof SmartDB.getPatientDailyLogs === 'function') {
+                    try { logs = await SmartDB.getPatientDailyLogs(p.patientId); } catch(e) { logs = []; }
                 }
 
                 // استخراج التقييم السريري الحقيقي واستبعاد الوهمي
@@ -656,23 +657,28 @@ const AdminEngine = (function() {
                 const painKey = normalizeTitle(item.painArea || p.painArea || '');
                 const diagKey = normalizeTitle(item.latestDiagnosis || p.chiefDiagnosis || '');
 
-                // البحث عما إذا كان هذا المراجع موجوداً مسبقاً بنفس الشكوى والتشخيص
+                // البحث عما إذا كان هذا السجل مطابقاً لنفس معرف المريض (أو إشعار مؤقت تابع له)
                 let existing = null;
+                const currentId = p.patientId || p.id;
+                const isTempNotif = (currentId && currentId.startsWith('pat_notif_')) || !!p._fromNotif;
+
                 for (const exItem of finalOverviewList) {
                     const exP = exItem.patient;
-                    const exPhone = (exP.phone || '').replace(/\D/g, '');
-                    const exPhoneKey = exPhone.length >= 7 ? exPhone.slice(-9) : '';
-                    const exName = normalizePatientName(exP.fullName || exP.name || '');
-                    const exPainKey = normalizeTitle(exItem.painArea || exP.painArea || '');
-                    const exDiagKey = normalizeTitle(exItem.latestDiagnosis || exP.chiefDiagnosis || '');
-
-                    const samePainOrDiag = (!painKey && !exPainKey) || (painKey === exPainKey) || (diagKey && exDiagKey && diagKey === exDiagKey) || isGenericPain(painKey) || isGenericPain(exPainKey);
-                    const samePhone = phoneKey && exPhoneKey && phoneKey === exPhoneKey;
-                    const sameRealName = isRealName && exName && cleanName === exName;
-
-                    if ((samePhone && samePainOrDiag) || (sameRealName && samePainOrDiag) || (samePhone && sameRealName)) {
+                    const exId = exP.patientId || exP.id;
+                    const exDate = (exP.createdAt || exItem.createdAt || '').slice(0, 19);
+                    const curDate = (p.createdAt || item.createdAt || '').slice(0, 19);
+                    if (exId && currentId && exId === currentId && (!curDate || !exDate || exDate === curDate)) {
                         existing = exItem;
                         break;
+                    }
+                    // إذا كان أحدهما إشعاراً مؤقتاً فقط والآخر سجلاً أصلياً لنفس الهاتف
+                    if (isTempNotif && phoneKey) {
+                        const exPhone = (exP.phone || '').replace(/\D/g, '');
+                        const exPhoneKey = exPhone.length >= 7 ? exPhone.slice(-9) : '';
+                        if (exPhoneKey && exPhoneKey === phoneKey) {
+                            existing = exItem;
+                            break;
+                        }
                     }
                 }
 
