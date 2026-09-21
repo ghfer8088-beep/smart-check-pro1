@@ -7828,7 +7828,17 @@ function triggerSessionReadyNotification(patientName = '') {
 // فتح نافذة الترحيب والدليل التعريفي للأداة
 function openWelcomeTourModal() {
     const modal = document.getElementById('welcome-tour-modal') || document.getElementById('disclaimer-modal');
-    if (modal) modal.style.display = 'flex';
+    if (modal) {
+        modal.style.display = 'flex';
+        // 🔧 إخفاء شريط التوجيه السفلي لمنع تغطيته على زر "أوافق وأبدأ"
+        const stickyBar = document.getElementById('sticky-patient-guidance-bar');
+        if (stickyBar) stickyBar.style.transform = 'translateY(120%)';
+    }
+}
+
+function _restoreStickyBarAfterWelcome() {
+    const stickyBar = document.getElementById('sticky-patient-guidance-bar');
+    if (stickyBar) stickyBar.style.transform = '';
 }
 
 // تشغيل الترحيب الصوتي تلقائياً لمرة واحدة فقط لكل زيارة أو استخدام جديد
@@ -7860,6 +7870,8 @@ function acceptWelcomeTourModal() {
     localStorage.setItem('smart_disclaimer_accepted', 'true');
     const modal = document.getElementById('welcome-tour-modal') || document.getElementById('disclaimer-modal');
     if (modal) modal.style.display = 'none';
+    // 🔧 إعادة شريط التوجيه السفلي بعد إغلاق Modal الترحيب
+    _restoreStickyBarAfterWelcome();
 
     try {
         if (typeof Wada3anAiEngine !== 'undefined') {

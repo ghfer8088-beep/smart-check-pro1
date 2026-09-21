@@ -3,7 +3,7 @@
 // استراتيجية Network-First لضمان وصول المريض لأحدث التحديثات فوراً
 // ==========================================================================
 
-const CACHE_NAME = 'wada3an-alam-v29.32';
+const CACHE_NAME = 'wada3an-alam-v29.33';
 const STATIC_ASSETS = [
     './',
     './index.html',
@@ -112,13 +112,40 @@ const STATIC_ASSETS = [
 self.addEventListener('install', (event) => {
     self.skipWaiting();
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(STATIC_ASSETS).catch((err) => {
-                console.warn('[SW] Caching non-fatal warning:', err);
-            });
+        caches.open(CACHE_NAME).then(async (cache) => {
+            // ✅ أولاً: ضمان تخزين الملفات الأساسية التي تُشغّل التطبيق بشكل مستقل
+            // حتى لو فشل أي ملف صوتي أو صورة لن يتأثر تحميل الأداة
+            const coreAssets = [
+                './index.html',
+                './css/style.css',
+                './js/app.js',
+                './js/smart-guidance.js',
+                './js/database.js',
+                './js/ai-engine.js',
+                './js/diagnostic-engine.js',
+                './js/cloud-sync.js',
+                './js/admin-engine.js',
+                './manifest.json',
+            ];
+
+            // تخزين الملفات الأساسية أولاً — أي فشل هنا يُسجَّل لكن لا يوقف العملية
+            await Promise.all(
+                coreAssets.map((url) =>
+                    cache.add(url).catch((err) => console.warn('[SW] Core asset failed:', url, err))
+                )
+            );
+
+            // تخزين باقي الأصول (صور، صوت، تمارين) بشكل احتياطي — الفشل مقبول
+            const optionalAssets = STATIC_ASSETS.filter((a) => !coreAssets.includes(a));
+            await Promise.all(
+                optionalAssets.map((url) =>
+                    cache.add(url).catch(() => {}) // الفشل الصامت مقبول للأصول الاختيارية
+                )
+            );
         })
     );
 });
+
 
 self.addEventListener('activate', (event) => {
     event.waitUntil(
