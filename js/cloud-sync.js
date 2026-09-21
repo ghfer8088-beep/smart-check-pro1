@@ -1188,13 +1188,14 @@
                             }).catch(() => {});
                         } catch(e) {}
                     }
+                }
                 saveCloudSyncedPatients(currentList);
                 try {
                     const existingAll = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
-                    for (const pt of currentList) {
-                        const pId = pt.id || pt.patientId;
+                    for (const pItem of currentList) {
+                        const pId = pItem.id || pItem.patientId;
                         if (pId && !existingAll.some(x => (x.id === pId || x.patientId === pId))) {
-                            existingAll.unshift(pt);
+                            existingAll.unshift(pItem);
                         }
                     }
                     localStorage.setItem('smart_all_patients', JSON.stringify(existingAll));

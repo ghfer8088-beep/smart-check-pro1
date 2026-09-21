@@ -7,19 +7,19 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <script>
-        // إزالة أي كاش قديم للوحة التحكم لضمان تحميل أحدث نسخة دائماً
-        if ('caches' in window) {
-            caches.keys().then(function(keys) {
-                keys.forEach(function(k) {
-                    if (k.startsWith('wada3an-alam-')) caches.delete(k);
-                });
-            });
-        }
+        // إلغاء أي Service Worker قديم وحذف الكاش تماماً للوحة التحكم
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(function(registrations) {
                 for (let r of registrations) {
-                    r.update();
+                    r.unregister();
                 }
+            });
+        }
+        if ('caches' in window) {
+            caches.keys().then(function(keys) {
+                keys.forEach(function(k) {
+                    caches.delete(k);
+                });
             });
         }
     </script>
@@ -1424,14 +1424,14 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/mqtt.min.js?v=29.25"></script>
-    <script src="js/cloud-sync.js?v=29.25"></script>
-    <script src="js/geo-tracker.js?v=29.25"></script>
-    <script src="js/database.js?v=29.25"></script>
-    <script src="js/exercise-image-studio.js?v=29.25"></script>
-    <script src="js/admin-engine.js?v=29.25"></script>
-    <script src="js/ai-config.js?v=29.25"></script>
-    <script src="js/ai-engine.js?v=29.25"></script>
+    <script src="js/mqtt.min.js?v=29.26"></script>
+    <script src="js/cloud-sync.js?v=29.26"></script>
+    <script src="js/geo-tracker.js?v=29.26"></script>
+    <script src="js/database.js?v=29.26"></script>
+    <script src="js/exercise-image-studio.js?v=29.26"></script>
+    <script src="js/admin-engine.js?v=29.26"></script>
+    <script src="js/ai-config.js?v=29.26"></script>
+    <script src="js/ai-engine.js?v=29.26"></script>
 
     <script>
         let allPatientsList = [];
@@ -2352,13 +2352,20 @@
                     }
                     if (!fallbackPts || fallbackPts.length === 0) {
                         try {
-                            const staticResp = await fetch('./data/clinic_backup_snapshot.json', { cache: 'no-cache' });
+                            const staticResp = await fetch('./data/clinic_backup_snapshot.json?v=' + Date.now(), { cache: 'no-store' });
                             if (staticResp.ok) {
                                 const staticJson = await staticResp.json();
+                                const snap = staticJson.snapshot || staticJson;
                                 if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.importSnapshot === 'function') {
-                                    await SmartCloudSync.importSnapshot(staticJson.snapshot || staticJson);
-                                    allPatientsList = await AdminEngine.loadPatientsOverview();
+                                    await SmartCloudSync.importSnapshot(snap);
                                 }
+                                const pts = snap.patients || snap.allPatients || [];
+                                if (pts.length > 0) {
+                                    localStorage.setItem('smart_cloud_synced_patients', JSON.stringify(pts));
+                                    localStorage.setItem('smart_all_patients', JSON.stringify(pts));
+                                    fallbackPts = pts;
+                                }
+                                allPatientsList = await AdminEngine.loadPatientsOverview();
                             }
                         } catch(eStatic) {}
                     }
@@ -2758,6 +2765,28 @@
         }
         window.setDesktopViewMode = setDesktopViewMode;
 
+        async function forceRestoreClinicBackup() {
+            try {
+                const resp = await fetch('./data/clinic_backup_snapshot.json?v=' + Date.now(), { cache: 'no-store' });
+                if (!resp.ok) throw new Error('تعذر جلب ملف النسخة الاحتياطية (HTTP ' + resp.status + ')');
+                const data = await resp.json();
+                const snap = data.snapshot || data;
+                if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.importSnapshot === 'function') {
+                    await SmartCloudSync.importSnapshot(snap);
+                }
+                const pts = snap.patients || snap.allPatients || [];
+                if (pts.length > 0) {
+                    localStorage.setItem('smart_cloud_synced_patients', JSON.stringify(pts));
+                    localStorage.setItem('smart_all_patients', JSON.stringify(pts));
+                }
+                await loadAdminData(false);
+            } catch(e) {
+                console.error('forceRestoreClinicBackup error:', e);
+                alert('تنبيه أثناء الاسترداد: ' + (e.message || e));
+            }
+        }
+        window.forceRestoreClinicBackup = forceRestoreClinicBackup;
+
         function renderTable(list) {
             const mobileCardsContainer = document.getElementById('patients-cards-container');
 
@@ -2766,8 +2795,12 @@
                 const paginationEl = document.getElementById('patients-cards-pagination');
                 if (!list || list.length === 0) {
                     mobileCardsContainer.innerHTML = `
-                        <div style="text-align: center; padding: 30px 15px; color: #94a3b8; background: #080c14; border-radius: 12px; border: 1px dashed #334155;">
-                            📂 لا يوجد مراجعين مسجلين حالياً.
+                        <div style="text-align: center; padding: 40px 15px; color: #94a3b8; background: #080c14; border-radius: 12px; border: 1px dashed #334155;">
+                            <div style="font-size: 2em; margin-bottom: 10px;">📂</div>
+                            <div style="color: #cbd5e1; font-weight: bold; margin-bottom: 12px; font-size: 1.05em;">لا يوجد مراجعين مسجلين محلياً حالياً.</div>
+                            <button type="button" onclick="forceRestoreClinicBackup()" style="background: linear-gradient(135deg, var(--primary-gold), #b45309); color: #000; border: none; padding: 10px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.95em; box-shadow: 0 4px 15px rgba(212,175,55,0.4);">
+                                ⚡ استرجاع الـ 51 مريضاً من النسخة الاحتياطية فوراً
+                            </button>
                         </div>`;
                     if (paginationEl) paginationEl.innerHTML = '';
                 } else {
