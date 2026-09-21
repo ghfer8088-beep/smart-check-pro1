@@ -8,20 +8,24 @@
     <meta http-equiv="Expires" content="0">
     <script>
         // إلغاء أي Service Worker قديم وحذف الكاش تماماً للوحة التحكم
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                for (let r of registrations) {
-                    r.unregister();
-                }
-            });
-        }
-        if ('caches' in window) {
-            caches.keys().then(function(keys) {
-                keys.forEach(function(k) {
-                    caches.delete(k);
-                });
-            });
-        }
+        try {
+            if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for (let r of registrations) {
+                        r.unregister();
+                    }
+                }).catch(function() {});
+            }
+        } catch(e) {}
+        try {
+            if ('caches' in window) {
+                caches.keys().then(function(keys) {
+                    keys.forEach(function(k) {
+                        caches.delete(k);
+                    });
+                }).catch(function() {});
+            }
+        } catch(e) {}
     </script>
     <title>لوحة الإدارة السريرية - وداعاً للألم</title>
     <link rel="icon" type="image/png" href="assets/logo.png">
@@ -3010,10 +3014,7 @@
             }
         }
 
-        // متغيرات ودوال تقسيم كروت المراجعين إلى صفحات (20 سجل لكل صفحة)
-        let currentCardsPage = 1;
-        const cardsPerPage = 20;
-
+        // دوال تقسيم كروت المراجعين إلى صفحات (20 سجل لكل صفحة)
         function setCardsPage(pageNum) {
             currentCardsPage = parseInt(pageNum) || 1;
             const q = document.getElementById('search-patients') ? document.getElementById('search-patients').value.trim() : '';
