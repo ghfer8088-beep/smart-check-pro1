@@ -1188,8 +1188,17 @@
                             }).catch(() => {});
                         } catch(e) {}
                     }
-                }
                 saveCloudSyncedPatients(currentList);
+                try {
+                    const existingAll = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
+                    for (const pt of currentList) {
+                        const pId = pt.id || pt.patientId;
+                        if (pId && !existingAll.some(x => (x.id === pId || x.patientId === pId))) {
+                            existingAll.unshift(pt);
+                        }
+                    }
+                    localStorage.setItem('smart_all_patients', JSON.stringify(existingAll));
+                } catch(e) {}
             }
 
             // 2. استيراد سجلات الجلسات اليومية
@@ -1280,21 +1289,15 @@
             }
         } catch(e) {}
 
-        // 3. إرسال إلى NTFY كقناة ثانوية
-        const rawJson = JSON.stringify(payload);
+        // 3. إرسال إشعار خفيف إلى NTFY دون إغراقه بحزم ضخمة تسبب تجاوز الحجم
         try {
-            fetch(CLOUD_SYNC_ENDPOINT, {
-                method: 'POST',
-                body: rawJson
-            }).catch(() => {});
-
             fetch('https://ntfy.sh', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     topic: 'wada3an_smart_check_clinic_sync_2026',
-                    message: rawJson,
-                    title: 'Full Clinic Sync Snapshot'
+                    message: `تم تحديث حزمة العيادة سحابياً (${(snapshot.patients || []).length} مراجع)`,
+                    title: 'Clinic Snapshot Updated'
                 })
             }).catch(() => {});
         } catch(e) {}
@@ -1763,7 +1766,9 @@
                 } else if (latestAttachmentItem && latestAttachmentItem.attachment && latestAttachmentItem.attachment.url) {
                     const attUrl = latestAttachmentItem.attachment.url;
                     const lastImportedUrl = localStorage.getItem('smart_last_imported_att_url');
-                    if (attUrl !== lastImportedUrl) {
+                    // ✅ v29.24: إذا كانت القائمة المحلية فارغة، نقوم بالاستيراد حتماً حتى لو كان الرابط مسجلاً مسبقاً
+                    const needsImport = (attUrl !== lastImportedUrl) || (getCloudSyncedPatients().length === 0);
+                    if (needsImport) {
                         try {
                             const attController = new AbortController();
                             const attTimer = setTimeout(() => attController.abort(), 15000);
@@ -1780,6 +1785,7 @@
                                         changed = true;
                                     } else {
                                         processPatientRecord(attJson);
+                                        changed = true;
                                     }
                                     localStorage.setItem('smart_last_imported_att_url', attUrl);
                                 }
@@ -1792,11 +1798,34 @@
             }
         }
 
-        saveCloudSyncedPatients(currentList);
+        // ✅ v29.24: إذا لم نجد أي مرضى محلياً بعد السحابة (بسبب حدود ntfy أو Master Hub)، نسترجع فوراً النسخة الاحتياطية الثابتة المدمجة بالعيادة
+        if (getCloudSyncedPatients().length === 0) {
+            try {
+                const staticResp = await fetch('./data/clinic_backup_snapshot.json', { cache: 'no-cache' });
+                if (staticResp.ok) {
+                    const staticJson = await staticResp.json();
+                    const snap = (staticJson && staticJson.snapshot) ? staticJson.snapshot : staticJson;
+                    if (snap && (Array.isArray(snap.patients) || Array.isArray(snap.allPatients))) {
+                        await importFullClinicSnapshot(snap);
+                        changed = true;
+                    }
+                }
+            } catch(eStatic) {
+                console.warn('Fallback static snapshot fetch warning:', eStatic);
+            }
+        }
+
+        // ✅ v29.24: إذا تم استيراد حزمة، نعيد قراءة القائمة الحديثة ولا نعيد حفظ القائمة القديمة
+        if (changed) {
+            currentList = getCloudSyncedPatients();
+        } else {
+            saveCloudSyncedPatients(currentList);
+        }
+
         if (changed) {
             triggerAppUIRefresh();
         }
-        return currentList;
+        return getCloudSyncedPatients();
     }
 
     // إنشاء اتصال لحظي دائم (Server-Sent Events) لتلقي أي مريض جديد فوراً دون إعادة تحميل الصفحة

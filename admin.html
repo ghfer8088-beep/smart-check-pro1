@@ -15,6 +15,13 @@
                 });
             });
         }
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for (let r of registrations) {
+                    r.update();
+                }
+            });
+        }
     </script>
     <title>لوحة الإدارة السريرية - وداعاً للألم</title>
     <link rel="icon" type="image/png" href="assets/logo.png">
@@ -1417,14 +1424,14 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/mqtt.min.js?v=29.23"></script>
-    <script src="js/cloud-sync.js?v=29.23"></script>
-    <script src="js/geo-tracker.js?v=29.23"></script>
-    <script src="js/database.js?v=29.23"></script>
-    <script src="js/exercise-image-studio.js?v=29.23"></script>
-    <script src="js/admin-engine.js?v=29.23"></script>
-    <script src="js/ai-config.js?v=29.23"></script>
-    <script src="js/ai-engine.js?v=29.23"></script>
+    <script src="js/mqtt.min.js?v=29.25"></script>
+    <script src="js/cloud-sync.js?v=29.25"></script>
+    <script src="js/geo-tracker.js?v=29.25"></script>
+    <script src="js/database.js?v=29.25"></script>
+    <script src="js/exercise-image-studio.js?v=29.25"></script>
+    <script src="js/admin-engine.js?v=29.25"></script>
+    <script src="js/ai-config.js?v=29.25"></script>
+    <script src="js/ai-engine.js?v=29.25"></script>
 
     <script>
         let allPatientsList = [];
@@ -2330,7 +2337,7 @@
                 allPatientsList = [];
             }
 
-            // شبكة أمان فورية: إذا كانت القائمة فارغة، نسترجع مباشرة من SmartDB أو التخزين المحلي لضمان عدم اختفاء أي مريض
+            // شبكة أمان فورية: إذا كانت القائمة فارغة، نسترجع مباشرة من SmartDB أو التخزين المحلي أو النسخة الاحتياطية لضمان عدم اختفاء أي مريض
             if (!allPatientsList || allPatientsList.length === 0) {
                 try {
                     let fallbackPts = [];
@@ -2340,7 +2347,22 @@
                     if (!fallbackPts || fallbackPts.length === 0) {
                         fallbackPts = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
                     }
-                    if (fallbackPts && fallbackPts.length > 0) {
+                    if (!fallbackPts || fallbackPts.length === 0) {
+                        fallbackPts = JSON.parse(localStorage.getItem('smart_cloud_synced_patients') || '[]');
+                    }
+                    if (!fallbackPts || fallbackPts.length === 0) {
+                        try {
+                            const staticResp = await fetch('./data/clinic_backup_snapshot.json', { cache: 'no-cache' });
+                            if (staticResp.ok) {
+                                const staticJson = await staticResp.json();
+                                if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.importSnapshot === 'function') {
+                                    await SmartCloudSync.importSnapshot(staticJson.snapshot || staticJson);
+                                    allPatientsList = await AdminEngine.loadPatientsOverview();
+                                }
+                            }
+                        } catch(eStatic) {}
+                    }
+                    if ((!allPatientsList || allPatientsList.length === 0) && fallbackPts && fallbackPts.length > 0) {
                         allPatientsList = fallbackPts.map(pt => ({
                             patient: pt,
                             isRegistered: !!(pt.isRegistered || pt.accountPin),
