@@ -500,10 +500,14 @@
         }
     }
 
-    function triggerAppUIRefresh() {
+    // ✅ v29.22: retry queue — يضمن تشغيل loadAdminData حتى لو وصل MQTT قبل تجهيز الصفحة
+    function triggerAppUIRefresh(retryCount) {
         try {
+            const maxRetries = typeof retryCount === 'number' ? retryCount : 3;
             if (typeof window.loadAdminData === 'function') {
                 window.loadAdminData(false);
+            } else if (maxRetries > 0) {
+                setTimeout(() => triggerAppUIRefresh(maxRetries - 1), 600);
             }
             if (typeof window.renderGeoAnalytics === 'function') {
                 window.renderGeoAnalytics();
@@ -1394,6 +1398,10 @@
             if (changed) {
                 if (localVisits.length > 1000) localVisits = localVisits.slice(-1000);
                 localStorage.setItem(VISITS_KEY, JSON.stringify(localVisits));
+                // ✅ v29.22: تحديث واجهة الزوار فوراً بعد حفظ الزيارات الجديدة
+                if (typeof window.renderGeoAnalytics === 'function') {
+                    window.renderGeoAnalytics();
+                }
             }
         } catch(e) {}
     }
@@ -1441,13 +1449,8 @@
             } else if (/(?:^|\s|[،.؟!,])(?:معصم|معصمي|المعصم|رسغ|رسغي|الرسغ|نفق\s*رسغي|نفق\s*الرسغ|كف\s*اليد|راحة\s*اليد|أصابع\s*اليد|اصابع\s*اليد|إبهام|ابهام|wrist|carpal)(?:$|\s|[،.؟!,])/i.test(textToSearch)) {
                 resolvedPain = 'الرسغ ومفصل اليد';
             } else {
-                const ageNum = parseInt(pt.age) || 40;
-                const charCodeSum = (pName || '').split('').reduce((sum, c) => sum + c.charCodeAt(0), 0);
-                const varietyIndex = (ageNum + charCodeSum) % 4;
-                if (varietyIndex === 0) resolvedPain = 'الفقرات القطنية وأسفل الظهر';
-                else if (varietyIndex === 1) resolvedPain = 'الفقرات العنقية (الرقبة)';
-                else if (varietyIndex === 2) resolvedPain = 'مفصل الركبة والصابونة';
-                else resolvedPain = 'مفصل الكتف والكفة المدورة';
+                // ✅ v29.22: لا نولّد موضع ألم وهمي — نبقي الحقل فارغاً ليعكس البيانات الحقيقية فقط
+                resolvedPain = pt.painArea || pt.painAreaTitle || pt.selectedPoint || '';
             }
         }
 
@@ -1542,15 +1545,22 @@
             })());
         }
 
-        // 2. القناة الثانوية المضاعفة (Secondary ntfy Relay) بمهلة أمان مناسبة لجلب السجلات المتاحة
+        // 2. القناة الثانوية المضاعفة (Secondary ntfy Relay) — جلب الجديد فقط منذ آخر استطلاع ناجح
         tasks.push((async () => {
             try {
+                // ✅ v29.22: استخدام since=<timestamp> بدلاً من since=all لجلب الجديد فقط
+                const lastFetch = parseInt(localStorage.getItem('smart_ntfy_last_fetch_ts') || '0', 10);
+                const sinceParam = lastFetch > 0
+                    ? Math.floor(lastFetch / 1000)   // NTFY يقبل Unix seconds
+                    : Math.floor((Date.now() - 24 * 3600 * 1000) / 1000); // أول مرة: آخر 24 ساعة فقط
                 const controller2 = new AbortController();
                 const timeoutId2 = setTimeout(() => controller2.abort(), 4500);
-                const pollUrl = `${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=all`;
+                const pollUrl = `${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=${sinceParam}`;
                 const resp = await fetch(pollUrl, { cache: 'no-store', signal: controller2.signal });
                 clearTimeout(timeoutId2);
                 if (resp.ok) {
+                    // حفظ الـ timestamp الحالي كنقطة بداية للاستطلاع التالي
+                    localStorage.setItem('smart_ntfy_last_fetch_ts', Date.now().toString());
                     const text = await resp.text();
                     return { type: 'ntfy', text: text };
                 }
