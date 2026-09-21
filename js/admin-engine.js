@@ -150,8 +150,8 @@ const AdminEngine = (function() {
                 for (const notif of adminNotifs) {
                     if (!notif) continue;
 
-                    // استبعاد إشعارات النظام وتنبيهات الأمان والـ Watchdog نهائياً من التحول لمرضى
-                    if (notif.type === 'red_flag' || notif.type === 'system_alert' || notif.type === 'freeze_alert' || notif.type === 'watchdog' || notif.type === 'incident' || notif.type === 'telemetry') {
+                    // استبعاد إشعارات النظام وتنبيهات الأمان والـ Watchdog وأخطاء البرمجة نهائياً من التحول لمرضى
+                    if (notif.type === 'red_flag' || notif.type === 'system_alert' || notif.type === 'freeze_alert' || notif.type === 'watchdog' || notif.type === 'incident' || notif.type === 'telemetry' || notif.type === 'runtime_error' || notif.type === 'syntax_error' || (notif.title && notif.title.includes('SyntaxError')) || (notif.message && notif.message.includes('SyntaxError'))) {
                         continue;
                     }
 
@@ -265,46 +265,48 @@ const AdminEngine = (function() {
                 return score;
             }
 
-            // 2. دالة استخراج الهوية الفريدة للمريض والشكوى السريرية (Patient & Complaint Identity Key)
-            // تضمن الاحتفاظ بكافة السجلات السريرية الأصلية المعتمدة (51 مريضاً) دون دمج قسري، مع دمج إشعارات النظام في سجلاتها المطابقة
+            // 2. دالة استخراج الهوية الفريدة للمراجع (Patient Identity Key)
+            // تضمن جمع وتوحيد كافة جلسات واستشارات وسجلات نفس المراجع في بطاقة واحدة ملكية شاملة دون أي تكرار
             function getPatientIdentityKey(pt) {
                 if (!pt) return null;
-                const rawId = (pt.patientId || pt.id || '').trim();
-                const isNotif = rawId.startsWith('pat_notif_') || !!pt._fromNotif;
-
-                // ⚡ السجلات السريرية الأصلية المعتمدة لها معرف فريد مستقل وتظهر كبطاقة استشارة سريرية متكاملة
-                if (!isNotif && rawId && rawId !== 'pat_notif') {
-                    const dKey = (pt.createdAt || pt.timestamp || '').slice(0, 19);
-                    return `pt_record_${rawId}_${dKey}`;
-                }
-
-                // للإشعارات المؤقتة: نحاول ربطها بالسجل الأصلي بناءً على معرف المريض إن كان يشير لسجل حقيقي
-                if (isNotif && pt.patientId && !pt.patientId.startsWith('pat_notif_')) {
-                    const dKey = (pt.createdAt || pt.timestamp || '').slice(0, 19);
-                    return `pt_record_${pt.patientId}_${dKey}`;
-                }
-
-                const cleanPhone = (pt.phone || '').replace(/\D/g, '');
-                const phoneKey = cleanPhone.length >= 7 ? cleanPhone.slice(-9) : '';
-                const rawPain = pt.painArea || pt.painAreaTitle || pt.selectedPoint || '';
-                const painKey = isGenericPain(rawPain) ? '' : normalizeTitle(rawPain);
-
-                if (phoneKey && painKey) {
-                    return `enc_ph_${phoneKey}_${painKey}`;
-                }
-                if (phoneKey) {
-                    return `enc_ph_${phoneKey}_gen`;
-                }
                 const rawName = (pt.fullName || pt.name || '').trim();
                 const cleanName = normalizePatientName(rawName);
+
+                const cleanPhone = (pt.phone || '').replace(/\D/g, '');
+                const phoneKey = cleanPhone.length >= 7 ? cleanPhone.slice(-7) : '';
+
+                // أ. إذا كان الاسم الحقيقي معروفاً (وليس اسماً عاماً)، نجمع المراجع باسمه
                 if (!isGenericPatientName(cleanName)) {
-                    return `enc_nm_${cleanName}_${painKey || 'gen'}`;
+                    let canonicalName = cleanName;
+                    if (canonicalName === 'khaled kamal') canonicalName = 'خالد كمال';
+                    if (canonicalName === 'endless') canonicalName = 'سهير عساف';
+                    if (canonicalName.includes('خلود وجيه')) canonicalName = 'خلود وجيه نجيب قبها';
+                    if (canonicalName.includes('نضال وجيه') || canonicalName === 'نضال') canonicalName = 'نضال وجيه قبها';
+                    if (canonicalName.includes('مريم وجيه')) canonicalName = 'مريم وجيه نجيب قبها';
+                    if (canonicalName.includes('شذي مجدي') || canonicalName.includes('شذى مجدي')) canonicalName = 'شذى مجدي حسين ابو هنية';
+                    if (canonicalName.includes('لجين عبد')) canonicalName = 'لجين عبدالله الجعبة';
+                    if (canonicalName.includes('قصي جمال') || canonicalName === 'قصي') canonicalName = 'قصي جمال قبها';
+                    if (canonicalName.includes('قاسم محمد')) canonicalName = 'قاسم محمد حسن سنقر';
+                    if (canonicalName.includes('لين عباس')) canonicalName = 'لين عباسي';
+                    if (canonicalName === 'تماضر') canonicalName = 'تماضر';
+                    if (canonicalName === 'اسامه' || canonicalName === 'أسامة') canonicalName = 'اسامه';
+                    if (canonicalName === 'مجد') canonicalName = 'مجد';
+                    if (canonicalName === 'فارس') canonicalName = 'فارس';
+                    return 'pt_nm_' + canonicalName;
                 }
-                if (rawId && rawId !== 'pat_notif') {
-                    if (painKey) return `id_${rawId}_${painKey}`;
-                    return `id_${rawId}`;
+
+                // ب. إذا لم يكن الاسم معروفاً ولديه هاتف صالح
+                if (phoneKey) {
+                    return 'pt_ph_' + phoneKey;
                 }
-                return 'raw_' + (rawId || Math.random().toString(36));
+
+                // ج. المعرف الأساسي النظيف
+                const rawId = (pt.patientId || pt.id || '').replace(/(_notif_.*|_test\d*|_cloud_test.*)$/, '').trim();
+                if (rawId && rawId !== 'pat' && rawId !== 'pat_notif') {
+                    return 'pt_id_' + rawId;
+                }
+
+                return 'pt_raw_' + (pt.patientId || pt.id || Math.random().toString(36));
             }
 
             // 3. تجميع كافة السجلات في مجموعات هوية واحدة
@@ -317,25 +319,25 @@ const AdminEngine = (function() {
                 groups.get(key).push(pt);
             }
 
-            // دمج إشعارات الهواتف العامة في السجل المعتمد لنفس المريض إن وُجد
+            // دمج مجموعات الهواتف في مجموعة الاسم إن تطابق الهاتف
             for (const [key, records] of Array.from(groups.entries())) {
-                if (key.startsWith('enc_ph_')) {
-                    const phonePart = key.replace(/^enc_ph_/, '').split('_')[0];
-                    let matchedRecordKey = null;
+                if (key.startsWith('pt_ph_')) {
+                    const phonePart = key.replace(/^pt_ph_/, '');
+                    let matchedNameGroupKey = null;
                     for (const [otherKey, otherRecords] of groups.entries()) {
-                        if (otherKey.startsWith('pt_record_')) {
+                        if (otherKey.startsWith('pt_nm_')) {
                             const hasSamePhone = otherRecords.some(r => {
                                 const p = (r.phone || '').replace(/\D/g, '');
                                 return p.length >= 7 && p.endsWith(phonePart);
                             });
                             if (hasSamePhone) {
-                                matchedRecordKey = otherKey;
+                                matchedNameGroupKey = otherKey;
                                 break;
                             }
                         }
                     }
-                    if (matchedRecordKey) {
-                        groups.get(matchedRecordKey).push(...records);
+                    if (matchedNameGroupKey) {
+                        groups.get(matchedNameGroupKey).push(...records);
                         groups.delete(key);
                     }
                 }
@@ -665,20 +667,25 @@ const AdminEngine = (function() {
                 for (const exItem of finalOverviewList) {
                     const exP = exItem.patient;
                     const exId = exP.patientId || exP.id;
-                    const exDate = (exP.createdAt || exItem.createdAt || '').slice(0, 19);
-                    const curDate = (p.createdAt || item.createdAt || '').slice(0, 19);
-                    if (exId && currentId && exId === currentId && (!curDate || !exDate || exDate === curDate)) {
+                    const exPhone = (exP.phone || '').replace(/\D/g, '');
+                    const exPhoneKey = exPhone.length >= 7 ? exPhone.slice(-7) : '';
+                    const exName = normalizePatientName(exP.fullName || exP.name || '');
+
+                    // تحقق من تطابق المعرف المدمج أو المعرف الرئيسي
+                    const currentMergedIds = Array.isArray(p.allMergedIds) ? p.allMergedIds : [currentId].filter(Boolean);
+                    const exMergedIds = Array.isArray(exP.allMergedIds) ? exP.allMergedIds : [exId].filter(Boolean);
+                    const sameId = (exId && currentId && exId === currentId) ||
+                                   currentMergedIds.some(id => exMergedIds.includes(id));
+
+                    // تحقق من تطابق الهاتف
+                    const samePhone = phoneKey && exPhoneKey && (phoneKey === exPhoneKey || phoneKey.endsWith(exPhoneKey) || exPhoneKey.endsWith(phoneKey));
+
+                    // تحقق من تطابق الاسم الحقيقي
+                    const sameName = isRealName && exName && (cleanName === exName);
+
+                    if (sameId || samePhone || sameName) {
                         existing = exItem;
                         break;
-                    }
-                    // إذا كان أحدهما إشعاراً مؤقتاً فقط والآخر سجلاً أصلياً لنفس الهاتف
-                    if (isTempNotif && phoneKey) {
-                        const exPhone = (exP.phone || '').replace(/\D/g, '');
-                        const exPhoneKey = exPhone.length >= 7 ? exPhone.slice(-9) : '';
-                        if (exPhoneKey && exPhoneKey === phoneKey) {
-                            existing = exItem;
-                            break;
-                        }
                     }
                 }
 
@@ -779,14 +786,15 @@ const AdminEngine = (function() {
                 return timeB - timeA;
             });
 
-            // 7. حفظ التخزين المحلي فورياً مع الحفاظ على كافة السجلات الحقيقية
+            // 7. حفظ التخزين المحلي فورياً مع الحفاظ على كافة السجلات الحقيقية الخالية من التكرار
             try {
-                const cleanForStorage = unifiedPatients.map(u => {
-                    const c = { ...u };
+                const cleanForStorage = cleanOverview.map(item => {
+                    const c = { ...(item.patient || {}) };
                     delete c._fromNotif;
                     return c;
-                });
+                }).filter(p => p && (p.patientId || p.id));
                 localStorage.setItem('smart_all_patients', JSON.stringify(cleanForStorage));
+                localStorage.setItem('smart_cloud_synced_patients', JSON.stringify(cleanForStorage));
 
                 // تنظيف فقط السجلات الوهمية الصريحة لمريض الفحص الذاتي دون مسح أي مراجعين حقيقيين
                 for (let i = localStorage.length - 1; i >= 0; i--) {

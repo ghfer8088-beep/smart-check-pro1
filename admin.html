@@ -1428,15 +1428,15 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/clinic-patients-data.js?v=29.28"></script>
-    <script src="js/mqtt.min.js?v=29.28"></script>
-    <script src="js/cloud-sync.js?v=29.28"></script>
-    <script src="js/geo-tracker.js?v=29.28"></script>
-    <script src="js/database.js?v=29.28"></script>
-    <script src="js/exercise-image-studio.js?v=29.28"></script>
-    <script src="js/admin-engine.js?v=29.28"></script>
-    <script src="js/ai-config.js?v=29.28"></script>
-    <script src="js/ai-engine.js?v=29.28"></script>
+    <script src="js/clinic-patients-data.js?v=29.29"></script>
+    <script src="js/mqtt.min.js?v=29.29"></script>
+    <script src="js/cloud-sync.js?v=29.29"></script>
+    <script src="js/geo-tracker.js?v=29.29"></script>
+    <script src="js/database.js?v=29.29"></script>
+    <script src="js/exercise-image-studio.js?v=29.29"></script>
+    <script src="js/admin-engine.js?v=29.29"></script>
+    <script src="js/ai-config.js?v=29.29"></script>
+    <script src="js/ai-engine.js?v=29.29"></script>
 
     <script>
         let allPatientsList = [];
@@ -1445,28 +1445,25 @@
         let isSoundAlertEnabled = localStorage.getItem('smart_admin_sound_enabled') !== 'false';
         let lastKnownNotifCount = 0;
 
-        // ⚡ تهيئة متزامنة فورية للـ 51 مريضاً في الذاكرة (Instant Zero-Latency Bootstrap)
+        // ⚡ تهيئة متزامنة فورية للمراجعين الحقيقيين في الذاكرة وتطهير أي بيانات مكررة سابقة
         function bootstrapClinicStaticPatients() {
             try {
+                const lsRaw = localStorage.getItem('smart_all_patients');
+                const lsList = JSON.parse(lsRaw || '[]');
+                // استشفاء تلقائي وتطهير لأي تراكم مكرر سابق في الذاكرة المحلية (مثل تضخم السجلات إلى مئات السجلات المكررة)
+                if (lsList.length > 30) {
+                    localStorage.removeItem('smart_all_patients');
+                    localStorage.removeItem('smart_cloud_synced_patients');
+                }
+
                 if (typeof window !== 'undefined' && window.CLINIC_BACKUP_SNAPSHOT) {
                     const snap = window.CLINIC_BACKUP_SNAPSHOT.snapshot || window.CLINIC_BACKUP_SNAPSHOT;
                     const pts = snap.patients || snap.allPatients || [];
                     if (pts && pts.length > 0) {
-                        const lsRaw = localStorage.getItem('smart_all_patients');
-                        const lsList = JSON.parse(lsRaw || '[]');
-                        if (!lsRaw || lsList.length < pts.length) {
-                            const mergedMap = new Map();
-                            pts.forEach(p => {
-                                const id = p.patientId || p.id;
-                                if (id) mergedMap.set(id, p);
-                            });
-                            lsList.forEach(p => {
-                                const id = p.patientId || p.id;
-                                if (id) mergedMap.set(id, p);
-                            });
-                            const mergedArr = Array.from(mergedMap.values());
-                            localStorage.setItem('smart_all_patients', JSON.stringify(mergedArr));
-                            localStorage.setItem('smart_cloud_synced_patients', JSON.stringify(mergedArr));
+                        const currentLsRaw = localStorage.getItem('smart_all_patients');
+                        if (!currentLsRaw) {
+                            localStorage.setItem('smart_all_patients', JSON.stringify(pts));
+                            localStorage.setItem('smart_cloud_synced_patients', JSON.stringify(pts));
                         }
                     }
                 }
@@ -2455,12 +2452,13 @@
                         }
                     }
                 }
-                if (healedCount > 0) {
-                    try {
-                        const ptsToSave = allPatientsList.map(item => item.patient).filter(Boolean);
+                try {
+                    const ptsToSave = allPatientsList.map(item => item.patient).filter(Boolean);
+                    if (ptsToSave.length > 0) {
                         localStorage.setItem('smart_all_patients', JSON.stringify(ptsToSave));
-                    } catch(e) {}
-                }
+                        localStorage.setItem('smart_cloud_synced_patients', JSON.stringify(ptsToSave));
+                    }
+                } catch(e) {}
             } catch (healErr) {
                 console.warn('Auto-heal session count warning:', healErr);
             }

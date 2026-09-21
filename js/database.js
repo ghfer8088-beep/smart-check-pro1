@@ -985,7 +985,18 @@ const SmartDB = (function() {
 
     function getAdminNotifications() {
         try {
-            return JSON.parse(localStorage.getItem('smart_admin_notifications') || '[]');
+            const raw = localStorage.getItem('smart_admin_notifications');
+            const list = JSON.parse(raw || '[]');
+            // تلقائياً: تنظيف وتطهير أي تنبيهات أخطاء سابقة تم إصلاحها وتجاوزها (مثل أخطاء SyntaxError القديمة)
+            const cleaned = list.filter(n => {
+                if (!n) return false;
+                const txt = (n.title || '') + ' ' + (n.message || '');
+                return !txt.includes('currentCardsPage') && !txt.includes('SyntaxError');
+            });
+            if (cleaned.length !== list.length) {
+                localStorage.setItem('smart_admin_notifications', JSON.stringify(cleaned));
+            }
+            return cleaned;
         } catch (e) {
             return [];
         }
