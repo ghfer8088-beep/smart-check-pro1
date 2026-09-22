@@ -303,9 +303,13 @@ const AdminEngine = (function() {
                     return 'pt_ph_' + phoneKey;
                 }
 
-                // ج. إذا لم يتوفر اسم حقيقي ولا هاتف صالح:
-                // ندمج كافة الفحوصات والزيارات التجريبية مجهولة الهوية في بطاقة موحدة واحدة بدلاً من إنشاء بطاقة مكررة لكل نقرة زائر
-                return 'pt_anonymous_guest_consolidated';
+                // ج. المعرف الأساسي النظيف
+                const rawId = (pt.patientId || pt.id || '').replace(/(_notif_.*|_test\d*|_cloud_test.*)$/, '').trim();
+                if (rawId && rawId !== 'pat' && rawId !== 'pat_notif') {
+                    return 'pt_id_' + rawId;
+                }
+
+                return 'pt_raw_' + (pt.patientId || pt.id || 'anonymous_guest');
             }
 
             // 3. تجميع كافة السجلات في مجموعات هوية واحدة
@@ -470,13 +474,14 @@ const AdminEngine = (function() {
                 unified.lastActiveAt = latestActiveDate || unified.createdAt;
 
                 // التحقق من صحة الاسم وتنسيقه بدقة لمنع تكرار أسماء مجهولة
+                const uPhone = (unified.phone ? String(unified.phone) : '').replace(/\D/g, '');
                 if (!unified.name || /^(?:الاسم|الآسم|الإسم)$/i.test(unified.name.trim()) || isGenericPatientName(unified.name)) {
-                    if (cleanPhone && cleanPhone.length >= 7) {
-                        unified.name = 'مراجع (' + cleanPhone.slice(-4) + ')';
+                    if (uPhone && uPhone.length >= 7) {
+                        unified.name = 'مراجع (' + uPhone.slice(-4) + ')';
                         unified.fullName = unified.name;
                     } else {
-                        unified.name = 'مراجع زائر (فحص تجريبي)';
-                        unified.fullName = 'مراجع زائر (فحص تجريبي)';
+                        unified.name = 'مراجع كريم';
+                        unified.fullName = 'مراجع كريم';
                     }
                 }
 

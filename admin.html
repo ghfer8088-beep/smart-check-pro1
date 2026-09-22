@@ -40,9 +40,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=29.49"></script>
-    <script src="js/security-shield.js?v=29.49"></script>
-    <link rel="stylesheet" href="css/style.css?v=29.49">
+    <script src="js/system-watchdog.js?v=29.50"></script>
+    <script src="js/security-shield.js?v=29.50"></script>
+    <link rel="stylesheet" href="css/style.css?v=29.50">
     <style>
         body {
             background-color: #080c14;
@@ -1428,15 +1428,15 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/clinic-patients-data.js?v=29.49"></script>
-    <script src="js/mqtt.min.js?v=29.49"></script>
-    <script src="js/cloud-sync.js?v=29.49"></script>
-    <script src="js/geo-tracker.js?v=29.49"></script>
-    <script src="js/database.js?v=29.49"></script>
-    <script src="js/exercise-image-studio.js?v=29.49"></script>
-    <script src="js/admin-engine.js?v=29.49"></script>
-    <script src="js/ai-config.js?v=29.49"></script>
-    <script src="js/ai-engine.js?v=29.49"></script>
+    <script src="js/clinic-patients-data.js?v=29.50"></script>
+    <script src="js/mqtt.min.js?v=29.50"></script>
+    <script src="js/cloud-sync.js?v=29.50"></script>
+    <script src="js/geo-tracker.js?v=29.50"></script>
+    <script src="js/database.js?v=29.50"></script>
+    <script src="js/exercise-image-studio.js?v=29.50"></script>
+    <script src="js/admin-engine.js?v=29.50"></script>
+    <script src="js/ai-config.js?v=29.50"></script>
+    <script src="js/ai-engine.js?v=29.50"></script>
 
     <script>
         let allPatientsList = [];
@@ -1450,18 +1450,12 @@
             try {
                 const lsRaw = localStorage.getItem('smart_all_patients');
                 const lsList = JSON.parse(lsRaw || '[]');
-                // استشفاء تلقائي وتطهير لأي تراكم مكرر سابق في الذاكرة المحلية (مثل تضخم السجلات إلى مئات السجلات المكررة)
-                if (lsList.length > 30) {
-                    localStorage.removeItem('smart_all_patients');
-                    localStorage.removeItem('smart_cloud_synced_patients');
-                }
 
                 if (typeof window !== 'undefined' && window.CLINIC_BACKUP_SNAPSHOT) {
                     const snap = window.CLINIC_BACKUP_SNAPSHOT.snapshot || window.CLINIC_BACKUP_SNAPSHOT;
                     const pts = snap.patients || snap.allPatients || [];
                     if (pts && pts.length > 0) {
-                        const currentLsRaw = localStorage.getItem('smart_all_patients');
-                        if (!currentLsRaw) {
+                        if (!lsRaw || lsList.length === 0) {
                             localStorage.setItem('smart_all_patients', JSON.stringify(pts));
                             localStorage.setItem('smart_cloud_synced_patients', JSON.stringify(pts));
                         }
@@ -1473,43 +1467,7 @@
         }
         bootstrapClinicStaticPatients();
 
-        // ⚡ إقلاع فوري متزامن من الكاش (0 ميلي ثانية) لعرض السجلات والأرقام فوراً عند فتح لوحة التحكم
-        function bootstrapAdminFromCacheSync() {
-            try {
-                let cached = JSON.parse(localStorage.getItem('smart_all_patients') || localStorage.getItem('smart_cloud_synced_patients') || '[]');
-                if (Array.isArray(cached) && cached.length > 0) {
-                    allPatientsList = cached.map(pt => ({
-                        patient: pt,
-                        isRegistered: !!(pt.isRegistered || pt.accountPin),
-                        logsCount: (Array.isArray(pt.dailyLogs) ? pt.dailyLogs.length : (Array.isArray(pt.logs) ? pt.logs.length : (pt.logsCount || pt.completedSessions || 0))),
-                        recoveryScore: pt.recoveryScore || null,
-                        baselinePain: pt.painLevel || null,
-                        latestDiagnosis: pt.chiefDiagnosis || pt.diagnosisTitle || 'تشخيص سريري متكامل',
-                        painArea: pt.painArea || pt.painAreaTitle || 'فحص واستشارة سريرية',
-                        createdAt: pt.createdAt || new Date().toISOString(),
-                        lastActiveAt: pt.lastActiveAt || pt.createdAt
-                    }));
-                    
-                    const statPtCountEl = document.getElementById('stat-patients-count');
-                    if (statPtCountEl && allPatientsList.length > 0) statPtCountEl.textContent = allPatientsList.length;
-                    
-                    const totalLogs = allPatientsList.reduce((acc, p) => acc + (p.logsCount || 0), 0);
-                    const statSessionsEl = document.getElementById('stat-sessions-count');
-                    if (statSessionsEl) statSessionsEl.textContent = totalLogs;
-
-                    const regCount = allPatientsList.filter(p => p.isRegistered).length;
-                    const statRegEl = document.getElementById('stat-registered-count');
-                    if (statRegEl) statRegEl.textContent = regCount;
-
-                    try { updatePatientFilterCounts(); } catch(e) {}
-                    try { if (typeof renderTable === 'function' && typeof getFilteredPatientsList === 'function') renderTable(getFilteredPatientsList()); } catch(e) {}
-                }
-            } catch(e) {}
-        }
-        bootstrapAdminFromCacheSync();
-
         async function initAdminPage() {
-            bootstrapAdminFromCacheSync();
             setDesktopViewMode('cards');
 
             // 1. ضمان فتح محتوى الإدارة فوراً وبشكل مباشر
@@ -2405,24 +2363,6 @@
             if (typeof SmartDB !== 'undefined' && typeof SmartDB.purgeDummyAssessments === 'function') {
                 try { await SmartDB.purgeDummyAssessments(); } catch(e) {}
             }
-
-            // تنظيف أي سجلات وهمية مكررة لمراجع كريم بدون هاتف وبدون جلسات
-            try {
-                for (let i = localStorage.length - 1; i >= 0; i--) {
-                    const k = localStorage.key(i);
-                    if (k && k.startsWith('smart_patient_pat_notif_')) {
-                        try {
-                            const val = JSON.parse(localStorage.getItem(k) || '{}');
-                            const pName = val.name || val.fullName || '';
-                            const pPhone = (val.phone || '').replace(/\D/g, '');
-                            const logs = (val.dailyLogs && val.dailyLogs.length) || (val.logs && val.logs.length) || 0;
-                            if ((!pPhone || pPhone.length < 7) && (!pName || /مراجع كريم|فحص ذاتي|زائر/i.test(pName)) && logs === 0) {
-                                localStorage.removeItem(k);
-                            }
-                        } catch(e) {}
-                    }
-                }
-            } catch(e) {}
 
             try {
                 allPatientsList = await AdminEngine.loadPatientsOverview();
