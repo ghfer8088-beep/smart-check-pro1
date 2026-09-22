@@ -706,7 +706,12 @@ async function getMaxUnlockedStep() {
         const urlParams = new URLSearchParams(window.location.search);
         const queryPid = urlParams.get('patient_id') || urlParams.get('id');
         const sessionPid = sessionStorage.getItem('scp_active_patient_id');
-        const savedPatientId = queryPid || sessionPid || (activePatient && (activePatient.patientId || activePatient.id));
+        const savedPatientId = queryPid 
+            || sessionPid 
+            || (activePatient && (activePatient.patientId || activePatient.id))
+            || localStorage.getItem('smart_current_patient_id')
+            || localStorage.getItem('smart_last_active_patient_id')
+            || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null);
 
         if (savedPatientId) {
             const logs = await SmartDB.getPatientDailyLogs(savedPatientId);
@@ -714,7 +719,7 @@ async function getMaxUnlockedStep() {
                 maxStep = Math.max(maxStep, 6);
             } else if (logs && logs.length >= 1) {
                 maxStep = Math.max(maxStep, 5);
-            } else if (localStorage.getItem('smart_plan_activated_' + savedPatientId) === 'true' || (activePatient && activePatient.isPlanActivated)) {
+            } else if (localStorage.getItem('smart_plan_activated_' + savedPatientId) === 'true' || localStorage.getItem('smart_plan_activated') === 'true' || (activePatient && activePatient.isPlanActivated)) {
                 maxStep = Math.max(maxStep, 4);
             } else {
                 maxStep = Math.max(maxStep, 3);
@@ -729,6 +734,12 @@ async function getMaxUnlockedStep() {
             maxStep = Math.max(maxStep, 2);
         }
 
+        // الحفاظ الصارم على أعلى خطوة تم الوصول إليها مسبقاً وعدم تصفيرها أبداً عند التحديث
+        const curSavedStep = parseInt(localStorage.getItem('smart_current_step') || '1', 10);
+        const prevMax = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
+        if (!isNaN(curSavedStep) && curSavedStep >= 1 && curSavedStep <= 6) maxStep = Math.max(maxStep, curSavedStep);
+        if (!isNaN(prevMax) && prevMax >= 1 && prevMax <= 6) maxStep = Math.max(maxStep, prevMax);
+
         localStorage.setItem('smart_max_reached_step', String(maxStep));
     } catch (e) {
         console.warn('Error calculating max unlocked step:', e);
@@ -739,12 +750,12 @@ window.getMaxUnlockedStep = getMaxUnlockedStep;
 
 function getMaxUnlockedStepSync() {
     try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const hasSession = urlParams.get('patient_id') || sessionStorage.getItem('scp_active_patient_id') || activePatient || currentAssessmentData || currentSelectedPoint;
-        if (!hasSession) return 1;
-
         const stored = parseInt(localStorage.getItem('smart_max_reached_step'), 10);
-        if (!isNaN(stored) && stored >= 1 && stored <= 6) return stored;
+        const curStep = parseInt(localStorage.getItem('smart_current_step'), 10);
+        let syncMax = 1;
+        if (!isNaN(stored) && stored >= 1 && stored <= 6) syncMax = Math.max(syncMax, stored);
+        if (!isNaN(curStep) && curStep >= 1 && curStep <= 6) syncMax = Math.max(syncMax, curStep);
+        return syncMax;
     } catch (e) {}
     return 1;
 }
@@ -6218,13 +6229,13 @@ async function loadPatientRecoveryDashboard(patientId, targetDay = null) {
     if (sessionData.isPlanCompleted) {
         await renderStep6Completion(patientId, sessionData);
     } 
-    // إذا كان في اليوم الأول ولم يوثق إنجاز اليوم الأول بعد: الجلسة الأولى المستقلة (الخطوة 4)
-    else if (sessionData.currentSessionDay === 1 && sessionData.dailyLogs.length === 0 && !lockStatus.isLocked) {
+    // إذا كان في اليوم الأول ولم يوثق إنجاز اليوم الأول بعد: الجلسة الأولى المستقلة (الخطوة 4) — فقط إذا لم يُطلب الانتقال لجلسة لاحقة
+    else if (sessionData.currentSessionDay === 1 && sessionData.dailyLogs.length === 0 && !lockStatus.isLocked && (!targetDay || targetDay <= 1)) {
         await renderStep4IndependentDay1(patientId, sessionData);
     } 
-    // إذا أنجز اليوم الأول (الأيام 2 إلى 7): متابعة الجلسات (الخطوة 5)
+    // إذا أنجز اليوم الأول (الأيام 2 إلى 7) أو طُلب عرض جلسة محددة: متابعة الجلسات (الخطوة 5)
     else {
-        await renderStep5SessionsDashboard(patientId, targetDay || sessionData.currentSessionDay, sessionData);
+        await renderStep5SessionsDashboard(patientId, targetDay || sessionData.currentSessionDay || 2, sessionData);
     }
 }
 window.loadPatientRecoveryDashboard = loadPatientRecoveryDashboard;
@@ -7331,6 +7342,34 @@ function goToStep(stepNum) {
                 const targetId = (typeof activePatient !== 'undefined' && activePatient?.patientId) || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null) || localStorage.getItem('smart_current_patient_id') || 'pat_guest';
                 if (typeof renderStep4IndependentDay1 === 'function') {
                     renderStep4IndependentDay1(targetId);
+                }
+            }
+        }, 80);
+    }
+
+    // إذا دخل المراجع الخطوة 5 (متابعة الجلسات)، التحقق من رسم لوحة الجلسات فوراً وعدم ترك الشاشة فارغة
+    if (stepNum === 5) {
+        setTimeout(() => {
+            const step5Box = document.getElementById('step5-sessions-container');
+            if (step5Box && (!step5Box.children.length || !step5Box.querySelector('.patient-recovery-master-card'))) {
+                const targetId = (typeof activePatient !== 'undefined' && activePatient?.patientId) || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null) || localStorage.getItem('smart_current_patient_id') || 'pat_guest';
+                if (typeof renderStep5SessionsDashboard === 'function') {
+                    renderStep5SessionsDashboard(targetId, 2);
+                } else if (typeof loadPatientRecoveryDashboard === 'function') {
+                    loadPatientRecoveryDashboard(targetId, 2);
+                }
+            }
+        }, 80);
+    }
+
+    // إذا دخل المراجع الخطوة 6 (وثيقة الإنهاء)، التحقق من رسم الوثيقة فوراً
+    if (stepNum === 6) {
+        setTimeout(() => {
+            const step6Box = document.getElementById('step6-completion-container');
+            if (step6Box && !step6Box.children.length) {
+                const targetId = (typeof activePatient !== 'undefined' && activePatient?.patientId) || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null) || localStorage.getItem('smart_current_patient_id') || 'pat_guest';
+                if (typeof renderStep6Completion === 'function') {
+                    renderStep6Completion(targetId);
                 }
             }
         }, 80);
@@ -8542,20 +8581,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const authPatientObj = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
-    const effectivePatientId = savedPatientId || (currentAssessmentData && currentAssessmentData.patientId) || (authPatientObj && (authPatientObj.patientId || authPatientObj.id)) || (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : null);
+    const effectivePatientId = savedPatientId 
+        || (currentAssessmentData && currentAssessmentData.patientId) 
+        || (authPatientObj && (authPatientObj.patientId || authPatientObj.id)) 
+        || (activePatient && (activePatient.patientId || activePatient.id))
+        || localStorage.getItem('smart_current_patient_id')
+        || localStorage.getItem('smart_last_active_patient_id')
+        || (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : null)
+        || 'pat_guest';
 
-    // توجيه صارم وموثوق لجميع الخطوات على اللابتوب والموبايل دون استثناء
+    // توجيه صارم وموثوق لجميع الخطوات على كافة الأجهزة دون استثناء
     if (savedTargetStep === 6) {
         goToStep(6);
-        if (effectivePatientId) await loadPatientRecoveryDashboard(effectivePatientId);
+        await loadPatientRecoveryDashboard(effectivePatientId);
         return;
     } else if (savedTargetStep === 5) {
         goToStep(5);
-        if (effectivePatientId) await loadPatientRecoveryDashboard(effectivePatientId);
+        await loadPatientRecoveryDashboard(effectivePatientId, 2);
         return;
     } else if (savedTargetStep === 4) {
-        const targetId = effectivePatientId || localStorage.getItem('smart_current_patient_id') || activePatient?.patientId || 'pat_guest';
-        await renderStep4IndependentDay1(targetId);
+        await renderStep4IndependentDay1(effectivePatientId);
         goToStep(4);
         return;
     } else if (savedTargetStep === 3) {
@@ -8572,35 +8617,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // التوجيه الاستدلالي في حال لم تكن الخطوة محددة في التخزين (savedTargetStep === 0)
-    if (effectivePatientId) {
-        const isPlanActive = localStorage.getItem('smart_plan_activated') === 'true' || localStorage.getItem('smart_plan_activated_' + effectivePatientId) === 'true';
-        let logs = [];
-        try { logs = await SmartDB.getPatientDailyLogs(effectivePatientId); } catch(e) {}
+    // التوجيه الاستدلالي المتقدم في حال لم تكن الخطوة محددة في التخزين أو عند إعادة التحميل
+    const isPlanActive = localStorage.getItem('smart_plan_activated') === 'true' || localStorage.getItem('smart_plan_activated_' + effectivePatientId) === 'true';
+    let logs = [];
+    try { logs = await SmartDB.getPatientDailyLogs(effectivePatientId); } catch(e) {}
 
-        if (logs && logs.length >= 7) {
-            await loadPatientRecoveryDashboard(effectivePatientId);
-            goToStep(6);
-            return;
-        } else if ((logs && logs.length > 0) || (p && p.currentSessionDay && p.currentSessionDay >= 2)) {
-            await loadPatientRecoveryDashboard(effectivePatientId);
-            return;
-        } else if (isPlanActive || maxUnlocked >= 4) {
-            await loadPatientRecoveryDashboard(effectivePatientId);
-            return;
-        } else if (currentAssessmentData) {
-            displayDiagnosticReport(currentAssessmentData);
-            goToStep(3);
-            return;
-        }
-    }
-
-    if (currentAssessmentData && maxUnlocked >= 3) {
-        displayDiagnosticReport(currentAssessmentData);
+    if (logs && logs.length >= 7) {
+        goToStep(6);
+        await loadPatientRecoveryDashboard(effectivePatientId);
+        return;
+    } else if ((logs && logs.length >= 1) || (p && p.currentSessionDay && p.currentSessionDay >= 2)) {
+        goToStep(5);
+        await loadPatientRecoveryDashboard(effectivePatientId, logs.length ? Math.min(7, logs.length + 1) : 2);
+        return;
+    } else if (isPlanActive || maxUnlocked >= 4) {
+        await renderStep4IndependentDay1(effectivePatientId);
+        goToStep(4);
+        return;
+    } else if (currentAssessmentData || maxUnlocked >= 3) {
+        if (currentAssessmentData) displayDiagnosticReport(currentAssessmentData);
         goToStep(3);
         return;
-    } else if (currentSelectedPoint && maxUnlocked >= 2) {
-        renderAdaptiveQuestions(currentSelectedPoint.id);
+    } else if (currentSelectedPoint || maxUnlocked >= 2) {
+        if (currentSelectedPoint) renderAdaptiveQuestions(currentSelectedPoint.id);
         goToStep(2);
         return;
     }

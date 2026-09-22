@@ -1782,9 +1782,25 @@
 
         async function forceAppUpdateAndClearCache() {
             try {
-                // حفظ حالة الجلسة الحالية قبل التحديث لمنع العودة للمرحلة 1
-                const curPid = sessionStorage.getItem('scp_active_patient_id') || localStorage.getItem('smart_current_patient_id');
-                if (curPid) localStorage.setItem('smart_current_patient_id', curPid);
+                // حفظ شامل ومحكم لكافة بيانات الجلسة الحالية قبل التحديث لمنع العودة للمرحلة 1 أبداً
+                const curPid = sessionStorage.getItem('scp_active_patient_id') 
+                    || localStorage.getItem('smart_current_patient_id')
+                    || localStorage.getItem('smart_last_active_patient_id')
+                    || (window.activePatient && (window.activePatient.patientId || window.activePatient.id))
+                    || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null);
+
+                if (curPid) {
+                    localStorage.setItem('smart_current_patient_id', curPid);
+                    localStorage.setItem('smart_last_active_patient_id', curPid);
+                    sessionStorage.setItem('scp_active_patient_id', curPid);
+                }
+
+                const curStep = localStorage.getItem('smart_current_step');
+                if (curStep) localStorage.setItem('smart_current_step', curStep);
+
+                if (window.activePatient) {
+                    try { localStorage.setItem('smart_active_patient', JSON.stringify(window.activePatient)); } catch(e) {}
+                }
 
                 sessionStorage.setItem('just_refreshed_toast', 'true');
                 if (typeof showToast === 'function') {
@@ -1806,7 +1822,9 @@
             setTimeout(() => {
                 try {
                     const baseUrl = window.location.href.split('?')[0].split('#')[0];
-                    window.location.replace(baseUrl + '?v=' + Date.now());
+                    const curPid = sessionStorage.getItem('scp_active_patient_id') || localStorage.getItem('smart_current_patient_id');
+                    const pidParam = (curPid && curPid !== 'pat_guest') ? ('&patient_id=' + encodeURIComponent(curPid)) : '';
+                    window.location.replace(baseUrl + '?v=' + Date.now() + pidParam);
                 } catch(e) {
                     window.location.reload();
                 }
@@ -1815,21 +1833,21 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=29.45"></script>
-    <script src="js/cloud-sync.js?v=29.45"></script>
-    <script src="js/geo-tracker.js?v=29.45"></script>
-    <script src="js/database.js?v=29.45"></script>
-    <script src="js/exercise-image-studio.js?v=29.45"></script>
-    <script src="js/exercises-db.js?v=29.45"></script>
-    <script src="js/diagnostic-engine.js?v=29.45"></script>
-    <script src="js/audio-pacer.js?v=29.45"></script>
-    <script src="js/patient-flow.js?v=29.45"></script>
-    <script src="js/admin-engine.js?v=29.45"></script>
-    <script src="js/ai-config.js?v=29.45"></script>
-    <script src="js/ai-engine.js?v=29.45"></script>
-    <script src="js/app.js?v=29.45"></script>
-    <script src="js/text-editor.js?v=29.45"></script>
-    <script src="js/smart-guidance.js?v=29.45"></script>
+    <script src="js/mqtt.min.js?v=29.46"></script>
+    <script src="js/cloud-sync.js?v=29.46"></script>
+    <script src="js/geo-tracker.js?v=29.46"></script>
+    <script src="js/database.js?v=29.46"></script>
+    <script src="js/exercise-image-studio.js?v=29.46"></script>
+    <script src="js/exercises-db.js?v=29.46"></script>
+    <script src="js/diagnostic-engine.js?v=29.46"></script>
+    <script src="js/audio-pacer.js?v=29.46"></script>
+    <script src="js/patient-flow.js?v=29.46"></script>
+    <script src="js/admin-engine.js?v=29.46"></script>
+    <script src="js/ai-config.js?v=29.46"></script>
+    <script src="js/ai-engine.js?v=29.46"></script>
+    <script src="js/app.js?v=29.46"></script>
+    <script src="js/text-editor.js?v=29.46"></script>
+    <script src="js/smart-guidance.js?v=29.46"></script>
 
     <script>
         // مؤشر المراجعين المتفاعلين أونلاين الآن (يتراوح عشوائياً بديناميكية طبيعية بين 40 و 99)
