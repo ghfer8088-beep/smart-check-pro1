@@ -403,15 +403,17 @@ const PatientFlow = (function() {
         }
 
         const cleanPhone = (patient && patient.phone) ? String(patient.phone).replace(/\D/g, '') : '';
-        const forceUnlock = (isAdmin && localStorage.getItem('force_unlock_global') === 'true') || 
+        const forceUnlock = (localStorage.getItem('force_unlock_global') === 'true') || 
                             localStorage.getItem(`force_unlock_${effectiveId}`) === 'true' || 
                             (patientId && localStorage.getItem(`force_unlock_${patientId}`) === 'true') || 
-                            (cleanPhone ? localStorage.getItem(`force_unlock_${cleanPhone}`) === 'true' : false);
+                            (cleanPhone ? localStorage.getItem(`force_unlock_${cleanPhone}`) === 'true' : false) ||
+                            (patient && (patient.forceUnlock === true || patient.force_unlock === true));
         if (forceUnlock) {
             return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
         }
 
-        const customTarget = localStorage.getItem(`custom_target_time_${effectiveId}`) || 
+        const customTarget = (patient && (patient.customTargetTime || patient.custom_target_time)) ||
+                             localStorage.getItem(`custom_target_time_${effectiveId}`) || 
                              (patientId ? localStorage.getItem(`custom_target_time_${patientId}`) : null) || 
                              (cleanPhone ? localStorage.getItem(`custom_target_time_${cleanPhone}`) : null) || 
                              localStorage.getItem('custom_target_time_global');

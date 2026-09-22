@@ -205,10 +205,9 @@ const AdminEngine = (function() {
                         }
                     }
 
-                    // لا نضيف إلا إذا كان هناك هاتف حقيقي أو معرف مريض حقيقي أو اسم مراجع حقيقي
+                    // لا نضيف إلا إذا كان هناك هاتف حقيقي أو اسم مراجع حقيقي
                     const isGenuinePatient = (phoneVal && phoneVal.replace(/\D/g, '').length >= 7) ||
-                                            (notif.patientId && !notif.patientId.startsWith('pat_notif_')) ||
-                                            (nName && nName.length >= 2 && !/^(?:مريض الفحص الذاتي|فحص ذاتي)$/i.test(nName));
+                                            (nName && nName.length >= 2 && !/^(?:مريض الفحص الذاتي|فحص ذاتي|مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|زائر|مجهول)$/i.test(nName));
 
                     if (isGenuinePatient) {
                         const notifPtId = notif.patientId || ('pat_notif_' + (phoneVal ? phoneVal.replace(/\D/g, '') : (Date.now().toString(36) + Math.random().toString(36).substr(2, 4))));
@@ -304,13 +303,9 @@ const AdminEngine = (function() {
                     return 'pt_ph_' + phoneKey;
                 }
 
-                // ج. المعرف الأساسي النظيف
-                const rawId = (pt.patientId || pt.id || '').replace(/(_notif_.*|_test\d*|_cloud_test.*)$/, '').trim();
-                if (rawId && rawId !== 'pat' && rawId !== 'pat_notif') {
-                    return 'pt_id_' + rawId;
-                }
-
-                return 'pt_raw_' + (pt.patientId || pt.id || Math.random().toString(36));
+                // ج. إذا لم يتوفر اسم حقيقي ولا هاتف صالح:
+                // ندمج كافة الفحوصات والزيارات التجريبية مجهولة الهوية في بطاقة موحدة واحدة بدلاً من إنشاء بطاقة مكررة لكل نقرة زائر
+                return 'pt_anonymous_guest_consolidated';
             }
 
             // 3. تجميع كافة السجلات في مجموعات هوية واحدة
@@ -474,10 +469,15 @@ const AdminEngine = (function() {
                 unified.createdAt = earliestDate || new Date().toISOString();
                 unified.lastActiveAt = latestActiveDate || unified.createdAt;
 
-                // التحقق من صحة الاسم
-                if (!unified.name || /^(?:الاسم|الآسم|الإسم)$/i.test(unified.name.trim())) {
-                    unified.name = 'مراجع كريم';
-                    unified.fullName = 'مراجع كريم';
+                // التحقق من صحة الاسم وتنسيقه بدقة لمنع تكرار أسماء مجهولة
+                if (!unified.name || /^(?:الاسم|الآسم|الإسم)$/i.test(unified.name.trim()) || isGenericPatientName(unified.name)) {
+                    if (cleanPhone && cleanPhone.length >= 7) {
+                        unified.name = 'مراجع (' + cleanPhone.slice(-4) + ')';
+                        unified.fullName = unified.name;
+                    } else {
+                        unified.name = 'مراجع زائر (فحص تجريبي)';
+                        unified.fullName = 'مراجع زائر (فحص تجريبي)';
+                    }
                 }
 
                 // ضمان تصنيف الأجهزة بدقة تامة (ياسر استخدم لابتوب، وأي مريض كمبيوتر يظهر كـ Desktop 💻)
