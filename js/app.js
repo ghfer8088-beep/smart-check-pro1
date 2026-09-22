@@ -6897,9 +6897,10 @@ function _isActiveAiChatSession() {
     return hasMessages;
 }
 
-// إعادة التحميل الآمنة مع إشعار بسيط
+// إعادة التحميل الآمنة مع إشعار بسيط وحفظ النسخة المحدثة
 function _doSafeReload() {
     sessionStorage.setItem('just_refreshed_toast', 'true');
+    sessionStorage.setItem('scp_last_reloaded_ver', CURRENT_APP_VERSION);
     window.location.reload(true);
 }
 
@@ -6954,21 +6955,30 @@ window._applyUpdateNow = function() {
     _doSafeReload();
 };
 
-const CURRENT_APP_VERSION = 'v29.45';
+const CURRENT_APP_VERSION = 'v29.46';
 let _versionCheckInProgress = false;
 
-// فحص مباشر وفوري لرقم الإصدار المنشور على السيرفر/GitHub
+// فحص مباشر وفوري لرقم الإصدار المنشور على السيرفر/GitHub مع حماية مانعة للتكرار
 async function _checkRemoteVersionUpdate() {
     if (_versionCheckInProgress || _autoReloadTriggered) return;
+    // صمام أمان: إذا كان المراجع قد أعاد التحميل للتو، تأجيل الفحص لمنع أي حلقة تكرار
+    if (sessionStorage.getItem('just_refreshed_toast') === 'true') return;
+
     _versionCheckInProgress = true;
     try {
         const res = await fetch('sw.js?_chk=' + Date.now(), { cache: 'no-store' });
         if (res && res.ok) {
             const text = await res.text();
             const match = text.match(/CACHE_NAME\s*=\s*['"]wada3an-alam-(v[\d\.]+)['"]/);
-            if (match && match[1] && match[1] !== CURRENT_APP_VERSION) {
-                console.log('[UpdateChecker] New system version detected:', match[1], 'current:', CURRENT_APP_VERSION);
-                _triggerAutoReloadCountdown();
+            if (match && match[1]) {
+                const remoteVersion = match[1];
+                const lastReloadedVersion = sessionStorage.getItem('scp_last_reloaded_ver');
+
+                // تفعيل التحديث فقط إذا كانت النسخة أحدث ومختلفة عن النسخة الحالية ولم يتم إعادة التحميل لها مسبقاً
+                if (remoteVersion !== CURRENT_APP_VERSION && remoteVersion !== lastReloadedVersion) {
+                    console.log('[UpdateChecker] New system version detected:', remoteVersion, 'current:', CURRENT_APP_VERSION);
+                    _triggerAutoReloadCountdown(remoteVersion);
+                }
             }
         }
     } catch (e) {
@@ -6978,9 +6988,14 @@ async function _checkRemoteVersionUpdate() {
 }
 window._checkRemoteVersionUpdate = _checkRemoteVersionUpdate;
 
-function _triggerAutoReloadCountdown() {
+function _triggerAutoReloadCountdown(targetVer = null) {
     if (_autoReloadTriggered) return;
+    if (targetVer && sessionStorage.getItem('scp_last_reloaded_ver') === targetVer) return;
+
     _autoReloadTriggered = true;
+    if (targetVer) {
+        sessionStorage.setItem('scp_last_reloaded_ver', targetVer);
+    }
 
     // 🛡️ إذا كان المريض في محادثة نشطة → لا تقطعها، أخبره بلطف
     if (_isActiveAiChatSession()) {
@@ -6988,7 +7003,7 @@ function _triggerAutoReloadCountdown() {
         return;
     }
 
-    // ✅ المريض في خطوة آمنة → أعد التحميل مع عداد مرئي
+    // ✅ المريض في خطوة آمنة → أعد التحميل مع عداد مرئي لمرة واحدة فقط
     const overlay = document.createElement('div');
     overlay.id = 'auto-update-overlay';
     overlay.style.cssText = `
