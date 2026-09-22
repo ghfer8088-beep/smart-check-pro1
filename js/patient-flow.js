@@ -553,6 +553,7 @@ const PatientFlow = (function() {
                 clearInterval(activeExerciseTimerInterval);
                 buttonEl.dataset.running = 'false';
                 buttonEl.dataset.remaining = total;
+                buttonEl.dataset.completed = 'true';
                 buttonEl.innerHTML = `<span>✅ تم إنجاز التمرين بنجاح! أحسنت</span>`;
                 buttonEl.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
                 buttonEl.style.color = '#ffffff';

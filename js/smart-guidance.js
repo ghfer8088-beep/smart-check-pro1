@@ -476,42 +476,49 @@ const SmartGuidance = (function() {
 
         if (!btn) return;
 
+        const cards = Array.from(document.querySelectorAll('#step-section-4 .clinical-exercise-card'));
+        const totalEx = cards.length;
+        const doneEx = cards.filter(c => {
+            const b = c.querySelector('button.btn-exercise-timer');
+            return b && (b.style.background.includes('10b981') || b.innerHTML.includes('تم إنجاز') || b.dataset.completed === 'true');
+        }).length;
         const isRunning = !!document.querySelector('#step-section-4 button.btn-exercise-timer[data-running="true"]');
-        const isDone = hasExercisedInSession || !!document.querySelector('#step-section-4 button.btn-exercise-timer[style*="10b981"]');
+        const allDone = hasExercisedInSession || (totalEx > 0 && doneEx >= totalEx);
 
         if (isRunning) {
             // الحالة 2: تمرين جارٍ حالياً
             activeSubState = 'step4_exercising';
             updateStageFlowBanner(4, 1);
             if (iconEl) iconEl.textContent = '⏱️';
-            if (subEl) subEl.textContent = 'المرحلة 4: جاري أداء التمرين الحركي';
-            if (mainEl) mainEl.textContent = 'تنفس بعمق مع كل حركة.. استمر حتى اكتمال المؤقت دون إجهاد';
+            if (subEl) subEl.textContent = 'المرحلة 4: مؤقت التمرين الحركي يعمل الآن';
+            if (mainEl) mainEl.textContent = 'تنفس بعمق مع كل حركة.. استمر حتى اكتمال المؤقت بالتكنيك السليم';
 
             btn.className = 'sticky-guidance-action-btn state-pending';
             if (btnIcon) btnIcon.textContent = '⏱️';
             if (btnText) btnText.textContent = 'مؤقت التمرين يعمل الآن...';
-        } else if (isDone) {
-            // الحالة 3: أتم التمارين وبات جاهزاً لتوثيق الجلسة
+        } else if (allDone) {
+            // الحالة 3: أتم كافة التمارين وبات جاهزاً لتوثيق الجلسة
             activeSubState = 'step4_done';
             updateStageFlowBanner(4, 2);
             if (iconEl) iconEl.textContent = '✅';
             if (subEl) subEl.textContent = 'المرحلة 4 (خطوة 2 من 2): توثيق إنجاز اليوم الأول';
-            if (mainEl) mainEl.textContent = 'أحسنت! بعد إتمام التمارين، اضغط أدناه لتوثيق الجلسة وبدء فترة الاستشفاء (24 س)';
+            if (mainEl) mainEl.textContent = '🎉 أحسنت! أتممت كافة تمارين اليوم الأول.. اضغط أدناه لتوثيق الجلسة وبدء الاستشفاء (24 س)';
 
             btn.className = 'sticky-guidance-action-btn state-ready';
             if (btnIcon) btnIcon.textContent = '✅';
             if (btnText) btnText.textContent = 'توثيق إنجاز اليوم الأول وبدء الاستشفاء ❯';
         } else {
-            // الحالة 1: وصل للتو للمرحلة، توجيهه للتعليمات وبدء أول تمرين بدلاً من التخطي المباشر
+            // الحالة 1: شرط سريري إلزامي لأداء التمارين المقترحة أولاً
             activeSubState = 'step4_initial';
             updateStageFlowBanner(4, 1);
-            if (iconEl) iconEl.textContent = '📖';
-            if (subEl) subEl.textContent = 'المرحلة 4 (خطوة 1 من 2): راجع التعليمات والتمارين';
-            if (mainEl) mainEl.textContent = 'اطّلع على بروتوكول الأمان وتوصيات المعالج، ثم شغّل مؤقت التمرين الأول أدناه';
+            if (iconEl) iconEl.textContent = '🏋️';
+            const remainingCount = totalEx > 0 ? (totalEx - doneEx) : 1;
+            if (subEl) subEl.textContent = `المرحلة 4 (خطوة 1 من 2): أداء التمارين المقررة (متبقي ${remainingCount} من ${totalEx || 3})`;
+            if (mainEl) mainEl.textContent = '⚠️ شرط سريري: يرجى أداء التمارين وتشغيل مؤقتاتها المقترحة أدناه قبل توثيق الجلسة';
 
             btn.className = 'sticky-guidance-action-btn state-gold';
             if (btnIcon) btnIcon.textContent = '⏱️';
-            if (btnText) btnText.textContent = 'الانتقال للتمارين وتشغيل المؤقت ❯';
+            if (btnText) btnText.textContent = 'تشغيل مؤقت التمرين التالي ❯';
         }
     }
 
@@ -734,36 +741,54 @@ const SmartGuidance = (function() {
             }
 
             case 4: {
-                const patientId = (typeof activePatient !== 'undefined' && activePatient?.patientId) || (typeof SmartDB !== 'undefined' && SmartDB.getCurrentSessionPatientId ? SmartDB.getCurrentSessionPatientId() : null);
+                const patientId = (typeof activePatient !== 'undefined' && activePatient?.patientId) || (typeof SmartDB !== 'undefined' && SmartDB.getCurrentSessionPatientId ? SmartDB.getCurrentSessionPatientId() : null) || 'pat_guest';
 
                 if (activeSubState === 'step4_done') {
                     // أتم التمارين -> فتح نافذة التوثيق
-                    const completeBtn = document.querySelector('#step-section-4 button[onclick*="openSessionAssessmentModal"]') || document.getElementById('btn-complete-day1-session');
-                    if (completeBtn) {
-                        completeBtn.click();
-                    } else if (typeof openSessionAssessmentModal === 'function') {
-                        openSessionAssessmentModal(patientId || 'P-GUEST', 1);
+                    if (typeof handleStep4CompletionClick === 'function') {
+                        handleStep4CompletionClick(patientId);
+                    } else {
+                        const completeBtn = document.querySelector('#step-section-4 button[onclick*="handleStep4CompletionClick"]') || document.getElementById('btn-complete-day1-session') || document.querySelector('#step-section-4 button[onclick*="openSessionAssessmentModal"]');
+                        if (completeBtn) {
+                            completeBtn.click();
+                        } else if (typeof openSessionAssessmentModal === 'function') {
+                            openSessionAssessmentModal(patientId, 1);
+                        }
                     }
                 } else if (activeSubState === 'step4_exercising') {
                     // تمرين يعمل -> التمرير للتمرين الجاري
                     const activeEx = document.querySelector('#step-section-4 button.btn-exercise-timer[data-running="true"]')?.closest('.clinical-exercise-card');
                     if (activeEx) activeEx.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 } else {
-                    // الحالة المبدئية: ضمان ظهور قسم المرحلة 4 أولاً ثم التمرير إلى أول تمرين وتشغيل مؤقته
+                    // التحقق من ظهور قسم المرحلة 4 أولاً
                     const step4Sec = document.getElementById('step-section-4');
                     if (step4Sec && (step4Sec.style.display === 'none' || window.getComputedStyle(step4Sec).display === 'none')) {
                         if (typeof goToStep === 'function') goToStep(4);
                     }
-                    const firstEx = document.querySelector('#step-section-4 .clinical-exercise-card');
-                    if (firstEx) {
-                        firstEx.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        const timerBtn = firstEx.querySelector('.btn-exercise-timer');
+
+                    // العثور على أول تمرين لم يُنجز بعد والتمرير إليه وتشغيل مؤقته
+                    const uncompletedCards = Array.from(document.querySelectorAll('#step-section-4 .clinical-exercise-card')).filter(c => {
+                        const btnEl = c.querySelector('button.btn-exercise-timer');
+                        return btnEl && !btnEl.style.background.includes('10b981') && !btnEl.innerHTML.includes('تم إنجاز') && btnEl.dataset.completed !== 'true';
+                    });
+
+                    const targetCard = uncompletedCards.length > 0 ? uncompletedCards[0] : document.querySelector('#step-section-4 .clinical-exercise-card');
+                    if (targetCard) {
+                        targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        targetCard.style.outline = '2px solid #eab308';
+                        targetCard.style.boxShadow = '0 0 25px rgba(234, 179, 8, 0.6)';
+                        setTimeout(() => {
+                            targetCard.style.outline = '';
+                            targetCard.style.boxShadow = '';
+                        }, 2500);
+
+                        const timerBtn = targetCard.querySelector('.btn-exercise-timer');
                         if (timerBtn && timerBtn.dataset.running !== 'true') {
                             timerBtn.click();
                         }
                     }
                     if (typeof showToast === 'function') {
-                        showToast('🏋️ تفضل بأداء تمرين اليوم الأول مع المؤقت الصوتي', 'info', 3500);
+                        showToast('⏱️ تفضل بأداء التمرين المقترح مع المؤقت الصوتي والتكنيك السليم 🌿', 'info', 3500);
                     }
                 }
                 break;

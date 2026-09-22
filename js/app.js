@@ -1009,11 +1009,7 @@ async function handleStepperClick(stepNum) {
         }
         goToStep(3);
     } else if (stepNum === 4) {
-        if (savedPatientId) {
-            await renderStep4IndependentDay1(savedPatientId);
-        } else {
-            goToStep(4);
-        }
+        await renderStep4IndependentDay1(savedPatientId || activePatient?.patientId || 'pat_guest');
     } else if (stepNum === 5) {
         if (savedPatientId) {
             await renderStep5SessionsDashboard(savedPatientId);
@@ -5405,7 +5401,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                 <div style="color: #cbd5e1; font-size: 0.9em; margin-bottom: 20px; line-height: 1.7; max-width: 600px; margin-left: auto; margin-right: auto;">
                     بعد انتهائك من أداء تمارين اليوم الأول، انقر على الزر أدناه لتوثيق إنجاز الجلسة الأولى وبدء فترة الاستشفاء الحيوي للأنسجة (24 ساعة). ستنتقل بعدها مباشرة لمتابعة باقي الجلسات (2 إلى 7) مع التقييم اليومي المعتمد.
                 </div>
-                <button type="button" onclick="openSessionAssessmentModal('${patientId}', 1)" class="btn-plan-royal-card" style="margin: 0 auto; max-width: 620px; width: 100%;">
+                <button type="button" id="btn-complete-day1-session" onclick="handleStep4CompletionClick('${patientId}')" class="btn-plan-royal-card" style="margin: 0 auto; max-width: 620px; width: 100%;">
                     <div class="royal-card-halo"></div>
                     <div class="royal-card-shimmer"></div>
                     <div class="royal-badge-pill">
@@ -5425,6 +5421,11 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                         </div>
                     </div>
                 </button>
+                <div style="margin-top: 12px; text-align: center;">
+                    <button type="button" onclick="handleStep4CompletionClick('${patientId}', true)" style="background: none; border: none; color: #94a3b8; font-size: 0.84em; text-decoration: underline; cursor: pointer; padding: 4px 10px; transition: 0.2s;">
+                        أديت التمارين مسبقاً خارج الأداة؟ انقر هنا للمتابعة والتوثيق المباشر ❯
+                    </button>
+                </div>
             </div>
 
             <!-- خدمة الزيارات المنزلية واستشارة المعالج -->
@@ -6326,12 +6327,76 @@ function showFutureSessionLockedPopup(currentDay, targetDay) {
         setTimeout(() => popup.remove(), 260);
     }, 2000);
 }
-window.showFutureSessionLockedPopup = showFutureSessionLockedPopup;
+// التحقق السريري من إتمام تمارين اليوم الأول وتوجيه المريض قبل فتح نافذة التوثيق
+function handleStep4CompletionClick(patientId, forceSkip = false) {
+    if (!forceSkip) {
+        const timerBtns = Array.from(document.querySelectorAll('#step-section-4 button.btn-exercise-timer'));
+        const uncompleted = timerBtns.filter(btn => {
+            const isFinished = btn.style.background.includes('10b981') || btn.innerHTML.includes('تم إنجاز') || btn.dataset.completed === 'true';
+            return !isFinished;
+        });
+
+        if (uncompleted.length > 0) {
+            const firstUnfinished = uncompleted[0];
+            const cardEl = firstUnfinished.closest('.clinical-exercise-card');
+            if (cardEl) {
+                cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                cardEl.style.outline = '2px solid #eab308';
+                cardEl.style.boxShadow = '0 0 25px rgba(234, 179, 8, 0.6)';
+                setTimeout(() => {
+                    cardEl.style.outline = '';
+                    cardEl.style.boxShadow = '';
+                }, 2500);
+            }
+            if (typeof showToast === 'function') {
+                showToast(`⚠️ شرط سريري إلزامي: يرجى أداء التمارين وتشغيل مؤقت كل تمرين أولاً (متبقي ${uncompleted.length} تمرين) لضمان فائدتك العلاجية 🏋️`, 'warning', 4500);
+            }
+            return;
+        }
+    }
+
+    const effectiveId = patientId || (typeof activePatient !== 'undefined' && activePatient?.patientId) || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null) || 'pat_guest';
+    openSessionAssessmentModal(effectiveId, 1);
+}
+window.handleStep4CompletionClick = handleStep4CompletionClick;
 
 // فتح نافذة التقييم الكبرى المستقلة للجلسة المنتهية
 async function openSessionAssessmentModal(patientId, sessionNumber) {
-    const sessionData = await PatientFlow.initPatientSession(patientId);
-    if (!sessionData) return;
+    let sessionData = null;
+    if (patientId) {
+        try {
+            sessionData = await PatientFlow.initPatientSession(patientId);
+        } catch(e) {
+            console.warn('initPatientSession error in modal:', e);
+        }
+    }
+    if (!sessionData || !sessionData.patient) {
+        const curAss = currentAssessmentData || (function() {
+            try { return JSON.parse(localStorage.getItem('smart_current_assessment')); } catch(e) { return null; }
+        })();
+        const authP = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+        const curP = window.activePatient || activePatient;
+        const fallbackId = patientId || authP?.patientId || curP?.patientId || ('P-' + Date.now().toString().slice(-6));
+        const resolvedPain = (typeof resolvePainAreaTitle === 'function') ? resolvePainAreaTitle(null, curAss, (typeof currentSelectedPoint !== 'undefined' ? currentSelectedPoint : null)) : (curAss?.painAreaTitle || 'الفقرات القطنية وأسفل الظهر');
+        sessionData = {
+            patient: curP || {
+                patientId: fallbackId,
+                id: fallbackId,
+                name: authP?.name || curAss?.patientName || 'المراجع المحترم',
+                phone: authP?.phone || curAss?.patientPhone || '',
+                painArea: resolvedPain,
+                painAreaTitle: resolvedPain,
+                painPointId: curAss?.pointId || 'lumbar_spine',
+                painLevel: curAss?.painSeverity || 7,
+                isPlanActivated: true
+            },
+            latestAssessment: curAss || { pointId: 'lumbar_spine', primaryDiagnosisKey: '', painAreaTitle: resolvedPain },
+            dailyLogs: [],
+            currentSessionDay: sessionNumber || 1,
+            isPlanCompleted: false,
+            stageTitle: 'مرحلة تفريغ الضغط الميكانيكي وتهيئة الأنسجة'
+        };
+    }
 
     const modal = document.getElementById('session-assessment-modal');
     const content = document.getElementById('session-assessment-modal-content');
@@ -6834,7 +6899,7 @@ window._applyUpdateNow = function() {
     _doSafeReload();
 };
 
-const CURRENT_APP_VERSION = 'v29.38';
+const CURRENT_APP_VERSION = 'v29.39';
 let _versionCheckInProgress = false;
 
 // فحص مباشر وفوري لرقم الإصدار المنشور على السيرفر/GitHub
@@ -7212,6 +7277,19 @@ function goToStep(stepNum) {
                 reportEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }, 100);
+    }
+
+    // إذا دخل المراجع الخطوة 4 (تمارين اليوم الأول)، التحقق من رسم التمارين فوراً وعدم ترك الشاشة فارغة
+    if (stepNum === 4) {
+        setTimeout(() => {
+            const day1Box = document.getElementById('step4-day1-container');
+            if (day1Box && (!day1Box.children.length || !day1Box.querySelector('.clinical-exercise-card'))) {
+                const targetId = (typeof activePatient !== 'undefined' && activePatient?.patientId) || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null) || localStorage.getItem('smart_current_patient_id') || 'pat_guest';
+                if (typeof renderStep4IndependentDay1 === 'function') {
+                    renderStep4IndependentDay1(targetId);
+                }
+            }
+        }, 80);
     }
 
     // إذا دخل المراجع الخطوة 1 (المجسم)، إظهار شريط التوجيه وبنر استئناف الجلسة الجارية وضمان رسم النقاط فوراً
@@ -8432,10 +8510,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (effectivePatientId) await loadPatientRecoveryDashboard(effectivePatientId);
         return;
     } else if (savedTargetStep === 4) {
+        const targetId = effectivePatientId || localStorage.getItem('smart_current_patient_id') || activePatient?.patientId || 'pat_guest';
+        await renderStep4IndependentDay1(targetId);
         goToStep(4);
-        if (effectivePatientId) {
-            await renderStep4IndependentDay1(effectivePatientId);
-        }
         return;
     } else if (savedTargetStep === 3) {
         if (currentAssessmentData) {
