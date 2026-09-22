@@ -5183,7 +5183,10 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
 
     if (!sessionData && patientId) {
         try {
-            sessionData = await PatientFlow.initPatientSession(patientId);
+            sessionData = await Promise.race([
+                PatientFlow.initPatientSession(patientId),
+                new Promise(resolve => setTimeout(() => resolve(null), 800))
+            ]);
         } catch(e) {
             console.warn('initPatientSession error in Step 4:', e);
         }
@@ -5207,7 +5210,8 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
             latestAssessment: curAss || { pointId: 'lumbar_spine', primaryDiagnosisKey: '' },
             dailyLogs: [],
             currentSessionDay: 1,
-            isPlanCompleted: false
+            isPlanCompleted: false,
+            stageTitle: 'مرحلة تفريغ الضغط الميكانيكي وتهيئة الأنسجة'
         };
     }
 
@@ -6904,7 +6908,7 @@ window._applyUpdateNow = function() {
     _doSafeReload();
 };
 
-const CURRENT_APP_VERSION = 'v29.43';
+const CURRENT_APP_VERSION = 'v29.44';
 let _versionCheckInProgress = false;
 
 // فحص مباشر وفوري لرقم الإصدار المنشور على السيرفر/GitHub

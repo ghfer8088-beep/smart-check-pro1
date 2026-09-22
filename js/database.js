@@ -9,52 +9,82 @@ const SmartDB = (function() {
 
     // فتح وتهيئة قاعدة البيانات
     function openDB() {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             if (dbInstance) return resolve(dbInstance);
+            if (typeof indexedDB === 'undefined') return resolve(null);
 
-            const req = indexedDB.open(DB_NAME, DB_VERSION);
-
-            req.onupgradeneeded = (e) => {
-                const db = e.target.result;
-                
-                // 1. جدول المرضى
-                if (!db.objectStoreNames.contains('patients')) {
-                    const patientStore = db.createObjectStore('patients', { keyPath: 'patientId' });
-                    patientStore.createIndex('phone', 'phone', { unique: false });
-                    patientStore.createIndex('createdAt', 'createdAt', { unique: false });
-                }
-
-                // 2. جدول التقييمات والتشخيصات
-                if (!db.objectStoreNames.contains('assessments')) {
-                    const assessStore = db.createObjectStore('assessments', { keyPath: 'assessmentId', autoIncrement: true });
-                    assessStore.createIndex('patientId', 'patientId', { unique: false });
-                    assessStore.createIndex('date', 'date', { unique: false });
-                }
-
-                // 3. جدول المتابعة والسجلات اليومية
-                if (!db.objectStoreNames.contains('dailyLogs')) {
-                    const logStore = db.createObjectStore('dailyLogs', { keyPath: 'logId', autoIncrement: true });
-                    logStore.createIndex('patientId', 'patientId', { unique: false });
-                    logStore.createIndex('sessionNumber', 'sessionNumber', { unique: false });
-                    logStore.createIndex('date', 'date', { unique: false });
-                }
-
-                // 4. جدول إعدادات النظام
-                if (!db.objectStoreNames.contains('settings')) {
-                    db.createObjectStore('settings', { keyPath: 'key' });
+            let isResolved = false;
+            const safeResolve = (val) => {
+                if (!isResolved) {
+                    isResolved = true;
+                    resolve(val);
                 }
             };
 
-            req.onsuccess = (e) => {
-                dbInstance = e.target.result;
-                try { purgeDummyAssessments(); } catch(err) {}
-                resolve(dbInstance);
-            };
+            // حماية صارمة: تايم أوت 1 ثانية في حال تجمد IndexedDB أو تشابك الاتصالات
+            const timeoutTimer = setTimeout(() => {
+                console.warn('[SmartDB] openDB timeout, falling back gracefully');
+                safeResolve(dbInstance || null);
+            }, 1000);
 
-            req.onerror = (e) => {
-                console.error('IndexedDB Error:', e);
-                reject(e);
-            };
+            try {
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+
+                req.onblocked = () => {
+                    console.warn('[SmartDB] IndexedDB blocked by concurrent connections');
+                    clearTimeout(timeoutTimer);
+                    safeResolve(dbInstance || null);
+                };
+
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    
+                    // 1. جدول المرضى
+                    if (!db.objectStoreNames.contains('patients')) {
+                        const patientStore = db.createObjectStore('patients', { keyPath: 'patientId' });
+                        patientStore.createIndex('phone', 'phone', { unique: false });
+                        patientStore.createIndex('createdAt', 'createdAt', { unique: false });
+                    }
+
+                    // 2. جدول التقييمات والتشخيصات
+                    if (!db.objectStoreNames.contains('assessments')) {
+                        const assessStore = db.createObjectStore('assessments', { keyPath: 'assessmentId', autoIncrement: true });
+                        assessStore.createIndex('patientId', 'patientId', { unique: false });
+                        assessStore.createIndex('date', 'date', { unique: false });
+                    }
+
+                    // 3. جدول المتابعة والسجلات اليومية
+                    if (!db.objectStoreNames.contains('dailyLogs')) {
+                        const logStore = db.createObjectStore('dailyLogs', { keyPath: 'logId', autoIncrement: true });
+                        logStore.createIndex('patientId', 'patientId', { unique: false });
+                        logStore.createIndex('sessionNumber', 'sessionNumber', { unique: false });
+                        logStore.createIndex('date', 'date', { unique: false });
+                    }
+
+                    // 4. جدول إعدادات النظام
+                    if (!db.objectStoreNames.contains('settings')) {
+                        db.createObjectStore('settings', { keyPath: 'key' });
+                    }
+                };
+
+                req.onsuccess = (e) => {
+                    clearTimeout(timeoutTimer);
+                    dbInstance = e.target.result;
+                    setTimeout(() => {
+                        try { purgeDummyAssessments(); } catch(err) {}
+                    }, 3000);
+                    safeResolve(dbInstance);
+                };
+
+                req.onerror = (e) => {
+                    clearTimeout(timeoutTimer);
+                    console.warn('[SmartDB] IndexedDB error:', e);
+                    safeResolve(null);
+                };
+            } catch(e) {
+                clearTimeout(timeoutTimer);
+                safeResolve(null);
+            }
         });
     }
 
@@ -280,13 +310,17 @@ const SmartDB = (function() {
 
         try {
             const db = await openDB();
-            return new Promise((resolve) => {
-                const tx = db.transaction('patients', 'readonly');
-                const store = tx.objectStore('patients');
-                const req = store.get(patientId);
-                req.onsuccess = () => resolve(sanitizePatientData(req.result || lsPatient));
-                req.onerror = () => resolve(sanitizePatientData(lsPatient));
-            });
+            if (!db) return sanitizePatientData(lsPatient);
+            return await Promise.race([
+                new Promise((resolve) => {
+                    const tx = db.transaction('patients', 'readonly');
+                    const store = tx.objectStore('patients');
+                    const req = store.get(patientId);
+                    req.onsuccess = () => resolve(sanitizePatientData(req.result || lsPatient));
+                    req.onerror = () => resolve(sanitizePatientData(lsPatient));
+                }),
+                new Promise(resolve => setTimeout(() => resolve(sanitizePatientData(lsPatient)), 600))
+            ]);
         } catch(e) {
             return sanitizePatientData(lsPatient);
         }
@@ -713,21 +747,25 @@ const SmartDB = (function() {
 
         try {
             const db = await openDB();
-            return new Promise((resolve) => {
-                const tx = db.transaction('assessments', 'readonly');
-                const index = tx.objectStore('assessments').index('patientId');
-                const req = index.getAll(patientId);
-                req.onsuccess = () => {
-                    const dbAssessments = (req.result || []).filter(a => 
-                        !a.autoHealed && 
-                        a.primaryDiagnosis !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة' && 
-                        a.painLocation !== 'العمود الفقري ومفاصل الحركة'
-                    );
-                    if (dbAssessments.length > 0) return resolve(dbAssessments);
-                    resolve(lsAssessments);
-                };
-                req.onerror = () => resolve(lsAssessments);
-            });
+            if (!db) return lsAssessments;
+            return await Promise.race([
+                new Promise((resolve) => {
+                    const tx = db.transaction('assessments', 'readonly');
+                    const index = tx.objectStore('assessments').index('patientId');
+                    const req = index.getAll(patientId);
+                    req.onsuccess = () => {
+                        const dbAssessments = (req.result || []).filter(a => 
+                            !a.autoHealed && 
+                            a.primaryDiagnosis !== 'إجهاد ميكانيكي وظيفي في الأنسجة الداعمة' && 
+                            a.painLocation !== 'العمود الفقري ومفاصل الحركة'
+                        );
+                        if (dbAssessments.length > 0) return resolve(dbAssessments);
+                        resolve(lsAssessments);
+                    };
+                    req.onerror = () => resolve(lsAssessments);
+                }),
+                new Promise(resolve => setTimeout(() => resolve(lsAssessments), 600))
+            ]);
         } catch(e) {
             return lsAssessments;
         }
@@ -859,53 +897,54 @@ const SmartDB = (function() {
             }
         } catch(e) {}
 
-        try {
-            const db = await openDB();
-            return new Promise((resolve) => {
-                const tx = db.transaction('dailyLogs', 'readonly');
-                const index = tx.objectStore('dailyLogs').index('patientId');
-                const req = index.getAll(patientId);
-                req.onsuccess = () => {
-                    const dbLogs = req.result || [];
-                    const mergedMap = new Map();
-                    // 1. الجلسات السحابية
-                    cloudLogs.forEach(l => {
-                        if (!l) return;
-                        const key = (typeof l.sessionNumber === 'number') ? `sess_${l.sessionNumber}` : (l.logId || `date_${l.date}`);
-                        mergedMap.set(key, l);
-                    });
-                    // 2. الجلسات المحلية في LocalStorage
-                    lsLogs.forEach(l => {
-                        if (!l) return;
-                        const key = (typeof l.sessionNumber === 'number') ? `sess_${l.sessionNumber}` : (l.logId || `date_${l.date}`);
-                        mergedMap.set(key, { ...(mergedMap.get(key) || {}), ...l });
-                    });
-                    // 3. الجلسات في IndexedDB
-                    dbLogs.forEach(l => {
-                        if (!l) return;
-                        const key = (typeof l.sessionNumber === 'number') ? `sess_${l.sessionNumber}` : (l.logId || `date_${l.date}`);
-                        mergedMap.set(key, { ...(mergedMap.get(key) || {}), ...l });
-                    });
-                    const mergedLogs = Array.from(mergedMap.values());
-                    mergedLogs.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
-                    resolve(mergedLogs);
-                };
-                req.onerror = () => {
-                    const fallbackMap = new Map();
-                    cloudLogs.forEach(l => { if (l && l.sessionNumber) fallbackMap.set(l.sessionNumber, l); });
-                    lsLogs.forEach(l => { if (l && l.sessionNumber) fallbackMap.set(l.sessionNumber, l); });
-                    const res = Array.from(fallbackMap.values());
-                    res.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
-                    resolve(res);
-                };
-            });
-        } catch(e) {
+        const fallbackResolve = () => {
             const fallbackMap = new Map();
             cloudLogs.forEach(l => { if (l && l.sessionNumber) fallbackMap.set(l.sessionNumber, l); });
             lsLogs.forEach(l => { if (l && l.sessionNumber) fallbackMap.set(l.sessionNumber, l); });
             const res = Array.from(fallbackMap.values());
             res.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
             return res;
+        };
+
+        try {
+            const db = await openDB();
+            if (!db) return fallbackResolve();
+            return await Promise.race([
+                new Promise((resolve) => {
+                    const tx = db.transaction('dailyLogs', 'readonly');
+                    const index = tx.objectStore('dailyLogs').index('patientId');
+                    const req = index.getAll(patientId);
+                    req.onsuccess = () => {
+                        const dbLogs = req.result || [];
+                        const mergedMap = new Map();
+                        // 1. الجلسات السحابية
+                        cloudLogs.forEach(l => {
+                            if (!l) return;
+                            const key = (typeof l.sessionNumber === 'number') ? `sess_${l.sessionNumber}` : (l.logId || `date_${l.date}`);
+                            mergedMap.set(key, l);
+                        });
+                        // 2. الجلسات المحلية في LocalStorage
+                        lsLogs.forEach(l => {
+                            if (!l) return;
+                            const key = (typeof l.sessionNumber === 'number') ? `sess_${l.sessionNumber}` : (l.logId || `date_${l.date}`);
+                            mergedMap.set(key, { ...(mergedMap.get(key) || {}), ...l });
+                        });
+                        // 3. الجلسات في IndexedDB
+                        dbLogs.forEach(l => {
+                            if (!l) return;
+                            const key = (typeof l.sessionNumber === 'number') ? `sess_${l.sessionNumber}` : (l.logId || `date_${l.date}`);
+                            mergedMap.set(key, { ...(mergedMap.get(key) || {}), ...l });
+                        });
+                        const mergedLogs = Array.from(mergedMap.values());
+                        mergedLogs.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
+                        resolve(mergedLogs);
+                    };
+                    req.onerror = () => resolve(fallbackResolve());
+                }),
+                new Promise(resolve => setTimeout(() => resolve(fallbackResolve()), 600))
+            ]);
+        } catch(e) {
+            return fallbackResolve();
         }
     }
 
