@@ -373,32 +373,65 @@ const PatientFlow = (function() {
 
     // حساب حالة القفل الزمني للجلسة
     async function getSessionLockStatus(patientId) {
-        const patient = await SmartDB.getPatient(patientId);
-        if (!patient) return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0 };
+        let effectiveId = patientId;
+        let patient = null;
 
+        if (effectiveId && effectiveId !== 'pat_guest') {
+            try { patient = await SmartDB.getPatient(effectiveId); } catch(e) {}
+        }
+        if (!patient && typeof activePatient !== 'undefined' && activePatient) {
+            patient = activePatient;
+            effectiveId = activePatient.patientId || activePatient.id || effectiveId;
+        }
+        if (!patient) {
+            try {
+                const raw = localStorage.getItem('smart_active_patient');
+                if (raw) {
+                    patient = JSON.parse(raw);
+                    if (patient) effectiveId = patient.patientId || patient.id || effectiveId;
+                }
+            } catch(e) {}
+        }
+        if (!effectiveId) {
+            effectiveId = (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null) || 'pat_guest';
+        }
+
+        const isAdmin = (typeof isAdminSession === 'function' && isAdminSession()) || window.location.search.includes('admin=true');
         const isDev = await SmartDB.getSetting('isDeveloperMode', false);
-        if (isDev) {
+        if (isDev && isAdmin) {
             return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, isDev: true };
         }
 
         const cleanPhone = (patient && patient.phone) ? String(patient.phone).replace(/\D/g, '') : '';
-        const forceUnlock = localStorage.getItem('force_unlock_global') === 'true' || localStorage.getItem(`force_unlock_${patientId}`) === 'true' || (cleanPhone ? localStorage.getItem(`force_unlock_${cleanPhone}`) === 'true' : false);
+        const forceUnlock = (isAdmin && localStorage.getItem('force_unlock_global') === 'true') || 
+                            localStorage.getItem(`force_unlock_${effectiveId}`) === 'true' || 
+                            (patientId && localStorage.getItem(`force_unlock_${patientId}`) === 'true') || 
+                            (cleanPhone ? localStorage.getItem(`force_unlock_${cleanPhone}`) === 'true' : false);
         if (forceUnlock) {
             return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
         }
 
-        const customTarget = localStorage.getItem(`custom_target_time_${patientId}`) || (cleanPhone ? localStorage.getItem(`custom_target_time_${cleanPhone}`) : null) || localStorage.getItem('custom_target_time_global');
+        const customTarget = localStorage.getItem(`custom_target_time_${effectiveId}`) || 
+                             (patientId ? localStorage.getItem(`custom_target_time_${patientId}`) : null) || 
+                             (cleanPhone ? localStorage.getItem(`custom_target_time_${cleanPhone}`) : null) || 
+                             localStorage.getItem('custom_target_time_global');
         if (customTarget) {
             const targetMs = parseInt(customTarget);
             const now = Date.now();
             const diff = targetMs - now;
             if (diff <= 0) {
-                localStorage.removeItem(`custom_target_time_${patientId}`);
+                localStorage.removeItem(`custom_target_time_${effectiveId}`);
+                if (patientId) localStorage.removeItem(`custom_target_time_${patientId}`);
                 if (cleanPhone) localStorage.removeItem(`custom_target_time_${cleanPhone}`);
                 localStorage.removeItem('custom_target_time_global');
                 return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0 };
             }
-            let customDuration = parseInt(localStorage.getItem(`custom_total_duration_${patientId}`) || (cleanPhone ? localStorage.getItem(`custom_total_duration_${cleanPhone}`) : null) || localStorage.getItem('custom_total_duration_global') || 0);
+            let customDuration = parseInt(
+                localStorage.getItem(`custom_total_duration_${effectiveId}`) || 
+                (patientId ? localStorage.getItem(`custom_total_duration_${patientId}`) : null) || 
+                (cleanPhone ? localStorage.getItem(`custom_total_duration_${cleanPhone}`) : null) || 
+                localStorage.getItem('custom_total_duration_global') || 0
+            );
             if (!customDuration || customDuration <= 0) {
                 customDuration = Math.max(diff, 24 * 3600 * 1000);
             }
@@ -412,19 +445,27 @@ const PatientFlow = (function() {
         }
 
         const sessionIntervalHours = parseInt(await SmartDB.getSetting('sessionIntervalHours', 24)) || 24;
-        const dailyLogs = await SmartDB.getPatientDailyLogs(patientId);
+        let dailyLogs = await SmartDB.getPatientDailyLogs(effectiveId);
+        if ((!dailyLogs || dailyLogs.length === 0) && patientId && patientId !== effectiveId) {
+            dailyLogs = await SmartDB.getPatientDailyLogs(patientId);
+        }
+        if ((!dailyLogs || dailyLogs.length === 0) && typeof activePatient !== 'undefined' && activePatient?.dailyLogs) {
+            dailyLogs = activePatient.dailyLogs;
+        }
         
         // الجلسة الأولى (اليوم 1) تكون متاحة ومفتوحة فوراً عند التسجيل ولا تُقفل أبداً
-        if (dailyLogs.length === 0) {
+        if (!dailyLogs || dailyLogs.length === 0) {
             return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0 };
         }
 
         const lastLog = dailyLogs[dailyLogs.length - 1];
-        const referenceTime = new Date(lastLog.date || new Date()).getTime();
+        const logDateStr = lastLog.date || lastLog.completedAt || lastLog.createdAt;
+        const referenceTime = logDateStr ? new Date(logDateStr).getTime() : Date.now();
+        const validRefTime = (!isNaN(referenceTime) && referenceTime > 0) ? referenceTime : Date.now();
 
         const now = Date.now();
         const intervalMs = sessionIntervalHours * 60 * 60 * 1000;
-        const elapsedMs = now - referenceTime;
+        const elapsedMs = now - validRefTime;
         const remainingMs = intervalMs - elapsedMs;
 
         if (remainingMs <= 0) {
@@ -436,7 +477,7 @@ const PatientFlow = (function() {
             remainingHours: remainingMs / (1000 * 60 * 60),
             remainingMs,
             totalDurationMs: intervalMs,
-            targetTime: referenceTime + intervalMs
+            targetTime: validRefTime + intervalMs
         };
     }
 
@@ -639,18 +680,23 @@ const PatientFlow = (function() {
             const nextButton = nextCard.querySelector('.btn-exercise-timer');
             const nextName = nextCard.querySelector('h4')?.textContent || 'التمرين التالي';
 
-            // إنشاء شريط الاستراحة الفاخر
+            // إنشاء شريط الاستراحة الفاخر - بتصميم عائم لا يزحزح كروت التمارين إطلاقاً
             const banner = document.createElement('div');
             banner.className = 'exercise-rest-transition-banner';
             banner.style.cssText = `
-                background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(16, 185, 129, 0.15) 100%);
-                border: 2px dashed #d4af37;
+                background: linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.96) 100%);
+                border: 2px solid #d4af37;
                 border-radius: 12px;
-                padding: 14px 18px;
+                padding: 14px 20px;
                 margin: 14px 0;
                 text-align: center;
                 animation: pulse 1.5s infinite;
-                box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(212, 175, 55, 0.35);
+                position: sticky;
+                top: 15px;
+                z-index: 1000;
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
             `;
             banner.innerHTML = `
                 <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
@@ -667,7 +713,16 @@ const PatientFlow = (function() {
                 </div>
             `;
 
-            currentCardEl.parentNode.insertBefore(banner, currentCardEl.nextSibling);
+            // وضع الشريط خارج شبكة كروت التمارين تماماً لمنع إزاحتها أو تحريكها من مكانها
+            const gridContainer = currentCardEl.closest('.exercise-visual-grid') || 
+                                  (currentCardEl.parentElement && (window.getComputedStyle(currentCardEl.parentElement).display === 'grid' || currentCardEl.parentElement.style.display === 'grid') ? currentCardEl.parentElement : null) ||
+                                  currentCardEl.parentNode;
+
+            if (gridContainer && gridContainer.parentNode && gridContainer !== document.body) {
+                gridContainer.parentNode.insertBefore(banner, gridContainer);
+            } else {
+                currentCardEl.parentNode.insertBefore(banner, currentCardEl);
+            }
 
             // تشغيل محطة صوت التحفيز أو الإرشاد بعد رنين اكتمال التمرين بثانية
             setTimeout(() => {
@@ -684,7 +739,7 @@ const PatientFlow = (function() {
             const finishRest = () => {
                 clearInterval(activeRestInterval);
                 activeRestInterval = null;
-                if (banner) banner.remove();
+                if (banner && banner.parentNode) banner.remove();
                 if (nextCard) {
                     nextCard.style.outline = '';
                     nextCard.style.boxShadow = '';

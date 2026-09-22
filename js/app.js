@@ -5501,7 +5501,8 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
     }
 
     activePatient = sessionData.patient;
-    const lockStatus = await PatientFlow.getSessionLockStatus(patientId);
+    const effectivePid = patientId || sessionData.patient?.patientId || sessionData.patient?.id;
+    const lockStatus = await PatientFlow.getSessionLockStatus(effectivePid);
 
     // إذا كان المريض أنجز كل الـ 7 جلسات، الانتقال لشاشة الإنهاء
     if (sessionData.isPlanCompleted) {
@@ -5977,7 +5978,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                             </span>
                         </div>
 
-                        <button type="button" onclick="openSessionAssessmentModal('${patientId}', ${activeDay})" class="royal-clinical-next-btn active-unlocked" style="width: 100%; max-width: 620px; margin: 0 auto; background: linear-gradient(180deg, #10b981 0%, #059669 50%, #047857 51%, #065f46 100%) !important; color: #ffffff !important; border: 2px solid #6ee7b7 !important; border-radius: 50px !important; padding: 10px 24px 10px 14px !important; font-size: 1.15em !important; font-weight: 900 !important; letter-spacing: 0.5px; cursor: pointer; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 14px !important; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.7), 0 2px 4px rgba(0, 0, 0, 0.3) !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important; box-sizing: border-box;">
+                        <button type="button" onclick="openSessionAssessmentModal('${effectivePid || patientId}', ${activeDay})" class="royal-clinical-next-btn active-unlocked" style="width: 100%; max-width: 620px; margin: 0 auto; background: linear-gradient(180deg, #10b981 0%, #059669 50%, #047857 51%, #065f46 100%) !important; color: #ffffff !important; border: 2px solid #6ee7b7 !important; border-radius: 50px !important; padding: 10px 24px 10px 14px !important; font-size: 1.15em !important; font-weight: 900 !important; letter-spacing: 0.5px; cursor: pointer; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 14px !important; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.7), 0 2px 4px rgba(0, 0, 0, 0.3) !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important; box-sizing: border-box;">
                             <!-- Left Glossy Orb Icon Circle -->
                             <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 45%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.4) 100%), linear-gradient(135deg, #10b981 0%, #047857 100%); border: 2.5px solid #ffffff; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.8); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                                 <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff" style="margin-left: 2px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));"><polygon points="6,4 20,12 6,20"/></svg>
@@ -6262,6 +6263,23 @@ async function completeDay1InitialExercises(patientId) {
 
     const pName = pInfo?.name || activePatient?.name || 'المراجع الكريم';
     const pPhone = pInfo?.phone || activePatient?.phone || '';
+
+    // تفعيل وتوثيق بدء فترة استشفاء الأنسجة (24 ساعة) للجلسة الثانية
+    const effectiveId = patientId || pInfo?.patientId || pInfo?.id || 'pat_guest';
+    const lockDurationMs = 24 * 60 * 60 * 1000;
+    const targetLockTime = Date.now() + lockDurationMs;
+    const cleanP = (pPhone || pInfo?.phone || '').replace(/\D/g, '');
+    try {
+        localStorage.removeItem(`force_unlock_${effectiveId}`);
+        localStorage.removeItem('force_unlock_global');
+        if (cleanP) localStorage.removeItem(`force_unlock_${cleanP}`);
+        localStorage.setItem(`custom_target_time_${effectiveId}`, String(targetLockTime));
+        localStorage.setItem(`custom_total_duration_${effectiveId}`, String(lockDurationMs));
+        if (cleanP) {
+            localStorage.setItem(`custom_target_time_${cleanP}`, String(targetLockTime));
+            localStorage.setItem(`custom_total_duration_${cleanP}`, String(lockDurationMs));
+        }
+    } catch(e) {}
 
     SmartDB.addAdminNotification({
         type: 'session_completed',
@@ -6682,6 +6700,23 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
         return;
     }
 
+    // تفعيل وتوثيق بدء فترة استشفاء الأنسجة (24 ساعة) للجلسة التالية
+    const effectiveId = patientId || pInfo?.patientId || pInfo?.id || 'pat_guest';
+    const lockDurationMs = 24 * 60 * 60 * 1000;
+    const targetLockTime = Date.now() + lockDurationMs;
+    const cleanP = (pPhone || pInfo?.phone || '').replace(/\D/g, '');
+    try {
+        localStorage.removeItem(`force_unlock_${effectiveId}`);
+        localStorage.removeItem('force_unlock_global');
+        if (cleanP) localStorage.removeItem(`force_unlock_${cleanP}`);
+        localStorage.setItem(`custom_target_time_${effectiveId}`, String(targetLockTime));
+        localStorage.setItem(`custom_total_duration_${effectiveId}`, String(lockDurationMs));
+        if (cleanP) {
+            localStorage.setItem(`custom_target_time_${cleanP}`, String(targetLockTime));
+            localStorage.setItem(`custom_total_duration_${cleanP}`, String(lockDurationMs));
+        }
+    } catch(e) {}
+
     if (sessionNumber === 1) {
         SmartDB.addAdminNotification({
             type: 'session_completed',
@@ -6908,7 +6943,7 @@ window._applyUpdateNow = function() {
     _doSafeReload();
 };
 
-const CURRENT_APP_VERSION = 'v29.44';
+const CURRENT_APP_VERSION = 'v29.45';
 let _versionCheckInProgress = false;
 
 // فحص مباشر وفوري لرقم الإصدار المنشور على السيرفر/GitHub
