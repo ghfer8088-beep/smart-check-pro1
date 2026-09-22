@@ -41,29 +41,13 @@
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
     <link rel="stylesheet" href="css/style.css?v=29.17">
     <script>
-        // التحقق من تحديثات Service Worker وتحديث الكاش بسلاسة دون تفريغ أي بيانات للمرضى
+        // التحقق من تحديثات النسخة بسلاسة دون تفريغ أي بيانات للمرضى
         (function() {
-            const APP_TARGET_VER = '29.35';
+            const APP_TARGET_VER = '29.47';
             const currentVer = localStorage.getItem('smart_app_version');
             if (currentVer !== APP_TARGET_VER) {
-                if ('caches' in window) {
-                    caches.keys().then(function(keys) {
-                        return Promise.all(keys.map(k => caches.delete(k)));
-                    }).then(function() {
-                        localStorage.setItem('smart_app_version', APP_TARGET_VER);
-                    }).catch(function() {});
-                } else {
-                    localStorage.setItem('smart_app_version', APP_TARGET_VER);
-                }
+                localStorage.setItem('smart_app_version', APP_TARGET_VER);
             }
-            if (window.location.protocol.startsWith('http') && 'serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                    for (let registration of registrations) {
-                        registration.update();
-                    }
-                }).catch(function() {});
-            }
-
         })();
     </script>
 </head>
@@ -1833,21 +1817,21 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=29.46"></script>
-    <script src="js/cloud-sync.js?v=29.46"></script>
-    <script src="js/geo-tracker.js?v=29.46"></script>
-    <script src="js/database.js?v=29.46"></script>
-    <script src="js/exercise-image-studio.js?v=29.46"></script>
-    <script src="js/exercises-db.js?v=29.46"></script>
-    <script src="js/diagnostic-engine.js?v=29.46"></script>
-    <script src="js/audio-pacer.js?v=29.46"></script>
-    <script src="js/patient-flow.js?v=29.46"></script>
-    <script src="js/admin-engine.js?v=29.46"></script>
-    <script src="js/ai-config.js?v=29.46"></script>
-    <script src="js/ai-engine.js?v=29.46"></script>
-    <script src="js/app.js?v=29.46"></script>
-    <script src="js/text-editor.js?v=29.46"></script>
-    <script src="js/smart-guidance.js?v=29.46"></script>
+    <script src="js/mqtt.min.js?v=29.47"></script>
+    <script src="js/cloud-sync.js?v=29.47"></script>
+    <script src="js/geo-tracker.js?v=29.47"></script>
+    <script src="js/database.js?v=29.47"></script>
+    <script src="js/exercise-image-studio.js?v=29.47"></script>
+    <script src="js/exercises-db.js?v=29.47"></script>
+    <script src="js/diagnostic-engine.js?v=29.47"></script>
+    <script src="js/audio-pacer.js?v=29.47"></script>
+    <script src="js/patient-flow.js?v=29.47"></script>
+    <script src="js/admin-engine.js?v=29.47"></script>
+    <script src="js/ai-config.js?v=29.47"></script>
+    <script src="js/ai-engine.js?v=29.47"></script>
+    <script src="js/app.js?v=29.47"></script>
+    <script src="js/text-editor.js?v=29.47"></script>
+    <script src="js/smart-guidance.js?v=29.47"></script>
 
     <script>
         // مؤشر المراجعين المتفاعلين أونلاين الآن (يتراوح عشوائياً بديناميكية طبيعية بين 40 و 99)

@@ -6873,46 +6873,21 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 نظام التحديث الذكي — يحترم جلسة المريض ولا يقطعها أبداً
 // ============================================================
-let _autoReloadTriggered = false;
-let _updatePendingAfterSession = false; // علامة: هناك تحديث ينتظر انتهاء الجلسة
+// 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
+// ============================================================
+const CURRENT_APP_VERSION = 'v29.47';
+let _versionCheckInProgress = false;
 
-// الكشف عما إذا كان المريض في منتصف محادثة نشطة مع الطبيب الافتراضي
-function _isActiveAiChatSession() {
-    // فحص 1: هل المريض في خطوة 2 أم لا؟
-    const currentStep = parseInt(localStorage.getItem('smart_current_step') || '1', 10);
-    if (currentStep < 2) return false;
-
-    // فحص 2: هل حاوية المحادثة ظاهرة؟
-    const chatContainer = document.getElementById('ai-chat-intake-container');
-    if (!chatContainer) return false;
-    const isVisible = chatContainer.style.display !== 'none' &&
-                      window.getComputedStyle(chatContainer).display !== 'none';
-    if (!isVisible) return false;
-
-    // فحص 3: هل يوجد رسائل فعلية في صندوق المحادثة؟
-    const chatBox = document.getElementById('ai-chat-messages-box');
-    if (!chatBox) return false;
-    const hasMessages = chatBox.children.length > 0;
-
-    return hasMessages;
-}
-
-// إعادة التحميل الآمنة مع إشعار بسيط وحفظ النسخة المحدثة
-function _doSafeReload() {
-    sessionStorage.setItem('just_refreshed_toast', 'true');
-    sessionStorage.setItem('scp_last_reloaded_ver', CURRENT_APP_VERSION);
-    window.location.reload(true);
-}
-
-// إظهار بانر "تحديث متاح — سيُطبق بعد انتهاء المحادثة"
-function _showDeferredUpdateBanner() {
-    if (document.getElementById('deferred-update-banner')) return;
-    _updatePendingAfterSession = true;
+// إظهار تنبيه هادئ وغير تدخلي بوجود تحديث جديد مع إمكانية الإغلاق التام
+function _showNonIntrusiveUpdateNotice(targetVer) {
+    if (sessionStorage.getItem('scp_update_notice_dismissed') === 'true') return;
+    if (sessionStorage.getItem('scp_update_handled') === 'true') return;
+    if (document.getElementById('pwa-update-notice-bar')) return;
 
     const banner = document.createElement('div');
-    banner.id = 'deferred-update-banner';
+    banner.id = 'pwa-update-notice-bar';
     banner.style.cssText = `
-        position: fixed; top: 0; left: 0; right: 0; z-index: 99999999;
+        position: fixed; top: 0; left: 0; right: 0; z-index: 9999999;
         background: linear-gradient(90deg, #0b1322 0%, #17253d 100%);
         border-bottom: 2px solid #d4af37;
         padding: 8px 18px;
@@ -6924,47 +6899,62 @@ function _showDeferredUpdateBanner() {
         <div style="display: flex; align-items: center; gap: 10px;">
             <span style="font-size: 1.3em;">⚡</span>
             <div>
-                <strong style="color: #d4af37; font-size: 0.9em; display: block;">تحديث جديد للنظام جاهز</strong>
-                <span style="color: #94a3b8; font-size: 0.77em;">سيُطبق تلقائياً بعد انتهاء المحادثة الحالية — لن تفقد أي بيانات</span>
+                <strong style="color: #d4af37; font-size: 0.9em; display: block;">تحديث جديد متوفر للمنظومة (${targetVer || CURRENT_APP_VERSION})</strong>
+                <span style="color: #94a3b8; font-size: 0.77em;">يمكنك التحديث بضغطة زر عند رغبتك دون فقدان أي من بياناتك أو تقدمك.</span>
             </div>
         </div>
-        <button type="button" onclick="window._applyUpdateNow()" style="background: #d4af37; color: #0a0e14; border: none; padding: 6px 14px; border-radius: 7px; font-weight: 900; font-size: 0.82em; cursor: pointer; white-space: nowrap;">
-            تطبيق الآن ⚡
-        </button>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" onclick="window._applyUpdateNow('${targetVer || CURRENT_APP_VERSION}')" style="background: #d4af37; color: #0a0e14; border: none; padding: 6px 14px; border-radius: 7px; font-weight: 900; font-size: 0.82em; cursor: pointer; white-space: nowrap;">
+                تحديث الآن ⚡
+            </button>
+            <button type="button" onclick="sessionStorage.setItem('scp_update_notice_dismissed','true'); document.getElementById('pwa-update-notice-bar')?.remove();" style="background: none; border: none; color: #94a3b8; font-size: 1.3em; cursor: pointer; padding: 0 6px; line-height: 1;" title="إغلاق التنبيه">&times;</button>
+        </div>
     `;
     document.body.appendChild(banner);
-
-    // مراقب: ينتظر انتقال المستخدم لخطوة التقرير أو التمارين (خطوة 3 أو أكثر) ثم يُعيد التحميل
-    const stepWatcher = setInterval(() => {
-        const step = parseInt(localStorage.getItem('smart_current_step') || '1', 10);
-        if (step >= 3 || !_isActiveAiChatSession()) {
-            clearInterval(stepWatcher);
-            // انتظر 3 ثوان إضافية لمنح المستخدم وقتاً لرؤية أي محتوى انتقالي
-            setTimeout(() => {
-                if (_updatePendingAfterSession) _doSafeReload();
-            }, 3000);
-        }
-    }, 2000);
 }
 
-// تطبيق التحديث فوراً بطلب من المستخدم (زر "تطبيق الآن")
-window._applyUpdateNow = function() {
-    _updatePendingAfterSession = false;
-    const banner = document.getElementById('deferred-update-banner');
+// تطبيق التحديث فوراً عند اختيار المستخدم
+window._applyUpdateNow = function(targetVer = null) {
+    const banner = document.getElementById('pwa-update-notice-bar') || document.getElementById('deferred-update-banner') || document.getElementById('auto-update-overlay');
     if (banner) banner.remove();
-    _doSafeReload();
+    _doSafeReload(targetVer);
 };
 
-const CURRENT_APP_VERSION = 'v29.46';
-let _versionCheckInProgress = false;
+// إعادة التحميل الآمنة مع حفظ تام للمرحلة وبيانات المريض قبل أي إنعاش
+function _doSafeReload(targetVer = null) {
+    const ver = targetVer || CURRENT_APP_VERSION;
+    sessionStorage.setItem('just_refreshed_toast', 'true');
+    sessionStorage.setItem('scp_update_handled', 'true');
+    sessionStorage.setItem('scp_last_reloaded_ver', ver);
+    sessionStorage.setItem('scp_last_reload_timestamp', String(Date.now()));
 
-// فحص مباشر وفوري لرقم الإصدار المنشور على السيرفر/GitHub مع حماية مانعة للتكرار
+    // حفظ صارم للخطوة الحالية للمريض لضمان عدم الرجوع للمرحلة الأولى أبداً
+    try {
+        const curStep = localStorage.getItem('smart_current_step');
+        if (curStep) localStorage.setItem('smart_current_step', curStep);
+        if (typeof activePatient !== 'undefined' && activePatient) {
+            localStorage.setItem('smart_active_patient', JSON.stringify(activePatient));
+            if (activePatient.patientId || activePatient.id) {
+                localStorage.setItem('smart_current_patient_id', activePatient.patientId || activePatient.id);
+            }
+        }
+    } catch(e) {}
+
+    window.location.reload(true);
+}
+
+// فحص هادئ ودوري لرقم الإصدار بدون أي حجب للشاشة أو تكرار
 async function _checkRemoteVersionUpdate() {
-    if (_versionCheckInProgress || _autoReloadTriggered) return;
-    // صمام أمان: إذا كان المراجع قد أعاد التحميل للتو، تأجيل الفحص لمنع أي حلقة تكرار
-    if (sessionStorage.getItem('just_refreshed_toast') === 'true') return;
+    if (_versionCheckInProgress) return;
+    if (sessionStorage.getItem('scp_update_handled') === 'true') return;
+    if (sessionStorage.getItem('scp_update_notice_dismissed') === 'true') return;
+
+    const lastCheckTime = parseInt(sessionStorage.getItem('scp_last_ver_check') || '0', 10);
+    if (Date.now() - lastCheckTime < 600000) return; // فحص كل 10 دقائق كحد أقصى
 
     _versionCheckInProgress = true;
+    sessionStorage.setItem('scp_last_ver_check', String(Date.now()));
+
     try {
         const res = await fetch('sw.js?_chk=' + Date.now(), { cache: 'no-store' });
         if (res && res.ok) {
@@ -6974,10 +6964,9 @@ async function _checkRemoteVersionUpdate() {
                 const remoteVersion = match[1];
                 const lastReloadedVersion = sessionStorage.getItem('scp_last_reloaded_ver');
 
-                // تفعيل التحديث فقط إذا كانت النسخة أحدث ومختلفة عن النسخة الحالية ولم يتم إعادة التحميل لها مسبقاً
                 if (remoteVersion !== CURRENT_APP_VERSION && remoteVersion !== lastReloadedVersion) {
-                    console.log('[UpdateChecker] New system version detected:', remoteVersion, 'current:', CURRENT_APP_VERSION);
-                    _triggerAutoReloadCountdown(remoteVersion);
+                    console.log('[UpdateChecker] New version available:', remoteVersion);
+                    _showNonIntrusiveUpdateNotice(remoteVersion);
                 }
             }
         }
@@ -6988,60 +6977,9 @@ async function _checkRemoteVersionUpdate() {
 }
 window._checkRemoteVersionUpdate = _checkRemoteVersionUpdate;
 
+// واجهة التوافق الخلفي: توجيه أي استدعاءات قديمة للإشعار الهادئ بدلاً من نافذة الحجب
 function _triggerAutoReloadCountdown(targetVer = null) {
-    if (_autoReloadTriggered) return;
-    if (targetVer && sessionStorage.getItem('scp_last_reloaded_ver') === targetVer) return;
-
-    _autoReloadTriggered = true;
-    if (targetVer) {
-        sessionStorage.setItem('scp_last_reloaded_ver', targetVer);
-    }
-
-    // 🛡️ إذا كان المريض في محادثة نشطة → لا تقطعها، أخبره بلطف
-    if (_isActiveAiChatSession()) {
-        _showDeferredUpdateBanner();
-        return;
-    }
-
-    // ✅ المريض في خطوة آمنة → أعد التحميل مع عداد مرئي لمرة واحدة فقط
-    const overlay = document.createElement('div');
-    overlay.id = 'auto-update-overlay';
-    overlay.style.cssText = `
-        position: fixed; inset: 0; z-index: 99999999;
-        background: rgba(7, 11, 22, 0.97);
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        gap: 20px; text-align: center; padding: 30px;
-        backdrop-filter: blur(8px);
-    `;
-    overlay.innerHTML = `
-        <div style="font-size: 3em;">🔄</div>
-        <div style="color: #d4af37; font-size: 1.4em; font-weight: 900; line-height: 1.4;">
-            تم إطلاق تحديث جديد للمنظومة!
-        </div>
-        <div style="color: #e2e8f0; font-size: 0.95em; line-height: 1.7; max-width: 380px;">
-            جاري تحميل أحدث إصدار من النظام تلقائياً.
-        </div>
-        <div style="background: #0f172a; border: 2px solid #d4af37; border-radius: 50%; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center;">
-            <span id="auto-update-countdown" style="color: #d4af37; font-size: 2em; font-weight: 900;">5</span>
-        </div>
-        <div style="color: #64748b; font-size: 0.82em;">يتم التحديث خلال ثوانٍ...</div>
-        <button type="button" onclick="sessionStorage.setItem('just_refreshed_toast','true'); window.location.reload(true);"
-            style="background: #d4af37; color: #0a0e14; border: none; padding: 11px 28px; border-radius: 10px; font-weight: 900; font-size: 1em; cursor: pointer; margin-top: 6px;">
-            تحديث الآن ⚡
-        </button>
-    `;
-    document.body.appendChild(overlay);
-
-    let remaining = 5;
-    const countdownEl = document.getElementById('auto-update-countdown');
-    const timer = setInterval(() => {
-        remaining--;
-        if (countdownEl) countdownEl.textContent = remaining;
-        if (remaining <= 0) {
-            clearInterval(timer);
-            _doSafeReload();
-        }
-    }, 1000);
+    _showNonIntrusiveUpdateNotice(targetVer);
 }
 window._triggerAutoReloadCountdown = _triggerAutoReloadCountdown;
 
@@ -8225,6 +8163,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         window._isDialogueConcluding = false;
     } catch(e) {}
 
+    // 🛡️ صمام أمان فوري: استعادة المرحلة المحفوظة فوراً وبشكل متزامن لمنع أي ظهور للمرحلة 1 عند الإنعاش
+    try {
+        const preSavedStep = parseInt(localStorage.getItem('smart_current_step') || '0', 10);
+        if (preSavedStep >= 2 && preSavedStep <= 6) {
+            goToStep(preSavedStep);
+        }
+    } catch(e) {}
+
     await SmartDB.openDB();
 
     if (window.location.protocol.startsWith('http') && 'serviceWorker' in navigator) {
@@ -8234,40 +8180,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (installingWorker) {
                     installingWorker.onstatechange = () => {
                         if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            console.log('[App] New SW installed, awaiting activation...');
-                        }
-                        if (installingWorker.state === 'activated') {
-                            _triggerAutoReloadCountdown();
+                            console.log('[App] New SW installed in background.');
                         }
                     };
                 }
             };
         }).catch(() => {});
 
-        // ✅ الاستماع لرسالة SW_ACTIVATED_NEW_VERSION — يُطلق إعادة تحميل تلقائية بعداد مرئي
-        navigator.serviceWorker.addEventListener('message', (event) => {
-            if (event.data && event.data.type === 'SW_ACTIVATED_NEW_VERSION') {
-                _triggerAutoReloadCountdown();
-            }
-        });
-
-        // ✅ خط احتياطي: إذا تغيّر الـ controller (SW جديد سيطر) → إعادة تحميل فورية
-        let isFirstControllerSet = !navigator.serviceWorker.controller;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (isFirstControllerSet) {
-                isFirstControllerSet = false;
-                return; // أول مرة يُضبط الـ controller عند تحميل الصفحة — لا نعيد التحميل
-            }
-            _triggerAutoReloadCountdown();
-        });
-
-        // فحص وجود تحديثات فور فتح أو تنشيط التطبيق
+        // فحص هادئ بفاصل 5 دقائق كحد أدنى عند عودة التركيز للنافذة
         window.addEventListener('focus', () => {
-            navigator.serviceWorker.getRegistration().then((reg) => {
-                if (reg) reg.update().catch(() => {});
-            }).catch(() => {});
-            if (typeof _checkRemoteVersionUpdate === 'function') {
-                _checkRemoteVersionUpdate();
+            const lastCheck = parseInt(sessionStorage.getItem('scp_last_focus_check') || '0', 10);
+            if (Date.now() - lastCheck > 300000) {
+                sessionStorage.setItem('scp_last_focus_check', String(Date.now()));
+                if (typeof _checkRemoteVersionUpdate === 'function') {
+                    _checkRemoteVersionUpdate();
+                }
             }
             if (window.SmartCloudSync && typeof SmartCloudSync.fetchRemoteTimingUpdates === 'function') {
                 SmartCloudSync.fetchRemoteTimingUpdates();
@@ -8276,31 +8203,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
-                if (typeof _checkRemoteVersionUpdate === 'function') {
-                    _checkRemoteVersionUpdate();
+                const lastCheck = parseInt(sessionStorage.getItem('scp_last_vis_check') || '0', 10);
+                if (Date.now() - lastCheck > 300000) {
+                    sessionStorage.setItem('scp_last_vis_check', String(Date.now()));
+                    if (typeof _checkRemoteVersionUpdate === 'function') {
+                        _checkRemoteVersionUpdate();
+                    }
                 }
                 if (window.SmartCloudSync && typeof SmartCloudSync.fetchRemoteTimingUpdates === 'function') {
                     SmartCloudSync.fetchRemoteTimingUpdates();
                 }
             }
         });
-
-        // 🔄 فحص دوري تلقائي كل 25 ثانية يضمن وصول التحديثات لشاشات اللابتوب والتابلت المفتوحة
-        setInterval(() => {
-            navigator.serviceWorker.getRegistration().then((reg) => {
-                if (reg) reg.update().catch(() => {});
-            }).catch(() => {});
-            if (typeof _checkRemoteVersionUpdate === 'function') {
-                _checkRemoteVersionUpdate();
-            }
-        }, 25000);
-    } else {
-        // إذا كان التطبيق يعمل بدون ServiceWorker (مثل التصفح الخاص أو المتصفحات القديمة)، فحص دوري للنسخة عبر الشبكة
-        setInterval(() => {
-            if (typeof _checkRemoteVersionUpdate === 'function') {
-                _checkRemoteVersionUpdate();
-            }
-        }, 25000);
     }
 
     // تهيئة الاستماع اللحظي لتعديل توقيت الجلسات سحابياً من لوحة الإدارة
@@ -8612,7 +8526,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     } else if (savedTargetStep === 5) {
         goToStep(5);
-        await loadPatientRecoveryDashboard(effectivePatientId, 2);
+        try {
+            await loadPatientRecoveryDashboard(effectivePatientId, 2);
+        } catch(err) {
+            console.warn('[DOMContentLoaded] Step 5 dashboard fallback:', err);
+            try { await renderStep5SessionsDashboard(effectivePatientId, 2); } catch(e) {}
+        }
         return;
     } else if (savedTargetStep === 4) {
         await renderStep4IndependentDay1(effectivePatientId);
