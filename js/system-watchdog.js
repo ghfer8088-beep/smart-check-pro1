@@ -274,9 +274,18 @@ const SmartWatchdog = (function() {
             // حفظ الحادثة في سجل التخزين المحلي للمنظومة
             const incidents = getStoredIncidents();
             incidents.unshift(incident);
-            if (incidents.length > 50) incidents.length = 50;
-            localStorage.setItem(TELEMETRY_STORAGE_KEY, JSON.stringify(incidents));
-            localStorage.setItem(TELEMETRY_LAST_UPDATE_KEY, Date.now().toString());
+            if (incidents.length > 30) incidents.length = 30;
+            try {
+                localStorage.setItem(TELEMETRY_STORAGE_KEY, JSON.stringify(incidents));
+                localStorage.setItem(TELEMETRY_LAST_UPDATE_KEY, Date.now().toString());
+            } catch (quotaErr) {
+                try {
+                    incidents.length = Math.min(incidents.length, 5);
+                    localStorage.setItem(TELEMETRY_STORAGE_KEY, JSON.stringify(incidents));
+                } catch(e2) {
+                    try { localStorage.removeItem(TELEMETRY_STORAGE_KEY); } catch(e3) {}
+                }
+            }
 
             // إرسال الإشعار لـ SmartDB ليظهر في قائمة إشعارات الإدارة المعتادة
             if (typeof SmartDB !== 'undefined' && typeof SmartDB.addAdminNotification === 'function') {

@@ -141,6 +141,7 @@ const PatientFlow = (function() {
                     }) || null;
                 }
             } catch(e) {}
+        }
         if (!patient) {
             // خط دفاع رابع: فحص الحساب الموثق المسجل حالياً smart_auth_patient
             try {
@@ -750,6 +751,8 @@ const PatientFlow = (function() {
 
 // تصدير PatientFlow للنطاق العالمي (window) لضمان وصول onclick في HTML إليه
 window.PatientFlow = PatientFlow;
+window.toggleExerciseTimer = PatientFlow.toggleExerciseTimer;
+window.markExerciseDone = PatientFlow.markExerciseDone;
 
 // ==========================================================================
 // تكوين أسئلة التقييم اليومي المنسجمة مع نقطة الألم المحددة
