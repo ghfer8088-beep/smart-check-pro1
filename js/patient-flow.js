@@ -748,6 +748,9 @@ const PatientFlow = (function() {
     };
 })();
 
+// تصدير PatientFlow للنطاق العالمي (window) لضمان وصول onclick في HTML إليه
+window.PatientFlow = PatientFlow;
+
 // ==========================================================================
 // تكوين أسئلة التقييم اليومي المنسجمة مع نقطة الألم المحددة
 // يُستدعى من loadPatientRecoveryDashboard لتخصيص نموذج اليوميات لكل منطقة
