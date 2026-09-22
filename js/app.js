@@ -117,7 +117,8 @@ window.detectArabicGender = detectArabicGender;
 // ==========================================================================
 function getDailyMotivationScript(dayNumber, patientName = '') {
     const isFemale = (typeof detectArabicGender === 'function') ? (detectArabicGender(patientName) === 'female') : false;
-    const namePart = (patientName && patientName !== 'المراجع الكريم') ? `يا ${patientName}` : (isFemale ? 'عزيزتي' : 'عزيزي');
+    const isPlaceholder = !patientName || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|undefined|null)$/i.test(patientName.trim());
+    const namePart = !isPlaceholder ? `يا ${patientName.trim()}` : (isFemale ? 'عزيزتي' : 'عزيزي');
     const genderGreeting = isFemale ? 'عزيزتي' : 'عزيزي';
     const genderContinue = isFemale ? 'واصلي' : 'واصل';
     const genderLook = isFemale ? 'راقبي' : 'راقب';
@@ -5184,6 +5185,27 @@ function getVitalsSummaryCardHTML(patient, assessment) {
 }
 
 // =========================================================================
+// دوال الترحيب والمخاطبة اللائقة بالمرضى (تمنع طباعة أي ألقاب مؤقتة أو مراجع كريم)
+// =========================================================================
+function formatPatientGreeting(pName) {
+    const raw = (pName || '').trim();
+    if (!raw || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|undefined|null)$/i.test(raw)) {
+        return 'مرحباً بك يا عزيزي 👋';
+    }
+    return `مرحباً ${raw} 👋`;
+}
+window.formatPatientGreeting = formatPatientGreeting;
+
+function formatPatientAddress(pName, fallback = 'يا عزيزي') {
+    const raw = (pName || '').trim();
+    if (!raw || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|undefined|null)$/i.test(raw)) {
+        return fallback;
+    }
+    return raw;
+}
+window.formatPatientAddress = formatPatientAddress;
+
+// =========================================================================
 // الخطوة 4: الجلسة الأولى (مستقلة تماماً)
 // تشمل: التعليمات + البيانات + الساعة الحية + التمارين + زر إنجاز اليوم الأول
 // خالية تماماً وبشكل قاطع من أي أسئلة أو مؤشرات مئوية أو رسوم بيانية
@@ -5231,6 +5253,11 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
     const container = document.getElementById('step4-day1-container') || document.getElementById('patient-recovery-dashboard');
     if (!container) return;
 
+    const maxReached = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
+    const isDay1Completed = (sessionData?.dailyLogs && sessionData.dailyLogs.length >= 1)
+                         || (sessionData?.currentSessionDay && sessionData.currentSessionDay >= 2)
+                         || (maxReached >= 5);
+
     const pointKey = sessionData.latestAssessment?.pointId || sessionData.latestAssessment?.pointKey || sessionData.patient.painArea || sessionData.patient.painPointId || 'lumbar_spine';
     const dayExercises = getExercisesForPoint(pointKey, 1, {
         primaryDiagnosisKey: sessionData.latestAssessment?.primaryDiagnosisKey || "",
@@ -5259,9 +5286,9 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
 
             <!-- شريط الجلسات -->
             <div style="display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
-                ${(sessionData && sessionData.dailyLogs && sessionData.dailyLogs.length >= 1) ? `
+                ${isDay1Completed ? `
                 <button type="button" onclick="handleStepperClick(5)" class="btn-header btn-header-emerald" style="padding: 7px 14px; font-size: 0.85em; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                    <span>📅</span> متابعة الجلسات (2 إلى 7) ⬅️
+                    <span>📅</span> متابعة الجلسات (المرحلة 5) ⬅️
                 </button>` : ''}
             </div>
 
@@ -5287,7 +5314,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <img src="assets/logo.png" alt="شعار وداعاً للألم" style="height: 55px; width: 55px; border-radius: 50%; border: 1.5px solid var(--primary-gold);">
                     <div>
-                        <h2 style="color: #ffffff; margin: 0 0 4px 0; font-size: 1.35em;">مرحباً ${sessionData.patient.name} 👋</h2>
+                        <h2 style="color: #ffffff; margin: 0 0 4px 0; font-size: 1.35em;">${formatPatientGreeting(sessionData.patient?.name)}</h2>
                         <div style="color: var(--primary-gold); font-size: 0.9em;">خطة الراحة الحركية الذاتية - الجلسة الأولى (مستقلة) - منطقة ${sessionData.latestAssessment?.painAreaTitle || 'المفصل المختار'}</div>
                     </div>
                 </div>
@@ -5399,14 +5426,14 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                             </div>
                             <div>
                                 <div style="background: #1e2633; height: 5px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
-                                    <div class="timer-progress-fill" style="background: linear-gradient(90deg, #d4af37 0%, #10b981 100%); height: 100%; width: 0%; transition: width 1s linear;"></div>
+                                    <div class="timer-progress-fill" style="background: linear-gradient(90deg, #d4af37 0%, #10b981 100%); height: 100%; width: ${isDay1Completed ? '100%' : '0%'}; transition: width 1s linear;"></div>
                                 </div>
                                 <div style="display: flex; gap: 8px; align-items: stretch;">
-                                    <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="flex: 1; background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.92em;">
-                                        ⏱️ ابدأ مؤقت التمرين (${ex.duration})
+                                    <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-completed="${isDay1Completed ? 'true' : 'false'}" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="flex: 1; background: ${isDay1Completed ? '#10b981' : 'linear-gradient(135deg, #d4af37 0%, #aa820a 100%)'}; color: ${isDay1Completed ? '#ffffff' : '#0a0e14'}; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.92em;">
+                                        ${isDay1Completed ? '✓ تم إنجاز التمرين بنجاح (انقر للإعادة إن رغبت)' : `⏱️ ابدأ مؤقت التمرين (${ex.duration})`}
                                     </button>
-                                    <button type="button" onclick="PatientFlow.markExerciseDone(this)" class="btn-mark-exercise-done" title="تأكيد إنجاز التمرين فوراً دون المؤقت" style="background: rgba(100,116,139,0.15); border: 1px solid #475569; color: #94a3b8; padding: 0 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85em; white-space: nowrap; transition: all 0.25s;">
-                                        تم ☑
+                                    <button type="button" onclick="PatientFlow.markExerciseDone(this)" class="btn-mark-exercise-done" title="تأكيد إنجاز التمرين فوراً دون المؤقت" style="background: ${isDay1Completed ? 'rgba(16,185,129,0.2)' : 'rgba(100,116,139,0.15)'}; border: 1px solid ${isDay1Completed ? '#10b981' : '#475569'}; color: ${isDay1Completed ? '#10b981' : '#94a3b8'}; padding: 0 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85em; white-space: nowrap; transition: all 0.25s;">
+                                        ${isDay1Completed ? 'منجز ✓' : 'تم ☑'}
                                     </button>
                                 </div>
                             </div>
@@ -5415,7 +5442,35 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                 </div>
             </div>
 
-            <!-- 5. زر توثيق إنجاز تمارين اليوم الأول وبدء فترة الاستشفاء (24 ساعة) والانتقال للخطوة 5 -->
+            <!-- 5. زر توثيق إنجاز تمارين اليوم الأول أو بطاقة المتابعة في حال الإنجاز المسبق -->
+            ${isDay1Completed ? `
+            <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(15, 23, 42, 0.95) 100%); border: 2px solid #10b981; border-radius: 14px; padding: 24px; text-align: center; margin: 25px 0; box-shadow: 0 8px 30px rgba(16, 185, 129, 0.25);">
+                <div style="color: #6ee7b7; font-size: 1.25em; font-weight: bold; margin-bottom: 8px;">✨ تمارين الجلسة الأولى مُنجزة وموثقة مسبقاً!</div>
+                <div style="color: #cbd5e1; font-size: 0.92em; margin-bottom: 20px; line-height: 1.7; max-width: 620px; margin-left: auto; margin-right: auto;">
+                    لقد أتممت بنجاح تمارين اليوم الأول وهي مسجلة في سجلك الطبي. يمكنك مراجعة الحركات هنا في أي وقت، أو الانتقال مباشرة لمتابعة باقي الجلسات في المرحلة الخامسة.
+                </div>
+                <button type="button" onclick="handleStepperClick(5)" class="btn-plan-royal-card" style="margin: 0 auto; max-width: 620px; width: 100%; border-color: #10b981;">
+                    <div class="royal-card-halo" style="background: radial-gradient(circle, rgba(16,185,129,0.3) 0%, transparent 70%);"></div>
+                    <div class="royal-card-shimmer"></div>
+                    <div class="royal-badge-pill" style="border-color: #10b981; color: #6ee7b7;">
+                        <span class="royal-badge-dot" style="background: #10b981;"></span>
+                        <span>📅 الجلسة الأولى مكتملة وموثقة</span>
+                    </div>
+                    <div class="royal-main-content">
+                        <div class="royal-icon-box" style="border-color: #10b981; color: #10b981;">
+                            <span class="royal-icon-emoji">🚀</span>
+                        </div>
+                        <div class="royal-text-col">
+                            <div class="royal-cta-headline" style="color: #6ee7b7;">الانتقال إلى متابعة الجلسات (المرحلة 5)</div>
+                            <div class="royal-cta-subline">استعراض الجلسات التالية ومؤشرات التعافي المعتمدة 📈</div>
+                        </div>
+                        <div class="royal-arrow-box" style="background: #10b981; color: #0a0e14;">
+                            <span class="royal-arrow-anim">⬅️</span>
+                        </div>
+                    </div>
+                </button>
+            </div>
+            ` : `
             <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%); border: 2px solid #10b981; border-radius: 14px; padding: 24px; text-align: center; margin: 25px 0; box-shadow: 0 8px 30px rgba(16, 185, 129, 0.25);">
                 <div style="color: #6ee7b7; font-size: 1.15em; font-weight: bold; margin-bottom: 8px;">🎯 خطوتك التالية بعد إتمام التمارين أعلاه:</div>
                 <div style="color: #cbd5e1; font-size: 0.9em; margin-bottom: 20px; line-height: 1.7; max-width: 600px; margin-left: auto; margin-right: auto;">
@@ -5447,6 +5502,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                     </button>
                 </div>
             </div>
+            `}
 
             <!-- خدمة الزيارات المنزلية واستشارة المعالج -->
             <div class="no-print">
@@ -5853,7 +5909,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <img src="assets/logo.png" alt="شعار وداعاً للألم" style="height: 55px; width: 55px; border-radius: 50%; border: 1.5px solid var(--primary-gold);">
                     <div>
-                        <h2 style="color: #ffffff; margin: 0 0 4px 0; font-size: 1.35em;">مرحباً ${sessionData.patient.name} 👋</h2>
+                        <h2 style="color: #ffffff; margin: 0 0 4px 0; font-size: 1.35em;">${formatPatientGreeting(sessionData.patient?.name)}</h2>
                         <div style="color: var(--primary-gold); font-size: 0.9em;">متابعة جلسات التأهيل الحركي (الجلسة ${activeDay} من 7) - منطقة ${sessionData.latestAssessment?.painAreaTitle || 'المفصل المختار'}</div>
                     </div>
                 </div>
@@ -6109,7 +6165,7 @@ async function renderStep6Completion(patientId, sessionData = null) {
     container.innerHTML = `
         <div style="background: linear-gradient(135deg, #0b1f17 0%, #153e2e 100%); border: 2px solid #10b981; border-radius: 16px; padding: 35px; color: #ffffff; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.6); margin-bottom: 25px;">
             <div style="font-size: 4em; margin-bottom: 10px;">🏆</div>
-            <h2 style="font-size: 2em; margin: 0 0 10px 0; color: #6ee7b7;">تهانينا القلبية ${sessionData.patient.name}!</h2>
+            <h2 style="font-size: 2em; margin: 0 0 10px 0; color: #6ee7b7;">تهانينا القلبية ${formatPatientAddress(sessionData.patient?.name)}!</h2>
             <div style="font-size: 1.15em; margin-bottom: 20px; color: #d1fae5;">لقد أتممت بنجاح برنامج الراحة والتأهيل الحركي (7 أيام كاملة) لمنطقة ${sessionData.latestAssessment?.painAreaTitle || 'المفصل'}</div>
             
             <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 15px; margin-bottom: 25px; display: inline-block;">
@@ -6365,8 +6421,21 @@ function showFutureSessionLockedPopup(currentDay, targetDay) {
         setTimeout(() => popup.remove(), 260);
     }, 2000);
 }
-// التحقق السريري من إتمام تمارين اليوم الأول وتوجيه المريض قبل فتح نافذة التوثيق
+// // التحقق السريري من إتمام تمارين اليوم الأول وتوجيه المريض قبل فتح نافذة التوثيق
 function handleStep4CompletionClick(patientId, forceSkip = false) {
+    const maxReached = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
+    const curDailyLogs = (typeof activePatient !== 'undefined' && activePatient?.dailyLogs) || [];
+    const isAlreadyDone = maxReached >= 5 || curDailyLogs.length >= 1;
+
+    if (isAlreadyDone && !forceSkip) {
+        if (typeof handleStepperClick === 'function') {
+            handleStepperClick(5);
+        } else if (typeof renderStep5SessionsDashboard === 'function') {
+            renderStep5SessionsDashboard(patientId);
+        }
+        return;
+    }
+
     if (!forceSkip) {
         const timerBtns = Array.from(document.querySelectorAll('#step-section-4 button.btn-exercise-timer'));
         const uncompleted = timerBtns.filter(btn => {
@@ -6423,12 +6492,10 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                 name: authP?.name || curAss?.patientName || 'المراجع المحترم',
                 phone: authP?.phone || curAss?.patientPhone || '',
                 painArea: resolvedPain,
-                painAreaTitle: resolvedPain,
-                painPointId: curAss?.pointId || 'lumbar_spine',
-                painLevel: curAss?.painSeverity || 7,
-                isPlanActivated: true
+                painPointId: curAss?.pointId || (typeof currentSelectedPoint !== 'undefined' ? currentSelectedPoint?.id : null) || 'lumbar_spine',
+                painLevel: curAss?.painSeverity || 7
             },
-            latestAssessment: curAss || { pointId: 'lumbar_spine', primaryDiagnosisKey: '', painAreaTitle: resolvedPain },
+            latestAssessment: curAss || { pointId: 'lumbar_spine', primaryDiagnosisKey: '' },
             dailyLogs: [],
             currentSessionDay: sessionNumber || 1,
             isPlanCompleted: false,
@@ -6437,7 +6504,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
     }
 
     const modal = document.getElementById('session-assessment-modal');
-    const content = document.getElementById('session-assessment-modal-content');
+    const content = document.getElementById('session-assessment-modal-content') || document.getElementById('session-assessment-content');
     if (!modal || !content) return;
 
     const pointKey = sessionData.latestAssessment?.pointId || sessionData.latestAssessment?.pointKey || sessionData.patient.painArea || sessionData.patient.painPointId || 'lumbar_spine';
@@ -6456,7 +6523,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
         </div>
 
         <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 10px; padding: 10px 14px; margin-bottom: 20px; color: #6ee7b7; font-size: 0.88em; line-height: 1.6;">
-            💡 <strong>مرحباً ${sessionData.patient.name}:</strong> يرجى توثيق استجابتك الحقيقية لتمارين الجلسة وفترة الاستشفاء السابقة. إجاباتك تُحدّث فوراً مؤشرات الشفاء والرسم البياني للجلسة التالية.
+            💡 <strong>${formatPatientGreeting(sessionData.patient?.name)}:</strong> يرجى توثيق استجابتك الحقيقية لتمارين الجلسة وفترة الاستشفاء السابقة. إجاباتك تُحدّث فوراً مؤشرات الشفاء والرسم البياني للجلسة التالية.
         </div>
 
         <!-- 1. مستوى شدة الألم الحالي -->
