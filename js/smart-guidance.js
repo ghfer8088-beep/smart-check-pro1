@@ -708,18 +708,17 @@ const SmartGuidance = (function() {
                 const hasReport = !!document.querySelector('#clinical-report-container .clinical-report-printable');
                 if (hasReport) {
                     // التقرير جاهز: تفعيل الخطة المجانية فوراً وبدء اليوم الأول
-                    const waBtn = document.querySelector('#clinical-report-container .btn-whatsapp-cta');
-                    const btnRoyal = document.getElementById('btn-activate-plan-royal');
-
-                    if (btnRoyal && typeof activateRecoveryPlanInstantly === 'function') {
+                    if (typeof window.activateRecoveryPlanInstantly === 'function') {
+                        window.activateRecoveryPlanInstantly();
+                    } else if (typeof activateRecoveryPlanInstantly === 'function') {
                         activateRecoveryPlanInstantly();
-                    } else if (btnRoyal) {
-                        btnRoyal.click();
-                    } else if (waBtn) {
-                        waBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        waBtn.click();
-                    } else if (typeof goToStep === 'function') {
-                        goToStep(4);
+                    } else {
+                        const btnRoyal = document.getElementById('btn-activate-plan-royal');
+                        if (btnRoyal) {
+                            btnRoyal.click();
+                        } else if (typeof goToStep === 'function') {
+                            goToStep(4);
+                        }
                     }
                 } else {
                     // التقرير قيد التحضير: التمرير بلطف للتقرير وطمأنة المريض دون مغادرة الصفحة
