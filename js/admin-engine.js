@@ -853,6 +853,41 @@ const AdminEngine = (function() {
         }
     }
 
+    // حفظ آمن في الذاكرة المحلية مع معالجة استباقية لامتلاء السعة (QuotaExceededError)
+    function safeStorageSet(key, val) {
+        try {
+            localStorage.setItem(key, val);
+            return true;
+        } catch(e) {
+            console.warn('LocalStorage quota exceeded on setItem, freeing temporary caches...', key);
+            try {
+                localStorage.removeItem('smart_geo_visits_history');
+                const nRaw = localStorage.getItem('smart_admin_notifications');
+                if (nRaw) {
+                    try {
+                        const notifs = JSON.parse(nRaw);
+                        if (Array.isArray(notifs)) {
+                            localStorage.setItem('smart_admin_notifications', JSON.stringify(notifs.slice(0, 10)));
+                        }
+                    } catch(err) {
+                        localStorage.removeItem('smart_admin_notifications');
+                    }
+                }
+                localStorage.setItem(key, val);
+                return true;
+            } catch(e2) {
+                console.warn('Storage quota still full for:', key, e2);
+                return false;
+            }
+        }
+    }
+
+    function safeStorageRemove(key) {
+        try {
+            localStorage.removeItem(key);
+        } catch(e) {}
+    }
+
     // التحكم الدقيق بتوقيت الجلسة الفردية لكل مريض بالساعة والدقيقة والثانية وبثه سحابياً لهاتف المريض
     function setPatientSessionTiming(patientId, sessionNum, hours, minutes, seconds, patientPhone = '', patientName = '', broadcastToAll = true) {
         const h = parseInt(hours) || 0;
@@ -864,47 +899,49 @@ const AdminEngine = (function() {
 
         const cleanPhone = patientPhone ? String(patientPhone).replace(/\D/g, '') : '';
 
-        if (forceUnlock) {
-            // فتح الجلسة فوراً لكافة الجلسات المحتملة لمنع أي تعارض في رقم الجلسة بين الأجهزة
-            localStorage.setItem(`force_unlock_${patientId}`, 'true');
-            localStorage.removeItem(`custom_target_time_${patientId}`);
-            localStorage.removeItem(`custom_total_duration_${patientId}`);
-            for (let i = 1; i <= 7; i++) {
-                localStorage.removeItem(`sessionStartTime_${patientId}_${i}`);
-            }
-            if (cleanPhone) {
-                localStorage.setItem(`force_unlock_${cleanPhone}`, 'true');
-                localStorage.removeItem(`custom_target_time_${cleanPhone}`);
-                localStorage.removeItem(`custom_total_duration_${cleanPhone}`);
+        try {
+            if (forceUnlock) {
+                // فتح الجلسة فوراً لكافة الجلسات المحتملة لمنع أي تعارض في رقم الجلسة بين الأجهزة
+                safeStorageSet(`force_unlock_${patientId}`, 'true');
+                safeStorageRemove(`custom_target_time_${patientId}`);
+                safeStorageRemove(`custom_total_duration_${patientId}`);
                 for (let i = 1; i <= 7; i++) {
-                    localStorage.removeItem(`sessionStartTime_${cleanPhone}_${i}`);
+                    safeStorageRemove(`sessionStartTime_${patientId}_${i}`);
+                }
+                if (cleanPhone) {
+                    safeStorageSet(`force_unlock_${cleanPhone}`, 'true');
+                    safeStorageRemove(`custom_target_time_${cleanPhone}`);
+                    safeStorageRemove(`custom_total_duration_${cleanPhone}`);
+                    for (let i = 1; i <= 7; i++) {
+                        safeStorageRemove(`sessionStartTime_${cleanPhone}_${i}`);
+                    }
+                }
+                if (broadcastToAll) {
+                    safeStorageSet('force_unlock_global', 'true');
+                    safeStorageRemove('custom_target_time_global');
+                    safeStorageRemove('custom_total_duration_global');
+                }
+            } else {
+                // تحديد وقت انتهاء دقيق
+                targetTime = Date.now() + totalDurationMs;
+                safeStorageSet(`custom_target_time_${patientId}`, String(targetTime));
+                safeStorageSet(`custom_total_duration_${patientId}`, String(totalDurationMs));
+                safeStorageRemove(`force_unlock_${patientId}`);
+                if (cleanPhone) {
+                    safeStorageSet(`custom_target_time_${cleanPhone}`, String(targetTime));
+                    safeStorageSet(`custom_total_duration_${cleanPhone}`, String(totalDurationMs));
+                    safeStorageRemove(`force_unlock_${cleanPhone}`);
+                }
+                if (broadcastToAll) {
+                    safeStorageSet('custom_target_time_global', String(targetTime));
+                    safeStorageSet('custom_total_duration_global', String(totalDurationMs));
+                    safeStorageRemove('force_unlock_global');
                 }
             }
-            if (broadcastToAll) {
-                localStorage.setItem('force_unlock_global', 'true');
-                localStorage.removeItem('custom_target_time_global');
-                localStorage.removeItem('custom_total_duration_global');
-            }
-        } else {
-            // تحديد وقت انتهاء دقيق
-            targetTime = Date.now() + totalDurationMs;
-            localStorage.setItem(`custom_target_time_${patientId}`, String(targetTime));
-            localStorage.setItem(`custom_total_duration_${patientId}`, String(totalDurationMs));
-            localStorage.removeItem(`force_unlock_${patientId}`);
-            if (cleanPhone) {
-                localStorage.setItem(`custom_target_time_${cleanPhone}`, String(targetTime));
-                localStorage.setItem(`custom_total_duration_${cleanPhone}`, String(totalDurationMs));
-                localStorage.removeItem(`force_unlock_${cleanPhone}`);
-            }
-            if (broadcastToAll) {
-                localStorage.setItem('custom_target_time_global', String(targetTime));
-                localStorage.setItem('custom_total_duration_global', String(totalDurationMs));
-                localStorage.removeItem('force_unlock_global');
-            }
+            safeStorageSet('countdownUpdated', Date.now().toString());
+        } catch(storageErr) {
+            console.warn('LocalStorage save warning in setPatientSessionTiming:', storageErr);
         }
-
-        // إرسال إشعار التحديث الفوري لكافة التبويبات المتزامنة محلياً
-        localStorage.setItem('countdownUpdated', Date.now().toString());
 
         // حفظ التوقيت داخل كائن المريض نفسه في SmartDB
         try {
@@ -925,27 +962,31 @@ const AdminEngine = (function() {
         } catch(e) {}
 
         // بث التحديث سحابياً لهاتف المريض فورياً
-        if (window.SmartCloudSync && typeof window.SmartCloudSync.dispatchTimingUpdate === 'function') {
-            window.SmartCloudSync.dispatchTimingUpdate({
-                patientId: patientId,
-                patientPhone: patientPhone,
-                patientName: patientName,
-                sessionNum: sessionNum,
-                hours: h,
-                minutes: m,
-                seconds: s,
-                totalDurationMs: totalDurationMs,
-                targetTime: targetTime,
-                forceUnlock: forceUnlock,
-                broadcastToAll: !!broadcastToAll,
-                global: !!broadcastToAll,
-                updatedAt: Date.now()
-            });
+        try {
+            if (window.SmartCloudSync && typeof window.SmartCloudSync.dispatchTimingUpdate === 'function') {
+                window.SmartCloudSync.dispatchTimingUpdate({
+                    patientId: patientId,
+                    patientPhone: patientPhone,
+                    patientName: patientName,
+                    sessionNum: sessionNum,
+                    hours: h,
+                    minutes: m,
+                    seconds: s,
+                    totalDurationMs: totalDurationMs,
+                    targetTime: targetTime,
+                    forceUnlock: forceUnlock,
+                    broadcastToAll: !!broadcastToAll,
+                    global: !!broadcastToAll,
+                    updatedAt: Date.now()
+                });
 
-            // تعميم حزمة المزامنة الكاملة فوراً لضمان احتفاظ السحابة بالتوقيت الجديد
-            if (typeof window.SmartCloudSync.broadcastSnapshot === 'function') {
-                setTimeout(() => window.SmartCloudSync.broadcastSnapshot(), 100);
+                // تعميم حزمة المزامنة الكاملة فوراً لضمان احتفاظ السحابة بالتوقيت الجديد
+                if (typeof window.SmartCloudSync.broadcastSnapshot === 'function') {
+                    setTimeout(() => window.SmartCloudSync.broadcastSnapshot(), 100);
+                }
             }
+        } catch(cloudErr) {
+            console.error('Error in cloud timing dispatch:', cloudErr);
         }
 
         return true;

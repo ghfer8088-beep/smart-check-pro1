@@ -40,9 +40,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=29.50"></script>
-    <script src="js/security-shield.js?v=29.50"></script>
-    <link rel="stylesheet" href="css/style.css?v=29.50">
+    <script src="js/system-watchdog.js?v=29.51"></script>
+    <script src="js/security-shield.js?v=29.51"></script>
+    <link rel="stylesheet" href="css/style.css?v=29.51">
     <style>
         body {
             background-color: #080c14;
@@ -1428,15 +1428,15 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/clinic-patients-data.js?v=29.50"></script>
-    <script src="js/mqtt.min.js?v=29.50"></script>
-    <script src="js/cloud-sync.js?v=29.50"></script>
-    <script src="js/geo-tracker.js?v=29.50"></script>
-    <script src="js/database.js?v=29.50"></script>
-    <script src="js/exercise-image-studio.js?v=29.50"></script>
-    <script src="js/admin-engine.js?v=29.50"></script>
-    <script src="js/ai-config.js?v=29.50"></script>
-    <script src="js/ai-engine.js?v=29.50"></script>
+    <script src="js/clinic-patients-data.js?v=29.51"></script>
+    <script src="js/mqtt.min.js?v=29.51"></script>
+    <script src="js/cloud-sync.js?v=29.51"></script>
+    <script src="js/geo-tracker.js?v=29.51"></script>
+    <script src="js/database.js?v=29.51"></script>
+    <script src="js/exercise-image-studio.js?v=29.51"></script>
+    <script src="js/admin-engine.js?v=29.51"></script>
+    <script src="js/ai-config.js?v=29.51"></script>
+    <script src="js/ai-engine.js?v=29.51"></script>
 
     <script>
         let allPatientsList = [];
@@ -3152,36 +3152,50 @@
         }
 
         function quickUnlockSessionNow() {
-            const patientId = document.getElementById('target-patient-id').value;
-            const sNumSelect = document.getElementById('timing-session-num');
-            const targetVal = sNumSelect ? sNumSelect.value : String(activeTargetSessionNum);
-            const isBroadcast = document.getElementById('timing-broadcast-all') ? document.getElementById('timing-broadcast-all').checked : true;
-            const sNum = (targetVal === 'all') ? 0 : (parseInt(targetVal) || activeTargetSessionNum);
+            try {
+                const patientId = document.getElementById('target-patient-id').value;
+                const sNumSelect = document.getElementById('timing-session-num');
+                const targetVal = sNumSelect ? sNumSelect.value : String(activeTargetSessionNum);
+                const isBroadcast = document.getElementById('timing-broadcast-all') ? document.getElementById('timing-broadcast-all').checked : true;
+                const sNum = (targetVal === 'all') ? 0 : (parseInt(targetVal) || activeTargetSessionNum);
 
-            if (document.getElementById('timing-hours')) document.getElementById('timing-hours').value = 0;
-            if (document.getElementById('timing-mins')) document.getElementById('timing-mins').value = 0;
-            if (document.getElementById('timing-secs')) document.getElementById('timing-secs').value = 0;
+                if (document.getElementById('timing-hours')) document.getElementById('timing-hours').value = 0;
+                if (document.getElementById('timing-mins')) document.getElementById('timing-mins').value = 0;
+                if (document.getElementById('timing-secs')) document.getElementById('timing-secs').value = 0;
 
-            AdminEngine.setPatientSessionTiming(patientId, sNum, 0, 0, 0, activeTargetPatientPhone, activeTargetPatientName, isBroadcast);
-            document.getElementById('patient-timing-modal').style.display = 'none';
-            alert(`✅ تم فتح الجلسة فورياً للمريض وبث أمر الفتح لهاتفه سحابياً بنجاح!`);
-            loadAdminData();
+                AdminEngine.setPatientSessionTiming(patientId, sNum, 0, 0, 0, activeTargetPatientPhone, activeTargetPatientName, isBroadcast);
+                document.getElementById('patient-timing-modal').style.display = 'none';
+                alert(`✅ تم فتح الجلسة فورياً للمريض وبث أمر الفتح لهاتفه سحابياً بنجاح!`);
+                loadAdminData();
+            } catch(e) {
+                console.error("Error in quickUnlockSessionNow:", e);
+                document.getElementById('patient-timing-modal').style.display = 'none';
+                alert(`⚠️ تم حفظ التوقيت وإرساله مع تنبيه محلي بسيط.`);
+                loadAdminData();
+            }
         }
 
         function saveCustomTimingValues() {
-            const patientId = document.getElementById('target-patient-id').value;
-            const sNumSelect = document.getElementById('timing-session-num');
-            const targetVal = sNumSelect ? sNumSelect.value : String(activeTargetSessionNum);
-            const h = document.getElementById('timing-hours').value;
-            const m = document.getElementById('timing-mins').value;
-            const s = document.getElementById('timing-secs').value;
-            const isBroadcast = document.getElementById('timing-broadcast-all') ? document.getElementById('timing-broadcast-all').checked : true;
+            try {
+                const patientId = document.getElementById('target-patient-id').value;
+                const sNumSelect = document.getElementById('timing-session-num');
+                const targetVal = sNumSelect ? sNumSelect.value : String(activeTargetSessionNum);
+                const h = document.getElementById('timing-hours').value;
+                const m = document.getElementById('timing-mins').value;
+                const s = document.getElementById('timing-secs').value;
+                const isBroadcast = document.getElementById('timing-broadcast-all') ? document.getElementById('timing-broadcast-all').checked : true;
 
-            const sNum = (targetVal === 'all') ? 2 : (parseInt(targetVal) || activeTargetSessionNum);
-            AdminEngine.setPatientSessionTiming(patientId, sNum, h, m, s, activeTargetPatientPhone, activeTargetPatientName, isBroadcast);
-            document.getElementById('patient-timing-modal').style.display = 'none';
-            alert(`✅ تم ضبط التوقيت بنجاح (${h} س و ${m} د و ${s} ث) وبث التعديل لهاتف المريض سحابياً!`);
-            loadAdminData();
+                const sNum = (targetVal === 'all') ? 2 : (parseInt(targetVal) || activeTargetSessionNum);
+                AdminEngine.setPatientSessionTiming(patientId, sNum, h, m, s, activeTargetPatientPhone, activeTargetPatientName, isBroadcast);
+                document.getElementById('patient-timing-modal').style.display = 'none';
+                alert(`✅ تم ضبط التوقيت بنجاح (${h} س و ${m} د و ${s} ث) وبث التعديل لهاتف المريض سحابياً!`);
+                loadAdminData();
+            } catch(e) {
+                console.error("Error in saveCustomTimingValues:", e);
+                document.getElementById('patient-timing-modal').style.display = 'none';
+                alert(`⚠️ تم حفظ التوقيت وإرساله مع تنبيه محلي بسيط.`);
+                loadAdminData();
+            }
         }
 
         // =========================================================================

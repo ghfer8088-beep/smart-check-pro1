@@ -1224,7 +1224,11 @@
                         }
                     }
                     existing.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
-                    localStorage.setItem(lsKey, JSON.stringify(existing));
+                    try {
+                        localStorage.setItem(lsKey, JSON.stringify(existing));
+                    } catch(qErr) {
+                        // في حال امتلاء الذاكرة المؤقتة، يعتمد النظام كلياً على IndexedDB
+                    }
                     // حفظ IndexedDB بالتوازي الكامل لمنع أي تعليق
                     if (dbSavePromises.length > 0) {
                         await Promise.all(dbSavePromises);
@@ -1258,11 +1262,15 @@
                         localVisits.push(v);
                     }
                 }
-                if (localVisits.length > 1000) localVisits = localVisits.slice(-1000);
-                localStorage.setItem(VISITS_KEY, JSON.stringify(localVisits));
+                if (localVisits.length > 100) localVisits = localVisits.slice(-100);
+                try {
+                    localStorage.setItem(VISITS_KEY, JSON.stringify(localVisits));
+                } catch(qErr) {
+                    try { localStorage.setItem(VISITS_KEY, JSON.stringify(localVisits.slice(-25))); } catch(e) {}
+                }
             }
 
-            localStorage.setItem('smart_last_cloud_sync_time', Date.now().toString());
+            try { localStorage.setItem('smart_last_cloud_sync_time', Date.now().toString()); } catch(e) {}
             if (syncBroadcastChannel) {
                 syncBroadcastChannel.postMessage({ type: 'FULL_SNAPSHOT_IMPORTED', timestamp: Date.now() });
             }

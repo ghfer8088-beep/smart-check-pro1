@@ -6942,7 +6942,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v29.50';
+const CURRENT_APP_VERSION = 'v29.51';
 let _versionCheckInProgress = false;
 
 // إظهار تنبيه هادئ وغير تدخلي بوجود تحديث جديد مع إمكانية الإغلاق التام
