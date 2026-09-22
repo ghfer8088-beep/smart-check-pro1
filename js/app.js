@@ -5046,29 +5046,73 @@ function showRoyalDuaaModal(patientId) {
         modal.style.display = 'flex';
         const inner = modal.querySelector('.modal-inner');
         if (inner) inner.scrollTop = 0;
+
+        // إخفاء مؤقت للشريط الإرشادي السفلي لضمان رؤية ونقر زر تأمين الدعاء براحة تامة على الشاشات الصغيرة
+        const stickyBar = document.getElementById('sticky-patient-guidance-bar');
+        if (stickyBar) {
+            stickyBar.style.transform = 'translateY(120%)';
+            stickyBar.style.transition = 'transform 0.3s ease';
+        }
+
         if (window.SmartGuidance && typeof SmartGuidance.guideDuaaModal === 'function') {
             SmartGuidance.guideDuaaModal();
         }
     } else {
+        if (typeof goToStep === 'function') goToStep(4);
         loadPatientRecoveryDashboard(patientId);
     }
 }
 window.showRoyalDuaaModal = showRoyalDuaaModal;
 
-function confirmRoyalDuaaAndProceed() {
+function closeRoyalDuaaModal() {
     const modal = document.getElementById('royal-duaa-modal');
     if (modal) modal.style.display = 'none';
+    const stickyBar = document.getElementById('sticky-patient-guidance-bar');
+    if (stickyBar) {
+        stickyBar.style.transform = 'translateY(0)';
+    }
+    if (window.SmartGuidance && typeof SmartGuidance.checkLiveGuidanceState === 'function') {
+        SmartGuidance.checkLiveGuidanceState();
+    }
+}
+window.closeRoyalDuaaModal = closeRoyalDuaaModal;
+
+async function confirmRoyalDuaaAndProceed() {
+    const modal = document.getElementById('royal-duaa-modal');
+    if (modal) modal.style.display = 'none';
+
+    // إعادة ظهور شريط التوجيه الطبي وتأهيله للمرحلة 4
+    const stickyBar = document.getElementById('sticky-patient-guidance-bar');
+    if (stickyBar) {
+        stickyBar.style.transform = 'translateY(0)';
+    }
+
+    // 1. الانتقال الحتمي والفوري للخطوة 4 (تمارين اليوم الأول) وإخفاء الخطوة 3 تماماً
+    if (typeof goToStep === 'function') {
+        goToStep(4);
+    }
     if (window.SmartGuidance && typeof SmartGuidance.onDuaaModalClosed === 'function') {
         SmartGuidance.onDuaaModalClosed();
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
     const pId = pendingDuaaPatientId || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null) || activePatient?.patientId || ('P-' + Date.now().toString().slice(-6));
     showToast('🌿 تقبّل الله دعاءكم وبارك في صحتكم وعافيتكم.. بدء خطة التعافي (اليوم الأول)', 'success');
+
     try {
-        loadPatientRecoveryDashboard(pId);
+        await loadPatientRecoveryDashboard(pId);
     } catch (e) {
         console.error('Error loading recovery dashboard:', e);
-        if (typeof goToStep === 'function') goToStep(4);
+        if (typeof renderStep4IndependentDay1 === 'function') {
+            await renderStep4IndependentDay1(pId);
+        }
     }
+
+    // ضمان التركيز على بداية قسم تمارين اليوم الأول
+    setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
+
     if (typeof playStationAudio === 'function') {
         try {
             playStationAudio('recovery');
@@ -6167,8 +6211,32 @@ async function loadPatientRecoveryDashboard(patientId, targetDay = null) {
         } catch(e) {}
     }
     if (!sessionData || !sessionData.patient) {
-        console.warn('Patient sessionData unavailable; preserving active session without reset.');
-        return;
+        console.warn('[loadPatientRecoveryDashboard] Building robust instant fallback session for Day 1.');
+        const curAss = currentAssessmentData || (function() {
+            try { return JSON.parse(localStorage.getItem('smart_current_assessment')); } catch(e) { return null; }
+        })();
+        const authP = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+        const curP = window.activePatient || activePatient;
+        const fallbackId = patientId || authP?.patientId || curP?.patientId || ('P-' + Date.now().toString().slice(-6));
+        const resolvedPain = (typeof resolvePainAreaTitle === 'function') ? resolvePainAreaTitle(null, curAss, (typeof currentSelectedPoint !== 'undefined' ? currentSelectedPoint : null)) : (curAss?.painAreaTitle || 'الفقرات القطنية وأسفل الظهر');
+        sessionData = {
+            patient: curP || {
+                patientId: fallbackId,
+                id: fallbackId,
+                name: authP?.name || curAss?.patientName || 'المراجع المحترم',
+                phone: authP?.phone || curAss?.patientPhone || '',
+                painArea: resolvedPain,
+                painAreaTitle: resolvedPain,
+                painPointId: curAss?.pointId || 'lumbar_spine',
+                painLevel: curAss?.painSeverity || 7,
+                isPlanActivated: true
+            },
+            latestAssessment: curAss || { pointId: 'lumbar_spine', primaryDiagnosisKey: '', painAreaTitle: resolvedPain },
+            dailyLogs: [],
+            currentSessionDay: 1,
+            isPlanCompleted: false,
+            stageTitle: 'مرحلة تفريغ الضغط الميكانيكي وتهيئة الأنسجة'
+        };
     }
 
     activePatient = sessionData.patient;
@@ -6813,6 +6881,30 @@ window._applyUpdateNow = function() {
     if (banner) banner.remove();
     _doSafeReload();
 };
+
+const CURRENT_APP_VERSION = 'v29.36';
+let _versionCheckInProgress = false;
+
+// فحص مباشر وفوري لرقم الإصدار المنشور على السيرفر/GitHub
+async function _checkRemoteVersionUpdate() {
+    if (_versionCheckInProgress || _autoReloadTriggered) return;
+    _versionCheckInProgress = true;
+    try {
+        const res = await fetch('sw.js?_chk=' + Date.now(), { cache: 'no-store' });
+        if (res && res.ok) {
+            const text = await res.text();
+            const match = text.match(/CACHE_NAME\s*=\s*['"]wada3an-alam-(v[\d\.]+)['"]/);
+            if (match && match[1] && match[1] !== CURRENT_APP_VERSION) {
+                console.log('[UpdateChecker] New system version detected:', match[1], 'current:', CURRENT_APP_VERSION);
+                _triggerAutoReloadCountdown();
+            }
+        }
+    } catch (e) {
+    } finally {
+        _versionCheckInProgress = false;
+    }
+}
+window._checkRemoteVersionUpdate = _checkRemoteVersionUpdate;
 
 function _triggerAutoReloadCountdown() {
     if (_autoReloadTriggered) return;
@@ -7994,9 +8086,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const installingWorker = registration.installing;
                 if (installingWorker) {
                     installingWorker.onstatechange = () => {
-                        // ℹ️ SW الجديد انتهى من التثبيت — سيأتي postMessage من activate لإعادة التحميل
                         if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
                             console.log('[App] New SW installed, awaiting activation...');
+                        }
+                        if (installingWorker.state === 'activated') {
+                            _triggerAutoReloadCountdown();
                         }
                     };
                 }
@@ -8025,16 +8119,41 @@ document.addEventListener('DOMContentLoaded', async () => {
             navigator.serviceWorker.getRegistration().then((reg) => {
                 if (reg) reg.update().catch(() => {});
             }).catch(() => {});
+            if (typeof _checkRemoteVersionUpdate === 'function') {
+                _checkRemoteVersionUpdate();
+            }
             if (window.SmartCloudSync && typeof SmartCloudSync.fetchRemoteTimingUpdates === 'function') {
                 SmartCloudSync.fetchRemoteTimingUpdates();
             }
         });
 
         document.addEventListener('visibilitychange', () => {
-            if (!document.hidden && window.SmartCloudSync && typeof SmartCloudSync.fetchRemoteTimingUpdates === 'function') {
-                SmartCloudSync.fetchRemoteTimingUpdates();
+            if (!document.hidden) {
+                if (typeof _checkRemoteVersionUpdate === 'function') {
+                    _checkRemoteVersionUpdate();
+                }
+                if (window.SmartCloudSync && typeof SmartCloudSync.fetchRemoteTimingUpdates === 'function') {
+                    SmartCloudSync.fetchRemoteTimingUpdates();
+                }
             }
         });
+
+        // 🔄 فحص دوري تلقائي كل 25 ثانية يضمن وصول التحديثات لشاشات اللابتوب والتابلت المفتوحة
+        setInterval(() => {
+            navigator.serviceWorker.getRegistration().then((reg) => {
+                if (reg) reg.update().catch(() => {});
+            }).catch(() => {});
+            if (typeof _checkRemoteVersionUpdate === 'function') {
+                _checkRemoteVersionUpdate();
+            }
+        }, 25000);
+    } else {
+        // إذا كان التطبيق يعمل بدون ServiceWorker (مثل التصفح الخاص أو المتصفحات القديمة)، فحص دوري للنسخة عبر الشبكة
+        setInterval(() => {
+            if (typeof _checkRemoteVersionUpdate === 'function') {
+                _checkRemoteVersionUpdate();
+            }
+        }, 25000);
     }
 
     // تهيئة الاستماع اللحظي لتعديل توقيت الجلسات سحابياً من لوحة الإدارة

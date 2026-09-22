@@ -1585,6 +1585,46 @@ body {
     }
 }
 
+/* تحسين موضع ومظهر نافذة الدعاء والصدقة الجارية (royal-duaa-modal) خاصة للهواتف */
+#royal-duaa-modal {
+    z-index: 2000100 !important;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (max-width: 768px) {
+    #royal-duaa-modal {
+        padding: 14px 10px 100px 10px !important;
+        align-items: flex-start !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+    #royal-duaa-modal .modal-inner {
+        margin: 10px auto 35px auto !important;
+        padding: 22px 14px !important;
+        max-height: none !important;
+        width: 96% !important;
+        box-sizing: border-box !important;
+    }
+    #royal-duaa-modal h2 {
+        font-size: 1.3em !important;
+        margin-bottom: 12px !important;
+    }
+    #royal-duaa-modal p {
+        font-size: 0.9em !important;
+        line-height: 1.7 !important;
+        padding: 10px !important;
+        margin-bottom: 16px !important;
+    }
+    #royal-duaa-modal #btn-confirm-duaa {
+        padding: 14px 18px !important;
+        font-size: 0.95em !important;
+        white-space: normal !important;
+        line-height: 1.4 !important;
+    }
+}
+
 .modal-inner {
     background: #111827;
     border: 1px solid var(--primary-gold);

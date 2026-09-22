@@ -749,7 +749,11 @@ const SmartGuidance = (function() {
                     const activeEx = document.querySelector('#step-section-4 button.btn-exercise-timer[data-running="true"]')?.closest('.clinical-exercise-card');
                     if (activeEx) activeEx.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 } else {
-                    // الحالة المبدئية: التمرير إلى أول تمرين وتشغيل مؤقته
+                    // الحالة المبدئية: ضمان ظهور قسم المرحلة 4 أولاً ثم التمرير إلى أول تمرين وتشغيل مؤقته
+                    const step4Sec = document.getElementById('step-section-4');
+                    if (step4Sec && (step4Sec.style.display === 'none' || window.getComputedStyle(step4Sec).display === 'none')) {
+                        if (typeof goToStep === 'function') goToStep(4);
+                    }
                     const firstEx = document.querySelector('#step-section-4 .clinical-exercise-card');
                     if (firstEx) {
                         firstEx.scrollIntoView({ behavior: 'smooth', block: 'center' });
