@@ -5390,8 +5390,8 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                                     <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="flex: 1; background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.92em;">
                                         ⏱️ ابدأ مؤقت التمرين (${ex.duration})
                                     </button>
-                                    <button type="button" onclick="PatientFlow.markExerciseDone(this)" class="btn-mark-exercise-done" title="تأكيد إنجاز التمرين فوراً" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #10b981; padding: 0 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.9em; white-space: nowrap; transition: 0.2s;">
-                                        ✅ تم
+                                    <button type="button" onclick="PatientFlow.markExerciseDone(this)" class="btn-mark-exercise-done" title="تأكيد إنجاز التمرين فوراً دون المؤقت" style="background: rgba(100,116,139,0.15); border: 1px solid #475569; color: #94a3b8; padding: 0 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85em; white-space: nowrap; transition: all 0.25s;">
+                                        تم ☑
                                     </button>
                                 </div>
                             </div>
@@ -6904,7 +6904,7 @@ window._applyUpdateNow = function() {
     _doSafeReload();
 };
 
-const CURRENT_APP_VERSION = 'v29.40';
+const CURRENT_APP_VERSION = 'v29.41';
 let _versionCheckInProgress = false;
 
 // فحص مباشر وفوري لرقم الإصدار المنشور على السيرفر/GitHub

@@ -593,7 +593,7 @@ const PatientFlow = (function() {
         }
         if (progressBar) progressBar.style.width = '100%';
 
-        actionBtn.style.background = '#059669';
+        actionBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
         actionBtn.style.borderColor = '#10b981';
         actionBtn.style.color = '#ffffff';
         actionBtn.innerHTML = '✅ تم';

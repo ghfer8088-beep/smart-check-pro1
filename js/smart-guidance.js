@@ -789,10 +789,13 @@ const SmartGuidance = (function() {
                             targetCard.style.boxShadow = '';
                         }, 2500);
 
-                        const timerBtn = targetCard.querySelector('.btn-exercise-timer');
-                        if (timerBtn && timerBtn.dataset.running !== 'true') {
-                            timerBtn.click();
-                        }
+                        // تأخير بسيط للسماح بانتهاء الانتقال السلس قبل بدء المؤقت
+                        setTimeout(() => {
+                            const timerBtn = targetCard.querySelector('.btn-exercise-timer');
+                            if (timerBtn && timerBtn.dataset.running !== 'true' && timerBtn.dataset.completed !== 'true') {
+                                timerBtn.click();
+                            }
+                        }, 650);
                     }
                     const exNum = progress.nextUncompletedIndex >= 0 ? (progress.nextUncompletedIndex + 1) : 1;
                     if (typeof showToast === 'function') {
