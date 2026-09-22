@@ -33,23 +33,7 @@ const SmartGuidance = (function() {
             }
         } catch (e) {}
 
-        // ✅ v29.19: استرجاع hasExercisedInSession من localStorage بدل تصفيره دائماً
-        try {
-            const savedDate = localStorage.getItem('smart_exercised_date');
-            const today = new Date().toDateString();
-            if (savedDate === today) {
-                hasExercisedInSession = true;
-            }
-        } catch(e) {}
-
-        // مراقبة نقرات مؤقتات التمارين لتسجيل تفاعل المريض مع التمارين
-        document.addEventListener('click', function(e) {
-            if (e.target && (e.target.closest('.btn-exercise-timer') || e.target.classList.contains('btn-exercise-timer'))) {
-                hasExercisedInSession = true;
-                // ✅ v29.19: حفظ حالة الانتهاء من التمرين مع تاريخ اليوم
-                try { localStorage.setItem('smart_exercised_date', new Date().toDateString()); } catch(e) {}
-            }
-        }, true);
+        // يتم تحديد حالة إتمام التمارين ديناميكياً وبشكل موضوعي من واقع DOM التمارين الحقيقي
 
         setTimeout(() => {
             const savedStep = parseInt(localStorage.getItem('smart_current_step') || '1', 10);
@@ -104,12 +88,7 @@ const SmartGuidance = (function() {
     function updateStep(stepNum) {
         currentStep = stepNum;
         isAiAnalyzing = false;
-        // ✅ v29.19: لا نُصفّر hasExercisedInSession عند الانتقال — بل نستعيده من localStorage
-        try {
-            const savedDate = localStorage.getItem('smart_exercised_date');
-            const today = new Date().toDateString();
-            hasExercisedInSession = (savedDate === today);
-        } catch(e) { hasExercisedInSession = false; }
+        hasExercisedInSession = false;
 
         // ✅ v29.19: إيقاف المراقب بعد إتمام المرحلة 6 لتوفير الموارد
         if (stepNum >= 6 && liveWatcherInterval) {
@@ -463,6 +442,42 @@ const SmartGuidance = (function() {
         if (btnText) btnText.textContent = 'تأكيد رقم الهاتف والمتابعة ❯';
     }
 
+    // فحص دقيق وموضوعي لحالة تمارين المرحلة الرابعة من واقع عناصر DOM الحقيقية
+    function getStep4ExerciseProgress() {
+        const cards = Array.from(document.querySelectorAll('#step-section-4 .clinical-exercise-card'));
+        const total = cards.length;
+        
+        let completedCount = 0;
+        let runningCount = 0;
+        let nextUncompleted = null;
+        let nextUncompletedIndex = -1;
+
+        cards.forEach((card, idx) => {
+            const btn = card.querySelector('button.btn-exercise-timer');
+            const isCompleted = btn && (btn.dataset.completed === 'true' || btn.style.background.includes('10b981') || btn.innerHTML.includes('تم إنجاز') || btn.innerHTML.includes('بنجاح'));
+            const isRunning = btn && btn.dataset.running === 'true';
+
+            if (isRunning) runningCount++;
+            if (isCompleted) {
+                completedCount++;
+            } else if (nextUncompleted === null) {
+                nextUncompleted = card;
+                nextUncompletedIndex = idx;
+            }
+        });
+
+        const allDone = (total > 0 && completedCount >= total);
+
+        return {
+            total,
+            completedCount,
+            runningCount,
+            nextUncompleted,
+            nextUncompletedIndex,
+            allDone
+        };
+    }
+
     // -------------------------------------------------------------------------
     // المرحلة 4: تمارين اليوم الأول (تسلسلي: تعليمات -> مؤقت -> توثيق)
     // -------------------------------------------------------------------------
@@ -476,49 +491,45 @@ const SmartGuidance = (function() {
 
         if (!btn) return;
 
-        const cards = Array.from(document.querySelectorAll('#step-section-4 .clinical-exercise-card'));
-        const totalEx = cards.length;
-        const doneEx = cards.filter(c => {
-            const b = c.querySelector('button.btn-exercise-timer');
-            return b && (b.style.background.includes('10b981') || b.innerHTML.includes('تم إنجاز') || b.dataset.completed === 'true');
-        }).length;
-        const isRunning = !!document.querySelector('#step-section-4 button.btn-exercise-timer[data-running="true"]');
-        const allDone = hasExercisedInSession || (totalEx > 0 && doneEx >= totalEx);
+        const progress = getStep4ExerciseProgress();
 
-        if (isRunning) {
-            // الحالة 2: تمرين جارٍ حالياً
+        if (progress.runningCount > 0) {
+            // مؤقت تمرين يعمل حالياً
             activeSubState = 'step4_exercising';
             updateStageFlowBanner(4, 1);
             if (iconEl) iconEl.textContent = '⏱️';
-            if (subEl) subEl.textContent = 'المرحلة 4: مؤقت التمرين الحركي يعمل الآن';
+            if (subEl) subEl.textContent = 'المرحلة 4: مؤقت التمرين الحركي يعمل الآن...';
             if (mainEl) mainEl.textContent = 'تنفس بعمق مع كل حركة.. استمر حتى اكتمال المؤقت بالتكنيك السليم';
 
             btn.className = 'sticky-guidance-action-btn state-pending';
             if (btnIcon) btnIcon.textContent = '⏱️';
             if (btnText) btnText.textContent = 'مؤقت التمرين يعمل الآن...';
-        } else if (allDone) {
-            // الحالة 3: أتم كافة التمارين وبات جاهزاً لتوثيق الجلسة
+        } else if (progress.allDone) {
+            // الشرط 6: بعد إتمام التمارين يتحول زر الإرشاد إلى "تم تفعيل زر توثيق الجلسة"
             activeSubState = 'step4_done';
             updateStageFlowBanner(4, 2);
-            if (iconEl) iconEl.textContent = '✅';
-            if (subEl) subEl.textContent = 'المرحلة 4 (خطوة 2 من 2): توثيق إنجاز اليوم الأول';
-            if (mainEl) mainEl.textContent = '🎉 أحسنت! أتممت كافة تمارين اليوم الأول.. اضغط أدناه لتوثيق الجلسة وبدء الاستشفاء (24 س)';
+            if (iconEl) iconEl.textContent = '🎉';
+            if (subEl) subEl.textContent = 'المرحلة 4 (خطوة 2 من 2): توثيق الجلسة وبدء الاستشفاء';
+            if (mainEl) mainEl.textContent = '🎉 تم إنجاز كافة التمارين بنجاح! تم تفعيل زر توثيق الجلسة وبدء الاستشفاء (24 س)';
 
             btn.className = 'sticky-guidance-action-btn state-ready';
             if (btnIcon) btnIcon.textContent = '✅';
-            if (btnText) btnText.textContent = 'توثيق إنجاز اليوم الأول وبدء الاستشفاء ❯';
+            if (btnText) btnText.textContent = 'تم تفعيل زر توثيق الجلسة - اضغط هنا للتوثيق ❯';
         } else {
-            // الحالة 1: شرط سريري إلزامي لأداء التمارين المقترحة أولاً
+            // الشرط 4 & 5: لم تكتمل التمارين بعد -> عرض الشرط السريري الواضح وزر بدء التمرين غير المنجز بالتوالي
             activeSubState = 'step4_initial';
             updateStageFlowBanner(4, 1);
-            if (iconEl) iconEl.textContent = '🏋️';
-            const remainingCount = totalEx > 0 ? (totalEx - doneEx) : 1;
-            if (subEl) subEl.textContent = `المرحلة 4 (خطوة 1 من 2): أداء التمارين المقررة (متبقي ${remainingCount} من ${totalEx || 3})`;
-            if (mainEl) mainEl.textContent = '⚠️ شرط سريري: يرجى أداء التمارين وتشغيل مؤقتاتها المقترحة أدناه قبل توثيق الجلسة';
+            if (iconEl) iconEl.textContent = '⚠️';
+            const exNum = progress.nextUncompletedIndex >= 0 ? (progress.nextUncompletedIndex + 1) : 1;
+            
+            if (subEl) subEl.textContent = `المرحلة 4 (خطوة 1 من 2): أداء التمارين المقررة (أنجزت ${progress.completedCount} من ${progress.total || 3})`;
+            // الشرط 4 نصاً:
+            if (mainEl) mainEl.textContent = '⚠️ لا يمكنك الانتقال لتوثيق الجلسة إلا بعد إتمامك لكافة التمارين المقترحة أدناه';
 
             btn.className = 'sticky-guidance-action-btn state-gold';
             if (btnIcon) btnIcon.textContent = '⏱️';
-            if (btnText) btnText.textContent = 'تشغيل مؤقت التمرين التالي ❯';
+            // الشرط 5:
+            if (btnText) btnText.textContent = `بدء التمرين #${exNum} ❯`;
         }
     }
 
@@ -537,7 +548,7 @@ const SmartGuidance = (function() {
 
         const isLocked = !!document.querySelector('.royal-clinical-lock-btn') || !!document.getElementById('recovery-progress-remaining-text');
         const isRunning = !!document.querySelector('#step-section-5 button.btn-exercise-timer[data-running="true"]');
-        const isDone = hasExercisedInSession || !!document.querySelector('#step-section-5 button.btn-exercise-timer[style*="10b981"]');
+        const isDone = !!document.querySelector('#step-section-5 button.btn-exercise-timer[data-completed="true"]') || !!document.querySelector('#step-section-5 button.btn-exercise-timer[style*="10b981"]');
 
         // ✅ v29.19: استخراج رقم الجلسة الحالية لعرضه في الشريط
         let sessionLabel = '';
@@ -742,8 +753,9 @@ const SmartGuidance = (function() {
 
             case 4: {
                 const patientId = (typeof activePatient !== 'undefined' && activePatient?.patientId) || (typeof SmartDB !== 'undefined' && SmartDB.getCurrentSessionPatientId ? SmartDB.getCurrentSessionPatientId() : null) || 'pat_guest';
+                const progress = getStep4ExerciseProgress();
 
-                if (activeSubState === 'step4_done') {
+                if (progress.allDone || activeSubState === 'step4_done') {
                     // أتم التمارين -> فتح نافذة التوثيق
                     if (typeof handleStep4CompletionClick === 'function') {
                         handleStep4CompletionClick(patientId);
@@ -755,7 +767,7 @@ const SmartGuidance = (function() {
                             openSessionAssessmentModal(patientId, 1);
                         }
                     }
-                } else if (activeSubState === 'step4_exercising') {
+                } else if (progress.runningCount > 0 || activeSubState === 'step4_exercising') {
                     // تمرين يعمل -> التمرير للتمرين الجاري
                     const activeEx = document.querySelector('#step-section-4 button.btn-exercise-timer[data-running="true"]')?.closest('.clinical-exercise-card');
                     if (activeEx) activeEx.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -766,17 +778,12 @@ const SmartGuidance = (function() {
                         if (typeof goToStep === 'function') goToStep(4);
                     }
 
-                    // العثور على أول تمرين لم يُنجز بعد والتمرير إليه وتشغيل مؤقته
-                    const uncompletedCards = Array.from(document.querySelectorAll('#step-section-4 .clinical-exercise-card')).filter(c => {
-                        const btnEl = c.querySelector('button.btn-exercise-timer');
-                        return btnEl && !btnEl.style.background.includes('10b981') && !btnEl.innerHTML.includes('تم إنجاز') && btnEl.dataset.completed !== 'true';
-                    });
-
-                    const targetCard = uncompletedCards.length > 0 ? uncompletedCards[0] : document.querySelector('#step-section-4 .clinical-exercise-card');
+                    // الشرط 5: الانتقال للتمرين الذي لم ينجز بالتوالي وبدء تشغيله
+                    const targetCard = progress.nextUncompleted || document.querySelector('#step-section-4 .clinical-exercise-card');
                     if (targetCard) {
                         targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        targetCard.style.outline = '2px solid #eab308';
-                        targetCard.style.boxShadow = '0 0 25px rgba(234, 179, 8, 0.6)';
+                        targetCard.style.outline = '3px solid #eab308';
+                        targetCard.style.boxShadow = '0 0 25px rgba(234, 179, 8, 0.7)';
                         setTimeout(() => {
                             targetCard.style.outline = '';
                             targetCard.style.boxShadow = '';
@@ -787,8 +794,9 @@ const SmartGuidance = (function() {
                             timerBtn.click();
                         }
                     }
+                    const exNum = progress.nextUncompletedIndex >= 0 ? (progress.nextUncompletedIndex + 1) : 1;
                     if (typeof showToast === 'function') {
-                        showToast('⏱️ تفضل بأداء التمرين المقترح مع المؤقت الصوتي والتكنيك السليم 🌿', 'info', 3500);
+                        showToast(`⏱️ جاري بدء التمرين #${exNum} بالتوالي.. التزم بالتكنيك السليم 🌿`, 'info', 3500);
                     }
                 }
                 break;

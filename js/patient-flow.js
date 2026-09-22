@@ -573,6 +573,47 @@ const PatientFlow = (function() {
         }, 1000);
     }
 
+    // إتمام التمرين يدوياً وفورياً وتأكيد إنجازه
+    function markExerciseDone(actionBtn) {
+        if (!actionBtn) return;
+        const cardEl = actionBtn.closest('.clinical-exercise-card, .exercise-visual-card');
+        const timerBtn = cardEl ? cardEl.querySelector('.btn-exercise-timer') : actionBtn;
+        const progressBar = cardEl ? cardEl.querySelector('.timer-progress-fill') : null;
+
+        if (timerBtn) {
+            if (activeExerciseTimerInterval && timerBtn.dataset.running === 'true') {
+                clearInterval(activeExerciseTimerInterval);
+            }
+            timerBtn.dataset.running = 'false';
+            timerBtn.dataset.completed = 'true';
+            timerBtn.dataset.remaining = '0';
+            timerBtn.innerHTML = `<span>✅ تم إنجاز التمرين بنجاح! أحسنت</span>`;
+            timerBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+            timerBtn.style.color = '#ffffff';
+        }
+        if (progressBar) progressBar.style.width = '100%';
+
+        actionBtn.style.background = '#059669';
+        actionBtn.style.borderColor = '#10b981';
+        actionBtn.style.color = '#ffffff';
+        actionBtn.innerHTML = '✅ تم';
+
+        if (typeof playStationAudio === 'function') {
+            playStationAudio('exercise_finish');
+        } else if (typeof ClinicalAudioPacer !== 'undefined') {
+            ClinicalAudioPacer.playCompleteChime();
+        }
+
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+        // تحديث فوري لشريط الإرشاد الذكي
+        if (typeof SmartGuidance !== 'undefined' && typeof SmartGuidance.checkAndApply === 'function') {
+            SmartGuidance.checkAndApply();
+        }
+
+        triggerExerciseRestPeriod(cardEl, timerBtn || actionBtn);
+    }
+
     // إدارة فترة الراحة التفاعلية (15 ثانية) والتنقل للتمرين التالي بالأصوات
     let activeRestInterval = null;
     function triggerExerciseRestPeriod(currentCardEl, completedButtonEl) {
@@ -701,6 +742,7 @@ const PatientFlow = (function() {
         getSessionLockStatus,
         startCountdownTimer,
         toggleExerciseTimer,
+        markExerciseDone,
         generatePainTrendChartSVG,
         calculateRecoveryScore
     };

@@ -5386,9 +5386,14 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                                 <div style="background: #1e2633; height: 5px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
                                     <div class="timer-progress-fill" style="background: linear-gradient(90deg, #d4af37 0%, #10b981 100%); height: 100%; width: 0%; transition: width 1s linear;"></div>
                                 </div>
-                                <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="width: 100%; background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.92em;">
-                                    ⏱️ ابدأ مؤقت التمرين (${ex.duration})
-                                </button>
+                                <div style="display: flex; gap: 8px; align-items: stretch;">
+                                    <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="flex: 1; background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.92em;">
+                                        ⏱️ ابدأ مؤقت التمرين (${ex.duration})
+                                    </button>
+                                    <button type="button" onclick="PatientFlow.markExerciseDone(this)" class="btn-mark-exercise-done" title="تأكيد إنجاز التمرين فوراً" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #10b981; padding: 0 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.9em; white-space: nowrap; transition: 0.2s;">
+                                        ✅ تم
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     `).join('')}
@@ -6349,7 +6354,7 @@ function handleStep4CompletionClick(patientId, forceSkip = false) {
                 }, 2500);
             }
             if (typeof showToast === 'function') {
-                showToast(`⚠️ شرط سريري إلزامي: يرجى أداء التمارين وتشغيل مؤقت كل تمرين أولاً (متبقي ${uncompleted.length} تمرين) لضمان فائدتك العلاجية 🏋️`, 'warning', 4500);
+                showToast(`⚠️ لا يمكنك الانتقال لتوثيق الجلسة إلا بعد إتمامك لكافة التمارين المقترحة أدناه (متبقي ${uncompleted.length} تمرين) 🏋️`, 'warning', 4500);
             }
             return;
         }
@@ -6899,7 +6904,7 @@ window._applyUpdateNow = function() {
     _doSafeReload();
 };
 
-const CURRENT_APP_VERSION = 'v29.39';
+const CURRENT_APP_VERSION = 'v29.40';
 let _versionCheckInProgress = false;
 
 // فحص مباشر وفوري لرقم الإصدار المنشور على السيرفر/GitHub
