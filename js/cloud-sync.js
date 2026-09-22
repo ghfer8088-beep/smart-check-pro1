@@ -75,9 +75,18 @@
         } catch(e) {}
     })();
 
-    // تطهير فوري من أي زيارات وهمية مسبقة (vis_seed_) لضمان مصداقية ودقة سجل الزوار 100%
-    (function sanitizeFakeSeedVisits() {
+    // تطهير فوري من أي زيارات وهمية أو سجلات ضيوف مجهولة لضمان حماية مساحة التخزين ومصداقية البيانات 100%
+    (function sanitizeFakeSeedVisitsAndGuestLogs() {
         try {
+            localStorage.removeItem('smart_daily_logs_pat_guest');
+            localStorage.removeItem('smart_patient_pat_guest');
+            sessionStorage.removeItem('smart_daily_logs_pat_guest');
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+                const k = localStorage.key(i);
+                if (k && (k.includes('pat_guest') || k.includes('smart_incident_') || k.includes('wada3an_telemetry_'))) {
+                    localStorage.removeItem(k);
+                }
+            }
             const raw = localStorage.getItem('smart_geo_visits_history');
             if (raw) {
                 const list = JSON.parse(raw);
@@ -91,12 +100,13 @@
         } catch(e) {}
     })();
 
-    // التحقق الصارم من قائمة المحذوفات لمنع إعادة استيراد أي مريض محذوف
+    // التحقق الصارم من قائمة المحذوفات ومنع أي مريض محذوف أو تجريبي/مجهول
     function isDeletedPatient(patientId) {
         if (!patientId) return false;
         try {
             const strId = String(patientId).trim();
             if (!strId || strId === 'pat' || strId === 'pat_notif' || strId === 'null' || strId === 'undefined') return false;
+            if (strId === 'pat_guest' || strId.startsWith('pat_guest')) return true;
             const delList = JSON.parse(localStorage.getItem('smart_deleted_patient_ids') || '[]');
             if (!Array.isArray(delList) || delList.length === 0) return false;
             if (delList.includes(strId)) return true;
@@ -109,6 +119,112 @@
         } catch(e) {
             return false;
         }
+    }
+
+    // فحص الأسماء الوهمية والمؤقتة للمجهولين
+    function isPlaceholderOrAnonymousName(name) {
+        if (!name) return true;
+        const n = String(name).trim();
+        if (!n) return true;
+        const placeholders = [
+            'مراجع كريم', 'المراجع الكريم', 'مراجع محترم', 'المراجع المحترم',
+            'مراجع زائر', 'زائر', 'ضيف', 'مستخدم جديد', 'مريض جديد',
+            'فحص ذاتي', 'مريض الفحص الذاتي', 'مجهول', 'غير محدد',
+            'pat_guest', 'guest', 'patient', 'user', 'undefined', 'null'
+        ];
+        if (placeholders.some(p => n === p || n.toLowerCase() === p)) return true;
+        if (/^(?:الاسم|الآسم|الإسم|اسمي|اسمك|اسم|مريض|مراجع)$/i.test(n)) return true;
+        return false;
+    }
+
+    // حفظ آمن في الذاكرة المحلية مع معالجة استباقية لامتلاء السعة (QuotaExceededError)
+    function safeStorageSet(key, val) {
+        try {
+            localStorage.setItem(key, val);
+            return true;
+        } catch(e) {
+            try {
+                localStorage.removeItem('smart_daily_logs_pat_guest');
+                localStorage.removeItem('smart_patient_pat_guest');
+                const vRaw = localStorage.getItem('smart_geo_visits_history');
+                if (vRaw) {
+                    const vList = JSON.parse(vRaw);
+                    if (Array.isArray(vList) && vList.length > 20) {
+                        localStorage.setItem('smart_geo_visits_history', JSON.stringify(vList.slice(-20)));
+                    }
+                }
+                const nRaw = localStorage.getItem('smart_admin_notifications');
+                if (nRaw) {
+                    const nList = JSON.parse(nRaw);
+                    if (Array.isArray(nList) && nList.length > 10) {
+                        localStorage.setItem('smart_admin_notifications', JSON.stringify(nList.slice(0, 10)));
+                    }
+                }
+                localStorage.setItem(key, val);
+                return true;
+            } catch(e2) {
+                return false;
+            }
+        }
+    }
+
+    // إرسال سحابي موحد ومقنن إلى NTFY بدون تعارض CORS وبدون تجاوز حد الطلبات 429
+    let lastNtfySendTime = 0;
+    let ntfyRateLimitedUntil = 0;
+    const ntfyQueue = [];
+    let isProcessingNtfyQueue = false;
+
+    function processNtfyQueue() {
+        if (isProcessingNtfyQueue || ntfyQueue.length === 0) return;
+        const now = Date.now();
+        if (now < ntfyRateLimitedUntil) {
+            setTimeout(processNtfyQueue, 5000);
+            return;
+        }
+        const timeSinceLast = now - lastNtfySendTime;
+        if (timeSinceLast < 1000) {
+            setTimeout(processNtfyQueue, 1000 - timeSinceLast);
+            return;
+        }
+
+        const item = ntfyQueue.shift();
+        if (!item) return;
+
+        isProcessingNtfyQueue = true;
+        lastNtfySendTime = Date.now();
+
+        try {
+            const headers = { 'Content-Type': 'text/plain; charset=utf-8' };
+            if (item.title) headers['Title'] = item.title;
+
+            fetch(item.endpoint, {
+                method: 'POST',
+                mode: 'cors',
+                credentials: 'omit',
+                headers: headers,
+                body: typeof item.body === 'string' ? item.body : JSON.stringify(item.body)
+            }).then(res => {
+                if (res.status === 429) {
+                    ntfyRateLimitedUntil = Date.now() + 45000;
+                }
+            }).catch(() => {})
+            .finally(() => {
+                isProcessingNtfyQueue = false;
+                if (ntfyQueue.length > 0) {
+                    setTimeout(processNtfyQueue, 1000);
+                }
+            });
+        } catch(e) {
+            isProcessingNtfyQueue = false;
+        }
+    }
+
+    function sendToNtfy(endpoint, body, title = '') {
+        if (!endpoint || !body) return;
+        if (Date.now() < ntfyRateLimitedUntil) return;
+        if (ntfyQueue.length > 5) ntfyQueue.shift();
+        ntfyQueue.push({ endpoint, body, title });
+        processNtfyQueue();
     }
 
     // تعريب وتوحيد أسماء وأعلام الدول لمنع ازدواجية الإحصائيات (الأردن / Jordan، السعودية / Saudi Arabia)
@@ -439,6 +555,7 @@
         if (topic === MQTT_TOPICS.SESSIONS) {
             const log = data.log || data;
             if (log && log.patientId && log.sessionNumber) {
+                if (log.patientId === 'pat_guest' || String(log.patientId).startsWith('pat_guest') || isDeletedPatient(log.patientId)) return;
                 if (window.SmartDB && typeof window.SmartDB.saveDailyLog === 'function') {
                     await window.SmartDB.saveDailyLog(log, { skipCloudSync: true });
                 }
@@ -448,7 +565,7 @@
                 if (lIdx >= 0) existing[lIdx] = { ...existing[lIdx], ...log };
                 else existing.push(log);
                 existing.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
-                localStorage.setItem(lsKey, JSON.stringify(existing));
+                safeStorageSet(lsKey, JSON.stringify(existing));
 
                 try {
                     const ptList = getCloudSyncedPatients();
@@ -734,18 +851,14 @@
             if (!Array.isArray(q) || q.length === 0) return;
 
             for (const pt of q) {
+                const ptId = pt ? (pt.id || pt.patientId) : null;
+                if (!pt || ptId === 'pat_guest' || String(ptId).startsWith('pat_guest') || isDeletedPatient(ptId)) {
+                    dequeuePendingCloudPatient(ptId);
+                    continue;
+                }
                 const rawBody = JSON.stringify(pt);
-                try {
-                    const r = await fetch(CLOUD_SYNC_ENDPOINT, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: rawBody,
-                        keepalive: true
-                    });
-                    if (r && r.ok) {
-                        dequeuePendingCloudPatient(pt.id || pt.patientId);
-                    }
-                } catch(err) {}
+                sendToNtfy(CLOUD_SYNC_ENDPOINT, rawBody, 'Patient Sync');
+                dequeuePendingCloudPatient(ptId);
             }
         } catch(e) {}
     }
@@ -987,32 +1100,8 @@
                 };
             }
             const rawBody = JSON.stringify(compactForCloud);
-            if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
-                try {
-                    const blob = new Blob([rawBody], { type: 'application/json' });
-                    navigator.sendBeacon(CLOUD_SYNC_ENDPOINT, blob);
-                } catch(eBeacon) {}
-            }
-
-            fetch(CLOUD_SYNC_ENDPOINT, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: rawBody,
-                keepalive: true
-            }).then(() => {
-                dequeuePendingCloudPatient(enhancedRecord.id || enhancedRecord.patientId);
-            }).catch(() => {});
-
-            fetch('https://ntfy.sh', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    topic: 'wada3an_smart_check_clinic_sync_2026',
-                    message: rawBody,
-                    title: 'New Patient Record'
-                }),
-                keepalive: true
-            }).catch(() => {});
+            sendToNtfy(CLOUD_SYNC_ENDPOINT, rawBody, 'New Patient Record');
+            dequeuePendingCloudPatient(enhancedRecord.id || enhancedRecord.patientId);
         } catch (e) {}
 
         return enhancedRecord;
@@ -1020,7 +1109,7 @@
 
     // ترحيل جلسة منجزة وتحديث يومي سحابياً لكافة الأجهزة (موبايل + لابتوب)
     async function dispatchSessionLogToCloud(logEntry) {
-        if (!logEntry || !logEntry.patientId) return null;
+        if (!logEntry || !logEntry.patientId || logEntry.patientId === 'pat_guest' || String(logEntry.patientId).startsWith('pat_guest')) return null;
         const now = Date.now();
         const pId = logEntry.patientId;
         const sNum = logEntry.sessionNumber || 1;
@@ -1071,22 +1160,7 @@
 
         // 3. بث سحابي عبر NTFY لكافة الأجهزة حول العالم
         const jsonStr = JSON.stringify(payload);
-        try {
-            fetch(CLOUD_SYNC_ENDPOINT, {
-                method: 'POST',
-                body: jsonStr
-            }).catch(() => {});
-
-            fetch('https://ntfy.sh', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    topic: 'wada3an_smart_check_clinic_sync_2026',
-                    message: jsonStr,
-                    title: `Session ${sNum} Completed`
-                })
-            }).catch(() => {});
-        } catch(e) {}
+        sendToNtfy(CLOUD_SYNC_ENDPOINT, jsonStr, `Session ${sNum} Completed`);
 
         return payload;
     }
@@ -1217,7 +1291,7 @@
                 // ✅ v29.19: تحويل الحفظ من تسلسلي إلى متوازٍ (Promise.all) لمنع تجميد 3 دقائق
                 const logsEntries = Object.entries(snapshot.dailyLogsMap);
                 await Promise.all(logsEntries.map(async ([pId, logs]) => {
-                    if (!pId || !Array.isArray(logs)) return;
+                    if (!pId || !Array.isArray(logs) || pId === 'pat_guest' || String(pId).startsWith('pat_guest') || isDeletedPatient(pId)) return;
                     const lsKey = 'smart_daily_logs_' + pId;
                     const existing = JSON.parse(localStorage.getItem(lsKey) || '[]');
                     const dbSavePromises = [];
@@ -1231,11 +1305,7 @@
                         }
                     }
                     existing.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
-                    try {
-                        localStorage.setItem(lsKey, JSON.stringify(existing));
-                    } catch(qErr) {
-                        // في حال امتلاء الذاكرة المؤقتة، يعتمد النظام كلياً على IndexedDB
-                    }
+                    safeStorageSet(lsKey, JSON.stringify(existing));
                     // حفظ IndexedDB بالتوازي الكامل لمنع أي تعليق
                     if (dbSavePromises.length > 0) {
                         await Promise.all(dbSavePromises);
@@ -1270,28 +1340,22 @@
                     }
                 }
                 if (localVisits.length > 100) localVisits = localVisits.slice(-100);
-                try {
-                    localStorage.setItem(VISITS_KEY, JSON.stringify(localVisits));
-                } catch(qErr) {
-                    try { localStorage.setItem(VISITS_KEY, JSON.stringify(localVisits.slice(-25))); } catch(e) {}
-                }
+                safeStorageSet(VISITS_KEY, JSON.stringify(localVisits));
             }
 
             try { localStorage.setItem('smart_last_cloud_sync_time', Date.now().toString()); } catch(e) {}
-            if (syncBroadcastChannel) {
-                syncBroadcastChannel.postMessage({ type: 'FULL_SNAPSHOT_IMPORTED', timestamp: Date.now() });
-            }
             return true;
-        } catch(e) {
+        } catch (e) {
             console.error('Error importing clinic snapshot:', e);
             return false;
         }
     }
 
-    // بث حزمة المزامنة الكاملة سحابياً لكافة الأجهزة
+    // إرسال اللقطة السحابية الشاملة الكاملة
     async function broadcastFullClinicSnapshot() {
-        const snapshot = exportFullClinicSnapshot();
-        if (!snapshot) return false;
+        const snapshot = await exportFullClinicSnapshot();
+        if (!snapshot || !snapshot.patients || snapshot.patients.length === 0) return false;
+
         const payload = {
             type: 'clinic_full_snapshot',
             snapshot: snapshot,
@@ -1308,18 +1372,8 @@
             }
         } catch(e) {}
 
-        // 3. إرسال إشعار خفيف إلى NTFY دون إغراقه بحزم ضخمة تسبب تجاوز الحجم
-        try {
-            fetch('https://ntfy.sh', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    topic: 'wada3an_smart_check_clinic_sync_2026',
-                    message: `تم تحديث حزمة العيادة سحابياً (${(snapshot.patients || []).length} مراجع)`,
-                    title: 'Clinic Snapshot Updated'
-                })
-            }).catch(() => {});
-        } catch(e) {}
+        // 3. إرسال إشعار خفيف إلى NTFY دون إغراقه بحزم ضخمة
+        sendToNtfy(CLOUD_SYNC_ENDPOINT, `تم تحديث حزمة العيادة سحابياً (${(snapshot.patients || []).length} مراجع)`, 'Clinic Snapshot Updated');
 
         // 4. تحديث Master Hub إن كانت متاحة
         if (isMasterHubAllowed()) {
@@ -1359,34 +1413,27 @@
             } catch(e) {}
 
             const rawBody = JSON.stringify(visitRecord);
-            fetch(CLOUD_VISITS_ENDPOINT, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: rawBody
-            }).catch(() => {});
-
-            fetch('https://ntfy.sh', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    topic: 'wada3an_smart_check_visits_2026',
-                    message: rawBody,
-                    title: 'Visit Log'
-                })
-            }).catch(() => {});
+            sendToNtfy(CLOUD_VISITS_ENDPOINT, rawBody, 'Visit Log');
         } catch (e) {}
     }
 
     // جلب كافة الزيارات المسجلة سحابياً من كافة الهواتف والكمبيوترات حول العالم (مع مهلة أمان قصوى 4 ثوانٍ)
     async function fetchCloudVisits() {
+        if (Date.now() < ntfyRateLimitedUntil) return;
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 4000);
             const resp = await fetch(`${CLOUD_VISITS_ENDPOINT}/json?poll=1&since=all`, {
                 cache: 'no-store',
+                mode: 'cors',
+                credentials: 'omit',
                 signal: controller.signal
             });
             clearTimeout(timeoutId);
+            if (resp.status === 429) {
+                ntfyRateLimitedUntil = Date.now() + 45000;
+                return;
+            }
             if (!resp.ok) return;
             const text = await resp.text();
             if (!text) return;
@@ -1418,8 +1465,8 @@
             }
 
             if (changed) {
-                if (localVisits.length > 1000) localVisits = localVisits.slice(-1000);
-                localStorage.setItem(VISITS_KEY, JSON.stringify(localVisits));
+                if (localVisits.length > 500) localVisits = localVisits.slice(-500);
+                safeStorageSet(VISITS_KEY, JSON.stringify(localVisits));
                 // ✅ v29.22: تحديث واجهة الزوار فوراً بعد حفظ الزيارات الجديدة
                 if (typeof window.renderGeoAnalytics === 'function') {
                     window.renderGeoAnalytics();
@@ -1432,12 +1479,19 @@
     function normalizeCloudPatientRecord(pt) {
         if (!pt) return null;
         const pId = pt.patientId || pt.id || ('pat_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 5));
+        if (pId === 'pat_guest' || String(pId).startsWith('pat_guest') || isDeletedPatient(pId)) return null;
+
         let pName = (pt.fullName || pt.name || '').trim();
         const pPh = (pt.phone || '').replace(/\D/g, '');
-        if (/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)$/i.test(pName)) {
-            pName = pPh.length >= 7 ? `مراجع (${pPh.slice(-4)})` : '';
+        if (isPlaceholderOrAnonymousName(pName)) {
+            if (pPh.length >= 7) {
+                pName = `مراجع (${pPh.slice(-4)})`;
+            } else {
+                return null; // سجل مجهول بدون رقم هاتف لا يتم قبوله
+            }
         }
         if (!pName && pPh.length >= 7) pName = `مراجع (${pPh.slice(-4)})`;
+        if (!pName) return null;
 
         const pPhone = pt.phone || '';
         
@@ -1570,14 +1624,24 @@
 
         // 2. القناة الثانوية المضاعفة (Secondary ntfy Relay) — جلب الجديد فقط منذ آخر استطلاع ناجح
         tasks.push((async () => {
+            if (Date.now() < ntfyRateLimitedUntil) return null;
             try {
                 // ✅ v29.30: جلب 'all' دائماً لضمان تحميل أي مريض تم تسجيله أو تحديثه سحابياً وعدم تفويته
                 const sinceParam = 'all';
                 const controller2 = new AbortController();
                 const timeoutId2 = setTimeout(() => controller2.abort(), 8000);
                 const pollUrl = `${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=${sinceParam}`;
-                const resp = await fetch(pollUrl, { cache: 'no-store', signal: controller2.signal });
+                const resp = await fetch(pollUrl, {
+                    cache: 'no-store',
+                    mode: 'cors',
+                    credentials: 'omit',
+                    signal: controller2.signal
+                });
                 clearTimeout(timeoutId2);
+                if (resp.status === 429) {
+                    ntfyRateLimitedUntil = Date.now() + 45000;
+                    return null;
+                }
                 if (resp.ok) {
                     // حفظ الـ timestamp الحالي كنقطة بداية للاستطلاع التالي
                     localStorage.setItem('smart_ntfy_last_fetch_ts', Date.now().toString());
@@ -1599,7 +1663,7 @@
                 for (const pt of itemVal.patients) {
                     if (!pt) continue;
                     const pIdRaw = pt.id || pt.patientId;
-                    if (isDeletedPatient(pIdRaw)) continue;
+                    if (!pIdRaw || pIdRaw === 'pat_guest' || String(pIdRaw).startsWith('pat_guest') || isDeletedPatient(pIdRaw)) continue;
 
                     const normalized = normalizeCloudPatientRecord(pt);
                     if (!normalized || isDeletedPatient(normalized.id)) continue;
@@ -1607,26 +1671,7 @@
                     const pId = normalized.id;
                     const idx = currentList.findIndex(x => pId && (x.id === pId || x.patientId === pId));
                     if (idx >= 0) {
-                        const existing = currentList[idx];
-                        const existingDaily = existing.dailyLogs || [];
-                        const incomingDaily = normalized.dailyLogs || normalized.logs || [];
-                        const mergedDaily = [...existingDaily];
-                        for (const idl of incomingDaily) {
-                            if (!idl || !idl.sessionNumber) continue;
-                            const mIdx = mergedDaily.findIndex(m => m.sessionNumber === idl.sessionNumber);
-                            if (mIdx >= 0) mergedDaily[mIdx] = { ...mergedDaily[mIdx], ...idl };
-                            else mergedDaily.push(idl);
-                        }
-                        normalized.dailyLogs = mergedDaily;
-                        normalized.logs = mergedDaily;
-                        currentList[idx] = {
-                            ...existing,
-                            ...normalized,
-                            createdAt: existing.createdAt || normalized.createdAt || existing.timestamp || normalized.timestamp,
-                            logsCount: (mergedDaily.length > 0) ? mergedDaily.length : Math.min(7, Math.max(existing.logsCount || 0, normalized.logsCount || 0)),
-                            completedSessions: (mergedDaily.length > 0) ? mergedDaily.length : Math.min(7, Math.max(existing.completedSessions || 0, normalized.completedSessions || 0)),
-                            recoveryScore: Math.max(existing.recoveryScore || 0, normalized.recoveryScore || 0)
-                        };
+                        currentList[idx] = { ...currentList[idx], ...normalized };
                     } else {
                         currentList.unshift(normalized);
                         changed = true;
@@ -1653,7 +1698,7 @@
                     if (pt.type === 'session_log_update' || (pt.log && pt.log.sessionNumber)) {
                         const logData = pt.log || pt;
                         if (logData && logData.patientId && logData.sessionNumber) {
-                            if (isDeletedPatient(logData.patientId)) return;
+                            if (logData.patientId === 'pat_guest' || String(logData.patientId).startsWith('pat_guest') || isDeletedPatient(logData.patientId)) return;
                             try {
                                 if (window.SmartDB && typeof window.SmartDB.saveDailyLog === 'function') {
                                     window.SmartDB.saveDailyLog(logData, { skipCloudSync: true }).catch(() => {});
@@ -1664,7 +1709,7 @@
                                 if (lIdx >= 0) existing[lIdx] = { ...existing[lIdx], ...logData };
                                 else existing.push(logData);
                                 existing.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
-                                localStorage.setItem(lsKey, JSON.stringify(existing));
+                                safeStorageSet(lsKey, JSON.stringify(existing));
 
                                 const targetP = currentList.find(x => x.id === logData.patientId || x.patientId === logData.patientId);
                                 if (targetP) {
@@ -1682,7 +1727,7 @@
 
                     if (pt.id || pt.patientId || pt.phone || pt.fullName || pt.name) {
                         const pIdRaw = pt.id || pt.patientId;
-                        if (isDeletedPatient(pIdRaw)) return;
+                        if (!pIdRaw || pIdRaw === 'pat_guest' || String(pIdRaw).startsWith('pat_guest') || isDeletedPatient(pIdRaw)) return;
 
                         const normalized = normalizeCloudPatientRecord(pt);
                         if (!normalized || isDeletedPatient(normalized.id)) return;
@@ -1737,7 +1782,7 @@
                                     }
                                 }
                                 existing.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
-                                localStorage.setItem(lsKey, JSON.stringify(existing));
+                                safeStorageSet(lsKey, JSON.stringify(existing));
                             }
                         } catch(e) {}
                     }
@@ -1877,6 +1922,7 @@
                             if (pt.type === 'session_log_update' || (pt.log && pt.log.sessionNumber)) {
                                 const logData = pt.log || pt;
                                 if (logData && logData.patientId && logData.sessionNumber) {
+                                    if (logData.patientId === 'pat_guest' || String(logData.patientId).startsWith('pat_guest') || isDeletedPatient(logData.patientId)) return;
                                     if (window.SmartDB && typeof window.SmartDB.saveDailyLog === 'function') {
                                         await window.SmartDB.saveDailyLog(logData, { skipCloudSync: true });
                                     }
@@ -1886,7 +1932,7 @@
                                     if (lIdx >= 0) existing[lIdx] = { ...existing[lIdx], ...logData };
                                     else existing.push(logData);
                                     existing.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
-                                    localStorage.setItem(lsKey, JSON.stringify(existing));
+                                    safeStorageSet(lsKey, JSON.stringify(existing));
                                     if (typeof callback === 'function') callback(logData);
                                 }
                                 return;
@@ -2188,34 +2234,8 @@
 
         const rawJson = JSON.stringify(payload);
 
-        // 3. إرسال إلى NTFY (قناة التوقيت) كنص خام مباشر
-        try {
-            fetch(CLOUD_TIMING_ENDPOINT, {
-                method: 'POST',
-                body: rawJson
-            }).catch(() => {});
-        } catch (e) {}
-
-        // 4. إرسال إلى NTFY بصيغة JSON القياسية الرسمية
-        try {
-            fetch('https://ntfy.sh', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    topic: 'wada3an_smart_check_timing_sync_2026',
-                    message: rawJson,
-                    title: 'Timing Update'
-                })
-            }).catch(() => {});
-        } catch (e) {}
-
-        // 5. إرسال إلى NTFY القناة المركزية
-        try {
-            fetch(CLOUD_SYNC_ENDPOINT, {
-                method: 'POST',
-                body: rawJson
-            }).catch(() => {});
-        } catch (e) {}
+        // 3. إرسال مقنن إلى NTFY (قناة التوقيت)
+        sendToNtfy(CLOUD_TIMING_ENDPOINT, rawJson, 'Timing Update');
 
         // 6. حفظ التحديث اللحظي في السحابة المركزية العالمية (Master Cloud Hub) إن كانت متاحة
         if (isMasterHubAllowed()) {
@@ -2510,6 +2530,7 @@
     async function fetchRemoteTimingUpdates() {
         if (isFetchingTiming) return;
         if (Date.now() - lastTimingFetchTime < 15000) return; // منع التكرار المتتالي في أقل من 15 ثانية
+        if (Date.now() < ntfyRateLimitedUntil) return [];
         isFetchingTiming = true;
         lastTimingFetchTime = Date.now();
 
@@ -2522,10 +2543,14 @@
                 const timeoutId = setTimeout(() => controller.abort(), 2000);
                 const resp = await fetch(`${CLOUD_TIMING_ENDPOINT}/json?poll=1&since=all`, {
                     cache: 'no-store',
+                    mode: 'cors',
+                    credentials: 'omit',
                     signal: controller.signal
                 });
                 clearTimeout(timeoutId);
-                if (resp.ok) {
+                if (resp.status === 429) {
+                    ntfyRateLimitedUntil = Date.now() + 45000;
+                } else if (resp.ok) {
                     const text = await resp.text();
                     if (text) {
                         const lines = text.trim().split('\n');
@@ -2552,10 +2577,14 @@
                 const timeoutId2 = setTimeout(() => controller2.abort(), 2000);
                 const resp2 = await fetch(`${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=all`, {
                     cache: 'no-store',
+                    mode: 'cors',
+                    credentials: 'omit',
                     signal: controller2.signal
                 });
                 clearTimeout(timeoutId2);
-                if (resp2.ok) {
+                if (resp2.status === 429) {
+                    ntfyRateLimitedUntil = Date.now() + 45000;
+                } else if (resp2.ok) {
                     const text2 = await resp2.text();
                     if (text2) {
                         const lines2 = text2.trim().split('\n');

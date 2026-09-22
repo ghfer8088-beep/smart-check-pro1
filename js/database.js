@@ -149,6 +149,19 @@ const SmartDB = (function() {
         }
     }
 
+    // تنظيف فوري وشامل لأي سجلات مؤقتة أو مجهولة تسببت بامتلاء الذاكرة
+    try {
+        localStorage.removeItem('smart_daily_logs_pat_guest');
+        localStorage.removeItem('smart_patient_pat_guest');
+        sessionStorage.removeItem('smart_daily_logs_pat_guest');
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+            const k = localStorage.key(i);
+            if (k && (k.includes('pat_guest') || k.includes('smart_incident_') || k.includes('wada3an_telemetry_'))) {
+                localStorage.removeItem(k);
+            }
+        }
+    } catch(e) {}
+
     // دوال إدارة المرضى
     async function savePatient(patient, options = {}) {
         if (!patient) return null;
@@ -819,7 +832,10 @@ const SmartDB = (function() {
 
     // دوال المتابعة اليومية
     async function saveDailyLog(log, options = {}) {
-        if (!log) return null;
+        if (!log || !log.patientId) return null;
+        if (log.patientId === 'pat_guest' || String(log.patientId).startsWith('pat_guest')) {
+            return log.logId || 'guest_log';
+        }
         if (!log.logId) {
             log.logId = 'log_' + (log.patientId || 'pt') + '_' + (log.sessionNumber || 1) + '_' + Date.now();
         }
@@ -831,7 +847,7 @@ const SmartDB = (function() {
             } catch (e) {}
         }
 
-        // حفظ متزامن وفوري في LocalStorage
+        // حفظ متزامن وفوري في LocalStorage مع حماية تامة من QuotaExceededError
         try {
             if (log.patientId) {
                 const lsKey = 'smart_daily_logs_' + log.patientId;
@@ -846,7 +862,7 @@ const SmartDB = (function() {
                     existing.push(log);
                 }
                 existing.sort((a, b) => (a.sessionNumber || 0) - (b.sessionNumber || 0));
-                localStorage.setItem(lsKey, JSON.stringify(existing));
+                safeLocalStorageSet(lsKey, JSON.stringify(existing));
 
                 // تحديث إحصائيات المريض الحقيقية تلقائياً لمنع أي تضارب أو أرقام وهمية
                 try {
@@ -862,9 +878,7 @@ const SmartDB = (function() {
                     }
                 } catch (ptErr) {}
             }
-        } catch(e) {
-            console.warn('LocalStorage saveDailyLog warning:', e);
-        }
+        } catch(e) {}
 
         try {
             const db = await openDB();

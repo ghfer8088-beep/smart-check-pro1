@@ -154,7 +154,7 @@ const AdminEngine = (function() {
                 const keysToRemove = [];
                 for (let i = 0; i < localStorage.length; i++) {
                     const k = localStorage.key(i);
-                    if (k && (k === 'smart_patient_pat_guest' || k.startsWith('smart_patient_guest') || k.startsWith('smart_patient_anonymous'))) {
+                    if (k && (k === 'smart_patient_pat_guest' || k.startsWith('smart_patient_guest') || k.startsWith('smart_patient_anonymous') || k.startsWith('smart_daily_logs_pat_guest') || k.startsWith('smart_daily_logs_guest'))) {
                         keysToRemove.push(k);
                     } else if (k && k.startsWith('smart_patient_')) {
                         try {
