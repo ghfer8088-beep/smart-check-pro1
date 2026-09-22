@@ -150,8 +150,8 @@ const PatientFlow = (function() {
                     patient = {
                         patientId: authP.patientId || patientId,
                         id: authP.patientId || patientId,
-                        name: authP.name || authP.fullName || 'المراجع المحترم',
-                        fullName: authP.fullName || authP.name || 'المراجع المحترم',
+                        name: authP.name || authP.fullName || '',
+                        fullName: authP.fullName || authP.name || '',
                         phone: authP.phone || authP.originalPhone || '',
                         isRegistered: true,
                         accountPin: authP.accountPin || ''
@@ -169,7 +169,7 @@ const PatientFlow = (function() {
                         patient = {
                             patientId: curAss.patientId || patientId,
                             id: curAss.patientId || patientId,
-                            name: curAss.patientName || 'المراجع المحترم',
+                            name: curAss.patientName || '',
                             phone: curAss.patientPhone || curAss.phone || '',
                             painArea: curAss.painAreaTitle || curAss.painArea || curAss.pointId || 'الفقرات القطنية وأسفل الظهر',
                             painLevel: curAss.painSeverity || curAss.internalPainScore || 7,
@@ -185,7 +185,7 @@ const PatientFlow = (function() {
             patient = {
                 patientId: patientId,
                 id: patientId,
-                name: 'المراجع المحترم',
+                name: '',
                 painArea: 'الفقرات القطنية وأسفل الظهر',
                 painLevel: 7
             };

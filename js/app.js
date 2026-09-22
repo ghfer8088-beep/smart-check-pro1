@@ -351,8 +351,8 @@ function renderSpecializedConsultationReferralCard(patientData) {
         specAdvice = 'الجنف انحراف ثلاثي الأبعاد لا تناسبه التمارين المنزلية المتناظرة نهائياً. يتطلب كشفاً يدوياً عيانياً لمستوى الكتفين والحوض وإجراء تقويم يدوي مخصص لإعادة توازن الأحمال الميكانيكية.';
     }
 
-    const pName = patientData.fullName || patientData.name || 'المراجع المحترم';
     const pPhone = patientData.phone || '';
+    const pName = patientData.fullName || patientData.name || (pPhone ? `مراجع (${pPhone.replace(/\D/g, '').slice(-4)})` : 'المراجع');
     const pAge = patientData.age ? `${patientData.age} سنة` : 'غير محدد';
     const notes = patientData.notes || 'استشارة سريرية خاصة';
 
@@ -1407,7 +1407,7 @@ function submitMandatoryPhoneGate() {
     }
 
     const validatedPhone = isValidPhoneNumber(fullPhone) ? fullPhone : rawPhone;
-    const validatedName = (rawName && rawName.length >= 2 && !/^(?:الاسم|الآسم|الإسم)$/i.test(rawName)) ? rawName : (clinicalDialogueState?.patientName || 'مراجع كريم');
+    const validatedName = (rawName && rawName.length >= 2 && !/^(?:الاسم|الآسم|الإسم)$/i.test(rawName)) ? rawName : (clinicalDialogueState?.patientName || (validatedPhone ? `مراجع (${validatedPhone.slice(-4)})` : ''));
 
     clinicalDialogueState.patientPhone = validatedPhone;
     clinicalDialogueState.patientName = validatedName;
@@ -1649,7 +1649,7 @@ async function runDiagnosticAnalysis() {
         if (!pName && authPatientData && (authPatientData.name || authPatientData.fullName)) {
             pName = authPatientData.name || authPatientData.fullName;
         }
-        if (!pName) pName = 'مراجع كريم';
+        if (!pName) pName = pPhone ? `مراجع (${pPhone.replace(/\D/g, '').slice(-4)})` : '';
 
         const verifiedPhone = (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') || (clinicalDialogueState && clinicalDialogueState.patientPhone) || '';
         let pPhone = verifiedPhone || document.getElementById('patient-phone')?.value?.trim() || document.getElementById('sub-phone')?.value?.trim() || '';
@@ -1775,15 +1775,21 @@ async function runDiagnosticAnalysis() {
             try { sessionStorage.setItem('scp_active_patient_id', targetPatientId); } catch(e) {}
             activePatient = patientRecord;
 
-            // إشعار الإدارة الفوري بإتمام الفحص السريري وتجهيز التقرير
-            SmartDB.addAdminNotification({
-                type: 'new_registration',
-                title: `🩺 فحص سريري جديد: ${patientRecord.name}`,
-                message: `أتم المراجع ${patientRecord.name} (${patientRecord.phone || 'بدون هاتف'}) استشارته السريرية بنجاح لموضع (${currentSelectedPoint.title}). التشخيص: [${resolvedDiagString}] - مستوى الألم: ${painDisplayStr}`,
-                patientId: targetPatientId,
-                patientName: patientRecord.name,
-                patientPhone: patientRecord.phone
-            });
+            // إشعار الإدارة الفوري بإتمام الفحص السريري وتجهيز التقرير (فقط للمرضى الحقيقيين ذوي الأسماء أو الهواتف الصالحة)
+            const cleanPName = (patientRecord.name || '').trim();
+            const cleanPPh = (patientRecord.phone || '').replace(/\D/g, '');
+            const isAnon = !cleanPName || /^(?:مراجع كريم|المراجع الكريم|مراجع محترم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest)$/i.test(cleanPName);
+            if (!isAnon || cleanPPh.length >= 7) {
+                const displayName = !isAnon ? cleanPName : `مراجع (${cleanPPh.slice(-4)})`;
+                SmartDB.addAdminNotification({
+                    type: 'new_registration',
+                    title: `🩺 فحص سريري جديد: ${displayName}`,
+                    message: `أتم المراجع ${displayName} (${patientRecord.phone || 'بدون هاتف'}) استشارته السريرية بنجاح لموضع (${currentSelectedPoint.title}). التشخيص: [${resolvedDiagString}] - مستوى الألم: ${painDisplayStr}`,
+                    patientId: targetPatientId,
+                    patientName: displayName,
+                    patientPhone: patientRecord.phone
+                });
+            }
         } catch (dbErr) {
             console.warn('Admin data persistence notice:', dbErr);
         }
@@ -3539,7 +3545,7 @@ async function handleRegisterFromReport() {
         msgEl.textContent = '⏳ جاري إنشاء وحفظ ملفك الطبي...';
     }
 
-    const patientName = clinicalDialogueState?.patientFullName || clinicalDialogueState?.patientName || activePatient?.fullName || activePatient?.name || 'مراجع كريم';
+    const patientName = clinicalDialogueState?.patientFullName || clinicalDialogueState?.patientName || activePatient?.fullName || activePatient?.name || (phone ? `مراجع (${phone.replace(/\D/g, '').slice(-4)})` : '');
     const curAssessment = window.currentAssessmentData || {};
     const patientGender = clinicalDialogueState?.patientVitals?.gender || window.activePatient?.gender || (typeof detectArabicGender === 'function' ? (detectArabicGender(patientName) === 'female' ? 'أنثى' : 'ذكر') : 'ذكر');
     const patientAge = clinicalDialogueState?.patientVitals?.age || window.activePatient?.age || (document.getElementById('patient-age') ? parseInt(document.getElementById('patient-age').value, 10) : null);
@@ -3654,8 +3660,8 @@ function renderSpecializedClinicalReportStep3(data, reportContainer) {
 
     const reportId = "SCP-SPEC-" + Math.floor(100000 + Math.random() * 900000);
     const currentDate = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
-    const pName = data.patientName || clinicalDialogueState?.patientFullName || clinicalDialogueState?.patientName || activePatient?.name || 'المراجع المحترم';
     const pPhone = data.patientPhone || clinicalDialogueState?.patientPhone || '';
+    const pName = data.patientName || clinicalDialogueState?.patientFullName || clinicalDialogueState?.patientName || activePatient?.name || (pPhone ? `مراجع (${pPhone.replace(/\D/g, '').slice(-4)})` : '');
     const vitals = data.patientVitals || clinicalDialogueState?.patientVitals || {};
     const pAge = vitals.age ? `${vitals.age} سنة` : 'غير محدد';
     const pWeight = vitals.weight ? `${vitals.weight} كغم` : 'غير محدد';
@@ -5232,7 +5238,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
         const authP = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
         const pObj = {
             patientId: patientId || authP?.patientId || curAss?.patientId || 'pat_guest',
-            name: authP?.name || curAss?.patientName || 'المراجع المحترم',
+            name: authP?.name || curAss?.patientName || ((authP?.phone || curAss?.patientPhone) ? `مراجع (${(authP?.phone || curAss?.patientPhone).replace(/\D/g, '').slice(-4)})` : ''),
             phone: authP?.phone || curAss?.patientPhone || '',
             painArea: curAss?.painAreaTitle || curAss?.pointId || 'lumbar_spine',
             painPointId: curAss?.pointId || 'lumbar_spine',
@@ -6253,7 +6259,7 @@ async function loadPatientRecoveryDashboard(patientId, targetDay = null) {
             patient: curP || {
                 patientId: fallbackId,
                 id: fallbackId,
-                name: authP?.name || curAss?.patientName || 'المراجع المحترم',
+                name: authP?.name || curAss?.patientName || ((authP?.phone || curAss?.patientPhone) ? `مراجع (${(authP?.phone || curAss?.patientPhone).replace(/\D/g, '').slice(-4)})` : ''),
                 phone: authP?.phone || curAss?.patientPhone || '',
                 painArea: resolvedPain,
                 painAreaTitle: resolvedPain,
@@ -6489,7 +6495,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
             patient: curP || {
                 patientId: fallbackId,
                 id: fallbackId,
-                name: authP?.name || curAss?.patientName || 'المراجع المحترم',
+                name: authP?.name || curAss?.patientName || ((authP?.phone || curAss?.patientPhone) ? `مراجع (${(authP?.phone || curAss?.patientPhone).replace(/\D/g, '').slice(-4)})` : ''),
                 phone: authP?.phone || curAss?.patientPhone || '',
                 painArea: resolvedPain,
                 painPointId: curAss?.pointId || (typeof currentSelectedPoint !== 'undefined' ? currentSelectedPoint?.id : null) || 'lumbar_spine',
@@ -6942,7 +6948,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v29.51';
+const CURRENT_APP_VERSION = 'v29.52';
 let _versionCheckInProgress = false;
 
 // إظهار تنبيه هادئ وغير تدخلي بوجود تحديث جديد مع إمكانية الإغلاق التام
@@ -8540,7 +8546,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const derivedProbability = Math.min(99, Math.max(65, derivedConfidence + 3));
                 currentAssessmentData = {
                     patientId: savedPatientId,
-                    patientName: p.fullName || p.name || 'المراجع المحترم',
+                    patientName: p.fullName || p.name || (p.phone ? `مراجع (${p.phone.replace(/\D/g, '').slice(-4)})` : ''),
                     primaryDiagnosis: p.chiefDiagnosis || p.diagnosisTitle || 'فحص واستشارة سريرية',
                     painAreaTitle: p.painAreaTitle || p.painArea || 'العمود الفقري والمفاصل',
                     pointId: p.painPointId || p.painArea || 'lumbar_spine',
@@ -10326,9 +10332,9 @@ async function sendChatMessage() {
 
             let resolvedFullName = (clinicalDialogueState.patientFullName && clinicalDialogueState.patientFullName.length > 1)
                 ? clinicalDialogueState.patientFullName
-                : (clinicalDialogueState.patientName && clinicalDialogueState.patientName.length > 1 ? clinicalDialogueState.patientName : 'مراجع كريم');
+                : (clinicalDialogueState.patientName && clinicalDialogueState.patientName.length > 1 ? clinicalDialogueState.patientName : `مراجع (${validFoundPhone.slice(-4)})`);
             if (/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)$/i.test(resolvedFullName)) {
-                resolvedFullName = 'مراجع كريم';
+                resolvedFullName = `مراجع (${validFoundPhone.slice(-4)})`;
             }
             let savedName = resolvedFullName;
 
@@ -10599,11 +10605,12 @@ async function sendChatMessage() {
 
     // حفظ فوري في قاعدة البيانات إذا توفر رقم الهاتف
     if (clinicalDialogueState.patientPhone && window.SmartDB && typeof SmartDB.savePatient === 'function') {
+        const phClean2 = (clinicalDialogueState.patientPhone ? String(clinicalDialogueState.patientPhone).replace(/\D/g, '') : '');
         let resolvedFullName2 = (clinicalDialogueState.patientFullName && clinicalDialogueState.patientFullName.length > 1)
             ? clinicalDialogueState.patientFullName
-            : (clinicalDialogueState.patientName && clinicalDialogueState.patientName.length > 1 ? clinicalDialogueState.patientName : 'مراجع كريم');
+            : (clinicalDialogueState.patientName && clinicalDialogueState.patientName.length > 1 ? clinicalDialogueState.patientName : (phClean2 ? `مراجع (${phClean2.slice(-4)})` : ''));
         if (/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)$/i.test(resolvedFullName2)) {
-            resolvedFullName2 = 'مراجع كريم';
+            resolvedFullName2 = phClean2 ? `مراجع (${phClean2.slice(-4)})` : '';
         }
         let savedName2 = resolvedFullName2;
 

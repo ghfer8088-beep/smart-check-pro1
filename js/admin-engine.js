@@ -131,16 +131,79 @@ const AdminEngine = (function() {
             const deletedRaw = JSON.parse(localStorage.getItem('smart_deleted_patient_ids') || '[]');
             const deletedIds = new Set(Array.isArray(deletedRaw) ? deletedRaw.filter(id => id && id !== 'pat' && id !== 'pat_notif' && String(id).length > 3) : []);
 
-            // 1. تجميع كافة السجلات الواردة (محلي، سحابي، إشعارات سريرية) مع استبعاد أي سجلات وهمية أو محذوفة أو تنبيهات نظام
+            // دالة تدقيق الأسماء الشاملة لكشف أي اسم مجهول أو عام أو لقب مؤقت
+            function normalizePatientName(name) {
+                if (!name) return '';
+                let n = String(name).trim().toLowerCase();
+                n = n.replace(/^(السيد|السيدة|الآنسة|الدكتور|الدكتورة|د\.|أ\.|م\.|الأستاذ|الاستاذ)\s+/gi, '');
+                n = n.replace(/[إأآ]/g, 'ا');
+                n = n.replace(/ة/g, 'ه');
+                n = n.replace(/ى/g, 'ي');
+                n = n.replace(/\s+/g, ' ');
+                return n.trim();
+            }
+
+            function isPlaceholderOrAnonymousName(name) {
+                if (!name) return true;
+                const n = normalizePatientName(name);
+                return !n || /^(?:مريض الفحص الذاتي|فحص ذاتي|مراجع كريم|المراجع الكريم|مراجع محترم|المراجع المحترم|مراجع جديد|المراجع الجديد|الاسم|الاسم الكريم|اسم المراجع|زائر|مجهول|مراجع مجهول|pat_guest|guest|anonymous|anonymous_guest|undefined|null)$/i.test(n);
+            }
+
+            // تنظيف وحذف تلقائي لكافة السجلات المجهولة في الذاكرة المحلية (مثل pat_guest أو مراجع كريم/محترم بلا هاتف)
+            try {
+                const keysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (k && (k === 'smart_patient_pat_guest' || k.startsWith('smart_patient_guest') || k.startsWith('smart_patient_anonymous'))) {
+                        keysToRemove.push(k);
+                    } else if (k && k.startsWith('smart_patient_')) {
+                        try {
+                            const ptObj = JSON.parse(localStorage.getItem(k) || '{}');
+                            const nm = (ptObj.fullName || ptObj.name || '').trim();
+                            const ph = (ptObj.phone || '').replace(/\D/g, '');
+                            if (isPlaceholderOrAnonymousName(nm) && ph.length < 7) {
+                                keysToRemove.push(k);
+                            }
+                        } catch(e) {}
+                    }
+                }
+                keysToRemove.forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
+
+                // تنظيف القوائم المجمعة في التخزين المحلي
+                ['smart_all_patients', 'smart_cloud_synced_patients', 'smart_pending_cloud_sync'].forEach(lsK => {
+                    try {
+                        const arr = JSON.parse(localStorage.getItem(lsK) || '[]');
+                        if (Array.isArray(arr) && arr.length > 0) {
+                            const filtered = arr.filter(pt => {
+                                if (!pt) return false;
+                                const nm = (pt.fullName || pt.name || '').trim();
+                                const ph = (pt.phone || '').replace(/\D/g, '');
+                                return !isPlaceholderOrAnonymousName(nm) || ph.length >= 7;
+                            });
+                            if (filtered.length !== arr.length) {
+                                localStorage.setItem(lsK, JSON.stringify(filtered));
+                            }
+                        }
+                    } catch(e) {}
+                });
+            } catch(e) {}
+
+            // 1. تجميع كافة السجلات الواردة (محلي، سحابي، إشعارات سريرية) مع استبعاد أي سجلات وهمية أو مجهولة ليس لها صاحب
             const isExcludedPt = (pt) => {
                 if (!pt) return true;
                 const pId = pt.patientId || pt.id;
-                if (!pId || pId === 'pat' || pId === 'pat_notif') return false;
+                if (!pId || pId === 'pat' || pId === 'pat_notif' || pId === 'pat_guest' || String(pId).startsWith('pat_guest')) return true;
                 if (deletedIds.has(pId)) return true;
                 const baseId = (pId || '').replace(/(_notif_.*|_test\d*|_cloud_test.*)$/, '');
-                if (baseId && baseId !== 'pat' && baseId !== 'pat_notif' && baseId.length > 5 && deletedIds.has(baseId)) return true;
+                if (baseId && baseId.length > 5 && deletedIds.has(baseId)) return true;
+
                 const n = (pt.fullName || pt.name || '').trim();
-                if (n.includes('مريض الفحص الذاتي') || n === 'فحص ذاتي') return true;
+                const ph = (pt.phone || '').replace(/\D/g, '');
+
+                // استبعاد قاطع لأي سجل بدون اسم حقيقي وبدون هاتف موثق
+                if (isPlaceholderOrAnonymousName(n) && ph.length < 7) {
+                    return true;
+                }
                 return false;
             };
 
@@ -169,14 +232,16 @@ const AdminEngine = (function() {
                         if (m2) nName = m2[1].trim();
                     }
 
-                    if (nName.includes('مريض الفحص الذاتي') || nName === 'فحص ذاتي') {
-                        continue;
-                    }
-
                     let phoneVal = notif.patientPhone || '';
                     if (!phoneVal && notif.message) {
                         const phoneMatch = notif.message.match(/(?:هاتف|رقم|phone|tel)?[:\s]*\(?([0-9+]{8,15})\)?/i) || notif.message.match(/(07[789]\d{7})/);
                         if (phoneMatch) phoneVal = phoneMatch[1].trim();
+                    }
+
+                    // لا نضيف إلا إذا كان هناك اسم مراجع حقيقي أو هاتف حقيقي (استبعاد قاطع للمجهولين)
+                    const cleanPh = phoneVal.replace(/\D/g, '');
+                    if (isPlaceholderOrAnonymousName(nName) && cleanPh.length < 7) {
+                        continue;
                     }
 
                     let painArea = (notif.meta && notif.meta.painArea) || '';
@@ -205,48 +270,32 @@ const AdminEngine = (function() {
                         }
                     }
 
-                    // لا نضيف إلا إذا كان هناك هاتف حقيقي أو اسم مراجع حقيقي
-                    const isGenuinePatient = (phoneVal && phoneVal.replace(/\D/g, '').length >= 7) ||
-                                            (nName && nName.length >= 2 && !/^(?:مريض الفحص الذاتي|فحص ذاتي|مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|زائر|مجهول)$/i.test(nName));
+                    const resolvedName = !isPlaceholderOrAnonymousName(nName) ? nName : (cleanPh.length >= 7 ? `مراجع (${cleanPh.slice(-4)})` : '');
+                    if (!resolvedName) continue;
 
-                    if (isGenuinePatient) {
-                        const notifPtId = notif.patientId || ('pat_notif_' + (phoneVal ? phoneVal.replace(/\D/g, '') : (Date.now().toString(36) + Math.random().toString(36).substr(2, 4))));
-                        candidatePool.push({
-                            patientId: notifPtId,
-                            id: notifPtId,
-                            name: nName || 'مراجع كريم',
-                            fullName: nName || 'مراجع كريم',
-                            phone: phoneVal,
-                            painArea: painArea,
-                            painAreaTitle: painArea,
-                            chiefDiagnosis: chiefDiag,
-                            diagnosisTitle: chiefDiag,
-                            completedSessions: completedSess,
-                            logsCount: completedSess,
-                            createdAt: notif.time || new Date().toISOString(),
-                            timestamp: notif.time || new Date().toISOString(),
-                            lastActiveAt: notif.time || new Date().toISOString(),
-                            _fromNotif: true
-                        });
-                    }
+                    const notifPtId = notif.patientId || ('pat_notif_' + (cleanPh || (Date.now().toString(36) + Math.random().toString(36).substr(2, 4))));
+                    candidatePool.push({
+                        patientId: notifPtId,
+                        id: notifPtId,
+                        name: resolvedName,
+                        fullName: resolvedName,
+                        phone: phoneVal,
+                        painArea: painArea,
+                        painAreaTitle: painArea,
+                        chiefDiagnosis: chiefDiag,
+                        diagnosisTitle: chiefDiag,
+                        completedSessions: completedSess,
+                        logsCount: completedSess,
+                        createdAt: notif.time || new Date().toISOString(),
+                        timestamp: notif.time || new Date().toISOString(),
+                        lastActiveAt: notif.time || new Date().toISOString(),
+                        _fromNotif: true
+                    });
                 }
             }
 
-            // دوال تطبيع أسماء المرضى واحتساب نقاط التفاعل السريري
-            function normalizePatientName(name) {
-                if (!name) return '';
-                let n = String(name).trim().toLowerCase();
-                n = n.replace(/^(السيد|السيدة|الآنسة|الدكتور|الدكتورة|د\.|أ\.|م\.|الأستاذ|الاستاذ)\s+/gi, '');
-                n = n.replace(/[إأآ]/g, 'ا');
-                n = n.replace(/ة/g, 'ه');
-                n = n.replace(/ى/g, 'ي');
-                n = n.replace(/\s+/g, ' ');
-                return n.trim();
-            }
-
             function isGenericPatientName(name) {
-                const n = normalizePatientName(name);
-                return !n || /^(مريض الفحص الذاتي|فحص ذاتي|مراجع كريم|مراجع جديد|الاسم|الاسم الكريم|اسم المراجع|زائر|مجهول|مراجع مجهول)$/.test(n);
+                return isPlaceholderOrAnonymousName(name);
             }
 
             function getInteractionScore(r) {
@@ -480,9 +529,14 @@ const AdminEngine = (function() {
                         unified.name = 'مراجع (' + uPhone.slice(-4) + ')';
                         unified.fullName = unified.name;
                     } else {
-                        unified.name = 'مراجع كريم';
-                        unified.fullName = 'مراجع كريم';
+                        // استبعاد قاطع لأي سجل بدون اسم وبدون صاحب
+                        continue;
                     }
+                }
+
+                // استبعاد قاطع إذا كان الاسم لقباً مؤقتاً بدون هاتف
+                if (isPlaceholderOrAnonymousName(unified.name) && uPhone.length < 7) {
+                    continue;
                 }
 
                 // ضمان تصنيف الأجهزة بدقة تامة (ياسر استخدم لابتوب، وأي مريض كمبيوتر يظهر كـ Desktop 💻)
@@ -643,6 +697,13 @@ const AdminEngine = (function() {
                 p.completedSessions = effectiveLogsCount;
                 p.recoveryScore = recoveryScore;
 
+                // فحص نهائي صارم: أي سجل بدون اسم حقيقي وبدون هاتف موثق يستبعد تماماً
+                const chkName = (p.fullName || p.name || '').trim();
+                const chkPhone = (p.phone || '').replace(/\D/g, '');
+                if (isPlaceholderOrAnonymousName(chkName) && chkPhone.length < 7) {
+                    continue;
+                }
+
                 overview.push({
                     patient: p,
                     isRegistered: !!p.isRegistered,
@@ -662,6 +723,10 @@ const AdminEngine = (function() {
             for (const item of overview) {
                 const p = item.patient;
                 const cleanPhone = (p.phone || '').replace(/\D/g, '');
+                const rawPtName = (p.fullName || p.name || '').trim();
+                if (isPlaceholderOrAnonymousName(rawPtName) && cleanPhone.length < 7) {
+                    continue;
+                }
                 const phoneKey = cleanPhone.length >= 7 ? cleanPhone.slice(-9) : '';
                 const cleanName = normalizePatientName(p.fullName || p.name || '');
                 const isRealName = !isGenericPatientName(cleanName);

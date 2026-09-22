@@ -40,9 +40,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=29.51"></script>
-    <script src="js/security-shield.js?v=29.51"></script>
-    <link rel="stylesheet" href="css/style.css?v=29.51">
+    <script src="js/system-watchdog.js?v=29.52"></script>
+    <script src="js/security-shield.js?v=29.52"></script>
+    <link rel="stylesheet" href="css/style.css?v=29.52">
     <style>
         body {
             background-color: #080c14;
@@ -1428,15 +1428,15 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/clinic-patients-data.js?v=29.51"></script>
-    <script src="js/mqtt.min.js?v=29.51"></script>
-    <script src="js/cloud-sync.js?v=29.51"></script>
-    <script src="js/geo-tracker.js?v=29.51"></script>
-    <script src="js/database.js?v=29.51"></script>
-    <script src="js/exercise-image-studio.js?v=29.51"></script>
-    <script src="js/admin-engine.js?v=29.51"></script>
-    <script src="js/ai-config.js?v=29.51"></script>
-    <script src="js/ai-engine.js?v=29.51"></script>
+    <script src="js/clinic-patients-data.js?v=29.52"></script>
+    <script src="js/mqtt.min.js?v=29.52"></script>
+    <script src="js/cloud-sync.js?v=29.52"></script>
+    <script src="js/geo-tracker.js?v=29.52"></script>
+    <script src="js/database.js?v=29.52"></script>
+    <script src="js/exercise-image-studio.js?v=29.52"></script>
+    <script src="js/admin-engine.js?v=29.52"></script>
+    <script src="js/ai-config.js?v=29.52"></script>
+    <script src="js/ai-engine.js?v=29.52"></script>
 
     <script>
         let allPatientsList = [];
@@ -2411,6 +2411,26 @@
             if (!Array.isArray(allPatientsList)) {
                 allPatientsList = [];
             }
+
+            // تصفية حاسمة تمنع ظهور أي سجل مجهول أو بدون صاحب (مراجع كريم / مراجع محترم / pat_guest)
+            const isPlaceholderName = (n) => {
+                if (!n) return true;
+                const s = String(n).trim().toLowerCase().replace(/^(السيد|السيدة|الآنسة|الدكتور|الدكتورة|د\.|أ\.|م\.|الأستاذ|الاستاذ)\s+/gi, '').replace(/[إأآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/\s+/g, ' ');
+                return !s || /^(?:مريض الفحص الذاتي|فحص ذاتي|مراجع كريم|المراجع الكريم|مراجع محترم|المراجع المحترم|مراجع جديد|المراجع الجديد|الاسم|الاسم الكريم|اسم المراجع|زائر|مجهول|مراجع مجهول|pat_guest|guest|anonymous|anonymous_guest|undefined|null)$/i.test(s);
+            };
+
+            allPatientsList = (allPatientsList || []).filter(item => {
+                if (!item) return false;
+                const p = item.patient || item;
+                const pId = p.patientId || p.id || '';
+                if (pId === 'pat_guest' || pId.startsWith('pat_guest')) return false;
+                const pName = (p.fullName || p.name || '').trim();
+                const pPhone = (p.phone || '').replace(/\D/g, '');
+                if (isPlaceholderName(pName) && pPhone.length < 7) {
+                    return false;
+                }
+                return true;
+            });
 
             // تحديث بطاقة إجمالي المراجعين فورياً ومباشرة
             const statPtCountEl = document.getElementById('stat-patients-count');
@@ -3582,9 +3602,8 @@
             activeAdminReportPatient = p;
             activeAdminReportAssessment = assessment;
 
-            // استخراج القيم السريرية بدقة فائقة
-            const pName = (p.fullName && p.fullName.length > (p.name || '').length) ? p.fullName : (p.name || p.fullName || 'مراجع كريم');
             const cleanPhone = (p.phone || '').replace(/[^0-9]/g, '');
+            const pName = (p.fullName && p.fullName.length > (p.name || '').length) ? p.fullName : (p.name || p.fullName || (cleanPhone ? `مراجع (${cleanPhone.slice(-4)})` : 'المراجع'));
             const reportId = assessment?.reportId || ('SCP-' + (patientId.replace(/\D/g, '') || Math.floor(100000 + Math.random() * 900000)));
             const createdDate = new Date(p.createdAt || p.timestamp || Date.now()).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
             

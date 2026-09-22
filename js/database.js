@@ -105,8 +105,9 @@ const SmartDB = (function() {
             p.chiefDiagnosis = 'انزلاق غضروفي وإجهاد ميكانيكي قطني (L4-S1)';
             p.diagnosisTitle = 'انزلاق غضروفي وإجهاد ميكانيكي قطني (L4-S1)';
         } else if (/^(?:اشعر|أشعر|احس|أحس|اعاني|أعاني)/i.test(pName)) {
-            p.name = 'مراجع كريم';
-            p.fullName = 'مراجع كريم';
+            const ph = (p.phone || '').replace(/\D/g, '');
+            p.name = ph.length >= 7 ? `مراجع (${ph.slice(-4)})` : '';
+            p.fullName = p.name;
         }
         return p;
     }
@@ -206,7 +207,8 @@ const SmartDB = (function() {
                 if (mergedPatient.fullName && mergedPatient.fullName !== mergedPatient.name) {
                     mergedPatient.name = mergedPatient.fullName;
                 } else {
-                    mergedPatient.name = 'مراجع كريم';
+                    const ph = (mergedPatient.phone || '').replace(/\D/g, '');
+                    mergedPatient.name = ph.length >= 7 ? `مراجع (${ph.slice(-4)})` : '';
                 }
             } else if (mergedPatient.fullName && mergedPatient.fullName.trim().length > (mergedPatient.name || '').trim().length) {
                 mergedPatient.name = mergedPatient.fullName.trim();
@@ -431,7 +433,8 @@ const SmartDB = (function() {
                                     return;
                                 }
                                 if (cleanName === 'الاسم' || cleanName === 'الآسم' || cleanName === 'الإسم') {
-                                    cleanName = 'مراجع كريم';
+                                    const ph = (cp.phone || '').replace(/\D/g, '');
+                                    cleanName = ph.length >= 7 ? `مراجع (${ph.slice(-4)})` : '';
                                 }
 
                                 const devType = cp.device || (typeof SmartGeoTracker !== 'undefined' ? SmartGeoTracker.getDeviceType().type : 'Desktop');
@@ -987,6 +990,15 @@ const SmartDB = (function() {
     // دوال إشعارات وتنبيهات الإدارة الفورية الحية
     function addAdminNotification(notif) {
         try {
+            if (!notif) return null;
+            const notifPName = (notif.patientName || '').trim();
+            const notifPPh = (notif.patientPhone || '').replace(/\D/g, '');
+            const isAnon = !notifPName || /^(?:مراجع كريم|المراجع الكريم|مراجع محترم|المراجع المحترم|مراجع جديد|المراجع الجديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|undefined|null)$/i.test(notifPName);
+            // استبعاد قاطع لأي إشعار مجهول ليس له اسم حقيقي ولا هاتف موثق
+            if (isAnon && notifPPh.length < 7) {
+                return null;
+            }
+
             const list = JSON.parse(localStorage.getItem('smart_admin_notifications') || '[]');
             const newNotif = {
                 id: 'N-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
@@ -994,7 +1006,7 @@ const SmartDB = (function() {
                 title: notif.title || 'إشعار جديد',
                 message: notif.message || '',
                 patientId: notif.patientId || null,
-                patientName: notif.patientName || '',
+                patientName: notif.patientName || (notifPPh ? `مراجع (${notifPPh.slice(-4)})` : ''),
                 patientPhone: notif.patientPhone || '',
                 meta: notif.meta || {},
                 time: new Date().toISOString(),
@@ -1031,11 +1043,17 @@ const SmartDB = (function() {
         try {
             const raw = localStorage.getItem('smart_admin_notifications');
             const list = JSON.parse(raw || '[]');
-            // تلقائياً: تنظيف وتطهير أي تنبيهات أخطاء سابقة تم إصلاحها وتجاوزها (مثل أخطاء SyntaxError القديمة)
+            // تلقائياً: تنظيف وتطهير أي تنبيهات أخطاء سابقة أو إشعارات لمراجعين مجهولين (مراجع كريم / مراجع محترم)
             const cleaned = list.filter(n => {
                 if (!n) return false;
-                const txt = (n.title || '') + ' ' + (n.message || '');
-                return !txt.includes('currentCardsPage') && !txt.includes('SyntaxError');
+                const txt = (n.title || '') + ' ' + (n.message || '') + ' ' + (n.patientName || '');
+                if (txt.includes('currentCardsPage') || txt.includes('SyntaxError')) return false;
+                const nPhone = (n.patientPhone || '').replace(/\D/g, '');
+                const isAnonTxt = /مراجع كريم|المراجع الكريم|مراجع محترم|المراجع المحترم|pat_guest|فحص ذاتي/i.test(txt);
+                if (isAnonTxt && nPhone.length < 7) {
+                    return false;
+                }
+                return true;
             });
             if (cleaned.length !== list.length) {
                 localStorage.setItem('smart_admin_notifications', JSON.stringify(cleaned));
@@ -1156,7 +1174,7 @@ const SmartDB = (function() {
                 const accountRecord = {
                     phone: cleanPhone,
                     originalPhone: phone,
-                    name: merged.fullName || merged.name || 'مراجع كريم',
+                    name: merged.fullName || merged.name || (cleanPhone ? `مراجع (${cleanPhone.slice(-4)})` : ''),
                     patientId: patientId,
                     gender: merged.gender,
                     age: merged.age,
@@ -1183,7 +1201,7 @@ const SmartDB = (function() {
             setAuthPatient({
                 phone: cleanPhone,
                 originalPhone: phone,
-                name: merged.fullName || merged.name || 'مراجع كريم',
+                name: merged.fullName || merged.name || (cleanPhone ? `مراجع (${cleanPhone.slice(-4)})` : ''),
                 patientId: patientId,
                 gender: merged.gender,
                 age: merged.age,
@@ -1408,7 +1426,7 @@ const SmartDB = (function() {
                             const curDate = curAss.date || new Date().toISOString();
                             if (!allAssessments.some(ea => ea.date === curDate || (ea.assessmentId && ea.assessmentId === curAss.assessmentId))) {
                                 const ptForAss = matchingPatients[0] || {
-                                    name: curAss.patientName || 'المراجع المحترم',
+                                    name: curAss.patientName || ((phone || curPhone) ? `مراجع (${String(phone || curPhone).replace(/\D/g, '').slice(-4)})` : ''),
                                     phone: phone || curPhone,
                                     patientId: curId || cleanTargetId
                                 };

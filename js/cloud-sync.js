@@ -410,15 +410,20 @@
                         await window.SmartDB.savePatient(normalized, { skipCloudSync: true });
                     }
 
-                    // ✅ v29.19: إنشاء إشعار تلقائي عند وصول مريض جديد من السحابة
-                    if (isNewPatient && window.SmartDB && typeof window.SmartDB.addAdminNotification === 'function') {
+                    // ✅ إنشاء إشعار تلقائي عند وصول مريض جديد من السحابة (فقط إن كان مريضاً حقيقياً وليس زائر مجهول)
+                    const pNameNorm = (normalized.fullName || normalized.name || '').trim();
+                    const pPhoneNorm = (normalized.phone || '').replace(/\D/g, '');
+                    const isAnonSync = !pNameNorm || /^(?:مراجع كريم|المراجع الكريم|مراجع محترم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|undefined|null)$/i.test(pNameNorm);
+
+                    if (isNewPatient && (!isAnonSync || pPhoneNorm.length >= 7) && window.SmartDB && typeof window.SmartDB.addAdminNotification === 'function') {
                         try {
+                            const displayName = !isAnonSync ? pNameNorm : `مراجع (${pPhoneNorm.slice(-4)})`;
                             window.SmartDB.addAdminNotification({
                                 type: 'new_registration',
-                                title: `👤 مراجع جديد: ${normalized.fullName || normalized.name || 'مراجع كريم'}`,
+                                title: `👤 مراجع جديد: ${displayName}`,
                                 message: `وصل ملف طبي جديد عبر المزامنة السحابية — موضع الشكوى: ${normalized.painArea || normalized.painAreaTitle || 'غير محدد'}`,
                                 patientId: normalized.patientId || normalized.id,
-                                patientName: normalized.fullName || normalized.name || 'مراجع كريم',
+                                patientName: displayName,
                                 patientPhone: normalized.phone || ''
                             });
                         } catch(e) {}
@@ -572,8 +577,9 @@
 
                         // تصحيح الاسم
                         let pName = (pt.fullName || pt.name || '').trim();
-                        if (/^(?:الاسم|الآسم|الإسم)$/.test(pName)) pName = 'مراجع كريم';
-                        if (!pName) pName = 'مراجع كريم';
+                        const cleanPh = (pt.phone || '').replace(/\D/g, '');
+                        if (/^(?:الاسم|الآسم|الإسم)$/.test(pName)) pName = (cleanPh.length >= 7 ? `مراجع (${cleanPh.slice(-4)})` : '');
+                        if (!pName && cleanPh.length >= 7) pName = `مراجع (${cleanPh.slice(-4)})`;
 
                         // احتساب BMI
                         const w = parseFloat(pt.weight), h = parseFloat(pt.height);
@@ -756,12 +762,13 @@
         // تنظيف الاسم والتحقق الصارم من عدم ترحيل كلمة "الاسم" كاسم شخصي للمريض
         let rawName = patientRecord.name || patientRecord.fullName || '';
         let cleanName = rawName.trim();
+        const ptPhoneClean = (patientRecord.phone ? String(patientRecord.phone).replace(/\D/g, '') : '');
         if (/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)$/i.test(cleanName)) {
             cleanName = (patientRecord.fullName && !/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)$/i.test(patientRecord.fullName)) 
                 ? patientRecord.fullName 
-                : 'مراجع كريم';
+                : (ptPhoneClean.length >= 7 ? `مراجع (${ptPhoneClean.slice(-4)})` : '');
         }
-        if (!cleanName) cleanName = 'مراجع كريم';
+        if (!cleanName && ptPhoneClean.length >= 7) cleanName = `مراجع (${ptPhoneClean.slice(-4)})`;
 
         // جلب البيانات الجغرافية للزائر (الدولة، المدينة، الجهاز)
         let geoInfo = null;
@@ -1426,10 +1433,11 @@
         if (!pt) return null;
         const pId = pt.patientId || pt.id || ('pat_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 5));
         let pName = (pt.fullName || pt.name || '').trim();
+        const pPh = (pt.phone || '').replace(/\D/g, '');
         if (/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)$/i.test(pName)) {
-            pName = 'مراجع كريم';
+            pName = pPh.length >= 7 ? `مراجع (${pPh.slice(-4)})` : '';
         }
-        if (!pName) pName = 'مراجع كريم';
+        if (!pName && pPh.length >= 7) pName = `مراجع (${pPh.slice(-4)})`;
 
         const pPhone = pt.phone || '';
         
