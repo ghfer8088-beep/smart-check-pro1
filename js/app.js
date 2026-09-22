@@ -1643,7 +1643,8 @@ async function runDiagnosticAnalysis() {
         }
         if (!pName) pName = 'مراجع كريم';
 
-        let pPhone = verifiedPhone || (clinicalDialogueState && clinicalDialogueState.patientPhone) || document.getElementById('patient-phone')?.value?.trim() || document.getElementById('sub-phone')?.value?.trim() || '';
+        const verifiedPhone = (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') || (clinicalDialogueState && clinicalDialogueState.patientPhone) || '';
+        let pPhone = verifiedPhone || document.getElementById('patient-phone')?.value?.trim() || document.getElementById('sub-phone')?.value?.trim() || '';
         if (!pPhone && authPatientData && (authPatientData.phone || authPatientData.originalPhone)) {
             pPhone = authPatientData.phone || authPatientData.originalPhone;
         }
@@ -6833,7 +6834,7 @@ window._applyUpdateNow = function() {
     _doSafeReload();
 };
 
-const CURRENT_APP_VERSION = 'v29.37';
+const CURRENT_APP_VERSION = 'v29.38';
 let _versionCheckInProgress = false;
 
 // فحص مباشر وفوري لرقم الإصدار المنشور على السيرفر/GitHub
@@ -7189,6 +7190,25 @@ function goToStep(stepNum) {
         setTimeout(() => {
             const reportEl = document.getElementById('clinical-report-container');
             if (reportEl) {
+                if (reportEl.innerHTML.includes('تقريرك قيد التحضير والتجهيز')) {
+                    if (typeof currentAssessmentData !== 'undefined' && currentAssessmentData && currentAssessmentData.primaryDiagnosis) {
+                        try { displayDiagnosticReport(currentAssessmentData); } catch(e) {}
+                    } else {
+                        try {
+                            const storedAssess = localStorage.getItem('smart_current_assessment');
+                            if (storedAssess) {
+                                currentAssessmentData = JSON.parse(storedAssess);
+                                if (currentAssessmentData && currentAssessmentData.primaryDiagnosis) {
+                                    displayDiagnosticReport(currentAssessmentData);
+                                } else if (typeof runDiagnosticAnalysis === 'function') {
+                                    runDiagnosticAnalysis();
+                                }
+                            } else if (typeof runDiagnosticAnalysis === 'function') {
+                                runDiagnosticAnalysis();
+                            }
+                        } catch(e) {}
+                    }
+                }
                 reportEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }, 100);
