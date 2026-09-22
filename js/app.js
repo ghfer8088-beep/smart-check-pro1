@@ -993,21 +993,7 @@ async function handleStepperClick(stepNum) {
         return;
     }
 
-    // التحقق الإلزامي من وجود رقم هاتف صحيح قبل الانتقال للتشخيص أو الخطوات التالية
-    if (stepNum >= 3) {
-        const verifiedPhone = (typeof getResolvedPatientPhone === 'function') ? getResolvedPatientPhone() : '';
-        if (!verifiedPhone) {
-            showToast('⚠️ يرجى إدخال رقم هاتفك المحمول أولاً لربط ملفك الطبي واستخراج التقرير', 'warning');
-            if (typeof promptMandatoryPhoneModal === 'function') {
-                promptMandatoryPhoneModal((validPhone, validName) => {
-                    goToStep(stepNum);
-                });
-            }
-            return;
-        }
-    }
-
-    // السماح الفوري والانتقال لأي مرحلة منجزة أو سابقة بكل سلاسة
+    // السماح الفوري والانتقال لأي مرحلة بكل سلاسة دون أي حواجز
     const savedPatientId = (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : null) || activePatient?.patientId;
 
     if (stepNum === 1) {
@@ -1358,30 +1344,15 @@ window.getResolvedPatientName = getResolvedPatientName;
 
 let _pendingDiagnosisCallback = null;
 
-// إظهار نافذة إدخال رقم الهاتف الإلزامية ومنع أي تجاوز
+// تم إلغاء حارس رقم الهاتف الإلزامي — المريض يقدم بياناته في الدردشة السريرية مباشرة
 function promptMandatoryPhoneModal(callback) {
-    _pendingDiagnosisCallback = callback;
     const modal = document.getElementById('mandatory-phone-gate-modal');
-    if (!modal) {
-        if (typeof callback === 'function') callback('', '');
-        return;
+    if (modal) modal.style.display = 'none';
+    if (typeof callback === 'function') {
+        const resolvedPhone = (typeof getResolvedPatientPhone === 'function') ? getResolvedPatientPhone() : '';
+        const resolvedName = (typeof getResolvedPatientName === 'function') ? getResolvedPatientName() : 'المراجع الكريم';
+        callback(resolvedPhone, resolvedName);
     }
-    const nameInput = document.getElementById('gate-patient-name');
-    const phoneInput = document.getElementById('gate-patient-phone');
-    const errEl = document.getElementById('gate-phone-error');
-    if (errEl) errEl.style.display = 'none';
-
-    const existingName = clinicalDialogueState?.patientName || document.getElementById('patient-name')?.value?.trim() || activePatient?.name || '';
-    if (nameInput && !nameInput.value && existingName && existingName !== 'المراجع الكريم') {
-        nameInput.value = existingName;
-    }
-    const existingPhone = clinicalDialogueState?.patientPhone || document.getElementById('patient-phone')?.value?.trim() || '';
-    if (phoneInput && !phoneInput.value && existingPhone) {
-        phoneInput.value = existingPhone;
-    }
-
-    modal.style.display = 'flex';
-    if (phoneInput) setTimeout(() => phoneInput.focus(), 200);
 }
 window.promptMandatoryPhoneModal = promptMandatoryPhoneModal;
 
@@ -1471,32 +1442,12 @@ async function runDiagnosticAnalysisWithCheck() {
         if (formName) clinicalDialogueState.patientName = formName;
     }
 
-    // شرط إلزامي صارم: لا يمكن الدخول للتشخيص دون رقم هاتف حقيقي صحيح
-    const verifiedPhone = getResolvedPatientPhone();
-    if (!verifiedPhone) {
-        showToast('⚠️ يرجى إدخال رقم هاتفك المحمول أولاً لربط ملفك الطبي واستخراج التقرير', 'warning');
-        promptMandatoryPhoneModal(async (validPhone, validName) => {
-            await runDiagnosticAnalysis();
-        });
-        return;
-    }
-
     await runDiagnosticAnalysis();
 }
 window.runDiagnosticAnalysisWithCheck = runDiagnosticAnalysisWithCheck;
 
 // تنفيذ الفحص السريري وتوليد التقرير الطبي الملكي
 async function runDiagnosticAnalysis() {
-    // التحقق الصارم من وجود رقم الهاتف
-    const verifiedPhone = getResolvedPatientPhone();
-    if (!verifiedPhone) {
-        showToast('⚠️ يرجى تزويدنا برقم هاتفك أولاً لربط ملفك الطبي السريري واستخراج التقرير', 'warning');
-        promptMandatoryPhoneModal(async (validPhone, validName) => {
-            await runDiagnosticAnalysis();
-        });
-        return;
-    }
-
     showRoyalReportLoadingModal();
     try {
         if (typeof SmartWatchdog !== 'undefined') {
@@ -6882,7 +6833,7 @@ window._applyUpdateNow = function() {
     _doSafeReload();
 };
 
-const CURRENT_APP_VERSION = 'v29.36';
+const CURRENT_APP_VERSION = 'v29.37';
 let _versionCheckInProgress = false;
 
 // فحص مباشر وفوري لرقم الإصدار المنشور على السيرفر/GitHub
@@ -10649,22 +10600,10 @@ function finishChatIntakeAndGenerateReport() {
         }
     }
 
-    // حارس رقم الهاتف الصارم: منع الانتقال للتشخيص بدون رقم هاتف معتمد
+    // المريض قدم بياناته في الدردشة، الانتقال الفوري والمباشر لإصدار التقرير الطبي الملكي
     const verifiedPhone = (typeof getResolvedPatientPhone === 'function') ? getResolvedPatientPhone() : (clinicalDialogueState.patientPhone || '');
-    if (!verifiedPhone || !isValidPhoneNumber(verifiedPhone)) {
-        showToast('⚠️ يرجى تزويد الطبيب برقم هاتفك أولاً في المحادثة لحفظ ملفك وإصدار تقريرك الطبي.', 'warning');
-        appendChatMessage('bot', '⚠️ عذراً يا غالي، لنتمكن من حفظ ملفك وربطه وإصدار تقرير حالتك وخطة تمارينك المخصصة بدقة، يرجى تزويدي برقم هاتفك أولاً (مثال: 079xxxxxxx):');
-        const chatInput = document.getElementById('ai-chat-input');
-        if (chatInput) {
-            chatInput.placeholder = 'أدخل رقم هاتفك هنا (مثال: 079xxxxxxx)...';
-            chatInput.focus();
-        }
-        if (typeof promptMandatoryPhoneModal === 'function') {
-            promptMandatoryPhoneModal((validPhone, validName) => {
-                finishChatIntakeAndGenerateReport();
-            });
-        }
-        return;
+    if (verifiedPhone) {
+        clinicalDialogueState.patientPhone = verifiedPhone;
     }
 
     const hasDescribedSymptoms = /ألم|وجع|خدر|تنميل|حرارة|حرقان|لسعة|كهربا|شد|تشنج|عصب|ديسك|فقرات|ظهر|رقبة|ركبة|كتف|ساق|رجل|صداع/i.test(userMessages);

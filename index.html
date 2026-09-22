@@ -1089,46 +1089,7 @@
     </div>
 
 
-    <!-- ================= نافذة حارس رقم الهاتف الإلزامي قبل التقرير الطبي ================= -->
-    <div id="mandatory-phone-gate-modal" class="app-modal" style="display: none; z-index: 2000000;">
-        <div class="modal-inner" style="max-width: 480px; background: #0b1322; border: 2px solid var(--primary-gold); border-radius: 16px; padding: 26px; box-shadow: 0 15px 50px rgba(0,0,0,0.9); text-align: center;">
-            <div style="font-size: 2.5em; margin-bottom: 10px;">📱</div>
-            <h3 style="color: var(--primary-gold); margin: 0 0 8px 0; font-size: 1.3em;">خطوة إلزامية لإصدار التقرير الطبي</h3>
-            <p style="color: #cbd5e1; font-size: 0.9em; line-height: 1.6; margin-bottom: 20px;">
-                يرجى تزويدنا باسمك الكريم ورقم هاتفك المحمول لربط وتوثيق ملفك السريري، واستخراج تقرير الفحص وخطة تمارينك التأهيلية:
-            </p>
-            
-            <div style="text-align: right; margin-bottom: 14px;">
-                <label style="color: #94a3b8; font-size: 0.85em; display: block; margin-bottom: 5px;">الاسم الكريم (المراجع): <span style="color: #ef4444;">*</span></label>
-                <input type="text" id="gate-patient-name" placeholder="أدخل اسمك الكريم" style="width: 100%; background: #0f172a; border: 1.5px solid #334155; padding: 11px 14px; border-radius: 8px; color: #fff; font-size: 0.95em;">
-            </div>
 
-            <div style="text-align: right; margin-bottom: 20px;">
-                <label style="color: #94a3b8; font-size: 0.85em; display: block; margin-bottom: 5px;">رقم الهاتف المحمول / الواتساب: <span style="color: #ef4444;">*</span></label>
-                <div style="display: flex; direction: ltr;">
-                    <select id="gate-phone-prefix" style="background: #1e293b; color: var(--primary-gold); border: 1.5px solid #334155; border-right: none; border-radius: 8px 0 0 8px; padding: 10px; font-weight: bold; font-size: 0.9em;">
-                        <option value="+962" selected>🇯🇴 +962</option>
-                        <option value="+966">🇸🇦 +966</option>
-                        <option value="+971">🇦🇪 +971</option>
-                        <option value="+965">🇰🇼 +965</option>
-                        <option value="+974">🇶🇦 +974</option>
-                        <option value="+968">🇴🇲 +968</option>
-                        <option value="+973">🇧🇭 +973</option>
-                        <option value="+20">🇪🇬 +20</option>
-                        <option value="+970">🇵🇸 +970</option>
-                        <option value="+964">🇮🇶 +964</option>
-                        <option value="">🌍 دولي</option>
-                    </select>
-                    <input type="tel" id="gate-patient-phone" placeholder="079xxxxxxx" style="flex: 1; background: #0f172a; border: 1.5px solid #334155; padding: 11px 14px; border-radius: 0 8px 8px 0; color: #fff; font-size: 0.95em; outline: none;">
-                </div>
-                <div id="gate-phone-error" style="color: #ef4444; font-size: 0.82em; margin-top: 6px; display: none;"></div>
-            </div>
-
-            <button type="button" id="gate-submit-btn" onclick="submitMandatoryPhoneGate()" style="width: 100%; background: linear-gradient(135deg, var(--primary-gold) 0%, var(--primary-gold-dark) 100%); color: #0a0e14; border: none; padding: 13px; border-radius: 8px; font-size: 1.05em; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);">
-                🩺 تأكيد وحفظ الملف واستخراج التقرير ⬅️
-            </button>
-        </div>
-    </div>
 
     <!-- نافذة تسجيل الدخول للمريض -->
     <div id="patient-login-modal" class="app-modal">
@@ -1854,21 +1815,21 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=29.36"></script>
-    <script src="js/cloud-sync.js?v=29.36"></script>
-    <script src="js/geo-tracker.js?v=29.36"></script>
-    <script src="js/database.js?v=29.36"></script>
-    <script src="js/exercise-image-studio.js?v=29.36"></script>
-    <script src="js/exercises-db.js?v=29.36"></script>
-    <script src="js/diagnostic-engine.js?v=29.36"></script>
-    <script src="js/audio-pacer.js?v=29.36"></script>
-    <script src="js/patient-flow.js?v=29.36"></script>
-    <script src="js/admin-engine.js?v=29.36"></script>
-    <script src="js/ai-config.js?v=29.36"></script>
-    <script src="js/ai-engine.js?v=29.36"></script>
-    <script src="js/app.js?v=29.36"></script>
-    <script src="js/text-editor.js?v=29.36"></script>
-    <script src="js/smart-guidance.js?v=29.36"></script>
+    <script src="js/mqtt.min.js?v=29.37"></script>
+    <script src="js/cloud-sync.js?v=29.37"></script>
+    <script src="js/geo-tracker.js?v=29.37"></script>
+    <script src="js/database.js?v=29.37"></script>
+    <script src="js/exercise-image-studio.js?v=29.37"></script>
+    <script src="js/exercises-db.js?v=29.37"></script>
+    <script src="js/diagnostic-engine.js?v=29.37"></script>
+    <script src="js/audio-pacer.js?v=29.37"></script>
+    <script src="js/patient-flow.js?v=29.37"></script>
+    <script src="js/admin-engine.js?v=29.37"></script>
+    <script src="js/ai-config.js?v=29.37"></script>
+    <script src="js/ai-engine.js?v=29.37"></script>
+    <script src="js/app.js?v=29.37"></script>
+    <script src="js/text-editor.js?v=29.37"></script>
+    <script src="js/smart-guidance.js?v=29.37"></script>
 
     <script>
         // مؤشر المراجعين المتفاعلين أونلاين الآن (يتراوح عشوائياً بديناميكية طبيعية بين 40 و 99)
