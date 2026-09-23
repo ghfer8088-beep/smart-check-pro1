@@ -6991,50 +6991,82 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.03';
+const CURRENT_APP_VERSION = 'v30.04';
 let _versionCheckInProgress = false;
+let _autoReloadTriggered = false;
 
-// إظهار تنبيه هادئ وغير تدخلي بوجود تحديث جديد مع إمكانية الإغلاق التام
-function _showNonIntrusiveUpdateNotice(targetVer) {
+// ============================================================
+// 🔄 شاشة التحديث التلقائي التنازلية المباشرة (Auto-Update Countdown Overlay)
+// تُخطر المريض بوضوح بوجود تحديث وتُنعش الصفحة تلقائياً مع صون كافة بياناته ومرحلته
+// ============================================================
+function _triggerAutoReloadCountdown(targetVer = null) {
     const ver = targetVer || CURRENT_APP_VERSION;
-    const dismissedVer = sessionStorage.getItem('scp_dismissed_ver');
-    if (sessionStorage.getItem('scp_update_notice_dismissed') === 'true' && dismissedVer === ver) return;
+    if (_autoReloadTriggered) return;
     if (sessionStorage.getItem('scp_last_reloaded_ver') === ver) return;
-    if (document.getElementById('pwa-update-notice-bar')) return;
+    if (document.getElementById('auto-update-overlay')) return;
 
-    const banner = document.createElement('div');
-    banner.id = 'pwa-update-notice-bar';
-    banner.style.cssText = `
-        position: fixed; top: 0; left: 0; right: 0; z-index: 9999999;
-        background: linear-gradient(90deg, #0b1322 0%, #17253d 100%);
-        border-bottom: 2.5px solid #d4af37;
-        padding: 9px 18px;
-        display: flex; align-items: center; justify-content: space-between; gap: 12px;
-        box-shadow: 0 4px 25px rgba(0,0,0,0.8), 0 0 15px rgba(212, 175, 55, 0.3);
-        animation: slideDownBanner 0.4s ease;
+    _autoReloadTriggered = true;
+
+    // حفظ صارم لبيانات وخطوة المريض لمنع أي فقدان للتقدم
+    try {
+        const curStep = localStorage.getItem('smart_current_step');
+        if (curStep) localStorage.setItem('smart_current_step', curStep);
+        if (typeof activePatient !== 'undefined' && activePatient) {
+            localStorage.setItem('smart_active_patient', JSON.stringify(activePatient));
+            if (activePatient.patientId || activePatient.id) {
+                localStorage.setItem('smart_current_patient_id', activePatient.patientId || activePatient.id);
+            }
+        }
+    } catch(e) {}
+
+    const overlay = document.createElement('div');
+    overlay.id = 'auto-update-overlay';
+    overlay.style.cssText = `
+        position: fixed; inset: 0; z-index: 99999999;
+        background: rgba(7, 11, 22, 0.96);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 20px; text-align: center; padding: 25px;
+        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     `;
-    banner.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <span style="font-size: 1.4em; filter: drop-shadow(0 0 8px rgba(212,175,55,0.7));">⚡</span>
-            <div>
-                <strong style="color: #d4af37; font-size: 0.93em; display: block; font-weight: 900;">تحديث جديد متوفر للمنظومة (${ver})</strong>
-                <span style="color: #cbd5e1; font-size: 0.78em;">تم إطلاق تحسينات جديدة! يمكنك التحديث الآن بضغطة زر عند رغبتك دون فقدان تقدمك.</span>
-            </div>
+
+    const countdownStart = 5;
+    overlay.innerHTML = `
+        <div style="font-size: 3.5em; filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.7));">🔄</div>
+        <div style="color: #d4af37; font-size: 1.55em; font-weight: 900; line-height: 1.4; text-shadow: 0 2px 10px rgba(212,175,55,0.4);">
+            تم إطلاق تحديث جديد للمنظومة (${ver})!
         </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <button type="button" onclick="window._applyUpdateNow('${ver}')" style="background: linear-gradient(135deg, #d4af37 0%, #f59e0b 100%); color: #0a0e14; border: none; padding: 7px 18px; border-radius: 8px; font-weight: 900; font-size: 0.85em; cursor: pointer; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.5);">
-                تحديث الآن ⚡
-            </button>
-            <button type="button" onclick="sessionStorage.setItem('scp_update_notice_dismissed','true'); sessionStorage.setItem('scp_dismissed_ver','${ver}'); document.getElementById('pwa-update-notice-bar')?.remove();" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #94a3b8; font-size: 1.2em; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;" title="إغلاق التنبيه">&times;</button>
+        <div style="color: #e2e8f0; font-size: 1.05em; line-height: 1.8; max-width: 440px;">
+            جاري تطبيق أحدث التحسينات السريرية والتقنية تلقائياً.<br>
+            <span style="color: #6ee7b7; font-weight: bold;">ستحتفظ بكافة بياناتك ومرحلتك العلاجية بالكامل 🔒</span>
         </div>
+        <div style="background: #0f172a; border: 3px solid #d4af37; border-radius: 50%; width: 78px; height: 78px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 25px rgba(212,175,55,0.45);">
+            <span id="auto-update-countdown" style="color: #d4af37; font-size: 2.3em; font-weight: 900;">${countdownStart}</span>
+        </div>
+        <div style="color: #94a3b8; font-size: 0.88em;">يتم التحديث تلقائياً خلال ثوانٍ...</div>
+        <button type="button" onclick="_doSafeReload('${ver}');"
+            style="background: linear-gradient(135deg, #d4af37 0%, #f59e0b 100%); color: #0a0e14; border: none; padding: 12px 34px; border-radius: 12px; font-weight: 900; font-size: 1.05em; cursor: pointer; margin-top: 6px; box-shadow: 0 4px 15px rgba(212,175,55,0.5); transition: transform 0.2s;">
+            تحديث الآن فوراً ⚡
+        </button>
     `;
-    document.body.appendChild(banner);
+    document.body.appendChild(overlay);
+
+    let remaining = countdownStart;
+    const countdownEl = document.getElementById('auto-update-countdown');
+    const timer = setInterval(() => {
+        remaining--;
+        if (countdownEl) countdownEl.textContent = remaining;
+        if (remaining <= 0) {
+            clearInterval(timer);
+            _doSafeReload(ver);
+        }
+    }, 1000);
 }
+window._triggerAutoReloadCountdown = _triggerAutoReloadCountdown;
 
 // تطبيق التحديث فوراً عند اختيار المستخدم
 window._applyUpdateNow = function(targetVer = null) {
-    const banner = document.getElementById('pwa-update-notice-bar') || document.getElementById('deferred-update-banner') || document.getElementById('auto-update-overlay');
-    if (banner) banner.remove();
+    const overlay = document.getElementById('auto-update-overlay');
+    if (overlay) overlay.remove();
     _doSafeReload(targetVer);
 };
 
@@ -7082,7 +7114,7 @@ async function _checkRemoteVersionUpdate() {
 
                 if (remoteVersion !== CURRENT_APP_VERSION && remoteVersion !== lastReloadedVersion) {
                     console.log('[UpdateChecker] New version available:', remoteVersion);
-                    _showNonIntrusiveUpdateNotice(remoteVersion);
+                    _triggerAutoReloadCountdown(remoteVersion);
                 }
             }
         }
@@ -7092,12 +7124,6 @@ async function _checkRemoteVersionUpdate() {
     }
 }
 window._checkRemoteVersionUpdate = _checkRemoteVersionUpdate;
-
-// واجهة التوافق الخلفي: توجيه أي استدعاءات قديمة للإشعار الهادئ بدلاً من نافذة الحجب
-function _triggerAutoReloadCountdown(targetVer = null) {
-    _showNonIntrusiveUpdateNotice(targetVer);
-}
-window._triggerAutoReloadCountdown = _triggerAutoReloadCountdown;
 
 function setupPwaInstallListener() {
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -8300,8 +8326,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     installingWorker.onstatechange = () => {
                         if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
                             console.log('[App] New SW installed, update ready.');
-                            if (typeof _showNonIntrusiveUpdateNotice === 'function') {
-                                _showNonIntrusiveUpdateNotice();
+                            if (typeof _triggerAutoReloadCountdown === 'function') {
+                                _triggerAutoReloadCountdown();
                             }
                         }
                     };
@@ -8313,8 +8339,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         navigator.serviceWorker.addEventListener('message', (event) => {
             if (event.data && event.data.type === 'SW_ACTIVATED_NEW_VERSION') {
                 const targetVer = event.data.version ? event.data.version.replace('wada3an-alam-', '') : '';
-                if (typeof _showNonIntrusiveUpdateNotice === 'function') {
-                    _showNonIntrusiveUpdateNotice(targetVer);
+                if (typeof _triggerAutoReloadCountdown === 'function') {
+                    _triggerAutoReloadCountdown(targetVer);
                 }
             }
         });
