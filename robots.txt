@@ -1,7 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /admin.html
-Disallow: /scratch/
-Disallow: /tests/
+Disallow: /calibrator.html
 
 Sitemap: https://smartchecktools.com/sitemap.xml
