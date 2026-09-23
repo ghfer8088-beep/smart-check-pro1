@@ -634,11 +634,13 @@ const SmartGuidance = (function() {
         // 1. إذا كانت نافذة الصدقة والدعاء مفتوحة
         const duaaModal = document.getElementById('royal-duaa-modal');
         if (duaaModal && duaaModal.style.display !== 'none' && window.getComputedStyle(duaaModal).display !== 'none') {
+            duaaModal.style.display = 'none';
             if (typeof window.confirmRoyalDuaaAndProceed === 'function') {
                 window.confirmRoyalDuaaAndProceed();
-            } else {
-                duaaModal.style.display = 'none';
-                if (typeof goToStep === 'function') goToStep(4);
+            } else if (typeof window.activateRecoveryPlanInstantly === 'function') {
+                window.activateRecoveryPlanInstantly();
+            } else if (typeof goToStep === 'function') {
+                goToStep(4);
             }
             return;
         }
@@ -723,29 +725,17 @@ const SmartGuidance = (function() {
             }
 
             case 3: {
-                const hasReport = !!document.querySelector('#clinical-report-container .clinical-report-printable');
-                if (hasReport) {
-                    // التقرير جاهز: تفعيل الخطة المجانية فوراً وبدء اليوم الأول
-                    if (typeof window.activateRecoveryPlanInstantly === 'function') {
-                        window.activateRecoveryPlanInstantly();
-                    } else if (typeof activateRecoveryPlanInstantly === 'function') {
-                        activateRecoveryPlanInstantly();
-                    } else {
-                        const btnRoyal = document.getElementById('btn-activate-plan-royal');
-                        if (btnRoyal) {
-                            btnRoyal.click();
-                        } else if (typeof goToStep === 'function') {
-                            goToStep(4);
-                        }
-                    }
+                // التقرير الطبي: تفعيل الخطة المجانية فوراً وبدء اليوم الأول بدون أي تعطيل أو شروط
+                if (typeof window.activateRecoveryPlanInstantly === 'function') {
+                    window.activateRecoveryPlanInstantly();
+                } else if (typeof activateRecoveryPlanInstantly === 'function') {
+                    activateRecoveryPlanInstantly();
                 } else {
-                    // التقرير قيد التحضير: التمرير بلطف للتقرير وطمأنة المريض دون مغادرة الصفحة
-                    const reportBox = document.getElementById('clinical-report-container');
-                    if (reportBox) {
-                        reportBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                    if (typeof showToast === 'function') {
-                        showToast('⏳ جاري إعداد وتجهيز تقريرك الطبي بدقة.. ثوانٍ قليلة وتظهر النتيجة 🌿', 'info', 3000);
+                    const btnRoyal = document.getElementById('btn-activate-plan-royal');
+                    if (btnRoyal) {
+                        btnRoyal.click();
+                    } else if (typeof goToStep === 'function') {
+                        goToStep(4);
                     }
                 }
                 break;

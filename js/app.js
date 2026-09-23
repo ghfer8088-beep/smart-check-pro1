@@ -4363,14 +4363,8 @@ function displayDiagnosticReport(data) {
         const btnRoyal = document.getElementById('btn-activate-plan-royal');
         if (btnRoyal && !btnRoyal._boundActivationHandler) {
             btnRoyal._boundActivationHandler = true;
-            let lastTrigger = 0;
-            const triggerActivation = (e) => {
-                const now = Date.now();
-                if (now - lastTrigger < 600) return;
-                lastTrigger = now;
-                if (e && e.cancelable) {
-                    e.preventDefault();
-                }
+            btnRoyal.onclick = function(e) {
+                if (e && typeof e.preventDefault === 'function') e.preventDefault();
                 if (typeof window.activateRecoveryPlanInstantly === 'function') {
                     window.activateRecoveryPlanInstantly();
                 } else if (typeof activateRecoveryPlanInstantly === 'function') {
@@ -4379,8 +4373,6 @@ function displayDiagnosticReport(data) {
                     goToStep(4);
                 }
             };
-            btnRoyal.addEventListener('click', triggerActivation);
-            btnRoyal.addEventListener('touchend', triggerActivation, { passive: false });
         }
 
         const wInput = document.getElementById('inline-report-weight');
@@ -4720,7 +4712,12 @@ function contactInternationalPatientCoordinator() {
 }
 
 // تفعيل فوري لخطة التعافي بنقرة واحدة (مقدمة مجاناً بالكامل كصدقة جارية)
+let _lastPlanActivationTime = 0;
 async function activateRecoveryPlanInstantly() {
+    const now = Date.now();
+    if (now - _lastPlanActivationTime < 600) return;
+    _lastPlanActivationTime = now;
+
     let targetPatientId = null;
     let auth = null;
     try {
@@ -4797,32 +4794,8 @@ async function activateRecoveryPlanInstantly() {
             isPlanActivated: true
         };
 
-        try {
-            if (typeof SmartDB !== 'undefined' && typeof SmartDB.savePatient === 'function') {
-                await SmartDB.savePatient(patientObj);
-            }
-        } catch (pErr) {
-            console.warn('SmartDB.savePatient non-fatal warning:', pErr);
-        }
-
-        if (curAssessment) {
-            curAssessment.patientId = patientId;
-            curAssessment.patientName = existingName;
-            curAssessment.patientPhone = resolvedPhone || auth?.phone || '';
-            curAssessment.painAreaTitle = resolvedPainTitle;
-            try {
-                if (typeof SmartDB !== 'undefined' && typeof SmartDB.saveAssessment === 'function') {
-                    await SmartDB.saveAssessment(curAssessment);
-                }
-            } catch (aErr) {
-                console.warn('SmartDB.saveAssessment non-fatal warning:', aErr);
-            }
-        }
-
-        if (typeof SmartDB !== 'undefined' && typeof SmartDB.setCurrentSessionPatientId === 'function') {
-            SmartDB.setCurrentSessionPatientId(patientId);
-        }
-        try { sessionStorage.setItem('scp_active_patient_id', patientId); } catch(e) {}
+        // 1. التثبيت المتزامن الفوري في الذاكرة المحلية (Instant Sync State)
+        window.activePatient = patientObj;
         activePatient = patientObj;
         try {
             if (resolvedPhone) localStorage.setItem('smart_patient_phone', String(resolvedPhone));
@@ -4833,33 +4806,93 @@ async function activateRecoveryPlanInstantly() {
             localStorage.setItem('smart_current_step', '4');
             const curMax = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
             localStorage.setItem('smart_max_reached_step', String(Math.max(curMax, 4)));
+            sessionStorage.setItem('scp_active_patient_id', patientId);
         } catch (e) {}
 
-        try {
-            if (typeof SmartDB !== 'undefined' && typeof SmartDB.addAdminNotification === 'function') {
-                SmartDB.addAdminNotification({
-                    type: 'new_registration',
-                    title: `👤 تفعيل فوري للخطة: ${existingName}`,
-                    message: `فعّل المراجع ${existingName} خطة التعافي الحركية (اليوم 1) بنقرة واحدة - منطقة: ${resolvedPainTitle} - هاتف: ${resolvedPhone || auth?.phone || 'بدون هاتف'}`,
-                    patientId,
-                    patientName: existingName,
-                    patientPhone: resolvedPhone || auth?.phone || '',
-                    meta: {
-                        painArea: resolvedPainTitle,
-                        diagnosis: curAssessment?.primaryDiagnosis || ''
-                    }
-                });
-            }
-        } catch (nErr) {
-            console.warn('Notification non-fatal warning:', nErr);
+        if (typeof SmartDB !== 'undefined' && typeof SmartDB.setCurrentSessionPatientId === 'function') {
+            SmartDB.setCurrentSessionPatientId(patientId);
         }
 
-        // إظهار نافذة الإهداء والدعاء الملكي لضمان قراءتها والتأمين عليها
-        showRoyalDuaaModal(patientId);
+        // 2. إغلاق أي نافذة دعاء أو مودال معلق
+        const duaaModal = document.getElementById('royal-duaa-modal');
+        if (duaaModal) duaaModal.style.display = 'none';
+
+        // 3. تأمين ظهور شريط التوجيه الطبي وتأهيله للخطوة 4
+        const stickyBar = document.getElementById('sticky-patient-guidance-bar');
+        if (stickyBar) {
+            stickyBar.style.transform = 'translateY(0)';
+        }
+
+        // 4. الانتقال الحتمي والفوري للخطوة 4 (تمارين اليوم الأول) دون أي تأخير
+        if (typeof goToStep === 'function') {
+            goToStep(4);
+        }
+        if (window.SmartGuidance && typeof SmartGuidance.updateStep === 'function') {
+            SmartGuidance.updateStep(4);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // 5. رسم وتحميل تمارين اليوم الأول فوراً
+        if (typeof renderStep4IndependentDay1 === 'function') {
+            renderStep4IndependentDay1(patientId, null);
+        }
+        if (typeof loadPatientRecoveryDashboard === 'function') {
+            loadPatientRecoveryDashboard(patientId).catch(err => console.warn('loadPatientRecoveryDashboard non-fatal:', err));
+        }
+
+        // 6. إظهار الإشعار الملكي المبهج بالدعاء والتفعيل
+        if (typeof showToast === 'function') {
+            showToast('🌿 بارك الله فيكم وتقبّل دعاءكم بالرحمة والمغفرة.. تم تفعيل الخطة المجانية وبدء اليوم الأول 🤲', 'success', 5000);
+        }
+
+        if (typeof playStationAudio === 'function') {
+            try { playStationAudio('recovery'); } catch(e) {}
+        }
+
+        // 7. حفظ البيانات في الخلفية بدون انتظار يوقف الواجهة (Non-blocking Background Persistence)
+        setTimeout(() => {
+            try {
+                if (typeof SmartDB !== 'undefined' && typeof SmartDB.savePatient === 'function') {
+                    SmartDB.savePatient(patientObj).catch(pErr => console.warn('SmartDB.savePatient non-fatal:', pErr));
+                }
+            } catch (pErr) {}
+
+            try {
+                if (curAssessment) {
+                    curAssessment.patientId = patientId;
+                    curAssessment.patientName = existingName;
+                    curAssessment.patientPhone = resolvedPhone || auth?.phone || '';
+                    curAssessment.painAreaTitle = resolvedPainTitle;
+                    if (typeof SmartDB !== 'undefined' && typeof SmartDB.saveAssessment === 'function') {
+                        SmartDB.saveAssessment(curAssessment).catch(aErr => console.warn('SmartDB.saveAssessment non-fatal:', aErr));
+                    }
+                }
+            } catch (aErr) {}
+
+            try {
+                if (typeof SmartDB !== 'undefined' && typeof SmartDB.addAdminNotification === 'function') {
+                    SmartDB.addAdminNotification({
+                        type: 'new_registration',
+                        title: `👤 تفعيل فوري للخطة: ${existingName}`,
+                        message: `فعّل المراجع ${existingName} خطة التعافي الحركية (اليوم 1) بنقرة واحدة - منطقة: ${resolvedPainTitle} - هاتف: ${resolvedPhone || auth?.phone || 'بدون هاتف'}`,
+                        patientId,
+                        patientName: existingName,
+                        patientPhone: resolvedPhone || auth?.phone || '',
+                        meta: {
+                            painArea: resolvedPainTitle,
+                            diagnosis: curAssessment?.primaryDiagnosis || ''
+                        }
+                    });
+                }
+            } catch (nErr) {}
+        }, 60);
+
     } catch (err) {
         console.error('Error activating plan instantly:', err);
         const fallbackId = targetPatientId || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' && SmartDB.getCurrentSessionPatientId()) || activePatient?.patientId || ('P-' + Date.now().toString().slice(-6));
-        showRoyalDuaaModal(fallbackId);
+        if (typeof goToStep === 'function') goToStep(4);
+        if (typeof renderStep4IndependentDay1 === 'function') renderStep4IndependentDay1(fallbackId);
+        if (typeof loadPatientRecoveryDashboard === 'function') loadPatientRecoveryDashboard(fallbackId);
     }
 }
 window.activateRecoveryPlanInstantly = activateRecoveryPlanInstantly;
@@ -5072,13 +5105,13 @@ async function confirmRoyalDuaaAndProceed() {
     const pId = pendingDuaaPatientId || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null) || activePatient?.patientId || ('P-' + Date.now().toString().slice(-6));
     showToast('🌿 تقبّل الله دعاءكم وبارك في صحتكم وعافيتكم.. بدء خطة التعافي (اليوم الأول)', 'success');
 
+    if (typeof renderStep4IndependentDay1 === 'function') {
+        renderStep4IndependentDay1(pId);
+    }
     try {
         await loadPatientRecoveryDashboard(pId);
     } catch (e) {
         console.error('Error loading recovery dashboard:', e);
-        if (typeof renderStep4IndependentDay1 === 'function') {
-            await renderStep4IndependentDay1(pId);
-        }
     }
 
     // ضمان التركيز على بداية قسم تمارين اليوم الأول
