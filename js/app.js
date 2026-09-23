@@ -5053,13 +5053,6 @@ function showRoyalDuaaModal(patientId) {
         const inner = modal.querySelector('.modal-inner');
         if (inner) inner.scrollTop = 0;
 
-        // إخفاء مؤقت للشريط الإرشادي السفلي لضمان رؤية ونقر زر تأمين الدعاء براحة تامة على الشاشات الصغيرة
-        const stickyBar = document.getElementById('sticky-patient-guidance-bar');
-        if (stickyBar) {
-            stickyBar.style.transform = 'translateY(120%)';
-            stickyBar.style.transition = 'transform 0.3s ease';
-        }
-
         if (window.SmartGuidance && typeof SmartGuidance.guideDuaaModal === 'function') {
             SmartGuidance.guideDuaaModal();
         }
@@ -6819,11 +6812,8 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
     `;
 
     modal.style.display = 'flex';
-    const stickyBar = document.getElementById('sticky-patient-guidance-bar');
-    if (stickyBar) {
-        stickyBar.style.transform = 'translateY(150%)';
-        stickyBar.style.opacity = '0';
-        stickyBar.style.pointerEvents = 'none';
+    if (window.SmartGuidance && typeof SmartGuidance.guideAssessmentModal === 'function') {
+        SmartGuidance.guideAssessmentModal(sessionNumber);
     }
 }
 window.openSessionAssessmentModal = openSessionAssessmentModal;
@@ -6837,7 +6827,9 @@ function closeSessionAssessmentModal() {
         stickyBar.style.opacity = '';
         stickyBar.style.pointerEvents = '';
     }
-    if (window.SmartGuidance && typeof SmartGuidance.checkLiveGuidanceState === 'function') {
+    if (window.SmartGuidance && typeof SmartGuidance.onAssessmentModalClosed === 'function') {
+        SmartGuidance.onAssessmentModalClosed();
+    } else if (window.SmartGuidance && typeof SmartGuidance.checkLiveGuidanceState === 'function') {
         SmartGuidance.checkLiveGuidanceState();
     }
 }
@@ -7126,7 +7118,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.08';
+const CURRENT_APP_VERSION = 'v30.09';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 

@@ -1578,15 +1578,6 @@ body {
     padding-bottom: 35px !important;
 }
 
-/* إخفاء شريط التوجيه السفلي تلقائياً عند فتح أي نافذة منبثقة لمنع حجب الأزرار */
-body:has(.app-modal[style*="display: flex"]) .sticky-patient-guidance-bar,
-body:has(.app-modal[style*="display: block"]) .sticky-patient-guidance-bar,
-body:has(.app-modal:not([style*="display: none"]):not([style*="display:none"])) .sticky-patient-guidance-bar,
-.modal-active .sticky-patient-guidance-bar {
-    transform: translateY(150%) !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-}
 
 @media (max-width: 768px) {
     .app-modal {
@@ -2747,7 +2738,7 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 9999 !important;
+    z-index: 2000090 !important;
     background: rgba(11, 17, 30, 0.95);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);

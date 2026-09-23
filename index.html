@@ -44,7 +44,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=30.08">
+    <link rel="stylesheet" href="css/style.css?v=30.09">
     <script>
         // التحقق من تحديثات النسخة بسلاسة دون تفريغ أي بيانات للمرضى
         (function() {
@@ -1037,7 +1037,7 @@
     </div>
 
     <!-- نافذة مكتبة التمارين المصورة الكاملة -->
-    <div id="exercise-library-modal" class="app-modal">
+    <div id="exercise-library-modal" class="app-modal" style="display: none;">
         <div class="modal-inner">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                 <h2 style="color: var(--primary-gold); margin: 0; font-size: 1.4em;">📚 مكتبة التمارين العلاجية المصورة</h2>
@@ -1081,7 +1081,7 @@
 
 
     <!-- نافذة تسجيل الدخول للمريض -->
-    <div id="patient-login-modal" class="app-modal">
+    <div id="patient-login-modal" class="app-modal" style="display: none;">
         <div class="modal-inner" style="max-width: 450px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h3 style="color: var(--primary-gold); margin: 0;">🔑 تسجيل دخول المراجع</h3>
@@ -1822,21 +1822,21 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=30.08"></script>
-    <script src="js/cloud-sync.js?v=30.08"></script>
-    <script src="js/geo-tracker.js?v=30.08"></script>
-    <script src="js/database.js?v=30.08"></script>
-    <script src="js/exercise-image-studio.js?v=30.08"></script>
-    <script src="js/exercises-db.js?v=30.08"></script>
-    <script src="js/diagnostic-engine.js?v=30.08"></script>
-    <script src="js/audio-pacer.js?v=30.08"></script>
-    <script src="js/patient-flow.js?v=30.08"></script>
-    <script src="js/admin-engine.js?v=30.08"></script>
-    <script src="js/ai-config.js?v=30.08"></script>
-    <script src="js/ai-engine.js?v=30.08"></script>
-    <script src="js/app.js?v=30.08"></script>
-    <script src="js/text-editor.js?v=30.08"></script>
-    <script src="js/smart-guidance.js?v=30.08"></script>
+    <script src="js/mqtt.min.js?v=30.09"></script>
+    <script src="js/cloud-sync.js?v=30.09"></script>
+    <script src="js/geo-tracker.js?v=30.09"></script>
+    <script src="js/database.js?v=30.09"></script>
+    <script src="js/exercise-image-studio.js?v=30.09"></script>
+    <script src="js/exercises-db.js?v=30.09"></script>
+    <script src="js/diagnostic-engine.js?v=30.09"></script>
+    <script src="js/audio-pacer.js?v=30.09"></script>
+    <script src="js/patient-flow.js?v=30.09"></script>
+    <script src="js/admin-engine.js?v=30.09"></script>
+    <script src="js/ai-config.js?v=30.09"></script>
+    <script src="js/ai-engine.js?v=30.09"></script>
+    <script src="js/app.js?v=30.09"></script>
+    <script src="js/text-editor.js?v=30.09"></script>
+    <script src="js/smart-guidance.js?v=30.09"></script>
 
     <script>
         // مؤشر المراجعين المتفاعلين أونلاين الآن (يتراوح عشوائياً بديناميكية طبيعية بين 40 و 99)

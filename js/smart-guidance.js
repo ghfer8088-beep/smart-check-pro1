@@ -116,13 +116,42 @@ const SmartGuidance = (function() {
         if (!barEl) barEl = document.getElementById('sticky-patient-guidance-bar');
         if (!barEl) return;
 
-        // 1. فحص وجود أي نافذة منبثقة نشطة (تقييم الجلسة، الشهادة والوسام، الصدقة والدعاء، الهاتف، الفيديو، إلخ)
-        // عند فتح أي نافذة منبثقة، يتم إخفاء شريط الإرشاد السفلي تماماً لتوفير مساحة كاملة ومنع حجب أزرار المودال
-        const activeModal = Array.from(document.querySelectorAll('.app-modal, #auto-update-overlay')).find(m => {
-            return m.style.display && m.style.display !== 'none' && window.getComputedStyle(m).display !== 'none';
+        // 1. فحص نافذة الصدقة الجارية والدعاء (royal-duaa-modal)
+        const duaaModal = document.getElementById('royal-duaa-modal');
+        if (duaaModal && duaaModal.style.display !== 'none' && window.getComputedStyle(duaaModal).display !== 'none') {
+            barEl.style.transform = '';
+            barEl.style.opacity = '';
+            barEl.style.pointerEvents = '';
+            renderDuaaModalBar();
+            return;
+        }
+
+        // 2. فحص نافذة تقييم الجلسة الشامل (session-assessment-modal)
+        const assessModal = document.getElementById('session-assessment-modal');
+        if (assessModal && assessModal.style.display !== 'none' && window.getComputedStyle(assessModal).display !== 'none') {
+            barEl.style.transform = '';
+            barEl.style.opacity = '';
+            barEl.style.pointerEvents = '';
+            renderAssessmentModalBar();
+            return;
+        }
+
+        // 3. فحص نافذة إدخال الهاتف الإلزامية
+        const phoneModal = document.getElementById('phone-intake-modal');
+        if (phoneModal && phoneModal.style.display !== 'none' && window.getComputedStyle(phoneModal).display !== 'none') {
+            barEl.style.transform = '';
+            barEl.style.opacity = '';
+            barEl.style.pointerEvents = '';
+            renderPhoneModalBar();
+            return;
+        }
+
+        // 4. النوافذ الكاملة الأخرى المستقلة التي تتطلب إخفاء مؤقتاً لشريط التوجيه (مثل الفيديو، أو مكتبة التمارين، إلخ)
+        const fullscreenModal = Array.from(document.querySelectorAll('#welcome-tour-modal, #disclaimer-modal, #completion-certificate-modal, #in-app-video-player-modal, #exercise-library-modal, #chiropractic-explainer-modal, #mri-consultation-modal, #video-success-stories-modal, #patient-login-modal, #patient-portal-modal, #auto-update-overlay')).find(m => {
+            return m && m.style.display && m.style.display !== 'none' && window.getComputedStyle(m).display !== 'none';
         });
 
-        if (activeModal) {
+        if (fullscreenModal) {
             barEl.style.transform = 'translateY(150%)';
             barEl.style.opacity = '0';
             barEl.style.pointerEvents = 'none';
@@ -133,7 +162,7 @@ const SmartGuidance = (function() {
             barEl.style.pointerEvents = '';
         }
 
-        // 2. توجيه المرحلة حسب رقم الخطوة الفعلي
+        // 5. توجيه المرحلة حسب رقم الخطوة الفعلي
         switch (currentStep) {
             case 1:
                 renderStep1Bar();
@@ -345,6 +374,12 @@ const SmartGuidance = (function() {
     // نافذة الصدقة الجارية والدعاء (royal-duaa-modal)
     // -------------------------------------------------------------------------
     function renderDuaaModalBar() {
+        if (!barEl) barEl = document.getElementById('sticky-patient-guidance-bar');
+        if (barEl) {
+            barEl.style.transform = '';
+            barEl.style.opacity = '';
+            barEl.style.pointerEvents = '';
+        }
         activeSubState = 'duaa_modal';
         const iconEl = document.getElementById('sticky-guidance-icon');
         const subEl = document.getElementById('sticky-guidance-sub');
@@ -387,6 +422,12 @@ const SmartGuidance = (function() {
     // نافذة تقييم الجلسة (session-assessment-modal)
     // -------------------------------------------------------------------------
     function renderAssessmentModalBar() {
+        if (!barEl) barEl = document.getElementById('sticky-patient-guidance-bar');
+        if (barEl) {
+            barEl.style.transform = '';
+            barEl.style.opacity = '';
+            barEl.style.pointerEvents = '';
+        }
         activeSubState = 'assessment_modal';
         const iconEl = document.getElementById('sticky-guidance-icon');
         const subEl = document.getElementById('sticky-guidance-sub');
@@ -419,6 +460,12 @@ const SmartGuidance = (function() {
     // نافذة إدخال الهاتف (phone-intake-modal)
     // -------------------------------------------------------------------------
     function renderPhoneModalBar() {
+        if (!barEl) barEl = document.getElementById('sticky-patient-guidance-bar');
+        if (barEl) {
+            barEl.style.transform = '';
+            barEl.style.opacity = '';
+            barEl.style.pointerEvents = '';
+        }
         activeSubState = 'phone_modal';
         const iconEl = document.getElementById('sticky-guidance-icon');
         const subEl = document.getElementById('sticky-guidance-sub');
