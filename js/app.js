@@ -6798,11 +6798,17 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
     // تحديث كائن المريض نفسه بعدد الجلسات ونسبة التعافي ومزامنتها سحابياً
     if (pInfo) {
         const totalDone = (allLogs && allLogs.length) ? allLogs.length : 1;
+        pInfo.dailyLogs = allLogs;
+        pInfo.logs = allLogs;
         pInfo.logsCount = totalDone;
         pInfo.completedSessions = totalDone;
         pInfo.lastSessionNumber = sessionNumber;
         pInfo.lastLogDate = new Date().toISOString();
-        if (typeof PatientFlow !== 'undefined' && typeof PatientFlow.calculateRecoveryScore === 'function' && pInfo.painLevel) {
+        if (totalDone >= 7) {
+            pInfo.isPlanCompleted = true;
+            pInfo.planCompleted = true;
+            pInfo.recoveryScore = 100;
+        } else if (typeof PatientFlow !== 'undefined' && typeof PatientFlow.calculateRecoveryScore === 'function' && pInfo.painLevel) {
             pInfo.recoveryScore = PatientFlow.calculateRecoveryScore(pInfo.painLevel, allLogs);
         } else {
             pInfo.recoveryScore = Math.min(100, Math.round((totalDone / 7) * 100));
@@ -7000,7 +7006,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.05';
+const CURRENT_APP_VERSION = 'v30.06';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
