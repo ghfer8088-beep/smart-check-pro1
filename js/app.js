@@ -6109,6 +6109,9 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             if (typeof triggerSessionReadyNotification === 'function') {
                 triggerSessionReadyNotification(activePatient?.name);
             }
+            if (window.SmartGuidance && typeof window.SmartGuidance.checkLiveGuidanceState === 'function') {
+                window.SmartGuidance.checkLiveGuidanceState();
+            }
         }, lockStatus.totalDurationMs);
     }
     // تفعيل الاستعلام السحابي اللحظي المستمر كل 3 ثوانٍ لتحديث الساعة والزر تلقائياً إذا تم التعديل من الإدارة

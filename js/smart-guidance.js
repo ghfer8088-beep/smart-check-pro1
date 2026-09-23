@@ -546,24 +546,29 @@ const SmartGuidance = (function() {
 
         if (!btn) return;
 
-        const isLocked = !!document.querySelector('.royal-clinical-lock-btn') || !!document.getElementById('recovery-progress-remaining-text');
         const isRunning = !!document.querySelector('#step-section-5 button.btn-exercise-timer[data-running="true"]');
-        const isDone = !!document.querySelector('#step-section-5 button.btn-exercise-timer[data-completed="true"]') || !!document.querySelector('#step-section-5 button.btn-exercise-timer[style*="10b981"]');
+        const unlockedRecordBtn = document.querySelector('.royal-clinical-next-btn.active-unlocked, #step-section-5 button.active-unlocked, #session-completion-control-wrapper button[onclick*="openSessionAssessmentModal"]');
+        const lockBtn = document.querySelector('.royal-clinical-lock-btn, #step-section-5 .royal-clinical-lock-btn');
+        const countdownEl = document.getElementById('countdown-hours');
+        const isLocked = !unlockedRecordBtn && (!!lockBtn || (!!countdownEl && countdownEl.offsetParent !== null) || !!document.getElementById('recovery-progress-remaining-text'));
 
-        // ✅ v29.19: استخراج رقم الجلسة الحالية لعرضه في الشريط
+        // ✅ v30.02: استخراج رقم الجلسة الحالية لعرضه بدقة في الشريط
         let sessionLabel = '';
         try {
             const sessNumEl = document.getElementById('current-session-number') || document.querySelector('[data-session-number]');
             const sessNumRaw = sessNumEl ? (sessNumEl.textContent || sessNumEl.getAttribute('data-session-number') || '') : '';
-            const sessNum = parseInt(sessNumRaw, 10);
-            if (!isNaN(sessNum) && sessNum > 0) sessionLabel = ` (جلسة ${sessNum} من 7)`;
+            let sessNum = parseInt(sessNumRaw, 10);
+            if (isNaN(sessNum) || sessNum <= 0) {
+                sessNum = (window.activePatient && window.activePatient.currentSessionDay) || 2;
+            }
+            if (sessNum > 0) sessionLabel = ` (جلسة ${sessNum} من 7)`;
         } catch(e) {}
 
         if (isLocked) {
             // الجلسة في فترة استشفاء الـ 24 ساعة
             activeSubState = 'step5_locked';
             if (iconEl) iconEl.textContent = '⏳';
-            if (subEl) subEl.textContent = `المرحلة 5${sessionLabel}: فترة استشفاء حيوي جارية للأنسجة (24 ساعة)`;
+            if (subEl) subEl.textContent = `المرحلة 5${sessionLabel}: فترة استشفاء حيوي جارية للأنسجة`;
             if (mainEl) mainEl.textContent = 'أنسجة مفاصلك في طور الاستشفاء.. التزم بإرشادات الراحة حتى انتهاء العداد';
 
             btn.className = 'sticky-guidance-action-btn state-pending';
@@ -578,24 +583,16 @@ const SmartGuidance = (function() {
             btn.className = 'sticky-guidance-action-btn state-pending';
             if (btnIcon) btnIcon.textContent = '⏱️';
             if (btnText) btnText.textContent = 'مؤقت التمرين يعمل الآن...';
-        } else if (isDone) {
+        } else {
+            // ✅ v30.02: الجلسة مفتوحة ومتاحة للتوثيق والتسجيل (مفتوحة طبيعياً أو معدلة من الإدارة أو منتهية العداد)
             activeSubState = 'step5_ready_record';
-            if (iconEl) iconEl.textContent = '✅';
-            if (subEl) subEl.textContent = `المرحلة 5${sessionLabel}: توثيق إنجاز الجلسة الحالية`;
-            if (mainEl) mainEl.textContent = 'أتممت تمارين اليوم؟ اضغط أدناه لحفظ تسجيل الجلسة وتوثيق التقييم والانتقال للتالية';
+            if (iconEl) iconEl.textContent = '🚀';
+            if (subEl) subEl.textContent = `المرحلة 5${sessionLabel}: الجلسة مفتوحة وجاهزة للتسجيل والتقييم`;
+            if (mainEl) mainEl.textContent = 'جلسة اليوم مفتوحة! اضغط لحفظ تسجيل الجلسة وتوثيق التقييم والانتقال للتالية';
 
             btn.className = 'sticky-guidance-action-btn state-ready';
             if (btnIcon) btnIcon.textContent = '🚀';
             if (btnText) btnText.textContent = 'حفظ تسجيل الجلسة وتوثيق التقييم ❯';
-        } else {
-            activeSubState = 'step5_initial';
-            if (iconEl) iconEl.textContent = '🏋️';
-            if (subEl) subEl.textContent = `المرحلة 5${sessionLabel}: الجلسة متاحة ومفتوحة للأداء`;
-            if (mainEl) mainEl.textContent = 'جلسة اليوم جاهزة! تفضل بأداء التمارين المخصصة لتليين المفصل وتفريغ الضغط';
-
-            btn.className = 'sticky-guidance-action-btn state-gold';
-            if (btnIcon) btnIcon.textContent = '⏱️';
-            if (btnText) btnText.textContent = 'الانتقال لتمارين اليوم وتشغيل المؤقت ❯';
         }
     }
 
@@ -796,7 +793,11 @@ const SmartGuidance = (function() {
             }
 
             case 5: {
-                const patientId = (typeof activePatient !== 'undefined' && activePatient?.patientId) || (typeof SmartDB !== 'undefined' && SmartDB.getCurrentSessionPatientId ? SmartDB.getCurrentSessionPatientId() : null);
+                const patientId = (typeof activePatient !== 'undefined' && activePatient?.patientId) || 
+                                  (typeof SmartDB !== 'undefined' && SmartDB.getCurrentSessionPatientId ? SmartDB.getCurrentSessionPatientId() : null) || 
+                                  localStorage.getItem('smart_current_patient_id') || 'P-GUEST';
+
+                const activeDayBtn = document.querySelector('.royal-clinical-next-btn.active-unlocked, #step-section-5 button.active-unlocked, #session-completion-control-wrapper button[onclick*="openSessionAssessmentModal"]');
 
                 if (activeSubState === 'step5_locked') {
                     const clock = document.getElementById('countdown-hours') || document.querySelector('.royal-clinical-lock-btn');
@@ -804,16 +805,18 @@ const SmartGuidance = (function() {
                     if (typeof showToast === 'function') {
                         showToast('⏳ أنسجة مفاصلك في فترة استشفاء وترميم.. العداد جارٍ ومتبقي لحين فتح الجلسة', 'warning', 4000);
                     }
-                } else if (activeSubState === 'step5_ready_record') {
-                    const activeDayBtn = document.querySelector('.royal-clinical-next-btn.active-unlocked, button[onclick*="openSessionAssessmentModal"]');
-                    if (activeDayBtn) {
-                        activeDayBtn.click();
-                    } else if (typeof openSessionAssessmentModal === 'function') {
-                        openSessionAssessmentModal(patientId || 'P-GUEST', 2);
-                    }
                 } else if (activeSubState === 'step5_exercising') {
                     const activeEx = document.querySelector('#step-section-5 button.btn-exercise-timer[data-running="true"]')?.closest('.clinical-exercise-card');
                     if (activeEx) activeEx.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else if (activeSubState === 'step5_ready_record' || activeDayBtn) {
+                    // ✅ v30.02: عند فتح الجلسة (طبيعياً أو من الإدارة) يتم فوراً فتح نافذة تسجيل وتقييم الجلسة دون أي تشويش
+                    if (activeDayBtn) {
+                        activeDayBtn.click();
+                    } else if (typeof openSessionAssessmentModal === 'function') {
+                        const currentDay = (window.activePatient && window.activePatient.currentSessionDay) || 
+                                          (typeof SmartDB !== 'undefined' && SmartDB.getCurrentPatient ? SmartDB.getCurrentPatient()?.currentSessionDay : null) || 2;
+                        openSessionAssessmentModal(patientId, currentDay);
+                    }
                 } else {
                     const firstEx = document.querySelector('#step-section-5 .clinical-exercise-card');
                     if (firstEx) {
@@ -873,6 +876,7 @@ const SmartGuidance = (function() {
     return {
         init: init,
         updateStep: updateStep,
+        checkLiveGuidanceState: checkLiveGuidanceState,
         onPointSelected: onPointSelected,
         guideStep1: renderStep1Bar,
         guideStep2: renderStep2Bar,

@@ -2526,6 +2526,9 @@
                             </button>
                         </div>
                     `;
+                    if (window.SmartGuidance && typeof window.SmartGuidance.checkLiveGuidanceState === 'function') {
+                        window.SmartGuidance.checkLiveGuidanceState();
+                    }
                 }
             } else if (update.targetTime && update.targetTime > Date.now()) {
                 const totalDur = update.totalDurationMs || (update.targetTime - Date.now());
@@ -2726,6 +2729,10 @@
             } else {
                 window.showToast('⏱️ قام المعالج بتعديل توقيت جلستك!', 'info');
             }
+        }
+
+        if (window.SmartGuidance && typeof window.SmartGuidance.checkLiveGuidanceState === 'function') {
+            setTimeout(() => window.SmartGuidance.checkLiveGuidanceState(), 100);
         }
 
         return true;
