@@ -1579,8 +1579,8 @@ body {
 }
 
 /* إخفاء شريط التوجيه السفلي تلقائياً عند فتح أي نافذة منبثقة لمنع حجب الأزرار */
-body:has(.app-modal[style*="display: flex"]),
-body:has(.app-modal[style*="display: block"]),
+body:has(.app-modal[style*="display: flex"]) .sticky-patient-guidance-bar,
+body:has(.app-modal[style*="display: block"]) .sticky-patient-guidance-bar,
 body:has(.app-modal:not([style*="display: none"]):not([style*="display:none"])) .sticky-patient-guidance-bar,
 .modal-active .sticky-patient-guidance-bar {
     transform: translateY(150%) !important;
