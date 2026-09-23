@@ -6688,7 +6688,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
             </div>
         </div>
 
-        <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
+        <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; margin-top: 25px; margin-bottom: 25px; padding-bottom: 15px;">
             <button type="button" onclick="closeSessionAssessmentModal()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer;">
                 إلغاء والعودة للتمارين
             </button>
@@ -6699,8 +6699,11 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
     `;
 
     modal.style.display = 'flex';
-    if (window.SmartGuidance && typeof SmartGuidance.guideAssessmentModal === 'function') {
-        SmartGuidance.guideAssessmentModal(sessionNumber);
+    const stickyBar = document.getElementById('sticky-patient-guidance-bar');
+    if (stickyBar) {
+        stickyBar.style.transform = 'translateY(150%)';
+        stickyBar.style.opacity = '0';
+        stickyBar.style.pointerEvents = 'none';
     }
 }
 window.openSessionAssessmentModal = openSessionAssessmentModal;
@@ -6708,8 +6711,14 @@ window.openSessionAssessmentModal = openSessionAssessmentModal;
 function closeSessionAssessmentModal() {
     const modal = document.getElementById('session-assessment-modal');
     if (modal) modal.style.display = 'none';
-    if (window.SmartGuidance && typeof SmartGuidance.onAssessmentModalClosed === 'function') {
-        SmartGuidance.onAssessmentModalClosed();
+    const stickyBar = document.getElementById('sticky-patient-guidance-bar');
+    if (stickyBar) {
+        stickyBar.style.transform = '';
+        stickyBar.style.opacity = '';
+        stickyBar.style.pointerEvents = '';
+    }
+    if (window.SmartGuidance && typeof SmartGuidance.checkLiveGuidanceState === 'function') {
+        SmartGuidance.checkLiveGuidanceState();
     }
 }
 window.closeSessionAssessmentModal = closeSessionAssessmentModal;
@@ -6991,7 +7000,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.04';
+const CURRENT_APP_VERSION = 'v30.05';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -7846,6 +7855,12 @@ async function openCompletionCertificateModal(patientId) {
 
         certModal.style.display = 'flex';
         certModal.scrollTop = 0;
+        const stickyBar = document.getElementById('sticky-patient-guidance-bar');
+        if (stickyBar) {
+            stickyBar.style.transform = 'translateY(150%)';
+            stickyBar.style.opacity = '0';
+            stickyBar.style.pointerEvents = 'none';
+        }
     } catch (e) {
         console.error('Certificate generation error:', e);
         showToast('حدث خطأ أثناء إعداد الشهادة الرقمية', 'error');
@@ -7855,6 +7870,15 @@ async function openCompletionCertificateModal(patientId) {
 function closeCompletionCertificateModal() {
     const modal = document.getElementById('completion-certificate-modal');
     if (modal) modal.style.display = 'none';
+    const stickyBar = document.getElementById('sticky-patient-guidance-bar');
+    if (stickyBar) {
+        stickyBar.style.transform = '';
+        stickyBar.style.opacity = '';
+        stickyBar.style.pointerEvents = '';
+    }
+    if (window.SmartGuidance && typeof SmartGuidance.checkLiveGuidanceState === 'function') {
+        SmartGuidance.checkLiveGuidanceState();
+    }
 }
 
 function printCertificate() {

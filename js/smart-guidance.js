@@ -116,28 +116,24 @@ const SmartGuidance = (function() {
         if (!barEl) barEl = document.getElementById('sticky-patient-guidance-bar');
         if (!barEl) return;
 
-        // 1. فحص نافذة الصدقة الجارية والدعاء (royal-duaa-modal)
-        const duaaModal = document.getElementById('royal-duaa-modal');
-        if (duaaModal && duaaModal.style.display !== 'none' && window.getComputedStyle(duaaModal).display !== 'none') {
-            renderDuaaModalBar();
+        // 1. فحص وجود أي نافذة منبثقة نشطة (تقييم الجلسة، الشهادة والوسام، الصدقة والدعاء، الهاتف، الفيديو، إلخ)
+        // عند فتح أي نافذة منبثقة، يتم إخفاء شريط الإرشاد السفلي تماماً لتوفير مساحة كاملة ومنع حجب أزرار المودال
+        const activeModal = Array.from(document.querySelectorAll('.app-modal, #auto-update-overlay')).find(m => {
+            return m.style.display && m.style.display !== 'none' && window.getComputedStyle(m).display !== 'none';
+        });
+
+        if (activeModal) {
+            barEl.style.transform = 'translateY(150%)';
+            barEl.style.opacity = '0';
+            barEl.style.pointerEvents = 'none';
             return;
+        } else {
+            barEl.style.transform = '';
+            barEl.style.opacity = '';
+            barEl.style.pointerEvents = '';
         }
 
-        // 2. فحص نافذة تقييم الجلسة الشامل (session-assessment-modal)
-        const assessModal = document.getElementById('session-assessment-modal');
-        if (assessModal && assessModal.style.display !== 'none' && window.getComputedStyle(assessModal).display !== 'none') {
-            renderAssessmentModalBar();
-            return;
-        }
-
-        // 3. فحص نافذة إدخال الهاتف الإلزامية
-        const phoneModal = document.getElementById('phone-intake-modal');
-        if (phoneModal && phoneModal.style.display !== 'none' && window.getComputedStyle(phoneModal).display !== 'none') {
-            renderPhoneModalBar();
-            return;
-        }
-
-        // 4. توجيه المرحلة حسب رقم الخطوة الفعلي
+        // 2. توجيه المرحلة حسب رقم الخطوة الفعلي
         switch (currentStep) {
             case 1:
                 renderStep1Bar();

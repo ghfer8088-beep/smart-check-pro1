@@ -1562,12 +1562,30 @@ body {
     bottom: 0;
     background: rgba(5, 8, 15, 0.9);
     backdrop-filter: blur(8px);
-    z-index: 2000000 !important;
+    z-index: 3000000 !important;
     display: none;
     align-items: center;
     justify-content: center;
     padding: 20px;
     box-sizing: border-box;
+}
+
+.app-modal .modal-inner {
+    max-height: 86vh !important;
+    overflow-y: auto !important;
+    box-sizing: border-box;
+    margin-bottom: 25px !important;
+    padding-bottom: 35px !important;
+}
+
+/* إخفاء شريط التوجيه السفلي تلقائياً عند فتح أي نافذة منبثقة لمنع حجب الأزرار */
+body:has(.app-modal[style*="display: flex"]),
+body:has(.app-modal[style*="display: block"]),
+body:has(.app-modal:not([style*="display: none"]):not([style*="display:none"])) .sticky-patient-guidance-bar,
+.modal-active .sticky-patient-guidance-bar {
+    transform: translateY(150%) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
 
 @media (max-width: 768px) {
@@ -1578,10 +1596,9 @@ body {
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;       /* يمنع iOS من "قفز" الصفحة عند محاولة التمرير داخل المودال */
     }
-    /* يضيف مسافة سفلية كافية داخل المودال لمنع الزر من الاختباء خلف أي شريط */
     .app-modal .modal-inner {
-        margin-bottom: env(safe-area-inset-bottom, 16px) !important;
-        padding-bottom: 20px !important;
+        margin-bottom: env(safe-area-inset-bottom, 24px) !important;
+        padding-bottom: 35px !important;
     }
 }
 
@@ -2730,7 +2747,7 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 2000090 !important;
+    z-index: 9999 !important;
     background: rgba(11, 17, 30, 0.95);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);

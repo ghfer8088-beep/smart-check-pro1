@@ -1286,8 +1286,8 @@
     </div>
 
     <!-- ================= 1. نافذة وسام الانتصار على الألم ووثيقة التعافي الحركي الرسمية (Victory & Recovery Medal Modal) ================= -->
-    <div id="completion-certificate-modal" class="app-modal" style="display: none;">
-        <div class="modal-inner" style="max-width: 860px; background: #0b1322; border: 2px solid var(--primary-gold); padding: 25px; border-radius: 16px; box-sizing: border-box; width: 95%;">
+    <div id="completion-certificate-modal" class="app-modal" style="display: none; z-index: 3000000;">
+        <div class="modal-inner" style="max-width: 860px; max-height: 88vh; overflow-y: auto; background: #0b1322; border: 2px solid var(--primary-gold); padding: 25px; border-radius: 16px; box-sizing: border-box; width: 95%;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;" class="no-print">
                 <div style="color: var(--primary-gold); font-weight: bold; font-size: 1.15em; display: flex; align-items: center; gap: 8px;">
                     <span>🏆</span> وسام الانتصار على الألم والتعافي الحركي الرسمي
@@ -1400,7 +1400,7 @@
             </div>
 
             <!-- أزرار الإجراءات للوسام والوثيقة مع ضبط العرض الكامل وتجنب الخروج من الإطار -->
-            <div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; width: 100%; box-sizing: border-box;" class="no-print">
+            <div style="display: flex; justify-content: center; gap: 10px; margin-top: 25px; margin-bottom: 25px; padding-bottom: 15px; flex-wrap: wrap; width: 100%; box-sizing: border-box;" class="no-print">
                 <button type="button" onclick="printCertificate()" style="background: #3b82f6; color: #ffffff; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex: 1 1 200px; max-width: 100%; box-sizing: border-box;">
                     🖨️ طباعة الوسام / حفظ PDF
                 </button>
@@ -1415,8 +1415,8 @@
     </div>
 
     <!-- ================= نافذة التقييم السريري الكبرى المستقلة للجلسة المنتهية (Session Assessment Modal) ================= -->
-    <div id="session-assessment-modal" class="app-modal" style="display: none; z-index: 2000050;">
-        <div class="modal-inner" style="max-width: 760px; width: 95%; max-height: 90vh; overflow-y: auto; background: #0b1322; border: 2px solid #10b981; padding: 25px 28px; border-radius: 18px; box-shadow: 0 15px 50px rgba(0,0,0,0.9), 0 0 30px rgba(16, 185, 129, 0.25);">
+    <div id="session-assessment-modal" class="app-modal" style="display: none; z-index: 3000000;">
+        <div class="modal-inner" style="max-width: 760px; width: 95%; max-height: 86vh; overflow-y: auto; background: #0b1322; border: 2px solid #10b981; padding: 25px 28px 35px 28px; margin-bottom: 25px; border-radius: 18px; box-shadow: 0 15px 50px rgba(0,0,0,0.9), 0 0 30px rgba(16, 185, 129, 0.25);">
             <div id="session-assessment-modal-content">
                 <!-- يُملأ ديناميكياً عبر openSessionAssessmentModal -->
             </div>
@@ -1822,21 +1822,21 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=30.04"></script>
-    <script src="js/cloud-sync.js?v=30.04"></script>
-    <script src="js/geo-tracker.js?v=30.04"></script>
-    <script src="js/database.js?v=30.04"></script>
-    <script src="js/exercise-image-studio.js?v=30.04"></script>
-    <script src="js/exercises-db.js?v=30.04"></script>
-    <script src="js/diagnostic-engine.js?v=30.04"></script>
-    <script src="js/audio-pacer.js?v=30.04"></script>
-    <script src="js/patient-flow.js?v=30.04"></script>
-    <script src="js/admin-engine.js?v=30.04"></script>
-    <script src="js/ai-config.js?v=30.04"></script>
-    <script src="js/ai-engine.js?v=30.04"></script>
-    <script src="js/app.js?v=30.04"></script>
-    <script src="js/text-editor.js?v=30.04"></script>
-    <script src="js/smart-guidance.js?v=30.04"></script>
+    <script src="js/mqtt.min.js?v=30.05"></script>
+    <script src="js/cloud-sync.js?v=30.05"></script>
+    <script src="js/geo-tracker.js?v=30.05"></script>
+    <script src="js/database.js?v=30.05"></script>
+    <script src="js/exercise-image-studio.js?v=30.05"></script>
+    <script src="js/exercises-db.js?v=30.05"></script>
+    <script src="js/diagnostic-engine.js?v=30.05"></script>
+    <script src="js/audio-pacer.js?v=30.05"></script>
+    <script src="js/patient-flow.js?v=30.05"></script>
+    <script src="js/admin-engine.js?v=30.05"></script>
+    <script src="js/ai-config.js?v=30.05"></script>
+    <script src="js/ai-engine.js?v=30.05"></script>
+    <script src="js/app.js?v=30.05"></script>
+    <script src="js/text-editor.js?v=30.05"></script>
+    <script src="js/smart-guidance.js?v=30.05"></script>
 
     <script>
         // مؤشر المراجعين المتفاعلين أونلاين الآن (يتراوح عشوائياً بديناميكية طبيعية بين 40 و 99)
