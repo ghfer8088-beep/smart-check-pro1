@@ -576,6 +576,9 @@ function selectAnatomyPoint(point, element) {
     if (typeof SmartWatchdog !== 'undefined') {
         SmartWatchdog.recordHeartbeat('point_selected', null, point?.title);
     }
+    if (typeof SmartVisitorTracker !== 'undefined' && typeof SmartVisitorTracker.trackPainPoint === 'function') {
+        SmartVisitorTracker.trackPainPoint(point);
+    }
     try {
         localStorage.setItem('smart_current_point', JSON.stringify(point));
         const curMax = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
@@ -1690,6 +1693,10 @@ async function runDiagnosticAnalysis() {
             localStorage.setItem('smart_max_reached_step', String(Math.max(curMax, 3)));
             if (typeof updateStepperVisuals === 'function') updateStepperVisuals(3);
         } catch (e) {}
+
+        if (typeof SmartVisitorTracker !== 'undefined' && typeof SmartVisitorTracker.trackDiagnosisReached === 'function') {
+            SmartVisitorTracker.trackDiagnosisReached(currentSelectedPoint, currentAssessmentData);
+        }
 
         const painDisplayStr = hasExplicitPain ? `${explicitPain}/10` : 'مستند للأعراض السريرية';
 

@@ -17,11 +17,66 @@
     const CLOUD_TIMING_ENDPOINT = 'https://ntfy.sh/wada3an_smart_check_timing_sync_2026';
     const CLOUD_MASTER_HUB_ENDPOINT = 'https://api.restful-api.dev/objects/ff808181a067127101a096bcda64034f';
 
+    // خريطة الحضور والتواجد اللحظي في الذاكرة (Active Realtime Presence Map)
+    const activePresenceMap = {};
+    let presenceDebounceTimer = null;
+    function triggerRealtimePresenceUI() {
+        if (presenceDebounceTimer) clearTimeout(presenceDebounceTimer);
+        presenceDebounceTimer = setTimeout(() => {
+            if (typeof window.renderRealtimePresence === 'function') {
+                try { window.renderRealtimePresence(); } catch(e) {}
+            }
+            if (typeof window.renderGeoAnalytics === 'function') {
+                try { window.renderGeoAnalytics(); } catch(e) {}
+            }
+        }, 60);
+    }
+
+    function handlePresenceIncoming(data) {
+        if (!data) return;
+        const sId = data.sessionId || (data.visitorId ? 'sess_' + data.visitorId : null);
+        if (!sId) return;
+
+        if (data.type === 'PRESENCE_LEAVE') {
+            delete activePresenceMap[sId];
+        } else {
+            activePresenceMap[sId] = {
+                sessionId: sId,
+                visitorId: data.visitorId,
+                device: data.device || 'Mobile',
+                deviceIcon: data.deviceIcon || (data.device === 'Desktop' ? '💻' : '📱'),
+                deviceLabel: data.deviceLabel || (data.device === 'Desktop' ? 'كمبيوتر محمول / مكتبي' : 'هاتف محمول'),
+                country: data.country || 'الأردن',
+                countryCode: data.countryCode || 'JO',
+                flag: data.flag || '🇯🇴',
+                city: data.city || 'عمّان',
+                currentStage: data.currentStage || 'في الأداة',
+                painPointTitle: data.painPointTitle || '—',
+                painPointId: data.painPointId || null,
+                reachedReport: !!data.reachedReport,
+                isPwa: !!data.isPwa,
+                lastPing: Date.now()
+            };
+        }
+        triggerRealtimePresenceUI();
+    }
+
     // إنشاء قناة بث لحظية للمتصفحات (Cross-Tab / Cross-Window Live Broadcast)
     let syncBroadcastChannel = null;
     try {
         if ('BroadcastChannel' in window) {
             syncBroadcastChannel = new BroadcastChannel(CLOUD_CHANNEL_NAME);
+            syncBroadcastChannel.addEventListener('message', (event) => {
+                if (event.data && (event.data.type === 'PRESENCE_PING' || event.data.type === 'PRESENCE_LEAVE')) {
+                    handlePresenceIncoming(event.data);
+                }
+            });
+            const pChan = new BroadcastChannel('smart_presence_broadcast_channel');
+            pChan.addEventListener('message', (event) => {
+                if (event.data) {
+                    handlePresenceIncoming(event.data);
+                }
+            });
         }
     } catch (e) {}
 
@@ -35,7 +90,9 @@
         TIMING: 'wada3an/clinic/timing',
         SESSIONS: 'wada3an/clinic/sessions',
         VISITS: 'wada3an/clinic/visits',
-        SYNC_REQ: 'wada3an/clinic/sync_req'
+        SYNC_REQ: 'wada3an/clinic/sync_req',
+        PRESENCE: 'wada3an/clinic/presence',
+        PAIN_POINTS: 'wada3an/clinic/pain_points'
     };
 
     let mqttClient = null;
@@ -390,7 +447,9 @@
                     MQTT_TOPICS.TIMING,
                     MQTT_TOPICS.SESSIONS,
                     MQTT_TOPICS.VISITS,
-                    MQTT_TOPICS.SYNC_REQ
+                    MQTT_TOPICS.SYNC_REQ,
+                    MQTT_TOPICS.PRESENCE,
+                    MQTT_TOPICS.PAIN_POINTS
                 ], { qos: 1 }, (err) => {
                     if (err) console.warn('[CloudSync] MQTT Subscribe error:', err);
                 });
@@ -621,6 +680,34 @@
             if (currentPatients && currentPatients.length > 0) {
                 broadcastFullClinicSnapshot();
             }
+            return;
+        }
+
+        // 7. نبضات الحضور والتواجد اللحظي الحقيقي
+        if (topic === MQTT_TOPICS.PRESENCE) {
+            handlePresenceIncoming(data);
+            return;
+        }
+
+        // 8. تحديثات نقاط الألم الشائعة سريرياً
+        if (topic === MQTT_TOPICS.PAIN_POINTS) {
+            try {
+                if (data && data.id) {
+                    const PAIN_KEY = 'smart_analytics_pain_points';
+                    let stats = JSON.parse(localStorage.getItem(PAIN_KEY) || '{}');
+                    stats[data.id] = {
+                        id: data.id,
+                        title: data.title || (stats[data.id] ? stats[data.id].title : data.id),
+                        region: data.region || 'العمود الفقري والمفاصل',
+                        count: Math.max(data.count || 1, (stats[data.id]?.count || 0) + 1),
+                        lastSelected: new Date().toISOString()
+                    };
+                    localStorage.setItem(PAIN_KEY, JSON.stringify(stats));
+                    if (typeof window.renderRealtimePresence === 'function') {
+                        window.renderRealtimePresence();
+                    }
+                }
+            } catch(pe) {}
             return;
         }
     }
@@ -2206,6 +2293,126 @@
     }
 
     // =========================================================================
+    // 🟢 محرك التتبع اللحظي الفعلي وقمع التحويل السريري (Real-Time Intelligence)
+    // =========================================================================
+
+    // بث نبضة الحضور عبر شبكة البث السحابي اللحظي
+    function dispatchPresence(presencePayload) {
+        if (!presencePayload) return;
+        try {
+            mqttPublish(MQTT_TOPICS.PRESENCE, presencePayload, { qos: 0 });
+            if (syncBroadcastChannel) {
+                syncBroadcastChannel.postMessage(presencePayload);
+            }
+        } catch(e) {}
+    }
+
+    // بث إحصائية شعبية نقطة ألم سحابياً
+    function dispatchPainPointStat(stat) {
+        if (!stat) return;
+        try {
+            mqttPublish(MQTT_TOPICS.PAIN_POINTS, stat, { qos: 1 });
+        } catch(e) {}
+    }
+
+    // استرجاع الحضور اللحظي الفعلي للمتواجدين أونلاين الآن (بدقة تامة 100%)
+    function getRealtimePresence() {
+        const now = Date.now();
+        const activeList = [];
+        let mobileCount = 0;
+        let desktopCount = 0;
+        let tabletCount = 0;
+
+        for (const sId in activePresenceMap) {
+            const s = activePresenceMap[sId];
+            if (!s || (now - (s.lastPing || 0)) > 35000) {
+                delete activePresenceMap[sId]; // إزالة الجلسات المنتهية مهلتها
+            } else {
+                activeList.push(s);
+                const dev = (s.device || 'Mobile').toLowerCase();
+                if (dev.includes('desktop')) desktopCount++;
+                else if (dev.includes('tablet')) tabletCount++;
+                else mobileCount++;
+            }
+        }
+
+        return {
+            totalOnline: activeList.length,
+            mobileOnline: mobileCount,
+            desktopOnline: desktopCount,
+            tabletOnline: tabletCount,
+            activeSessions: activeList.sort((a, b) => (b.lastPing || 0) - (a.lastPing || 0))
+        };
+    }
+
+    // استخراج الإحصائيات الشاملة والموحدة للعيادة وقمع التحويل (Unified Analytics)
+    function getUnifiedAnalytics() {
+        const detailedStats = getDetailedVisitorStats();
+        const presence = getRealtimePresence();
+
+        // نقاط الألم الأكثر طلباً وبحثاً
+        let painPointsStats = [];
+        try {
+            const rawPts = localStorage.getItem('smart_analytics_pain_points');
+            if (rawPts) {
+                painPointsStats = Object.values(JSON.parse(rawPts)).sort((a, b) => (b.count || 0) - (a.count || 0));
+            }
+        } catch(e) {}
+
+        const rawVisits = (detailedStats && detailedStats.rawVisits) ? detailedStats.rawVisits : [];
+        const totalVisits = detailedStats.totalVisits || rawVisits.length;
+
+        // تحليل قمع التحويل السريري الفعلي
+        let startedExamsCount = 0;
+        let reachedReportCount = 0;
+        let pwaCount = 0;
+
+        rawVisits.forEach(v => {
+            if (v.isPwa) pwaCount++;
+            if (v.reachedReport || (v.currentStage && v.currentStage.includes('التقرير'))) {
+                reachedReportCount++;
+                startedExamsCount++;
+            } else if (v.selectedPointTitle && v.selectedPointTitle !== '—') {
+                startedExamsCount++;
+            }
+        });
+
+        // دمج عدد الحالات المشخصة في قاعدة بيانات العيادة
+        const patientsList = getCloudSyncedPatients();
+        const diagnosedTotal = Math.max(reachedReportCount, patientsList.length);
+
+        const examStartRate = totalVisits > 0 ? Math.min(100, Math.round((startedExamsCount / totalVisits) * 100)) : 0;
+        const diagnosisConversionRate = totalVisits > 0 ? Math.min(100, Math.round((diagnosedTotal / totalVisits) * 100)) : 0;
+        const pwaInstallRate = totalVisits > 0 ? Math.round((pwaCount / totalVisits) * 100) : 0;
+
+        // حساب نسب نقاط الألم
+        const totalPainSelections = painPointsStats.reduce((acc, p) => acc + (p.count || 0), 0);
+        painPointsStats.forEach(p => {
+            p.percentage = totalPainSelections > 0 ? Math.round((p.count / totalPainSelections) * 100) : 0;
+        });
+
+        return {
+            totalVisits: totalVisits,
+            activeOnline: presence.totalOnline,
+            mobileOnline: presence.mobileOnline,
+            desktopOnline: presence.desktopOnline,
+            tabletOnline: presence.tabletOnline,
+            activeSessions: presence.activeSessions,
+            startedExams: startedExamsCount,
+            diagnosedCases: diagnosedTotal,
+            examStartRate: examStartRate,
+            conversionRate: diagnosisConversionRate,
+            pwaInstallRate: pwaInstallRate,
+            mobilePct: detailedStats.mobilePct || 0,
+            desktopPct: detailedStats.desktopPct || 0,
+            tabletPct: detailedStats.tabletPct || 0,
+            topPainPoints: painPointsStats.slice(0, 10),
+            topCountries: detailedStats.countries || [],
+            recentJourneys: rawVisits.slice(0, 20)
+        };
+    }
+
+    // =========================================================================
     // ⏱️ مزامنة توقيت الجلسات وقفل/فتح الجلسات السحابي بين الإدارة وهواتف المرضى
     // =========================================================================
     let timingEventSource = null;
@@ -2700,7 +2907,11 @@
         subscribe: subscribeToPatientUpdates,
         dispatchVisit: dispatchVisitToCloud,
         fetchCloudVisits: fetchCloudVisits,
-        getAnalytics: getGeoAnalyticsSummary,
+        dispatchPresence: dispatchPresence,
+        dispatchPainPointStat: dispatchPainPointStat,
+        getRealtimePresence: getRealtimePresence,
+        getUnifiedAnalytics: getUnifiedAnalytics,
+        getAnalytics: getUnifiedAnalytics,
         getDetailedAnalytics: getDetailedVisitorStats,
         getDetailedVisitorStats: getDetailedVisitorStats,
         clearVisits: clearVisitsHistory,

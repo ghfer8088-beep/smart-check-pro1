@@ -42,9 +42,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=29.53"></script>
-    <script src="js/security-shield.js?v=29.53"></script>
-    <link rel="stylesheet" href="css/style.css?v=29.53">
+    <script src="js/system-watchdog.js?v=30.00"></script>
+    <script src="js/security-shield.js?v=30.00"></script>
+    <link rel="stylesheet" href="css/style.css?v=30.00">
     <style>
         body {
             background-color: #080c14;
@@ -531,6 +531,114 @@
                 </div>
             </div>
 
+            <!-- ========================================================================= -->
+            <!-- 🛰️ لوحة التحليل الذكي ورصد الزوار اللحظي الموحدة (Smart Visitor Intelligence) -->
+            <!-- ========================================================================= -->
+            <div id="smart-visitor-intelligence-section" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(11, 19, 34, 0.98) 100%); border: 1.5px solid #38bdf8; border-radius: 14px; padding: 22px; margin-bottom: 25px; box-shadow: 0 8px 30px rgba(0,0,0,0.6);">
+                
+                <!-- عنوان القسم وشارات الحالة اللحظية -->
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(56, 189, 248, 0.25); padding-bottom: 14px; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 2em; filter: drop-shadow(0 2px 8px rgba(56,189,248,0.5));">🛰️</span>
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <h3 style="color: #38bdf8; margin: 0; font-size: 1.25em;">رادار الزوار اللحظي وتحليل السلوكيات السريرية</h3>
+                                <span style="background: rgba(16, 185, 129, 0.18); color: #6ee7b7; border: 1px solid #10b981; padding: 2px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
+                                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981; animation: pulseRed 1.8s infinite;"></span>
+                                    <span>بيانات لحظية حقيقية 100%</span>
+                                </span>
+                            </div>
+                            <div style="color: #94a3b8; font-size: 0.84em; margin-top: 3px;">
+                                رصد فوري للمتواجدين الآن، نقاط الألم الأكثر طلباً، وقمع التحويل من الزيارة إلى التقرير
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <button type="button" onclick="openVisitorAnalyticsModal()" class="btn-header" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(14, 165, 233, 0.15) 100%); border-color: #38bdf8; color: #7dd3fc; font-weight: bold; padding: 8px 14px; font-size: 0.85em; display: inline-flex; align-items: center; gap: 6px;">
+                            <span>📊</span> التقرير التفصيلي الكامل
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4 بطاقات رصد لحظية احترافية -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px;">
+                    <!-- كرت 1: المتواجدون أونلاين الآن -->
+                    <div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(16, 185, 129, 0.45); border-radius: 12px; padding: 16px; text-align: center; position: relative; overflow: hidden;">
+                        <div style="position: absolute; top: 10px; right: 12px; display: flex; align-items: center; gap: 5px;">
+                            <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981; animation: pulseRed 1.5s infinite;"></span>
+                            <span style="color: #6ee7b7; font-size: 0.72em; font-weight: bold;">LIVE</span>
+                        </div>
+                        <div id="radar-online-count" style="font-size: 2.3em; font-weight: 900; color: #10b981; font-family: monospace;">0</div>
+                        <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 2px;">متواجدون أونلاين الآن 🟢</div>
+                        <div id="radar-online-devices" style="color: #94a3b8; font-size: 0.78em; margin-top: 6px; display: flex; justify-content: center; gap: 8px;">
+                            <span>📱 <span id="radar-online-mobile">0</span> موبايل</span>
+                            <span>|</span>
+                            <span>💻 <span id="radar-online-desktop">0</span> لابتوب</span>
+                        </div>
+                    </div>
+
+                    <!-- كرت 2: إجمالي الزيارات ومعدل بدء الفحص -->
+                    <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 12px; padding: 16px; text-align: center;">
+                        <div id="radar-total-visits" style="font-size: 2.3em; font-weight: 900; color: #38bdf8; font-family: monospace;">0</div>
+                        <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 2px;">إجمالي الزيارات الفعلية 👥</div>
+                        <div style="color: #94a3b8; font-size: 0.78em; margin-top: 6px;">
+                            بدأ الفحص: <strong id="radar-start-rate" style="color: #7dd3fc;">0%</strong> (<span id="radar-started-count">0</span> زائر)
+                        </div>
+                    </div>
+
+                    <!-- كرت 3: الحالات التشخيصية ونسبة التحويل -->
+                    <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 12px; padding: 16px; text-align: center;">
+                        <div id="radar-diagnosed-count" style="font-size: 2.3em; font-weight: 900; color: var(--primary-gold); font-family: monospace;">0</div>
+                        <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 2px;">الحالات المكتملة سريرياً 🩺</div>
+                        <div style="color: #94a3b8; font-size: 0.78em; margin-top: 6px;">
+                            نسبة التحويل للتقرير: <strong id="radar-conversion-rate" style="color: #fde047;">0%</strong>
+                        </div>
+                    </div>
+
+                    <!-- كرت 4: توزيع الأجهزة وتثبيت التطبيق -->
+                    <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(168, 85, 247, 0.35); border-radius: 12px; padding: 16px; text-align: center;">
+                        <div id="radar-mobile-ratio" style="font-size: 2.3em; font-weight: 900; color: #c084fc; font-family: monospace;">0%</div>
+                        <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 2px;">نسبة استخدام الهواتف 📱</div>
+                        <div style="color: #94a3b8; font-size: 0.78em; margin-top: 6px;">
+                            تثبيت PWA: <strong id="radar-pwa-rate" style="color: #d8b4fe;">0%</strong> | لابتوب: <span id="radar-desktop-pct">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- قسم مزدوج: نقاط الألم الشائعة + مسار أحدث الزوار اللحظي -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+                    
+                    <!-- الصندوق الأول: نقاط الألم الأكثر طلباً وبحثاً (Common Pain Points) -->
+                    <div style="background: #080c14; border: 1px solid rgba(51, 65, 85, 0.6); border-radius: 10px; padding: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <h4 style="margin: 0; color: var(--primary-gold); font-size: 0.95em; display: flex; align-items: center; gap: 8px;">
+                                <span>🎯</span> نقاط الألم الأكثر طلباً وبحثاً بالعيادة:
+                            </h4>
+                            <span style="font-size: 0.78em; color: #64748b;">إحصاء سريري</span>
+                        </div>
+                        <div id="radar-top-pain-points-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; padding-right: 4px;">
+                            <div style="color: #64748b; font-size: 0.85em; text-align: center; padding: 20px;">جارٍ قراءة بيانات نقاط الألم...</div>
+                        </div>
+                    </div>
+
+                    <!-- الصندوق الثاني: مسار وسلوكيات الزوار المتصلين لحظة بلحظة (Live Visitor Journeys) -->
+                    <div style="background: #080c14; border: 1px solid rgba(51, 65, 85, 0.6); border-radius: 10px; padding: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <h4 style="margin: 0; color: #38bdf8; font-size: 0.95em; display: flex; align-items: center; gap: 8px;">
+                                <span>🧭</span> مسار الزوار وحالتهم الحالية:
+                            </h4>
+                            <span id="radar-last-refresh-time" style="font-size: 0.75em; color: #64748b;">تحديث لحظي</span>
+                        </div>
+                        <div id="radar-live-visitors-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; padding-right: 4px;">
+                            <div style="color: #64748b; font-size: 0.85em; text-align: center; padding: 20px;">بانتظار تدفق الزيارات...</div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
             <!-- بطاقات الإحصائيات -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin-bottom: 25px;">
                 <div style="background: #111827; padding: 20px; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.3); text-align: center;">
@@ -862,19 +970,85 @@
                     </div>
                 </div>
 
-                <!-- Search & Filters -->
-                <div style="background: #080c14; border: 1px solid rgba(51, 65, 85, 0.6); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 260px;">
-                        <input type="text" id="analytics-search-input" oninput="filterAnalyticsCountries()" placeholder="🔍 ابحث بالدولة أو المدينة..." style="width: 100%; background: #111827; border: 1px solid #334155; padding: 9px 14px; border-radius: 8px; color: #fff; font-size: 0.9em;">
+                <!-- أزرار تبويب التحليلات المتقدمة -->
+                <div style="display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid #1e293b; padding-bottom: 10px; flex-wrap: wrap;">
+                    <button type="button" class="analytics-tab-btn" id="modal-tab-btn-geo" onclick="switchAnalyticsModalTab('geo')" style="background: var(--primary-gold); color: #0a0e14; border: none; padding: 7px 16px; border-radius: 8px; font-weight: bold; font-size: 0.88em; cursor: pointer;">
+                        🌍 التوزيع الجغرافي والمدن
+                    </button>
+                    <button type="button" class="analytics-tab-btn" id="modal-tab-btn-pain" onclick="switchAnalyticsModalTab('pain')" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 7px 16px; border-radius: 8px; font-size: 0.88em; cursor: pointer;">
+                        🎯 نقاط الألم الأكثر طلباً (<span id="modal-pain-badge-count">0</span>)
+                    </button>
+                    <button type="button" class="analytics-tab-btn" id="modal-tab-btn-journey" onclick="switchAnalyticsModalTab('journey')" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 7px 16px; border-radius: 8px; font-size: 0.88em; cursor: pointer;">
+                        🧭 قمع التحويل ومسار الزوار
+                    </button>
+                </div>
+
+                <!-- التبويب 1: التوزيع الجغرافي والمدن -->
+                <div id="modal-tab-content-geo">
+                    <!-- Search & Filters -->
+                    <div style="background: #080c14; border: 1px solid rgba(51, 65, 85, 0.6); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 260px;">
+                            <input type="text" id="analytics-search-input" oninput="filterAnalyticsCountries()" placeholder="🔍 ابحث بالدولة أو المدينة..." style="width: 100%; background: #111827; border: 1px solid #334155; padding: 9px 14px; border-radius: 8px; color: #fff; font-size: 0.9em;">
+                        </div>
+                        <div style="color: #94a3b8; font-size: 0.82em;">
+                            💡 انقر على أي دولة بالأسفل لإظهار تفاصيل مدنها وأجهزتها وتوقيت زياراتها
+                        </div>
                     </div>
-                    <div style="color: #94a3b8; font-size: 0.82em;">
-                        💡 انقر على أي دولة بالأسفل لإظهار تفاصيل مدنها وأجهزتها وتوقيت زياراتها
+
+                    <!-- Interactive Countries List with Drilldown -->
+                    <div id="analytics-countries-container" style="display: flex; flex-direction: column; gap: 12px;">
+                        <!-- Dynamically populated -->
                     </div>
                 </div>
 
-                <!-- Interactive Countries List with Drilldown -->
-                <div id="analytics-countries-container" style="display: flex; flex-direction: column; gap: 12px;">
-                    <!-- Dynamically populated -->
+                <!-- التبويب 2: نقاط الألم الأكثر طلباً وبحثاً -->
+                <div id="modal-tab-content-pain" style="display: none;">
+                    <div style="background: #080c14; border: 1px solid rgba(51, 65, 85, 0.6); border-radius: 10px; padding: 16px; margin-bottom: 16px;">
+                        <div style="color: #94a3b8; font-size: 0.86em; margin-bottom: 12px;">
+                            📋 إحصائيات سريرية دقيقة توضح أكثر الشكاوى والفقرات والمفاصل التي يبحث عنها المراجعون:
+                        </div>
+                        <div id="modal-pain-points-list" style="display: flex; flex-direction: column; gap: 10px;">
+                            <!-- Dynamically populated -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- التبويب 3: قمع التحويل ومسار وسلوكيات الزوار -->
+                <div id="modal-tab-content-journey" style="display: none;">
+                    <!-- قمع التحويل السريري (Clinical Conversion Funnel) -->
+                    <div style="background: #080c14; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 10px; padding: 16px; margin-bottom: 16px;">
+                        <h4 style="margin: 0 0 12px 0; color: #38bdf8; font-size: 0.95em;">📊 قمع التحويل السريري (Conversion Funnel):</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+                            <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 8px; padding: 12px; text-align: center;">
+                                <div style="color: #94a3b8; font-size: 0.78em;">1. زيارة الأداة</div>
+                                <div id="funnel-visits-count" style="font-size: 1.6em; font-weight: bold; color: #f8fafc;">0</div>
+                                <div style="color: #10b981; font-size: 0.75em; font-weight: bold;">100%</div>
+                            </div>
+                            <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 8px; padding: 12px; text-align: center;">
+                                <div style="color: #94a3b8; font-size: 0.78em;">2. اختيار موضع الألم</div>
+                                <div id="funnel-started-count" style="font-size: 1.6em; font-weight: bold; color: #38bdf8;">0</div>
+                                <div id="funnel-start-pct" style="color: #38bdf8; font-size: 0.75em; font-weight: bold;">0%</div>
+                            </div>
+                            <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 8px; padding: 12px; text-align: center;">
+                                <div style="color: #94a3b8; font-size: 0.78em;">3. إتمام التقرير والتشخيص</div>
+                                <div id="funnel-diagnosed-count" style="font-size: 1.6em; font-weight: bold; color: var(--primary-gold);">0</div>
+                                <div id="funnel-conversion-pct" style="color: var(--primary-gold); font-size: 0.75em; font-weight: bold;">0%</div>
+                            </div>
+                            <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 8px; padding: 12px; text-align: center;">
+                                <div style="color: #94a3b8; font-size: 0.78em;">4. تثبيت تطبيق PWA</div>
+                                <div id="funnel-pwa-count" style="font-size: 1.6em; font-weight: bold; color: #c084fc;">0</div>
+                                <div id="funnel-pwa-pct" style="color: #c084fc; font-size: 0.75em; font-weight: bold;">0%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- سجل مسار الزوار خطوة بخطوة -->
+                    <div style="background: #080c14; border: 1px solid rgba(51, 65, 85, 0.6); border-radius: 10px; padding: 16px;">
+                        <h4 style="margin: 0 0 12px 0; color: var(--primary-gold); font-size: 0.95em;">🧭 سجل سلوك ومسار الزوار الأخير:</h4>
+                        <div id="modal-visitor-journeys-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 350px; overflow-y: auto;">
+                            <!-- Dynamically populated -->
+                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -1430,15 +1604,15 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/clinic-patients-data.js?v=29.53"></script>
-    <script src="js/mqtt.min.js?v=29.53"></script>
-    <script src="js/cloud-sync.js?v=29.53"></script>
-    <script src="js/geo-tracker.js?v=29.53"></script>
-    <script src="js/database.js?v=29.53"></script>
-    <script src="js/exercise-image-studio.js?v=29.53"></script>
-    <script src="js/admin-engine.js?v=29.53"></script>
-    <script src="js/ai-config.js?v=29.53"></script>
-    <script src="js/ai-engine.js?v=29.53"></script>
+    <script src="js/clinic-patients-data.js?v=30.00"></script>
+    <script src="js/mqtt.min.js?v=30.00"></script>
+    <script src="js/cloud-sync.js?v=30.00"></script>
+    <script src="js/geo-tracker.js?v=30.00"></script>
+    <script src="js/database.js?v=30.00"></script>
+    <script src="js/exercise-image-studio.js?v=30.00"></script>
+    <script src="js/admin-engine.js?v=30.00"></script>
+    <script src="js/ai-config.js?v=30.00"></script>
+    <script src="js/ai-engine.js?v=30.00"></script>
 
     <script>
         let allPatientsList = [];
@@ -2519,8 +2693,14 @@
             try { updatePatientFilterCounts(); } catch(e) { console.warn(e); }
             try { renderTable(getFilteredPatientsList()); } catch(e) { console.error('renderTable error:', e); }
             try { renderGeoAnalytics(); } catch(e) { console.warn(e); }
+            try { renderRealtimePresence(); } catch(e) { console.warn(e); }
         }
         window.loadAdminData = loadAdminData;
+
+        // تحديث دوري ذكي كل 5 ثوانٍ لمؤشرات الحضور اللحظية في لوحة الإدارة
+        setInterval(() => {
+            try { renderRealtimePresence(); } catch(e) {}
+        }, 5000);
 
         function updatePatientFilterCounts() {
             const countAll = (allPatientsList || []).length;
@@ -3104,6 +3284,135 @@
             });
             renderTable(filtered);
         }
+
+        function formatTimeAgoArabic(date) {
+            if (!date || isNaN(date.getTime())) return 'منذ قليل';
+            const diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
+            if (diffSec < 45) return 'الآن';
+            if (diffSec < 90) return 'منذ دقيقة';
+            if (diffSec < 3600) return `منذ ${Math.floor(diffSec / 60)} د`;
+            if (diffSec < 7200) return 'منذ ساعة';
+            if (diffSec < 86400) return `منذ ${Math.floor(diffSec / 3600)} س`;
+            return `منذ ${Math.floor(diffSec / 86400)} يوم`;
+        }
+        window.formatTimeAgoArabic = formatTimeAgoArabic;
+
+        function renderRealtimePresence() {
+            if (typeof SmartCloudSync === 'undefined') return;
+            const analytics = typeof SmartCloudSync.getUnifiedAnalytics === 'function'
+                ? SmartCloudSync.getUnifiedAnalytics()
+                : (typeof SmartCloudSync.getAnalytics === 'function' ? SmartCloudSync.getAnalytics() : null);
+            if (!analytics) return;
+
+            // 1. تحديث العدادات اللحظية في رادار الزوار
+            const onlineCountEl = document.getElementById('radar-online-count');
+            const onlineMobEl = document.getElementById('radar-online-mobile');
+            const onlineDeskEl = document.getElementById('radar-online-desktop');
+            const totalVisitsEl = document.getElementById('radar-total-visits');
+            const startRateEl = document.getElementById('radar-start-rate');
+            const startedCountEl = document.getElementById('radar-started-count');
+            const diagCountEl = document.getElementById('radar-diagnosed-count');
+            const convRateEl = document.getElementById('radar-conversion-rate');
+            const mobRatioEl = document.getElementById('radar-mobile-ratio');
+            const pwaRateEl = document.getElementById('radar-pwa-rate');
+            const deskPctEl = document.getElementById('radar-desktop-pct');
+            const refreshTimeEl = document.getElementById('radar-last-refresh-time');
+
+            if (onlineCountEl) onlineCountEl.textContent = analytics.activeOnline || 0;
+            if (onlineMobEl) onlineMobEl.textContent = analytics.mobileOnline || 0;
+            if (onlineDeskEl) onlineDeskEl.textContent = analytics.desktopOnline || 0;
+            if (totalVisitsEl) totalVisitsEl.textContent = analytics.totalVisits || 0;
+            if (startRateEl) startRateEl.textContent = (analytics.examStartRate || 0) + '%';
+            if (startedCountEl) startedCountEl.textContent = analytics.startedExams || 0;
+            if (diagCountEl) diagCountEl.textContent = analytics.diagnosedCases || 0;
+            if (convRateEl) convRateEl.textContent = (analytics.conversionRate || 0) + '%';
+            if (mobRatioEl) mobRatioEl.textContent = (analytics.mobilePct || 0) + '%';
+            if (pwaRateEl) pwaRateEl.textContent = (analytics.pwaInstallRate || 0) + '%';
+            if (deskPctEl) deskPctEl.textContent = (analytics.desktopPct || 0) + '%';
+            if (refreshTimeEl) refreshTimeEl.textContent = 'محدث: ' + new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            // 2. تحديث قائمة نقاط الألم الشائعة والأكثر طلباً
+            const painPointsListEl = document.getElementById('radar-top-pain-points-list');
+            if (painPointsListEl) {
+                const pts = analytics.topPainPoints || [];
+                if (pts.length === 0) {
+                    painPointsListEl.innerHTML = '<div style="color: #64748b; font-size: 0.82em; text-align: center; padding: 15px;">لا توجد بيانات نقاط ألم مسجلة بعد...</div>';
+                } else {
+                    painPointsListEl.innerHTML = pts.slice(0, 6).map((p, idx) => `
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 6px; padding: 6px 10px; font-size: 0.85em;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="color: var(--primary-gold); font-weight: bold; font-family: monospace;">#${idx + 1}</span>
+                                <span style="color: #f8fafc; font-weight: 500;">${p.title}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <span style="background: rgba(212, 175, 55, 0.15); color: #fde047; padding: 1px 7px; border-radius: 10px; font-size: 0.8em; font-weight: bold;">${p.count} طلب</span>
+                                ${p.percentage ? `<span style="color: #94a3b8; font-size: 0.78em;">(${p.percentage}%)</span>` : ''}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            // 3. تحديث مسار الزوار وحالتهم اللحظية
+            const liveVisitorsListEl = document.getElementById('radar-live-visitors-list');
+            if (liveVisitorsListEl) {
+                const activeSessions = analytics.activeSessions || [];
+                const recentJourneys = analytics.recentJourneys || [];
+
+                let combinedFeed = [];
+                activeSessions.forEach(s => {
+                    combinedFeed.push({
+                        flag: s.flag || '🌐',
+                        city: s.city || 'عمّان',
+                        country: s.country || 'الأردن',
+                        deviceIcon: s.deviceIcon || '📱',
+                        stage: s.currentStage || 'في الأداة',
+                        point: s.painPointTitle !== '—' ? s.painPointTitle : '',
+                        isOnline: true,
+                        timeStr: 'متصل الآن 🟢'
+                    });
+                });
+
+                recentJourneys.slice(0, 10).forEach(v => {
+                    const exists = combinedFeed.some(c => c.city === v.city && c.country === v.country && Math.abs(new Date(v.timestamp).getTime() - Date.now()) < 30000);
+                    if (!exists) {
+                        const d = v.timestamp ? new Date(v.timestamp) : new Date();
+                        const timeAgo = formatTimeAgoArabic(d);
+                        combinedFeed.push({
+                            flag: v.flag || '🌐',
+                            city: v.city || 'عمّان',
+                            country: v.country || 'الأردن',
+                            deviceIcon: v.deviceIcon || (v.device === 'Desktop' ? '💻' : '📱'),
+                            stage: v.currentStage || (v.reachedReport ? 'استعراض التقرير السريري' : (v.selectedPointTitle ? `تحديد: ${v.selectedPointTitle}` : 'زيارة الأداة')),
+                            point: v.selectedPointTitle && v.selectedPointTitle !== '—' ? v.selectedPointTitle : '',
+                            isOnline: false,
+                            timeStr: timeAgo
+                        });
+                    }
+                });
+
+                if (combinedFeed.length === 0) {
+                    liveVisitorsListEl.innerHTML = '<div style="color: #64748b; font-size: 0.82em; text-align: center; padding: 15px;">لا توجد جلسات مسجلة بعد...</div>';
+                } else {
+                    liveVisitorsListEl.innerHTML = combinedFeed.slice(0, 8).map(item => `
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.7); border: 1px solid ${item.isOnline ? 'rgba(16, 185, 129, 0.4)' : 'rgba(56, 189, 248, 0.2)'}; border-radius: 6px; padding: 6px 10px; font-size: 0.84em;">
+                            <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
+                                <span style="font-size: 1.2em;">${item.flag}</span>
+                                <span style="color: #f8fafc; font-weight: 500; white-space: nowrap;">${item.city}</span>
+                                <span style="font-size: 0.9em;">${item.deviceIcon}</span>
+                                <span style="color: ${item.isOnline ? '#6ee7b7' : '#94a3b8'}; font-size: 0.82em; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                                    ${item.stage}
+                                </span>
+                            </div>
+                            <span style="color: ${item.isOnline ? '#10b981' : '#64748b'}; font-size: 0.75em; white-space: nowrap; font-weight: ${item.isOnline ? 'bold' : 'normal'};">
+                                ${item.timeStr}
+                            </span>
+                        </div>
+                    `).join('');
+                }
+            }
+        }
+        window.renderRealtimePresence = renderRealtimePresence;
 
         function renderGeoAnalytics() {
             if (typeof SmartCloudSync === 'undefined' || typeof SmartCloudSync.getAnalytics !== 'function') return;
@@ -4408,27 +4717,176 @@
             if (modal) modal.style.display = 'none';
         }
 
+        function switchAnalyticsModalTab(tabKey) {
+            document.querySelectorAll('.analytics-tab-btn').forEach(b => {
+                b.style.background = '#1e293b';
+                b.style.color = '#cbd5e1';
+                b.style.border = '1px solid #334155';
+            });
+            const activeBtn = document.getElementById(`modal-tab-btn-${tabKey}`);
+            if (activeBtn) {
+                activeBtn.style.background = 'var(--primary-gold)';
+                activeBtn.style.color = '#0a0e14';
+                activeBtn.style.border = 'none';
+            }
+            ['geo', 'pain', 'journey'].forEach(k => {
+                const el = document.getElementById(`modal-tab-content-${k}`);
+                if (el) el.style.display = (k === tabKey) ? 'block' : 'none';
+            });
+        }
+        window.switchAnalyticsModalTab = switchAnalyticsModalTab;
+
         function renderVisitorAnalyticsModalContent() {
             const sync = window.SmartCloudSync;
             if (!sync) return;
-            const getStats = sync.getDetailedVisitorStats || sync.getDetailedAnalytics;
-            if (typeof getStats !== 'function') return;
             
-            detailedVisitsData = getStats.call(sync);
-            if (!detailedVisitsData) return;
+            const unifiedData = (typeof sync.getUnifiedAnalytics === 'function') ? sync.getUnifiedAnalytics() : null;
+            const detailedStats = (typeof sync.getDetailedVisitorStats === 'function') ? sync.getDetailedVisitorStats() : (sync.getDetailedAnalytics ? sync.getDetailedAnalytics() : null);
             
+            detailedVisitsData = detailedStats;
+            const data = unifiedData || detailedStats;
+            if (!data) return;
+
+            // 1. تحديث بطاقات KPI الأربع الرئيسية
             const totalEl = document.getElementById('analytics-total-visits');
             const countriesEl = document.getElementById('analytics-total-countries');
             const mobileEl = document.getElementById('analytics-mobile-pct');
             const desktopEl = document.getElementById('analytics-desktop-pct');
 
-            if (totalEl) totalEl.textContent = detailedVisitsData.totalVisits || 0;
-            if (countriesEl) countriesEl.textContent = detailedVisitsData.totalCountries || (detailedVisitsData.countries ? detailedVisitsData.countries.length : 0);
-            if (mobileEl) mobileEl.textContent = (detailedVisitsData.mobilePct || 0) + '%';
-            if (desktopEl) desktopEl.textContent = (detailedVisitsData.desktopPct || 0) + '%';
+            const countriesList = data.topCountries || (detailedStats ? detailedStats.countries : []);
+            if (totalEl) totalEl.textContent = data.totalVisits || 0;
+            if (countriesEl) countriesEl.textContent = (countriesList ? countriesList.length : (data.totalCountries || 0));
+            if (mobileEl) mobileEl.textContent = (data.mobilePct || 0) + '%';
+            if (desktopEl) desktopEl.textContent = (data.desktopPct || 0) + '%';
 
-            renderAnalyticsCountriesList(detailedVisitsData.countries);
+            // 2. تحديث قائمة الدول التفاعلية
+            renderAnalyticsCountriesList(countriesList);
+
+            // 3. تحديث تبويب نقاط الألم الشائعة والأكثر طلباً
+            const painPoints = data.topPainPoints || [];
+            const painBadge = document.getElementById('modal-pain-badge-count');
+            if (painBadge) painBadge.textContent = painPoints.length;
+
+            const painListEl = document.getElementById('modal-pain-points-list');
+            if (painListEl) {
+                if (painPoints.length === 0) {
+                    painListEl.innerHTML = `
+                        <div style="text-align: center; padding: 30px; color: #64748b;">
+                            <div style="font-size: 2em; margin-bottom: 6px;">🩺</div>
+                            لا توجد نقاط ألم مسجلة بعد. عند تفاعل الزوار مع خريطة الجسم ستظهر الشكاوى الأكثر طلباً هنا فوراً.
+                        </div>
+                    `;
+                } else {
+                    painListEl.innerHTML = painPoints.map((pt, idx) => {
+                        const pct = pt.percentage || 0;
+                        return `
+                            <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 8px; padding: 12px 14px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="background: var(--primary-gold); color: #0a0e14; border-radius: 6px; padding: 2px 8px; font-weight: bold; font-size: 0.8em; font-family: monospace;">#${idx + 1}</span>
+                                        <strong style="color: #f8fafc; font-size: 0.95em;">${pt.title}</strong>
+                                        <span style="color: #94a3b8; font-size: 0.8em;">(${pt.region || 'العمود الفقري والمفاصل'})</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="color: #fde047; font-weight: bold; font-size: 0.9em;">${pt.count} مراجع</span>
+                                        <span style="background: rgba(212, 175, 55, 0.15); color: var(--primary-gold); padding: 2px 8px; border-radius: 10px; font-size: 0.78em; font-weight: bold;">${pct}%</span>
+                                    </div>
+                                </div>
+                                <div style="width: 100%; height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden;">
+                                    <div style="width: ${Math.max(5, pct)}%; height: 100%; background: linear-gradient(90deg, #d4af37, #f59e0b); border-radius: 3px;"></div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+
+            // 4. تحديث قمع التحويل السريري (Conversion Funnel)
+            const fVisitsEl = document.getElementById('funnel-visits-count');
+            const fStartedEl = document.getElementById('funnel-started-count');
+            const fStartPctEl = document.getElementById('funnel-start-pct');
+            const fDiagEl = document.getElementById('funnel-diagnosed-count');
+            const fConvPctEl = document.getElementById('funnel-conversion-pct');
+            const fPwaEl = document.getElementById('funnel-pwa-count');
+            const fPwaPctEl = document.getElementById('funnel-pwa-pct');
+
+            const totalV = data.totalVisits || 0;
+            const startedV = data.startedExams || 0;
+            const diagV = data.diagnosedCases || 0;
+            const pwaRate = data.pwaInstallRate || 0;
+            const pwaCount = Math.round((pwaRate / 100) * totalV);
+
+            if (fVisitsEl) fVisitsEl.textContent = totalV;
+            if (fStartedEl) fStartedEl.textContent = startedV;
+            if (fStartPctEl) fStartPctEl.textContent = (data.examStartRate || 0) + '%';
+            if (fDiagEl) fDiagEl.textContent = diagV;
+            if (fConvPctEl) fConvPctEl.textContent = (data.conversionRate || 0) + '%';
+            if (fPwaEl) fPwaEl.textContent = pwaCount;
+            if (fPwaPctEl) fPwaPctEl.textContent = pwaRate + '%';
+
+            // 5. تحديث سجل مسار الزوار خطوة بخطوة
+            const journeysListEl = document.getElementById('modal-visitor-journeys-list');
+            if (journeysListEl) {
+                const journeys = data.recentJourneys || [];
+                const activeSessions = data.activeSessions || [];
+                
+                let combinedItems = [];
+                activeSessions.forEach(s => {
+                    combinedItems.push({
+                        isOnline: true,
+                        city: s.city || 'عمّان',
+                        country: s.country || 'الأردن',
+                        flag: s.flag || '🌐',
+                        device: s.device || 'Mobile',
+                        deviceIcon: s.deviceIcon || '📱',
+                        stage: s.currentStage || 'في الأداة',
+                        point: s.painPointTitle !== '—' ? s.painPointTitle : '',
+                        timeStr: 'متصل الآن 🟢'
+                    });
+                });
+
+                journeys.slice(0, 15).forEach(v => {
+                    const timeAgo = v.timestamp ? formatTimeAgoArabic(new Date(v.timestamp)) : 'مؤخراً';
+                    combinedItems.push({
+                        isOnline: false,
+                        city: v.city || 'عمّان',
+                        country: v.country || 'الأردن',
+                        flag: v.flag || '🌐',
+                        device: v.device || 'Mobile',
+                        deviceIcon: v.deviceIcon || (v.device === 'Desktop' ? '💻' : '📱'),
+                        stage: v.currentStage || (v.reachedReport ? 'أتم الفحص وفتح التقرير السريري' : (v.selectedPointTitle ? `حدد موضع الألم: ${v.selectedPointTitle}` : 'زار الأداة التشخيصية')),
+                        point: v.selectedPointTitle && v.selectedPointTitle !== '—' ? v.selectedPointTitle : '',
+                        timeStr: timeAgo
+                    });
+                });
+
+                if (combinedItems.length === 0) {
+                    journeysListEl.innerHTML = '<div style="color: #64748b; font-size: 0.85em; text-align: center; padding: 20px;">لا توجد مسارات مسجلة بعد...</div>';
+                } else {
+                    journeysListEl.innerHTML = combinedItems.map(item => `
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.7); border: 1px solid ${item.isOnline ? 'rgba(16, 185, 129, 0.4)' : '#1e293b'}; border-radius: 8px; padding: 10px 14px; font-size: 0.85em;">
+                            <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
+                                <span style="font-size: 1.3em;">${item.flag}</span>
+                                <div>
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        <strong style="color: #f8fafc;">${item.city}، ${item.country}</strong>
+                                        <span>${item.deviceIcon}</span>
+                                        ${item.point ? `<span style="background: rgba(212, 175, 55, 0.15); color: var(--primary-gold); padding: 1px 6px; border-radius: 4px; font-size: 0.8em;">🎯 ${item.point}</span>` : ''}
+                                    </div>
+                                    <div style="color: ${item.isOnline ? '#6ee7b7' : '#94a3b8'}; font-size: 0.82em; margin-top: 2px;">
+                                        ${item.stage}
+                                    </div>
+                                </div>
+                            </div>
+                            <span style="color: ${item.isOnline ? '#10b981' : '#64748b'}; font-size: 0.78em; font-weight: ${item.isOnline ? 'bold' : 'normal'}; white-space: nowrap;">
+                                ${item.timeStr}
+                            </span>
+                        </div>
+                    `).join('');
+                }
+            }
         }
+        window.renderVisitorAnalyticsModalContent = renderVisitorAnalyticsModalContent;
 
         function renderAnalyticsCountriesList(countries) {
             const container = document.getElementById('analytics-countries-container');
