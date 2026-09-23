@@ -150,18 +150,22 @@
 
     function inferCountryFromPhone(phone) {
         if (!phone) return null;
-        const clean = phone.replace(/\D/g, '');
+        let clean = phone.replace(/\D/g, '');
+        if (clean.startsWith('00')) clean = clean.slice(2);
         if (clean.startsWith('962') || clean.startsWith('07')) return { country: 'الأردن', countryCode: 'JO', flag: '🇯🇴', city: 'عمّان' };
         if (clean.startsWith('966') || clean.startsWith('05')) return { country: 'المملكة العربية السعودية', countryCode: 'SA', flag: '🇸🇦', city: 'الرياض' };
         if (clean.startsWith('971')) return { country: 'الإمارات العربية المتحدة', countryCode: 'AE', flag: '🇦🇪', city: 'دبي' };
-        if (clean.startsWith('20')) return { country: 'مصر', countryCode: 'EG', flag: '🇪🇬', city: 'القاهرة' };
-        if (clean.startsWith('964')) return { country: 'العراق', countryCode: 'IQ', flag: '🇮🇶', city: 'بغداد' };
+        if (clean.startsWith('44')) return { country: 'المملكة المتحدة', countryCode: 'GB', flag: '🇬🇧', city: 'لندن' };
+        if (clean.startsWith('49')) return { country: 'ألمانيا', countryCode: 'DE', flag: '🇩🇪', city: 'فرانكفورت' };
         if (clean.startsWith('970') || clean.startsWith('972')) return { country: 'فلسطين', countryCode: 'PS', flag: '🇵🇸', city: 'القدس' };
+        if (clean.startsWith('964')) return { country: 'العراق', countryCode: 'IQ', flag: '🇮🇶', city: 'بغداد' };
+        if (clean.startsWith('20') || (clean.startsWith('01') && clean.length === 11)) return { country: 'مصر', countryCode: 'EG', flag: '🇪🇬', city: 'القاهرة' };
         if (clean.startsWith('965')) return { country: 'الكويت', countryCode: 'KW', flag: '🇰🇼', city: 'الكويت' };
         if (clean.startsWith('974')) return { country: 'قطر', countryCode: 'QA', flag: '🇶🇦', city: 'الدوحة' };
         if (clean.startsWith('968')) return { country: 'سلطنة عمان', countryCode: 'OM', flag: '🇴🇲', city: 'مسقط' };
         if (clean.startsWith('973')) return { country: 'البحرين', countryCode: 'BH', flag: '🇧🇭', city: 'المنامة' };
-        if (clean.startsWith('49')) return { country: 'ألمانيا', countryCode: 'DE', flag: '🇩🇪', city: 'فرانكفورت' };
+        if (clean.startsWith('961')) return { country: 'لبنان', countryCode: 'LB', flag: '🇱🇧', city: 'بيروت' };
+        if (clean.startsWith('963')) return { country: 'سوريا', countryCode: 'SY', flag: '🇸🇾', city: 'دمشق' };
         return null;
     }
 

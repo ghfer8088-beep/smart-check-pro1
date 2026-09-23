@@ -2126,30 +2126,57 @@
             const pId = p.patientId || p.id || p.phone;
             if (!pId || seenIds.has('vis_' + pId)) continue;
             seenIds.add('vis_' + pId);
-            let pCountry = (p.country && p.country !== 'غير محدد') ? p.country : '';
+            let pCountry = (p.country && p.country !== 'غير محدد' && p.country !== 'دولي') ? p.country : '';
             let pFlag = p.flag || '🌐';
             let pCity = (p.city && p.city !== 'غير محدد') ? p.city : '';
 
-            if (!pCountry) {
-                const ph = (p.phone || '').replace(/\D/g, '');
-                if (ph.startsWith('962') || ph.startsWith('07')) { pCountry = 'الأردن'; pFlag = '🇯🇴'; pCity = pCity || 'عمّان'; }
-                else if (ph.startsWith('966') || ph.startsWith('05')) { pCountry = 'المملكة العربية السعودية'; pFlag = '🇸🇦'; pCity = pCity || 'الرياض'; }
-                else if (ph.startsWith('49')) { pCountry = 'ألمانيا'; pFlag = '🇩🇪'; pCity = pCity || 'فرانكفورت'; }
-                else if (ph.startsWith('970') || ph.startsWith('972')) { pCountry = 'فلسطين'; pFlag = '🇵🇸'; pCity = pCity || 'القدس'; }
-                else if (ph.startsWith('971')) { pCountry = 'الإمارات'; pFlag = '🇦🇪'; pCity = pCity || 'دبي'; }
-                else if (ph.startsWith('964')) { pCountry = 'العراق'; pFlag = '🇮🇶'; pCity = pCity || 'بغداد'; }
-                else if (ph.startsWith('20')) { pCountry = 'مصر'; pFlag = '🇪🇬'; pCity = pCity || 'القاهرة'; }
-                else if (ph.startsWith('965')) { pCountry = 'الكويت'; pFlag = '🇰🇼'; pCity = pCity || 'الكويت'; }
-                else if (ph.startsWith('974')) { pCountry = 'قطر'; pFlag = '🇶🇦'; pCity = pCity || 'الدوحة'; }
-                else if (ph.startsWith('968')) { pCountry = 'سلطنة عمان'; pFlag = '🇴🇲'; pCity = pCity || 'مسقط'; }
-                else if (ph.startsWith('973')) { pCountry = 'البحرين'; pFlag = '🇧🇭'; pCity = pCity || 'المنامة'; }
-                else { pCountry = 'دولي'; pFlag = '🌐'; pCity = pCity || 'غير محدد'; }
+            if (!pCountry || pCountry === 'Jordan') {
+                let ph = (p.phone || '').replace(/\D/g, '');
+                if (ph.startsWith('00')) ph = ph.slice(2);
+
+                if (ph.startsWith('44')) {
+                    pCountry = 'المملكة المتحدة'; pFlag = '🇬🇧'; pCity = pCity || 'لندن';
+                } else if (ph.startsWith('49') || (p.allMergedIds && p.allMergedIds.some(id => String(id).includes('frankfurt')))) {
+                    pCountry = 'ألمانيا'; pFlag = '🇩🇪'; pCity = pCity || 'فرانكفورت';
+                } else if (ph.startsWith('966') || ph.startsWith('05')) {
+                    pCountry = 'المملكة العربية السعودية'; pFlag = '🇸🇦'; pCity = pCity || 'الرياض';
+                } else if (ph.startsWith('971')) {
+                    pCountry = 'الإمارات العربية المتحدة'; pFlag = '🇦🇪'; pCity = pCity || 'دبي';
+                } else if (ph.startsWith('970') || ph.startsWith('972')) {
+                    pCountry = 'فلسطين'; pFlag = '🇵🇸'; pCity = pCity || 'القدس';
+                } else if (ph.startsWith('964')) {
+                    pCountry = 'العراق'; pFlag = '🇮🇶'; pCity = pCity || 'بغداد';
+                } else if (ph.startsWith('20') || (ph.startsWith('01') && ph.length === 11)) {
+                    pCountry = 'مصر'; pFlag = '🇪🇬'; pCity = pCity || 'القاهرة';
+                } else if (ph.startsWith('965')) {
+                    pCountry = 'الكويت'; pFlag = '🇰🇼'; pCity = pCity || 'الكويت';
+                } else if (ph.startsWith('974')) {
+                    pCountry = 'قطر'; pFlag = '🇶🇦'; pCity = pCity || 'الدوحة';
+                } else if (ph.startsWith('968')) {
+                    pCountry = 'سلطنة عمان'; pFlag = '🇴🇲'; pCity = pCity || 'مسقط';
+                } else if (ph.startsWith('973')) {
+                    pCountry = 'البحرين'; pFlag = '🇧🇭'; pCity = pCity || 'المنامة';
+                } else if (ph.startsWith('961')) {
+                    pCountry = 'لبنان'; pFlag = '🇱🇧'; pCity = pCity || 'بيروت';
+                } else if (ph.startsWith('963')) {
+                    pCountry = 'سوريا'; pFlag = '🇸🇾'; pCity = pCity || 'دمشق';
+                } else if (ph.startsWith('90')) {
+                    pCountry = 'تركيا'; pFlag = '🇹🇷'; pCity = pCity || 'إسطنبول';
+                } else if (ph.startsWith('1') && ph.length >= 10 && !ph.startsWith('1789')) {
+                    pCountry = 'الولايات المتحدة'; pFlag = '🇺🇸'; pCity = pCity || 'واشنطن';
+                } else if (p.country && p.country !== 'غير محدد') {
+                    pCountry = p.country;
+                } else {
+                    pCountry = 'الأردن'; pFlag = '🇯🇴'; pCity = pCity || 'عمّان';
+                }
             }
+
+            const cCode = (pFlag === '🇬🇧' ? 'GB' : (pFlag === '🇩🇪' ? 'DE' : (pFlag === '🇸🇦' ? 'SA' : (pFlag === '🇦🇪' ? 'AE' : (pFlag === '🇵🇸' ? 'PS' : (pFlag === '🇮🇶' ? 'IQ' : (pFlag === '🇪🇬' ? 'EG' : (pFlag === '🇺🇸' ? 'US' : 'JO'))))))));
 
             visitsHistory.unshift({
                 visitorId: 'vis_' + pId,
                 country: pCountry,
-                countryCode: p.countryCode || (pFlag === '🇯🇴' ? 'JO' : (pFlag === '🇩🇪' ? 'DE' : (pFlag === '🇸🇦' ? 'SA' : '🌐'))),
+                countryCode: p.countryCode || cCode,
                 city: pCity || 'غير محدد',
                 flag: pFlag,
                 device: p.device || 'Mobile',
