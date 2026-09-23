@@ -6991,13 +6991,15 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v29.52';
+const CURRENT_APP_VERSION = 'v30.03';
 let _versionCheckInProgress = false;
 
 // إظهار تنبيه هادئ وغير تدخلي بوجود تحديث جديد مع إمكانية الإغلاق التام
 function _showNonIntrusiveUpdateNotice(targetVer) {
-    if (sessionStorage.getItem('scp_update_notice_dismissed') === 'true') return;
-    if (sessionStorage.getItem('scp_update_handled') === 'true') return;
+    const ver = targetVer || CURRENT_APP_VERSION;
+    const dismissedVer = sessionStorage.getItem('scp_dismissed_ver');
+    if (sessionStorage.getItem('scp_update_notice_dismissed') === 'true' && dismissedVer === ver) return;
+    if (sessionStorage.getItem('scp_last_reloaded_ver') === ver) return;
     if (document.getElementById('pwa-update-notice-bar')) return;
 
     const banner = document.createElement('div');
@@ -7005,25 +7007,25 @@ function _showNonIntrusiveUpdateNotice(targetVer) {
     banner.style.cssText = `
         position: fixed; top: 0; left: 0; right: 0; z-index: 9999999;
         background: linear-gradient(90deg, #0b1322 0%, #17253d 100%);
-        border-bottom: 2px solid #d4af37;
-        padding: 8px 18px;
+        border-bottom: 2.5px solid #d4af37;
+        padding: 9px 18px;
         display: flex; align-items: center; justify-content: space-between; gap: 12px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+        box-shadow: 0 4px 25px rgba(0,0,0,0.8), 0 0 15px rgba(212, 175, 55, 0.3);
         animation: slideDownBanner 0.4s ease;
     `;
     banner.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 1.3em;">⚡</span>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 1.4em; filter: drop-shadow(0 0 8px rgba(212,175,55,0.7));">⚡</span>
             <div>
-                <strong style="color: #d4af37; font-size: 0.9em; display: block;">تحديث جديد متوفر للمنظومة (${targetVer || CURRENT_APP_VERSION})</strong>
-                <span style="color: #94a3b8; font-size: 0.77em;">يمكنك التحديث بضغطة زر عند رغبتك دون فقدان أي من بياناتك أو تقدمك.</span>
+                <strong style="color: #d4af37; font-size: 0.93em; display: block; font-weight: 900;">تحديث جديد متوفر للمنظومة (${ver})</strong>
+                <span style="color: #cbd5e1; font-size: 0.78em;">تم إطلاق تحسينات جديدة! يمكنك التحديث الآن بضغطة زر عند رغبتك دون فقدان تقدمك.</span>
             </div>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
-            <button type="button" onclick="window._applyUpdateNow('${targetVer || CURRENT_APP_VERSION}')" style="background: #d4af37; color: #0a0e14; border: none; padding: 6px 14px; border-radius: 7px; font-weight: 900; font-size: 0.82em; cursor: pointer; white-space: nowrap;">
+            <button type="button" onclick="window._applyUpdateNow('${ver}')" style="background: linear-gradient(135deg, #d4af37 0%, #f59e0b 100%); color: #0a0e14; border: none; padding: 7px 18px; border-radius: 8px; font-weight: 900; font-size: 0.85em; cursor: pointer; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.5);">
                 تحديث الآن ⚡
             </button>
-            <button type="button" onclick="sessionStorage.setItem('scp_update_notice_dismissed','true'); document.getElementById('pwa-update-notice-bar')?.remove();" style="background: none; border: none; color: #94a3b8; font-size: 1.3em; cursor: pointer; padding: 0 6px; line-height: 1;" title="إغلاق التنبيه">&times;</button>
+            <button type="button" onclick="sessionStorage.setItem('scp_update_notice_dismissed','true'); sessionStorage.setItem('scp_dismissed_ver','${ver}'); document.getElementById('pwa-update-notice-bar')?.remove();" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #94a3b8; font-size: 1.2em; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1;" title="إغلاق التنبيه">&times;</button>
         </div>
     `;
     document.body.appendChild(banner);
@@ -7062,11 +7064,9 @@ function _doSafeReload(targetVer = null) {
 // فحص هادئ ودوري لرقم الإصدار بدون أي حجب للشاشة أو تكرار
 async function _checkRemoteVersionUpdate() {
     if (_versionCheckInProgress) return;
-    if (sessionStorage.getItem('scp_update_handled') === 'true') return;
-    if (sessionStorage.getItem('scp_update_notice_dismissed') === 'true') return;
 
     const lastCheckTime = parseInt(sessionStorage.getItem('scp_last_ver_check') || '0', 10);
-    if (Date.now() - lastCheckTime < 600000) return; // فحص كل 10 دقائق كحد أقصى
+    if (Date.now() - lastCheckTime < 25000) return; // فحص كل 25 ثانية كحد أقصى
 
     _versionCheckInProgress = true;
     sessionStorage.setItem('scp_last_ver_check', String(Date.now()));
@@ -8291,26 +8291,41 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (window.location.protocol.startsWith('http') && 'serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').then((registration) => {
+            // فحص فوري لتحديثات الـ Service Worker عند التشغيل
+            try { registration.update(); } catch(e) {}
+
             registration.onupdatefound = () => {
                 const installingWorker = registration.installing;
                 if (installingWorker) {
                     installingWorker.onstatechange = () => {
                         if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            console.log('[App] New SW installed in background.');
+                            console.log('[App] New SW installed, update ready.');
+                            if (typeof _showNonIntrusiveUpdateNotice === 'function') {
+                                _showNonIntrusiveUpdateNotice();
+                            }
                         }
                     };
                 }
             };
         }).catch(() => {});
 
-        // فحص هادئ بفاصل 5 دقائق كحد أدنى عند عودة التركيز للنافذة
-        window.addEventListener('focus', () => {
-            const lastCheck = parseInt(sessionStorage.getItem('scp_last_focus_check') || '0', 10);
-            if (Date.now() - lastCheck > 300000) {
-                sessionStorage.setItem('scp_last_focus_check', String(Date.now()));
-                if (typeof _checkRemoteVersionUpdate === 'function') {
-                    _checkRemoteVersionUpdate();
+        // ✅ الاستماع لرسالة تفعيل النسخة الجديدة من Service Worker
+        navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'SW_ACTIVATED_NEW_VERSION') {
+                const targetVer = event.data.version ? event.data.version.replace('wada3an-alam-', '') : '';
+                if (typeof _showNonIntrusiveUpdateNotice === 'function') {
+                    _showNonIntrusiveUpdateNotice(targetVer);
                 }
+            }
+        });
+
+        // فحص وجود تحديثات فور عودة التركيز للنافذة
+        window.addEventListener('focus', () => {
+            navigator.serviceWorker.getRegistration().then((reg) => {
+                if (reg) reg.update().catch(() => {});
+            }).catch(() => {});
+            if (typeof _checkRemoteVersionUpdate === 'function') {
+                _checkRemoteVersionUpdate();
             }
             if (window.SmartCloudSync && typeof SmartCloudSync.fetchRemoteTimingUpdates === 'function') {
                 SmartCloudSync.fetchRemoteTimingUpdates();
@@ -8319,18 +8334,35 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
-                const lastCheck = parseInt(sessionStorage.getItem('scp_last_vis_check') || '0', 10);
-                if (Date.now() - lastCheck > 300000) {
-                    sessionStorage.setItem('scp_last_vis_check', String(Date.now()));
-                    if (typeof _checkRemoteVersionUpdate === 'function') {
-                        _checkRemoteVersionUpdate();
-                    }
+                if (typeof _checkRemoteVersionUpdate === 'function') {
+                    _checkRemoteVersionUpdate();
                 }
                 if (window.SmartCloudSync && typeof SmartCloudSync.fetchRemoteTimingUpdates === 'function') {
                     SmartCloudSync.fetchRemoteTimingUpdates();
                 }
             }
         });
+
+        // 🔄 فحص دوري تلقائي كل 25 ثانية يضمن وصول إشعار التحديث لكافة الأجهزة والصفحات المفتوحة
+        setInterval(() => {
+            navigator.serviceWorker.getRegistration().then((reg) => {
+                if (reg) reg.update().catch(() => {});
+            }).catch(() => {});
+            if (typeof _checkRemoteVersionUpdate === 'function') {
+                _checkRemoteVersionUpdate();
+            }
+        }, 25000);
+    } else {
+        setInterval(() => {
+            if (typeof _checkRemoteVersionUpdate === 'function') {
+                _checkRemoteVersionUpdate();
+            }
+        }, 25000);
+    }
+
+    // فحص أولي فوري للإصدار عند إقلاع الصفحة
+    if (typeof _checkRemoteVersionUpdate === 'function') {
+        setTimeout(_checkRemoteVersionUpdate, 1500);
     }
 
     // تهيئة الاستماع اللحظي لتعديل توقيت الجلسات سحابياً من لوحة الإدارة
