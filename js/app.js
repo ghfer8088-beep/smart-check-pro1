@@ -7118,7 +7118,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.09';
+const CURRENT_APP_VERSION = 'v30.10';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
