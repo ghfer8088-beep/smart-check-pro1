@@ -124,7 +124,7 @@ function getDailyMotivationScript(dayNumber, patientName = '') {
     }
     const isFemale = (typeof detectArabicGender === 'function') ? (detectArabicGender(effectiveName) === 'female') : false;
     const isPlaceholder = !effectiveName || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null)$/i.test(effectiveName.trim());
-    const namePart = !isPlaceholder ? `يا ${effectiveName.trim()}` : (isFemale ? 'يا أختي الكريمة' : 'يا بطل التعافي');
+    const namePart = !isPlaceholder ? `يا ${effectiveName.trim()}` : (isFemale ? 'يا أختي الكريمة' : 'يا أخي الكريم');
     const genderGreeting = isFemale ? 'أختي الكريمة' : 'أخي الكريم';
     const genderContinue = isFemale ? 'واصلي' : 'واصل';
     const genderLook = isFemale ? 'راقبي' : 'راقب';
@@ -991,6 +991,15 @@ async function handleStepperClick(stepNum) {
 
     // صمام أمان فوري: المرحلة 3 مفتوحة دائماً عند النقر عليها مع ضمان جاهزية التقرير فوراً بدون أي تعليق
     if (stepNum === 3) {
+        if (typeof hideRoyalReportLoadingModal === 'function') {
+            hideRoyalReportLoadingModal();
+        }
+        const loadingModal = document.getElementById('royal-report-loading-modal');
+        if (loadingModal) {
+            loadingModal.style.display = 'none';
+            loadingModal.style.opacity = '0';
+            loadingModal.style.pointerEvents = 'none';
+        }
         if (typeof ensureAndDisplayReport === 'function') {
             await ensureAndDisplayReport();
         }
@@ -3957,8 +3966,13 @@ window.playRoyalDuaaAudio = playRoyalDuaaAudio;
 
 // تشغيل صوت د. سارة بعد اختفاء نافذة الصدقة وتأكيد بدء الخطة
 function playSarahCharityIntroAudio(patientName = '') {
-    const pName = patientName || (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '');
-    const cleanName = (pName && !/^(?:مراجع|بطل|عزيزي|undefined|null|pat_guest)$/i.test(pName)) ? ` يا ${pName}` : '';
+    let clean = (patientName || '').trim();
+    if (!clean || /^(?:مراجع|مراجع كريم|المراجع الكريم|المراجع المحترم|بطل|بطل التعافي|عزيزي|عزيزتي|undefined|null|pat_guest)$/i.test(clean)) {
+        if (typeof getResolvedPatientName === 'function') {
+            clean = getResolvedPatientName();
+        }
+    }
+    const cleanName = (clean && !/^(?:مراجع|مراجع كريم|المراجع الكريم|المراجع المحترم|بطل|بطل التعافي|عزيزي|عزيزتي|undefined|null|pat_guest)$/i.test(clean)) ? ` يا ${clean}` : '';
     const speechText = `أهلاً بك${cleanName}. هذه الخطة العلاجية والتأهيلية مقدمة لك مجاناً بالكامل كصدقة جارية عن روح المرحوم والد المعالج جمال قبها، رحمه الله تعالى وجعل مأواه الفردوس الأعلى من الجنة. نسألكم له خالص الدعاء بالرحمة والمغفرة. والآن سنبدأ معاً أولى خطوات التعافي وجلسة اليوم الأول لتفريغ الضغط عن الفقرات والمفاصل بأمان تام.`;
 
     const statusEl = document.getElementById('sarah-charity-voice-status');
@@ -3972,7 +3986,9 @@ function playSarahCharityIntroAudio(patientName = '') {
 
     try {
         if (typeof Wada3anAiEngine !== 'undefined') {
-            Wada3anAiEngine.unlockAudio();
+            if (typeof Wada3anAiEngine.unlockAudio === 'function') {
+                Wada3anAiEngine.unlockAudio();
+            }
             if (typeof Wada3anAiEngine.selectDoctorPersona === 'function') {
                 Wada3anAiEngine.selectDoctorPersona('sarah');
             }
@@ -3995,6 +4011,10 @@ function playSarahCharityIntroAudio(patientName = '') {
             ut.lang = 'ar-SA';
             ut.rate = 0.95;
             ut.pitch = 1.05;
+            const voices = window.speechSynthesis.getVoices() || [];
+            const arVoice = voices.find(v => v.lang && v.lang.startsWith('ar') && (v.name.includes('Sarah') || v.name.includes('Zeina') || v.name.includes('Laila') || v.name.includes('Salma') || v.name.includes('Female')))
+                         || voices.find(v => v.lang && v.lang.startsWith('ar'));
+            if (arVoice) ut.voice = arVoice;
             ut.onend = onFinish;
             ut.onerror = onFinish;
             window.speechSynthesis.speak(ut);
@@ -4007,6 +4027,16 @@ window.playSarahCharityIntroAudio = playSarahCharityIntroAudio;
 
 // استرجاع وعرض التقرير الطبي فوراً دون أي شاشات انتظار أو تعليق
 async function ensureAndDisplayReport() {
+    if (typeof hideRoyalReportLoadingModal === 'function') {
+        hideRoyalReportLoadingModal();
+    }
+    const loadingModal = document.getElementById('royal-report-loading-modal');
+    if (loadingModal) {
+        loadingModal.style.display = 'none';
+        loadingModal.style.opacity = '0';
+        loadingModal.style.pointerEvents = 'none';
+    }
+
     const reportContainer = document.getElementById('clinical-report-container');
     if (!reportContainer) return false;
 
@@ -5029,8 +5059,8 @@ async function activateRecoveryPlanInstantly() {
             || document.getElementById('sub-name')?.value?.trim() 
             || '';
 
-        if (!existingName || /^(?:الاسم|الآسم|الإسم|مراجع كريم|المراجع الكريم)$/i.test(existingName)) {
-            existingName = auth?.name || curAssessment?.patientName || curPatient?.fullName || curPatient?.name || 'المراجع الكريم';
+        if (!existingName || /^(?:الاسم|الآسم|الإسم|مراجع كريم|المراجع الكريم|بطل التعافي|عزيزي|عزيزتي)$/i.test(existingName)) {
+            existingName = auth?.name || curAssessment?.patientName || curPatient?.fullName || curPatient?.name || '';
         }
 
         targetPatientId = auth?.patientId || curPatient?.patientId || curPatient?.id || (typeof SmartDB !== 'undefined' && SmartDB.getCurrentSessionPatientId ? SmartDB.getCurrentSessionPatientId() : null) || ('P-' + Date.now().toString().slice(-6));
@@ -5083,6 +5113,10 @@ async function activateRecoveryPlanInstantly() {
         window.activePatient = patientObj;
         activePatient = patientObj;
         try {
+            if (existingName) {
+                localStorage.setItem('smart_patient_name', existingName);
+                localStorage.setItem('smart_user_name', existingName);
+            }
             if (resolvedPhone) localStorage.setItem('smart_patient_phone', String(resolvedPhone));
             localStorage.setItem('smart_active_patient', JSON.stringify(patientObj));
             localStorage.setItem('smart_current_patient_id', patientId);
@@ -5125,10 +5159,10 @@ async function activateRecoveryPlanInstantly() {
                 if (typeof SmartDB !== 'undefined' && typeof SmartDB.addAdminNotification === 'function') {
                     SmartDB.addAdminNotification({
                         type: 'new_registration',
-                        title: `👤 تفعيل فوري للخطة: ${existingName}`,
-                        message: `فعّل المراجع ${existingName} خطة التعافي الحركية (اليوم 1) بنقرة واحدة - منطقة: ${resolvedPainTitle} - هاتف: ${resolvedPhone || auth?.phone || 'بدون هاتف'}`,
+                        title: `👤 تفعيل فوري للخطة: ${existingName || 'مراجع جديد'}`,
+                        message: `فعّل المراجع ${existingName || 'المراجع'} خطة التعافي الحركية (اليوم 1) بنقرة واحدة - منطقة: ${resolvedPainTitle} - هاتف: ${resolvedPhone || auth?.phone || 'بدون هاتف'}`,
                         patientId,
-                        patientName: existingName,
+                        patientName: existingName || '',
                         patientPhone: resolvedPhone || auth?.phone || '',
                         meta: {
                             painArea: resolvedPainTitle,
@@ -5142,9 +5176,7 @@ async function activateRecoveryPlanInstantly() {
     } catch (err) {
         console.error('Error activating plan instantly:', err);
         const fallbackId = targetPatientId || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' && SmartDB.getCurrentSessionPatientId()) || activePatient?.patientId || ('P-' + Date.now().toString().slice(-6));
-        if (typeof goToStep === 'function') goToStep(4);
-        if (typeof renderStep4IndependentDay1 === 'function') renderStep4IndependentDay1(fallbackId);
-        if (typeof loadPatientRecoveryDashboard === 'function') loadPatientRecoveryDashboard(fallbackId);
+        showRoyalDuaaModal(fallbackId);
     }
 }
 window.activateRecoveryPlanInstantly = activateRecoveryPlanInstantly;
@@ -5308,6 +5340,9 @@ function showRoyalDuaaModal(patientId = null) {
     if (modal) {
         modal.style.display = 'flex';
         modal.style.zIndex = '99999999';
+        modal.style.opacity = '1';
+        modal.style.visibility = 'visible';
+        modal.style.pointerEvents = 'auto';
         const inner = modal.querySelector('.modal-inner');
         if (inner) inner.scrollTop = 0;
 
@@ -5324,10 +5359,10 @@ function showRoyalDuaaModal(patientId = null) {
     } else {
         if (typeof goToStep === 'function') goToStep(4);
         if (typeof renderStep4IndependentDay1 === 'function') renderStep4IndependentDay1(pId);
-        loadPatientRecoveryDashboard(pId);
         setTimeout(() => {
+            const pName = (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || activePatient?.name || '';
             if (typeof playSarahCharityIntroAudio === 'function') {
-                playSarahCharityIntroAudio();
+                playSarahCharityIntroAudio(pName);
             }
         }, 350);
     }
@@ -5336,7 +5371,11 @@ window.showRoyalDuaaModal = showRoyalDuaaModal;
 
 function closeRoyalDuaaModal() {
     const modal = document.getElementById('royal-duaa-modal');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+        modal.style.display = 'none';
+        modal.style.opacity = '0';
+        modal.style.visibility = 'hidden';
+    }
     if (typeof Wada3anAiEngine !== 'undefined' && typeof Wada3anAiEngine.stopSpeaking === 'function') {
         Wada3anAiEngine.stopSpeaking();
     }
@@ -5355,9 +5394,10 @@ function closeRoyalDuaaModal() {
     if (window.SmartGuidance && typeof SmartGuidance.onDuaaModalClosed === 'function') {
         SmartGuidance.onDuaaModalClosed();
     }
+    const pName = (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || activePatient?.name || '';
     setTimeout(() => {
         if (typeof playSarahCharityIntroAudio === 'function') {
-            playSarahCharityIntroAudio(activePatient?.name || activePatient?.fullName);
+            playSarahCharityIntroAudio(pName);
         }
     }, 350);
 }
@@ -5365,7 +5405,11 @@ window.closeRoyalDuaaModal = closeRoyalDuaaModal;
 
 async function confirmRoyalDuaaAndProceed() {
     const modal = document.getElementById('royal-duaa-modal');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+        modal.style.display = 'none';
+        modal.style.opacity = '0';
+        modal.style.visibility = 'hidden';
+    }
 
     if (typeof Wada3anAiEngine !== 'undefined' && typeof Wada3anAiEngine.stopSpeaking === 'function') {
         Wada3anAiEngine.stopSpeaking();
@@ -5393,12 +5437,7 @@ async function confirmRoyalDuaaAndProceed() {
     showToast('🌿 تقبّل الله دعاءكم وبارك في صحتكم وعافيتكم.. بدء خطة التعافي (اليوم الأول)', 'success');
 
     if (typeof renderStep4IndependentDay1 === 'function') {
-        renderStep4IndependentDay1(pId);
-    }
-    try {
-        await loadPatientRecoveryDashboard(pId);
-    } catch (e) {
-        console.error('Error loading recovery dashboard:', e);
+        await renderStep4IndependentDay1(pId);
     }
 
     // ضمان التركيز على بداية قسم تمارين اليوم الأول
@@ -5407,9 +5446,10 @@ async function confirmRoyalDuaaAndProceed() {
     }, 100);
 
     // 2. بعد اختفاء رسالة الصدقة مباشرة، ينطلق صوت د. سارة ليؤكد أن الخطة صدقة جارية ويبدأ اليوم الأول
+    const resolvedName = (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || activePatient?.name || '';
     setTimeout(() => {
         if (typeof playSarahCharityIntroAudio === 'function') {
-            playSarahCharityIntroAudio(activePatient?.name || activePatient?.fullName);
+            playSarahCharityIntroAudio(resolvedName);
         }
     }, 350);
 }
@@ -5521,26 +5561,26 @@ function getVitalsSummaryCardHTML(patient, assessment) {
 // =========================================================================
 function formatPatientGreeting(pName) {
     let resolved = (pName || '').trim();
-    if (!resolved || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null)$/i.test(resolved)) {
+    if (!resolved || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null|بطل|بطل التعافي)$/i.test(resolved)) {
         if (typeof getResolvedPatientName === 'function') {
             resolved = getResolvedPatientName();
         }
     }
-    if (!resolved || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null)$/i.test(resolved)) {
-        return 'مرحباً بك يا بطل التعافي 👋';
+    if (!resolved || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null|بطل|بطل التعافي)$/i.test(resolved)) {
+        return 'مرحباً بك 👋';
     }
     return `مرحباً بك يا ${resolved} 👋`;
 }
 window.formatPatientGreeting = formatPatientGreeting;
 
-function formatPatientAddress(pName, fallback = 'يا بطل التعافي') {
+function formatPatientAddress(pName, fallback = '') {
     let resolved = (pName || '').trim();
-    if (!resolved || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null)$/i.test(resolved)) {
+    if (!resolved || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null|بطل|بطل التعافي)$/i.test(resolved)) {
         if (typeof getResolvedPatientName === 'function') {
             resolved = getResolvedPatientName();
         }
     }
-    if (!resolved || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null)$/i.test(resolved)) {
+    if (!resolved || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null|بطل|بطل التعافي)$/i.test(resolved)) {
         return fallback;
     }
     return resolved;
@@ -6191,6 +6231,8 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
 
     // ساعة التوقيت الـ 24 ساعة المعتمدة أو شارة الإنجاز المكتمل للجلسة
     let clock24HTML = '';
+    const isDay1NotDone = (activeDay === 2 && (!sessionData.dailyLogs || sessionData.dailyLogs.length === 0));
+
     if (isDayAlreadyCompleted) {
         clock24HTML = `
             <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);">
@@ -6212,37 +6254,70 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 ` : ''}
             </div>
         `;
-    } else {
+    } else if (isDay1NotDone) {
         clock24HTML = `
-            <div style="background: linear-gradient(135deg, #0b101b 0%, #172033 100%); border: 1.5px solid ${lockStatus.isLocked ? 'var(--primary-gold)' : '#10b981'}; border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+            <div style="background: linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #eab308; border-radius: 14px; padding: 22px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
-                    <div style="color: ${lockStatus.isLocked ? 'var(--primary-gold)' : '#10b981'}; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-                        <span>⏱️</span> ${lockStatus.isLocked ? 'ساعة التوقيت المعتمدة (فترة استشفاء جارية)' : '✅ الجلسة مفتوحة ومتاحة الآن'}
+                    <div style="color: #fef08a; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                        <span>⚠️</span> تتطلب الجلسة الثانية إتمام تمارين اليوم الأول أولاً
                     </div>
-                    <span style="background: ${lockStatus.isLocked ? 'rgba(212, 175, 55, 0.15)' : 'rgba(16, 185, 129, 0.2)'}; border: 1px solid ${lockStatus.isLocked ? 'var(--primary-gold)' : '#10b981'}; color: ${lockStatus.isLocked ? '#fef08a' : '#6ee7b7'}; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
-                        ${lockStatus.isLocked ? `الجلسة ${activeDay} من 7 (مقفلة مؤقتاً)` : `الجلسة ${activeDay} من 7 (متاحة ومفتوحة)`}
+                    <span style="background: rgba(234, 179, 8, 0.2); border: 1px solid #eab308; color: #fef08a; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
+                        بانتظار توثيق اليوم الأول
+                    </span>
+                </div>
+                <p style="color: #cbd5e1; font-size: 0.9em; margin: 0 0 16px 0; line-height: 1.6;">
+                    لتحقيق الفائدة السريرية المتدرجة وحماية المفاصل، تبدأ فترة الاستشفاء الحيوي (24 ساعة) تلقائياً بمجرد إتمامك لتمارين الجلسة الأولى وتوثيقها.
+                </p>
+                <button type="button" onclick="handleStepperClick(4)" style="background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; font-weight: 900; border: none; padding: 10px 24px; border-radius: 25px; font-size: 0.95em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);">
+                    <span>🏋️</span> الانتقال لتمارين الجلسة الأولى (اليوم 1) ❯
+                </button>
+            </div>
+        `;
+    } else if (lockStatus.isLocked && lockStatus.remainingMs > 0) {
+        clock24HTML = `
+            <div style="background: linear-gradient(135deg, #0b101b 0%, #172033 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                    <div style="color: var(--primary-gold); font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                        <span>⏱️</span> ساعة التوقيت المعتمدة (فترة استشفاء جارية)
+                    </div>
+                    <span style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
+                        الجلسة ${activeDay} من 7 (مقفلة مؤقتاً للاستشفاء)
                     </span>
                 </div>
                 
                 <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 12px;">
-                    <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid ${lockStatus.isLocked ? 'rgba(212, 175, 55, 0.35)' : 'rgba(16, 185, 129, 0.5)'}; min-width: 75px;">
+                    <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
                         <div id="countdown-hours" style="font-size: 2.2em; font-weight: bold; color: #ffffff; font-family: monospace;">${initialH}</div>
                         <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">ساعة</div>
                     </div>
-                    <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid ${lockStatus.isLocked ? 'rgba(212, 175, 55, 0.35)' : 'rgba(16, 185, 129, 0.5)'}; min-width: 75px;">
+                    <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
                         <div id="countdown-mins" style="font-size: 2.2em; font-weight: bold; color: #ffffff; font-family: monospace;">${initialM}</div>
                         <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">دقيقة</div>
                     </div>
-                    <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid ${lockStatus.isLocked ? 'rgba(212, 175, 55, 0.35)' : 'rgba(16, 185, 129, 0.5)'}; min-width: 75px;">
-                        <div id="countdown-secs" style="font-size: 2.2em; font-weight: bold; color: ${lockStatus.isLocked ? 'var(--primary-gold)' : '#10b981'}; font-family: monospace;">${initialS}</div>
+                    <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
+                        <div id="countdown-secs" style="font-size: 2.2em; font-weight: bold; color: var(--primary-gold); font-family: monospace;">${initialS}</div>
                         <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">ثانية</div>
                     </div>
                 </div>
 
                 <p style="color: #cbd5e1; font-size: 0.85em; margin: 0; line-height: 1.6;">
-                    ${lockStatus.isLocked 
-                        ? '⏳ يجري احتساب فترة استشفاء الأنسجة. التزم بالتمارين المقررة أدناه واسترح حتى اكتمال العداد لتوثيق الجلسة.' 
-                        : '🎉 اكتملت فترة الاستشفاء أو تم فتح الجلسة لك من قبل المعالج! يمكنك الآن أداء التمارين وحفظ تسجيل الجلسة.'}
+                    ⏳ يجري احتساب فترة استشفاء الأنسجة (24 ساعة). التزم بالتمارين المقررة أدناه واسترح حتى اكتمال العداد لتوثيق الجلسة.
+                </p>
+            </div>
+        `;
+    } else {
+        clock24HTML = `
+            <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                    <div style="color: #10b981; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                        <span>✅</span> الجلسة مفتوحة ومتاحة للبدء الآن
+                    </div>
+                    <span style="background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">
+                        الجلسة ${activeDay} من 7 (جاهزة للتطبيق والتوثيق)
+                    </span>
+                </div>
+                <p style="color: #cbd5e1; font-size: 0.9em; margin: 0; line-height: 1.6;">
+                    🎉 اكتملت فترة الاستشفاء الحيوي للأنسجة! يمكنك الآن أداء التمارين الموضحة بالأسفل ثم توثيق التقييم الحركي والانتقال للجلسة التالية.
                 </p>
             </div>
         `;
@@ -6896,11 +6971,18 @@ async function completeDay1InitialExercises(patientId) {
         localStorage.removeItem(`force_unlock_${effectiveId}`);
         localStorage.removeItem('force_unlock_global');
         if (cleanP) localStorage.removeItem(`force_unlock_${cleanP}`);
+        localStorage.setItem('custom_target_time_global', String(targetLockTime));
+        localStorage.setItem('custom_total_duration_global', String(lockDurationMs));
         localStorage.setItem(`custom_target_time_${effectiveId}`, String(targetLockTime));
         localStorage.setItem(`custom_total_duration_${effectiveId}`, String(lockDurationMs));
         if (cleanP) {
             localStorage.setItem(`custom_target_time_${cleanP}`, String(targetLockTime));
             localStorage.setItem(`custom_total_duration_${cleanP}`, String(lockDurationMs));
+        }
+        if (pInfo) {
+            pInfo.customTargetTime = targetLockTime;
+            pInfo.customTotalDuration = lockDurationMs;
+            SmartDB.savePatient(pInfo).catch(() => {});
         }
     } catch(e) {}
 
@@ -7357,11 +7439,18 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
         localStorage.removeItem(`force_unlock_${effectiveId}`);
         localStorage.removeItem('force_unlock_global');
         if (cleanP) localStorage.removeItem(`force_unlock_${cleanP}`);
+        localStorage.setItem('custom_target_time_global', String(targetLockTime));
+        localStorage.setItem('custom_total_duration_global', String(lockDurationMs));
         localStorage.setItem(`custom_target_time_${effectiveId}`, String(targetLockTime));
         localStorage.setItem(`custom_total_duration_${effectiveId}`, String(lockDurationMs));
         if (cleanP) {
             localStorage.setItem(`custom_target_time_${cleanP}`, String(targetLockTime));
             localStorage.setItem(`custom_total_duration_${cleanP}`, String(lockDurationMs));
+        }
+        if (pInfo) {
+            pInfo.customTargetTime = targetLockTime;
+            pInfo.customTotalDuration = lockDurationMs;
+            SmartDB.savePatient(pInfo).catch(() => {});
         }
     } catch(e) {}
 
@@ -7512,7 +7601,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.16';
+const CURRENT_APP_VERSION = 'v30.17';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 

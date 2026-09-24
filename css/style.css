@@ -1618,7 +1618,7 @@ body {
 
 /* تحسين موضع ومظهر نافذة الدعاء والصدقة الجارية (royal-duaa-modal) خاصة للهواتف */
 #royal-duaa-modal {
-    z-index: 3000000 !important;
+    z-index: 99999999 !important;
     display: none;
     align-items: center;
     justify-content: center;

@@ -4871,8 +4871,8 @@ function getExercisesForDiagnosis(diagnosisName, jointName) {
 function generateDetailedReport(diagnosisList, jointName, answers, age, bmi, gender, patientName, severity, duration, chronicDiseases, pattern) {
     let primary = diagnosisList[0];
     let pronoun = gender === 'male' ? 'تعاني' : 'تعانين';
-    let pronoun2 = gender === 'male' ? 'أنت' : 'أنتِ';
-    let namePart = patientName ? (gender === 'male' ? `عزيزي ${patientName}` : `عزيزتي ${patientName}`) : pronoun2;
+    const hasValidName = patientName && typeof patientName === 'string' && patientName.trim().length > 1 && !/^(?:مراجع|مراجع كريم|المراجع الكريم|عزيزي|عزيزتي|null|undefined)$/i.test(patientName.trim());
+    let namePart = hasValidName ? (gender === 'male' ? `أخي ${patientName.trim()}` : `أختي ${patientName.trim()}`) : pronoun2;
     
     // التعامل مع الحالة التي تكون فيها الاحتمالية 0% أو منخفضة جداً
     if(primary.prob === 0 || primary.prob < 10) {

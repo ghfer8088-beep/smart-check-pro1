@@ -293,7 +293,7 @@ const PatientFlow = (function() {
         // استخراج وتعيين اسم المريض الحقيقي دائماً ومنع أي قيمة فارغة أو عامة
         if (patient) {
             const rawPName = (patient.name || patient.fullName || '').trim();
-            if (!rawPName || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null)$/i.test(rawPName)) {
+            if (!rawPName || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null|بطل|بطل التعافي)$/i.test(rawPName)) {
                 let resolvedPName = '';
                 if (typeof window !== 'undefined' && typeof window.getResolvedPatientName === 'function') {
                     resolvedPName = window.getResolvedPatientName();
@@ -301,10 +301,19 @@ const PatientFlow = (function() {
                 if (!resolvedPName && typeof localStorage !== 'undefined') {
                     resolvedPName = localStorage.getItem('smart_patient_name') || localStorage.getItem('smart_user_name') || '';
                 }
-                if (resolvedPName && !/^(?:مراجع كريم|المراجع الكريم|عزيزي|عزيزتي|pat_guest)$/i.test(resolvedPName)) {
+                if (resolvedPName && !/^(?:مراجع كريم|المراجع الكريم|عزيزي|عزيزتي|pat_guest|بطل|بطل التعافي)$/i.test(resolvedPName)) {
                     patient.name = resolvedPName;
                     patient.fullName = resolvedPName;
+                    try {
+                        localStorage.setItem('smart_patient_name', resolvedPName);
+                        localStorage.setItem('smart_user_name', resolvedPName);
+                    } catch(e) {}
                 }
+            } else {
+                try {
+                    localStorage.setItem('smart_patient_name', rawPName);
+                    localStorage.setItem('smart_user_name', rawPName);
+                } catch(e) {}
             }
         }
 
@@ -557,7 +566,7 @@ const PatientFlow = (function() {
         
         // الجلسة الأولى (اليوم 1) تكون متاحة ومفتوحة فوراً عند التسجيل ولا تُقفل أبداً
         if (!dailyLogs || dailyLogs.length === 0) {
-            return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0 };
+            return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, isDay1Pending: true };
         }
 
         const lastLog = dailyLogs[dailyLogs.length - 1];
