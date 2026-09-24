@@ -1468,7 +1468,13 @@ async function runDiagnosticAnalysisWithCheck() {
 window.runDiagnosticAnalysisWithCheck = runDiagnosticAnalysisWithCheck;
 
 // تنفيذ الفحص السريري وتوليد التقرير الطبي الملكي
+let isRunningDiagnosticAnalysis = false;
 async function runDiagnosticAnalysis() {
+    if (isRunningDiagnosticAnalysis) {
+        console.warn('runDiagnosticAnalysis already in progress, skipping duplicate call.');
+        return;
+    }
+    isRunningDiagnosticAnalysis = true;
     showRoyalReportLoadingModal();
     try {
         if (typeof SmartWatchdog !== 'undefined') {
@@ -1649,6 +1655,15 @@ async function runDiagnosticAnalysis() {
         // استخراج اسم وهاتف المريض الخاص بهذا الفحص حصرياً مع ربطه بالحساب الموثق المسجل حالياً
         const authPatientData = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
 
+        const verifiedPhone = (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') || (clinicalDialogueState && clinicalDialogueState.patientPhone) || '';
+        let pPhone = verifiedPhone || document.getElementById('patient-phone')?.value?.trim() || document.getElementById('sub-phone')?.value?.trim() || '';
+        if (!pPhone && authPatientData && (authPatientData.phone || authPatientData.originalPhone)) {
+            pPhone = authPatientData.phone || authPatientData.originalPhone;
+        }
+        if (!pPhone) {
+            pPhone = localStorage.getItem('smart_patient_phone') || '';
+        }
+
         let pName = '';
         if (clinicalDialogueState && clinicalDialogueState.patientName && !/^(?:الاسم|الآسم|الإسم|مراجع كريم|المراجع الكريم)$/i.test(clinicalDialogueState.patientName.trim())) {
             pName = clinicalDialogueState.patientName.trim();
@@ -1663,15 +1678,6 @@ async function runDiagnosticAnalysis() {
             pName = authPatientData.name || authPatientData.fullName;
         }
         if (!pName) pName = pPhone ? `مراجع (${pPhone.replace(/\D/g, '').slice(-4)})` : '';
-
-        const verifiedPhone = (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') || (clinicalDialogueState && clinicalDialogueState.patientPhone) || '';
-        let pPhone = verifiedPhone || document.getElementById('patient-phone')?.value?.trim() || document.getElementById('sub-phone')?.value?.trim() || '';
-        if (!pPhone && authPatientData && (authPatientData.phone || authPatientData.originalPhone)) {
-            pPhone = authPatientData.phone || authPatientData.originalPhone;
-        }
-        if (!pPhone) {
-            pPhone = localStorage.getItem('smart_patient_phone') || '';
-        }
 
         currentAssessmentData = {
             ...assessmentResult,
@@ -1849,8 +1855,8 @@ async function runDiagnosticAnalysis() {
                 displayDiagnosticReport(currentAssessmentData);
             }
         } catch (subErr) {}
-        goToStep(3);
     } finally {
+        isRunningDiagnosticAnalysis = false;
         setTimeout(() => {
             hideRoyalReportLoadingModal();
         }, 2200);
@@ -7132,7 +7138,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.11';
+const CURRENT_APP_VERSION = 'v30.12';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -7556,11 +7562,7 @@ function goToStep(stepNum) {
                                 currentAssessmentData = JSON.parse(storedAssess);
                                 if (currentAssessmentData && currentAssessmentData.primaryDiagnosis) {
                                     displayDiagnosticReport(currentAssessmentData);
-                                } else if (typeof runDiagnosticAnalysis === 'function') {
-                                    runDiagnosticAnalysis();
                                 }
-                            } else if (typeof runDiagnosticAnalysis === 'function') {
-                                runDiagnosticAnalysis();
                             }
                         } catch(e) {}
                     }

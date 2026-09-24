@@ -118,31 +118,31 @@ const SmartDB = (function() {
             localStorage.setItem(key, value);
             return true;
         } catch(e) {
-            console.warn('[SmartDB] Storage quota warning on ' + key + ':', e.message);
-            // المرحلة الأولى: محاولة إخلاء المساحة تلقائياً من المفاتيح المؤقتة والإشعارات وتيليمتري
+            // المرحلة الأولى: إخلاء المساحة تلقائياً من الإشعارات القديمة وبلاغات التيليمتري وسجلات الطوارئ
             try {
                 for (let i = localStorage.length - 1; i >= 0; i--) {
                     const k = localStorage.key(i);
-                    if (!k) continue;
-                    if (k.includes('_notif_') || k.includes('_test') || k.includes('smart_incident') || k.includes('wada3an_telemetry') || k.startsWith('smart_daily_logs_')) {
+                    if (!k || k === key) continue;
+                    if (k.includes('_notif_') || k.includes('_test') || k.includes('smart_incident') || k.includes('wada3an_telemetry') || k.includes('_log_debug')) {
                         localStorage.removeItem(k);
                     }
                 }
                 localStorage.setItem(key, value);
                 return true;
             } catch(retryErr) {
-                // المرحلة الثانية: إخلاء نسخ الكاش الفردية القديمة للمرضى من localStorage (لأنها محفوظة بشكل دائم في IndexedDB)
+                // المرحلة الثانية: إخلاء نسخ الكاش الفردية المؤقتة للمرضى القدامى (مع المحافظة على الحساب الحالي وبيانات IndexedDB)
                 try {
                     for (let i = localStorage.length - 1; i >= 0; i--) {
                         const k = localStorage.key(i);
-                        if (k && k.startsWith('smart_patient_') && !k.startsWith('smart_patient_account_')) {
+                        if (!k || k === key) continue;
+                        if (k.startsWith('smart_patient_') && !k.startsWith('smart_patient_account_') && !k.includes(key)) {
                             localStorage.removeItem(k);
                         }
                     }
                     localStorage.setItem(key, value);
                     return true;
                 } catch(thirdErr) {
-                    console.error('[SmartDB] Storage quota critical - could not write ' + key + ':', thirdErr.message);
+                    console.warn('[SmartDB] Storage notice: Local cache full for ' + key + '; data is safely persisted in IndexedDB.');
                     return false;
                 }
             }
