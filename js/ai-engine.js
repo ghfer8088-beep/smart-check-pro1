@@ -2090,72 +2090,13 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
         return arVoices[0];
     },
 
-    // تشغيل نطق صوتي فوري بنظام المتصفح الصوتي العربي المتقدم كشبكة أمان دائمة تضمن عدم الصمت إطلاقاً
+    // تم إيقاف وإلغاء أي نطق آلي مصطنع نهائياً لضمان الاعتماد الحصري على التسجيلات البشرية الجاهزة
     speakWithNaturalSystemVoice(text, onEndCallback) {
-        if (typeof window === 'undefined' || !('speechSynthesis' in window) || !text) {
-            if (onEndCallback) onEndCallback();
-            return;
-        }
-
-        try {
-            window.speechSynthesis.cancel();
-            const cleanText = this.sanitizeSpeechArabicText(text);
-            if (!cleanText || cleanText.length < 2) {
-                if (onEndCallback) onEndCallback();
-                return;
-            }
-
-            const persona = this.getSessionDoctorPersona();
-            const isFemale = (persona.id === 'sarah' || (persona.name && persona.name.includes('سارة')));
-            const bestVoice = this.getBestArabicVoice(isFemale);
-
-            const utterance = new SpeechSynthesisUtterance(cleanText);
-            if (bestVoice) {
-                utterance.voice = bestVoice;
-                utterance.lang = bestVoice.lang;
-            } else {
-                utterance.lang = 'ar-SA';
-            }
-
-            utterance.rate = 0.95; // وتيرة هادئة وطبيعية غير متسرعة
-            utterance.pitch = isFemale ? 1.05 : 0.95;
-
-            this.isSpeaking = true;
-            this.showLiveAudioPill();
-
-            let hasEnded = false;
-            const endHandler = () => {
-                if (hasEnded) return;
-                hasEnded = true;
-                this.isSpeaking = false;
-                this.hideLiveAudioPill();
-                if (onEndCallback) onEndCallback();
-            };
-
-            utterance.onend = endHandler;
-            utterance.onerror = (err) => {
-                console.warn('System voice playback event:', err);
-                endHandler();
-            };
-
-            // صمام أمان لإلغاء التعليق في بعض المتصفحات
-            const safetyDuration = Math.max(8000, cleanText.length * 100);
-            setTimeout(() => {
-                if (this.isSpeaking && !hasEnded) {
-                    endHandler();
-                }
-            }, safetyDuration);
-
-            window.speechSynthesis.speak(utterance);
-        } catch (e) {
-            console.warn('speakWithNaturalSystemVoice failed:', e);
-            this.isSpeaking = false;
-            this.hideLiveAudioPill();
-            if (onEndCallback) onEndCallback();
-        }
+        if (onEndCallback) onEndCallback();
+        return;
     },
 
-    // نطق نص تقرير الطبيب بصوت استوديو بشري حقيقي فائق النقاء أو الصوت العربي الطبيعي الفوري
+    // نطق نص تقرير الطبيب بصوت استوديو بشري حقيقي فائق النقاء
     async speakText(text, onEndCallback) {
         this.stopSpeaking();
         if (!text) {
@@ -2166,7 +2107,6 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
         try {
             this.unlockAudio();
             const chosenVoice = this.getStudioVoiceForSession();
-            // استخدام النص السريري مع تنظيف الرموز
             let clean = this.sanitizeSpeechArabicText(text);
             const sentences = clean.split(/(?<=[.!?؛؟\n])\s+/);
             if (sentences.length > 2 && clean.split(/\s+/).length > 35) {
@@ -2181,15 +2121,8 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
             console.warn('Gemini studio neural voice notice:', e);
         }
 
-        // إذا تعذر TTS الاستوديو، الانتقال السلس للصوت العربي الطبيعي للمتصفح لضمان نطق التوجيه دائماً
-        try {
-            this.speakWithNaturalSystemVoice(text, onEndCallback);
-        } catch (fallbackErr) {
-            console.warn('speakWithNaturalSystemVoice fallback notice:', fallbackErr);
-            this.isSpeaking = false;
-            this.hideLiveAudioPill();
-            if (onEndCallback) onEndCallback();
-        }
+        // في حال عدم توفر تسجيل بشري، نكتفي بالمتابعة الصامتة تماماً دون أي أصوات آلية
+        if (onEndCallback) onEndCallback();
     },
 
     // تشغيل نطق رسالة الشات بصوت الاستوديو الطبيعي
@@ -2230,7 +2163,7 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
 
     // تشغيل الصوت العربي الطبيعي الفوري
     speakWithSystemVoice(text, onEndCallback) {
-        this.speakWithNaturalSystemVoice(text, onEndCallback);
+        if (onEndCallback) onEndCallback();
     },
 
     stopSpeaking() {

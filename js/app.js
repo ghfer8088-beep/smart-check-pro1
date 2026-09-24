@@ -3979,14 +3979,22 @@ function playRoyalDuaaAudio() {
 }
 window.playRoyalDuaaAudio = playRoyalDuaaAudio;
 
-// تشغيل صوت د. سارة البشري الاستوديو بعد اختفاء نافذة الصدقة وتأكيد بدء الخطة
-function playSarahCharityIntroAudio(patientName = '') {
+// تشغيل صوت د. سارة البشري الاستوديو بعد اختفاء نافذة الصدقة وتأكيد بدء الخطة (مرة واحدة فقط دون تكرار)
+let _sarahCharityIntroLastTriggered = 0;
+function playSarahCharityIntroAudio(patientName = '', isUserManualClick = false) {
+    const now = Date.now();
+    // حماية تامة ضد التكرار: منع التشغيل التلقائي المكرر
+    if (!isUserManualClick && (now - _sarahCharityIntroLastTriggered < 4000)) {
+        return;
+    }
+    _sarahCharityIntroLastTriggered = now;
+
     const statusEl = document.getElementById('sarah-charity-voice-status');
     const bannerEl = document.getElementById('sarah-charity-voice-banner');
     if (bannerEl) bannerEl.style.display = 'flex';
 
-    // إذا كان الصوت الاستوديو يعمل بالفعل، نتيح الإيقاف المؤقت أو المتابعة
-    if (currentActiveStationAudio && !currentActiveStationAudio.paused && currentActiveStationAudio.currentTime > 0) {
+    // إذا كان الصوت الاستوديو يعمل بالفعل ونقر المراجع على الزر يدوياً، نتيح الإيقاف المؤقت أو المتابعة
+    if (isUserManualClick && currentActiveStationAudio && !currentActiveStationAudio.paused && currentActiveStationAudio.currentTime > 0) {
         try {
             currentActiveStationAudio.pause();
         } catch(e) {}
@@ -4005,6 +4013,7 @@ function playSarahCharityIntroAudio(patientName = '') {
             playStationAudio('recovery', onFinish);
         } else {
             const audio = new Audio('assets/audio/station_recovery.mp3');
+            audio.loop = false;
             currentActiveStationAudio = audio;
             audio.onended = onFinish;
             audio.onerror = onFinish;
@@ -5341,13 +5350,7 @@ function showRoyalDuaaModal(patientId = null) {
         if (window.SmartGuidance && typeof SmartGuidance.guideDuaaModal === 'function') {
             SmartGuidance.guideDuaaModal();
         }
-
-        // تشغيل قراءة وتلاوة الدعاء الصوتي لوالد المعالج بصوت نقي وطبيعي فور فتح النافذة
-        setTimeout(() => {
-            if (typeof playRoyalDuaaAudio === 'function') {
-                playRoyalDuaaAudio();
-            }
-        }, 150);
+        // لا يتم تشغيل أي صوت أثناء عرض رسالة الصدقة (الصوت البشري ينطلق حصراً بعد إغلاق أو اختفاء الرسالة)
     } else {
         if (typeof goToStep === 'function') goToStep(4);
         if (typeof renderStep4IndependentDay1 === 'function') renderStep4IndependentDay1(pId);
@@ -5705,7 +5708,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                     </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                    <button type="button" id="btn-replay-sarah-charity" onclick="playSarahCharityIntroAudio('${(sessionData.patient?.name || '').replace(/'/g, "\\'")}')" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(16, 185, 129, 0.3) 100%); border: 1.5px solid var(--primary-gold); color: #fef08a; padding: 8px 16px; border-radius: 20px; font-weight: 800; font-size: 0.86em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+                    <button type="button" id="btn-replay-sarah-charity" onclick="playSarahCharityIntroAudio('${(sessionData.patient?.name || '').replace(/'/g, "\\'")}', true)" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(16, 185, 129, 0.3) 100%); border: 1.5px solid var(--primary-gold); color: #fef08a; padding: 8px 16px; border-radius: 20px; font-weight: 800; font-size: 0.86em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
                         <span id="sarah-charity-voice-status">🔊 استمع لكلمة د. سارة</span>
                     </button>
                     <button type="button" onclick="showRoyalDuaaModal('${patientId}')" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #a7f3d0; padding: 8px 14px; border-radius: 20px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
@@ -7607,7 +7610,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.18';
+const CURRENT_APP_VERSION = 'v30.19';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -9775,6 +9778,7 @@ function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
     scheduleSafetyTimeout(45);
 
     const audio = new Audio();
+    audio.loop = false;
     currentActiveStationAudio = audio;
 
     audio._cancelPlayback = () => {
@@ -9800,6 +9804,7 @@ function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
         if (finished || isCancelled) return;
         // فحص وجود صيغة wav البديلة حصراً في حال لم يتم إلغاء الصوت
         const wavAudio = new Audio(wavPath);
+        wavAudio.loop = false;
         currentActiveStationAudio = wavAudio;
         wavAudio._cancelPlayback = () => {
             isCancelled = true;
@@ -9997,24 +10002,6 @@ function playClinicalAudioFallback(stationKey, onDone) {
     if (stationKey === 'recovery') {
         if (onDone) onDone();
         return;
-    }
-
-    if ('speechSynthesis' in window) {
-        let msg = '';
-        if (stationKey === 'exercise_start') msg = 'ابدأ التمرين بهدوء وتنفس بانتظام';
-        else if (stationKey === 'exercise_finish') msg = 'أحسنت! أتممت التمرين بنجاح';
-        else if (stationKey === 'session_cooldown') msg = 'أحسنت! تبدأ الآن فترة الاستشفاء لمدة 24 ساعة';
-        else if (stationKey === 'plan_complete') msg = 'مبارك! أتممت برنامج التعافي المنزلي بنجاح';
-
-        if (msg) {
-            const ut = new SpeechSynthesisUtterance(msg);
-            ut.lang = 'ar-SA';
-            ut.rate = 0.95;
-            ut.onend = () => { if (onDone) onDone(); };
-            ut.onerror = () => { if (onDone) onDone(); };
-            window.speechSynthesis.speak(ut);
-            return;
-        }
     }
 
     if (onDone) onDone();

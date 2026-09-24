@@ -386,6 +386,7 @@ const SmartGuidance = (function() {
             barEl.style.transform = '';
             barEl.style.opacity = '';
             barEl.style.pointerEvents = '';
+            barEl.style.zIndex = '100000005';
         }
         activeSubState = 'duaa_modal';
         const iconEl = document.getElementById('sticky-guidance-icon');
@@ -418,6 +419,10 @@ const SmartGuidance = (function() {
 
     function onDuaaModalClosed() {
         activeSubState = 'default';
+        if (!barEl) barEl = document.getElementById('sticky-patient-guidance-bar');
+        if (barEl) {
+            barEl.style.zIndex = '';
+        }
         const confirmBtn = document.getElementById('btn-confirm-duaa');
         if (confirmBtn) {
             confirmBtn.classList.remove('guidance-target-highlight');
