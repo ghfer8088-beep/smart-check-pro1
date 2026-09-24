@@ -3069,22 +3069,18 @@
         console.log(`📢 [CloudSync] Processing Global Version Broadcast: ${newVer}`);
         sessionStorage.setItem('scp_latest_remote_ver', newVer);
 
-        const acknowledgedVer = localStorage.getItem('smart_acknowledged_version');
+        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.14');
+        const lastReloaded = sessionStorage.getItem('scp_last_reloaded_ver');
 
-        // إذا كان الإصدار جديداً أو مطلوب إظهار الإشعار قسرياً لجميع المستخدمين
-        if (data.forcePrompt || (acknowledgedVer !== newVer && acknowledgedVer !== newVer.replace('v', ''))) {
-            if (typeof window.openGlobalVersionUpdateModal === 'function') {
-                window.openGlobalVersionUpdateModal(data);
-            } else if (typeof window.showGlobalVersionUpdateModal === 'function') {
-                window.showGlobalVersionUpdateModal(data);
-            } else if (typeof window._triggerAutoReloadCountdown === 'function') {
+        if (data.forcePrompt || (newVer !== curVer && newVer !== lastReloaded)) {
+            if (typeof window._triggerAutoReloadCountdown === 'function') {
                 window._triggerAutoReloadCountdown(newVer);
             }
         }
     }
 
     function broadcastAppVersionUpdate(options = {}) {
-        const ver = options.version || (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.13');
+        const ver = options.version || (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.14');
         const payload = {
             type: 'app_version_update',
             version: ver,

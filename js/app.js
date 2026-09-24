@@ -7197,7 +7197,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.13';
+const CURRENT_APP_VERSION = 'v30.14';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -7209,12 +7209,6 @@ function _triggerAutoReloadCountdown(targetVer = null) {
     const ver = targetVer || CURRENT_APP_VERSION;
     if (_autoReloadTriggered) return;
     if (sessionStorage.getItem('scp_last_reloaded_ver') === ver) return;
-
-    if (typeof openGlobalVersionUpdateModal === 'function') {
-        openGlobalVersionUpdateModal({ version: ver });
-        return;
-    }
-
     if (document.getElementById('auto-update-overlay')) return;
 
     _autoReloadTriggered = true;
@@ -8633,19 +8627,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         const verEl = document.getElementById('app-current-version-text');
         if (verEl) verEl.textContent = CURRENT_APP_VERSION;
-    } catch(e) {}
-
-    // 📢 عرض رسالة التحديث الملكية العالمية الشاملة في حال وجود إصدار جديد لم يعتمده المستخدم بعد
-    try {
-        const acknowledgedVer = localStorage.getItem('smart_acknowledged_version');
-        const isNotAcknowledged = window._pendingUpdateModalNotice || (acknowledgedVer !== CURRENT_APP_VERSION && acknowledgedVer !== CURRENT_APP_VERSION.replace('v', ''));
-        if (isNotAcknowledged) {
-            setTimeout(() => {
-                if (typeof openGlobalVersionUpdateModal === 'function') {
-                    openGlobalVersionUpdateModal({ version: CURRENT_APP_VERSION });
-                }
-            }, 1000);
-        }
     } catch(e) {}
 
     // تهيئة الاستماع اللحظي لتعديل توقيت الجلسات سحابياً من لوحة الإدارة
