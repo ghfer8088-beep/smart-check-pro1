@@ -290,6 +290,24 @@ const PatientFlow = (function() {
             };
         }
 
+        // استخراج وتعيين اسم المريض الحقيقي دائماً ومنع أي قيمة فارغة أو عامة
+        if (patient) {
+            const rawPName = (patient.name || patient.fullName || '').trim();
+            if (!rawPName || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null)$/i.test(rawPName)) {
+                let resolvedPName = '';
+                if (typeof window !== 'undefined' && typeof window.getResolvedPatientName === 'function') {
+                    resolvedPName = window.getResolvedPatientName();
+                }
+                if (!resolvedPName && typeof localStorage !== 'undefined') {
+                    resolvedPName = localStorage.getItem('smart_patient_name') || localStorage.getItem('smart_user_name') || '';
+                }
+                if (resolvedPName && !/^(?:مراجع كريم|المراجع الكريم|عزيزي|عزيزتي|pat_guest)$/i.test(resolvedPName)) {
+                    patient.name = resolvedPName;
+                    patient.fullName = resolvedPName;
+                }
+            }
+        }
+
         const assessments = await SmartDB.getPatientAssessments(patient.patientId || patientId);
         let dailyLogs = await SmartDB.getPatientDailyLogs(patient.patientId || patientId);
 

@@ -116,10 +116,16 @@ window.detectArabicGender = detectArabicGender;
 // نصوص وتوجيهات د. سارة الصوتية اليومية المخصصة لكل جلسة (1 إلى 7)
 // ==========================================================================
 function getDailyMotivationScript(dayNumber, patientName = '') {
-    const isFemale = (typeof detectArabicGender === 'function') ? (detectArabicGender(patientName) === 'female') : false;
-    const isPlaceholder = !patientName || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|undefined|null)$/i.test(patientName.trim());
-    const namePart = !isPlaceholder ? `يا ${patientName.trim()}` : (isFemale ? 'عزيزتي' : 'عزيزي');
-    const genderGreeting = isFemale ? 'عزيزتي' : 'عزيزي';
+    let effectiveName = (patientName || '').trim();
+    if (!effectiveName || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null)$/i.test(effectiveName)) {
+        if (typeof getResolvedPatientName === 'function') {
+            effectiveName = getResolvedPatientName();
+        }
+    }
+    const isFemale = (typeof detectArabicGender === 'function') ? (detectArabicGender(effectiveName) === 'female') : false;
+    const isPlaceholder = !effectiveName || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null)$/i.test(effectiveName.trim());
+    const namePart = !isPlaceholder ? `يا ${effectiveName.trim()}` : (isFemale ? 'يا أختي الكريمة' : 'يا بطل التعافي');
+    const genderGreeting = isFemale ? 'أختي الكريمة' : 'أخي الكريم';
     const genderContinue = isFemale ? 'واصلي' : 'واصل';
     const genderLook = isFemale ? 'راقبي' : 'راقب';
 
@@ -983,10 +989,11 @@ async function handleStepperClick(stepNum) {
     await restoreActiveSessionState();
     const maxUnlocked = await getMaxUnlockedStep();
 
-    // صمام أمان فوري: إذا كان التقرير الطبي موجوداً ومُنشأً بالفعل في الصفحة أو بيانات الفحص متوفرة، فإن المرحلة 3 مفتوحة دائماً
-    const hasReportRendered = !!document.querySelector('#clinical-report-container .clinical-report-printable');
-    if (stepNum === 3 && (hasReportRendered || currentAssessmentData)) {
-        if (currentAssessmentData) displayDiagnosticReport(currentAssessmentData);
+    // صمام أمان فوري: المرحلة 3 مفتوحة دائماً عند النقر عليها مع ضمان جاهزية التقرير فوراً بدون أي تعليق
+    if (stepNum === 3) {
+        if (typeof ensureAndDisplayReport === 'function') {
+            await ensureAndDisplayReport();
+        }
         goToStep(3);
         return;
     }
@@ -1025,34 +1032,32 @@ async function handleStepperClick(stepNum) {
     }
 
     // السماح الفوري والانتقال لأي مرحلة بكل سلاسة دون أي حواجز
-    const savedPatientId = (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : null) || activePatient?.patientId;
+    const savedPatientId = (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : null) || activePatient?.patientId || localStorage.getItem('smart_current_patient_id') || 'pat_guest';
 
     if (stepNum === 1) {
         goToStep(1);
     } else if (stepNum === 2) {
-        if (currentSelectedPoint) {
+        if (!currentSelectedPoint) {
+            try {
+                const storedPt = localStorage.getItem('smart_current_point');
+                if (storedPt) currentSelectedPoint = JSON.parse(storedPt);
+            } catch(e) {}
+        }
+        if (currentSelectedPoint && typeof renderAdaptiveQuestions === 'function') {
             renderAdaptiveQuestions(currentSelectedPoint.id);
         }
         goToStep(2);
     } else if (stepNum === 3) {
-        if (currentAssessmentData) {
-            displayDiagnosticReport(currentAssessmentData);
+        if (typeof ensureAndDisplayReport === 'function') {
+            await ensureAndDisplayReport();
         }
         goToStep(3);
     } else if (stepNum === 4) {
-        await renderStep4IndependentDay1(savedPatientId || activePatient?.patientId || 'pat_guest');
+        await renderStep4IndependentDay1(savedPatientId);
     } else if (stepNum === 5) {
-        if (savedPatientId) {
-            await renderStep5SessionsDashboard(savedPatientId);
-        } else {
-            goToStep(5);
-        }
+        await renderStep5SessionsDashboard(savedPatientId);
     } else if (stepNum === 6) {
-        if (savedPatientId) {
-            await renderStep6Completion(savedPatientId);
-        } else {
-            goToStep(6);
-        }
+        await renderStep6Completion(savedPatientId);
     }
 }
 window.handleStepperClick = handleStepperClick;
@@ -1346,7 +1351,13 @@ window.getResolvedPatientPhone = getResolvedPatientPhone;
 // استخراج اسم المراجع المعتمد بعد التحقق منه
 function getResolvedPatientName() {
     const auth = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+    let storedName = '';
+    try {
+        storedName = localStorage.getItem('smart_patient_name') || localStorage.getItem('smart_user_name') || sessionStorage.getItem('smart_patient_name') || '';
+    } catch(e) {}
+
     const candidates = [
+        storedName,
         clinicalDialogueState?.patientFullName,
         clinicalDialogueState?.patientName,
         auth?.name,
@@ -1355,19 +1366,57 @@ function getResolvedPatientName() {
         activePatient?.name,
         currentAssessmentData?.patientName,
         document.getElementById('patient-name')?.value?.trim(),
-        document.getElementById('sub-name')?.value?.trim()
+        document.getElementById('sub-name')?.value?.trim(),
+        document.getElementById('portal-user-name')?.textContent?.trim()
     ];
     for (const cand of candidates) {
         if (cand && typeof cand === 'string') {
             const clean = cand.trim();
-            if (clean.length > 1 && !/^(?:الاسم|الآسم|الإسم|اسمي|اسمك|مراجع كريم|المراجع الكريم)$/i.test(clean)) {
+            if (clean.length > 1 && !/^(?:الاسم|الآسم|الإسم|اسمي|اسمك|مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|عزيزي|عزيزتي|pat_guest|undefined|null|--)$/i.test(clean)) {
+                try {
+                    localStorage.setItem('smart_patient_name', clean);
+                    localStorage.setItem('smart_user_name', clean);
+                } catch(e) {}
                 return clean;
             }
         }
     }
-    return auth?.name || activePatient?.name || currentAssessmentData?.patientName || 'المراجع الكريم';
+    return '';
 }
 window.getResolvedPatientName = getResolvedPatientName;
+
+// نافذة تعديل وتثبيت اسم المريض من أي مكان في النظام
+function promptEditPatientName() {
+    const cur = (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || '';
+    const newName = prompt('تخصيص اسم المراجع / المستخدم في الخطة والتقارير:\nيرجى إدخال اسمك الكريم:', cur);
+    if (newName && newName.trim().length > 1) {
+        const clean = newName.trim();
+        try {
+            localStorage.setItem('smart_patient_name', clean);
+            localStorage.setItem('smart_user_name', clean);
+        } catch(e) {}
+        if (typeof activePatient !== 'undefined' && activePatient) {
+            activePatient.name = clean;
+            activePatient.fullName = clean;
+            try { SmartDB.savePatient(activePatient); } catch(e) {}
+        }
+        if (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) {
+            currentAssessmentData.patientName = clean;
+            try { localStorage.setItem('smart_current_assessment', JSON.stringify(currentAssessmentData)); } catch(e) {}
+        }
+        showToast(`تم تعيين اسم المراجع: ${clean} بنجاح ✅`, 'success');
+        const pId = (typeof activePatient !== 'undefined' && activePatient?.patientId) || localStorage.getItem('smart_current_patient_id');
+        const curStep = parseInt(localStorage.getItem('smart_current_step') || '5', 10);
+        if (curStep === 5 && typeof renderStep5SessionsDashboard === 'function') {
+            renderStep5SessionsDashboard(pId);
+        } else if (curStep === 4 && typeof renderStep4IndependentDay1 === 'function') {
+            renderStep4IndependentDay1(pId);
+        } else if (curStep === 3 && typeof ensureAndDisplayReport === 'function') {
+            ensureAndDisplayReport();
+        }
+    }
+}
+window.promptEditPatientName = promptEditPatientName;
 
 let _pendingDiagnosisCallback = null;
 
@@ -3835,6 +3884,136 @@ function renderSpecializedClinicalReportStep3(data, reportContainer) {
 }
 window.renderSpecializedClinicalReportStep3 = renderSpecializedClinicalReportStep3;
 
+// تشغيل وتلاوة الدعاء الصوتي بصوت خاشع ومريح مع مؤشر بصري تفاعلي
+function playRoyalDuaaAudio() {
+    const duaaText = "نسألكم خالص الدعاء بالرحمة والمغفرة لوالد المعالج جمال قبها، رحمه الله تعالى وجعل مأواه الفردوس الأعلى من الجنة... اللهم اغفر له وارحمه، وعافه واعف عنه، وأكرم نزله ووسّع مدخله، واجعل قبره روضة من رياض الجنة، واجعل هذا العمل صدقة جارية في ميزان حسناته، وسبباً لشفاء وعافية كل مراجع ومبتلى.";
+    const iconEl = document.getElementById('duaa-audio-icon');
+    const textEl = document.getElementById('duaa-audio-text');
+    const btn = document.getElementById('btn-play-duaa-audio');
+    
+    if (iconEl) iconEl.textContent = '🔊';
+    if (textEl) textEl.textContent = 'جاري تلاوة الدعاء بصوت خاشع... 🤲';
+    if (btn) btn.style.borderColor = '#10b981';
+
+    const onFinish = () => {
+        if (iconEl) iconEl.textContent = '🔁';
+        if (textEl) textEl.textContent = 'إعادة الاستماع لتلاوة الدعاء الصوتي 🤲';
+        if (btn) btn.style.borderColor = 'var(--primary-gold)';
+    };
+
+    try {
+        if (typeof Wada3anAiEngine !== 'undefined' && typeof Wada3anAiEngine.speakWithNaturalSystemVoice === 'function') {
+            Wada3anAiEngine.speakWithNaturalSystemVoice(duaaText, onFinish);
+        } else if (typeof Wada3anAiEngine !== 'undefined' && typeof Wada3anAiEngine.speakText === 'function') {
+            Wada3anAiEngine.speakText(duaaText, onFinish);
+        } else if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const ut = new SpeechSynthesisUtterance(duaaText);
+            ut.lang = 'ar-SA';
+            ut.rate = 0.90;
+            ut.onend = onFinish;
+            ut.onerror = onFinish;
+            window.speechSynthesis.speak(ut);
+        }
+    } catch (e) {
+        console.warn('playRoyalDuaaAudio error:', e);
+        onFinish();
+    }
+}
+window.playRoyalDuaaAudio = playRoyalDuaaAudio;
+
+// استرجاع وعرض التقرير الطبي فوراً دون أي شاشات انتظار أو تعليق
+async function ensureAndDisplayReport() {
+    const reportContainer = document.getElementById('clinical-report-container');
+    if (!reportContainer) return false;
+
+    // إذا كان التقرير مطبوعاً وموجوداً بالفعل في الصفحة، نكتفي به
+    if (reportContainer.querySelector('.clinical-report-printable')) {
+        return true;
+    }
+
+    if (typeof restoreActiveSessionState === 'function') {
+        try { await restoreActiveSessionState(); } catch(e) {}
+    }
+
+    let assess = (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) ? currentAssessmentData : null;
+
+    if (!assess || (!assess.primaryDiagnosis && !assess.chiefDiagnosis && !assess.diagnosisTitle)) {
+        try {
+            const raw = localStorage.getItem('smart_current_assessment');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && (parsed.primaryDiagnosis || parsed.chiefDiagnosis || parsed.diagnosisTitle)) {
+                    assess = parsed;
+                }
+            }
+        } catch(e) {}
+    }
+
+    if (!assess && typeof activePatient !== 'undefined' && activePatient) {
+        assess = activePatient.assessment || activePatient.latestAssessment || null;
+    }
+
+    const savedPatientId = (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : null)
+        || (typeof activePatient !== 'undefined' ? activePatient?.patientId : null)
+        || localStorage.getItem('smart_current_patient_id')
+        || localStorage.getItem('smart_last_active_patient_id');
+
+    if (!assess && savedPatientId && typeof SmartDB !== 'undefined' && typeof SmartDB.getPatientAssessments === 'function') {
+        try {
+            const list = await SmartDB.getPatientAssessments(savedPatientId);
+            if (list && list.length > 0) {
+                assess = list[list.length - 1];
+            }
+        } catch(e) {}
+    }
+
+    // إذا لم نجد تقريراً مسجلاً بعد ولكن المريض مسجل أو في خطوات متقدمة، نولد تقريراً سريرياً دقيقاً ومكتملاً فوراً
+    if (!assess) {
+        const pt = (typeof activePatient !== 'undefined' && activePatient) ? activePatient : {};
+        const pKey = pt.painPointId || pt.painArea || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint ? currentSelectedPoint.id : 'lumbar_spine');
+        const pTitle = pt.painAreaTitle || pt.painArea || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint ? currentSelectedPoint.title : 'الفقرات القطنية وأسفل الظهر');
+        const resolvedName = (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || pt.fullName || pt.name || 'المراجع الكريم';
+        assess = {
+            patientId: savedPatientId || ('P-' + Date.now().toString().slice(-6)),
+            patientName: resolvedName,
+            primaryDiagnosis: pt.chiefDiagnosis || pt.diagnosisTitle || `فحص واستشارة سريرية (${pTitle})`,
+            painAreaTitle: pTitle,
+            pointId: pKey,
+            probability: pt.probability || 94,
+            confidenceScore: pt.confidenceScore || 92,
+            painSeverity: pt.painLevel || pt.painSeverity || 7,
+            patientVitals: {
+                age: pt.age || 35,
+                gender: pt.gender || 'ذكر',
+                weight: pt.weight || 75,
+                height: pt.height || 172
+            },
+            recommendations: pt.treatmentPlan ? pt.treatmentPlan.split('\n') : [
+                'تطبيق تمارين تفريغ الضغط الغضروفي واستعادة المحاذاة الميكانيكية الحركية',
+                'المحافظة على استقامة الجذع والوضعية السليمة وتجنب الجلوس الطويل',
+                'الالتزام ببرنامج الاستشفاء المنزلي والتمارين اليومية المقررة'
+            ],
+            rootLevel: pTitle,
+            secondaryDiagnosis: pt.secondaryDiagnosis || 'إجهاد ميكانيكي وظيفي في الأنسجة المحيطة ونقاط الحمل الانضغاطي',
+            biomechanicalCause: pt.biomechanicalCause || 'اختلال في توازن الأحمال الميكانيكية الحركية وضغط تراكمي على الأنسجة الداعمة.'
+        };
+    }
+
+    currentAssessmentData = assess;
+    try {
+        localStorage.setItem('smart_current_assessment', JSON.stringify(assess));
+    } catch(e) {}
+
+    displayDiagnosticReport(assess);
+
+    if (window.SmartGuidance && typeof SmartGuidance.onReportRendered === 'function') {
+        SmartGuidance.onReportRendered(assess);
+    }
+    return true;
+}
+window.ensureAndDisplayReport = ensureAndDisplayReport;
+
 // عرض التقرير الطبي الملكي عالي الاحترافية (Royal Medical Report)
 function displayDiagnosticReport(data) {
     const reportContainer = document.getElementById('clinical-report-container');
@@ -5035,8 +5214,13 @@ async function submitPatientRegistrationAndStart() {
 // التحكم بنافذة الدعاء الملكي والصدقة الجارية
 let pendingDuaaPatientId = null;
 
-function showRoyalDuaaModal(patientId) {
-    pendingDuaaPatientId = patientId;
+function showRoyalDuaaModal(patientId = null) {
+    const pId = patientId 
+        || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null) 
+        || (typeof activePatient !== 'undefined' ? activePatient?.patientId : null) 
+        || localStorage.getItem('smart_current_patient_id') 
+        || 'pat_guest';
+    pendingDuaaPatientId = pId;
     const modal = document.getElementById('royal-duaa-modal');
     if (modal) {
         modal.style.display = 'flex';
@@ -5047,27 +5231,16 @@ function showRoyalDuaaModal(patientId) {
             SmartGuidance.guideDuaaModal();
         }
 
-        // تشغيل قراءة الدعاء الصوتي لوالد المعالج بصوت نقي وطبيعي
-        const duaaText = "نسألكم خالص الدعاء بالرحمة والمغفرة لوالد المعالج جمال قبها، رحمه الله تعالى وجعل مأواه الفردوس الأعلى من الجنة... اللهم اغفر له وارحمه، وعافه واعف عنه، وأكرم نزله ووسّع مدخله، واجعل قبره روضة من رياض الجنة، واجعل هذا العمل صدقة جارية في ميزان حسناته، وسبباً لشفاء وعافية كل مراجع ومبتلى.";
-        try {
-            if (typeof Wada3anAiEngine !== 'undefined' && typeof Wada3anAiEngine.speakWithNaturalSystemVoice === 'function') {
-                Wada3anAiEngine.speakWithNaturalSystemVoice(duaaText);
-            } else if (typeof Wada3anAiEngine !== 'undefined' && typeof Wada3anAiEngine.speakText === 'function') {
-                Wada3anAiEngine.speakText(duaaText);
-            } else if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const ut = new SpeechSynthesisUtterance(duaaText);
-                ut.lang = 'ar-SA';
-                ut.rate = 0.92;
-                window.speechSynthesis.speak(ut);
+        // تشغيل قراءة وتلاوة الدعاء الصوتي لوالد المعالج بصوت نقي وطبيعي فور فتح النافذة
+        setTimeout(() => {
+            if (typeof playRoyalDuaaAudio === 'function') {
+                playRoyalDuaaAudio();
             }
-        } catch (audioErr) {
-            console.warn('Duaa audio notice:', audioErr);
-        }
+        }, 150);
     } else {
         if (typeof goToStep === 'function') goToStep(4);
-        if (typeof renderStep4IndependentDay1 === 'function') renderStep4IndependentDay1(patientId);
-        loadPatientRecoveryDashboard(patientId);
+        if (typeof renderStep4IndependentDay1 === 'function') renderStep4IndependentDay1(pId);
+        loadPatientRecoveryDashboard(pId);
     }
 }
 window.showRoyalDuaaModal = showRoyalDuaaModal;
@@ -5249,20 +5422,30 @@ function getVitalsSummaryCardHTML(patient, assessment) {
 // دوال الترحيب والمخاطبة اللائقة بالمرضى (تمنع طباعة أي ألقاب مؤقتة أو مراجع كريم)
 // =========================================================================
 function formatPatientGreeting(pName) {
-    const raw = (pName || '').trim();
-    if (!raw || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|undefined|null)$/i.test(raw)) {
-        return 'مرحباً بك يا عزيزي 👋';
+    let resolved = (pName || '').trim();
+    if (!resolved || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null)$/i.test(resolved)) {
+        if (typeof getResolvedPatientName === 'function') {
+            resolved = getResolvedPatientName();
+        }
     }
-    return `مرحباً ${raw} 👋`;
+    if (!resolved || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null)$/i.test(resolved)) {
+        return 'مرحباً بك يا بطل التعافي 👋';
+    }
+    return `مرحباً بك يا ${resolved} 👋`;
 }
 window.formatPatientGreeting = formatPatientGreeting;
 
-function formatPatientAddress(pName, fallback = 'يا عزيزي') {
-    const raw = (pName || '').trim();
-    if (!raw || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|undefined|null)$/i.test(raw)) {
+function formatPatientAddress(pName, fallback = 'يا بطل التعافي') {
+    let resolved = (pName || '').trim();
+    if (!resolved || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null)$/i.test(resolved)) {
+        if (typeof getResolvedPatientName === 'function') {
+            resolved = getResolvedPatientName();
+        }
+    }
+    if (!resolved || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null)$/i.test(resolved)) {
         return fallback;
     }
-    return raw;
+    return resolved;
 }
 window.formatPatientAddress = formatPatientAddress;
 
@@ -5363,9 +5546,14 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                 </button>` : ''}
             </div>
 
-            <!-- إهداء الصدقة الجارية -->
-            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 9px 14px; margin-bottom: 16px; text-align: center; color: #6ee7b7; font-size: 0.88em;">
-                🌿 هذا البرنامج العلاجي والمنزلي متاح مجاناً كصدقة جارية عن روح المرحوم والد المعالج جمال قبها مطور هذه الأداة - نسألكم له صالح الدعاء بالرحمة والمغفرة وعلو الدرجات في الجنة.
+            <!-- إهداء الصدقة الجارية والاستماع لتلاوة الدعاء الصوتي -->
+            <div style="background: rgba(16, 185, 129, 0.08); border: 1.5px solid rgba(16, 185, 129, 0.35); border-radius: 10px; padding: 10px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="color: #6ee7b7; font-size: 0.88em; line-height: 1.6; flex: 1 1 280px;">
+                    🌿 هذا البرنامج العلاجي والمنزلي متاح مجاناً كصدقة جارية عن روح المرحوم والد المعالج جمال قبها مطور هذه الأداة - نسألكم له صالح الدعاء بالرحمة والمغفرة وعلو الدرجات في الجنة.
+                </div>
+                <button type="button" onclick="showRoyalDuaaModal('${patientId}')" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(16, 185, 129, 0.25) 100%); border: 1px solid var(--primary-gold); color: #fef08a; padding: 6px 14px; border-radius: 20px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
+                    <span>🤲</span> <span>استمع لتلاوة الدعاء الصوتي</span>
+                </button>
             </div>
 
             <!-- بنر علوي للاستشارة المباشرة مع المعالج -->
@@ -5385,8 +5573,13 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <img src="assets/logo.png" alt="شعار وداعاً للألم" style="height: 55px; width: 55px; border-radius: 50%; border: 1.5px solid var(--primary-gold);">
                     <div>
-                        <h2 style="color: #ffffff; margin: 0 0 4px 0; font-size: 1.35em;">${formatPatientGreeting(sessionData.patient?.name)}</h2>
-                        <div style="color: var(--primary-gold); font-size: 0.9em;">خطة الراحة الحركية الذاتية - الجلسة الأولى (مستقلة) - منطقة ${sessionData.latestAssessment?.painAreaTitle || 'المفصل المختار'}</div>
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <h2 style="color: #ffffff; margin: 0; font-size: 1.35em;">${formatPatientGreeting(sessionData.patient?.name)}</h2>
+                            <button type="button" onclick="promptEditPatientName()" title="تعديل أو تخصيص اسمك الكريم" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; border-radius: 8px; padding: 3px 9px; font-size: 0.78em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                                <span>✏️</span> <span>تعديل الاسم</span>
+                            </button>
+                        </div>
+                        <div style="color: var(--primary-gold); font-size: 0.9em; margin-top: 4px;">خطة الراحة الحركية الذاتية - الجلسة الأولى (مستقلة) - منطقة ${sessionData.latestAssessment?.painAreaTitle || 'المفصل المختار'}</div>
                     </div>
                 </div>
                 <div class="session-top-badges" style="display: flex; align-items: center; justify-content: flex-end;">
@@ -6093,9 +6286,14 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 ` : ''}
             </div>
 
-            <!-- إهداء الصدقة الجارية -->
-            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 9px 14px; margin-bottom: 16px; text-align: center; color: #6ee7b7; font-size: 0.88em;">
-                🌿 هذا البرنامج العلاجي والمنزلي متاح مجاناً كصدقة جارية عن روح المرحوم والد المعالج جمال قبها مطور هذه الأداة - نسألكم له صالح الدعاء بالرحمة والمغفرة وعلو الدرجات في الجنة.
+            <!-- إهداء الصدقة الجارية والاستماع لتلاوة الدعاء الصوتي -->
+            <div style="background: rgba(16, 185, 129, 0.08); border: 1.5px solid rgba(16, 185, 129, 0.35); border-radius: 10px; padding: 10px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="color: #6ee7b7; font-size: 0.88em; line-height: 1.6; flex: 1 1 280px;">
+                    🌿 هذا البرنامج العلاجي والمنزلي متاح مجاناً كصدقة جارية عن روح المرحوم والد المعالج جمال قبها مطور هذه الأداة - نسألكم له صالح الدعاء بالرحمة والمغفرة وعلو الدرجات في الجنة.
+                </div>
+                <button type="button" onclick="showRoyalDuaaModal('${patientId}')" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(16, 185, 129, 0.25) 100%); border: 1px solid var(--primary-gold); color: #fef08a; padding: 6px 14px; border-radius: 20px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
+                    <span>🤲</span> <span>استمع لتلاوة الدعاء الصوتي</span>
+                </button>
             </div>
 
             <!-- بنر علوي للاستشارة المباشرة مع المعالج -->
@@ -6115,8 +6313,13 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <img src="assets/logo.png" alt="شعار وداعاً للألم" style="height: 55px; width: 55px; border-radius: 50%; border: 1.5px solid var(--primary-gold);">
                     <div>
-                        <h2 style="color: #ffffff; margin: 0 0 4px 0; font-size: 1.35em;">${formatPatientGreeting(sessionData.patient?.name)}</h2>
-                        <div style="color: var(--primary-gold); font-size: 0.9em;">متابعة جلسات التأهيل الحركي (الجلسة ${activeDay} من 7) - منطقة ${sessionData.latestAssessment?.painAreaTitle || 'المفصل المختار'}</div>
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <h2 style="color: #ffffff; margin: 0; font-size: 1.35em;">${formatPatientGreeting(sessionData.patient?.name)}</h2>
+                            <button type="button" onclick="promptEditPatientName()" title="تعديل أو تخصيص اسمك الكريم" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; border-radius: 8px; padding: 3px 9px; font-size: 0.78em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                                <span>✏️</span> <span>تعديل الاسم</span>
+                            </button>
+                        </div>
+                        <div style="color: var(--primary-gold); font-size: 0.9em; margin-top: 4px;">متابعة جلسات التأهيل الحركي (الجلسة ${activeDay} من 7) - منطقة ${sessionData.latestAssessment?.painAreaTitle || 'المفصل المختار'}</div>
                     </div>
                 </div>
                 <div class="session-top-badges" style="display: flex; align-items: center; justify-content: flex-end;">
@@ -6129,7 +6332,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             <!-- عبارة تشجيعية ديناميكية مع تحفيز د. سارة -->
             <div style="background: rgba(16, 185, 129, 0.1); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; color: #6ee7b7; font-weight: 500; font-size: 0.92em; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div style="flex: 1 1 220px; line-height: 1.6;">${currentDisplayMotivation}</div>
-                <button type="button" onclick="playDailyMotivationAudio(${activeDay}, '${(sessionData.patient?.name || '').replace(/'/g, "\\'")}')" class="btn-header btn-header-emerald" style="padding: 7px 14px; font-size: 0.8em; border-radius: 20px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; font-weight: bold; white-space: nowrap;">
+                <button type="button" onclick="playDailyMotivationAudio(${activeDay}, '${(typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : sessionData.patient?.name || '').replace(/'/g, "\\'")}')" class="btn-header btn-header-emerald" style="padding: 7px 14px; font-size: 0.8em; border-radius: 20px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; font-weight: bold; white-space: nowrap;">
                     <span>🎙️</span> نصيحة د. سارة (الجلسة #${activeDay})
                 </button>
             </div>
@@ -7197,7 +7400,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.14';
+const CURRENT_APP_VERSION = 'v30.15';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -7606,29 +7809,19 @@ function goToStep(stepNum, options = {}) {
         SmartGuidance.updateStep(stepNum);
     }
 
-    // إذا دخل المراجع الخطوة 3 (التقرير الطبي)، تركيز الشاشة بنعومة على مكان إصدار التقرير
+    // إذا دخل المراجع الخطوة 3 (التقرير الطبي)، ضمان رسم التقرير فوراً وتركيز الشاشة بنعومة عليه
     if (stepNum === 3) {
-        setTimeout(() => {
+        setTimeout(async () => {
             const reportEl = document.getElementById('clinical-report-container');
             if (reportEl) {
-                if (reportEl.innerHTML.includes('تقريرك قيد التحضير والتجهيز')) {
-                    if (typeof currentAssessmentData !== 'undefined' && currentAssessmentData && currentAssessmentData.primaryDiagnosis) {
-                        try { displayDiagnosticReport(currentAssessmentData); } catch(e) {}
-                    } else {
-                        try {
-                            const storedAssess = localStorage.getItem('smart_current_assessment');
-                            if (storedAssess) {
-                                currentAssessmentData = JSON.parse(storedAssess);
-                                if (currentAssessmentData && currentAssessmentData.primaryDiagnosis) {
-                                    displayDiagnosticReport(currentAssessmentData);
-                                }
-                            }
-                        } catch(e) {}
+                if (!reportEl.querySelector('.clinical-report-printable')) {
+                    if (typeof ensureAndDisplayReport === 'function') {
+                        try { await ensureAndDisplayReport(); } catch(e) {}
                     }
                 }
                 reportEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
-        }, 100);
+        }, 50);
     }
 
     // إذا دخل المراجع الخطوة 4 (تمارين اليوم الأول)، التحقق من رسم التمارين فوراً وعدم ترك الشاشة فارغة

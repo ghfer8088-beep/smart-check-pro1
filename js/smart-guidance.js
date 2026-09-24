@@ -334,6 +334,12 @@ const SmartGuidance = (function() {
         const isLoadingModalVisible = loadingModal && loadingModal.style.display !== 'none' && window.getComputedStyle(loadingModal).display !== 'none';
 
         if (!hasReport || isLoadingModalVisible) {
+            // تشغيل التقرير تلقائياً إذا كان المريض منجزاً لمراحل أو التقرير متوفراً
+            if (!isLoadingModalVisible && typeof window.ensureAndDisplayReport === 'function') {
+                window.ensureAndDisplayReport().then(ok => {
+                    if (ok) renderStep3Bar();
+                }).catch(() => {});
+            }
             // حالة التحضير: الشاشة مركزة على مكان إصدار التقرير والانتظار
             activeSubState = 'step3_loading';
             updateStageFlowBanner(3, 1);
@@ -350,11 +356,24 @@ const SmartGuidance = (function() {
             updateStageFlowBanner(3, 2);
             if (iconEl) iconEl.textContent = '📋';
             if (subEl) subEl.textContent = 'المرحلة 3 من 6: تشخيصك الطبي جاهز ومكتمل';
-            if (mainEl) mainEl.textContent = 'بعد قراءة كافة البيانات يرجى الضغط على زر تفعيل الخطة المجانية';
 
-            btn.className = 'sticky-guidance-action-btn state-ready';
-            if (btnIcon) btnIcon.textContent = '🚀';
-            if (btnText) btnText.textContent = 'تفعيل الخطة المجانية وبدء اليوم الأول ❯';
+            const maxStep = (typeof getMaxUnlockedStepSync === 'function' ? getMaxUnlockedStepSync() : 1);
+            if (maxStep >= 5) {
+                if (mainEl) mainEl.textContent = 'يمكنك استعراض تقريرك الطبي في أي وقت، أو العودة لمتابعة جلساتك العلاجية.';
+                btn.className = 'sticky-guidance-action-btn state-ready';
+                if (btnIcon) btnIcon.textContent = '➡️';
+                if (btnText) btnText.textContent = 'العودة لمتابعة الجلسات (المرحلة 5) ❯';
+            } else if (maxStep >= 4) {
+                if (mainEl) mainEl.textContent = 'تم تفعيل خطتك بنجاح، يمكنك متابعة تمارين اليوم الأول.';
+                btn.className = 'sticky-guidance-action-btn state-ready';
+                if (btnIcon) btnIcon.textContent = '➡️';
+                if (btnText) btnText.textContent = 'متابعة تمارين اليوم الأول (المرحلة 4) ❯';
+            } else {
+                if (mainEl) mainEl.textContent = 'بعد قراءة كافة البيانات يرجى الضغط على زر تفعيل الخطة المجانية';
+                btn.className = 'sticky-guidance-action-btn state-ready';
+                if (btnIcon) btnIcon.textContent = '🚀';
+                if (btnText) btnText.textContent = 'تفعيل الخطة المجانية وبدء اليوم الأول ❯';
+            }
         }
     }
 
@@ -790,6 +809,23 @@ const SmartGuidance = (function() {
             }
 
             case 3: {
+                const maxStep = (typeof getMaxUnlockedStepSync === 'function' ? getMaxUnlockedStepSync() : 1);
+                const savedPatientId = (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : null) || (typeof activePatient !== 'undefined' ? activePatient?.patientId : null) || localStorage.getItem('smart_current_patient_id') || 'pat_guest';
+                if (maxStep >= 5) {
+                    if (typeof renderStep5SessionsDashboard === 'function') {
+                        renderStep5SessionsDashboard(savedPatientId);
+                    } else if (typeof goToStep === 'function') {
+                        goToStep(5);
+                    }
+                    break;
+                } else if (maxStep >= 4) {
+                    if (typeof renderStep4IndependentDay1 === 'function') {
+                        renderStep4IndependentDay1(savedPatientId);
+                    } else if (typeof goToStep === 'function') {
+                        goToStep(4);
+                    }
+                    break;
+                }
                 // التقرير الطبي: تفعيل الخطة المجانية فوراً وبدء اليوم الأول بدون أي تعطيل أو شروط
                 if (typeof window.activateRecoveryPlanInstantly === 'function') {
                     window.activateRecoveryPlanInstantly();

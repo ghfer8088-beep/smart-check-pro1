@@ -28,11 +28,11 @@
     </script>
 
     <!-- منظومة الأمان السيبراني وحماية الملكية الفكرية وقفل النطاق -->
-    <script src="js/security-shield.js?v=30.14"></script>
-    <script src="js/system-watchdog.js?v=30.14"></script>
+    <script src="js/security-shield.js?v=30.15"></script>
+    <script src="js/system-watchdog.js?v=30.15"></script>
 
     <!-- وسوم تطبيق الويب التقدمي PWA والأيقونات الرسمية -->
-    <link rel="manifest" href="manifest.json?v=30.14">
+    <link rel="manifest" href="manifest.json?v=30.15">
     <link rel="icon" type="image/png" href="assets/logo.png">
     <link rel="shortcut icon" href="assets/logo.png">
     <link rel="apple-touch-icon" href="assets/logo.png">
@@ -44,11 +44,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=30.14">
+    <link rel="stylesheet" href="css/style.css?v=30.15">
     <script>
         // التحقق من وصول أحدث إصدار وبث التحديث عالمياً لجميع الأجهزة
         (function() {
-            const APP_TARGET_VER = '30.14';
+            const APP_TARGET_VER = '30.15';
             window.APP_TARGET_VER = APP_TARGET_VER;
         })();
     </script>
@@ -149,7 +149,7 @@
                 <div class="brand-version-badge" onclick="event.stopPropagation(); if(typeof forceAppUpdateAndClearCache==='function') forceAppUpdateAndClearCache();" title="انقر لتحديث وتنشيط التطبيق فوراً" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72em; color: #94a3b8; margin-top: 1px; cursor: pointer; user-select: none;">
                     <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                     <span>الإصدار:</span>
-                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v30.14</strong>
+                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v30.15</strong>
                 </div>
             </div>
         </div>
@@ -799,7 +799,7 @@
                     <div style="width: 80%; height: 6px; background: #1e293b; border-radius: 3px; margin: 0 auto 20px auto; overflow: hidden;">
                         <div style="height: 100%; width: 60%; background: linear-gradient(90deg, #d4af37, #10b981); border-radius: 3px; animation: pulse 1.2s infinite;"></div>
                     </div>
-                    <button type="button" onclick="if(typeof currentAssessmentData!=='undefined'&&currentAssessmentData){displayDiagnosticReport(currentAssessmentData);}else if(typeof runDiagnosticAnalysis==='function'){runDiagnosticAnalysis();}" style="background: linear-gradient(135deg, var(--primary-gold) 0%, #b8860b 100%); color: #0a0e14; border: none; padding: 10px 24px; border-radius: 20px; font-weight: 800; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);">
+                    <button type="button" onclick="if(typeof ensureAndDisplayReport==='function'){ensureAndDisplayReport();}else if(typeof currentAssessmentData!=='undefined'&&currentAssessmentData){displayDiagnosticReport(currentAssessmentData);}else if(typeof runDiagnosticAnalysis==='function'){runDiagnosticAnalysis();}" style="background: linear-gradient(135deg, var(--primary-gold) 0%, #b8860b 100%); color: #0a0e14; border: none; padding: 10px 24px; border-radius: 20px; font-weight: 800; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);">
                         🔄 عرض التقرير والتشخيص الآن
                     </button>
                 </div>
@@ -1453,6 +1453,14 @@
                 « اللهم اغفر له وارحمه، وعافه واعفُ عنه، وأكرم نزله ووسّع مدخله، واجعل قبره روضةً من رياض الجنة، واجعل هذا العمل صدقة جارية في ميزان حسناته، وسبباً لشفاء وعافية كل مراجع ومبتلى »
             </p>
 
+            <!-- زر تشغيل وتلاوة الدعاء الصوتي لوالد المعالج والاستماع المباشر -->
+            <div style="margin: 0 auto 18px auto; max-width: 440px;">
+                <button type="button" id="btn-play-duaa-audio" onclick="playRoyalDuaaAudio()" style="width: 100%; background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(16, 185, 129, 0.3) 100%); border: 1.5px solid var(--primary-gold); color: #fef08a; padding: 12px 20px; border-radius: 12px; font-weight: 800; font-size: 1.02em; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); transition: all 0.3s ease;">
+                    <span id="duaa-audio-icon" style="font-size: 1.25em;">🔊</span>
+                    <span id="duaa-audio-text">استمع لتلاوة الدعاء الصوتي بالرحمة والمغفرة 🤲</span>
+                </button>
+            </div>
+
             <button type="button" id="btn-confirm-duaa" onclick="confirmRoyalDuaaAndProceed()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; padding: 15px 36px; border-radius: 10px; font-weight: 900; font-size: 1.1em; cursor: pointer; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.45); display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; max-width: 440px; transition: transform 0.2s;">
                 <span>🤲 آمين يارب العالمين.. بدء خطة التعافي (اليوم الأول)</span>
             </button>
@@ -1825,21 +1833,21 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=30.14"></script>
-    <script src="js/cloud-sync.js?v=30.14"></script>
-    <script src="js/geo-tracker.js?v=30.14"></script>
-    <script src="js/database.js?v=30.14"></script>
-    <script src="js/exercise-image-studio.js?v=30.14"></script>
-    <script src="js/exercises-db.js?v=30.14"></script>
-    <script src="js/diagnostic-engine.js?v=30.14"></script>
-    <script src="js/audio-pacer.js?v=30.14"></script>
-    <script src="js/patient-flow.js?v=30.14"></script>
-    <script src="js/admin-engine.js?v=30.14"></script>
-    <script src="js/ai-config.js?v=30.14"></script>
-    <script src="js/ai-engine.js?v=30.14"></script>
-    <script src="js/app.js?v=30.14"></script>
-    <script src="js/text-editor.js?v=30.14"></script>
-    <script src="js/smart-guidance.js?v=30.14"></script>
+    <script src="js/mqtt.min.js?v=30.15"></script>
+    <script src="js/cloud-sync.js?v=30.15"></script>
+    <script src="js/geo-tracker.js?v=30.15"></script>
+    <script src="js/database.js?v=30.15"></script>
+    <script src="js/exercise-image-studio.js?v=30.15"></script>
+    <script src="js/exercises-db.js?v=30.15"></script>
+    <script src="js/diagnostic-engine.js?v=30.15"></script>
+    <script src="js/audio-pacer.js?v=30.15"></script>
+    <script src="js/patient-flow.js?v=30.15"></script>
+    <script src="js/admin-engine.js?v=30.15"></script>
+    <script src="js/ai-config.js?v=30.15"></script>
+    <script src="js/ai-engine.js?v=30.15"></script>
+    <script src="js/app.js?v=30.15"></script>
+    <script src="js/text-editor.js?v=30.15"></script>
+    <script src="js/smart-guidance.js?v=30.15"></script>
 
     <script>
         // مؤشر المراجعين المتفاعلين أونلاين الآن (يتراوح عشوائياً بديناميكية طبيعية بين 40 و 99)
