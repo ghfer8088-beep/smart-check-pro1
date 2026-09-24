@@ -2181,11 +2181,15 @@ ${(history || []).map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المرا�
             console.warn('Gemini studio neural voice notice:', e);
         }
 
-        // إذا فشل TTS البشري: إكمال بصمت - لا صوت آلي
-        console.info('[TTS] تعذر توليد الصوت البشري - إكمال بصمت');
-        this.isSpeaking = false;
-        this.hideLiveAudioPill();
-        if (onEndCallback) onEndCallback();
+        // إذا تعذر TTS الاستوديو، الانتقال السلس للصوت العربي الطبيعي للمتصفح لضمان نطق التوجيه دائماً
+        try {
+            this.speakWithNaturalSystemVoice(text, onEndCallback);
+        } catch (fallbackErr) {
+            console.warn('speakWithNaturalSystemVoice fallback notice:', fallbackErr);
+            this.isSpeaking = false;
+            this.hideLiveAudioPill();
+            if (onEndCallback) onEndCallback();
+        }
     },
 
     // تشغيل نطق رسالة الشات بصوت الاستوديو الطبيعي

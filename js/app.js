@@ -4780,6 +4780,7 @@ async function activateRecoveryPlanInstantly() {
             painArea: resolvedPainTitle,
             painAreaTitle: resolvedPainTitle,
             selectedPoint: resolvedPainTitle,
+            painPointId: curAssessment?.pointId || (typeof currentSelectedPoint !== 'undefined' ? (currentSelectedPoint?.id || currentSelectedPoint?.region) : '') || '',
             chiefDiagnosis: curAssessment?.primaryDiagnosis?.title || curAssessment?.primaryDiagnosis || curAssessment?.title || 'تشخيص سريري متكامل',
             diagnosisTitle: curAssessment?.primaryDiagnosis?.title || curAssessment?.primaryDiagnosis || curAssessment?.title || 'تشخيص سريري متكامل',
             treatmentPlan: cleanTreatmentPlan,
@@ -4813,41 +4814,8 @@ async function activateRecoveryPlanInstantly() {
             SmartDB.setCurrentSessionPatientId(patientId);
         }
 
-        // 2. إغلاق أي نافذة دعاء أو مودال معلق
-        const duaaModal = document.getElementById('royal-duaa-modal');
-        if (duaaModal) duaaModal.style.display = 'none';
-
-        // 3. تأمين ظهور شريط التوجيه الطبي وتأهيله للخطوة 4
-        const stickyBar = document.getElementById('sticky-patient-guidance-bar');
-        if (stickyBar) {
-            stickyBar.style.transform = 'translateY(0)';
-        }
-
-        // 4. الانتقال الحتمي والفوري للخطوة 4 (تمارين اليوم الأول) دون أي تأخير
-        if (typeof goToStep === 'function') {
-            goToStep(4);
-        }
-        if (window.SmartGuidance && typeof SmartGuidance.updateStep === 'function') {
-            SmartGuidance.updateStep(4);
-        }
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-
-        // 5. رسم وتحميل تمارين اليوم الأول فوراً
-        if (typeof renderStep4IndependentDay1 === 'function') {
-            renderStep4IndependentDay1(patientId, null);
-        }
-        if (typeof loadPatientRecoveryDashboard === 'function') {
-            loadPatientRecoveryDashboard(patientId).catch(err => console.warn('loadPatientRecoveryDashboard non-fatal:', err));
-        }
-
-        // 6. إظهار الإشعار الملكي المبهج بالدعاء والتفعيل
-        if (typeof showToast === 'function') {
-            showToast('🌿 بارك الله فيكم وتقبّل دعاءكم بالرحمة والمغفرة.. تم تفعيل الخطة المجانية وبدء اليوم الأول 🤲', 'success', 5000);
-        }
-
-        if (typeof playStationAudio === 'function') {
-            try { playStationAudio('recovery'); } catch(e) {}
-        }
+        // 2. إظهار نافذة الإهداء والدعاء الملكي لوالد المعالج وتشغيل الصوت
+        showRoyalDuaaModal(patientId);
 
         // 7. حفظ البيانات في الخلفية بدون انتظار يوقف الواجهة (Non-blocking Background Persistence)
         setTimeout(() => {
@@ -5056,8 +5024,27 @@ function showRoyalDuaaModal(patientId) {
         if (window.SmartGuidance && typeof SmartGuidance.guideDuaaModal === 'function') {
             SmartGuidance.guideDuaaModal();
         }
+
+        // تشغيل قراءة الدعاء الصوتي لوالد المعالج بصوت نقي وطبيعي
+        const duaaText = "نسألكم خالص الدعاء بالرحمة والمغفرة لوالد المعالج جمال قبها، رحمه الله تعالى وجعل مأواه الفردوس الأعلى من الجنة... اللهم اغفر له وارحمه، وعافه واعف عنه، وأكرم نزله ووسّع مدخله، واجعل قبره روضة من رياض الجنة، واجعل هذا العمل صدقة جارية في ميزان حسناته، وسبباً لشفاء وعافية كل مراجع ومبتلى.";
+        try {
+            if (typeof Wada3anAiEngine !== 'undefined' && typeof Wada3anAiEngine.speakWithNaturalSystemVoice === 'function') {
+                Wada3anAiEngine.speakWithNaturalSystemVoice(duaaText);
+            } else if (typeof Wada3anAiEngine !== 'undefined' && typeof Wada3anAiEngine.speakText === 'function') {
+                Wada3anAiEngine.speakText(duaaText);
+            } else if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const ut = new SpeechSynthesisUtterance(duaaText);
+                ut.lang = 'ar-SA';
+                ut.rate = 0.92;
+                window.speechSynthesis.speak(ut);
+            }
+        } catch (audioErr) {
+            console.warn('Duaa audio notice:', audioErr);
+        }
     } else {
         if (typeof goToStep === 'function') goToStep(4);
+        if (typeof renderStep4IndependentDay1 === 'function') renderStep4IndependentDay1(patientId);
         loadPatientRecoveryDashboard(patientId);
     }
 }
@@ -5066,6 +5053,12 @@ window.showRoyalDuaaModal = showRoyalDuaaModal;
 function closeRoyalDuaaModal() {
     const modal = document.getElementById('royal-duaa-modal');
     if (modal) modal.style.display = 'none';
+    if (typeof Wada3anAiEngine !== 'undefined' && typeof Wada3anAiEngine.stopSpeaking === 'function') {
+        Wada3anAiEngine.stopSpeaking();
+    }
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        try { window.speechSynthesis.cancel(); } catch(e) {}
+    }
     const stickyBar = document.getElementById('sticky-patient-guidance-bar');
     if (stickyBar) {
         stickyBar.style.transform = 'translateY(0)';
@@ -5079,6 +5072,13 @@ window.closeRoyalDuaaModal = closeRoyalDuaaModal;
 async function confirmRoyalDuaaAndProceed() {
     const modal = document.getElementById('royal-duaa-modal');
     if (modal) modal.style.display = 'none';
+
+    if (typeof Wada3anAiEngine !== 'undefined' && typeof Wada3anAiEngine.stopSpeaking === 'function') {
+        Wada3anAiEngine.stopSpeaking();
+    }
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        try { window.speechSynthesis.cancel(); } catch(e) {}
+    }
 
     // إعادة ظهور شريط التوجيه الطبي وتأهيله للمرحلة 4
     const stickyBar = document.getElementById('sticky-patient-guidance-bar');
@@ -5273,13 +5273,13 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
             patientId: patientId || authP?.patientId || curAss?.patientId || 'pat_guest',
             name: authP?.name || curAss?.patientName || ((authP?.phone || curAss?.patientPhone) ? `مراجع (${(authP?.phone || curAss?.patientPhone).replace(/\D/g, '').slice(-4)})` : ''),
             phone: authP?.phone || curAss?.patientPhone || '',
-            painArea: curAss?.painAreaTitle || curAss?.pointId || 'lumbar_spine',
-            painPointId: curAss?.pointId || 'lumbar_spine',
+            painArea: curAss?.painAreaTitle || curAss?.pointId || (typeof currentSelectedPoint !== 'undefined' ? (currentSelectedPoint?.title || currentSelectedPoint?.id) : '') || 'lumbar_spine',
+            painPointId: curAss?.pointId || (typeof currentSelectedPoint !== 'undefined' ? (currentSelectedPoint?.id || currentSelectedPoint?.region) : '') || 'lumbar_spine',
             painLevel: curAss?.painSeverity || 7
         };
         sessionData = {
             patient: pObj,
-            latestAssessment: curAss || { pointId: 'lumbar_spine', primaryDiagnosisKey: '' },
+            latestAssessment: curAss || { pointId: (typeof currentSelectedPoint !== 'undefined' ? (currentSelectedPoint?.id || currentSelectedPoint?.region) : '') || 'lumbar_spine', primaryDiagnosisKey: '' },
             dailyLogs: [],
             currentSessionDay: 1,
             isPlanCompleted: false,
@@ -5297,11 +5297,13 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                          || (sessionData?.currentSessionDay && sessionData.currentSessionDay >= 2)
                          || (maxReached >= 5);
 
-    const pointKey = sessionData.latestAssessment?.pointId || sessionData.latestAssessment?.pointKey || sessionData.patient.painArea || sessionData.patient.painPointId || 'lumbar_spine';
+    const curAssData = sessionData.latestAssessment || (typeof currentAssessmentData !== 'undefined' ? currentAssessmentData : null) || {};
+    const curPt = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint : null;
+    const pointKey = curAssData?.pointId || curAssData?.pointKey || curPt?.id || curPt?.region || sessionData.patient?.painPointId || sessionData.patient?.painArea || sessionData.patient?.selectedPoint || 'lumbar_spine';
     const dayExercises = getExercisesForPoint(pointKey, 1, {
-        primaryDiagnosisKey: sessionData.latestAssessment?.primaryDiagnosisKey || "",
-        answers: sessionData.latestAssessment?.answers || {},
-        userNotes: sessionData.latestAssessment?.userNotes || ""
+        primaryDiagnosisKey: sessionData.latestAssessment?.primaryDiagnosisKey || curAssData?.primaryDiagnosisKey || "",
+        answers: sessionData.latestAssessment?.answers || curAssData?.answers || {},
+        userNotes: sessionData.latestAssessment?.userNotes || curAssData?.userNotes || ""
     });
 
     container.innerHTML = `
@@ -5633,11 +5635,13 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
     // تحديد اليوم المعروض حالياً: بين 2 و 7 (الافتراضي هو اليوم الحالي لمسار المريض)
     const activeDay = Math.max(2, Math.min(7, targetDay || sessionData.currentSessionDay || 2));
 
-    const pointKey = sessionData.latestAssessment?.pointId || sessionData.latestAssessment?.pointKey || sessionData.patient.painArea || sessionData.patient.painPointId || 'lumbar_spine';
+    const curAssData5 = sessionData.latestAssessment || (typeof currentAssessmentData !== 'undefined' ? currentAssessmentData : null) || {};
+    const curPt5 = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint : null;
+    const pointKey = curAssData5?.pointId || curAssData5?.pointKey || curPt5?.id || curPt5?.region || sessionData.patient?.painPointId || sessionData.patient?.painArea || sessionData.patient?.selectedPoint || 'lumbar_spine';
     const dayExercises = getExercisesForPoint(pointKey, activeDay, {
-        primaryDiagnosisKey: sessionData.latestAssessment?.primaryDiagnosisKey || "",
-        answers: sessionData.latestAssessment?.answers || {},
-        userNotes: sessionData.latestAssessment?.userNotes || ""
+        primaryDiagnosisKey: sessionData.latestAssessment?.primaryDiagnosisKey || curAssData5?.primaryDiagnosisKey || "",
+        answers: sessionData.latestAssessment?.answers || curAssData5?.answers || {},
+        userNotes: sessionData.latestAssessment?.userNotes || curAssData5?.userNotes || ""
     });
 
     const anatomicalConfig = typeof getAnatomicalDailyAssessmentConfig === 'function' ? getAnatomicalDailyAssessmentConfig(pointKey) : null;
@@ -7118,7 +7122,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.10';
+const CURRENT_APP_VERSION = 'v30.11';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 

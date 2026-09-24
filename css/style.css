@@ -892,9 +892,12 @@ body {
     }
 
     #floating-quick-contact {
-        bottom: 14px !important;
-        left: 14px !important;
+        top: 50% !important;
+        bottom: auto !important;
+        transform: translateY(-50%) !important;
+        left: 12px !important;
         gap: 8px !important;
+        z-index: 100000 !important;
     }
 
     /* شريط المشاكل والتخصصات على الموبايل */

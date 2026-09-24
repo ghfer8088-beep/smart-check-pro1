@@ -194,9 +194,65 @@ function toggleExerciseFormTip(buttonEl) {
     }
 }
 
+// دالة موحدة لتطبيع موضع الألم التشريحي ودعم الأسماء والمصطلحات العربية والإنجليزية بدقة تامة
+function normalizeAnatomicalRegionKey(pointId = '') {
+    if (!pointId) return 'lumbar';
+    const s = String(pointId).toLowerCase().trim();
+
+    // 1. حالات الرسغ واليد والأصابع ونفق الرسغ
+    if (/(?:معصم|رسغ|نفق\s*رسغ|كف|أصابع|اصابع|إبهام|ابهام|يد|wrist|carpal|hand|finger)/i.test(s)) {
+        return 'wrist';
+    }
+    // 2. حالات الكوع والساعد
+    if (/(?:كوع|مرفق|ساعد|elbow)/i.test(s)) {
+        return 'elbow';
+    }
+    // 3. حالات الكتف والكفة المدورة ولوح الكتف
+    if (/(?:كتف|كفة\s*مدورة|لوح\s*الكتف|rotator|scapula|shoulder)/i.test(s) && !/(?:عنق|رقب|صدر)/i.test(s)) {
+        return 'shoulder';
+    }
+    // 4. حالات الرقبة والفقرات العنقية والصداع
+    if (/(?:رقب|عنق|صداع|رأس|cervical|neck|head)/i.test(s)) {
+        return 'cervical';
+    }
+    // 5. حالات أعلى الظهر والفقرات الصدرية والأبهر وعضلة شبه المنحرفة
+    if (/(?:أبهر|ابهر|شبه\s*منحرف|trapezius|صدر|بين\s*الكتفين|thoracic|chest|rib|sternum)/i.test(s)) {
+        return 'thoracic';
+    }
+    // 6. حالات مفصل الفك الصدغي
+    if (/(?:فك|صدغ|أسنان|صرير|jaw|tmj)/i.test(s)) {
+        return 'jaw';
+    }
+    // 7. حالات الركبة والفخذ والصابونة
+    if (/(?:ركب|صابون|فخذ|غضروف\s*الركبة|knee|patella|hamstring)/i.test(s)) {
+        return 'knee';
+    }
+    // 8. حالات الكاحل والقدم وباطن القدم ووتر أكيليس والسمانة
+    if (/(?:كاحل|قدم|كعب|أخمص|اخمص|لفافة|أكيليس|اكيليس|سمان|ankle|achilles|foot|plantar|heel|calf|37515)/i.test(s)) {
+        return 'ankle';
+    }
+    // 9. حالات الحوض والمفصل العجزي وعرق النسا والكمثرية
+    if (/(?:عرق\s*النسا|عرق\s*نسا|كمثر|عجز|عصعص|حوض|ورِك|ورك|ألي|الي|sacroiliac|piriformis|pelvis|hip|gluteal|sciatica)/i.test(s)) {
+        return 'si_joint';
+    }
+    // 10. حالات أسفل الظهر والفقرات القطنية
+    if (/(?:قطن|أسفل\s*الظهر|اسفل\s*الظهر|lumbar|lower_back|l4|l5|s1|disc|ديسك)/i.test(s)) {
+        return 'lumbar';
+    }
+
+    return s;
+}
+if (typeof window !== 'undefined') {
+    window.normalizeAnatomicalRegionKey = normalizeAnatomicalRegionKey;
+}
+
 // دالة جلب إعدادات الأسئلة الحركية والسلوكية ونوعية النوم المخصصة لكل موضع ألم
 function getAnatomicalDailyAssessmentConfig(pointId = '') {
-    const pId = (pointId || "").toLowerCase();
+    const norm = normalizeAnatomicalRegionKey(pointId);
+    let pId = (pointId || "").toLowerCase();
+    if (norm) {
+        pId = `${pId} ${norm}`;
+    }
 
     if (pId.includes('cervical') || pId.includes('neck') || pId.includes('head') || pId.includes('trapezius')) {
         return {
@@ -871,13 +927,19 @@ const MASTER_EXERCISES_CATALOG = {
 
 // الدالة الذكية لوصف التمارين الطبية المخصصة للحالة السريرية والتدرج عبر الأيام السبعة
 function prescribePathologyExercises({ pointId, primaryDiagnosisKey, answers = {}, userNotes = "", dayNumber = 1 }) {
-    const pId = (pointId || "").toLowerCase();
+    let pId = (pointId || "").toLowerCase();
     const q1 = (answers.q1 || "").toLowerCase();
     const q2 = (answers.q2 || "").toLowerCase();
     const q4 = (answers.q4 || "").toLowerCase();
     const notes = (userNotes || "").toLowerCase();
     const diagKey = (primaryDiagnosisKey || "").toLowerCase();
     const day = parseInt(dayNumber) || 1;
+
+    // تطبيع تشريحي ذكي وشامل لدعم الأسماء والمصطلحات العربية والإنجليزية ومفاتيح النقاط
+    const norm = normalizeAnatomicalRegionKey(pointId || primaryDiagnosisKey || userNotes);
+    if (norm) {
+        pId = `${pId} ${norm}`;
+    }
 
     // تحديد المرحلة السريرية:
     // المرحلة 1 (اليوم 1-2): تسكين حاد وتفريغ الضغط الميكانيكي/المفصلي
@@ -1003,7 +1065,7 @@ function prescribePathologyExercises({ pointId, primaryDiagnosisKey, answers = {
     }
 
     // 6. حالات الرسغ واليد ونفق الرسغ
-    if (pId.includes("wrist") || pId.includes("hand") || pId.includes("finger")) {
+    if (pId.includes("wrist") || pId.includes("hand") || pId.includes("finger") || pId.includes("رسغ") || pId.includes("معصم") || pId.includes("نفق") || pId.includes("كف") || pId.includes("أصابع")) {
         if (isPhase1) {
             return [
                 MASTER_EXERCISES_CATALOG.wrist[0], // إطالة أوتار الرسغ والنفق الرسغي
@@ -1236,6 +1298,12 @@ function getExerciseFormTips(ex = {}) {
     const vt = (ex.visualType || ex.id || "").toLowerCase();
     const nm = (ex.name || "").toLowerCase();
 
+    if (vt.includes('wrist') || vt.includes('finger') || nm.includes('رسغ') || nm.includes('نفق') || nm.includes('أصابع') || nm.includes('كف')) {
+        return {
+            correct: "حافظ على استقامة الكوع واسحب الأصابع بلطف للخلف حتى تشعر بإطالة مريحة في باطن الساعد والرسغ دون إحداث ألم حاد أو تنميل.",
+            mistake: "السحب العنيف للمفصل بقوة زائدة، أو ثني الكوع أثناء أداء الإطالة مما يقلل فاعليتها."
+        };
+    }
     if (vt.includes('chin_tuck') || nm.includes('ذقن')) {
         return {
             correct: "اسحب الذقن أفقياً للخلف بمحاذاة الحنجرة (صنع ذقن مزدوج) مع إبقاء النظر للأمام مباشرة دون خفض الرأس للأسفل.",
