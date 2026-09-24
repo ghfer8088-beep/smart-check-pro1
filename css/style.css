@@ -92,6 +92,21 @@ body {
     white-space: nowrap;
 }
 
+.brand-version-badge {
+    font-size: 0.72em;
+    color: #94a3b8;
+    margin-top: 1px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    user-select: none;
+    transition: opacity 0.2s ease;
+}
+.brand-version-badge:hover {
+    opacity: 0.85;
+}
+
 .header-right-group {
     display: flex;
     align-items: center;
@@ -546,6 +561,11 @@ body {
         font-size: 0.72em !important;
         line-height: 1.3;
         color: var(--primary-gold-light) !important;
+    }
+
+    .brand-version-badge {
+        font-size: 0.68em !important;
+        margin-top: 0px !important;
     }
 
     .btn-mobile-menu-toggle {
@@ -1598,7 +1618,7 @@ body {
 
 /* تحسين موضع ومظهر نافذة الدعاء والصدقة الجارية (royal-duaa-modal) خاصة للهواتف */
 #royal-duaa-modal {
-    z-index: 2000100 !important;
+    z-index: 3000000 !important;
     display: none;
     align-items: center;
     justify-content: center;
@@ -2741,7 +2761,7 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 2000090 !important;
+    z-index: 3000010 !important;
     background: rgba(11, 17, 30, 0.95);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);

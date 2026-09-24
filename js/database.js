@@ -979,6 +979,14 @@ const SmartDB = (function() {
 
     async function getSetting(key, defaultValue = null) {
         const db = await openDB();
+        if (!db) {
+            try {
+                const localVal = localStorage.getItem(`smart_setting_${key}`);
+                return localVal !== null ? JSON.parse(localVal) : defaultValue;
+            } catch(e) {
+                return defaultValue;
+            }
+        }
         return new Promise((resolve, reject) => {
             const tx = db.transaction('settings', 'readonly');
             const store = tx.objectStore('settings');

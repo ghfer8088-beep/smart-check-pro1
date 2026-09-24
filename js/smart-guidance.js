@@ -147,7 +147,8 @@ const SmartGuidance = (function() {
         }
 
         // 4. النوافذ الكاملة الأخرى المستقلة التي تتطلب إخفاء مؤقتاً لشريط التوجيه (مثل الفيديو، أو مكتبة التمارين، إلخ)
-        const fullscreenModal = Array.from(document.querySelectorAll('#welcome-tour-modal, #disclaimer-modal, #completion-certificate-modal, #in-app-video-player-modal, #exercise-library-modal, #chiropractic-explainer-modal, #mri-consultation-modal, #video-success-stories-modal, #patient-login-modal, #patient-portal-modal, #auto-update-overlay')).find(m => {
+        const fullscreenModal = Array.from(document.querySelectorAll('.app-modal, .modal, [id$="-modal"]')).find(m => {
+            if (m === duaaModal || m === assessModal || m === phoneModal) return false;
             return m && m.style.display && m.style.display !== 'none' && window.getComputedStyle(m).display !== 'none';
         });
 
@@ -595,19 +596,43 @@ const SmartGuidance = (function() {
         const countdownEl = document.getElementById('countdown-hours');
         const isLocked = !unlockedRecordBtn && (!!lockBtn || (!!countdownEl && countdownEl.offsetParent !== null) || !!document.getElementById('recovery-progress-remaining-text'));
 
-        // ✅ v30.02: استخراج رقم الجلسة الحالية لعرضه بدقة في الشريط
+        // استخراج رقم الجلسة المعروضة حالياً بدقة لعرضه في الشريط
         let sessionLabel = '';
+        let sessNum = 0;
         try {
-            const sessNumEl = document.getElementById('current-session-number') || document.querySelector('[data-session-number]');
-            const sessNumRaw = sessNumEl ? (sessNumEl.textContent || sessNumEl.getAttribute('data-session-number') || '') : '';
-            let sessNum = parseInt(sessNumRaw, 10);
-            if (isNaN(sessNum) || sessNum <= 0) {
-                sessNum = (window.activePatient && window.activePatient.currentSessionDay) || 2;
+            const sessNumEl = document.getElementById('current-session-number') || document.querySelector('#step5-sessions-container [data-session-number]');
+            if (sessNumEl) {
+                const rawVal = sessNumEl.value || sessNumEl.getAttribute('data-session-number') || sessNumEl.textContent || '';
+                const parsed = parseInt(rawVal, 10);
+                if (!isNaN(parsed) && parsed >= 1 && parsed <= 7) sessNum = parsed;
             }
-            if (sessNum > 0) sessionLabel = ` (جلسة ${sessNum} من 7)`;
+            if (!sessNum && window.activePatient) {
+                sessNum = window.activePatient.activeSessionDay || window.activePatient.currentSessionDay || 0;
+            }
+            if (!sessNum) {
+                const headerMatch = document.getElementById('step5-sessions-container')?.innerText.match(/الجلسة\s+(\d+)\s+من\s+7/);
+                if (headerMatch && headerMatch[1]) sessNum = parseInt(headerMatch[1], 10);
+            }
+            if (!sessNum || isNaN(sessNum) || sessNum <= 0) sessNum = 2;
+            sessionLabel = ` (جلسة ${sessNum} من 7)`;
         } catch(e) {}
 
-        if (isLocked) {
+        const isReviewingCompleted = !unlockedRecordBtn && !isLocked && !isRunning && (
+            (window.activePatient && window.activePatient.currentSessionDay && sessNum < window.activePatient.currentSessionDay) ||
+            !!(document.getElementById('step5-sessions-container')?.innerText.includes('تم إنجاز الجلسة')) ||
+            !!(document.getElementById('step5-sessions-container')?.innerText.includes('جلسة منجزة وموثقة'))
+        );
+
+        if (isReviewingCompleted) {
+            activeSubState = 'step5_reviewing';
+            if (iconEl) iconEl.textContent = '✓';
+            if (subEl) subEl.textContent = `المرحلة 5${sessionLabel}: استعراض جلسة منجزة مسبقاً`;
+            if (mainEl) mainEl.textContent = 'يمكنك مراجعة التمارين المعتمدة أو الانتقال لمتابعة جلستك الحالية النشطة';
+
+            btn.className = 'sticky-guidance-action-btn state-ready';
+            if (btnIcon) btnIcon.textContent = '⬅️';
+            if (btnText) btnText.textContent = 'الانتقال للجلسة الحالية';
+        } else if (isLocked) {
             // الجلسة في فترة استشفاء الـ 24 ساعة
             activeSubState = 'step5_locked';
             if (iconEl) iconEl.textContent = '⏳';
@@ -847,6 +872,18 @@ const SmartGuidance = (function() {
                     if (clock) clock.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     if (typeof showToast === 'function') {
                         showToast('⏳ أنسجة مفاصلك في فترة استشفاء وترميم.. العداد جارٍ ومتبقي لحين فتح الجلسة', 'warning', 4000);
+                    }
+                } else if (activeSubState === 'step5_reviewing') {
+                    const returnBtn = document.querySelector('#step5-sessions-container button[onclick*="الانتقال لجلستك الحالية"]');
+                    if (returnBtn) {
+                        returnBtn.click();
+                    } else {
+                        const curP = window.activePatient || {};
+                        const pId = curP.patientId || curP.id || patientId;
+                        const curDay = curP.currentSessionDay || 2;
+                        if (typeof window.renderStep5SessionsDashboard === 'function') {
+                            window.renderStep5SessionsDashboard(pId, curDay);
+                        }
                     }
                 } else if (activeSubState === 'step5_exercising') {
                     const activeEx = document.querySelector('#step-section-5 button.btn-exercise-timer[data-running="true"]')?.closest('.clinical-exercise-card');

@@ -69,6 +69,8 @@
             syncBroadcastChannel.addEventListener('message', (event) => {
                 if (event.data && (event.data.type === 'PRESENCE_PING' || event.data.type === 'PRESENCE_LEAVE')) {
                     handlePresenceIncoming(event.data);
+                } else if (event.data && (event.data.type === 'app_version_update' || event.data.version)) {
+                    handleAppVersionUpdateMessage(event.data);
                 }
             });
             const pChan = new BroadcastChannel('smart_presence_broadcast_channel');
@@ -92,7 +94,8 @@
         VISITS: 'wada3an/clinic/visits',
         SYNC_REQ: 'wada3an/clinic/sync_req',
         PRESENCE: 'wada3an/clinic/presence',
-        PAIN_POINTS: 'wada3an/clinic/pain_points'
+        PAIN_POINTS: 'wada3an/clinic/pain_points',
+        VERSION: 'wada3an/clinic/version'
     };
 
     let mqttClient = null;
@@ -449,7 +452,8 @@
                     MQTT_TOPICS.VISITS,
                     MQTT_TOPICS.SYNC_REQ,
                     MQTT_TOPICS.PRESENCE,
-                    MQTT_TOPICS.PAIN_POINTS
+                    MQTT_TOPICS.PAIN_POINTS,
+                    MQTT_TOPICS.VERSION
                 ], { qos: 1 }, (err) => {
                     if (err) console.warn('[CloudSync] MQTT Subscribe error:', err);
                 });
@@ -507,6 +511,13 @@
     async function handleIncomingMqttMessage(topic, data, myClientId) {
         if (!data) return;
         if (data.sender === myClientId) return;
+
+        // 0. بث رسالة التحديث العالمية للإصدار الجديد لكافة الأجهزة
+        if (topic === MQTT_TOPICS.VERSION || (data && data.type === 'app_version_update')) {
+            console.log('🚀 [CloudSync] Received app version update broadcast via MQTT:', data);
+            handleAppVersionUpdateMessage(data);
+            return;
+        }
 
         // 1. حزمة المزامنة الكاملة
         if (topic === MQTT_TOPICS.SNAPSHOT) {
@@ -3049,8 +3060,86 @@
         } catch(e) {}
     }
 
+    // =========================================================================
+    // 📢 منظومة بث التحديثات العالمية اللحظية (Global App Version Broadcast System)
+    // =========================================================================
+    function handleAppVersionUpdateMessage(data) {
+        if (!data || !data.version) return;
+        const newVer = String(data.version).trim();
+        console.log(`📢 [CloudSync] Processing Global Version Broadcast: ${newVer}`);
+        sessionStorage.setItem('scp_latest_remote_ver', newVer);
+
+        const acknowledgedVer = localStorage.getItem('smart_acknowledged_version');
+
+        // إذا كان الإصدار جديداً أو مطلوب إظهار الإشعار قسرياً لجميع المستخدمين
+        if (data.forcePrompt || (acknowledgedVer !== newVer && acknowledgedVer !== newVer.replace('v', ''))) {
+            if (typeof window.openGlobalVersionUpdateModal === 'function') {
+                window.openGlobalVersionUpdateModal(data);
+            } else if (typeof window.showGlobalVersionUpdateModal === 'function') {
+                window.showGlobalVersionUpdateModal(data);
+            } else if (typeof window._triggerAutoReloadCountdown === 'function') {
+                window._triggerAutoReloadCountdown(newVer);
+            }
+        }
+    }
+
+    function broadcastAppVersionUpdate(options = {}) {
+        const ver = options.version || (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.13');
+        const payload = {
+            type: 'app_version_update',
+            version: ver,
+            title: options.title || `إطلاق التحديث السريري والتقني الشامل (${ver})`,
+            notes: options.notes || [
+                'ضبط تسلسل الجلسات (1 إلى 7) ومنع قفل الجلسات المنجزة',
+                'مزامنة شريط التوجيه الطبي الذكي مع الجلسة الحالية الفردية',
+                'تحديد الجلسة الحالية تلقائياً في نافذة توقيت لوحة التحكم',
+                'بث سحابي فوري وشامل لجميع أجهزة وهواتف المستخدمين بالعالم'
+            ],
+            timestamp: Date.now(),
+            forcePrompt: true
+        };
+
+        // 1. بث عبر MQTT اللحظي مع خاصية الاحتفاظ retain لضمان استلام أي جهاز ينضم لاحقاً
+        mqttPublish(MQTT_TOPICS.VERSION, payload, { retain: true });
+
+        // 2. بث عبر BroadcastChannel للنوافذ والتبويبات المفتوحة محلياً
+        try {
+            if (syncBroadcastChannel) {
+                syncBroadcastChannel.postMessage(payload);
+            }
+        } catch(e) {}
+
+        // 3. بث عبر شبكة ntfy السحابية العالمية
+        try {
+            sendToNtfy(CLOUD_SYNC_ENDPOINT, JSON.stringify(payload), `Smart Check Pro Update ${ver}`);
+        } catch(e) {}
+
+        // 4. البث عبر السحابة المركزية Master Hub
+        try {
+            if (isMasterHubAllowed()) {
+                fetch(CLOUD_MASTER_HUB_ENDPOINT, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'Smart Check Pro Global State',
+                        data: {
+                            latestVersionUpdate: payload,
+                            lastUpdated: new Date().toISOString()
+                        }
+                    })
+                }).catch(() => {});
+            }
+        } catch(e) {}
+
+        // تطبيق الإشعار على الشاشة الحالية
+        handleAppVersionUpdateMessage(payload);
+        return true;
+    }
+
     // تصدير واجهة الترحيل السحابي
     window.SmartCloudSync = {
+        broadcastAppVersionUpdate: broadcastAppVersionUpdate,
+        handleVersionUpdateMessage: handleAppVersionUpdateMessage,
         dispatchPatient: dispatchPatientToCloud,
         dispatchSessionLog: dispatchSessionLogToCloud,
         getPatientLogs: getPatientLogs,

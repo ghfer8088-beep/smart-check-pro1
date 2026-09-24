@@ -1082,6 +1082,10 @@ const AdminEngine = (function() {
                         pt.customTimingMinutes = m;
                         pt.customTimingSeconds = s;
                         pt.lastTimingUpdated = Date.now();
+                        if (sessionNum && sessionNum >= 1 && sessionNum <= 7) {
+                            pt.currentSessionDay = sessionNum;
+                            pt.targetedSessionNum = sessionNum;
+                        }
                         window.SmartDB.savePatient(pt, { skipCloudSync: true });
                     }
                 }).catch(() => {});

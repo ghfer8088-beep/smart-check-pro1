@@ -28,11 +28,11 @@
     </script>
 
     <!-- منظومة الأمان السيبراني وحماية الملكية الفكرية وقفل النطاق -->
-    <script src="js/security-shield.js?v=20.5"></script>
-    <script src="js/system-watchdog.js?v=20.5"></script>
+    <script src="js/security-shield.js?v=30.13"></script>
+    <script src="js/system-watchdog.js?v=30.13"></script>
 
     <!-- وسوم تطبيق الويب التقدمي PWA والأيقونات الرسمية -->
-    <link rel="manifest" href="manifest.json?v=18.6">
+    <link rel="manifest" href="manifest.json?v=30.13">
     <link rel="icon" type="image/png" href="assets/logo.png">
     <link rel="shortcut icon" href="assets/logo.png">
     <link rel="apple-touch-icon" href="assets/logo.png">
@@ -44,14 +44,15 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=30.10">
+    <link rel="stylesheet" href="css/style.css?v=30.13">
     <script>
-        // التحقق من تحديثات النسخة بسلاسة دون تفريغ أي بيانات للمرضى
+        // التحقق من وصول أحدث إصدار وبث التحديث عالمياً لجميع الأجهزة
         (function() {
-            const APP_TARGET_VER = '30.00';
-            const currentVer = localStorage.getItem('smart_app_version');
-            if (currentVer !== APP_TARGET_VER) {
-                localStorage.setItem('smart_app_version', APP_TARGET_VER);
+            const APP_TARGET_VER = '30.13';
+            window.APP_TARGET_VER = APP_TARGET_VER;
+            const acknowledged = localStorage.getItem('smart_acknowledged_version');
+            if (acknowledged !== 'v' + APP_TARGET_VER && acknowledged !== APP_TARGET_VER) {
+                window._pendingUpdateModalNotice = true;
             }
         })();
     </script>
@@ -149,6 +150,11 @@
             <div>
                 <h1 class="brand-title" style="margin: 0; padding: 0;">Smart Check Pro <span style="color: var(--primary-gold); font-size: 0.8em;">2.0</span><span class="sr-only" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;"> - منظومة الفحص الذكي وتفريغ الضغط الغضروفي والكايروبراكتيك</span></h1>
                 <div class="brand-subtitle">مطورة من قبل "وداعاً للألم"</div>
+                <div class="brand-version-badge" onclick="event.stopPropagation(); if(typeof openGlobalVersionUpdateModal==='function') openGlobalVersionUpdateModal();" title="انقر لعرض تفاصيل الإصدار والتحديثات السريرية" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72em; color: #94a3b8; margin-top: 1px; cursor: pointer; user-select: none;">
+                    <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
+                    <span>الإصدار:</span>
+                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v30.13</strong>
+                </div>
             </div>
         </div>
 
@@ -1426,7 +1432,7 @@
 
 
     <!-- ================= نافذة الإهداء والدعاء الملكي عند تفعيل الخطة المجانية ================= -->
-    <div id="royal-duaa-modal" class="app-modal" style="display: none; z-index: 2000100;">
+    <div id="royal-duaa-modal" class="app-modal" style="display: none;">
         <div class="modal-inner" style="max-width: 620px; width: 95%; background: linear-gradient(135deg, #0b1322 0%, #0f1c30 100%); border: 2.5px solid var(--primary-gold); padding: 30px 24px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.95), 0 0 35px rgba(212, 175, 55, 0.35); text-align: center; position: relative;">
             <button type="button" onclick="closeRoyalDuaaModal()" aria-label="إغلاق" style="position: absolute; left: 14px; top: 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(212,175,55,0.4); color: #94a3b8; font-size: 1.3em; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">&times;</button>
             <div style="font-size: 3.2em; margin-bottom: 8px; filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.6));">🤲</div>
@@ -1454,6 +1460,65 @@
             <button type="button" id="btn-confirm-duaa" onclick="confirmRoyalDuaaAndProceed()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; padding: 15px 36px; border-radius: 10px; font-weight: 900; font-size: 1.1em; cursor: pointer; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.45); display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; max-width: 440px; transition: transform 0.2s;">
                 <span>🤲 آمين يارب العالمين.. بدء خطة التعافي (اليوم الأول)</span>
             </button>
+        </div>
+    </div>
+
+    <!-- ================= نافذة التحديث الملكية العالمية الشاملة (Global App Version Update Modal) ================= -->
+    <div id="global-version-update-modal" class="app-modal" style="display: none; z-index: 99999999;">
+        <div class="modal-inner" style="max-width: 660px; width: 95%; background: linear-gradient(135deg, #0b1322 0%, #0f1c30 100%); border: 2.5px solid var(--primary-gold); padding: 28px 24px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.95), 0 0 35px rgba(212, 175, 55, 0.4); text-align: center; position: relative;">
+            <button type="button" onclick="closeGlobalVersionUpdateModal()" aria-label="إغلاق" style="position: absolute; left: 14px; top: 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(212,175,55,0.4); color: #94a3b8; font-size: 1.3em; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">&times;</button>
+            
+            <div style="font-size: 3.2em; margin-bottom: 6px; filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.7));">🚀</div>
+            
+            <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); padding: 5px 16px; border-radius: 20px; margin-bottom: 10px;">
+                <span style="color: #6ee7b7; font-size: 0.9em; font-weight: 800;">🌍 بث التحديث العالمي المعتمد</span>
+                <span id="global-modal-version-tag" style="background: var(--primary-gold); color: #0a0e14; padding: 2px 10px; border-radius: 12px; font-weight: 900; font-size: 0.88em;">v30.13</span>
+            </div>
+            
+            <h2 id="global-modal-title" style="color: #ffffff; font-size: 1.5em; font-weight: 900; margin: 0 0 8px 0; text-shadow: 0 2px 10px rgba(212,175,55,0.4);">
+                تم إطلاق التحديث السريري والتقني الشامل
+            </h2>
+            <div style="color: #94a3b8; font-size: 0.88em; margin-bottom: 18px;">
+                منظومة وداعاً للألم — Smart Check Pro 2.0 (تم توزيع النسخة المحدثة لكافة الأجهزة والمستخدمين بالعالم)
+            </div>
+
+            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 14px; padding: 16px 18px; text-align: right; margin-bottom: 20px; font-size: 0.92em; line-height: 1.8;">
+                <div style="color: var(--primary-gold); font-weight: 800; font-size: 0.95em; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                    <span>✨</span>
+                    <span>أهم التحسينات والإصلاحات المعتمدة في هذا الإصدار:</span>
+                </div>
+                <div id="global-modal-changelog" style="display: flex; flex-direction: column; gap: 10px; color: #cbd5e1;">
+                    <div style="display: flex; align-items: flex-start; gap: 10px;">
+                        <span style="color: #10b981; font-weight: bold; font-size: 1.1em;">✓</span>
+                        <div><strong>ضبط تسلسل الجلسات (1 إلى 7):</strong> منع قفل الجلسات السابقة المنجزة (مثل الجلسة 3 عند الوصول للجلسة 4) واعتماد تتابع سريري سليم بنسبة 100%.</div>
+                    </div>
+                    <div style="display: flex; align-items: flex-start; gap: 10px;">
+                        <span style="color: #10b981; font-weight: bold; font-size: 1.1em;">✓</span>
+                        <div><strong>مزامنة شريط التوجيه الطبي الذكي:</strong> ربط الشريط أسفل الشاشة برقم الجلسة الحالية الفعلي وتسهيل استعراض الجلسات السابقة.</div>
+                    </div>
+                    <div style="display: flex; align-items: flex-start; gap: 10px;">
+                        <span style="color: #10b981; font-weight: bold; font-size: 1.1em;">✓</span>
+                        <div><strong>توقيت الجلسة في لوحة التحكم:</strong> تحديد الجلسة الحالية للمريض تلقائياً عند فتح نافذة التوقيت لتسهيل وتسريع التعديل السريري.</div>
+                    </div>
+                    <div style="display: flex; align-items: flex-start; gap: 10px;">
+                        <span style="color: #10b981; font-weight: bold; font-size: 1.1em;">✓</span>
+                        <div><strong>البث السحابي وتحديث الكاش:</strong> مزامنة فورية تتجاوز الذاكرة المؤقتة مع صون كامل لبيانات المريض ومرحلته العلاجية.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 10px; padding: 10px 14px; margin-bottom: 22px; color: #6ee7b7; font-size: 0.88em; font-weight: 700;">
+                🔒 ستحتفظ بكافة بياناتك ومرحلتك العلاجية وتقدمك بالكامل دون أي فقدان
+            </div>
+
+            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                <button type="button" onclick="confirmGlobalUpdateNow()" style="background: linear-gradient(135deg, #d4af37 0%, #f59e0b 100%); color: #0a0e14; border: none; padding: 13px 28px; border-radius: 10px; font-weight: 900; font-size: 1.05em; cursor: pointer; box-shadow: 0 4px 15px rgba(212,175,55,0.45); display: inline-flex; align-items: center; gap: 8px; flex: 1; min-width: 220px; justify-content: center;">
+                    <span>تحديث وتنشيط التطبيق الآن 🔄</span>
+                </button>
+                <button type="button" onclick="closeGlobalVersionUpdateModal()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 13px 22px; border-radius: 10px; font-weight: bold; font-size: 0.95em; cursor: pointer;">
+                    متابعة الاستخدام ✓
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1820,24 +1885,63 @@
                 }
             }, 300);
         }
+
+        // =========================================================================
+        // 🚀 معالج نافذة التحديث الملكية العالمية (Global Version Update Modal Controller)
+        // =========================================================================
+        function openGlobalVersionUpdateModal(verData = null) {
+            const modal = document.getElementById('global-version-update-modal');
+            if (!modal) return;
+            const targetVer = (verData && verData.version) ? verData.version : (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.13');
+            const tag = document.getElementById('global-modal-version-tag');
+            if (tag) tag.textContent = targetVer;
+            const titleEl = document.getElementById('global-modal-title');
+            if (titleEl && verData && verData.title) titleEl.textContent = verData.title;
+            modal.style.display = 'flex';
+        }
+
+        function closeGlobalVersionUpdateModal() {
+            const modal = document.getElementById('global-version-update-modal');
+            if (modal) modal.style.display = 'none';
+            const ver = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.13');
+            localStorage.setItem('smart_acknowledged_version', ver);
+            localStorage.setItem('smart_app_version', ver.replace('v', ''));
+        }
+
+        function confirmGlobalUpdateNow() {
+            const ver = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.13');
+            localStorage.setItem('smart_acknowledged_version', ver);
+            localStorage.setItem('smart_app_version', ver.replace('v', ''));
+            const modal = document.getElementById('global-version-update-modal');
+            if (modal) modal.style.display = 'none';
+            if (typeof forceAppUpdateAndClearCache === 'function') {
+                forceAppUpdateAndClearCache();
+            } else {
+                window.location.reload(true);
+            }
+        }
+
+        window.openGlobalVersionUpdateModal = openGlobalVersionUpdateModal;
+        window.closeGlobalVersionUpdateModal = closeGlobalVersionUpdateModal;
+        window.confirmGlobalUpdateNow = confirmGlobalUpdateNow;
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=30.12"></script>
-    <script src="js/cloud-sync.js?v=30.12"></script>
-    <script src="js/geo-tracker.js?v=30.12"></script>
-    <script src="js/database.js?v=30.12"></script>
-    <script src="js/exercise-image-studio.js?v=30.12"></script>
-    <script src="js/exercises-db.js?v=30.12"></script>
-    <script src="js/diagnostic-engine.js?v=30.12"></script>
-    <script src="js/audio-pacer.js?v=30.12"></script>
-    <script src="js/patient-flow.js?v=30.12"></script>
-    <script src="js/admin-engine.js?v=30.12"></script>
-    <script src="js/ai-config.js?v=30.12"></script>
-    <script src="js/ai-engine.js?v=30.12"></script>
-    <script src="js/app.js?v=30.12"></script>
-    <script src="js/text-editor.js?v=30.12"></script>
-    <script src="js/smart-guidance.js?v=30.12"></script>
+    <script src="js/mqtt.min.js?v=30.13"></script>
+    <script src="js/cloud-sync.js?v=30.13"></script>
+    <script src="js/geo-tracker.js?v=30.13"></script>
+    <script src="js/database.js?v=30.13"></script>
+    <script src="js/exercise-image-studio.js?v=30.13"></script>
+    <script src="js/exercises-db.js?v=30.13"></script>
+    <script src="js/diagnostic-engine.js?v=30.13"></script>
+    <script src="js/audio-pacer.js?v=30.13"></script>
+    <script src="js/patient-flow.js?v=30.13"></script>
+    <script src="js/admin-engine.js?v=30.13"></script>
+    <script src="js/ai-config.js?v=30.13"></script>
+    <script src="js/ai-engine.js?v=30.13"></script>
+    <script src="js/app.js?v=30.13"></script>
+    <script src="js/text-editor.js?v=30.13"></script>
+    <script src="js/smart-guidance.js?v=30.13"></script>
 
     <script>
         // مؤشر المراجعين المتفاعلين أونلاين الآن (يتراوح عشوائياً بديناميكية طبيعية بين 40 و 99)

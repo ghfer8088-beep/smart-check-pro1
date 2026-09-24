@@ -545,6 +545,12 @@ window.stopAllActiveAudio = stopAllActiveAudio;
 
 // اختيار نقطة الألم
 function selectAnatomyPoint(point, element) {
+    if (!point) return;
+    if (typeof point === 'string') {
+        const foundPt = (typeof anatomyPoints !== 'undefined' && Array.isArray(anatomyPoints)) ? anatomyPoints.find(p => p.id === point) : null;
+        point = foundPt || { id: point, title: point, region: 'spine' };
+    }
+
     // قفل تشغيل الصوت الترحيبي نهائياً لهذه الزيارة وإيقاف أي صوت نشط فوراً
     try {
         sessionStorage.setItem('scp_welcome_audio_played', 'true');
@@ -560,7 +566,7 @@ function selectAnatomyPoint(point, element) {
     }
 
     document.querySelectorAll('.anatomy-hotspot').forEach(p => p.classList.remove('active'));
-    if (element) {
+    if (element && element.classList) {
         element.classList.add('active');
     } else {
         const found = document.querySelector(`.anatomy-hotspot[data-point-id="${point.id}"]`);
@@ -5265,9 +5271,13 @@ window.formatPatientAddress = formatPatientAddress;
 // تشمل: التعليمات + البيانات + الساعة الحية + التمارين + زر إنجاز اليوم الأول
 // خالية تماماً وبشكل قاطع من أي أسئلة أو مؤشرات مئوية أو رسوم بيانية
 // =========================================================================
+let _isRenderingStep4 = false;
 async function renderStep4IndependentDay1(patientId, sessionData = null) {
-    // الانتقال الحتمي للخطوة 4 فوراً لضمان عدم السقوط للخطوة 1 أبداً
-    goToStep(4);
+    if (_isRenderingStep4) return;
+    _isRenderingStep4 = true;
+    try {
+        // الانتقال الحتمي للخطوة 4 فوراً لضمان عدم السقوط للخطوة 1 أبداً
+        goToStep(4, { fromRender: true });
 
     if (!sessionData && patientId) {
         try {
@@ -5602,6 +5612,9 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
     };
     updateLiveClock();
     window.liveSessionClockInterval = setInterval(updateLiveClock, 1000);
+    } finally {
+        _isRenderingStep4 = false;
+    }
 }
 
 // =========================================================================
@@ -5614,42 +5627,63 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
 // 5. أسئلة التقييم السريري (متاحة دائماً في كل جلسة من 2 إلى 7)
 // 6. تمارين الجلسة المقررة مع المؤقتات ودليل التكنيك
 // =========================================================================
+let _isRenderingStep5 = false;
 async function renderStep5SessionsDashboard(patientId, targetDay = null, sessionData = null) {
-    if (window.liveSessionClockInterval) {
-        clearInterval(window.liveSessionClockInterval);
-        window.liveSessionClockInterval = null;
-    }
+    if (_isRenderingStep5) return;
+    _isRenderingStep5 = true;
+    try {
+        if (window.liveSessionClockInterval) {
+            clearInterval(window.liveSessionClockInterval);
+            window.liveSessionClockInterval = null;
+        }
 
-    if (!sessionData) {
-        sessionData = await PatientFlow.initPatientSession(patientId);
-    }
-    if (!sessionData || !sessionData.patient) {
-        console.warn('Patient sessionData unavailable in Step 5; preserving active state.');
-        return;
-    }
+        if (!sessionData) {
+            sessionData = await PatientFlow.initPatientSession(patientId);
+        }
+        if (!sessionData || !sessionData.patient) {
+            console.warn('Patient sessionData unavailable in Step 5; preserving active state.');
+            return;
+        }
 
-    activePatient = sessionData.patient;
-    const effectivePid = patientId || sessionData.patient?.patientId || sessionData.patient?.id;
-    const lockStatus = await PatientFlow.getSessionLockStatus(effectivePid);
+        activePatient = sessionData.patient;
+        const effectivePid = patientId || sessionData.patient?.patientId || sessionData.patient?.id;
+        const lockStatus = await PatientFlow.getSessionLockStatus(effectivePid);
 
-    // إذا كان المريض أنجز كل الـ 7 جلسات ولم يُطلب استعراض جلسة محددة، الانتقال لشاشة الإنهاء
-    if (sessionData.isPlanCompleted && !targetDay) {
-        renderStep6Completion(patientId, sessionData);
-        return;
-    }
+        // إذا كان المريض أنجز كل الـ 7 جلسات ولم يُطلب استعراض جلسة محددة، الانتقال لشاشة الإنهاء
+        if (sessionData.isPlanCompleted && !targetDay) {
+            renderStep6Completion(patientId, sessionData);
+            return;
+        }
 
-    if (targetDay === 1) {
-        renderStep4IndependentDay1(patientId, sessionData);
-        return;
-    }
+        if (targetDay === 1) {
+            renderStep4IndependentDay1(patientId, sessionData);
+            return;
+        }
 
-    goToStep(5);
+        goToStep(5, { fromRender: true });
 
     const container = document.getElementById('step5-sessions-container');
     if (!container) return;
 
-    // تحديد اليوم المعروض حالياً: بين 2 و 7 (الافتراضي هو اليوم الحالي لمسار المريض)
-    const activeDay = Math.max(2, Math.min(7, targetDay || sessionData.currentSessionDay || 2));
+    // تحديد اليوم الحالي لتقدم مسار المريض
+    const progressionDay = sessionData.isPlanCompleted ? 7 : Math.min(7, Math.max(2, sessionData.currentSessionDay || 2));
+
+    // تحديد اليوم المعروض حالياً: بين 2 و 7 مع منع القفز المستقبلي إن لم تكن الخطة مكتملة
+    let activeDay = progressionDay;
+    if (targetDay) {
+        if (sessionData.isPlanCompleted) {
+            activeDay = Math.max(2, Math.min(7, targetDay));
+        } else {
+            // منع تخطي الجلسات: لا يجوز عرض جلسة مستقبلية مقفلة كجلسة نشطة
+            activeDay = Math.max(2, Math.min(progressionDay, targetDay));
+        }
+    }
+
+    if (activePatient) {
+        activePatient.currentSessionDay = progressionDay;
+        activePatient.activeSessionDay = activeDay;
+        window.activePatient = activePatient;
+    }
 
     const curAssData5 = sessionData.latestAssessment || (typeof currentAssessmentData !== 'undefined' ? currentAssessmentData : null) || {};
     const curPt5 = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint : null;
@@ -5791,8 +5825,9 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 </button>
                 ${[2, 3, 4, 5, 6, 7].map(d => {
                     const isCurrentActive = (d === activeDay);
-                    const isCompleted = (d < sessionData.currentSessionDay || sessionData.isPlanCompleted);
-                    const isFutureLocked = (!sessionData.isPlanCompleted && d > sessionData.currentSessionDay);
+                    const isCompleted = (d < progressionDay || sessionData.isPlanCompleted);
+                    const isFutureLocked = (!sessionData.isPlanCompleted && d > progressionDay);
+                    const isCurrentProgression = (!sessionData.isPlanCompleted && d === progressionDay);
 
                     let bg = '#1e293b';
                     let border = '1px solid #334155';
@@ -5807,17 +5842,30 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                         bg = 'rgba(16, 185, 129, 0.15)';
                         border = '1px solid #10b981';
                         color = '#6ee7b7';
+                    } else if (isCurrentProgression) {
+                        bg = 'rgba(56, 189, 248, 0.15)';
+                        border = '1.5px solid #38bdf8';
+                        color = '#7dd3fc';
                     } else if (isFutureLocked) {
                         bg = 'rgba(15, 23, 42, 0.6)';
                         border = '1px dashed #475569';
                         color = '#64748b';
-                        clickAction = `showFutureSessionLockedPopup(${sessionData.currentSessionDay}, ${d})`;
+                        clickAction = `showFutureSessionLockedPopup(${progressionDay}, ${d})`;
+                    }
+
+                    let statusBadge = '🔒 مقفلة';
+                    if (isCurrentActive) {
+                        statusBadge = (isCompleted && d < progressionDay) ? '🟢 المعروضة (مراجعة)' : '🟢 المعروضة';
+                    } else if (isCompleted) {
+                        statusBadge = '✓ منجزة';
+                    } else if (isCurrentProgression) {
+                        statusBadge = '🔵 جلستك الحالية';
                     }
 
                     return `
                         <button type="button" onclick="${clickAction}" style="background: ${bg}; border: ${border}; color: ${color}; padding: 10px 4px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: 0.2s; min-width: 60px;">
                             <span>الجلسة ${d}</span>
-                            <span style="font-size: 0.75em; opacity: 0.85;">${isCurrentActive ? '🟢 المعروضة' : (isCompleted ? '✓ منجزة' : '🔒 مقفلة')}</span>
+                            <span style="font-size: 0.75em; opacity: 0.85;">${statusBadge}</span>
                         </button>
                     `;
                 }).join('')}
@@ -5825,7 +5873,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         </div>
     `;
 
-    const isDayAlreadyCompleted = (activeDay < sessionData.currentSessionDay || sessionData.isPlanCompleted);
+    const isDayAlreadyCompleted = (activeDay < progressionDay || sessionData.isPlanCompleted);
 
     // حساب القيم المبدئية الدقيقة للساعة
     let initialH = '00', initialM = '00', initialS = '00';
@@ -5920,15 +5968,15 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                         <button type="button" onclick="renderStep6Completion('${patientId}')" style="background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; font-weight: bold; border: none; padding: 10px 22px; border-radius: 25px; font-size: 0.92em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);">
                             🏆 الذهاب إلى وثيقة التخرج والتعافي الشامل
                         </button>
-                    ` : (activeDay < 7 ? `
-                        <button type="button" onclick="renderStep5SessionsDashboard('${patientId}', ${activeDay + 1})" style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #7dd3fc; font-weight: bold; padding: 8px 18px; border-radius: 20px; font-size: 0.88em; cursor: pointer;">
-                            الانتقال للجلسة التالية (#${activeDay + 1}) ⬅️
+                    ` : (activeDay < progressionDay ? `
+                        <button type="button" onclick="renderStep5SessionsDashboard('${patientId}', ${progressionDay})" style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #7dd3fc; font-weight: bold; padding: 8px 18px; border-radius: 20px; font-size: 0.88em; cursor: pointer;">
+                            الانتقال لجلستك الحالية النشطة (#${progressionDay}) ⬅️
                         </button>
                     ` : '')}
                 </div>
             </div>
         `;
-    } else if (activeDay === sessionData.currentSessionDay) {
+    } else if (activeDay === progressionDay) {
         if (lockStatus.isLocked) {
             const totalDuration = lockStatus.totalDurationMs || (24 * 3600 * 1000);
             const remMs = Math.max(0, (lockStatus.targetTime || Date.now()) - Date.now());
@@ -6015,6 +6063,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
 
     container.innerHTML = `
         <div class="patient-recovery-master-card" style="background: #111827; border: 1px solid var(--primary-gold); border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
+            <input type="hidden" id="current-session-number" data-session-number="${activeDay}" value="${activeDay}">
             
             ${isAdminSession() ? `
             <!-- شريط التنقل الخاص بالإدارة (يظهر فقط للأدمن عند فتح جلسة مريض) -->
@@ -6244,40 +6293,47 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             }
         }, 25000);
     }
+    } finally {
+        _isRenderingStep5 = false;
+    }
 }
 
 
 // =========================================================================
 // الخطوة 6: وثيقة التعافي والإنهاء (التخرج بعد 7 أيام)
 // =========================================================================
+let _isRenderingStep6 = false;
 async function renderStep6Completion(patientId, sessionData = null) {
-    if (window.liveSessionClockInterval) {
-        clearInterval(window.liveSessionClockInterval);
-        window.liveSessionClockInterval = null;
-    }
-
-    if (!sessionData) {
-        sessionData = await PatientFlow.initPatientSession(patientId);
-    }
-    if (!sessionData || !sessionData.patient) {
-        console.warn('Patient sessionData unavailable in Step 6; preserving active state.');
-        return;
-    }
-
-    // التحقق المانع: عدم السماح بالوصول لوثيقة التخرج إلا بعد إتمام كامل الأيام السبعة
-    const completedDays = sessionData.dailyLogs ? sessionData.dailyLogs.length : 0;
-    if (!sessionData.isPlanCompleted && completedDays < 7) {
-        showToast(`🔒 وثيقة التعافي والإنهاء مقفلة: تتفعل تلقائياً فقط بعد إتمام جميع جلسات خطة التعافي السبع (7 أيام)! أنت حالياً في اليوم (${completedDays + 1} من 7).`, 'warning');
-        if (completedDays === 0) {
-            renderStep4IndependentDay1(patientId);
-        } else {
-            renderStep5SessionsDashboard(patientId);
+    if (_isRenderingStep6) return;
+    _isRenderingStep6 = true;
+    try {
+        if (window.liveSessionClockInterval) {
+            clearInterval(window.liveSessionClockInterval);
+            window.liveSessionClockInterval = null;
         }
-        return;
-    }
 
-    activePatient = sessionData.patient;
-    goToStep(6);
+        if (!sessionData) {
+            sessionData = await PatientFlow.initPatientSession(patientId);
+        }
+        if (!sessionData || !sessionData.patient) {
+            console.warn('Patient sessionData unavailable in Step 6; preserving active state.');
+            return;
+        }
+
+        // التحقق المانع: عدم السماح بالوصول لوثيقة التخرج إلا بعد إتمام كامل الأيام السبعة
+        const completedDays = sessionData.dailyLogs ? sessionData.dailyLogs.length : 0;
+        if (!sessionData.isPlanCompleted && completedDays < 7) {
+            showToast(`🔒 وثيقة التعافي والإنهاء مقفلة: تتفعل تلقائياً فقط بعد إتمام جميع جلسات خطة التعافي السبع (7 أيام)! أنت حالياً في اليوم (${completedDays + 1} من 7).`, 'warning');
+            if (completedDays === 0) {
+                renderStep4IndependentDay1(patientId);
+            } else {
+                renderStep5SessionsDashboard(patientId);
+            }
+            return;
+        }
+
+        activePatient = sessionData.patient;
+        goToStep(6, { fromRender: true });
 
     const container = document.getElementById('step6-completion-container') || document.getElementById('patient-recovery-dashboard');
     if (!container) return;
@@ -6404,6 +6460,9 @@ async function renderStep6Completion(patientId, sessionData = null) {
             playStationAudio('plan_complete', () => {}, 'motivation');
         }
     }, 400);
+    } finally {
+        _isRenderingStep6 = false;
+    }
 }
 
 // توجيه ذكي للمرحلة المناسبة في خطة التعافي
@@ -7138,7 +7197,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.12';
+const CURRENT_APP_VERSION = 'v30.13';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -7150,6 +7209,12 @@ function _triggerAutoReloadCountdown(targetVer = null) {
     const ver = targetVer || CURRENT_APP_VERSION;
     if (_autoReloadTriggered) return;
     if (sessionStorage.getItem('scp_last_reloaded_ver') === ver) return;
+
+    if (typeof openGlobalVersionUpdateModal === 'function') {
+        openGlobalVersionUpdateModal({ version: ver });
+        return;
+    }
+
     if (document.getElementById('auto-update-overlay')) return;
 
     _autoReloadTriggered = true;
@@ -7504,7 +7569,7 @@ function shareViaNative() {
 }
 
 // التنقل بين الخطوات
-function goToStep(stepNum) {
+function goToStep(stepNum, options = {}) {
     // إيقاف أي صوت محطة سابق فور الانتقال بين الخطوات لمنع أي تداخل
     if (typeof currentActiveStationAudio !== 'undefined' && currentActiveStationAudio) {
         try {
@@ -7573,8 +7638,9 @@ function goToStep(stepNum) {
     }
 
     // إذا دخل المراجع الخطوة 4 (تمارين اليوم الأول)، التحقق من رسم التمارين فوراً وعدم ترك الشاشة فارغة
-    if (stepNum === 4) {
+    if (stepNum === 4 && !options?.fromRender && !_isRenderingStep4) {
         setTimeout(() => {
+            if (_isRenderingStep4) return;
             const day1Box = document.getElementById('step4-day1-container');
             if (day1Box && (!day1Box.children.length || !day1Box.querySelector('.clinical-exercise-card'))) {
                 const targetId = (typeof activePatient !== 'undefined' && activePatient?.patientId) || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null) || localStorage.getItem('smart_current_patient_id') || 'pat_guest';
@@ -7582,12 +7648,13 @@ function goToStep(stepNum) {
                     renderStep4IndependentDay1(targetId);
                 }
             }
-        }, 80);
+        }, 120);
     }
 
     // إذا دخل المراجع الخطوة 5 (متابعة الجلسات)، التحقق من رسم لوحة الجلسات فوراً وعدم ترك الشاشة فارغة
-    if (stepNum === 5) {
+    if (stepNum === 5 && !options?.fromRender && !_isRenderingStep5) {
         setTimeout(() => {
+            if (_isRenderingStep5) return;
             const step5Box = document.getElementById('step5-sessions-container');
             if (step5Box && (!step5Box.children.length || !step5Box.querySelector('.patient-recovery-master-card'))) {
                 const targetId = (typeof activePatient !== 'undefined' && activePatient?.patientId) || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null) || localStorage.getItem('smart_current_patient_id') || 'pat_guest';
@@ -7597,12 +7664,13 @@ function goToStep(stepNum) {
                     loadPatientRecoveryDashboard(targetId, 2);
                 }
             }
-        }, 80);
+        }, 120);
     }
 
     // إذا دخل المراجع الخطوة 6 (وثيقة الإنهاء)، التحقق من رسم الوثيقة فوراً
-    if (stepNum === 6) {
+    if (stepNum === 6 && !options?.fromRender && !_isRenderingStep6) {
         setTimeout(() => {
+            if (_isRenderingStep6) return;
             const step6Box = document.getElementById('step6-completion-container');
             if (step6Box && !step6Box.children.length) {
                 const targetId = (typeof activePatient !== 'undefined' && activePatient?.patientId) || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null) || localStorage.getItem('smart_current_patient_id') || 'pat_guest';
@@ -7610,7 +7678,7 @@ function goToStep(stepNum) {
                     renderStep6Completion(targetId);
                 }
             }
-        }, 80);
+        }, 120);
     }
 
     // إذا دخل المراجع الخطوة 1 (المجسم)، إظهار شريط التوجيه وبنر استئناف الجلسة الجارية وضمان رسم النقاط فوراً
@@ -8562,6 +8630,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         setTimeout(_checkRemoteVersionUpdate, 1500);
     }
 
+    try {
+        const verEl = document.getElementById('app-current-version-text');
+        if (verEl) verEl.textContent = CURRENT_APP_VERSION;
+    } catch(e) {}
+
+    // 📢 عرض رسالة التحديث الملكية العالمية الشاملة في حال وجود إصدار جديد لم يعتمده المستخدم بعد
+    try {
+        const acknowledgedVer = localStorage.getItem('smart_acknowledged_version');
+        const isNotAcknowledged = window._pendingUpdateModalNotice || (acknowledgedVer !== CURRENT_APP_VERSION && acknowledgedVer !== CURRENT_APP_VERSION.replace('v', ''));
+        if (isNotAcknowledged) {
+            setTimeout(() => {
+                if (typeof openGlobalVersionUpdateModal === 'function') {
+                    openGlobalVersionUpdateModal({ version: CURRENT_APP_VERSION });
+                }
+            }, 1000);
+        }
+    } catch(e) {}
+
     // تهيئة الاستماع اللحظي لتعديل توقيت الجلسات سحابياً من لوحة الإدارة
     if (window.SmartCloudSync) {
         if (typeof SmartCloudSync.initTimingListener === 'function') SmartCloudSync.initTimingListener();
@@ -8880,7 +8966,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     } else if (savedTargetStep === 4) {
         await renderStep4IndependentDay1(effectivePatientId);
-        goToStep(4);
         return;
     } else if (savedTargetStep === 3) {
         if (currentAssessmentData) {
@@ -8911,7 +8996,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     } else if (isPlanActive || maxUnlocked >= 4) {
         await renderStep4IndependentDay1(effectivePatientId);
-        goToStep(4);
         return;
     } else if (currentAssessmentData || maxUnlocked >= 3) {
         if (currentAssessmentData) displayDiagnosticReport(currentAssessmentData);

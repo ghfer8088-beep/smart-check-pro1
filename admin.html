@@ -42,9 +42,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=30.00"></script>
-    <script src="js/security-shield.js?v=30.00"></script>
-    <link rel="stylesheet" href="css/style.css?v=30.10">
+    <script src="js/system-watchdog.js?v=30.13"></script>
+    <script src="js/security-shield.js?v=30.13"></script>
+    <link rel="stylesheet" href="css/style.css?v=30.13">
     <style>
         body {
             background-color: #080c14;
@@ -403,6 +403,11 @@
                 <div>
                     <h1 style="color: var(--primary-gold); margin: 0; font-size: 1.45em;">لوحة الإدارة السريرية الشاملة</h1>
                     <div style="color: #94a3b8; font-size: 0.88em;">وداعاً للألم (تقنية الكايروبراكتيك) - مركز الإشعارات ومتابعة المرضى</div>
+                    <div style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.78em; color: #94a3b8; margin-top: 2px;">
+                        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
+                        <span>الإصدار المعتمد:</span>
+                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.13</strong>
+                    </div>
                 </div>
             </div>
 
@@ -427,7 +432,10 @@
                         <span>⚙️</span> إعدادات
                     </button>
                     <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header admin-btn-cache" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 9px 12px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
-                        ⚡ تحديث الكاش (v19.1)
+                        ⚡ تحديث الكاش (v30.13)
+                    </button>
+                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.13) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
+                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.13)
                     </button>
                     <button type="button" id="btn-force-sync" onclick="handleForceFullSync()" style="background: linear-gradient(135deg,rgba(59,130,246,0.25),rgba(99,102,241,0.2)); border: 1px solid #6366f1; color: #a5b4fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="جلب كافة السجلات من السحابة قسرياً وبثها لجميع الأجهزة">
                         🔄 مزامنة كاملة
@@ -788,14 +796,14 @@
                         🎯 رقم الجلسة المستهدفة:
                     </label>
                     <select id="timing-session-num" style="background: #0b111e; border: 1px solid var(--primary-gold); color: #fef08a; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 0.95em; cursor: pointer;">
-                        <option value="all">⚡ جميع الجلسات (فتح أو ضبط شامل لكافة الجلسات)</option>
+                        <option value="1">الجلسة 1 (التشخيص المبدئي والتمارين الأولى)</option>
                         <option value="2">الجلسة 2 (فترة الاستشفاء الأولى)</option>
                         <option value="3">الجلسة 3</option>
                         <option value="4">الجلسة 4</option>
                         <option value="5">الجلسة 5</option>
                         <option value="6">الجلسة 6</option>
                         <option value="7">الجلسة 7</option>
-                        <option value="1">الجلسة 1</option>
+                        <option value="all">⚡ جميع الجلسات (فتح أو ضبط شامل لكافة الجلسات)</option>
                     </select>
                 </div>
 
@@ -1611,15 +1619,15 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/clinic-patients-data.js?v=30.10"></script>
-    <script src="js/mqtt.min.js?v=30.10"></script>
-    <script src="js/cloud-sync.js?v=30.10"></script>
-    <script src="js/geo-tracker.js?v=30.10"></script>
-    <script src="js/database.js?v=30.10"></script>
-    <script src="js/exercise-image-studio.js?v=30.10"></script>
-    <script src="js/admin-engine.js?v=30.10"></script>
-    <script src="js/ai-config.js?v=30.10"></script>
-    <script src="js/ai-engine.js?v=30.10"></script>
+    <script src="js/clinic-patients-data.js?v=30.13"></script>
+    <script src="js/mqtt.min.js?v=30.13"></script>
+    <script src="js/cloud-sync.js?v=30.13"></script>
+    <script src="js/geo-tracker.js?v=30.13"></script>
+    <script src="js/database.js?v=30.13"></script>
+    <script src="js/exercise-image-studio.js?v=30.13"></script>
+    <script src="js/admin-engine.js?v=30.13"></script>
+    <script src="js/ai-config.js?v=30.13"></script>
+    <script src="js/ai-engine.js?v=30.13"></script>
 
     <script>
         let allPatientsList = [];
@@ -3066,6 +3074,7 @@
                         const locationDisplay = city ? `${flag} ${city} (${country})` : `${flag} ${country}`;
                         const safeId = (p.patientId || ('pat_' + idx)).replace(/[^a-zA-Z0-9_-]/g, '');
                         const accId = `royal-acc-${idx}-${safeId}`;
+                        const patCurrentSession = p.currentSessionDay || (item.logsCount != null ? Math.min(7, Math.max(1, item.logsCount + 1)) : ((Array.isArray(p.dailyLogs) && p.dailyLogs.length) ? Math.min(7, p.dailyLogs.length + 1) : 2));
 
                         return `
                         <div class="royal-patient-card">
@@ -3150,7 +3159,7 @@
                                     <button type="button" disabled style="background: #1e293b; color: #64748b; border: 1px solid #334155; padding: 10px; border-radius: 8px; font-size: 0.85em;">
                                         بلا هاتف مسجل
                                     </button>`}
-                                    <button type="button" onclick="openPatientTimingModal('${p.patientId}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}', ${Math.min(7, (item.logsCount || 0) + 1)}, '${p.phone || ''}')" style="background: #2563eb; color: #fff; border: none; padding: 10px; border-radius: 8px; font-size: 0.9em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                                    <button type="button" onclick="openPatientTimingModal('${p.patientId}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}', ${patCurrentSession}, '${p.phone || ''}')" style="background: #2563eb; color: #fff; border: none; padding: 10px; border-radius: 8px; font-size: 0.9em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;">
                                         <span>⏱️ تعديل التوقيت</span>
                                     </button>
                                 </div>
@@ -3486,11 +3495,11 @@
             activeTargetPatientPhone = patientPhone || '';
             activeTargetPatientName = patientName || '';
             document.getElementById('target-patient-id').value = patientId;
-            document.getElementById('timing-patient-name').textContent = `المريض: ${patientName} (${patientPhone || 'بلا هاتف'}) - الجلسة التالية: #${activeTargetSessionNum}`;
+            document.getElementById('timing-patient-name').textContent = `المريض: ${patientName} (${patientPhone || 'بلا هاتف'}) - الجلسة الحالية: #${activeTargetSessionNum}`;
             const sNumSelect = document.getElementById('timing-session-num');
             if (sNumSelect) {
                 const matchOpt = Array.from(sNumSelect.options).find(o => o.value === String(activeTargetSessionNum));
-                sNumSelect.value = matchOpt ? String(activeTargetSessionNum) : 'all';
+                sNumSelect.value = matchOpt ? String(activeTargetSessionNum) : '2';
             }
             document.getElementById('patient-timing-modal').style.display = 'flex';
         }
@@ -3529,7 +3538,7 @@
                 const s = document.getElementById('timing-secs').value;
                 const isBroadcast = document.getElementById('timing-broadcast-all') ? document.getElementById('timing-broadcast-all').checked : true;
 
-                const sNum = (targetVal === 'all') ? 2 : (parseInt(targetVal) || activeTargetSessionNum);
+                const sNum = (targetVal === 'all') ? 0 : (parseInt(targetVal) || activeTargetSessionNum);
                 AdminEngine.setPatientSessionTiming(patientId, sNum, h, m, s, activeTargetPatientPhone, activeTargetPatientName, isBroadcast);
                 document.getElementById('patient-timing-modal').style.display = 'none';
                 alert(`✅ تم ضبط التوقيت بنجاح (${h} س و ${m} د و ${s} ث) وبث التعديل لهاتف المريض سحابياً!`);
@@ -5353,6 +5362,21 @@
             }
             window.location.reload(true);
         }
+
+        // بث رسالة التحديث الجديد الشامل (v30.13) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
+        function handleBroadcastGlobalVersion() {
+            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.13) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث الملكي وتحديث الكاش تلقائياً لكافة المراجعين.')) {
+                if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
+                    SmartCloudSync.broadcastAppVersionUpdate({
+                        version: 'v30.13',
+                        title: 'تم إطلاق التحديث السريري والتقني الشامل (v30.13)',
+                        timestamp: Date.now()
+                    });
+                }
+                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.13) عبر شبكة البث اللحظي MQTT و NTFY و Master Hub لكافة الأجهزة!');
+            }
+        }
+        window.handleBroadcastGlobalVersion = handleBroadcastGlobalVersion;
 
         // مزامنة كاملة قسرية: جلب كل السجلات من جميع مصادر السحابة وبثها لجميع الأجهزة
         async function handleForceFullSync() {
