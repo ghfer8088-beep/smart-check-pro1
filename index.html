@@ -75,7 +75,8 @@
 
     <!-- نافذة الترحيب بالمشترك الجديد والتعريف بالأداة والإقرار الطبي -->
     <div id="welcome-tour-modal" class="app-modal" style="display: none;">
-        <div class="modal-inner" style="max-width: 650px; text-align: center; border: 2px solid var(--primary-gold); padding: 25px 28px; background: #0f172a; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.7);">
+        <div class="modal-inner" style="max-width: 650px; text-align: center; border: 2px solid var(--primary-gold); padding: 25px 28px; background: #0f172a; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.7); position: relative;">
+            <button type="button" onclick="closeWelcomeTourModal()" aria-label="إغلاق" style="position: absolute; left: 14px; top: 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(212,175,55,0.4); color: #94a3b8; font-size: 1.3em; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">&times;</button>
             <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 12px;">
                 <img src="assets/logo.png" alt="شعار وداعاً للألم" style="height: 54px; width: 54px; border-radius: 50%; border: 1.5px solid var(--primary-gold);">
                 <div style="text-align: right;">
@@ -1822,21 +1823,21 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=30.10"></script>
-    <script src="js/cloud-sync.js?v=30.10"></script>
-    <script src="js/geo-tracker.js?v=30.10"></script>
-    <script src="js/database.js?v=30.10"></script>
-    <script src="js/exercise-image-studio.js?v=30.10"></script>
-    <script src="js/exercises-db.js?v=30.10"></script>
-    <script src="js/diagnostic-engine.js?v=30.10"></script>
-    <script src="js/audio-pacer.js?v=30.10"></script>
-    <script src="js/patient-flow.js?v=30.10"></script>
-    <script src="js/admin-engine.js?v=30.10"></script>
-    <script src="js/ai-config.js?v=30.10"></script>
-    <script src="js/ai-engine.js?v=30.10"></script>
-    <script src="js/app.js?v=30.10"></script>
-    <script src="js/text-editor.js?v=30.10"></script>
-    <script src="js/smart-guidance.js?v=30.10"></script>
+    <script src="js/mqtt.min.js?v=30.11"></script>
+    <script src="js/cloud-sync.js?v=30.11"></script>
+    <script src="js/geo-tracker.js?v=30.11"></script>
+    <script src="js/database.js?v=30.11"></script>
+    <script src="js/exercise-image-studio.js?v=30.11"></script>
+    <script src="js/exercises-db.js?v=30.11"></script>
+    <script src="js/diagnostic-engine.js?v=30.11"></script>
+    <script src="js/audio-pacer.js?v=30.11"></script>
+    <script src="js/patient-flow.js?v=30.11"></script>
+    <script src="js/admin-engine.js?v=30.11"></script>
+    <script src="js/ai-config.js?v=30.11"></script>
+    <script src="js/ai-engine.js?v=30.11"></script>
+    <script src="js/app.js?v=30.11"></script>
+    <script src="js/text-editor.js?v=30.11"></script>
+    <script src="js/smart-guidance.js?v=30.11"></script>
 
     <script>
         // مؤشر المراجعين المتفاعلين أونلاين الآن (يتراوح عشوائياً بديناميكية طبيعية بين 40 و 99)

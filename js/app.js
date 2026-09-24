@@ -914,13 +914,21 @@ async function restoreActiveSessionState() {
     if (activePatient) {
         const ptArea = activePatient.selectedPoint || activePatient.painArea || activePatient.painPointId || '';
         if (ptArea && (!currentSelectedPoint || queryPid)) {
-            const isSpine = /ظهر|قطني|l4|l5|s1|فقرات|spine|lumbar/i.test(ptArea);
-            if (isSpine) {
-                currentSelectedPoint = {
-                    id: 'lumbar_spine',
-                    title: 'الفقرات القطنية وأسفل الظهر (L4-S1)',
-                    region: 'spine'
-                };
+            const allPts = (typeof getFrontPoints === 'function' && typeof getBackPoints === 'function')
+                ? [...getFrontPoints(), ...getBackPoints()]
+                : [];
+            const foundPt = allPts.find(p => p.id === ptArea || p.title === ptArea);
+            if (foundPt) {
+                currentSelectedPoint = foundPt;
+            } else {
+                const isSpine = /ظهر|قطني|l4|l5|s1|فقرات|spine|lumbar/i.test(ptArea);
+                if (isSpine) {
+                    currentSelectedPoint = {
+                        id: 'lumbar_spine',
+                        title: 'الفقرات القطنية وأسفل الظهر (L4-S1)',
+                        region: 'spine'
+                    };
+                }
             }
         }
     }
@@ -934,7 +942,9 @@ async function restoreActiveSessionState() {
 
     if (!currentSelectedPoint && currentAssessmentData && currentAssessmentData.pointId) {
         try {
-            const allPts = (typeof ANATOMY_POINTS !== 'undefined') ? (ANATOMY_POINTS.front.concat(ANATOMY_POINTS.back)) : [];
+            const allPts = (typeof getFrontPoints === 'function' && typeof getBackPoints === 'function')
+                ? [...getFrontPoints(), ...getBackPoints()]
+                : [];
             currentSelectedPoint = allPts.find(p => p.id === currentAssessmentData.pointId) || {
                 id: currentAssessmentData.pointId,
                 title: currentAssessmentData.painAreaTitle || 'المفصل المحدد',
@@ -6420,11 +6430,11 @@ async function loadPatientRecoveryDashboard(patientId, targetDay = null) {
                 phone: authP?.phone || curAss?.patientPhone || '',
                 painArea: resolvedPain,
                 painAreaTitle: resolvedPain,
-                painPointId: curAss?.pointId || 'lumbar_spine',
+                painPointId: curAss?.pointId || (typeof currentSelectedPoint !== 'undefined' ? (currentSelectedPoint?.id || currentSelectedPoint?.region) : '') || 'lumbar_spine',
                 painLevel: curAss?.painSeverity || 7,
                 isPlanActivated: true
             },
-            latestAssessment: curAss || { pointId: 'lumbar_spine', primaryDiagnosisKey: '', painAreaTitle: resolvedPain },
+            latestAssessment: curAss || { pointId: (typeof currentSelectedPoint !== 'undefined' ? (currentSelectedPoint?.id || currentSelectedPoint?.region) : '') || 'lumbar_spine', primaryDiagnosisKey: '', painAreaTitle: resolvedPain },
             dailyLogs: [],
             currentSessionDay: 1,
             isPlanCompleted: false,
@@ -7941,8 +7951,8 @@ async function openCompletionCertificateModal(patientId) {
         const completionDate = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
 
         activeCertificateData = {
-            patientName: patient.name,
-            patientPhone: patient.phone,
+            patientName: patient?.name || 'المراجع الكريم',
+            patientPhone: patient?.phone || '',
             certCode,
             completionDate,
             painAreaTitle,
@@ -7969,7 +7979,7 @@ async function openCompletionCertificateModal(patientId) {
 
         if (codeEl) codeEl.textContent = certCode;
         if (dateEl) dateEl.textContent = `التاريخ: ${completionDate}`;
-        if (nameEl) nameEl.textContent = patient.name;
+        if (nameEl) nameEl.textContent = patient?.name || 'المراجع الكريم';
         if (areaEl) areaEl.textContent = painAreaTitle;
         if (dropEl) dropEl.textContent = `${painDrop}%`;
         if (mobEl) mobEl.textContent = `${mobilityScore}%`;
@@ -7988,6 +7998,7 @@ async function openCompletionCertificateModal(patientId) {
         showToast('حدث خطأ أثناء إعداد الشهادة الرقمية', 'error');
     }
 }
+window.openCompletionCertificateModal = openCompletionCertificateModal;
 
 function closeCompletionCertificateModal() {
     const modal = document.getElementById('completion-certificate-modal');
@@ -8002,15 +8013,17 @@ function closeCompletionCertificateModal() {
         SmartGuidance.checkLiveGuidanceState();
     }
 }
+window.closeCompletionCertificateModal = closeCompletionCertificateModal;
 
 function printCertificate() {
     window.print();
 }
+window.printCertificate = printCertificate;
 
 function shareCertificateToWhatsApp() {
     if (!activeCertificateData) return;
     const text = `🏆 *وسام الانتصار على الألم والتعافي الحركي - وداعاً للألم للكايروبراكتيك*\n\n` +
-        `👤 *المراجع البطل:* ${activeCertificateData.patientName}\n` +
+        `👤 *المراجع البطل:* ${activeCertificateData.patientName || 'المراجع الكريم'}\n` +
         `🎯 *موضع الشكوى والتعافي:* ${activeCertificateData.painAreaTitle}\n` +
         `📉 *نسبة التراجع وتسكين الألم:* ${activeCertificateData.painDrop}% (من ${activeCertificateData.baselinePain}/10 إلى ${activeCertificateData.finalPain}/10)\n` +
         `🤸‍♂️ *استعادة المدى الحركي والمرونة:* ${activeCertificateData.mobilityScore}%\n` +
@@ -8024,6 +8037,7 @@ function shareCertificateToWhatsApp() {
     const url = `https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
 }
+window.shareCertificateToWhatsApp = shareCertificateToWhatsApp;
 
 // تصدير وعرض الملف السريري الشامل للمعالج (Doctor Clinical Summary)
 async function exportClinicalSummaryForDoctor(patientId) {
@@ -8242,11 +8256,13 @@ async function exportClinicalSummaryForDoctor(patientId) {
         showToast('حدث خطأ أثناء إنشاء الملخص السريري', 'error');
     }
 }
+window.exportClinicalSummaryForDoctor = exportClinicalSummaryForDoctor;
 
 function closeDoctorSummaryModal() {
     const modal = document.getElementById('doctor-summary-modal');
     if (modal) modal.style.display = 'none';
 }
+window.closeDoctorSummaryModal = closeDoctorSummaryModal;
 
 function sendDoctorSummaryWhatsApp() {
     if (!activeDoctorSummaryData) return;
@@ -8257,8 +8273,8 @@ function sendDoctorSummaryWhatsApp() {
     const message = `*📋 تقرير التقدم السريري للمراجع - وداعاً للألم*\n` +
         `----------------------------------------\n` +
         `👤 *بيانات المريض:*\n` +
-        `• الاسم: ${d.patientName}\n` +
-        `• الهاتف: ${d.patientPhone}\n` +
+        `• الاسم: ${d.patientName || 'المراجع الكريم'}\n` +
+        `• الهاتف: ${d.patientPhone || '--'}\n` +
         `• العمر/الجنس: ${d.patientAge} سنة | ${d.patientGender}\n` +
         (d.bmiDisplay && d.bmiDisplay !== '--' ? `• القياسات الحيوية: الوزن ${d.patientWeight || '--'} كجم | الطول ${d.patientHeight || '--'} سم | BMI: ${d.bmiDisplay}\n` : '') +
         `• موضع الشكوى: ${d.painArea}\n\n` +
@@ -8280,6 +8296,7 @@ function sendDoctorSummaryWhatsApp() {
     const url = `https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
 }
+window.sendDoctorSummaryWhatsApp = sendDoctorSummaryWhatsApp;
 
 // بنر التذكير اليومي الذكي للجلسات
 function getNotificationReminderBannerHTML(patientId) {
@@ -8415,6 +8432,12 @@ function acceptWelcomeTourModal() {
 function acceptMedicalDisclaimer() {
     acceptWelcomeTourModal();
 }
+
+function closeWelcomeTourModal() {
+    acceptWelcomeTourModal();
+}
+window.closeWelcomeTourModal = closeWelcomeTourModal;
+window.acceptWelcomeTourModal = acceptWelcomeTourModal;
 
 // تشغيل ترحيب د. سارة الصوتي تلقائياً فور الدخول أو أول تفاعل للمستخدم
 function autoPlayWelcomeAudioIfEligible() {
