@@ -3854,6 +3854,39 @@ function renderSpecializedClinicalReportStep3(data, reportContainer) {
                 </div>
             </div>
 
+            <!-- زر تفعيل الخطة المجانية والصدقة الجارية -->
+            <div style="text-align: center; margin: 24px auto; max-width: 520px;">
+                <button type="button" onclick="window.activateRecoveryPlanInstantly ? window.activateRecoveryPlanInstantly() : activateRecoveryPlanInstantly()" class="btn-plan-royal-card" id="btn-activate-plan-royal-spec" aria-label="إضغط هنا لتفعيل الخطة المجانية">
+                    <div class="royal-card-halo"></div>
+                    <div class="royal-card-shimmer"></div>
+                    <div class="royal-main-content" style="justify-content: center; align-items: center; text-align: center; gap: 14px;">
+                        <div class="royal-icon-box" style="width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;">
+                            <span class="royal-icon-emoji" style="font-size: 1.4em;">🎁</span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex: 1;">
+                            <div class="pulsing-click-here" style="color: #fef08a; font-size: 1.15em; font-weight: 900; letter-spacing: 0.8px; margin-bottom: 2px;">
+                                إضغط هنا
+                            </div>
+                            <div class="royal-cta-headline" style="font-size: 1.35em; font-weight: 900; color: #ffffff; text-shadow: 0 2px 8px rgba(0,0,0,0.8); letter-spacing: 0.4px; line-height: 1.25; text-align: center;">
+                                لتفعيل الخطة المجانية وبدء اليوم الأول
+                            </div>
+                        </div>
+                        <div class="royal-arrow-box" style="width: 44px; height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                            <span class="royal-arrow-anim" style="font-size: 1.25em;">⬅️</span>
+                        </div>
+                    </div>
+                </button>
+                <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(212, 175, 55, 0.18) 100%); border: 1.5px solid var(--primary-gold); border-radius: 12px; padding: 12px 16px; margin-top: 14px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                    <div style="color: #fef08a; font-weight: 800; font-size: 0.98em; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 3px; flex-wrap: wrap;">
+                        <span style="font-size: 1.2em;">🌿</span>
+                        <span>مقدمة مجاناً بالكامل كصدقة جارية عن روح المرحوم والد المعالج جمال قبها مطور هذه الأداة</span>
+                    </div>
+                    <div style="color: #6ee7b7; font-size: 0.88em; font-weight: bold;">
+                        نسألكم له خالص الدعاء بالرحمة والمغفرة وعلو الدرجات في الجنة 🤲
+                    </div>
+                </div>
+            </div>
+
             <!-- 6. بطاقة التحويل المباشر وحجز الموعد / الزيارة المنزلية -->
             <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.98) 100%); border: 2px solid #10b981; border-radius: 16px; padding: 24px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
                 <div style="font-size: 2.6em; margin-bottom: 10px;">🩺</div>
@@ -3921,6 +3954,56 @@ function playRoyalDuaaAudio() {
     }
 }
 window.playRoyalDuaaAudio = playRoyalDuaaAudio;
+
+// تشغيل صوت د. سارة بعد اختفاء نافذة الصدقة وتأكيد بدء الخطة
+function playSarahCharityIntroAudio(patientName = '') {
+    const pName = patientName || (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '');
+    const cleanName = (pName && !/^(?:مراجع|بطل|عزيزي|undefined|null|pat_guest)$/i.test(pName)) ? ` يا ${pName}` : '';
+    const speechText = `أهلاً بك${cleanName}. هذه الخطة العلاجية والتأهيلية مقدمة لك مجاناً بالكامل كصدقة جارية عن روح المرحوم والد المعالج جمال قبها، رحمه الله تعالى وجعل مأواه الفردوس الأعلى من الجنة. نسألكم له خالص الدعاء بالرحمة والمغفرة. والآن سنبدأ معاً أولى خطوات التعافي وجلسة اليوم الأول لتفريغ الضغط عن الفقرات والمفاصل بأمان تام.`;
+
+    const statusEl = document.getElementById('sarah-charity-voice-status');
+    const bannerEl = document.getElementById('sarah-charity-voice-banner');
+    if (bannerEl) bannerEl.style.display = 'flex';
+    if (statusEl) statusEl.textContent = '🔊 د. سارة تتحدث الآن...';
+
+    const onFinish = () => {
+        if (statusEl) statusEl.textContent = '🔁 إعادة الاستماع لكلمة د. سارة';
+    };
+
+    try {
+        if (typeof Wada3anAiEngine !== 'undefined') {
+            Wada3anAiEngine.unlockAudio();
+            if (typeof Wada3anAiEngine.selectDoctorPersona === 'function') {
+                Wada3anAiEngine.selectDoctorPersona('sarah');
+            }
+            if (typeof Wada3anAiEngine.speakWithNaturalSystemVoice === 'function') {
+                Wada3anAiEngine.speakWithNaturalSystemVoice(speechText, onFinish);
+                return;
+            } else if (typeof Wada3anAiEngine.speakText === 'function') {
+                Wada3anAiEngine.speakText(speechText, onFinish);
+                return;
+            }
+        }
+    } catch(e) {
+        console.warn('Wada3anAiEngine charity speech notice:', e);
+    }
+
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        try {
+            window.speechSynthesis.cancel();
+            const ut = new SpeechSynthesisUtterance(speechText);
+            ut.lang = 'ar-SA';
+            ut.rate = 0.95;
+            ut.pitch = 1.05;
+            ut.onend = onFinish;
+            ut.onerror = onFinish;
+            window.speechSynthesis.speak(ut);
+        } catch(e) {
+            onFinish();
+        }
+    }
+}
+window.playSarahCharityIntroAudio = playSarahCharityIntroAudio;
 
 // استرجاع وعرض التقرير الطبي فوراً دون أي شاشات انتظار أو تعليق
 async function ensureAndDisplayReport() {
@@ -4481,7 +4564,7 @@ function displayDiagnosticReport(data) {
                                     إضغط هنا
                                 </div>
                                 <div class="royal-cta-headline" style="font-size: 1.35em; font-weight: 900; color: #ffffff; text-shadow: 0 2px 8px rgba(0,0,0,0.8); letter-spacing: 0.4px; line-height: 1.25; text-align: center;">
-                                    ${isRegisteredPatient ? 'لبدء جلسة اليوم الأول فوراً' : 'لتفعيل الخطة المجانية'}
+                                    لتفعيل الخطة المجانية وبدء اليوم الأول
                                 </div>
                             </div>
                             <div class="royal-arrow-box" style="width: 44px; height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
@@ -5224,6 +5307,7 @@ function showRoyalDuaaModal(patientId = null) {
     const modal = document.getElementById('royal-duaa-modal');
     if (modal) {
         modal.style.display = 'flex';
+        modal.style.zIndex = '99999999';
         const inner = modal.querySelector('.modal-inner');
         if (inner) inner.scrollTop = 0;
 
@@ -5241,6 +5325,11 @@ function showRoyalDuaaModal(patientId = null) {
         if (typeof goToStep === 'function') goToStep(4);
         if (typeof renderStep4IndependentDay1 === 'function') renderStep4IndependentDay1(pId);
         loadPatientRecoveryDashboard(pId);
+        setTimeout(() => {
+            if (typeof playSarahCharityIntroAudio === 'function') {
+                playSarahCharityIntroAudio();
+            }
+        }, 350);
     }
 }
 window.showRoyalDuaaModal = showRoyalDuaaModal;
@@ -5258,9 +5347,19 @@ function closeRoyalDuaaModal() {
     if (stickyBar) {
         stickyBar.style.transform = 'translateY(0)';
     }
-    if (window.SmartGuidance && typeof SmartGuidance.checkLiveGuidanceState === 'function') {
-        SmartGuidance.checkLiveGuidanceState();
+
+    // الانتقال للمرحلة 4 (اليوم الأول) وتشغيل صوت د. سارة بعد اختفاء النافذة
+    const pId = pendingDuaaPatientId || localStorage.getItem('smart_current_patient_id') || 'pat_guest';
+    if (typeof goToStep === 'function') goToStep(4);
+    if (typeof renderStep4IndependentDay1 === 'function') renderStep4IndependentDay1(pId);
+    if (window.SmartGuidance && typeof SmartGuidance.onDuaaModalClosed === 'function') {
+        SmartGuidance.onDuaaModalClosed();
     }
+    setTimeout(() => {
+        if (typeof playSarahCharityIntroAudio === 'function') {
+            playSarahCharityIntroAudio(activePatient?.name || activePatient?.fullName);
+        }
+    }, 350);
 }
 window.closeRoyalDuaaModal = closeRoyalDuaaModal;
 
@@ -5307,13 +5406,12 @@ async function confirmRoyalDuaaAndProceed() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, 100);
 
-    if (typeof playStationAudio === 'function') {
-        try {
-            playStationAudio('recovery');
-        } catch (e) {
-            console.warn('Background recovery audio notice:', e);
+    // 2. بعد اختفاء رسالة الصدقة مباشرة، ينطلق صوت د. سارة ليؤكد أن الخطة صدقة جارية ويبدأ اليوم الأول
+    setTimeout(() => {
+        if (typeof playSarahCharityIntroAudio === 'function') {
+            playSarahCharityIntroAudio(activePatient?.name || activePatient?.fullName);
         }
-    }
+    }, 350);
 }
 window.confirmRoyalDuaaAndProceed = confirmRoyalDuaaAndProceed;
 
@@ -5546,14 +5644,28 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                 </button>` : ''}
             </div>
 
-            <!-- إهداء الصدقة الجارية والاستماع لتلاوة الدعاء الصوتي -->
-            <div style="background: rgba(16, 185, 129, 0.08); border: 1.5px solid rgba(16, 185, 129, 0.35); border-radius: 10px; padding: 10px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <div style="color: #6ee7b7; font-size: 0.88em; line-height: 1.6; flex: 1 1 280px;">
-                    🌿 هذا البرنامج العلاجي والمنزلي متاح مجاناً كصدقة جارية عن روح المرحوم والد المعالج جمال قبها مطور هذه الأداة - نسألكم له صالح الدعاء بالرحمة والمغفرة وعلو الدرجات في الجنة.
+            <!-- بطاقة إهداء الصدقة الجارية وكلمة د. سارة الصوتية الترحيبية -->
+            <div id="sarah-charity-voice-banner" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 14px 18px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+                <div style="display: flex; align-items: center; gap: 12px; flex: 1 1 300px;">
+                    <span style="font-size: 2.2em; background: rgba(16, 185, 129, 0.2); border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 1.5px solid #10b981; flex-shrink: 0;">👩‍⚕️</span>
+                    <div>
+                        <div style="color: #6ee7b7; font-weight: 800; font-size: 1em; display: flex; align-items: center; gap: 6px;">
+                            <span>د. سارة (المستشارة الطبية):</span>
+                            <span style="background: rgba(212, 175, 55, 0.2); color: var(--primary-gold); padding: 2px 8px; border-radius: 10px; font-size: 0.78em;">🌿 صدقة جارية</span>
+                        </div>
+                        <div style="color: #f1f5f9; font-size: 0.92em; line-height: 1.6; margin-top: 3px;">
+                            «هذه الخطة مقدمة مجاناً بالكامل كصدقة جارية عن روح المرحوم والد المعالج جمال قبها، نسألكم له خالص الدعاء بالرحمة والمغفرة. والآن سنبدأ معاً أولى خطوات التعافي وجلسة اليوم الأول.»
+                        </div>
+                    </div>
                 </div>
-                <button type="button" onclick="showRoyalDuaaModal('${patientId}')" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(16, 185, 129, 0.25) 100%); border: 1px solid var(--primary-gold); color: #fef08a; padding: 6px 14px; border-radius: 20px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
-                    <span>🤲</span> <span>استمع لتلاوة الدعاء الصوتي</span>
-                </button>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" id="btn-replay-sarah-charity" onclick="playSarahCharityIntroAudio('${(sessionData.patient?.name || '').replace(/'/g, "\\'")}')" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(16, 185, 129, 0.3) 100%); border: 1.5px solid var(--primary-gold); color: #fef08a; padding: 8px 16px; border-radius: 20px; font-weight: 800; font-size: 0.86em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+                        <span id="sarah-charity-voice-status">🔊 استمع لكلمة د. سارة</span>
+                    </button>
+                    <button type="button" onclick="showRoyalDuaaModal('${patientId}')" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #a7f3d0; padding: 8px 14px; border-radius: 20px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
+                        <span>🤲</span> <span>نص الدعاء</span>
+                    </button>
+                </div>
             </div>
 
             <!-- بنر علوي للاستشارة المباشرة مع المعالج -->
@@ -7400,7 +7512,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.15';
+const CURRENT_APP_VERSION = 'v30.16';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -9752,6 +9864,14 @@ function playClinicalAudioFallback(stationKey, onDone) {
     } catch (e) {}
 
     // نطق سريري فوري باللغة العربية إن كان متاحاً
+    if (stationKey === 'recovery') {
+        if (typeof playSarahCharityIntroAudio === 'function') {
+            playSarahCharityIntroAudio();
+        }
+        if (onDone) onDone();
+        return;
+    }
+
     if ('speechSynthesis' in window) {
         let msg = '';
         if (stationKey === 'exercise_start') msg = 'ابدأ التمرين بهدوء وتنفس بانتظام';
