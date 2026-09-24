@@ -3926,36 +3926,51 @@ function renderSpecializedClinicalReportStep3(data, reportContainer) {
 }
 window.renderSpecializedClinicalReportStep3 = renderSpecializedClinicalReportStep3;
 
-// تشغيل وتلاوة الدعاء الصوتي بصوت خاشع ومريح مع مؤشر بصري تفاعلي
+// تشغيل وتلاوة الدعاء الصوتي بصوت خاشع ومريح عبر تسجيل الاستوديو البشري الأصلي
 function playRoyalDuaaAudio() {
-    const duaaText = "نسألكم خالص الدعاء بالرحمة والمغفرة لوالد المعالج جمال قبها، رحمه الله تعالى وجعل مأواه الفردوس الأعلى من الجنة... اللهم اغفر له وارحمه، وعافه واعف عنه، وأكرم نزله ووسّع مدخله، واجعل قبره روضة من رياض الجنة، واجعل هذا العمل صدقة جارية في ميزان حسناته، وسبباً لشفاء وعافية كل مراجع ومبتلى.";
     const iconEl = document.getElementById('duaa-audio-icon');
     const textEl = document.getElementById('duaa-audio-text');
     const btn = document.getElementById('btn-play-duaa-audio');
     
-    if (iconEl) iconEl.textContent = '🔊';
-    if (textEl) textEl.textContent = 'جاري تلاوة الدعاء بصوت خاشع... 🤲';
-    if (btn) btn.style.borderColor = '#10b981';
+    // إمكانية الإيقاف المؤقت أو المتابعة إذا كان الصوت البشري قيد التشغيل بالفعل
+    if (currentActiveStationAudio && !currentActiveStationAudio.paused && currentActiveStationAudio.currentTime > 0) {
+        try {
+            currentActiveStationAudio.pause();
+        } catch(e) {}
+        if (iconEl) iconEl.textContent = '🔊';
+        if (textEl) textEl.textContent = 'متابعة الاستماع لتلاوة الدعاء الصوتي (د. سارة) 🤲';
+        if (btn) {
+            btn.style.borderColor = 'var(--primary-gold)';
+            btn.style.boxShadow = 'none';
+        }
+        return;
+    }
+
+    if (iconEl) iconEl.textContent = '⏸️';
+    if (textEl) textEl.textContent = 'د. سارة تتلو الدعاء بالرحمة والمغفرة... 🤲';
+    if (btn) {
+        btn.style.borderColor = '#10b981';
+        btn.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.4)';
+    }
 
     const onFinish = () => {
         if (iconEl) iconEl.textContent = '🔁';
         if (textEl) textEl.textContent = 'إعادة الاستماع لتلاوة الدعاء الصوتي 🤲';
-        if (btn) btn.style.borderColor = 'var(--primary-gold)';
+        if (btn) {
+            btn.style.borderColor = 'var(--primary-gold)';
+            btn.style.boxShadow = 'none';
+        }
     };
 
     try {
-        if (typeof Wada3anAiEngine !== 'undefined' && typeof Wada3anAiEngine.speakWithNaturalSystemVoice === 'function') {
-            Wada3anAiEngine.speakWithNaturalSystemVoice(duaaText, onFinish);
-        } else if (typeof Wada3anAiEngine !== 'undefined' && typeof Wada3anAiEngine.speakText === 'function') {
-            Wada3anAiEngine.speakText(duaaText, onFinish);
-        } else if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            const ut = new SpeechSynthesisUtterance(duaaText);
-            ut.lang = 'ar-SA';
-            ut.rate = 0.90;
-            ut.onend = onFinish;
-            ut.onerror = onFinish;
-            window.speechSynthesis.speak(ut);
+        if (typeof playStationAudio === 'function') {
+            playStationAudio('recovery', onFinish);
+        } else {
+            const audio = new Audio('assets/audio/station_recovery.mp3');
+            currentActiveStationAudio = audio;
+            audio.onended = onFinish;
+            audio.onerror = onFinish;
+            audio.play().catch(onFinish);
         }
     } catch (e) {
         console.warn('playRoyalDuaaAudio error:', e);
@@ -3964,20 +3979,21 @@ function playRoyalDuaaAudio() {
 }
 window.playRoyalDuaaAudio = playRoyalDuaaAudio;
 
-// تشغيل صوت د. سارة بعد اختفاء نافذة الصدقة وتأكيد بدء الخطة
+// تشغيل صوت د. سارة البشري الاستوديو بعد اختفاء نافذة الصدقة وتأكيد بدء الخطة
 function playSarahCharityIntroAudio(patientName = '') {
-    let clean = (patientName || '').trim();
-    if (!clean || /^(?:مراجع|مراجع كريم|المراجع الكريم|المراجع المحترم|بطل|بطل التعافي|عزيزي|عزيزتي|undefined|null|pat_guest)$/i.test(clean)) {
-        if (typeof getResolvedPatientName === 'function') {
-            clean = getResolvedPatientName();
-        }
-    }
-    const cleanName = (clean && !/^(?:مراجع|مراجع كريم|المراجع الكريم|المراجع المحترم|بطل|بطل التعافي|عزيزي|عزيزتي|undefined|null|pat_guest)$/i.test(clean)) ? ` يا ${clean}` : '';
-    const speechText = `أهلاً بك${cleanName}. هذه الخطة العلاجية والتأهيلية مقدمة لك مجاناً بالكامل كصدقة جارية عن روح المرحوم والد المعالج جمال قبها، رحمه الله تعالى وجعل مأواه الفردوس الأعلى من الجنة. نسألكم له خالص الدعاء بالرحمة والمغفرة. والآن سنبدأ معاً أولى خطوات التعافي وجلسة اليوم الأول لتفريغ الضغط عن الفقرات والمفاصل بأمان تام.`;
-
     const statusEl = document.getElementById('sarah-charity-voice-status');
     const bannerEl = document.getElementById('sarah-charity-voice-banner');
     if (bannerEl) bannerEl.style.display = 'flex';
+
+    // إذا كان الصوت الاستوديو يعمل بالفعل، نتيح الإيقاف المؤقت أو المتابعة
+    if (currentActiveStationAudio && !currentActiveStationAudio.paused && currentActiveStationAudio.currentTime > 0) {
+        try {
+            currentActiveStationAudio.pause();
+        } catch(e) {}
+        if (statusEl) statusEl.textContent = '🔊 متابعة الاستماع لكلمة د. سارة';
+        return;
+    }
+
     if (statusEl) statusEl.textContent = '🔊 د. سارة تتحدث الآن...';
 
     const onFinish = () => {
@@ -3985,42 +4001,18 @@ function playSarahCharityIntroAudio(patientName = '') {
     };
 
     try {
-        if (typeof Wada3anAiEngine !== 'undefined') {
-            if (typeof Wada3anAiEngine.unlockAudio === 'function') {
-                Wada3anAiEngine.unlockAudio();
-            }
-            if (typeof Wada3anAiEngine.selectDoctorPersona === 'function') {
-                Wada3anAiEngine.selectDoctorPersona('sarah');
-            }
-            if (typeof Wada3anAiEngine.speakWithNaturalSystemVoice === 'function') {
-                Wada3anAiEngine.speakWithNaturalSystemVoice(speechText, onFinish);
-                return;
-            } else if (typeof Wada3anAiEngine.speakText === 'function') {
-                Wada3anAiEngine.speakText(speechText, onFinish);
-                return;
-            }
+        if (typeof playStationAudio === 'function') {
+            playStationAudio('recovery', onFinish);
+        } else {
+            const audio = new Audio('assets/audio/station_recovery.mp3');
+            currentActiveStationAudio = audio;
+            audio.onended = onFinish;
+            audio.onerror = onFinish;
+            audio.play().catch(onFinish);
         }
     } catch(e) {
-        console.warn('Wada3anAiEngine charity speech notice:', e);
-    }
-
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        try {
-            window.speechSynthesis.cancel();
-            const ut = new SpeechSynthesisUtterance(speechText);
-            ut.lang = 'ar-SA';
-            ut.rate = 0.95;
-            ut.pitch = 1.05;
-            const voices = window.speechSynthesis.getVoices() || [];
-            const arVoice = voices.find(v => v.lang && v.lang.startsWith('ar') && (v.name.includes('Sarah') || v.name.includes('Zeina') || v.name.includes('Laila') || v.name.includes('Salma') || v.name.includes('Female')))
-                         || voices.find(v => v.lang && v.lang.startsWith('ar'));
-            if (arVoice) ut.voice = arVoice;
-            ut.onend = onFinish;
-            ut.onerror = onFinish;
-            window.speechSynthesis.speak(ut);
-        } catch(e) {
-            onFinish();
-        }
+        console.warn('playSarahCharityIntroAudio error:', e);
+        onFinish();
     }
 }
 window.playSarahCharityIntroAudio = playSarahCharityIntroAudio;
@@ -5376,6 +5368,13 @@ function closeRoyalDuaaModal() {
         modal.style.opacity = '0';
         modal.style.visibility = 'hidden';
     }
+    if (currentActiveStationAudio) {
+        try {
+            currentActiveStationAudio.pause();
+            currentActiveStationAudio.currentTime = 0;
+        } catch(e) {}
+        currentActiveStationAudio = null;
+    }
     if (typeof Wada3anAiEngine !== 'undefined' && typeof Wada3anAiEngine.stopSpeaking === 'function') {
         Wada3anAiEngine.stopSpeaking();
     }
@@ -5399,7 +5398,7 @@ function closeRoyalDuaaModal() {
         if (typeof playSarahCharityIntroAudio === 'function') {
             playSarahCharityIntroAudio(pName);
         }
-    }, 350);
+    }, 400);
 }
 window.closeRoyalDuaaModal = closeRoyalDuaaModal;
 
@@ -5411,6 +5410,13 @@ async function confirmRoyalDuaaAndProceed() {
         modal.style.visibility = 'hidden';
     }
 
+    if (currentActiveStationAudio) {
+        try {
+            currentActiveStationAudio.pause();
+            currentActiveStationAudio.currentTime = 0;
+        } catch(e) {}
+        currentActiveStationAudio = null;
+    }
     if (typeof Wada3anAiEngine !== 'undefined' && typeof Wada3anAiEngine.stopSpeaking === 'function') {
         Wada3anAiEngine.stopSpeaking();
     }
@@ -5451,7 +5457,7 @@ async function confirmRoyalDuaaAndProceed() {
         if (typeof playSarahCharityIntroAudio === 'function') {
             playSarahCharityIntroAudio(resolvedName);
         }
-    }, 350);
+    }, 400);
 }
 window.confirmRoyalDuaaAndProceed = confirmRoyalDuaaAndProceed;
 
@@ -7601,7 +7607,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.17';
+const CURRENT_APP_VERSION = 'v30.18';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -9733,6 +9739,19 @@ function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
             const desc = document.getElementById('report-audio-status-desc');
             if (desc) desc.textContent = 'اكتمل الشرح الصوتي للتقرير السريري وخطة التعافي.';
         }
+        if (stationKey === 'recovery') {
+            const iconEl = document.getElementById('duaa-audio-icon');
+            const textEl = document.getElementById('duaa-audio-text');
+            const btn = document.getElementById('btn-play-duaa-audio');
+            if (iconEl) iconEl.textContent = '🔁';
+            if (textEl) textEl.textContent = 'إعادة الاستماع لتلاوة الدعاء الصوتي 🤲';
+            if (btn) {
+                btn.style.borderColor = 'var(--primary-gold)';
+                btn.style.boxShadow = 'none';
+            }
+            const statusEl = document.getElementById('sarah-charity-voice-status');
+            if (statusEl) statusEl.textContent = '🔁 إعادة الاستماع لكلمة د. سارة';
+        }
         if (typeof onComplete === 'function') {
             onComplete();
         }
@@ -9864,6 +9883,20 @@ function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
                 }
                 const desc = document.getElementById('report-audio-status-desc');
                 if (desc) desc.innerHTML = '<span style="color: var(--primary-gold); font-weight: bold;">🔊 د. سارة تشرح الآن تقريرك السريري وخطة التعافي...</span>';
+            } else if (stationKey === 'recovery') {
+                const iconEl = document.getElementById('duaa-audio-icon');
+                const textEl = document.getElementById('duaa-audio-text');
+                const btn = document.getElementById('btn-play-duaa-audio');
+                if (iconEl) iconEl.textContent = '⏸️';
+                if (textEl) textEl.textContent = 'د. سارة تتلو الدعاء بالرحمة والمغفرة... 🤲';
+                if (btn) {
+                    btn.style.borderColor = '#10b981';
+                    btn.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.4)';
+                }
+                const bannerEl = document.getElementById('sarah-charity-voice-banner');
+                if (bannerEl) bannerEl.style.display = 'flex';
+                const statusEl = document.getElementById('sarah-charity-voice-status');
+                if (statusEl) statusEl.textContent = '🔊 د. سارة تتحدث الآن...';
             }
         }).catch(() => {
             if (stationKey === 'welcome') {
@@ -9890,6 +9923,14 @@ function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
                 }
                 const desc = document.getElementById('report-audio-status-desc');
                 if (desc) desc.innerHTML = '<span style="color: #6ee7b7; font-weight: bold;">🎙️ دكتورة سارة سجلت لك شرحاً صوتياً لتقريرك وخطة علاجك (اضغط هنا للاستماع)</span>';
+            } else if (stationKey === 'recovery') {
+                const iconEl = document.getElementById('duaa-audio-icon');
+                const textEl = document.getElementById('duaa-audio-text');
+                const btn = document.getElementById('btn-play-duaa-audio');
+                if (iconEl) iconEl.textContent = '🔊';
+                if (textEl) textEl.textContent = 'استمع لتلاوة الدعاء الصوتي (د. سارة) 🤲';
+                const statusEl = document.getElementById('sarah-charity-voice-status');
+                if (statusEl) statusEl.textContent = '🔊 استمع لكلمة د. سارة';
             }
             if (!isCancelled) triggerComplete();
         });
@@ -9952,11 +9993,8 @@ function playClinicalAudioFallback(stationKey, onDone) {
         }
     } catch (e) {}
 
-    // نطق سريري فوري باللغة العربية إن كان متاحاً
+    // محطة التعافي والصدقة
     if (stationKey === 'recovery') {
-        if (typeof playSarahCharityIntroAudio === 'function') {
-            playSarahCharityIntroAudio();
-        }
         if (onDone) onDone();
         return;
     }
