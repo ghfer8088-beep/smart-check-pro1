@@ -820,7 +820,8 @@ const SmartGuidance = (function() {
             }
 
             case 4: {
-                const patientId = (typeof activePatient !== 'undefined' && activePatient?.patientId) || (typeof SmartDB !== 'undefined' && SmartDB.getCurrentSessionPatientId ? SmartDB.getCurrentSessionPatientId() : null) || 'pat_guest';
+                const rawPid = (typeof activePatient !== 'undefined' && (activePatient?.patientId || activePatient?.id)) || (typeof SmartDB !== 'undefined' && SmartDB.getCurrentSessionPatientId ? SmartDB.getCurrentSessionPatientId() : null) || (function(){ try { return localStorage.getItem('smart_current_patient_id'); } catch(e){ return ''; } })() || 'pat_guest';
+                const patientId = (typeof window.getCleanPatientId === 'function') ? window.getCleanPatientId(rawPid) : (rawPid && rawPid !== 'undefined' && rawPid !== 'null' ? String(rawPid).trim() : 'pat_guest');
                 const progress = getStep4ExerciseProgress();
 
                 if (progress.allDone || activeSubState === 'step4_done') {

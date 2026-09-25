@@ -28,11 +28,11 @@
     </script>
 
     <!-- منظومة الأمان السيبراني وحماية الملكية الفكرية وقفل النطاق -->
-    <script src="js/security-shield.js?v=30.22"></script>
-    <script src="js/system-watchdog.js?v=30.22"></script>
+    <script src="js/security-shield.js?v=30.23"></script>
+    <script src="js/system-watchdog.js?v=30.23"></script>
 
     <!-- وسوم تطبيق الويب التقدمي PWA والأيقونات الرسمية -->
-    <link rel="manifest" href="manifest.json?v=30.22">
+    <link rel="manifest" href="manifest.json?v=30.23">
     <link rel="icon" type="image/png" href="assets/logo.png">
     <link rel="shortcut icon" href="assets/logo.png">
     <link rel="apple-touch-icon" href="assets/logo.png">
@@ -44,11 +44,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=30.22">
+    <link rel="stylesheet" href="css/style.css?v=30.23">
     <script>
         // التحقق من وصول أحدث إصدار وبث التحديث عالمياً لجميع الأجهزة
         (function() {
-            const APP_TARGET_VER = '30.22';
+            const APP_TARGET_VER = '30.23';
             window.APP_TARGET_VER = APP_TARGET_VER;
         })();
     </script>
@@ -149,7 +149,7 @@
                 <div class="brand-version-badge" onclick="event.stopPropagation(); if(typeof forceAppUpdateAndClearCache==='function') forceAppUpdateAndClearCache();" title="انقر لتحديث وتنشيط التطبيق فوراً" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72em; color: #94a3b8; margin-top: 1px; cursor: pointer; user-select: none;">
                     <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                     <span>الإصدار:</span>
-                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v30.22</strong>
+                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v30.23</strong>
                 </div>
             </div>
         </div>
@@ -1418,7 +1418,7 @@
     </div>
 
     <!-- ================= نافذة التقييم السريري الكبرى المستقلة للجلسة المنتهية (Session Assessment Modal) ================= -->
-    <div id="session-assessment-modal" class="app-modal" style="display: none; z-index: 3000000;">
+    <div id="session-assessment-modal" class="app-modal" style="display: none; z-index: 99999999 !important;">
         <div class="modal-inner" style="max-width: 760px; width: 95%; max-height: 86vh; overflow-y: auto; background: #0b1322; border: 2px solid #10b981; padding: 25px 28px 35px 28px; margin-bottom: 25px; border-radius: 18px; box-shadow: 0 15px 50px rgba(0,0,0,0.9), 0 0 30px rgba(16, 185, 129, 0.25);">
             <div id="session-assessment-modal-content">
                 <!-- يُملأ ديناميكياً عبر openSessionAssessmentModal -->
@@ -1840,21 +1840,21 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=30.22"></script>
-    <script src="js/cloud-sync.js?v=30.22"></script>
-    <script src="js/geo-tracker.js?v=30.22"></script>
-    <script src="js/database.js?v=30.22"></script>
-    <script src="js/exercise-image-studio.js?v=30.22"></script>
-    <script src="js/exercises-db.js?v=30.22"></script>
-    <script src="js/diagnostic-engine.js?v=30.22"></script>
-    <script src="js/audio-pacer.js?v=30.22"></script>
-    <script src="js/patient-flow.js?v=30.22"></script>
-    <script src="js/admin-engine.js?v=30.22"></script>
-    <script src="js/ai-config.js?v=30.22"></script>
-    <script src="js/ai-engine.js?v=30.22"></script>
-    <script src="js/app.js?v=30.22"></script>
-    <script src="js/text-editor.js?v=30.22"></script>
-    <script src="js/smart-guidance.js?v=30.22"></script>
+    <script src="js/mqtt.min.js?v=30.23"></script>
+    <script src="js/cloud-sync.js?v=30.23"></script>
+    <script src="js/geo-tracker.js?v=30.23"></script>
+    <script src="js/database.js?v=30.23"></script>
+    <script src="js/exercise-image-studio.js?v=30.23"></script>
+    <script src="js/exercises-db.js?v=30.23"></script>
+    <script src="js/diagnostic-engine.js?v=30.23"></script>
+    <script src="js/audio-pacer.js?v=30.23"></script>
+    <script src="js/patient-flow.js?v=30.23"></script>
+    <script src="js/admin-engine.js?v=30.23"></script>
+    <script src="js/ai-config.js?v=30.23"></script>
+    <script src="js/ai-engine.js?v=30.23"></script>
+    <script src="js/app.js?v=30.23"></script>
+    <script src="js/text-editor.js?v=30.23"></script>
+    <script src="js/smart-guidance.js?v=30.23"></script>
 
     <script>
         // مؤشر المراجعين المتفاعلين أونلاين الآن (يتراوح عشوائياً بديناميكية طبيعية بين 40 و 99)

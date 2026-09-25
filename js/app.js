@@ -5620,6 +5620,36 @@ function formatPatientAddress(pName, fallback = '') {
 }
 window.formatPatientAddress = formatPatientAddress;
 
+// دالة موحدة لتطهير وضمان معرف المريض السريري ومنع أي قيمة وهمية (undefined/null/فارغة)
+function getCleanPatientId(pid) {
+    if (pid && typeof pid === 'string' && pid !== 'undefined' && pid !== 'null' && pid !== '[object Object]' && pid.trim()) {
+        return pid.trim();
+    }
+    if (pid && typeof pid === 'object') {
+        const objId = pid.patientId || pid.id;
+        if (objId && objId !== 'undefined' && objId !== 'null') return String(objId).trim();
+    }
+    if (typeof activePatient !== 'undefined' && activePatient) {
+        const apId = activePatient.patientId || activePatient.id;
+        if (apId && apId !== 'undefined' && apId !== 'null') return String(apId).trim();
+    }
+    try {
+        const authP = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+        if (authP?.patientId && authP.patientId !== 'undefined' && authP.patientId !== 'null') return String(authP.patientId).trim();
+    } catch(e) {}
+    try {
+        const spid = localStorage.getItem('smart_current_patient_id') || 
+                     (typeof SmartDB !== 'undefined' && SmartDB.getCurrentSessionPatientId ? SmartDB.getCurrentSessionPatientId() : '');
+        if (spid && spid !== 'undefined' && spid !== 'null' && spid.trim()) return spid.trim();
+    } catch(e) {}
+    try {
+        const curAss = JSON.parse(localStorage.getItem('smart_current_assessment') || '{}');
+        if (curAss?.patientId && curAss.patientId !== 'undefined' && curAss.patientId !== 'null') return String(curAss.patientId).trim();
+    } catch(e) {}
+    return 'pat_guest';
+}
+window.getCleanPatientId = getCleanPatientId;
+
 // =========================================================================
 // الخطوة 4: الجلسة الأولى (مستقلة تماماً)
 // تشمل: التعليمات + البيانات + الساعة الحية + التمارين + زر إنجاز اليوم الأول
@@ -5630,14 +5660,17 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
     if (_isRenderingStep4) return;
     _isRenderingStep4 = true;
     try {
+        // تطهير معرف المريض قطعياً
+        patientId = getCleanPatientId(patientId);
+
         // الانتقال الحتمي للخطوة 4 فوراً لضمان عدم السقوط للخطوة 1 أبداً
         goToStep(4, { fromRender: true });
 
-    if (!sessionData && patientId) {
+    if (!sessionData && patientId && patientId !== 'pat_guest') {
         try {
             sessionData = await Promise.race([
                 PatientFlow.initPatientSession(patientId),
-                new Promise(resolve => setTimeout(() => resolve(null), 3000))
+                new Promise(resolve => setTimeout(() => resolve(null), 1500))
             ]);
         } catch(e) {
             console.warn('initPatientSession error in Step 4:', e);
@@ -5657,7 +5690,8 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                        : (authP?.name && !_S4_INVALID.test(authP.name)) ? authP.name
                        : (curAss?.patientName && !_S4_INVALID.test(curAss.patientName)) ? curAss.patientName : '';
         const pObj = {
-            patientId: patientId || authP?.patientId || curAss?.patientId || 'pat_guest',
+            patientId: patientId,
+            id: patientId,
             name: bestName,
             fullName: bestName,
             phone: authP?.phone || curAss?.patientPhone || '',
@@ -6029,12 +6063,48 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             window.liveSessionClockInterval = null;
         }
 
+        const cleanPid = (typeof getCleanPatientId === 'function') ? getCleanPatientId(patientId) : (patientId && patientId !== 'undefined' ? patientId : 'pat_guest');
+        patientId = cleanPid;
+
         if (!sessionData) {
-            sessionData = await PatientFlow.initPatientSession(patientId);
+            try {
+                sessionData = await Promise.race([
+                    PatientFlow.initPatientSession(patientId),
+                    new Promise(resolve => setTimeout(() => resolve(null), 1200))
+                ]);
+            } catch(e) {}
         }
         if (!sessionData || !sessionData.patient) {
-            console.warn('Patient sessionData unavailable in Step 5; preserving active state.');
-            return;
+            const curAss = currentAssessmentData || (function() {
+                try { return JSON.parse(localStorage.getItem('smart_current_assessment')); } catch(e) { return null; }
+            })();
+            const authP = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+            const curP = window.activePatient || activePatient;
+            const fallbackId = patientId || authP?.patientId || curP?.patientId || ('P-' + Date.now().toString().slice(-6));
+            const resolvedPain = (typeof resolvePainAreaTitle === 'function') ? resolvePainAreaTitle(null, curAss, (typeof currentSelectedPoint !== 'undefined' ? currentSelectedPoint : null)) : (curAss?.painAreaTitle || 'الفقرات القطنية وأسفل الظهر');
+            const _S5_INVALID = /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null|بطل|بطل التعافي|مرحباً بك|مرحبا بك)$/i;
+            const _s5StoredName = (function() { try { return (localStorage.getItem('smart_patient_name') || localStorage.getItem('smart_user_name') || '').trim(); } catch(e) { return ''; } })();
+            const bestName = (_s5StoredName && !_S5_INVALID.test(_s5StoredName)) ? _s5StoredName
+                           : (authP?.name && !_S5_INVALID.test(authP.name)) ? authP.name
+                           : (curAss?.patientName && !_S5_INVALID.test(curAss.patientName)) ? curAss.patientName
+                           : (curP?.name && !_S5_INVALID.test(curP.name)) ? curP.name : '';
+            sessionData = {
+                patient: curP || {
+                    patientId: fallbackId,
+                    id: fallbackId,
+                    name: bestName,
+                    fullName: bestName,
+                    phone: authP?.phone || curAss?.patientPhone || '',
+                    painArea: resolvedPain,
+                    painPointId: curAss?.pointId || (typeof currentSelectedPoint !== 'undefined' ? currentSelectedPoint?.id : null) || 'lumbar_spine',
+                    painLevel: curAss?.painSeverity || 7
+                },
+                latestAssessment: curAss || { pointId: 'lumbar_spine', primaryDiagnosisKey: '' },
+                dailyLogs: [],
+                currentSessionDay: targetDay || 2,
+                isPlanCompleted: false,
+                stageTitle: 'مرحلة تفريغ الضغط الميكانيكي وتهيئة الأنسجة'
+            };
         }
 
         activePatient = sessionData.patient;
@@ -6753,8 +6823,16 @@ async function renderStep6Completion(patientId, sessionData = null) {
             window.liveSessionClockInterval = null;
         }
 
+        const cleanPid = (typeof getCleanPatientId === 'function') ? getCleanPatientId(patientId) : (patientId && patientId !== 'undefined' ? patientId : 'pat_guest');
+        patientId = cleanPid;
+
         if (!sessionData) {
-            sessionData = await PatientFlow.initPatientSession(patientId);
+            try {
+                sessionData = await Promise.race([
+                    PatientFlow.initPatientSession(patientId),
+                    new Promise(resolve => setTimeout(() => resolve(null), 1200))
+                ]);
+            } catch(e) {}
         }
         if (!sessionData || !sessionData.patient) {
             console.warn('Patient sessionData unavailable in Step 6; preserving active state.');
@@ -6908,7 +6986,16 @@ async function renderStep6Completion(patientId, sessionData = null) {
 
 // توجيه ذكي للمرحلة المناسبة في خطة التعافي
 async function loadPatientRecoveryDashboard(patientId, targetDay = null) {
-    let sessionData = await PatientFlow.initPatientSession(patientId);
+    const cleanPid = (typeof getCleanPatientId === 'function') ? getCleanPatientId(patientId) : (patientId && patientId !== 'undefined' ? patientId : 'pat_guest');
+    patientId = cleanPid;
+
+    let sessionData = null;
+    try {
+        sessionData = await Promise.race([
+            PatientFlow.initPatientSession(patientId),
+            new Promise(resolve => setTimeout(() => resolve(null), 1200))
+        ]);
+    } catch(e) {}
     if (!sessionData || !sessionData.patient) {
         // خط إنقاذ إضافي: استرجاع أحدث مريض مسجل في قاعدة البيانات
         try {
@@ -7143,11 +7230,17 @@ function showFutureSessionLockedPopup(currentDay, targetDay) {
 }
 // التحقق السريري من إتمام تمارين اليوم الأول وتوجيه المريض لفتح نافذة التوثيق
 function handleStep4CompletionClick(patientId, forceSkip = false) {
-    const curDailyLogs = (typeof activePatient !== 'undefined' && activePatient?.dailyLogs) || [];
+    const cleanId = (typeof getCleanPatientId === 'function') ? getCleanPatientId(patientId) : (patientId && patientId !== 'undefined' ? patientId : 'pat_guest');
+    patientId = cleanId;
+
+    const curDailyLogs = (typeof activePatient !== 'undefined' && Array.isArray(activePatient?.dailyLogs)) ? activePatient.dailyLogs : [];
+    const hasDay1Log = curDailyLogs.some(l => Number(l.sessionNumber || l.day) === 1);
     
-    // إذا كان المريض قد وثق الجلسة الأولى بالفعل (dailyLogs >= 1)، نوجهه مباشرة لمتابعة الجلسات في الخطوة 5
-    if (curDailyLogs.length >= 1 && !forceSkip) {
-        if (typeof renderStep5SessionsDashboard === 'function') {
+    // إذا كان المريض قد وثق الجلسة الأولى بالفعل (dailyLogs تشمل جلسة اليوم الأول) ولم يطلب إعادة فتح التوثيق
+    if (hasDay1Log && !forceSkip) {
+        if (typeof loadPatientRecoveryDashboard === 'function') {
+            loadPatientRecoveryDashboard(patientId, 2);
+        } else if (typeof renderStep5SessionsDashboard === 'function') {
             renderStep5SessionsDashboard(patientId, 2);
         } else if (typeof goToStep === 'function') {
             goToStep(5);
@@ -7193,17 +7286,22 @@ function handleStep4CompletionClick(patientId, forceSkip = false) {
         }
     }
 
-    const effectiveId = patientId || (typeof activePatient !== 'undefined' && activePatient?.patientId) || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null) || 'pat_guest';
-    openSessionAssessmentModal(effectiveId, 1);
+    openSessionAssessmentModal(patientId, 1);
 }
 window.handleStep4CompletionClick = handleStep4CompletionClick;
 
 // فتح نافذة التقييم الكبرى المستقلة للجلسة المنتهية
 async function openSessionAssessmentModal(patientId, sessionNumber) {
+    const cleanId = (typeof getCleanPatientId === 'function') ? getCleanPatientId(patientId) : (patientId && patientId !== 'undefined' ? patientId : 'pat_guest');
+    patientId = cleanId;
+
     let sessionData = null;
-    if (patientId) {
+    if (patientId && patientId !== 'pat_guest') {
         try {
-            sessionData = await PatientFlow.initPatientSession(patientId);
+            sessionData = await Promise.race([
+                PatientFlow.initPatientSession(patientId),
+                new Promise(resolve => setTimeout(() => resolve(null), 350))
+            ]);
         } catch(e) {
             console.warn('initPatientSession error in modal:', e);
         }
@@ -7399,10 +7497,17 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
         </div>
     `;
 
-    modal.style.display = 'flex';
-    modal.style.zIndex = '3000000';
-    modal.style.opacity = '1';
-    modal.style.pointerEvents = 'auto';
+    modal.style.setProperty('display', 'flex', 'important');
+    modal.style.setProperty('z-index', '99999999', 'important');
+    modal.style.setProperty('opacity', '1', 'important');
+    modal.style.setProperty('pointer-events', 'auto', 'important');
+
+    // إخفاء الشريط السفلي أثناء فتح نافذة التقييم لضمان عدم حجب زر الاعتماد والتقييم نهائياً
+    const stickyBar = document.getElementById('sticky-patient-guidance-bar');
+    if (stickyBar) {
+        stickyBar.style.setProperty('display', 'none', 'important');
+    }
+
     if (window.SmartGuidance && typeof SmartGuidance.guideAssessmentModal === 'function') {
         SmartGuidance.guideAssessmentModal(sessionNumber);
     }
@@ -7411,9 +7516,10 @@ window.openSessionAssessmentModal = openSessionAssessmentModal;
 
 function closeSessionAssessmentModal() {
     const modal = document.getElementById('session-assessment-modal');
-    if (modal) modal.style.display = 'none';
+    if (modal) modal.style.setProperty('display', 'none', 'important');
     const stickyBar = document.getElementById('sticky-patient-guidance-bar');
     if (stickyBar) {
+        stickyBar.style.removeProperty('display');
         stickyBar.style.transform = '';
         stickyBar.style.opacity = '';
         stickyBar.style.pointerEvents = '';
@@ -7428,6 +7534,9 @@ window.closeSessionAssessmentModal = closeSessionAssessmentModal;
 
 // حفظ التسجيل اليومي الشامل
 async function submitComprehensiveDailyLog(patientId, sessionNumber) {
+    const cleanId = (typeof getCleanPatientId === 'function') ? getCleanPatientId(patientId) : (patientId && patientId !== 'undefined' ? patientId : 'pat_guest');
+    patientId = cleanId;
+
     const painScore = parseInt(document.getElementById('modal-pain-input')?.value || document.getElementById('daily-pain-input')?.value || 3);
     const mobilityRate = parseInt(document.getElementById('modal-mobility-slider')?.value || document.querySelector('input[name="modal_mobility_check"]:checked')?.value || document.getElementById('daily-mobility-slider')?.value || 70);
     const sleepRate = parseInt(document.getElementById('modal-sleep-slider')?.value || document.querySelector('input[name="modal_sleep_check"]:checked')?.value || document.getElementById('daily-sleep-slider')?.value || 70);
@@ -7721,7 +7830,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.22';
+const CURRENT_APP_VERSION = 'v30.23';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -8151,7 +8260,7 @@ function goToStep(stepNum, options = {}) {
             if (_isRenderingStep4) return;
             const day1Box = document.getElementById('step4-day1-container');
             if (day1Box && (!day1Box.children.length || !day1Box.querySelector('.clinical-exercise-card'))) {
-                const targetId = (typeof activePatient !== 'undefined' && activePatient?.patientId) || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null) || localStorage.getItem('smart_current_patient_id') || 'pat_guest';
+                const targetId = (typeof getCleanPatientId === 'function') ? getCleanPatientId(activePatient?.patientId || activePatient?.id) : 'pat_guest';
                 if (typeof renderStep4IndependentDay1 === 'function') {
                     renderStep4IndependentDay1(targetId);
                 }
@@ -8165,7 +8274,7 @@ function goToStep(stepNum, options = {}) {
             if (_isRenderingStep5) return;
             const step5Box = document.getElementById('step5-sessions-container');
             if (step5Box && (!step5Box.children.length || !step5Box.querySelector('.patient-recovery-master-card'))) {
-                const targetId = (typeof activePatient !== 'undefined' && activePatient?.patientId) || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null) || localStorage.getItem('smart_current_patient_id') || 'pat_guest';
+                const targetId = (typeof getCleanPatientId === 'function') ? getCleanPatientId(activePatient?.patientId || activePatient?.id) : 'pat_guest';
                 if (typeof renderStep5SessionsDashboard === 'function') {
                     renderStep5SessionsDashboard(targetId, 2);
                 } else if (typeof loadPatientRecoveryDashboard === 'function') {
@@ -8181,7 +8290,7 @@ function goToStep(stepNum, options = {}) {
             if (_isRenderingStep6) return;
             const step6Box = document.getElementById('step6-completion-container');
             if (step6Box && !step6Box.children.length) {
-                const targetId = (typeof activePatient !== 'undefined' && activePatient?.patientId) || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null) || localStorage.getItem('smart_current_patient_id') || 'pat_guest';
+                const targetId = (typeof getCleanPatientId === 'function') ? getCleanPatientId(activePatient?.patientId || activePatient?.id) : 'pat_guest';
                 if (typeof renderStep6Completion === 'function') {
                     renderStep6Completion(targetId);
                 }
