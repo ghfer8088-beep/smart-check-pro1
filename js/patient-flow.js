@@ -12,8 +12,8 @@ const PatientFlow = (function() {
         daysData.push({ day: 0, pain: baselinePain, label: "البداية" });
 
         for (let i = 1; i <= 7; i++) {
-            if (i <= dailyLogs.length) {
-                const log = dailyLogs[i - 1];
+            const log = (dailyLogs || []).find(l => Number(l.sessionNumber || l.day) === i);
+            if (log) {
                 daysData.push({
                     day: i,
                     pain: typeof log.painScore === 'number' ? log.painScore : Math.max(1, baselinePain - i),

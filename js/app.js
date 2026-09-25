@@ -5791,16 +5791,40 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                 </button>
             </div>` : ''}
 
-            <!-- شريط الجلسات -->
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
-                ${sessionData.isPlanCompleted ? `
-                <button type="button" onclick="renderStep6Completion('${patientId}')" class="btn-header" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(180, 130, 20, 0.25) 100%); border: 1px solid var(--primary-gold); color: #fef08a; padding: 7px 14px; font-size: 0.85em; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                    <span>🏆</span> العودة لوثيقة التعافي والإنهاء
-                </button>` : '<div></div>'}
-                ${isDay1Completed ? `
-                <button type="button" onclick="handleStepperClick(5)" class="btn-header btn-header-emerald" style="padding: 7px 14px; font-size: 0.85em; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                    <span>📅</span> متابعة الجلسات (المرحلة 5) ⬅️
-                </button>` : ''}
+            <!-- جدول جلسات برنامج التعافي (الأيام 1 إلى 7) موحد مع كافة الجلسات -->
+            <div style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 12px 16px; margin-bottom: 22px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                    <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.95em;">📅 جدول جلسات برنامج التعافي (الأيام 1 إلى 7):</div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        ${sessionData.isPlanCompleted ? `
+                            <button type="button" onclick="renderStep6Completion('${patientId}')" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.3) 0%, rgba(180, 130, 20, 0.3) 100%); border: 1px solid var(--primary-gold); color: #fef08a; padding: 5px 12px; border-radius: 6px; font-size: 0.78em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                                <span>🏆</span> وثيقة الإنهاء والشهادة
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; overflow-x: auto;">
+                    <!-- زر الجلسة الأولى (النشطة حالياً) -->
+                    <button type="button" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.35) 0%, rgba(180, 130, 20, 0.25) 100%); border: 2px solid var(--primary-gold); color: #ffffff; padding: 10px 4px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: default; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-width: 60px;">
+                        <span>الجلسة 1</span>
+                        <span style="font-size: 0.75em; opacity: 0.9;">${isDay1Completed ? '🟢 المعروضة (منجزة)' : '🟢 المعروضة'}</span>
+                    </button>
+                    ${[2, 3, 4, 5, 6, 7].map(d => {
+                        const hasLog = (sessionData.dailyLogs || []).some(l => Number(l.sessionNumber || l.day) === d);
+                        const isUnlocked = isDay1Completed || hasLog || sessionData.isPlanCompleted;
+                        let clickAction = isUnlocked ? `renderStep5SessionsDashboard('${patientId}', ${d})` : `showFutureSessionLockedPopup(1, ${d})`;
+                        let bg = isUnlocked ? (hasLog ? 'rgba(16, 185, 129, 0.15)' : 'rgba(56, 189, 248, 0.15)') : 'rgba(15, 23, 42, 0.6)';
+                        let border = isUnlocked ? (hasLog ? '1px solid #10b981' : '1.5px solid #38bdf8') : '1px dashed #475569';
+                        let color = isUnlocked ? (hasLog ? '#6ee7b7' : '#7dd3fc') : '#64748b';
+                        let badge = hasLog ? '✓ منجزة' : (isUnlocked ? 'متاحة' : '🔒 مقفلة');
+                        return `
+                            <button type="button" onclick="${clickAction}" style="background: ${bg}; border: ${border}; color: ${color}; padding: 10px 4px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: 0.2s; min-width: 60px;">
+                                <span>الجلسة ${d}</span>
+                                <span style="font-size: 0.75em; opacity: 0.85;">${badge}</span>
+                            </button>
+                        `;
+                    }).join('')}
+                </div>
             </div>
 
             <!-- بطاقة إهداء الصدقة الجارية وكلمة د. سارة الصوتية الترحيبية -->
@@ -6264,9 +6288,8 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         const currentDisplayStageTitle = dayStageInfo.stageTitle || sessionData.stageTitle;
         const currentDisplayMotivation = dayStageInfo.motivation || sessionData.motivation;
 
-        // جلب سجل الجلسة المعروضة activeDay لحساب مؤشراتها وسلوكياتها بدقة
-        const activeDayLog = (sessionData.dailyLogs || []).find(l => (Number(l.sessionNumber) === activeDay || Number(l.day) === activeDay))
-                           || ((sessionData.dailyLogs && sessionData.dailyLogs[activeDay - 1]) ? sessionData.dailyLogs[activeDay - 1] : null);
+        // جلب سجل الجلسة المعروضة activeDay لحساب مؤشراتها وسلوكياتها بدقة (تطابق حصري برقم الجلسة)
+        const activeDayLog = (sessionData.dailyLogs || []).find(l => (Number(l.sessionNumber) === activeDay || Number(l.day) === activeDay)) || null;
 
         let displayPainReduction = sessionData.indicators ? sessionData.indicators.painReduction : 0;
         let displayMobility = sessionData.indicators ? sessionData.indicators.mobility : 0;
@@ -6353,10 +6376,12 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         }
 
         const logSessionNum = lastDailyLog.sessionNumber || lastDailyLog.day || activeDay;
+        const isPrevLog = (Number(logSessionNum) !== Number(activeDay));
+        const reportBadgeTitle = isPrevLog ? `(مستند لنتائج الجلسة السابقة #${logSessionNum})` : `(الجلسة #${logSessionNum})`;
         behavioralReportHTML = `
             <div style="background: #0f172a; border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px; margin-bottom: 22px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-                    <div style="color: var(--primary-gold); font-weight: bold; font-size: 1.05em;">🧬 تقرير السلوك الحركي والميكانيكا الحيوية (الجلسة #${logSessionNum}):</div>
+                    <div style="color: var(--primary-gold); font-weight: bold; font-size: 1.05em;">🧬 تقرير السلوك الحركي والميكانيكا الحيوية ${reportBadgeTitle}:</div>
                     <span style="color: #94a3b8; font-size: 0.8em;">مسجل بتاريخ: ${lastDailyLog.date ? new Date(lastDailyLog.date).toLocaleDateString('ar-EG') : 'موثق سريرياً'}</span>
                 </div>
 
@@ -6398,10 +6423,15 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             </div>
             <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; overflow-x: auto;">
                 <!-- زر الجلسة الأولى المستقلة -->
-                <button type="button" onclick="renderStep4IndependentDay1('${patientId}')" title="مراجعة تمارين الجلسة الأولى" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 10px 4px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: 0.2s; min-width: 60px;">
-                    <span>الجلسة 1</span>
-                    <span style="font-size: 0.75em; opacity: 0.9;">✓ منجزة</span>
-                </button>
+                ${(() => {
+                    const isDay1Done = (sessionData.dailyLogs || []).some(l => Number(l.sessionNumber || l.day) === 1) || sessionData.isPlanCompleted;
+                    return `
+                    <button type="button" onclick="renderStep4IndependentDay1('${patientId}')" title="مراجعة تمارين الجلسة الأولى" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 10px 4px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: 0.2s; min-width: 60px;">
+                        <span>الجلسة 1</span>
+                        <span style="font-size: 0.75em; opacity: 0.9;">${isDay1Done ? '✓ منجزة' : '🔵 اليوم 1'}</span>
+                    </button>
+                    `;
+                })()}
                 ${[2, 3, 4, 5, 6, 7].map(d => {
                     const hasCompletedLog = (sessionData.dailyLogs || []).some(l => Number(l.sessionNumber || l.day) === d);
                     const isCompleted = (hasCompletedLog || d < progressionDay || sessionData.isPlanCompleted);
@@ -6620,10 +6650,10 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
 
             sessionCompletionSectionHTML = `
                 <div id="session-completion-control-wrapper" style="text-align: center; margin-top: 25px;">
-                    <!-- عنوان الجلسة التالية بخط كبير ولون ذهبي فخم -->
+                    <!-- عنوان الجلسة التالية أو إتمام البرنامج بخط كبير ولون ذهبي فخم -->
                     <div style="text-align: center; margin-bottom: 14px;">
                         <span style="font-size: 1.5em; font-weight: 900; color: #d4af37; text-shadow: 0 0 16px rgba(212, 175, 55, 0.6), 0 2px 4px rgba(0,0,0,0.8); letter-spacing: 0.8px; display: inline-block;">
-                            الجلسة التالية
+                            ${activeDay === 7 ? '🏆 إتمام البرنامج والتعافي الشامل' : 'الجلسة التالية'}
                         </span>
                     </div>
 
@@ -6668,10 +6698,10 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         } else {
             sessionCompletionSectionHTML = `
                 <div id="session-completion-control-wrapper" style="text-align: center; margin-top: 25px;">
-                    <!-- عنوان الجلسة التالية بخط كبير ولون ذهبي فخم -->
+                    <!-- عنوان الجلسة التالية أو إتمام البرنامج بخط كبير ولون ذهبي فخم -->
                     <div style="text-align: center; margin-bottom: 14px;">
                         <span style="font-size: 1.5em; font-weight: 900; color: #d4af37; text-shadow: 0 0 16px rgba(212, 175, 55, 0.6), 0 2px 4px rgba(0,0,0,0.8); letter-spacing: 0.8px; display: inline-block;">
-                            الجلسة التالية
+                            ${activeDay === 7 ? '🏆 إتمام البرنامج والتعافي الشامل' : 'الجلسة التالية'}
                         </span>
                     </div>
 
@@ -6682,7 +6712,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                         </div>
                         <!-- Main Text -->
                         <span style="flex-grow: 1; text-align: center; font-size: 1.08em; font-weight: 900; color: #ffffff !important; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7) !important;">
-                            حفظ تسجيل الجلسة (#${activeDay}) وتوثيق التقييم والانتقال للجلسة التالية 🚀
+                            ${activeDay === 7 ? 'حفظ توثيق الجلسة الختامية (#7) وإتمام البرنامج والتخرج 🏆' : `حفظ تسجيل الجلسة (#${activeDay}) وتوثيق التقييم والانتقال للجلسة التالية 🚀`}
                         </span>
                         <!-- Right Arrow Chevron -->
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));"><polyline points="15 18 9 12 15 6"/></svg>
@@ -6892,10 +6922,10 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 wrapper.style.padding = '0';
                 wrapper.innerHTML = `
                     <div style="text-align: center; margin-top: 25px;">
-                        <!-- عنوان الجلسة التالية بخط كبير ولون ذهبي فخم -->
+                        <!-- عنوان الجلسة التالية أو إتمام البرنامج بخط كبير ولون ذهبي فخم -->
                         <div style="text-align: center; margin-bottom: 14px;">
                             <span style="font-size: 1.5em; font-weight: 900; color: #d4af37; text-shadow: 0 0 16px rgba(212, 175, 55, 0.6), 0 2px 4px rgba(0,0,0,0.8); letter-spacing: 0.8px; display: inline-block;">
-                                الجلسة التالية
+                                ${activeDay === 7 ? '🏆 إتمام البرنامج والتعافي الشامل' : 'الجلسة التالية'}
                             </span>
                         </div>
 
@@ -6906,7 +6936,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                             </div>
                             <!-- Main Text -->
                             <span style="flex-grow: 1; text-align: center; font-size: 1.08em; font-weight: 900; color: #ffffff !important; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7) !important;">
-                                حفظ تسجيل الجلسة (#${activeDay}) وتوثيق التقييم والانتقال للجلسة التالية 🚀
+                                ${activeDay === 7 ? 'حفظ توثيق الجلسة الختامية (#7) وإتمام البرنامج والتخرج 🏆' : `حفظ تسجيل الجلسة (#${activeDay}) وتوثيق التقييم والانتقال للجلسة التالية 🚀`}
                             </span>
                             <!-- Right Arrow Chevron -->
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));"><polyline points="15 18 9 12 15 6"/></svg>
@@ -7676,7 +7706,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                 إلغاء والعودة للتمارين
             </button>
             <button type="button" id="btn-modal-submit-daily-log" onclick="window.submitComprehensiveDailyLog('${patientId}', ${sessionNumber})" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; padding: 14px 32px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.05em; box-shadow: 0 4px 18px rgba(16, 185, 129, 0.4); flex-grow: 1; max-width: 450px;">
-                ✅ ${sessionNumber === 1 ? 'اعتماد تمارين اليوم الأول وبدء فترة الاستشفاء (24 ساعة) 🚀' : 'اعتماد التقييم والانتقال للجلسة التالية 🚀'}
+                ✅ ${sessionNumber === 1 ? 'اعتماد تمارين اليوم الأول وبدء فترة الاستشفاء (24 ساعة) 🚀' : (sessionNumber === 7 ? 'اعتماد تقييم الجلسة السابعة وإتمام خطة التعافي والتخرج 🏆' : 'اعتماد التقييم والانتقال للجلسة التالية 🚀')}
             </button>
         </div>
     `;
@@ -8056,7 +8086,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.27';
+const CURRENT_APP_VERSION = 'v30.28';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
