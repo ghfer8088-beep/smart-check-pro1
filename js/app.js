@@ -6166,24 +6166,55 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         activePatient = sessionData.patient;
         const effectivePid = patientId || sessionData.patient?.patientId || sessionData.patient?.id;
 
-        // التحقق الصارم من وجود سجلات الجلسات في sessionData وعدم فقدانها من الذاكرة أو التخزين
-        if (!sessionData.dailyLogs || sessionData.dailyLogs.length === 0) {
-            if (activePatient && Array.isArray(activePatient.dailyLogs) && activePatient.dailyLogs.length > 0) {
-                sessionData.dailyLogs = activePatient.dailyLogs;
-            } else {
-                try {
-                    const lsLogs = JSON.parse(localStorage.getItem('smart_daily_logs_' + effectivePid) || '[]');
-                    if (Array.isArray(lsLogs) && lsLogs.length > 0) {
-                        sessionData.dailyLogs = lsLogs;
-                    }
-                } catch(e) {}
+        // التحقق الصارم من وجود سجلات الجلسات في sessionData ودمجها من كافة المصادر لضمان عدم فقدان أي جلسة
+        const logMap5 = new Map();
+        (sessionData.dailyLogs || []).forEach(l => {
+            if (l && (l.sessionNumber || l.day)) logMap5.set(Number(l.sessionNumber || l.day), l);
+        });
+        if (activePatient && Array.isArray(activePatient.dailyLogs)) {
+            activePatient.dailyLogs.forEach(l => {
+                if (l && (l.sessionNumber || l.day)) logMap5.set(Number(l.sessionNumber || l.day), { ...(logMap5.get(Number(l.sessionNumber || l.day)) || {}), ...l });
+            });
+        }
+        if (typeof window !== 'undefined' && window.activePatient && Array.isArray(window.activePatient.dailyLogs)) {
+            window.activePatient.dailyLogs.forEach(l => {
+                if (l && (l.sessionNumber || l.day)) logMap5.set(Number(l.sessionNumber || l.day), { ...(logMap5.get(Number(l.sessionNumber || l.day)) || {}), ...l });
+            });
+        }
+        try {
+            const lsLogs = JSON.parse(localStorage.getItem('smart_daily_logs_' + effectivePid) || '[]');
+            if (Array.isArray(lsLogs)) {
+                lsLogs.forEach(l => {
+                    if (l && (l.sessionNumber || l.day)) logMap5.set(Number(l.sessionNumber || l.day), { ...(logMap5.get(Number(l.sessionNumber || l.day)) || {}), ...l });
+                });
             }
+        } catch(e) {}
+        try {
+            const lsPt = JSON.parse(localStorage.getItem('smart_active_patient') || '{}');
+            if (Array.isArray(lsPt.dailyLogs)) {
+                lsPt.dailyLogs.forEach(l => {
+                    if (l && (l.sessionNumber || l.day)) logMap5.set(Number(l.sessionNumber || l.day), { ...(logMap5.get(Number(l.sessionNumber || l.day)) || {}), ...l });
+                });
+            }
+        } catch(e) {}
+
+        sessionData.dailyLogs = Array.from(logMap5.values());
+        sessionData.dailyLogs.sort((a, b) => (Number(a.sessionNumber || a.day) || 0) - (Number(b.sessionNumber || b.day) || 0));
+
+        let highestCompleted5 = 0;
+        sessionData.dailyLogs.forEach(l => {
+            const sNum = Number(l.sessionNumber || l.day || 0);
+            if (sNum > highestCompleted5) highestCompleted5 = sNum;
+        });
+
+        if (highestCompleted5 >= 7 || sessionData.dailyLogs.length >= 7) {
+            sessionData.isPlanCompleted = true;
         }
 
         const lockStatus = await PatientFlow.getSessionLockStatus(effectivePid);
 
         // إذا كان المريض أنجز كل الـ 7 جلسات ولم يُطلب استعراض جلسة محددة، الانتقال لشاشة الإنهاء
-        if (sessionData.isPlanCompleted && !targetDay) {
+        if (sessionData.isPlanCompleted && (!targetDay || targetDay > 7)) {
             renderStep6Completion(patientId, sessionData);
             return;
         }
@@ -6195,78 +6226,96 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
 
         goToStep(5, { fromRender: true });
 
-    const container = document.getElementById('step5-sessions-container');
-    if (!container) return;
+        const container = document.getElementById('step5-sessions-container');
+        if (!container) return;
 
-    // تحديد اليوم الحالي لتقدم مسار المريض
-    const progressionDay = sessionData.isPlanCompleted ? 7 : Math.min(7, Math.max(2, sessionData.currentSessionDay || 2));
+        // تحديد اليوم الحالي لتقدم مسار المريض
+        const progressionDay = sessionData.isPlanCompleted ? 7 : Math.min(7, Math.max(2, Math.max(sessionData.currentSessionDay || 2, highestCompleted5 + 1)));
 
-    // تحديد اليوم المعروض حالياً: بين 2 و 7 مع منع القفز المستقبلي إن لم تكن الخطة مكتملة
-    let activeDay = progressionDay;
-    if (targetDay) {
-        if (sessionData.isPlanCompleted) {
+        // تحديد اليوم المعروض حالياً: إذا تم تمرير targetDay (مثلاً عند إتمام جلسة سابقة أو النقر المباشر)، يُعرض مباشرة
+        let activeDay = progressionDay;
+        if (targetDay) {
             activeDay = Math.max(2, Math.min(7, targetDay));
+        }
+
+        if (activePatient) {
+            activePatient.currentSessionDay = progressionDay;
+            activePatient.activeSessionDay = activeDay;
+            activePatient.dailyLogs = sessionData.dailyLogs;
+            window.activePatient = activePatient;
+        }
+
+        const curAssData5 = sessionData.latestAssessment || (typeof currentAssessmentData !== 'undefined' ? currentAssessmentData : null) || {};
+        const curPt5 = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint : null;
+        const pointKey = curAssData5?.pointId || curAssData5?.pointKey || curPt5?.id || curPt5?.region || sessionData.patient?.painPointId || sessionData.patient?.painArea || sessionData.patient?.selectedPoint || 'lumbar_spine';
+        const dayExercises = getExercisesForPoint(pointKey, activeDay, {
+            primaryDiagnosisKey: sessionData.latestAssessment?.primaryDiagnosisKey || curAssData5?.primaryDiagnosisKey || "",
+            answers: sessionData.latestAssessment?.answers || curAssData5?.answers || {},
+            userNotes: sessionData.latestAssessment?.userNotes || curAssData5?.userNotes || ""
+        });
+
+        const anatomicalConfig = typeof getAnatomicalDailyAssessmentConfig === 'function' ? getAnatomicalDailyAssessmentConfig(pointKey) : null;
+
+        // استخراج المرحلة السريرية والتوجيه التحفيزي الدقيق لليوم المعروض activeDay
+        const dayStageInfo = (typeof PatientFlow !== 'undefined' && PatientFlow.getStageInfoForDay)
+            ? PatientFlow.getStageInfoForDay(pointKey, activeDay)
+            : (typeof getStageInfoForDay === 'function' ? getStageInfoForDay(pointKey, activeDay) : { stageTitle: sessionData.stageTitle, motivation: sessionData.motivation });
+
+        const currentDisplayStageTitle = dayStageInfo.stageTitle || sessionData.stageTitle;
+        const currentDisplayMotivation = dayStageInfo.motivation || sessionData.motivation;
+
+        // جلب سجل الجلسة المعروضة activeDay لحساب مؤشراتها وسلوكياتها بدقة
+        const activeDayLog = (sessionData.dailyLogs || []).find(l => (Number(l.sessionNumber) === activeDay || Number(l.day) === activeDay))
+                           || ((sessionData.dailyLogs && sessionData.dailyLogs[activeDay - 1]) ? sessionData.dailyLogs[activeDay - 1] : null);
+
+        let displayPainReduction = sessionData.indicators ? sessionData.indicators.painReduction : 0;
+        let displayMobility = sessionData.indicators ? sessionData.indicators.mobility : 0;
+        let displaySleep = sessionData.indicators ? sessionData.indicators.sleepQuality : 0;
+
+        if (activeDayLog) {
+            if (typeof activeDayLog.painScore === 'number' && sessionData.baselinePain > 0) {
+                displayPainReduction = Math.max(0, Math.min(100, Math.round(((sessionData.baselinePain - activeDayLog.painScore) / sessionData.baselinePain) * 100)));
+                if (activeDayLog.painScore < sessionData.baselinePain && displayPainReduction === 0) displayPainReduction = 10;
+            }
+            if (typeof activeDayLog.mobilityRate === 'number') {
+                displayMobility = activeDayLog.mobilityRate;
+            } else if (typeof activeDayLog.movementScore === 'number') {
+                displayMobility = activeDayLog.movementScore;
+            }
+            if (typeof activeDayLog.sleepRate === 'number') {
+                displaySleep = activeDayLog.sleepRate;
+            } else if (typeof activeDayLog.sleepQuality === 'number') {
+                displaySleep = activeDayLog.sleepQuality;
+            }
         } else {
-            // منع تخطي الجلسات: لا يجوز عرض جلسة مستقبلية مقفلة كجلسة نشطة
-            activeDay = Math.max(2, Math.min(progressionDay, targetDay));
+            // إذا كانت الجلسة المعروضة لم توثق بعد، نعرض مؤشرات آخر جلسة موثقة ليعرف المراجع تقدمه الحقيقي دون ظهور أصفار
+            const prevLogs = (sessionData.dailyLogs || []).filter(l => Number(l.sessionNumber || l.day) < activeDay);
+            const lastPrevLog = prevLogs.length > 0 ? prevLogs[prevLogs.length - 1] : (sessionData.dailyLogs && sessionData.dailyLogs.length > 0 ? sessionData.dailyLogs[sessionData.dailyLogs.length - 1] : null);
+            if (lastPrevLog) {
+                if (typeof lastPrevLog.painScore === 'number' && sessionData.baselinePain > 0) {
+                    displayPainReduction = Math.max(0, Math.min(100, Math.round(((sessionData.baselinePain - lastPrevLog.painScore) / sessionData.baselinePain) * 100)));
+                    if (lastPrevLog.painScore < sessionData.baselinePain && displayPainReduction === 0) displayPainReduction = 10;
+                }
+                if (typeof lastPrevLog.mobilityRate === 'number') {
+                    displayMobility = lastPrevLog.mobilityRate;
+                } else if (typeof lastPrevLog.movementScore === 'number') {
+                    displayMobility = lastPrevLog.movementScore;
+                }
+                if (typeof lastPrevLog.sleepRate === 'number') {
+                    displaySleep = lastPrevLog.sleepRate;
+                } else if (typeof lastPrevLog.sleepQuality === 'number') {
+                    displaySleep = lastPrevLog.sleepQuality;
+                }
+            } else if (activeDay < progressionDay || sessionData.isPlanCompleted) {
+                const factor = activeDay / 7;
+                const maxPainDrop = (sessionData.indicators && sessionData.indicators.painReduction) ? sessionData.indicators.painReduction : 85;
+                displayPainReduction = Math.min(100, Math.round(maxPainDrop * factor));
+                displayMobility = Math.min(98, Math.round(50 + 48 * factor));
+                displaySleep = Math.min(98, Math.round(55 + 43 * factor));
+            }
+            if (displayMobility === 0) displayMobility = 70;
+            if (displaySleep === 0) displaySleep = 70;
         }
-    }
-
-    if (activePatient) {
-        activePatient.currentSessionDay = progressionDay;
-        activePatient.activeSessionDay = activeDay;
-        window.activePatient = activePatient;
-    }
-
-    const curAssData5 = sessionData.latestAssessment || (typeof currentAssessmentData !== 'undefined' ? currentAssessmentData : null) || {};
-    const curPt5 = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint : null;
-    const pointKey = curAssData5?.pointId || curAssData5?.pointKey || curPt5?.id || curPt5?.region || sessionData.patient?.painPointId || sessionData.patient?.painArea || sessionData.patient?.selectedPoint || 'lumbar_spine';
-    const dayExercises = getExercisesForPoint(pointKey, activeDay, {
-        primaryDiagnosisKey: sessionData.latestAssessment?.primaryDiagnosisKey || curAssData5?.primaryDiagnosisKey || "",
-        answers: sessionData.latestAssessment?.answers || curAssData5?.answers || {},
-        userNotes: sessionData.latestAssessment?.userNotes || curAssData5?.userNotes || ""
-    });
-
-    const anatomicalConfig = typeof getAnatomicalDailyAssessmentConfig === 'function' ? getAnatomicalDailyAssessmentConfig(pointKey) : null;
-
-    // استخراج المرحلة السريرية والتوجيه التحفيزي الدقيق لليوم المعروض activeDay
-    const dayStageInfo = (typeof PatientFlow !== 'undefined' && PatientFlow.getStageInfoForDay)
-        ? PatientFlow.getStageInfoForDay(pointKey, activeDay)
-        : (typeof getStageInfoForDay === 'function' ? getStageInfoForDay(pointKey, activeDay) : { stageTitle: sessionData.stageTitle, motivation: sessionData.motivation });
-
-    const currentDisplayStageTitle = dayStageInfo.stageTitle || sessionData.stageTitle;
-    const currentDisplayMotivation = dayStageInfo.motivation || sessionData.motivation;
-
-    // جلب سجل الجلسة المعروضة activeDay لحساب مؤشراتها وسلوكياتها بدقة
-    const activeDayLog = (sessionData.dailyLogs || []).find(l => (Number(l.sessionNumber) === activeDay || Number(l.day) === activeDay))
-                       || ((sessionData.dailyLogs && sessionData.dailyLogs[activeDay - 1]) ? sessionData.dailyLogs[activeDay - 1] : null);
-
-    let displayPainReduction = sessionData.indicators ? sessionData.indicators.painReduction : 0;
-    let displayMobility = sessionData.indicators ? sessionData.indicators.mobility : 0;
-    let displaySleep = sessionData.indicators ? sessionData.indicators.sleepQuality : 0;
-
-    if (activeDayLog) {
-        if (typeof activeDayLog.painScore === 'number' && sessionData.baselinePain > 0) {
-            displayPainReduction = Math.max(0, Math.min(100, Math.round(((sessionData.baselinePain - activeDayLog.painScore) / sessionData.baselinePain) * 100)));
-            if (activeDayLog.painScore < sessionData.baselinePain && displayPainReduction === 0) displayPainReduction = 10;
-        }
-        if (typeof activeDayLog.mobilityRate === 'number') {
-            displayMobility = activeDayLog.mobilityRate;
-        } else if (typeof activeDayLog.movementScore === 'number') {
-            displayMobility = activeDayLog.movementScore;
-        }
-        if (typeof activeDayLog.sleepRate === 'number') {
-            displaySleep = activeDayLog.sleepRate;
-        } else if (typeof activeDayLog.sleepQuality === 'number') {
-            displaySleep = activeDayLog.sleepQuality;
-        }
-    } else if (activeDay < sessionData.currentSessionDay || sessionData.isPlanCompleted) {
-        const factor = activeDay / 7;
-        const maxPainDrop = (sessionData.indicators && sessionData.indicators.painReduction) ? sessionData.indicators.painReduction : 85;
-        displayPainReduction = Math.min(100, Math.round(maxPainDrop * factor));
-        displayMobility = Math.min(98, Math.round(50 + 48 * factor));
-        displaySleep = Math.min(98, Math.round(55 + 43 * factor));
-    }
 
     // بطاقة التحليل السلوكي المستمر بناءً على سجل الجلسة المعروضة أو السابقة
     const lastDailyLog = activeDayLog || (sessionData.dailyLogs.length > 0 ? sessionData.dailyLogs[sessionData.dailyLogs.length - 1] : null);
@@ -6354,10 +6403,11 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                     <span style="font-size: 0.75em; opacity: 0.9;">✓ منجزة</span>
                 </button>
                 ${[2, 3, 4, 5, 6, 7].map(d => {
+                    const hasCompletedLog = (sessionData.dailyLogs || []).some(l => Number(l.sessionNumber || l.day) === d);
+                    const isCompleted = (hasCompletedLog || d < progressionDay || sessionData.isPlanCompleted);
                     const isCurrentActive = (d === activeDay);
-                    const isCompleted = (d < progressionDay || sessionData.isPlanCompleted);
-                    const isFutureLocked = (!sessionData.isPlanCompleted && d > progressionDay);
-                    const isCurrentProgression = (!sessionData.isPlanCompleted && d === progressionDay);
+                    const isCurrentProgression = (!sessionData.isPlanCompleted && d === progressionDay && !hasCompletedLog);
+                    const isFutureLocked = (!sessionData.isPlanCompleted && !hasCompletedLog && d > progressionDay);
 
                     let bg = '#1e293b';
                     let border = '1px solid #334155';
@@ -6385,7 +6435,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
 
                     let statusBadge = '🔒 مقفلة';
                     if (isCurrentActive) {
-                        statusBadge = (isCompleted && d < progressionDay) ? '🟢 المعروضة (مراجعة)' : '🟢 المعروضة';
+                        statusBadge = isCompleted ? '🟢 المعروضة (مراجعة)' : '🟢 المعروضة';
                     } else if (isCompleted) {
                         statusBadge = '✓ منجزة';
                     } else if (isCurrentProgression) {
@@ -6933,12 +6983,14 @@ async function renderStep6Completion(patientId, sessionData = null) {
 
         // التحقق المانع: عدم السماح بالوصول لوثيقة التخرج إلا بعد إتمام كامل الأيام السبعة
         const completedDays = sessionData.dailyLogs ? sessionData.dailyLogs.length : 0;
-        if (!sessionData.isPlanCompleted && completedDays < 7) {
+        const hasSession7 = sessionData.dailyLogs && sessionData.dailyLogs.some(l => Number(l.sessionNumber || l.day) >= 7);
+        const isPlanDone = sessionData.isPlanCompleted || hasSession7 || completedDays >= 7 || (activePatient && (activePatient.isPlanCompleted || activePatient.planCompleted));
+        if (!isPlanDone) {
             showToast(`🔒 وثيقة التعافي والإنهاء مقفلة: تتفعل تلقائياً فقط بعد إتمام جميع جلسات خطة التعافي السبع (7 أيام)! أنت حالياً في اليوم (${completedDays + 1} من 7).`, 'warning');
             if (completedDays === 0) {
                 renderStep4IndependentDay1(patientId);
             } else {
-                renderStep5SessionsDashboard(patientId);
+                renderStep5SessionsDashboard(patientId, Math.min(7, Math.max(2, completedDays + 1)));
             }
             return;
         }
@@ -7809,7 +7861,13 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
         const pPhone = activePatient?.phone || '';
 
         // 4. الانتقال الفوري بالواجهة دون تأخير
-        if (allLogs && allLogs.length >= 7) {
+        if (sessionNumber >= 7 || (allLogs && allLogs.length >= 7)) {
+            activePatient.isPlanCompleted = true;
+            activePatient.planCompleted = true;
+            try {
+                localStorage.setItem('smart_plan_completed_' + patientId, 'true');
+                localStorage.setItem('smart_active_patient', JSON.stringify(activePatient));
+            } catch(e) {}
             goToStep(6);
             if (typeof renderStep6Completion === 'function') {
                 renderStep6Completion(patientId);
@@ -7852,9 +7910,10 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
                 playStationAudio('motivation', () => {}, 'recovery');
             }
         } else {
+            const nextSession = Math.min(7, sessionNumber + 1);
             goToStep(5);
             if (typeof renderStep5SessionsDashboard === 'function') {
-                renderStep5SessionsDashboard(patientId, sessionNumber + 1);
+                renderStep5SessionsDashboard(patientId, nextSession);
             }
             try {
                 SmartDB.addAdminNotification({
@@ -7869,7 +7928,7 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
             } catch(e) {}
             showToast(`🎉 أحسنت! تم حفظ تقييم الجلسة #${sessionNumber} بنجاح وبدأت فترة استشفاء الجلسة التالية (24 ساعة).`, 'success');
             if (typeof playDailyMotivationAudio === 'function') {
-                playDailyMotivationAudio(sessionNumber + 1, pName);
+                playDailyMotivationAudio(nextSession, pName);
             }
         }
 
@@ -7883,7 +7942,8 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
         closeSessionAssessmentModal();
         goToStep(5);
         if (typeof renderStep5SessionsDashboard === 'function') {
-            renderStep5SessionsDashboard(patientId, 2).catch(() => {});
+            const fallbackNext = Math.min(7, (sessionNumber || 1) + 1);
+            renderStep5SessionsDashboard(patientId, fallbackNext).catch(() => {});
         }
     }
 }
@@ -7996,7 +8056,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.26';
+const CURRENT_APP_VERSION = 'v30.27';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 

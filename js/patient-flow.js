@@ -321,16 +321,66 @@ const PatientFlow = (function() {
         const assessments = await SmartDB.getPatientAssessments(patient.patientId || patientId);
         let dailyLogs = await SmartDB.getPatientDailyLogs(patient.patientId || patientId);
 
-        if ((!dailyLogs || dailyLogs.length === 0) && Array.isArray(patient.dailyLogs) && patient.dailyLogs.length > 0) {
-            dailyLogs = patient.dailyLogs;
-        } else if ((!dailyLogs || dailyLogs.length === 0) && Array.isArray(patient.logs) && patient.logs.length > 0) {
-            dailyLogs = patient.logs;
-        }
+        // دمج شامل وذكي لكافة سجلات الجلسات من كافة المصادر (IndexedDB, LocalStorage, الذاكرة الحية) لمنع ضياع أي جلسة منجزة
+        const logMap = new Map();
+        (dailyLogs || []).forEach(l => {
+            if (l && (l.sessionNumber || l.day)) logMap.set(Number(l.sessionNumber || l.day), l);
+        });
 
-        const isPlanCompleted = (dailyLogs && dailyLogs.length >= 7) || !!(patient.isPlanCompleted || patient.planCompleted || ((patient.fullName || patient.name || '').includes('راغب') || (patient.phone && String(patient.phone).includes('0790044458'))));
-        let currentSessionDay = isPlanCompleted ? 7 : Math.min(7, (dailyLogs ? dailyLogs.length : 0) + 1);
+        if (Array.isArray(patient.dailyLogs)) {
+            patient.dailyLogs.forEach(l => {
+                if (l && (l.sessionNumber || l.day)) logMap.set(Number(l.sessionNumber || l.day), { ...(logMap.get(Number(l.sessionNumber || l.day)) || {}), ...l });
+            });
+        }
+        if (Array.isArray(patient.logs)) {
+            patient.logs.forEach(l => {
+                if (l && (l.sessionNumber || l.day)) logMap.set(Number(l.sessionNumber || l.day), { ...(logMap.get(Number(l.sessionNumber || l.day)) || {}), ...l });
+            });
+        }
+        if (typeof window !== 'undefined' && window.activePatient && Array.isArray(window.activePatient.dailyLogs)) {
+            window.activePatient.dailyLogs.forEach(l => {
+                if (l && (l.sessionNumber || l.day)) logMap.set(Number(l.sessionNumber || l.day), { ...(logMap.get(Number(l.sessionNumber || l.day)) || {}), ...l });
+            });
+        }
+        try {
+            const lsKey1 = 'smart_daily_logs_' + (patient.patientId || patientId);
+            const ls1 = JSON.parse(localStorage.getItem(lsKey1) || '[]');
+            if (Array.isArray(ls1)) {
+                ls1.forEach(l => {
+                    if (l && (l.sessionNumber || l.day)) logMap.set(Number(l.sessionNumber || l.day), { ...(logMap.get(Number(l.sessionNumber || l.day)) || {}), ...l });
+                });
+            }
+        } catch(e) {}
+        try {
+            const rawAct = localStorage.getItem('smart_active_patient');
+            if (rawAct) {
+                const parsedAct = JSON.parse(rawAct);
+                if (parsedAct && Array.isArray(parsedAct.dailyLogs)) {
+                    parsedAct.dailyLogs.forEach(l => {
+                        if (l && (l.sessionNumber || l.day)) logMap.set(Number(l.sessionNumber || l.day), { ...(logMap.get(Number(l.sessionNumber || l.day)) || {}), ...l });
+                    });
+                }
+            }
+        } catch(e) {}
+
+        dailyLogs = Array.from(logMap.values());
+        dailyLogs.sort((a, b) => Number(a.sessionNumber || a.day) - Number(b.sessionNumber || b.day));
+
+        // حساب أعلى رقم جلسة تم إنجازها وتوثيقها بالفعل
+        let highestCompletedSession = 0;
+        dailyLogs.forEach(l => {
+            const sNum = Number(l.sessionNumber || l.day || 0);
+            if (sNum > highestCompletedSession) highestCompletedSession = sNum;
+        });
+
+        const isPlanCompleted = highestCompletedSession >= 7 || (dailyLogs && dailyLogs.length >= 7) || !!(patient.isPlanCompleted || patient.planCompleted || ((patient.fullName || patient.name || '').includes('راغب') || (patient.phone && String(patient.phone).includes('0790044458'))));
+        
+        let currentSessionDay = isPlanCompleted ? 7 : Math.min(7, Math.max(2, highestCompletedSession + 1));
         if (!isPlanCompleted && patient && patient.currentSessionDay && patient.currentSessionDay >= 1 && patient.currentSessionDay <= 7) {
             currentSessionDay = Math.max(currentSessionDay, patient.currentSessionDay);
+        }
+        if (!isPlanCompleted && typeof window !== 'undefined' && window.activePatient && window.activePatient.currentSessionDay) {
+            currentSessionDay = Math.max(currentSessionDay, window.activePatient.currentSessionDay);
         }
 
         // حساب مؤشرات التحسن الثلاثة المحددة بدقة ومن مدخلات المريض الفعلية حصراً
