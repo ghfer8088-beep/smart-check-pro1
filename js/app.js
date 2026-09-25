@@ -5772,6 +5772,91 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
         else if (typeof day1Log.sleepQuality === 'number') s4Sleep = day1Log.sleepQuality;
     }
 
+    const lockStatus = (typeof PatientFlow !== 'undefined' && PatientFlow.getSessionLockStatus)
+        ? await PatientFlow.getSessionLockStatus(patientId)
+        : { isLocked: false, remainingMs: 0 };
+
+    let s4InitialH = '00', s4InitialM = '00', s4InitialS = '00';
+    if (isDay1Completed && lockStatus.isLocked && lockStatus.remainingMs > 0) {
+        const totalSec = Math.floor(lockStatus.remainingMs / 1000);
+        s4InitialH = String(Math.floor(totalSec / 3600)).padStart(2, '0');
+        s4InitialM = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+        s4InitialS = String(totalSec % 60).padStart(2, '0');
+    }
+
+    let clockSectionHTML = '';
+    if (isDay1Completed) {
+        if (lockStatus.isLocked && lockStatus.remainingMs > 0) {
+            clockSectionHTML = `
+                <div style="background: linear-gradient(135deg, #0b101b 0%, #172033 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                        <div style="color: var(--primary-gold); font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                            <span>⏱️</span> ساعة التوقيت المعتمدة (فترة استشفاء جارية بعد الجلسة الأولى)
+                        </div>
+                        <span style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
+                            الجلسة 1 منجزة (متبقي للاستشفاء حتى فتح الجلسة 2)
+                        </span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 12px;">
+                        <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
+                            <div id="countdown-hours" style="font-size: 2.2em; font-weight: bold; color: #ffffff; font-family: monospace;">${s4InitialH}</div>
+                            <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">ساعة</div>
+                        </div>
+                        <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
+                            <div id="countdown-mins" style="font-size: 2.2em; font-weight: bold; color: #ffffff; font-family: monospace;">${s4InitialM}</div>
+                            <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">دقيقة</div>
+                        </div>
+                        <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
+                            <div id="countdown-secs" style="font-size: 2.2em; font-weight: bold; color: var(--primary-gold); font-family: monospace;">${s4InitialS}</div>
+                            <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">ثانية</div>
+                        </div>
+                    </div>
+
+                    <p style="color: #cbd5e1; font-size: 0.85em; margin: 0; line-height: 1.6;">
+                        ⏳ يجري احتساب فترة استشفاء الأنسجة (24 ساعة) بعد الجلسة الأولى. يمكنك مراجعة التمارين المقررة أدناه حتى اكتمال العداد لفتح الجلسة الثانية.
+                    </p>
+                </div>
+            `;
+        } else {
+            clockSectionHTML = `
+                <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                        <div style="color: #10b981; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                            <span>✅</span> تمارين الجلسة الأولى مكتملة وموثقة سريرياً
+                        </div>
+                        <span style="background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">
+                            الجلسة الثانية جاهزة للبدء الآن
+                        </span>
+                    </div>
+                    <p style="color: #cbd5e1; font-size: 0.9em; margin: 0 0 14px 0; line-height: 1.6;">
+                        🎉 اكتملت فترة الاستشفاء الحيوي للأنسجة! يمكنك الانتقال للجلسة الثانية مباشرة لمواصلة برنامج التعافي.
+                    </p>
+                    <button type="button" onclick="renderStep5SessionsDashboard('${patientId}', 2)" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; font-weight: 900; border: none; padding: 10px 24px; border-radius: 25px; font-size: 0.95em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);">
+                        <span>🚀</span> الانتقال للجلسة الثانية (اليوم 2) ❯
+                    </button>
+                </div>
+            `;
+        }
+    } else {
+        clockSectionHTML = `
+            <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 18px 22px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4em;">
+                        ⚡
+                    </div>
+                    <div>
+                        <div style="color: var(--primary-gold); font-size: 0.92em; font-weight: bold;">حالة الجلسة الأولى (اليوم 1):</div>
+                        <div style="color: #cbd5e1; font-size: 0.84em; margin-top: 2px;">مفتوحة وجاهزة للتطبيق الآن - ابدأ بالتمارين المقررة أدناه ثم وثق إنجازك</div>
+                    </div>
+                </div>
+                <span style="background: rgba(16, 185, 129, 0.2); border: 1.5px solid #10b981; color: #6ee7b7; padding: 6px 14px; border-radius: 20px; font-size: 0.82em; font-weight: bold; display: inline-flex; align-items: center; gap: 6px;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block;"></span> متاحة للبدء
+                </span>
+            </div>
+        `;
+    }
+
     container.innerHTML = `
         <div class="patient-recovery-master-card" style="background: #111827; border: 1px solid var(--primary-gold); border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
             
@@ -5920,25 +6005,8 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                 </div>
             </div>
 
-            <!-- 2. البيانات: بطاقة بيانات المراجع الحيوية والميكانيكية -->
-            ${getVitalsSummaryCardHTML(sessionData.patient, sessionData.latestAssessment)}
-
-            <!-- 3. الساعة الرقمية الحية لجلسة اليوم الأول -->
-            <div id="live-session-clock-card" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.8) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 16px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5em;">
-                        ⏱️
-                    </div>
-                    <div>
-                        <div style="color: var(--primary-gold); font-size: 0.88em; font-weight: bold; letter-spacing: 0.5px;">توقيت الجلسة الحركية المباشرة (اليوم الأول):</div>
-                        <div id="live-session-date-display" style="color: #94a3b8; font-size: 0.84em; margin-top: 2px;">--</div>
-                    </div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 10px; background: rgba(0, 0, 0, 0.5); border: 1.5px solid #10b981; padding: 8px 18px; border-radius: 10px;">
-                    <span style="color: #10b981; font-size: 0.95em; animation: pulse 1.5s infinite;">🟢 جلسة نشطة الآن:</span>
-                    <div id="live-session-time-display" style="color: #6ee7b7; font-size: 1.45em; font-weight: 900; letter-spacing: 1px; font-family: monospace;" dir="ltr">--:--:--</div>
-                </div>
-            </div>
+            <!-- ساعة التوقيت المعتمدة / حالة استشفاء اليوم الأول -->
+            ${clockSectionHTML}
 
             <!-- مؤشرات التحسن الثلاثة المعتمدة للجلسة الأولى (تطابق كامل مع الجلسات 2-7) -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 24px;">
@@ -6088,36 +6156,27 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
         </div>
     `;
 
-    // تنشيط الساعة الحية لليوم الأول
+    // تنظيف أي مؤقتات سابقة
     if (window.liveSessionClockInterval) {
         clearInterval(window.liveSessionClockInterval);
         window.liveSessionClockInterval = null;
     }
-    const updateLiveClock = () => {
-        const timeEl = document.getElementById('live-session-time-display');
-        const dateEl = document.getElementById('live-session-date-display');
-        if (!timeEl) {
-            if (window.liveSessionClockInterval) {
-                clearInterval(window.liveSessionClockInterval);
-                window.liveSessionClockInterval = null;
-            }
-            return;
+
+    // تشغيل العداد التنازلي لساعة الـ 24 ساعة إذا كانت الجلسة الأولى مكتملة وفترة الاستشفاء سارية
+    if (isDay1Completed && lockStatus.isLocked && lockStatus.targetTime) {
+        if (typeof PatientFlow !== 'undefined' && PatientFlow.startCountdownTimer) {
+            PatientFlow.startCountdownTimer(lockStatus.targetTime, {
+                hours: document.getElementById('countdown-hours'),
+                minutes: document.getElementById('countdown-mins'),
+                seconds: document.getElementById('countdown-secs')
+            }, () => {
+                if (typeof showToast === 'function') {
+                    showToast('🎉 اكتملت فترة الاستشفاء الحيوي للأنسجة! الجلسة الثانية متاحة الآن 🚀', 'success');
+                }
+                renderStep4IndependentDay1(patientId, sessionData);
+            }, lockStatus.totalDurationMs);
         }
-        const now = new Date();
-        let hours = now.getHours();
-        const ampm = hours >= 12 ? 'م' : 'ص';
-        hours = hours % 12;
-        hours = hours ? hours : 12;
-        const hoursStr = String(hours).padStart(2, '0');
-        const minutesStr = String(now.getMinutes()).padStart(2, '0');
-        const secondsStr = String(now.getSeconds()).padStart(2, '0');
-        timeEl.textContent = `${hoursStr}:${minutesStr}:${secondsStr} ${ampm}`;
-        if (dateEl) {
-            dateEl.textContent = now.toLocaleDateString('ar-JO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        }
-    };
-    updateLiveClock();
-    window.liveSessionClockInterval = setInterval(updateLiveClock, 1000);
+    }
     } finally {
         _isRenderingStep4 = false;
     }
@@ -6736,17 +6795,14 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 </button>
             </div>` : ''}
 
-            <!-- شريط التنقل السريع بين المراحل السابقة -->
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
-                <button type="button" onclick="renderStep4IndependentDay1('${patientId}')" class="btn-header" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 7px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                    <span>🏋️</span> مراجعة تمارين الجلسة الأولى (اليوم 1)
+            ${sessionData.isPlanCompleted ? `
+            <!-- زر العودة لوثيقة التعافي والإنهاء عند اكتمال البرنامج -->
+            <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 14px;">
+                <button type="button" onclick="renderStep6Completion('${patientId}')" class="btn-header" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(180, 130, 20, 0.25) 100%); border: 1px solid var(--primary-gold); color: #fef08a; padding: 7px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <span>🏆</span> العودة لوثيقة التعافي والإنهاء
                 </button>
-                ${sessionData.isPlanCompleted ? `
-                    <button type="button" onclick="renderStep6Completion('${patientId}')" class="btn-header" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(180, 130, 20, 0.25) 100%); border: 1px solid var(--primary-gold); color: #fef08a; padding: 7px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        <span>🏆</span> العودة لوثيقة التعافي والإنهاء
-                    </button>
-                ` : ''}
             </div>
+            ` : ''}
 
             <!-- إهداء الصدقة الجارية والاستماع لتلاوة الدعاء الصوتي -->
             <div style="background: rgba(16, 185, 129, 0.08); border: 1.5px solid rgba(16, 185, 129, 0.35); border-radius: 10px; padding: 10px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
@@ -8094,7 +8150,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.29';
+const CURRENT_APP_VERSION = 'v30.30';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
