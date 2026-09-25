@@ -5744,9 +5744,6 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                     <div>
                         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                             <h2 style="color: #ffffff; margin: 0; font-size: 1.35em;">${formatPatientGreeting(sessionData.patient?.name)}</h2>
-                            <button type="button" onclick="promptEditPatientName()" title="تعديل أو تخصيص اسمك الكريم" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; border-radius: 8px; padding: 3px 9px; font-size: 0.78em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
-                                <span>✏️</span> <span>تعديل الاسم</span>
-                            </button>
                         </div>
                         <div style="color: var(--primary-gold); font-size: 0.9em; margin-top: 4px;">خطة الراحة الحركية الذاتية - الجلسة الأولى (مستقلة) - منطقة ${sessionData.latestAssessment?.painAreaTitle || 'المفصل المختار'}</div>
                     </div>
@@ -6526,9 +6523,6 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                     <div>
                         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                             <h2 style="color: #ffffff; margin: 0; font-size: 1.35em;">${formatPatientGreeting(sessionData.patient?.name)}</h2>
-                            <button type="button" onclick="promptEditPatientName()" title="تعديل أو تخصيص اسمك الكريم" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; border-radius: 8px; padding: 3px 9px; font-size: 0.78em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
-                                <span>✏️</span> <span>تعديل الاسم</span>
-                            </button>
                         </div>
                         <div style="color: var(--primary-gold); font-size: 0.9em; margin-top: 4px;">متابعة جلسات التأهيل الحركي (الجلسة ${activeDay} من 7) - منطقة ${sessionData.latestAssessment?.painAreaTitle || 'المفصل المختار'}</div>
                     </div>
@@ -7083,44 +7077,55 @@ function showFutureSessionLockedPopup(currentDay, targetDay) {
         setTimeout(() => popup.remove(), 260);
     }, 2000);
 }
-// // التحقق السريري من إتمام تمارين اليوم الأول وتوجيه المريض قبل فتح نافذة التوثيق
+// التحقق السريري من إتمام تمارين اليوم الأول وتوجيه المريض لفتح نافذة التوثيق
 function handleStep4CompletionClick(patientId, forceSkip = false) {
-    const maxReached = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
     const curDailyLogs = (typeof activePatient !== 'undefined' && activePatient?.dailyLogs) || [];
-    const isAlreadyDone = maxReached >= 5 || curDailyLogs.length >= 1;
-
-    if (isAlreadyDone && !forceSkip) {
-        if (typeof handleStepperClick === 'function') {
-            handleStepperClick(5);
-        } else if (typeof renderStep5SessionsDashboard === 'function') {
-            renderStep5SessionsDashboard(patientId);
+    
+    // إذا كان المريض قد وثق الجلسة الأولى بالفعل (dailyLogs >= 1)، نوجهه مباشرة لمتابعة الجلسات في الخطوة 5
+    if (curDailyLogs.length >= 1 && !forceSkip) {
+        if (typeof renderStep5SessionsDashboard === 'function') {
+            renderStep5SessionsDashboard(patientId, 2);
+        } else if (typeof goToStep === 'function') {
+            goToStep(5);
         }
         return;
     }
 
     if (!forceSkip) {
-        const timerBtns = Array.from(document.querySelectorAll('#step-section-4 button.btn-exercise-timer'));
-        const uncompleted = timerBtns.filter(btn => {
-            const isFinished = btn.style.background.includes('10b981') || btn.innerHTML.includes('تم إنجاز') || btn.dataset.completed === 'true';
-            return !isFinished;
-        });
+        let isAllDone = false;
+        if (window.SmartGuidance && typeof window.SmartGuidance.getStep4ExerciseProgress === 'function') {
+            isAllDone = window.SmartGuidance.getStep4ExerciseProgress().allDone;
+        }
 
-        if (uncompleted.length > 0) {
-            const firstUnfinished = uncompleted[0];
-            const cardEl = firstUnfinished.closest('.clinical-exercise-card');
-            if (cardEl) {
-                cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                cardEl.style.outline = '2px solid #eab308';
-                cardEl.style.boxShadow = '0 0 25px rgba(234, 179, 8, 0.6)';
-                setTimeout(() => {
-                    cardEl.style.outline = '';
-                    cardEl.style.boxShadow = '';
-                }, 2500);
+        if (!isAllDone) {
+            const timerBtns = Array.from(document.querySelectorAll('#step-section-4 button.btn-exercise-timer'));
+            const uncompleted = timerBtns.filter(btn => {
+                const isFinished = btn.dataset.completed === 'true' ||
+                                   btn.style.background.includes('10b981') ||
+                                   btn.innerHTML.includes('تم إنجاز') ||
+                                   btn.innerHTML.includes('إنجاز') ||
+                                   btn.innerHTML.includes('تمت') ||
+                                   btn.innerHTML.includes('مكتمل');
+                return !isFinished;
+            });
+
+            if (uncompleted.length > 0) {
+                const firstUnfinished = uncompleted[0];
+                const cardEl = firstUnfinished.closest('.clinical-exercise-card, .exercise-visual-card');
+                if (cardEl) {
+                    cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    cardEl.style.outline = '2px solid #eab308';
+                    cardEl.style.boxShadow = '0 0 25px rgba(234, 179, 8, 0.6)';
+                    setTimeout(() => {
+                        cardEl.style.outline = '';
+                        cardEl.style.boxShadow = '';
+                    }, 2500);
+                }
+                if (typeof showToast === 'function') {
+                    showToast(`⚠️ لا يمكنك الانتقال لتوثيق الجلسة إلا بعد إتمامك لكافة التمارين المقترحة أدناه (متبقي ${uncompleted.length} تمرين) 🏋️`, 'warning', 4500);
+                }
+                return;
             }
-            if (typeof showToast === 'function') {
-                showToast(`⚠️ لا يمكنك الانتقال لتوثيق الجلسة إلا بعد إتمامك لكافة التمارين المقترحة أدناه (متبقي ${uncompleted.length} تمرين) 🏋️`, 'warning', 4500);
-            }
-            return;
         }
     }
 
@@ -7169,7 +7174,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
     const content = document.getElementById('session-assessment-modal-content') || document.getElementById('session-assessment-content');
     if (!modal || !content) return;
 
-    const pointKey = sessionData.latestAssessment?.pointId || sessionData.latestAssessment?.pointKey || sessionData.patient.painArea || sessionData.patient.painPointId || 'lumbar_spine';
+    const pointKey = sessionData.latestAssessment?.pointId || sessionData.latestAssessment?.pointKey || sessionData.patient?.painArea || sessionData.patient?.painPointId || 'lumbar_spine';
     const anatomicalConfig = typeof getAnatomicalDailyAssessmentConfig === 'function' ? getAnatomicalDailyAssessmentConfig(pointKey) : null;
     const areaTitle = sessionData.latestAssessment?.painAreaTitle || 'المنطقة المصابة';
 
@@ -7312,6 +7317,9 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
     `;
 
     modal.style.display = 'flex';
+    modal.style.zIndex = '3000000';
+    modal.style.opacity = '1';
+    modal.style.pointerEvents = 'auto';
     if (window.SmartGuidance && typeof SmartGuidance.guideAssessmentModal === 'function') {
         SmartGuidance.guideAssessmentModal(sessionNumber);
     }
@@ -7630,7 +7638,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.20';
+const CURRENT_APP_VERSION = 'v30.21';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 

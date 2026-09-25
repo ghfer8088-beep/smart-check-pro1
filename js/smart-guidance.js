@@ -824,15 +824,15 @@ const SmartGuidance = (function() {
                 const progress = getStep4ExerciseProgress();
 
                 if (progress.allDone || activeSubState === 'step4_done') {
-                    // أتم التمارين -> فتح نافذة التوثيق
-                    if (typeof handleStep4CompletionClick === 'function') {
-                        handleStep4CompletionClick(patientId);
+                    // أتم التمارين -> فتح نافذة التوثيق فوراً
+                    if (typeof openSessionAssessmentModal === 'function') {
+                        openSessionAssessmentModal(patientId, 1);
+                    } else if (typeof handleStep4CompletionClick === 'function') {
+                        handleStep4CompletionClick(patientId, true);
                     } else {
                         const completeBtn = document.querySelector('#step-section-4 button[onclick*="handleStep4CompletionClick"]') || document.getElementById('btn-complete-day1-session') || document.querySelector('#step-section-4 button[onclick*="openSessionAssessmentModal"]');
                         if (completeBtn) {
                             completeBtn.click();
-                        } else if (typeof openSessionAssessmentModal === 'function') {
-                            openSessionAssessmentModal(patientId, 1);
                         }
                     }
                 } else if (progress.runningCount > 0 || activeSubState === 'step4_exercising') {
@@ -986,6 +986,7 @@ const SmartGuidance = (function() {
         onReportRendered: onReportRendered,
         onActionButtonClick: onActionButtonClick,
         updateStageFlowBanner: updateStageFlowBanner,
+        getStep4ExerciseProgress: getStep4ExerciseProgress,
         pointTo: pointTo,
         triggerHotspotsSynchronizedPulse: triggerHotspotsSynchronizedPulse,
         removeHotspotsSynchronizedPulse: removeHotspotsSynchronizedPulse,
