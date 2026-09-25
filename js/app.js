@@ -146,12 +146,9 @@ function playDailyMotivationAudio(dayNumber, patientName = '', onEndCallback = n
     if (typeof stopAllActiveAudio === 'function') {
         stopAllActiveAudio();
     }
-    const scriptText = getDailyMotivationScript(dayNumber, patientName);
-    
-    if (typeof Wada3anAiEngine !== 'undefined' && typeof Wada3anAiEngine.speakText === 'function') {
-        Wada3anAiEngine.speakText(scriptText, onEndCallback);
-    } else if (typeof playStationAudio === 'function') {
-        playStationAudio('motivation', onEndCallback);
+    // تشغيل الصوت البشري الحقيقي المعتمد في المنظومة فوراً بدون أي تأخير أو استدعاءات شبكية
+    if (typeof playStationAudio === 'function') {
+        playStationAudio('motivation', onEndCallback, 'recovery');
     } else if (typeof onEndCallback === 'function') {
         onEndCallback();
     }
@@ -820,10 +817,19 @@ async function restoreActiveSessionState() {
     const queryPid = urlParams.get('patient_id') || urlParams.get('id');
     const isAdmin = isAdminSession();
 
-    let savedPatientId = queryPid 
-        || sessionStorage.getItem('scp_active_patient_id')
-        || localStorage.getItem('smart_current_patient_id')
-        || localStorage.getItem('smart_last_active_patient_id');
+    const authP = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+
+    let savedPatientId = queryPid;
+    // إذا كان المريض مسجلاً دخوله بحسابه الخاص ولم يُحدد مريض في الرابط، حسابه هو المعتمد قطعاً
+    if (!savedPatientId && authP && (authP.patientId || authP.id)) {
+        savedPatientId = authP.patientId || authP.id;
+    }
+
+    if (!savedPatientId) {
+        savedPatientId = sessionStorage.getItem('scp_active_patient_id')
+            || localStorage.getItem('smart_current_patient_id')
+            || localStorage.getItem('smart_last_active_patient_id');
+    }
 
     if (!savedPatientId) {
         try {
@@ -837,9 +843,10 @@ async function restoreActiveSessionState() {
         } catch(e) {}
     }
 
-    // إذا تم فتح جلسة محددة عبر الرابط لمريض محدد: عزل الجلسة فوراً ومنع تسرب بيانات من مريض آخر
-    if (queryPid) {
-        if (activePatient && activePatient.patientId !== queryPid && activePatient.id !== queryPid) {
+    // إذا تم فتح جلسة محددة عبر الرابط لمريض محدد أو تسجيل دخول: عزل الجلسة فوراً ومنع تسرب بيانات من مريض آخر
+    const targetSessionPid = queryPid || (authP && (authP.patientId || authP.id));
+    if (targetSessionPid) {
+        if (activePatient && activePatient.patientId !== targetSessionPid && activePatient.id !== targetSessionPid) {
             activePatient = null;
             currentAssessmentData = null;
             currentSelectedPoint = null;
@@ -901,21 +908,22 @@ async function restoreActiveSessionState() {
         } catch (e) {}
     }
 
-    // استرجاع تقرير الجلسة الحالية من التخزين المحلي مع مزامنة هوية المريض تلقائياً
+    // استرجاع تقرير الجلسة الحالية من التخزين المحلي فقط إذا كان يخص المريض الحالي نفسه
     if (!currentAssessmentData && !queryPid) {
         try {
             const rawAss = localStorage.getItem('smart_current_assessment');
             if (rawAss) {
                 const parsedAss = JSON.parse(rawAss);
+                const currentExpectedPid = (authP && (authP.patientId || authP.id)) || savedPatientId;
                 if (parsedAss) {
-                    currentAssessmentData = parsedAss;
-                    if (parsedAss.patientId) {
-                        savedPatientId = parsedAss.patientId;
-                        try {
-                            sessionStorage.setItem('scp_active_patient_id', parsedAss.patientId);
-                            localStorage.setItem('smart_current_patient_id', parsedAss.patientId);
-                            localStorage.setItem('smart_last_active_patient_id', parsedAss.patientId);
-                        } catch(e) {}
+                    if (!currentExpectedPid || !parsedAss.patientId || parsedAss.patientId === currentExpectedPid) {
+                        currentAssessmentData = parsedAss;
+                        if (parsedAss.patientId && !savedPatientId) {
+                            savedPatientId = parsedAss.patientId;
+                        }
+                    } else {
+                        // التقرير المخزن في الكاش يخص مريضاً آخر أو جلسة سابقة — تفريغه لسلامة العزل
+                        localStorage.removeItem('smart_current_assessment');
                     }
                 }
             }
@@ -6240,7 +6248,14 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
 
     // ساعة التوقيت الـ 24 ساعة المعتمدة أو شارة الإنجاز المكتمل للجلسة
     let clock24HTML = '';
-    const isDay1NotDone = (activeDay === 2 && (!sessionData.dailyLogs || sessionData.dailyLogs.length === 0));
+    const hasExplicitAdminTimingOrUnlock = !lockStatus.isLocked || !!lockStatus.targetTime || !!lockStatus.forced ||
+        (localStorage.getItem('force_unlock_global') === 'true') ||
+        (localStorage.getItem(`force_unlock_${effectivePid}`) === 'true') ||
+        (localStorage.getItem(`custom_target_time_${effectivePid}`) !== null) ||
+        (localStorage.getItem('custom_target_time_global') !== null) ||
+        (activePatient && (activePatient.forceUnlock || activePatient.customTargetTime));
+
+    const isDay1NotDone = (activeDay === 2 && (!sessionData.dailyLogs || sessionData.dailyLogs.length === 0) && !hasExplicitAdminTimingOrUnlock);
 
     if (isDayAlreadyCompleted) {
         clock24HTML = `
@@ -7387,6 +7402,11 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
     // إغلاق نافذة التقييم
     closeSessionAssessmentModal();
 
+    // 🔊 تشغيل مقطع التحفيز الصوتي البشري فوراً عند حفظ بيانات الجلسة الأولى والانتقال للجلسة الثانية دون أي تأخير
+    if (sessionNumber === 1 && typeof playStationAudio === 'function') {
+        playStationAudio('motivation', () => {}, 'recovery');
+    }
+
     const allLogs = await SmartDB.getPatientDailyLogs(patientId);
     const pInfo = await SmartDB.getPatient(patientId);
     const pName = pInfo?.name || activePatient?.name || patientId;
@@ -7610,7 +7630,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.19';
+const CURRENT_APP_VERSION = 'v30.20';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -8941,14 +8961,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         window._isDialogueConcluding = false;
     } catch(e) {}
 
-    // 🛡️ صمام أمان فوري: استعادة المرحلة المحفوظة فوراً وبشكل متزامن لمنع أي ظهور للمرحلة 1 عند الإنعاش
-    try {
-        const preSavedStep = parseInt(localStorage.getItem('smart_current_step') || '0', 10);
-        if (preSavedStep >= 2 && preSavedStep <= 6) {
-            goToStep(preSavedStep);
-        }
-    } catch(e) {}
-
+    // استعادة المرحلة تتم بشكل موثق وآمن بعد التحقق من هوية المريض وقاعدة البيانات
     await SmartDB.openDB();
 
     if (window.location.protocol.startsWith('http') && 'serviceWorker' in navigator) {
@@ -9169,6 +9182,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     let savedPatientId = queryPatientId;
 
     if (!savedPatientId) {
+        const authPInit = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+        if (authPInit && (authPInit.patientId || authPInit.id)) {
+            savedPatientId = authPInit.patientId || authPInit.id;
+        }
+    }
+
+    if (!savedPatientId) {
         savedPatientId = sessionStorage.getItem('scp_active_patient_id')
             || localStorage.getItem('smart_current_patient_id')
             || localStorage.getItem('smart_last_active_patient_id');
@@ -9271,9 +9291,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             let assessments = [];
             try { assessments = await SmartDB.getPatientAssessments(savedPatientId); } catch(e) {}
             
-            // عزل صارم: منع تسرب أي تقرير يخص مريضاً آخر فقط في حال كان الرابط محدد لمعرف مريض صريح
-            if (queryPatientId && currentAssessmentData && currentAssessmentData.patientId && currentAssessmentData.patientId !== savedPatientId) {
+            // عزل صارم: منع تسرب أي تقرير يخص مريضاً آخر أو جلسة سابقة غير متطابقة
+            if (currentAssessmentData && currentAssessmentData.patientId && savedPatientId && currentAssessmentData.patientId !== savedPatientId) {
                 currentAssessmentData = null;
+                try { localStorage.removeItem('smart_current_assessment'); } catch(e) {}
             }
 
             if (!currentAssessmentData) {
@@ -9325,50 +9346,66 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const authPatientObj = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
-    const effectivePatientId = savedPatientId 
-        || (currentAssessmentData && currentAssessmentData.patientId) 
-        || (authPatientObj && (authPatientObj.patientId || authPatientObj.id)) 
+    const effectivePatientId = (queryPatientId ? savedPatientId : (authPatientObj && (authPatientObj.patientId || authPatientObj.id)))
+        || savedPatientId 
         || (activePatient && (activePatient.patientId || activePatient.id))
+        || (currentAssessmentData && currentAssessmentData.patientId) 
         || localStorage.getItem('smart_current_patient_id')
         || localStorage.getItem('smart_last_active_patient_id')
         || (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : null)
         || 'pat_guest';
 
-    // توجيه صارم وموثوق لجميع الخطوات على كافة الأجهزة دون استثناء
-    if (savedTargetStep === 6) {
-        goToStep(6);
-        await loadPatientRecoveryDashboard(effectivePatientId);
-        return;
-    } else if (savedTargetStep === 5) {
-        goToStep(5);
-        try {
-            await loadPatientRecoveryDashboard(effectivePatientId, 2);
-        } catch(err) {
-            console.warn('[DOMContentLoaded] Step 5 dashboard fallback:', err);
-            try { await renderStep5SessionsDashboard(effectivePatientId, 2); } catch(e) {}
-        }
-        return;
-    } else if (savedTargetStep === 4) {
-        await renderStep4IndependentDay1(effectivePatientId);
-        return;
-    } else if (savedTargetStep === 3) {
-        if (currentAssessmentData) {
-            displayDiagnosticReport(currentAssessmentData);
-        }
-        goToStep(3);
-        return;
-    } else if (savedTargetStep === 2) {
-        if (currentSelectedPoint) {
-            renderAdaptiveQuestions(currentSelectedPoint.id);
-        }
-        goToStep(2);
-        return;
-    }
-
-    // التوجيه الاستدلالي المتقدم في حال لم تكن الخطوة محددة في التخزين أو عند إعادة التحميل
+    // التوجيه الاستدلالي المتقدم مع التحقق الصارم من استحقاق المرحلة للمريض لمنع أي تداخل بين الجلسات
     const isPlanActive = localStorage.getItem('smart_plan_activated') === 'true' || localStorage.getItem('smart_plan_activated_' + effectivePatientId) === 'true';
     let logs = [];
     try { logs = await SmartDB.getPatientDailyLogs(effectivePatientId); } catch(e) {}
+
+    // التحقق من أهلية المرحلة المطلوبة للمريض الحالي
+    let isTargetStepValid = false;
+    if (savedTargetStep === 6) {
+        isTargetStepValid = (logs && logs.length >= 7) || (p && p.isPlanCompleted);
+    } else if (savedTargetStep === 5) {
+        isTargetStepValid = (logs && logs.length >= 1) || (p && p.currentSessionDay && p.currentSessionDay >= 2) || (localStorage.getItem(`custom_target_time_${effectivePatientId}`) !== null) || (localStorage.getItem(`force_unlock_${effectivePatientId}`) !== null);
+    } else if (savedTargetStep === 4) {
+        isTargetStepValid = isPlanActive || maxUnlocked >= 4 || (currentAssessmentData && (!currentAssessmentData.patientId || currentAssessmentData.patientId === effectivePatientId));
+    } else if (savedTargetStep === 3) {
+        isTargetStepValid = !!currentAssessmentData && (!currentAssessmentData.patientId || currentAssessmentData.patientId === effectivePatientId);
+    } else if (savedTargetStep === 2) {
+        isTargetStepValid = !!currentSelectedPoint;
+    }
+
+    // توجيه صارم وموثوق للمراحل المعتمدة فقط
+    if (isTargetStepValid) {
+        if (savedTargetStep === 6) {
+            goToStep(6);
+            await loadPatientRecoveryDashboard(effectivePatientId);
+            return;
+        } else if (savedTargetStep === 5) {
+            goToStep(5);
+            try {
+                await loadPatientRecoveryDashboard(effectivePatientId, 2);
+            } catch(err) {
+                console.warn('[DOMContentLoaded] Step 5 dashboard fallback:', err);
+                try { await renderStep5SessionsDashboard(effectivePatientId, 2); } catch(e) {}
+            }
+            return;
+        } else if (savedTargetStep === 4) {
+            await renderStep4IndependentDay1(effectivePatientId);
+            return;
+        } else if (savedTargetStep === 3) {
+            if (currentAssessmentData) {
+                displayDiagnosticReport(currentAssessmentData);
+            }
+            goToStep(3);
+            return;
+        } else if (savedTargetStep === 2) {
+            if (currentSelectedPoint) {
+                renderAdaptiveQuestions(currentSelectedPoint.id);
+            }
+            goToStep(2);
+            return;
+        }
+    }
 
     if (logs && logs.length >= 7) {
         goToStep(6);

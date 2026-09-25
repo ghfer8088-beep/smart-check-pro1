@@ -2783,6 +2783,30 @@
             currentName = (window.activePatient.name || window.activePatient.fullName || '').trim();
         }
 
+        let authP = null;
+        try {
+            if (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') {
+                authP = SmartDB.getAuthPatient();
+            }
+        } catch(e) {}
+        if (authP) {
+            if (!currentPid) currentPid = authP.patientId || authP.id;
+            if (!currentPhone) currentPhone = authP.phone || authP.originalPhone || '';
+            if (!currentName) currentName = (authP.name || authP.fullName || '').trim();
+        }
+
+        try {
+            const rawAct = localStorage.getItem('smart_active_patient');
+            if (rawAct) {
+                const parsed = JSON.parse(rawAct);
+                if (parsed) {
+                    if (!currentPid) currentPid = parsed.patientId || parsed.id;
+                    if (!currentPhone) currentPhone = parsed.phone || '';
+                    if (!currentName) currentName = (parsed.name || parsed.fullName || '').trim();
+                }
+            }
+        } catch(e) {}
+
         const cleanCurrentPhone = String(currentPhone).replace(/\D/g, '');
 
         let isMatch = false;
@@ -2817,9 +2841,14 @@
             }
         }
 
-        // 4. تطابق باسم المريض
-        if (!isMatch && targetName && currentName && targetName === currentName) {
-            isMatch = true;
+        // 4. تطابق ذكي بالاسم العربي (مثل "ياسمين" مع تطبيع الحروف والمسافات والهمزات)
+        const normalizeArabic = s => (s ? String(s).toLowerCase().replace(/[أإآ]/g, 'ا').replace(/[ىئ]/g, 'ي').replace(/ة/g, 'ه').replace(/[\u064B-\u065F]/g, '').replace(/\s+/g, ' ').trim() : '');
+        if (!isMatch && targetName && currentName) {
+            const nTarget = normalizeArabic(targetName);
+            const nCurr = normalizeArabic(currentName);
+            if (nTarget && nCurr && (nTarget === nCurr || nCurr.includes(nTarget) || nTarget.includes(nCurr))) {
+                isMatch = true;
+            }
         }
 
         // إذا لم يكن هناك تطابق
@@ -2842,6 +2871,7 @@
         if (targetPid) keysToUpdate.add(targetPid);
         if (cleanCurrentPhone) keysToUpdate.add(cleanCurrentPhone);
         if (targetPhone) keysToUpdate.add(targetPhone);
+        if (authP && (authP.patientId || authP.id)) keysToUpdate.add(authP.patientId || authP.id);
         keysToUpdate.add('global');
 
         const now = Date.now();
@@ -2858,6 +2888,38 @@
                     localStorage.setItem(`custom_total_duration_${key}`, String(update.totalDurationMs));
                 }
                 localStorage.removeItem(`force_unlock_${key}`);
+            }
+        }
+
+        // تحديث كائن المريض النشط وقاعدة البيانات محلياً
+        if (window.activePatient) {
+            if (update.forceUnlock) {
+                window.activePatient.forceUnlock = true;
+                delete window.activePatient.customTargetTime;
+            } else if (update.targetTime) {
+                window.activePatient.customTargetTime = update.targetTime;
+                window.activePatient.customDurationMs = update.totalDurationMs;
+                window.activePatient.forceUnlock = false;
+            }
+            try { localStorage.setItem('smart_active_patient', JSON.stringify(window.activePatient)); } catch(e) {}
+        }
+        if (window.SmartDB && typeof window.SmartDB.getPatient === 'function') {
+            const targetKey = currentPid || targetPid || (authP && (authP.patientId || authP.id));
+            if (targetKey) {
+                window.SmartDB.getPatient(targetKey).then(pt => {
+                    if (pt) {
+                        if (update.forceUnlock) {
+                            pt.forceUnlock = true;
+                            delete pt.customTargetTime;
+                            delete pt.customDurationMs;
+                        } else if (update.targetTime) {
+                            pt.customTargetTime = update.targetTime;
+                            pt.customDurationMs = update.totalDurationMs;
+                            pt.forceUnlock = false;
+                        }
+                        window.SmartDB.savePatient(pt, { skipCloudSync: true });
+                    }
+                }).catch(() => {});
             }
         }
 

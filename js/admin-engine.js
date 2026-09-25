@@ -1086,7 +1086,7 @@ const AdminEngine = (function() {
                             pt.currentSessionDay = sessionNum;
                             pt.targetedSessionNum = sessionNum;
                         }
-                        window.SmartDB.savePatient(pt, { skipCloudSync: true });
+                        window.SmartDB.savePatient(pt);
                     }
                 }).catch(() => {});
             }
