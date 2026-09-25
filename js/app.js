@@ -6804,16 +6804,6 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             </div>
             ` : ''}
 
-            <!-- إهداء الصدقة الجارية والاستماع لتلاوة الدعاء الصوتي -->
-            <div style="background: rgba(16, 185, 129, 0.08); border: 1.5px solid rgba(16, 185, 129, 0.35); border-radius: 10px; padding: 10px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <div style="color: #6ee7b7; font-size: 0.88em; line-height: 1.6; flex: 1 1 280px;">
-                    🌿 هذا البرنامج العلاجي والمنزلي متاح مجاناً كصدقة جارية عن روح المرحوم والد المعالج جمال قبها مطور هذه الأداة - نسألكم له صالح الدعاء بالرحمة والمغفرة وعلو الدرجات في الجنة.
-                </div>
-                <button type="button" onclick="showRoyalDuaaModal('${patientId}')" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(16, 185, 129, 0.25) 100%); border: 1px solid var(--primary-gold); color: #fef08a; padding: 6px 14px; border-radius: 20px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
-                    <span>🤲</span> <span>استمع لتلاوة الدعاء الصوتي</span>
-                </button>
-            </div>
-
             <!-- بنر علوي للاستشارة المباشرة مع المعالج -->
             <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(15, 23, 42, 0.9) 100%); border: 1px solid var(--primary-gold); border-radius: 10px; padding: 12px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div style="color: #fef08a; font-size: 0.9em; display: flex; align-items: center; gap: 8px;">
@@ -8150,7 +8140,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.30';
+const CURRENT_APP_VERSION = 'v30.31';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
