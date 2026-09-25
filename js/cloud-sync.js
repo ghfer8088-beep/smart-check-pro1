@@ -434,9 +434,9 @@
             mqttClient = mqttLib.connect(MQTT_BROKER_URL, {
                 clientId: clientId,
                 clean: true,
-                connectTimeout: 3000,    // ✅ v29.19: تقليص من 8000 إلى 3000 لمنع التجميد
-                reconnectPeriod: 8000,   // ✅ v29.19: تمديد من 4000 إلى 8000 لتقليل محاولات الاتصال المتكررة
-                keepalive: 30
+                connectTimeout: 12000,   // ✅ مهلة اتصال كافية (12 ثانية) لمنع connack timeout الزائف
+                reconnectPeriod: 15000,  // ✅ إعادة محاولة متزنة كل 15 ثانية لتفادي الضغط وتكرار الأخطاء
+                keepalive: 60            // ✅ 60 ثانية لثبات الاتصال ومنع keepalive timeout
             });
 
             mqttClient.on('connect', () => {
@@ -477,8 +477,14 @@
                 }
             });
 
+            let lastMqttErrorLogTime = 0;
             mqttClient.on('error', (err) => {
-                console.warn('[CloudSync] MQTT error:', err?.message || err);
+                const errMsg = err?.message || String(err || '');
+                const now = Date.now();
+                if (now - lastMqttErrorLogTime > 45000) {
+                    lastMqttErrorLogTime = now;
+                    console.warn('[CloudSync] Realtime sync reconnecting in background (' + errMsg + ')');
+                }
                 mqttConnected = false;
                 updateMqttStatusBadge(false);
             });
@@ -494,11 +500,11 @@
     }
 
     function mqttPublish(topic, obj, options = {}) {
-        if (!mqttClient || !mqttConnected) return false;
+        if (!mqttClient || !mqttConnected || !mqttClient.connected) return false;
         try {
             const raw = JSON.stringify(obj);
             mqttClient.publish(topic, raw, { qos: 1, retain: !!options.retain, ...options }, (err) => {
-                if (err) console.warn(`[CloudSync] Publish to ${topic} error:`, err);
+                if (err && mqttConnected) console.warn(`[CloudSync] Publish to ${topic} error:`, err);
             });
             return true;
         } catch(e) {
@@ -857,11 +863,17 @@
     // حفظ وتحديث مصفوفة المرضى السحابية
     function saveCloudSyncedPatients(patientsList) {
         try {
-            // الاحتفاظ بأحدث 1000 حالة سريرية لضمان الأداء السريع
-            if (patientsList.length > 1000) {
-                patientsList = patientsList.slice(-1000);
+            // الاحتفاظ بأحدث 50 حالة سريرية في كاش الذاكرة المحلية لتفادي امتلاء Quota (بينما IndexedDB يحتفظ بكافة السجلات)
+            if (patientsList.length > 50) {
+                patientsList = patientsList.slice(-50);
             }
-            localStorage.setItem(CLOUD_PATIENTS_KEY, JSON.stringify(patientsList));
+            try {
+                localStorage.setItem(CLOUD_PATIENTS_KEY, JSON.stringify(patientsList));
+            } catch (quotaErr) {
+                try {
+                    localStorage.setItem(CLOUD_PATIENTS_KEY, JSON.stringify(patientsList.slice(-20)));
+                } catch(e2) {}
+            }
             localStorage.setItem('smart_last_cloud_sync_time', Date.now().toString());
         } catch (e) {}
     }

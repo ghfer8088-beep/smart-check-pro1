@@ -118,33 +118,58 @@ const SmartDB = (function() {
             localStorage.setItem(key, value);
             return true;
         } catch(e) {
-            // المرحلة الأولى: إخلاء المساحة تلقائياً من الإشعارات القديمة وبلاغات التيليمتري وسجلات الطوارئ
+            // محاولة تفريغ مساحة الكاش المحلي بذكاء دون المساس ببيانات المريض الحالي
             try {
+                const activePid = (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('scp_active_patient_id') : '')
+                               || (typeof localStorage !== 'undefined' ? localStorage.getItem('smart_current_patient_id') : '');
+
                 for (let i = localStorage.length - 1; i >= 0; i--) {
                     const k = localStorage.key(i);
                     if (!k || k === key) continue;
-                    if (k.includes('_notif_') || k.includes('_test') || k.includes('smart_incident') || k.includes('wada3an_telemetry') || k.includes('_log_debug')) {
+                    // 1. حذف السجلات المؤقتة والإشعارات وبلاغات التيليمتري
+                    if (k.includes('_notif_') || k.includes('_test') || k.includes('smart_incident') || k.includes('wada3an_telemetry') || k.includes('_log_debug') || k.includes('pat_guest')) {
                         localStorage.removeItem(k);
+                        continue;
+                    }
+                    // 2. إخلاء سجلات الجلسات للمرضى القدامى غير النشطين حالياً (محفوظة بأمان دائم في IndexedDB)
+                    if (k.startsWith('smart_daily_logs_') && (!activePid || !k.includes(activePid))) {
+                        localStorage.removeItem(k);
+                        continue;
+                    }
+                    // 3. إخلاء كاش المرضى الفرديين القدامى
+                    if (k.startsWith('smart_patient_') && !k.startsWith('smart_patient_account_') && (!activePid || !k.includes(activePid)) && !k.includes(key)) {
+                        localStorage.removeItem(k);
+                        continue;
                     }
                 }
+
+                // 4. تقليص كاش المرضى السحابيين إذا كان متضخماً
+                try {
+                    const csp = localStorage.getItem('smart_cloud_synced_patients');
+                    if (csp && csp.length > 40000) {
+                        const parsed = JSON.parse(csp);
+                        if (Array.isArray(parsed) && parsed.length > 25) {
+                            localStorage.setItem('smart_cloud_synced_patients', JSON.stringify(parsed.slice(-25)));
+                        }
+                    }
+                } catch(ex) {}
+
+                // 5. تقليص قائمة جميع المرضى في الكاش
+                try {
+                    const sap = localStorage.getItem('smart_all_patients');
+                    if (sap && sap.length > 40000) {
+                        const parsed = JSON.parse(sap);
+                        if (Array.isArray(parsed) && parsed.length > 25) {
+                            localStorage.setItem('smart_all_patients', JSON.stringify(parsed.slice(-25)));
+                        }
+                    }
+                } catch(ex) {}
+
                 localStorage.setItem(key, value);
                 return true;
             } catch(retryErr) {
-                // المرحلة الثانية: إخلاء نسخ الكاش الفردية المؤقتة للمرضى القدامى (مع المحافظة على الحساب الحالي وبيانات IndexedDB)
-                try {
-                    for (let i = localStorage.length - 1; i >= 0; i--) {
-                        const k = localStorage.key(i);
-                        if (!k || k === key) continue;
-                        if (k.startsWith('smart_patient_') && !k.startsWith('smart_patient_account_') && !k.includes(key)) {
-                            localStorage.removeItem(k);
-                        }
-                    }
-                    localStorage.setItem(key, value);
-                    return true;
-                } catch(thirdErr) {
-                    console.warn('[SmartDB] Storage notice: Local cache full for ' + key + '; data is safely persisted in IndexedDB.');
-                    return false;
-                }
+                // الكاش المحلي ممتلئ، البيانات محفوظة بأمان في IndexedDB
+                return false;
             }
         }
     }
@@ -159,6 +184,25 @@ const SmartDB = (function() {
             if (k && (k.includes('pat_guest') || k.includes('smart_incident_') || k.includes('wada3an_telemetry_'))) {
                 localStorage.removeItem(k);
             }
+        }
+        // تنظيف الكاشات المتضخمة فور الإقلاع
+        const _csp = localStorage.getItem('smart_cloud_synced_patients');
+        if (_csp && _csp.length > 60000) {
+            try {
+                const _p = JSON.parse(_csp);
+                if (Array.isArray(_p) && _p.length > 30) {
+                    localStorage.setItem('smart_cloud_synced_patients', JSON.stringify(_p.slice(-30)));
+                }
+            } catch(e) {}
+        }
+        const _sap = localStorage.getItem('smart_all_patients');
+        if (_sap && _sap.length > 60000) {
+            try {
+                const _p2 = JSON.parse(_sap);
+                if (Array.isArray(_p2) && _p2.length > 30) {
+                    localStorage.setItem('smart_all_patients', JSON.stringify(_p2.slice(-30)));
+                }
+            } catch(e) {}
         }
     } catch(e) {}
 
