@@ -127,7 +127,7 @@ const SmartDB = (function() {
                     const k = localStorage.key(i);
                     if (!k || k === key) continue;
                     // 1. حذف السجلات المؤقتة والإشعارات وبلاغات التيليمتري
-                    if (k.includes('_notif_') || k.includes('_test') || k.includes('smart_incident') || k.includes('wada3an_telemetry') || k.includes('_log_debug') || k.includes('pat_guest')) {
+                    if (k.includes('_notif_') || k.includes('_test') || k.includes('smart_incident') || k.includes('wada3an_telemetry') || k.includes('_log_debug')) {
                         localStorage.removeItem(k);
                         continue;
                     }
@@ -174,14 +174,11 @@ const SmartDB = (function() {
         }
     }
 
-    // تنظيف فوري وشامل لأي سجلات مؤقتة أو مجهولة تسببت بامتلاء الذاكرة
+    // تنظيف بلاغات الحوادث والتيليمتري فقط مع الحفاظ التام على بيانات وجلسات المرضى
     try {
-        localStorage.removeItem('smart_daily_logs_pat_guest');
-        localStorage.removeItem('smart_patient_pat_guest');
-        sessionStorage.removeItem('smart_daily_logs_pat_guest');
         for (let i = localStorage.length - 1; i >= 0; i--) {
             const k = localStorage.key(i);
-            if (k && (k.includes('pat_guest') || k.includes('smart_incident_') || k.includes('wada3an_telemetry_'))) {
+            if (k && (k.includes('smart_incident_') || k.includes('wada3an_telemetry_') || k.includes('_log_debug'))) {
                 localStorage.removeItem(k);
             }
         }
@@ -877,9 +874,6 @@ const SmartDB = (function() {
     // دوال المتابعة اليومية
     async function saveDailyLog(log, options = {}) {
         if (!log || !log.patientId) return null;
-        if (log.patientId === 'pat_guest' || String(log.patientId).startsWith('pat_guest')) {
-            return log.logId || 'guest_log';
-        }
         if (!log.logId) {
             log.logId = 'log_' + (log.patientId || 'pt') + '_' + (log.sessionNumber || 1) + '_' + Date.now();
         }

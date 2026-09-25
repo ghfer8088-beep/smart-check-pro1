@@ -727,7 +727,15 @@ async function getMaxUnlockedStep() {
             || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null);
 
         if (savedPatientId) {
-            const logs = await SmartDB.getPatientDailyLogs(savedPatientId);
+            let logs = await SmartDB.getPatientDailyLogs(savedPatientId);
+            if ((!logs || logs.length === 0) && activePatient && Array.isArray(activePatient.dailyLogs)) {
+                logs = activePatient.dailyLogs;
+            }
+            if (!logs || logs.length === 0) {
+                try {
+                    logs = JSON.parse(localStorage.getItem('smart_daily_logs_' + savedPatientId) || '[]');
+                } catch(e) {}
+            }
             if (logs && logs.length >= 7) {
                 maxStep = Math.max(maxStep, 6);
             } else if (logs && logs.length >= 1) {
@@ -1042,8 +1050,17 @@ async function handleStepperClick(stepNum) {
             else if (currentSelectedPoint) goToStep(2);
             else goToStep(1);
         } else if (stepNum === 5) {
+            const savedPatientId = SmartDB.getCurrentSessionPatientId() || activePatient?.patientId || localStorage.getItem('smart_current_patient_id') || 'pat_guest';
+            let day1Done = false;
+            try {
+                const lsLogs = JSON.parse(localStorage.getItem('smart_daily_logs_' + savedPatientId) || '[]');
+                day1Done = lsLogs.some(l => Number(l.sessionNumber || l.day) === 1);
+            } catch(e) {}
+            if (day1Done || (activePatient && Array.isArray(activePatient.dailyLogs) && activePatient.dailyLogs.length > 0)) {
+                await renderStep5SessionsDashboard(savedPatientId);
+                return;
+            }
             showToast('🔒 جدول متابعة الجلسات يتفعل بعد توثيق وإنجاز الجلسة الأولى (اليوم 1)', 'info');
-            const savedPatientId = SmartDB.getCurrentSessionPatientId() || activePatient?.patientId;
             if (savedPatientId) renderStep4IndependentDay1(savedPatientId);
             else goToStep(3);
         } else if (stepNum === 6) {
@@ -6109,6 +6126,21 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
 
         activePatient = sessionData.patient;
         const effectivePid = patientId || sessionData.patient?.patientId || sessionData.patient?.id;
+
+        // التحقق الصارم من وجود سجلات الجلسات في sessionData وعدم فقدانها من الذاكرة أو التخزين
+        if (!sessionData.dailyLogs || sessionData.dailyLogs.length === 0) {
+            if (activePatient && Array.isArray(activePatient.dailyLogs) && activePatient.dailyLogs.length > 0) {
+                sessionData.dailyLogs = activePatient.dailyLogs;
+            } else {
+                try {
+                    const lsLogs = JSON.parse(localStorage.getItem('smart_daily_logs_' + effectivePid) || '[]');
+                    if (Array.isArray(lsLogs) && lsLogs.length > 0) {
+                        sessionData.dailyLogs = lsLogs;
+                    }
+                } catch(e) {}
+            }
+        }
+
         const lockStatus = await PatientFlow.getSessionLockStatus(effectivePid);
 
         // إذا كان المريض أنجز كل الـ 7 جلسات ولم يُطلب استعراض جلسة محددة، الانتقال لشاشة الإنهاء
@@ -6355,7 +6387,16 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         (localStorage.getItem('custom_target_time_global') !== null) ||
         (activePatient && (activePatient.forceUnlock || activePatient.customTargetTime));
 
-    const isDay1NotDone = (activeDay === 2 && (!sessionData.dailyLogs || sessionData.dailyLogs.length === 0) && !hasExplicitAdminTimingOrUnlock);
+    const hasCompletedDay1 = (sessionData.dailyLogs && sessionData.dailyLogs.some(l => Number(l.sessionNumber || l.day) === 1)) ||
+        (activePatient && activePatient.dailyLogs && activePatient.dailyLogs.some(l => Number(l.sessionNumber || l.day) === 1)) ||
+        (function() {
+            try {
+                const logs = JSON.parse(localStorage.getItem('smart_daily_logs_' + effectivePid) || '[]');
+                return logs.some(l => Number(l.sessionNumber || l.day) === 1);
+            } catch(e) { return false; }
+        })();
+
+    const isDay1NotDone = (activeDay === 2 && !hasCompletedDay1 && !hasExplicitAdminTimingOrUnlock);
 
     if (isDayAlreadyCompleted) {
         clock24HTML = `
@@ -7597,48 +7638,98 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
         date: new Date().toISOString()
     };
 
-    await SmartDB.saveDailyLog(logEntry);
+    // 1. تحديث فوري وكامل لكائن المريض في الذاكرة الحية لمنع أي ارتداد
+    if (!window.activePatient) window.activePatient = {};
+    if (!activePatient) activePatient = window.activePatient;
+    if (!activePatient.patientId) activePatient.patientId = patientId;
+    if (!Array.isArray(activePatient.dailyLogs)) activePatient.dailyLogs = [];
+    const exIdx = activePatient.dailyLogs.findIndex(l => Number(l.sessionNumber || l.day) === sessionNumber);
+    if (exIdx >= 0) {
+        activePatient.dailyLogs[exIdx] = logEntry;
+    } else {
+        activePatient.dailyLogs.push(logEntry);
+    }
+    activePatient.dailyLogs.sort((a, b) => (Number(a.sessionNumber || a.day) || 0) - (Number(b.sessionNumber || b.day) || 0));
+    activePatient.logs = activePatient.dailyLogs;
+    activePatient.completedSessions = activePatient.dailyLogs.length;
+    activePatient.logsCount = activePatient.dailyLogs.length;
+    activePatient.lastSessionNumber = sessionNumber;
+    activePatient.lastLogDate = logEntry.date;
+    activePatient.currentSessionDay = sessionNumber === 1 ? 2 : Math.min(7, sessionNumber + 1);
+    window.activePatient = activePatient;
 
-    // إغلاق نافذة التقييم
-    closeSessionAssessmentModal();
+    // 2. مزامنة فورية في LocalStorage مع حماية تامة
+    try {
+        localStorage.setItem('smart_daily_logs_' + patientId, JSON.stringify(activePatient.dailyLogs));
+        localStorage.setItem('smart_active_patient', JSON.stringify(activePatient));
+        localStorage.setItem('smart_current_patient_id', patientId);
+        if (sessionNumber === 1) {
+            localStorage.setItem('smart_current_step', '5');
+            localStorage.setItem('smart_max_reached_step', '5');
+            localStorage.setItem('smart_plan_activated_' + patientId, 'true');
+            localStorage.setItem('smart_plan_activated', 'true');
+        }
+    } catch(e) {}
 
-    // 🔊 تشغيل مقطع التحفيز الصوتي البشري فوراً عند حفظ بيانات الجلسة الأولى والانتقال للجلسة الثانية دون أي تأخير
-    if (sessionNumber === 1 && typeof playStationAudio === 'function') {
-        playStationAudio('motivation', () => {}, 'recovery');
+    // 3. توثيق فترة استشفاء الأنسجة (24 ساعة)
+    const effectiveId = patientId || activePatient.patientId || activePatient.id || 'pat_guest';
+    const lockDurationMs = 24 * 60 * 60 * 1000;
+    const targetLockTime = Date.now() + lockDurationMs;
+    const cleanP = (activePatient.phone || '').replace(/\D/g, '');
+    try {
+        localStorage.removeItem(`force_unlock_${effectiveId}`);
+        localStorage.removeItem('force_unlock_global');
+        if (cleanP) localStorage.removeItem(`force_unlock_${cleanP}`);
+        localStorage.setItem('custom_target_time_global', String(targetLockTime));
+        localStorage.setItem('custom_total_duration_global', String(lockDurationMs));
+        localStorage.setItem(`custom_target_time_${effectiveId}`, String(targetLockTime));
+        localStorage.setItem(`custom_total_duration_${effectiveId}`, String(lockDurationMs));
+        if (cleanP) {
+            localStorage.setItem(`custom_target_time_${cleanP}`, String(targetLockTime));
+            localStorage.setItem(`custom_total_duration_${cleanP}`, String(lockDurationMs));
+        }
+        activePatient.customTargetTime = targetLockTime;
+        activePatient.customTotalDuration = lockDurationMs;
+    } catch(e) {}
+
+    // 4. حفظ متزامن في قاعدة البيانات المحلية والسحابية بأمان تام
+    try {
+        await SmartDB.saveDailyLog(logEntry);
+    } catch(dbErr) {
+        console.warn('[submitComprehensiveDailyLog] saveDailyLog fallback handled:', dbErr);
     }
 
-    const allLogs = await SmartDB.getPatientDailyLogs(patientId);
-    const pInfo = await SmartDB.getPatient(patientId);
-    const pName = pInfo?.name || activePatient?.name || patientId;
+    // 5. إغلاق نافذة التقييم فوراً
+    closeSessionAssessmentModal();
+
+    const allLogs = activePatient.dailyLogs;
+    let pInfo = null;
+    try { pInfo = await SmartDB.getPatient(patientId); } catch(e) {}
+    const pName = pInfo?.name || activePatient?.name || (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || patientId;
     const pPhone = pInfo?.phone || activePatient?.phone || '';
 
-    // تحديث كائن المريض نفسه بعدد الجلسات ونسبة التعافي ومزامنتها سحابياً
     if (pInfo) {
-        const totalDone = (allLogs && allLogs.length) ? allLogs.length : 1;
         pInfo.dailyLogs = allLogs;
         pInfo.logs = allLogs;
-        pInfo.logsCount = totalDone;
-        pInfo.completedSessions = totalDone;
+        pInfo.logsCount = allLogs.length;
+        pInfo.completedSessions = allLogs.length;
         pInfo.lastSessionNumber = sessionNumber;
-        pInfo.lastLogDate = new Date().toISOString();
-        if (totalDone >= 7) {
+        pInfo.lastLogDate = logEntry.date;
+        pInfo.customTargetTime = targetLockTime;
+        pInfo.customTotalDuration = lockDurationMs;
+        if (allLogs.length >= 7) {
             pInfo.isPlanCompleted = true;
             pInfo.planCompleted = true;
             pInfo.recoveryScore = 100;
         } else if (typeof PatientFlow !== 'undefined' && typeof PatientFlow.calculateRecoveryScore === 'function' && pInfo.painLevel) {
             pInfo.recoveryScore = PatientFlow.calculateRecoveryScore(pInfo.painLevel, allLogs);
         } else {
-            pInfo.recoveryScore = Math.min(100, Math.round((totalDone / 7) * 100));
+            pInfo.recoveryScore = Math.min(100, Math.round((allLogs.length / 7) * 100));
         }
-        await SmartDB.savePatient(pInfo);
+        try { await SmartDB.savePatient(pInfo); } catch(e) {}
     }
 
-    // تشغيل توجيه د. سارة الصوتي المخصص للجلسة الحالية
-    if (typeof playDailyMotivationAudio === 'function') {
-        playDailyMotivationAudio(sessionNumber, pName);
-    }
-
-    // التحقق الصارم من إتمام 7 جلسات فعلية كاملة
+    // حالة إتمام 7 جلسات (التخرج والشهادة والوسام - الخطوة 6)
     if (allLogs && allLogs.length >= 7) {
         SmartDB.addAdminNotification({
             type: 'plan_completed',
@@ -7655,34 +7746,12 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
             }
         });
         showToast('🏆 تهانينا الحارة! أتممت برنامج الـ 7 أيام بنجاح باهر', 'success');
+        goToStep(6);
         await renderStep6Completion(patientId);
         return;
     }
 
-    // تفعيل وتوثيق بدء فترة استشفاء الأنسجة (24 ساعة) للجلسة التالية
-    const effectiveId = patientId || pInfo?.patientId || pInfo?.id || 'pat_guest';
-    const lockDurationMs = 24 * 60 * 60 * 1000;
-    const targetLockTime = Date.now() + lockDurationMs;
-    const cleanP = (pPhone || pInfo?.phone || '').replace(/\D/g, '');
-    try {
-        localStorage.removeItem(`force_unlock_${effectiveId}`);
-        localStorage.removeItem('force_unlock_global');
-        if (cleanP) localStorage.removeItem(`force_unlock_${cleanP}`);
-        localStorage.setItem('custom_target_time_global', String(targetLockTime));
-        localStorage.setItem('custom_total_duration_global', String(lockDurationMs));
-        localStorage.setItem(`custom_target_time_${effectiveId}`, String(targetLockTime));
-        localStorage.setItem(`custom_total_duration_${effectiveId}`, String(lockDurationMs));
-        if (cleanP) {
-            localStorage.setItem(`custom_target_time_${cleanP}`, String(targetLockTime));
-            localStorage.setItem(`custom_total_duration_${cleanP}`, String(lockDurationMs));
-        }
-        if (pInfo) {
-            pInfo.customTargetTime = targetLockTime;
-            pInfo.customTotalDuration = lockDurationMs;
-            SmartDB.savePatient(pInfo).catch(() => {});
-        }
-    } catch(e) {}
-
+    // حالة إتمام اليوم الأول والانتقال المباشر لليوم الثاني (الخطوة 5)
     if (sessionNumber === 1) {
         SmartDB.addAdminNotification({
             type: 'session_completed',
@@ -7700,10 +7769,19 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
             showToast('🎉 أحسنت! تم توثيق إنجاز تمارين اليوم الأول بنجاح وبدأت فترة الاستشفاء الحيوي للأنسجة (24 ساعة).', 'success');
         }
 
-        await loadPatientRecoveryDashboard(patientId, 2);
+        // الانتقال المباشر والفوري إلى الخطوة 5 وعرض لوحة الجلسات للجلسة الثانية
+        goToStep(5);
+        await renderStep5SessionsDashboard(patientId, 2);
+
+        if (typeof playDailyMotivationAudio === 'function') {
+            playDailyMotivationAudio(1, pName);
+        } else if (typeof playStationAudio === 'function') {
+            playStationAudio('motivation', () => {}, 'recovery');
+        }
         return;
     }
 
+    // لباقي الجلسات (2 إلى 6):
     SmartDB.addAdminNotification({
         type: 'session_done',
         title: `📝 إنجاز الجلسة #${sessionNumber}: ${pName}`,
@@ -7720,7 +7798,12 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
         showToast(`🎉 أحسنت! تم حفظ تقييم الجلسة #${sessionNumber} بنجاح وبدأت فترة استشفاء الجلسة التالية (24 ساعة).`, 'success');
     }
 
-    await loadPatientRecoveryDashboard(patientId, sessionNumber + 1);
+    goToStep(5);
+    await renderStep5SessionsDashboard(patientId, sessionNumber + 1);
+
+    if (typeof playDailyMotivationAudio === 'function') {
+        playDailyMotivationAudio(sessionNumber + 1, pName);
+    }
 }
 
 // فتح مكتبة التمارين
@@ -7830,7 +7913,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.23';
+const CURRENT_APP_VERSION = 'v30.24';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
