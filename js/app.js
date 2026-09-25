@@ -7532,7 +7532,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
             <button type="button" onclick="closeSessionAssessmentModal()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer;">
                 إلغاء والعودة للتمارين
             </button>
-            <button type="button" onclick="submitComprehensiveDailyLog('${patientId}', ${sessionNumber})" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; padding: 14px 32px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.05em; box-shadow: 0 4px 18px rgba(16, 185, 129, 0.4); flex-grow: 1; max-width: 450px;">
+            <button type="button" id="btn-modal-submit-daily-log" onclick="window.submitComprehensiveDailyLog('${patientId}', ${sessionNumber})" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; padding: 14px 32px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.05em; box-shadow: 0 4px 18px rgba(16, 185, 129, 0.4); flex-grow: 1; max-width: 450px;">
                 ✅ ${sessionNumber === 1 ? 'اعتماد تمارين اليوم الأول وبدء فترة الاستشفاء (24 ساعة) 🚀' : 'اعتماد التقييم والانتقال للجلسة التالية 🚀'}
             </button>
         </div>
@@ -7565,246 +7565,238 @@ function closeSessionAssessmentModal() {
         stickyBar.style.opacity = '';
         stickyBar.style.pointerEvents = '';
     }
-    if (window.SmartGuidance && typeof SmartGuidance.onAssessmentModalClosed === 'function') {
-        SmartGuidance.onAssessmentModalClosed();
-    } else if (window.SmartGuidance && typeof SmartGuidance.checkLiveGuidanceState === 'function') {
-        SmartGuidance.checkLiveGuidanceState();
+    try {
+        if (window.SmartGuidance && typeof SmartGuidance.onAssessmentModalClosed === 'function') {
+            SmartGuidance.onAssessmentModalClosed();
+        } else if (window.SmartGuidance && typeof SmartGuidance.checkLiveGuidanceState === 'function') {
+            SmartGuidance.checkLiveGuidanceState();
+        }
+    } catch (gErr) {
+        console.warn('SmartGuidance error during closeSessionAssessmentModal:', gErr);
     }
 }
 window.closeSessionAssessmentModal = closeSessionAssessmentModal;
 
 // حفظ التسجيل اليومي الشامل
 async function submitComprehensiveDailyLog(patientId, sessionNumber) {
-    const cleanId = (typeof getCleanPatientId === 'function') ? getCleanPatientId(patientId) : (patientId && patientId !== 'undefined' ? patientId : 'pat_guest');
-    patientId = cleanId;
-
-    const painScore = parseInt(document.getElementById('modal-pain-input')?.value || document.getElementById('daily-pain-input')?.value || 3);
-    const mobilityRate = parseInt(document.getElementById('modal-mobility-slider')?.value || document.querySelector('input[name="modal_mobility_check"]:checked')?.value || document.getElementById('daily-mobility-slider')?.value || 70);
-    const sleepRate = parseInt(document.getElementById('modal-sleep-slider')?.value || document.querySelector('input[name="modal_sleep_check"]:checked')?.value || document.getElementById('daily-sleep-slider')?.value || 70);
-
-    // استخراج السلوكيات الإيجابية المحددة من النافذة
-    const positiveHabitsList = [];
-    const positiveHabitsIds = {};
-    document.querySelectorAll('.modal-pos-habit-checkbox:checked').forEach(cb => {
-        const text = cb.getAttribute('data-text') || cb.parentElement?.textContent?.trim() || '';
-        const id = cb.getAttribute('data-id') || cb.id;
-        if (text) positiveHabitsList.push(text);
-        if (id) positiveHabitsIds[id] = true;
-    });
-
-    // استخراج السلوكيات السلبية المحددة من النافذة
-    const negativeHabitsList = [];
-    const negativeHabitsIds = {};
-    document.querySelectorAll('.modal-neg-habit-checkbox:checked').forEach(cb => {
-        const text = cb.getAttribute('data-text') || cb.parentElement?.textContent?.trim() || '';
-        const id = cb.getAttribute('data-id') || cb.id;
-        if (text) negativeHabitsList.push(text);
-        if (id) negativeHabitsIds[id] = true;
-    });
-
-    // التوافقية العكسية مع السجلات القديمة
-    const exercisesDone = positiveHabitsIds['beh-exercise'] || positiveHabitsIds['modal-beh-exercise'] || (positiveHabitsList.length > 0) || (sessionNumber === 1);
-    const goodPosture = positiveHabitsIds['beh-posture'] || positiveHabitsIds['modal-beh-posture'] || false;
-    const walkingDone = positiveHabitsIds['beh-walk'] || positiveHabitsIds['modal-beh-walk'] || false;
-    const heatDone = positiveHabitsIds['beh-heat'] || positiveHabitsIds['modal-beh-heat'] || false;
-
-    const longSitting = negativeHabitsIds['neg-sitting'] || negativeHabitsIds['modal-neg-sitting'] || false;
-    const heavyLifting = negativeHabitsIds['neg-lifting'] || negativeHabitsIds['modal-neg-lifting'] || false;
-    const phoneUsage = negativeHabitsIds['neg-phone'] || negativeHabitsIds['modal-neg-phone'] || false;
-    const poorSleep = negativeHabitsIds['neg-sleep'] || negativeHabitsIds['modal-neg-sleep'] || false;
-
-    const logEntry = {
-        patientId,
-        sessionNumber,
-        painScore,
-        mobilityRate,
-        sleepRate,
-        positiveHabitsList,
-        negativeHabitsList,
-        positiveHabitsIds,
-        negativeHabitsIds,
-        exercisesDone,
-        goodPosture,
-        walkingDone,
-        heatDone,
-        negativeHabits: {
-            longSitting,
-            heavyLifting,
-            phoneUsage,
-            poorSleep,
-            ...negativeHabitsIds
-        },
-        isDay1InitialCompletion: sessionNumber === 1,
-        date: new Date().toISOString()
-    };
-
-    // 1. تحديث فوري وكامل لكائن المريض في الذاكرة الحية لمنع أي ارتداد
-    if (!window.activePatient) window.activePatient = {};
-    if (!activePatient) activePatient = window.activePatient;
-    if (!activePatient.patientId) activePatient.patientId = patientId;
-    if (!Array.isArray(activePatient.dailyLogs)) activePatient.dailyLogs = [];
-    const exIdx = activePatient.dailyLogs.findIndex(l => Number(l.sessionNumber || l.day) === sessionNumber);
-    if (exIdx >= 0) {
-        activePatient.dailyLogs[exIdx] = logEntry;
-    } else {
-        activePatient.dailyLogs.push(logEntry);
-    }
-    activePatient.dailyLogs.sort((a, b) => (Number(a.sessionNumber || a.day) || 0) - (Number(b.sessionNumber || b.day) || 0));
-    activePatient.logs = activePatient.dailyLogs;
-    activePatient.completedSessions = activePatient.dailyLogs.length;
-    activePatient.logsCount = activePatient.dailyLogs.length;
-    activePatient.lastSessionNumber = sessionNumber;
-    activePatient.lastLogDate = logEntry.date;
-    activePatient.currentSessionDay = sessionNumber === 1 ? 2 : Math.min(7, sessionNumber + 1);
-    window.activePatient = activePatient;
-
-    // 2. مزامنة فورية في LocalStorage مع حماية تامة
-    try {
-        localStorage.setItem('smart_daily_logs_' + patientId, JSON.stringify(activePatient.dailyLogs));
-        localStorage.setItem('smart_active_patient', JSON.stringify(activePatient));
-        localStorage.setItem('smart_current_patient_id', patientId);
-        if (sessionNumber === 1) {
-            localStorage.setItem('smart_current_step', '5');
-            localStorage.setItem('smart_max_reached_step', '5');
-            localStorage.setItem('smart_plan_activated_' + patientId, 'true');
-            localStorage.setItem('smart_plan_activated', 'true');
-        }
-    } catch(e) {}
-
-    // 3. توثيق فترة استشفاء الأنسجة (24 ساعة)
-    const effectiveId = patientId || activePatient.patientId || activePatient.id || 'pat_guest';
-    const lockDurationMs = 24 * 60 * 60 * 1000;
-    const targetLockTime = Date.now() + lockDurationMs;
-    const cleanP = (activePatient.phone || '').replace(/\D/g, '');
-    try {
-        localStorage.removeItem(`force_unlock_${effectiveId}`);
-        localStorage.removeItem('force_unlock_global');
-        if (cleanP) localStorage.removeItem(`force_unlock_${cleanP}`);
-        localStorage.setItem('custom_target_time_global', String(targetLockTime));
-        localStorage.setItem('custom_total_duration_global', String(lockDurationMs));
-        localStorage.setItem(`custom_target_time_${effectiveId}`, String(targetLockTime));
-        localStorage.setItem(`custom_total_duration_${effectiveId}`, String(lockDurationMs));
-        if (cleanP) {
-            localStorage.setItem(`custom_target_time_${cleanP}`, String(targetLockTime));
-            localStorage.setItem(`custom_total_duration_${cleanP}`, String(lockDurationMs));
-        }
-        activePatient.customTargetTime = targetLockTime;
-        activePatient.customTotalDuration = lockDurationMs;
-    } catch(e) {}
-
-    // 4. حفظ متزامن في قاعدة البيانات المحلية والسحابية بأمان تام
-    try {
-        await SmartDB.saveDailyLog(logEntry);
-    } catch(dbErr) {
-        console.warn('[submitComprehensiveDailyLog] saveDailyLog fallback handled:', dbErr);
+    const submitBtn = document.getElementById('btn-modal-submit-daily-log') || document.querySelector('#session-assessment-modal button[onclick*="submitComprehensiveDailyLog"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.7';
+        submitBtn.style.pointerEvents = 'none';
+        submitBtn.innerHTML = '<span>⏳ جارٍ التوثيق وبدء الجلسة...</span>';
     }
 
-    // 5. إغلاق نافذة التقييم فوراً
-    closeSessionAssessmentModal();
-
-    const allLogs = activePatient.dailyLogs;
-    let pInfo = null;
-    try { pInfo = await SmartDB.getPatient(patientId); } catch(e) {}
-    const pName = pInfo?.name || activePatient?.name || (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || patientId;
-    const pPhone = pInfo?.phone || activePatient?.phone || '';
-
-    if (pInfo) {
-        pInfo.dailyLogs = allLogs;
-        pInfo.logs = allLogs;
-        pInfo.logsCount = allLogs.length;
-        pInfo.completedSessions = allLogs.length;
-        pInfo.lastSessionNumber = sessionNumber;
-        pInfo.lastLogDate = logEntry.date;
-        pInfo.customTargetTime = targetLockTime;
-        pInfo.customTotalDuration = lockDurationMs;
-        if (allLogs.length >= 7) {
-            pInfo.isPlanCompleted = true;
-            pInfo.planCompleted = true;
-            pInfo.recoveryScore = 100;
-        } else if (typeof PatientFlow !== 'undefined' && typeof PatientFlow.calculateRecoveryScore === 'function' && pInfo.painLevel) {
-            pInfo.recoveryScore = PatientFlow.calculateRecoveryScore(pInfo.painLevel, allLogs);
-        } else {
-            pInfo.recoveryScore = Math.min(100, Math.round((allLogs.length / 7) * 100));
-        }
-        try { await SmartDB.savePatient(pInfo); } catch(e) {}
+    // إغلاق نافذة التقييم فوراً كأول إجراء لضمان عدم بقاء المراجع عالقاً فيها نهائياً
+    try {
+        closeSessionAssessmentModal();
+    } catch (closeErr) {
+        const m = document.getElementById('session-assessment-modal');
+        if (m) m.style.display = 'none';
     }
 
-    // حالة إتمام 7 جلسات (التخرج والشهادة والوسام - الخطوة 6)
-    if (allLogs && allLogs.length >= 7) {
-        SmartDB.addAdminNotification({
-            type: 'plan_completed',
-            title: `🏆 إتمام البرنامج (7 أيام): ${pName}`,
-            message: `أتم المريض ${pName} برنامج التأهيل والتعافي المنزلي (7 أيام كاملة)! ألم اليوم الأخير: ${painScore}/10، مرونة الحركة: ${mobilityRate}% - جاهز للمتابعة وحجز الجلسة السريرية.`,
+    try {
+        const cleanId = (typeof getCleanPatientId === 'function') ? getCleanPatientId(patientId) : (patientId && patientId !== 'undefined' ? patientId : 'pat_guest');
+        patientId = cleanId;
+
+        const painScore = parseInt(document.getElementById('modal-pain-input')?.value || document.getElementById('daily-pain-input')?.value || 3);
+        const mobilityRate = parseInt(document.getElementById('modal-mobility-slider')?.value || document.querySelector('input[name="modal_mobility_check"]:checked')?.value || document.getElementById('daily-mobility-slider')?.value || 70);
+        const sleepRate = parseInt(document.getElementById('modal-sleep-slider')?.value || document.querySelector('input[name="modal_sleep_check"]:checked')?.value || document.getElementById('daily-sleep-slider')?.value || 70);
+
+        // استخراج السلوكيات الإيجابية المحددة من النافذة
+        const positiveHabitsList = [];
+        const positiveHabitsIds = {};
+        document.querySelectorAll('.modal-pos-habit-checkbox:checked').forEach(cb => {
+            const text = cb.getAttribute('data-text') || cb.parentElement?.textContent?.trim() || '';
+            const id = cb.getAttribute('data-id') || cb.id;
+            if (text) positiveHabitsList.push(text);
+            if (id) positiveHabitsIds[id] = true;
+        });
+
+        // استخراج السلوكيات السلبية المحددة من النافذة
+        const negativeHabitsList = [];
+        const negativeHabitsIds = {};
+        document.querySelectorAll('.modal-neg-habit-checkbox:checked').forEach(cb => {
+            const text = cb.getAttribute('data-text') || cb.parentElement?.textContent?.trim() || '';
+            const id = cb.getAttribute('data-id') || cb.id;
+            if (text) negativeHabitsList.push(text);
+            if (id) negativeHabitsIds[id] = true;
+        });
+
+        // التوافقية العكسية مع السجلات القديمة
+        const exercisesDone = positiveHabitsIds['beh-exercise'] || positiveHabitsIds['modal-beh-exercise'] || (positiveHabitsList.length > 0) || (sessionNumber === 1);
+        const goodPosture = positiveHabitsIds['beh-posture'] || positiveHabitsIds['modal-beh-posture'] || false;
+        const walkingDone = positiveHabitsIds['beh-walk'] || positiveHabitsIds['modal-beh-walk'] || false;
+        const heatDone = positiveHabitsIds['beh-heat'] || positiveHabitsIds['modal-beh-heat'] || false;
+
+        const longSitting = negativeHabitsIds['neg-sitting'] || negativeHabitsIds['modal-neg-sitting'] || false;
+        const heavyLifting = negativeHabitsIds['neg-lifting'] || negativeHabitsIds['modal-neg-lifting'] || false;
+        const phoneUsage = negativeHabitsIds['neg-phone'] || negativeHabitsIds['modal-neg-phone'] || false;
+        const poorSleep = negativeHabitsIds['neg-sleep'] || negativeHabitsIds['modal-neg-sleep'] || false;
+
+        const logEntry = {
             patientId,
-            patientName: pName,
-            patientPhone: pPhone,
-            meta: {
-                painScore,
-                mobilityRate,
-                sleepRate,
-                totalLogs: allLogs.length
+            sessionNumber,
+            painScore,
+            mobilityRate,
+            sleepRate,
+            positiveHabitsList,
+            negativeHabitsList,
+            positiveHabitsIds,
+            negativeHabitsIds,
+            exercisesDone,
+            goodPosture,
+            walkingDone,
+            heatDone,
+            negativeHabits: {
+                longSitting,
+                heavyLifting,
+                phoneUsage,
+                poorSleep,
+                ...negativeHabitsIds
+            },
+            isDay1InitialCompletion: sessionNumber === 1,
+            date: new Date().toISOString()
+        };
+
+        // 1. تحديث فوري وكامل لكائن المريض في الذاكرة الحية
+        if (!window.activePatient) window.activePatient = {};
+        if (!activePatient) activePatient = window.activePatient;
+        if (!activePatient.patientId) activePatient.patientId = patientId;
+        if (!Array.isArray(activePatient.dailyLogs)) activePatient.dailyLogs = [];
+        const exIdx = activePatient.dailyLogs.findIndex(l => Number(l.sessionNumber || l.day) === sessionNumber);
+        if (exIdx >= 0) {
+            activePatient.dailyLogs[exIdx] = logEntry;
+        } else {
+            activePatient.dailyLogs.push(logEntry);
+        }
+        activePatient.dailyLogs.sort((a, b) => (Number(a.sessionNumber || a.day) || 0) - (Number(b.sessionNumber || b.day) || 0));
+        activePatient.logs = activePatient.dailyLogs;
+        activePatient.completedSessions = activePatient.dailyLogs.length;
+        activePatient.logsCount = activePatient.dailyLogs.length;
+        activePatient.lastSessionNumber = sessionNumber;
+        activePatient.lastLogDate = logEntry.date;
+        activePatient.currentSessionDay = sessionNumber === 1 ? 2 : Math.min(7, sessionNumber + 1);
+        window.activePatient = activePatient;
+
+        // 2. مزامنة فورية في LocalStorage مع حماية تامة
+        try {
+            localStorage.setItem('smart_daily_logs_' + patientId, JSON.stringify(activePatient.dailyLogs));
+            localStorage.setItem('smart_active_patient', JSON.stringify(activePatient));
+            localStorage.setItem('smart_current_patient_id', patientId);
+            if (sessionNumber === 1) {
+                localStorage.setItem('smart_current_step', '5');
+                localStorage.setItem('smart_max_reached_step', '5');
+                localStorage.setItem('smart_plan_activated_' + patientId, 'true');
+                localStorage.setItem('smart_plan_activated', 'true');
             }
-        });
-        showToast('🏆 تهانينا الحارة! أتممت برنامج الـ 7 أيام بنجاح باهر', 'success');
-        goToStep(6);
-        await renderStep6Completion(patientId);
-        return;
-    }
+        } catch(e) {}
 
-    // حالة إتمام اليوم الأول والانتقال المباشر لليوم الثاني (الخطوة 5)
-    if (sessionNumber === 1) {
-        SmartDB.addAdminNotification({
-            type: 'session_completed',
-            title: `🏋️ إتمام تمارين وتقييم اليوم الأول: ${pName}`,
-            message: `أتم المريض ${pName} تمارين وتقييم الجلسة الأولى بنجاح (الألم: ${painScore}/10، الحركة: ${mobilityRate}%) وبدأت فترة الاستشفاء لمدة 24 ساعة.`,
-            patientId,
-            patientName: pName,
-            patientPhone: pPhone,
-            meta: { sessionNumber: 1, painScore, mobilityRate, sleepRate }
-        });
+        // 3. توثيق فترة استشفاء الأنسجة (24 ساعة)
+        const effectiveId = patientId || activePatient.patientId || activePatient.id || 'pat_guest';
+        const lockDurationMs = 24 * 60 * 60 * 1000;
+        const targetLockTime = Date.now() + lockDurationMs;
+        const cleanP = (activePatient.phone || '').replace(/\D/g, '');
+        try {
+            localStorage.removeItem(`force_unlock_${effectiveId}`);
+            localStorage.removeItem('force_unlock_global');
+            if (cleanP) localStorage.removeItem(`force_unlock_${cleanP}`);
+            localStorage.setItem('custom_target_time_global', String(targetLockTime));
+            localStorage.setItem('custom_total_duration_global', String(lockDurationMs));
+            localStorage.setItem(`custom_target_time_${effectiveId}`, String(targetLockTime));
+            localStorage.setItem(`custom_total_duration_${effectiveId}`, String(lockDurationMs));
+            if (cleanP) {
+                localStorage.setItem(`custom_target_time_${cleanP}`, String(targetLockTime));
+                localStorage.setItem(`custom_total_duration_${cleanP}`, String(lockDurationMs));
+            }
+            activePatient.customTargetTime = targetLockTime;
+            activePatient.customTotalDuration = lockDurationMs;
+        } catch(e) {}
 
-        if (negativeHabitsList.length > 0) {
-            showToast('⚠️ تم توثيق إنجاز تمارين اليوم الأول بنجاح وبدأت فترة استشفاء الجلسة التالية (24 ساعة). انتبه للسلوكيات السلبية!', 'warning');
+        const allLogs = activePatient.dailyLogs;
+        const pName = activePatient?.name || (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || patientId;
+        const pPhone = activePatient?.phone || '';
+
+        // 4. الانتقال الفوري بالواجهة دون تأخير
+        if (allLogs && allLogs.length >= 7) {
+            goToStep(6);
+            if (typeof renderStep6Completion === 'function') {
+                renderStep6Completion(patientId);
+            }
+            try {
+                SmartDB.addAdminNotification({
+                    type: 'plan_completed',
+                    title: `🏆 إتمام البرنامج (7 أيام): ${pName}`,
+                    message: `أتم المريض ${pName} برنامج التأهيل والتعافي المنزلي (7 أيام كاملة)! ألم اليوم الأخير: ${painScore}/10، مرونة الحركة: ${mobilityRate}%`,
+                    patientId,
+                    patientName: pName,
+                    patientPhone: pPhone
+                });
+            } catch(e) {}
+            showToast('🏆 تهانينا الحارة! أتممت برنامج الـ 7 أيام بنجاح باهر', 'success');
+        } else if (sessionNumber === 1) {
+            goToStep(5);
+            if (typeof renderStep5SessionsDashboard === 'function') {
+                renderStep5SessionsDashboard(patientId, 2);
+            }
+            try {
+                SmartDB.addAdminNotification({
+                    type: 'session_completed',
+                    title: `🏋️ إتمام تمارين وتقييم اليوم الأول: ${pName}`,
+                    message: `أتم المريض ${pName} تمارين وتقييم الجلسة الأولى بنجاح (الألم: ${painScore}/10، الحركة: ${mobilityRate}%) وبدأت فترة الاستشفاء لمدة 24 ساعة.`,
+                    patientId,
+                    patientName: pName,
+                    patientPhone: pPhone,
+                    meta: { sessionNumber: 1, painScore, mobilityRate, sleepRate }
+                });
+            } catch(e) {}
+            if (negativeHabitsList.length > 0) {
+                showToast('⚠️ تم توثيق إنجاز تمارين اليوم الأول بنجاح وبدأت فترة الاستشفاء (24 ساعة). انتبه للسلوكيات السلبية!', 'warning');
+            } else {
+                showToast('🎉 أحسنت! تم توثيق إنجاز تمارين اليوم الأول بنجاح وبدأت فترة الاستشفاء الحيوي للأنسجة (24 ساعة).', 'success');
+            }
+            if (typeof playDailyMotivationAudio === 'function') {
+                playDailyMotivationAudio(1, pName);
+            } else if (typeof playStationAudio === 'function') {
+                playStationAudio('motivation', () => {}, 'recovery');
+            }
         } else {
-            showToast('🎉 أحسنت! تم توثيق إنجاز تمارين اليوم الأول بنجاح وبدأت فترة الاستشفاء الحيوي للأنسجة (24 ساعة).', 'success');
+            goToStep(5);
+            if (typeof renderStep5SessionsDashboard === 'function') {
+                renderStep5SessionsDashboard(patientId, sessionNumber + 1);
+            }
+            try {
+                SmartDB.addAdminNotification({
+                    type: 'session_done',
+                    title: `📝 إنجاز الجلسة #${sessionNumber}: ${pName}`,
+                    message: `سجل المريض ${pName} تقييم الجلسة #${sessionNumber} بنجاح. مستوى الألم الحالي: ${painScore}/10، مرونة الحركة: ${mobilityRate}%`,
+                    patientId,
+                    patientName: pName,
+                    patientPhone: pPhone,
+                    meta: { sessionNumber, painScore, mobilityRate, sleepRate }
+                });
+            } catch(e) {}
+            showToast(`🎉 أحسنت! تم حفظ تقييم الجلسة #${sessionNumber} بنجاح وبدأت فترة استشفاء الجلسة التالية (24 ساعة).`, 'success');
+            if (typeof playDailyMotivationAudio === 'function') {
+                playDailyMotivationAudio(sessionNumber + 1, pName);
+            }
         }
 
-        // الانتقال المباشر والفوري إلى الخطوة 5 وعرض لوحة الجلسات للجلسة الثانية
+        // 5. حفظ متزامن في الخلفية لقاعدة البيانات دون تأخير الواجهة إطلاقاً
+        try {
+            SmartDB.saveDailyLog(logEntry).catch(e => console.warn('Background saveDailyLog error:', e));
+        } catch (e) {}
+
+    } catch (fatalErr) {
+        console.error('[submitComprehensiveDailyLog] Handled fatal error safely:', fatalErr);
+        closeSessionAssessmentModal();
         goToStep(5);
-        await renderStep5SessionsDashboard(patientId, 2);
-
-        if (typeof playDailyMotivationAudio === 'function') {
-            playDailyMotivationAudio(1, pName);
-        } else if (typeof playStationAudio === 'function') {
-            playStationAudio('motivation', () => {}, 'recovery');
+        if (typeof renderStep5SessionsDashboard === 'function') {
+            renderStep5SessionsDashboard(patientId, 2).catch(() => {});
         }
-        return;
-    }
-
-    // لباقي الجلسات (2 إلى 6):
-    SmartDB.addAdminNotification({
-        type: 'session_done',
-        title: `📝 إنجاز الجلسة #${sessionNumber}: ${pName}`,
-        message: `سجل المريض ${pName} تقييم الجلسة #${sessionNumber} بنجاح. مستوى الألم الحالي: ${painScore}/10، مرونة الحركة: ${mobilityRate}%`,
-        patientId,
-        patientName: pName,
-        patientPhone: pPhone,
-        meta: { sessionNumber, painScore, mobilityRate, sleepRate }
-    });
-
-    if (negativeHabitsList.length > 0 || longSitting || heavyLifting || phoneUsage || poorSleep) {
-        showToast(`⚠️ تم توثيق الجلسة #${sessionNumber} بنجاح وبدأت فترة استشفاء الجلسة التالية (24 ساعة). انتبه للسلوكيات السلبية!`, 'error');
-    } else {
-        showToast(`🎉 أحسنت! تم حفظ تقييم الجلسة #${sessionNumber} بنجاح وبدأت فترة استشفاء الجلسة التالية (24 ساعة).`, 'success');
-    }
-
-    goToStep(5);
-    await renderStep5SessionsDashboard(patientId, sessionNumber + 1);
-
-    if (typeof playDailyMotivationAudio === 'function') {
-        playDailyMotivationAudio(sessionNumber + 1, pName);
     }
 }
+window.submitComprehensiveDailyLog = submitComprehensiveDailyLog;
 
 // فتح مكتبة التمارين
 function openExerciseLibraryModal(filterCategory = 'all') {
@@ -7913,7 +7905,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.24';
+const CURRENT_APP_VERSION = 'v30.25';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -8016,11 +8008,13 @@ function _doSafeReload(targetVer = null) {
 }
 
 // فحص هادئ ودوري لرقم الإصدار بدون أي حجب للشاشة أو تكرار
-async function _checkRemoteVersionUpdate() {
+async function _checkRemoteVersionUpdate(force = false) {
     if (_versionCheckInProgress) return;
 
-    const lastCheckTime = parseInt(sessionStorage.getItem('scp_last_ver_check') || '0', 10);
-    if (Date.now() - lastCheckTime < 360000) return; // فحص كل 6 دقائق كحد أدنى لمنع إزعاج المستخدمين
+    if (!force) {
+        const lastCheckTime = parseInt(sessionStorage.getItem('scp_last_ver_check') || '0', 10);
+        if (Date.now() - lastCheckTime < 60000) return;
+    }
 
     _versionCheckInProgress = true;
     sessionStorage.setItem('scp_last_ver_check', String(Date.now()));
@@ -8312,7 +8306,10 @@ function goToStep(stepNum, options = {}) {
 
     // إظهار قسم الخطوة المحددة بدقة (الخطوات 1 إلى 6 أصبحت مستقلة تماماً)
     const targetSection = document.getElementById(`step-section-${stepNum}`);
-    if (targetSection) targetSection.style.display = 'block';
+    if (targetSection) {
+        targetSection.style.display = 'block';
+        try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {}
+    }
 
     // تحديث مؤشرات شريط الخطوات الذكي مع المحافظة على جميع الخطوات المنجزة
     updateStepperVisuals(stepNum);
@@ -9320,7 +9317,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // فحص أولي فوري للإصدار عند إقلاع الصفحة
     if (typeof _checkRemoteVersionUpdate === 'function') {
-        setTimeout(_checkRemoteVersionUpdate, 1500);
+        setTimeout(() => _checkRemoteVersionUpdate(true), 1200);
     }
 
     try {
