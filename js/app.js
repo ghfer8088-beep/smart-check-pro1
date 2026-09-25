@@ -973,6 +973,18 @@ async function restoreActiveSessionState() {
         } catch (e) {}
     }
 
+    // ضمان جذري: اسم المريض في activePatient يجب أن يُستعاد دائماً من localStorage عند تحديث الصفحة
+    if (activePatient) {
+        const _RST_INVALID = /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null|بطل|بطل التعافي|مرحباً بك|مرحبا بك)$/i;
+        const _rstStored = (function() { try { return (localStorage.getItem('smart_patient_name') || localStorage.getItem('smart_user_name') || '').trim(); } catch(e) { return ''; } })();
+        const cn = (activePatient.name || activePatient.fullName || '').trim();
+        if (_rstStored && !_RST_INVALID.test(_rstStored) && (!cn || _RST_INVALID.test(cn))) {
+            activePatient.name = _rstStored;
+            activePatient.fullName = _rstStored;
+        }
+        window.activePatient = activePatient;
+    }
+
     if (currentSelectedPoint) {
         const found = document.querySelector(`.anatomy-hotspot[data-point-id="${currentSelectedPoint.id}"]`);
         if (found) found.classList.add('active');
@@ -1373,15 +1385,19 @@ function getResolvedPatientName() {
         storedName = localStorage.getItem('smart_patient_name') || localStorage.getItem('smart_user_name') || sessionStorage.getItem('smart_patient_name') || '';
     } catch(e) {}
 
+    // الأسماء الوهمية التي يجب إهمالها تماماً
+    const INVALID_NAMES_RE = /^(?:الاسم|الآسم|الإسم|اسمي|اسمك|مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|بطل|بطل التعافي|مرحباً بك|مرحبا بك|أهلاً|أهلا|هلا|مرحبا|أخي|أختي|undefined|null|--)$/i;
+
+    // الأولوية: localStorage أولاً لأنه الأموثق وأسرع
     const candidates = [
         storedName,
-        clinicalDialogueState?.patientFullName,
-        clinicalDialogueState?.patientName,
         auth?.name,
         auth?.fullName,
         activePatient?.fullName,
         activePatient?.name,
         currentAssessmentData?.patientName,
+        clinicalDialogueState?.patientFullName,
+        clinicalDialogueState?.patientName,
         document.getElementById('patient-name')?.value?.trim(),
         document.getElementById('sub-name')?.value?.trim(),
         document.getElementById('portal-user-name')?.textContent?.trim()
@@ -1389,7 +1405,7 @@ function getResolvedPatientName() {
     for (const cand of candidates) {
         if (cand && typeof cand === 'string') {
             const clean = cand.trim();
-            if (clean.length > 1 && !/^(?:الاسم|الآسم|الإسم|اسمي|اسمك|مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|عزيزي|عزيزتي|pat_guest|undefined|null|--)$/i.test(clean)) {
+            if (clean.length > 1 && !INVALID_NAMES_RE.test(clean)) {
                 try {
                     localStorage.setItem('smart_patient_name', clean);
                     localStorage.setItem('smart_user_name', clean);
@@ -5621,21 +5637,29 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
         try {
             sessionData = await Promise.race([
                 PatientFlow.initPatientSession(patientId),
-                new Promise(resolve => setTimeout(() => resolve(null), 800))
+                new Promise(resolve => setTimeout(() => resolve(null), 3000))
             ]);
         } catch(e) {
             console.warn('initPatientSession error in Step 4:', e);
         }
     }
 
+    // الاسم المحفوظ في localStorage هو المرجع الأموثق دائماً
+    const _S4_INVALID = /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null|بطل|بطل التعافي|مرحباً بك|مرحبا بك)$/i;
+    const _s4StoredName = (function() { try { return (localStorage.getItem('smart_patient_name') || localStorage.getItem('smart_user_name') || '').trim(); } catch(e) { return ''; } })();
+
     if (!sessionData || !sessionData.patient) {
         const curAss = currentAssessmentData || (function() {
             try { return JSON.parse(localStorage.getItem('smart_current_assessment')); } catch(e) { return null; }
         })();
         const authP = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+        const bestName = (_s4StoredName && !_S4_INVALID.test(_s4StoredName)) ? _s4StoredName
+                       : (authP?.name && !_S4_INVALID.test(authP.name)) ? authP.name
+                       : (curAss?.patientName && !_S4_INVALID.test(curAss.patientName)) ? curAss.patientName : '';
         const pObj = {
             patientId: patientId || authP?.patientId || curAss?.patientId || 'pat_guest',
-            name: authP?.name || curAss?.patientName || ((authP?.phone || curAss?.patientPhone) ? `مراجع (${(authP?.phone || curAss?.patientPhone).replace(/\D/g, '').slice(-4)})` : ''),
+            name: bestName,
+            fullName: bestName,
             phone: authP?.phone || curAss?.patientPhone || '',
             painArea: curAss?.painAreaTitle || curAss?.pointId || (typeof currentSelectedPoint !== 'undefined' ? (currentSelectedPoint?.title || currentSelectedPoint?.id) : '') || 'lumbar_spine',
             painPointId: curAss?.pointId || (typeof currentSelectedPoint !== 'undefined' ? (currentSelectedPoint?.id || currentSelectedPoint?.region) : '') || 'lumbar_spine',
@@ -5649,6 +5673,15 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
             isPlanCompleted: false,
             stageTitle: 'مرحلة تفريغ الضغط الميكانيكي وتهيئة الأنسجة'
         };
+    }
+
+    // ضمان جذري نهائي: تصحيح الاسم من localStorage دائماً حتى لو جاء DB بدون اسم أو باسم وهمي
+    if (sessionData && sessionData.patient && _s4StoredName && !_S4_INVALID.test(_s4StoredName)) {
+        const cn = (sessionData.patient.name || sessionData.patient.fullName || '').trim();
+        if (!cn || _S4_INVALID.test(cn)) {
+            sessionData.patient.name = _s4StoredName;
+            sessionData.patient.fullName = _s4StoredName;
+        }
     }
 
     activePatient = sessionData.patient;
@@ -6895,24 +6928,55 @@ async function loadPatientRecoveryDashboard(patientId, targetDay = null) {
         const curP = window.activePatient || activePatient;
         const fallbackId = patientId || authP?.patientId || curP?.patientId || ('P-' + Date.now().toString().slice(-6));
         const resolvedPain = (typeof resolvePainAreaTitle === 'function') ? resolvePainAreaTitle(null, curAss, (typeof currentSelectedPoint !== 'undefined' ? currentSelectedPoint : null)) : (curAss?.painAreaTitle || 'الفقرات القطنية وأسفل الظهر');
+        const _DASH_INVALID = /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null|بطل|بطل التعافي|مرحباً بك|مرحبا بك)$/i;
+        const _dashStored = (function() { try { return (localStorage.getItem('smart_patient_name') || localStorage.getItem('smart_user_name') || '').trim(); } catch(e) { return ''; } })();
+        const bestDashName = (_dashStored && !_DASH_INVALID.test(_dashStored)) ? _dashStored
+                           : (authP?.name && !_DASH_INVALID.test(authP.name)) ? authP.name
+                           : (curAss?.patientName && !_DASH_INVALID.test(curAss.patientName)) ? curAss.patientName
+                           : (curP?.name && !_DASH_INVALID.test(curP.name)) ? curP.name : '';
         sessionData = {
-            patient: curP || {
-                patientId: fallbackId,
-                id: fallbackId,
-                name: authP?.name || curAss?.patientName || ((authP?.phone || curAss?.patientPhone) ? `مراجع (${(authP?.phone || curAss?.patientPhone).replace(/\D/g, '').slice(-4)})` : ''),
-                phone: authP?.phone || curAss?.patientPhone || '',
-                painArea: resolvedPain,
-                painAreaTitle: resolvedPain,
-                painPointId: curAss?.pointId || (typeof currentSelectedPoint !== 'undefined' ? (currentSelectedPoint?.id || currentSelectedPoint?.region) : '') || 'lumbar_spine',
-                painLevel: curAss?.painSeverity || 7,
-                isPlanActivated: true
-            },
+            patient: (() => {
+                if (curP) {
+                    // تصحيح اسم activePatient إذا كان وهمياً
+                    const cn = (curP.name || curP.fullName || '').trim();
+                    if (bestDashName && (!cn || _DASH_INVALID.test(cn))) {
+                        curP.name = bestDashName;
+                        curP.fullName = bestDashName;
+                    }
+                    return curP;
+                }
+                return {
+                    patientId: fallbackId,
+                    id: fallbackId,
+                    name: bestDashName,
+                    fullName: bestDashName,
+                    phone: authP?.phone || curAss?.patientPhone || '',
+                    painArea: resolvedPain,
+                    painAreaTitle: resolvedPain,
+                    painPointId: curAss?.pointId || (typeof currentSelectedPoint !== 'undefined' ? (currentSelectedPoint?.id || currentSelectedPoint?.region) : '') || 'lumbar_spine',
+                    painLevel: curAss?.painSeverity || 7,
+                    isPlanActivated: true
+                };
+            })(),
             latestAssessment: curAss || { pointId: (typeof currentSelectedPoint !== 'undefined' ? (currentSelectedPoint?.id || currentSelectedPoint?.region) : '') || 'lumbar_spine', primaryDiagnosisKey: '', painAreaTitle: resolvedPain },
             dailyLogs: [],
             currentSessionDay: 1,
             isPlanCompleted: false,
             stageTitle: 'مرحلة تفريغ الضغط الميكانيكي وتهيئة الأنسجة'
         };
+    }
+
+    // ضمان جذري: تصحيح الاسم من localStorage دائماً حتى بعد بناء sessionData
+    {
+        const _DASH_INVALID2 = /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null|بطل|بطل التعافي|مرحباً بك|مرحبا بك)$/i;
+        const _dashStored2 = (function() { try { return (localStorage.getItem('smart_patient_name') || localStorage.getItem('smart_user_name') || '').trim(); } catch(e) { return ''; } })();
+        if (sessionData && sessionData.patient && _dashStored2 && !_DASH_INVALID2.test(_dashStored2)) {
+            const cn2 = (sessionData.patient.name || sessionData.patient.fullName || '').trim();
+            if (!cn2 || _DASH_INVALID2.test(cn2)) {
+                sessionData.patient.name = _dashStored2;
+                sessionData.patient.fullName = _dashStored2;
+            }
+        }
     }
 
     activePatient = sessionData.patient;
@@ -7152,11 +7216,18 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
         const curP = window.activePatient || activePatient;
         const fallbackId = patientId || authP?.patientId || curP?.patientId || ('P-' + Date.now().toString().slice(-6));
         const resolvedPain = (typeof resolvePainAreaTitle === 'function') ? resolvePainAreaTitle(null, curAss, (typeof currentSelectedPoint !== 'undefined' ? currentSelectedPoint : null)) : (curAss?.painAreaTitle || 'الفقرات القطنية وأسفل الظهر');
+        const _MDL_INVALID = /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null|بطل|بطل التعافي|مرحباً بك|مرحبا بك)$/i;
+        const _mdlStored = (function() { try { return (localStorage.getItem('smart_patient_name') || localStorage.getItem('smart_user_name') || '').trim(); } catch(e) { return ''; } })();
+        const bestMdlName = (_mdlStored && !_MDL_INVALID.test(_mdlStored)) ? _mdlStored
+                          : (authP?.name && !_MDL_INVALID.test(authP.name)) ? authP.name
+                          : (curAss?.patientName && !_MDL_INVALID.test(curAss.patientName)) ? curAss.patientName
+                          : (curP?.name && !_MDL_INVALID.test(curP.name)) ? curP.name : '';
         sessionData = {
             patient: curP || {
                 patientId: fallbackId,
                 id: fallbackId,
-                name: authP?.name || curAss?.patientName || ((authP?.phone || curAss?.patientPhone) ? `مراجع (${(authP?.phone || curAss?.patientPhone).replace(/\D/g, '').slice(-4)})` : ''),
+                name: bestMdlName,
+                fullName: bestMdlName,
                 phone: authP?.phone || curAss?.patientPhone || '',
                 painArea: resolvedPain,
                 painPointId: curAss?.pointId || (typeof currentSelectedPoint !== 'undefined' ? currentSelectedPoint?.id : null) || 'lumbar_spine',
@@ -7168,6 +7239,18 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
             isPlanCompleted: false,
             stageTitle: 'مرحلة تفريغ الضغط الميكانيكي وتهيئة الأنسجة'
         };
+    }
+    // ضمان نهائي: تصحيح اسم المريض في كل الأحوال
+    if (sessionData && sessionData.patient) {
+        const _MDL_INV2 = /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null|بطل|بطل التعافي|مرحباً بك|مرحبا بك)$/i;
+        const _mdlSt2 = (function() { try { return (localStorage.getItem('smart_patient_name') || localStorage.getItem('smart_user_name') || '').trim(); } catch(e) { return ''; } })();
+        if (_mdlSt2 && !_MDL_INV2.test(_mdlSt2)) {
+            const cn = (sessionData.patient.name || sessionData.patient.fullName || '').trim();
+            if (!cn || _MDL_INV2.test(cn)) {
+                sessionData.patient.name = _mdlSt2;
+                sessionData.patient.fullName = _mdlSt2;
+            }
+        }
     }
 
     const modal = document.getElementById('session-assessment-modal');
@@ -7745,7 +7828,7 @@ async function _checkRemoteVersionUpdate() {
     if (_versionCheckInProgress) return;
 
     const lastCheckTime = parseInt(sessionStorage.getItem('scp_last_ver_check') || '0', 10);
-    if (Date.now() - lastCheckTime < 25000) return; // فحص كل 25 ثانية كحد أقصى
+    if (Date.now() - lastCheckTime < 360000) return; // فحص كل 6 دقائق كحد أدنى لمنع إزعاج المستخدمين
 
     _versionCheckInProgress = true;
     sessionStorage.setItem('scp_last_ver_check', String(Date.now()));
@@ -9026,7 +9109,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // 🔄 فحص دوري تلقائي كل 25 ثانية يضمن وصول إشعار التحديث لكافة الأجهزة والصفحات المفتوحة
+        // 🔄 فحص دوري تلقائي كل 6 دقائق — تقليل التحديثات المزعجة للمستخدمين
         setInterval(() => {
             navigator.serviceWorker.getRegistration().then((reg) => {
                 if (reg) reg.update().catch(() => {});
@@ -9034,13 +9117,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (typeof _checkRemoteVersionUpdate === 'function') {
                 _checkRemoteVersionUpdate();
             }
-        }, 25000);
+        }, 360000);
     } else {
         setInterval(() => {
             if (typeof _checkRemoteVersionUpdate === 'function') {
                 _checkRemoteVersionUpdate();
             }
-        }, 25000);
+        }, 360000);
     }
 
     // فحص أولي فوري للإصدار عند إقلاع الصفحة

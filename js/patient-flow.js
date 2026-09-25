@@ -293,7 +293,8 @@ const PatientFlow = (function() {
         // استخراج وتعيين اسم المريض الحقيقي دائماً ومنع أي قيمة فارغة أو عامة
         if (patient) {
             const rawPName = (patient.name || patient.fullName || '').trim();
-            if (!rawPName || /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null|بطل|بطل التعافي)$/i.test(rawPName)) {
+            const _PF_INVALID = /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|بطل|بطل التعافي|مرحباً بك|مرحبا بك|أهلاً|أهلا|أخي|أختي|undefined|null|--)$/i;
+            if (!rawPName || _PF_INVALID.test(rawPName)) {
                 let resolvedPName = '';
                 if (typeof window !== 'undefined' && typeof window.getResolvedPatientName === 'function') {
                     resolvedPName = window.getResolvedPatientName();
@@ -301,7 +302,7 @@ const PatientFlow = (function() {
                 if (!resolvedPName && typeof localStorage !== 'undefined') {
                     resolvedPName = localStorage.getItem('smart_patient_name') || localStorage.getItem('smart_user_name') || '';
                 }
-                if (resolvedPName && !/^(?:مراجع كريم|المراجع الكريم|عزيزي|عزيزتي|pat_guest|بطل|بطل التعافي)$/i.test(resolvedPName)) {
+                if (resolvedPName && !_PF_INVALID.test(resolvedPName)) {
                     patient.name = resolvedPName;
                     patient.fullName = resolvedPName;
                     try {
