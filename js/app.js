@@ -6290,6 +6290,8 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
 
         // جلب سجل الجلسة المعروضة activeDay لحساب مؤشراتها وسلوكياتها بدقة (تطابق حصري برقم الجلسة)
         const activeDayLog = (sessionData.dailyLogs || []).find(l => (Number(l.sessionNumber) === activeDay || Number(l.day) === activeDay)) || null;
+        const prevLogs = (sessionData.dailyLogs || []).filter(l => Number(l.sessionNumber || l.day) < activeDay);
+        const lastPrevLog = prevLogs.length > 0 ? prevLogs[prevLogs.length - 1] : (sessionData.dailyLogs && sessionData.dailyLogs.length > 0 ? sessionData.dailyLogs[sessionData.dailyLogs.length - 1] : null);
 
         let displayPainReduction = sessionData.indicators ? sessionData.indicators.painReduction : 0;
         let displayMobility = sessionData.indicators ? sessionData.indicators.mobility : 0;
@@ -6312,8 +6314,6 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             }
         } else {
             // إذا كانت الجلسة المعروضة لم توثق بعد، نعرض مؤشرات آخر جلسة موثقة ليعرف المراجع تقدمه الحقيقي دون ظهور أصفار
-            const prevLogs = (sessionData.dailyLogs || []).filter(l => Number(l.sessionNumber || l.day) < activeDay);
-            const lastPrevLog = prevLogs.length > 0 ? prevLogs[prevLogs.length - 1] : (sessionData.dailyLogs && sessionData.dailyLogs.length > 0 ? sessionData.dailyLogs[sessionData.dailyLogs.length - 1] : null);
             if (lastPrevLog) {
                 if (typeof lastPrevLog.painScore === 'number' && sessionData.baselinePain > 0) {
                     displayPainReduction = Math.max(0, Math.min(100, Math.round(((sessionData.baselinePain - lastPrevLog.painScore) / sessionData.baselinePain) * 100)));
@@ -6604,19 +6604,8 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         `;
     }
 
-    // الرسم البياني لمسار تراجع الألم:
-    // الجلسة 2: بدون رسم بياني
-    // باقي الجلسات (3 إلى 7): فيها كل شيء بالإضافة للرسم البياني
-    let chartSectionHTML = '';
-    if (activeDay === 2 && !sessionData.isPlanCompleted) {
-        chartSectionHTML = `
-            <div style="background: rgba(15, 23, 42, 0.7); border: 1px dashed rgba(212, 175, 55, 0.4); border-radius: 10px; padding: 12px 16px; text-align: center; color: #94a3b8; font-size: 0.85em; margin-bottom: 20px;">
-                📊 <strong>الرسم البياني لمسار تراجع الألم:</strong> ينطلق تلقائياً بدءاً من الجلسة 3 عند توفر قراءتين مقارنتين لتوثيق منحنى الاستشفاء والشفاء بدقة.
-            </div>
-        `;
-    } else {
-        chartSectionHTML = sessionData.painTrendHTML || '';
-    }
+    // الرسم البياني لمسار تراجع الألم: متاح فوراً في كافة الجلسات بما فيها الجلسة 2 لتوثيق مسار الشفاء منذ اليوم الأول
+    let chartSectionHTML = sessionData.painTrendHTML || '';
 
     // قسم توثيق وإنجاز الجلسة المشروط بانتهاء مؤقت الـ 24 ساعة
     let sessionCompletionSectionHTML = '';
@@ -6818,19 +6807,19 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3); text-align: center;">
                     <div style="font-size: 2em; font-weight: bold; color: #ef4444;">${displayPainReduction}%</div>
                     <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر انخفاض وتلاشي الألم</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${(activeDayLog && typeof activeDayLog.painScore === 'number') ? `مستوى الألم المسجل (${activeDayLog.painScore}/10) مقارنة بالبداية (${sessionData.baselinePain || 8}/10)` : (sessionData.dailyLogs && sessionData.dailyLogs.length > 0 ? (sessionData.baselinePain ? `مقارنة بألم البداية (${sessionData.baselinePain}/10)` : 'مقارنة بالتقييم السريري المبدئي') : 'بانتظار تقييمك للجلسة الأولى')}</div>
+                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${(activeDayLog && typeof activeDayLog.painScore === 'number') ? `مستوى الألم المسجل (${activeDayLog.painScore}/10) مقارنة بالبداية (${sessionData.baselinePain || 8}/10)` : (lastPrevLog ? `مقارنة بألم البداية (${sessionData.baselinePain || 8}/10) - مستند لتقييم الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day}` : 'بانتظار تقييمك للجلسة الأولى')}</div>
                 </div>
 
                 <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3); text-align: center;">
                     <div style="font-size: 2em; font-weight: bold; color: #38bdf8;">${displayMobility}%</div>
                     <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر استعادة المدى الحركي</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${(activeDayLog && (typeof activeDayLog.mobilityRate === 'number' || typeof activeDayLog.movementScore === 'number')) ? 'المرونة الموثقة للجلسة ' + activeDay : (sessionData.dailyLogs && sessionData.dailyLogs.length > 0 ? 'بناءً على التقييم الحركي الفعلي المسجل' : 'بانتظار تقييمك للجلسة الأولى')}</div>
+                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${(activeDayLog && (typeof activeDayLog.mobilityRate === 'number' || typeof activeDayLog.movementScore === 'number')) ? 'المرونة الموثقة للجلسة ' + activeDay : (lastPrevLog ? `استناداً لتقييم الحركة في الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day}` : 'بانتظار تقييمك للجلسة الأولى')}</div>
                 </div>
 
                 <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); text-align: center;">
                     <div style="font-size: 2em; font-weight: bold; color: #10b981;">${displaySleep}%</div>
                     <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر جودة وعمق النوم</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${(activeDayLog && (typeof activeDayLog.sleepRate === 'number' || typeof activeDayLog.sleepQuality === 'number')) ? 'جودة النوم الموثقة للجلسة ' + activeDay : (sessionData.dailyLogs && sessionData.dailyLogs.length > 0 ? 'بناءً على تقييم النوم والراحة الفعلي المسجل' : 'بانتظار تقييمك للجلسة الأولى')}</div>
+                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${(activeDayLog && (typeof activeDayLog.sleepRate === 'number' || typeof activeDayLog.sleepQuality === 'number')) ? 'جودة النوم الموثقة للجلسة ' + activeDay : (lastPrevLog ? `استناداً لتقييم النوم في الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day}` : 'بانتظار تقييمك للجلسة الأولى')}</div>
                 </div>
             </div>
 
@@ -7569,9 +7558,28 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
     const content = document.getElementById('session-assessment-modal-content') || document.getElementById('session-assessment-content');
     if (!modal || !content) return;
 
-    const pointKey = sessionData.latestAssessment?.pointId || sessionData.latestAssessment?.pointKey || sessionData.patient?.painArea || sessionData.patient?.painPointId || 'lumbar_spine';
+    const curAssModal = sessionData.latestAssessment || (typeof currentAssessmentData !== 'undefined' ? currentAssessmentData : null) || {};
+    const curPtModal = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint : null;
+    const pointKey = curAssModal?.pointId || curAssModal?.pointKey || curPtModal?.id || curPtModal?.region || sessionData.patient?.painArea || sessionData.patient?.painPointId || 'lumbar_spine';
     const anatomicalConfig = typeof getAnatomicalDailyAssessmentConfig === 'function' ? getAnatomicalDailyAssessmentConfig(pointKey) : null;
-    const areaTitle = sessionData.latestAssessment?.painAreaTitle || 'المنطقة المصابة';
+    const areaTitle = curAssModal?.painAreaTitle 
+                   || (typeof resolvePainAreaTitle === 'function' ? resolvePainAreaTitle(null, curAssModal, curPtModal) : '') 
+                   || sessionData.patient?.painArea 
+                   || 'الفقرات القطنية وأسفل الظهر';
+
+    // استخراج قيم آخر جلسة موثقة لتبدأ منها السلايدرات بسلاسة بدلاً من قيم افتراضية عشوائية
+    const prevLogsModal = (sessionData.dailyLogs || []).filter(l => Number(l.sessionNumber || l.day) < sessionNumber);
+    const lastPrevLogModal = prevLogsModal.length > 0 ? prevLogsModal[prevLogsModal.length - 1] : (sessionData.dailyLogs && sessionData.dailyLogs.length > 0 ? sessionData.dailyLogs[sessionData.dailyLogs.length - 1] : null);
+    const basePainModal = Number(sessionData.baselinePain || sessionData.patient?.painLevel || curAssModal?.painSeverity || 7);
+    const initialPainVal = (lastPrevLogModal && typeof lastPrevLogModal.painScore === 'number') 
+                         ? Math.max(1, lastPrevLogModal.painScore) 
+                         : (sessionNumber === 1 ? Math.max(1, basePainModal) : Math.max(1, basePainModal - 1));
+    const initialMobilityVal = (lastPrevLogModal && typeof lastPrevLogModal.mobilityRate === 'number') 
+                             ? lastPrevLogModal.mobilityRate 
+                             : 70;
+    const initialSleepVal = (lastPrevLogModal && typeof lastPrevLogModal.sleepRate === 'number') 
+                          ? lastPrevLogModal.sleepRate 
+                          : 70;
 
     content.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(16, 185, 129, 0.3); padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
@@ -7592,7 +7600,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
         <div style="margin-bottom: 20px; background: #111827; padding: 16px; border-radius: 12px; border: 1px solid #334155;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                 <label style="color: #e2e8f0; font-size: 0.95em; font-weight: bold;">1. مستوى شدة الألم الحالي (من 1 إلى 10):</label>
-                <span id="modal-pain-val" style="color: var(--primary-gold); font-weight: bold; font-size: 1.2em;">3 / 10</span>
+                <span id="modal-pain-val" style="color: var(--primary-gold); font-weight: bold; font-size: 1.2em;">${initialPainVal} من 10</span>
             </div>
             <div style="text-align: center; margin: 4px 0 8px 0;">
                 <div class="slider-drag-hint-animated">
@@ -7601,7 +7609,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                     <span class="pulse-arrow-hand-right">👉</span>
                 </div>
             </div>
-            <input type="range" id="modal-pain-input" min="1" max="10" value="3" oninput="document.getElementById('modal-pain-val').textContent = this.value + ' / 10'" style="width: 100%; accent-color: var(--primary-gold); cursor: pointer;">
+            <input type="range" id="modal-pain-input" min="1" max="10" value="${initialPainVal}" oninput="document.getElementById('modal-pain-val').textContent = this.value + ' من 10'" style="width: 100%; accent-color: var(--primary-gold); cursor: pointer;">
         </div>
 
         <!-- 2. نسبة استعادة حرية الحركة وقوة المفصل -->
@@ -7610,7 +7618,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                 <label style="color: #38bdf8; font-size: 0.95em; font-weight: bold;">
                     ${anatomicalConfig ? anatomicalConfig.mobilityQuestion : '2. نسبة استعادة حرية الحركة وقوة المفصل اليوم:'}
                 </label>
-                <span id="modal-mobility-val" style="color: #38bdf8; font-weight: bold; font-size: 1.2em;">70 %</span>
+                <span id="modal-mobility-val" style="color: #38bdf8; font-weight: bold; font-size: 1.2em;">${initialMobilityVal} %</span>
             </div>
             <div style="text-align: center; margin: 4px 0 8px 0;">
                 <div class="slider-drag-hint-animated">
@@ -7619,7 +7627,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                     <span class="pulse-arrow-hand-right">👉</span>
                 </div>
             </div>
-            <input type="range" id="modal-mobility-slider" min="10" max="100" value="70" oninput="document.getElementById('modal-mobility-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #38bdf8; margin-bottom: 12px; cursor: pointer;">
+            <input type="range" id="modal-mobility-slider" min="10" max="100" value="${initialMobilityVal}" oninput="document.getElementById('modal-mobility-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #38bdf8; margin-bottom: 12px; cursor: pointer;">
             
             <div style="color: #94a3b8; font-size: 0.84em; margin-bottom: 8px;">اختر كل ما ينطبق على حركتك اليوم (اختيار متعدد):</div>
             <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
@@ -8086,7 +8094,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.28';
+const CURRENT_APP_VERSION = 'v30.29';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 

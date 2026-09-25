@@ -38,10 +38,10 @@ const PatientFlow = (function() {
         const padY = 30;
         const stepX = (width - padX * 2) / 7;
 
-        // توليد مسار النقاط
+        // توليد مسار النقاط (سريرياً: الألم 10 في الأعلى، و 0 في الأسفل ليعكس المنحنى هبوط وتلاشي الألم واقعياً)
         const points = daysData.map((d, idx) => {
             const x = padX + idx * stepX;
-            const y = padY + (d.pain / 10) * (height - padY * 2);
+            const y = padY + ((10 - Math.max(0, Math.min(10, d.pain))) / 10) * (height - padY * 2);
             return { ...d, x, y };
         });
 
