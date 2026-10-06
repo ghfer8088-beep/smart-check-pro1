@@ -1048,7 +1048,7 @@ const SmartDB = (function() {
     }
 
     // دوال إشعارات وتنبيهات الإدارة الفورية الحية
-    function addAdminNotification(notif) {
+    function addAdminNotification(notif, options = {}) {
         try {
             if (!notif) return null;
             const notifPName = (notif.patientName || '').trim();
@@ -1061,29 +1061,33 @@ const SmartDB = (function() {
 
             const list = JSON.parse(localStorage.getItem('smart_admin_notifications') || '[]');
             const newNotif = {
-                id: 'N-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-                type: notif.type || 'info', // 'new_registration', 'plan_completed', 'red_flag', 'session_done'
+                id: notif.id || ('N-' + Date.now() + '-' + Math.floor(Math.random() * 1000)),
+                type: notif.type || 'info', // 'new_registration', 'plan_completed', 'red_flag', 'session_done', 'session_completed'
                 title: notif.title || 'إشعار جديد',
                 message: notif.message || '',
                 patientId: notif.patientId || null,
                 patientName: notif.patientName || (notifPPh ? `مراجع (${notifPPh.slice(-4)})` : ''),
                 patientPhone: notif.patientPhone || '',
                 meta: notif.meta || {},
-                time: new Date().toISOString(),
-                read: false
+                time: notif.time || new Date().toISOString(),
+                read: notif.read || false
             };
-            list.unshift(newNotif);
-            if (list.length > 30) list.length = 30;
-            try {
-                localStorage.setItem('smart_admin_notifications', JSON.stringify(list));
-            } catch(qErr) {
-                list.length = 10;
-                try { localStorage.setItem('smart_admin_notifications', JSON.stringify(list)); } catch(e) {}
+
+            // منع تكرار الإشعار المتطابق
+            const isDup = list.some(x => x.id === newNotif.id || (x.patientId && x.patientId === newNotif.patientId && x.type === newNotif.type && Math.abs(new Date(x.time || 0).getTime() - new Date(newNotif.time || 0).getTime()) < 10000));
+            if (!isDup) {
+                list.unshift(newNotif);
+                if (list.length > 50) list.length = 50;
+                try {
+                    localStorage.setItem('smart_admin_notifications', JSON.stringify(list));
+                } catch(qErr) {
+                    list.length = 15;
+                    try { localStorage.setItem('smart_admin_notifications', JSON.stringify(list)); } catch(e) {}
+                }
+                try { localStorage.setItem('smart_last_notif_time', Date.now().toString()); } catch(e) {}
             }
-            try { localStorage.setItem('smart_last_notif_time', Date.now().toString()); } catch(e) {}
 
             // ✅ v29.19: إرسال BroadcastChannel لإبلاغ admin.html فوراً بالإشعار الجديد
-            // (storage event لا يعمل في نفس المتصفح — BroadcastChannel يصل لجميع التبويبات)
             try {
                 if ('BroadcastChannel' in window) {
                     const bc = new BroadcastChannel('smart_check_pro_global_sync_channel');
@@ -1091,6 +1095,13 @@ const SmartDB = (function() {
                     bc.close();
                 }
             } catch(bcErr) {}
+
+            // ✅ بث سحابي لحظي مباشر عبر MQTT و NTFY لإيصال الإشعار فوراً إلى لابتوب الطبيب ولوحة التحكم
+            if (!options.skipCloudSync && typeof window !== 'undefined' && window.SmartCloudSync && typeof window.SmartCloudSync.dispatchNotification === 'function') {
+                try {
+                    window.SmartCloudSync.dispatchNotification(newNotif);
+                } catch(csErr) {}
+            }
 
             return newNotif;
         } catch (e) {

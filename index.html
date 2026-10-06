@@ -149,7 +149,7 @@
                 <div class="brand-version-badge" onclick="event.stopPropagation(); if(typeof forceAppUpdateAndClearCache==='function') forceAppUpdateAndClearCache();" title="انقر لتحديث وتنشيط التطبيق فوراً" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72em; color: #94a3b8; margin-top: 1px; cursor: pointer; user-select: none;">
                     <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                     <span>الإصدار:</span>
-                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v30.31</strong>
+                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v30.32</strong>
                 </div>
             </div>
         </div>
@@ -1857,27 +1857,23 @@
     <script src="js/smart-guidance.js?v=30.27"></script>
 
     <script>
-        // مؤشر المراجعين المتفاعلين أونلاين الآن (يتراوح عشوائياً بديناميكية طبيعية بين 40 و 99)
+        // مؤشر المراجعين المتواجدين أونلاين الآن (متزامن بدقة مع السحابة ولوحة الإدارة)
         (function initLiveSocialProof() {
             const countEl = document.getElementById('live-online-users-count');
             const locEl = document.getElementById('visitor-detected-location');
 
-            function getOrInitLiveCount() {
-                let current = parseInt(sessionStorage.getItem('smart_live_counter_val') || '0', 10);
-                if (!current || current < 40 || current > 99) {
-                    current = Math.floor(Math.random() * (78 - 52 + 1)) + 52; // بداية طبيعية بين 52 و 78
-                } else {
-                    // تذبذب عشوائي طفيف بمقدار ±1 إلى ±3
-                    const delta = Math.floor(Math.random() * 7) - 3;
-                    current = Math.min(99, Math.max(40, current + delta));
-                }
-                try { sessionStorage.setItem('smart_live_counter_val', String(current)); } catch(e) {}
-                return current;
-            }
-
             function updateLiveCount() {
                 if (!countEl) return;
-                countEl.textContent = getOrInitLiveCount();
+                let onlineCount = 1;
+                try {
+                    if (window.SmartCloudSync && typeof window.SmartCloudSync.getRealtimePresence === 'function') {
+                        const presence = window.SmartCloudSync.getRealtimePresence();
+                        if (presence && presence.totalOnline) {
+                            onlineCount = Math.max(1, presence.totalOnline);
+                        }
+                    }
+                } catch(e) {}
+                countEl.textContent = onlineCount;
             }
             updateLiveCount();
 
@@ -1896,8 +1892,8 @@
                 });
             }
 
-            // تذبذب هادئ كل 45 ثانية يبقى محصوراً بين 40 و 99
-            setInterval(updateLiveCount, 45000);
+            // تحديث دوري متزامن كل 10 ثوانٍ
+            setInterval(updateLiveCount, 10000);
         })();
     </script>
 </body>
