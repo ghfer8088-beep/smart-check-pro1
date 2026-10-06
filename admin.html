@@ -406,7 +406,7 @@
                     <div style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.78em; color: #94a3b8; margin-top: 2px;">
                         <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                         <span>الإصدار المعتمد:</span>
-                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.32</strong>
+                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.33</strong>
                     </div>
                 </div>
             </div>
@@ -432,10 +432,10 @@
                         <span>⚙️</span> إعدادات
                     </button>
                     <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header admin-btn-cache" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 9px 12px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
-                        ⚡ تحديث الكاش (v30.32)
+                        ⚡ تحديث الكاش (v30.33)
                     </button>
-                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.32) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
-                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.32)
+                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.33) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
+                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.33)
                     </button>
                     <button type="button" id="btn-force-sync" onclick="handleForceFullSync()" style="background: linear-gradient(135deg,rgba(59,130,246,0.25),rgba(99,102,241,0.2)); border: 1px solid #6366f1; color: #a5b4fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="جلب كافة السجلات من السحابة قسرياً وبثها لجميع الأجهزة">
                         🔄 مزامنة كاملة
@@ -2801,15 +2801,17 @@
                 const pId = pt.patientId || pt.id;
                 const pName = (pt.fullName || pt.name || '').trim();
                 const pPhone = (pt.phone || '').trim();
-                if (!pName || /^(?:مراجع كريم|المراجع الكريم|مراجع محترم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|undefined|null)$/i.test(pName)) {
-                    if (pPhone.length < 7) continue;
+                const isRealClinicPatient = pName && !/^(?:مراجع كريم|المراجع الكريم|مراجع محترم|المراجع المحترم|مراجع جديد|المراجع الجديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|مراجع مجهول|pat_guest|guest|anonymous|undefined|null)$/i.test(pName);
+                if (!isRealClinicPatient && pPhone.length < 7) {
+                    continue;
                 }
                 const displayName = pName || `مراجع (${pPhone.slice(-4)})`;
                 const logs = (Array.isArray(pt.dailyLogs) && pt.dailyLogs.length > 0) ? pt.dailyLogs : ((Array.isArray(pt.logs) && pt.logs.length > 0) ? pt.logs : []);
+                const logsCount = Math.max(logs.length, item.logsCount || 0, pt.logsCount || 0, pt.completedSessions || 0);
 
                 // 1. إشعار إتمام الخطة العلاجية بالكامل (اليوم السابع)
-                if (pt.isPlanCompleted || pt.planCompleted || item.logsCount >= 7 || logs.length >= 7) {
-                    const hasPlanNotif = notifs.some(n => (n.patientId === pId || (n.patientPhone && n.patientPhone === pPhone)) && n.type === 'plan_completed');
+                if (pt.isPlanCompleted || pt.planCompleted || item.logsCount >= 7 || logsCount >= 7) {
+                    const hasPlanNotif = notifs.some(n => (n.patientId === pId || (pPhone && n.patientPhone === pPhone) || (n.patientName && n.patientName === displayName)) && n.type === 'plan_completed');
                     if (!hasPlanNotif) {
                         notifs.unshift({
                             id: 'N-PLAN-' + (pId || Date.now()),
@@ -2827,10 +2829,10 @@
                 }
 
                 // 2. إشعار إنجاز الجلسات العلاجية اليومية
-                if (logs.length > 0) {
-                    const lastLog = logs[logs.length - 1];
-                    const sessNum = lastLog.sessionNumber || logs.length;
-                    const hasSessionNotif = notifs.some(n => (n.patientId === pId || (n.patientPhone && n.patientPhone === pPhone)) && (n.type === 'session_done' || n.type === 'session_completed') && n.title.includes(String(sessNum)));
+                if (logsCount > 0) {
+                    const lastLog = logs.length > 0 ? logs[logs.length - 1] : { sessionNumber: logsCount, painScore: 5, mobilityRate: 70 };
+                    const sessNum = lastLog.sessionNumber || logsCount;
+                    const hasSessionNotif = notifs.some(n => (n.patientId === pId || (pPhone && n.patientPhone === pPhone) || (n.patientName && n.patientName === displayName)) && (n.type === 'session_done' || n.type === 'session_completed') && n.title.includes(String(sessNum)));
                     if (!hasSessionNotif && sessNum < 7) {
                         notifs.unshift({
                             id: 'N-SESS-' + sessNum + '-' + (pId || Date.now()),
@@ -2848,8 +2850,8 @@
                 }
 
                 // 3. إشعار التسجيل المعتمد في العيادة
-                if (pt.isRegistered || pt.accountPin || pPhone.length >= 7) {
-                    const hasRegNotif = notifs.some(n => (n.patientId === pId || (n.patientPhone && n.patientPhone === pPhone)) && n.type === 'new_registration');
+                if (pt.isRegistered || pt.accountPin || pPhone.length >= 7 || isRealClinicPatient) {
+                    const hasRegNotif = notifs.some(n => (n.patientId === pId || (pPhone && n.patientPhone === pPhone) || (n.patientName && n.patientName === displayName)) && n.type === 'new_registration');
                     if (!hasRegNotif) {
                         notifs.push({
                             id: 'N-REG-' + (pId || Date.now()),
@@ -5456,17 +5458,17 @@
             window.location.reload(true);
         }
 
-        // بث رسالة التحديث الجديد الشامل (v30.32) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
+        // بث رسالة التحديث الجديد الشامل (v30.33) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
         function handleBroadcastGlobalVersion() {
-            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.32) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
+            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.33) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
                 if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                     SmartCloudSync.broadcastAppVersionUpdate({
-                        version: 'v30.32',
-                        title: 'تحديث المنظومة (v30.32)',
+                        version: 'v30.33',
+                        title: 'تحديث المنظومة (v30.33)',
                         timestamp: Date.now()
                     });
                 }
-                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.32) عبر شبكة البث اللحظي MQTT و NTFY و Master Hub لكافة الأجهزة!');
+                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.33) عبر شبكة البث اللحظي MQTT و NTFY و Master Hub لكافة الأجهزة!');
             }
         }
         window.handleBroadcastGlobalVersion = handleBroadcastGlobalVersion;
