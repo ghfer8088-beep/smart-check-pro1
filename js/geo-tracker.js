@@ -477,7 +477,7 @@
                 try { 
                     localStorage.setItem(VISITS_HISTORY_KEY, JSON.stringify(history)); 
                     const curVisits = parseInt(localStorage.getItem('smart_cumulative_total_visits') || '0', 10);
-                    localStorage.setItem('smart_cumulative_total_visits', String((curVisits || 480) + 1));
+                    localStorage.setItem('smart_cumulative_total_visits', String((curVisits || 0) + 1));
                 } catch (e) {}
 
                 // ترحيل الزيارة سحابياً

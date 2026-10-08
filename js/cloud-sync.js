@@ -2164,6 +2164,7 @@
     }
 
     // استخراج تحليلات الزوار التفصيلية الحقيقية 100% مع تفصيل المدن والأجهزة والتوقيت لكل دولة
+    // استخراج تحليلات الزوار الفعلية الحقيقية 100% فقط (بدون أي أرقام وهمية أو اصطناعية إطلاقاً)
     function getDetailedVisitorStats() {
         try {
             let visitsHistory = [];
@@ -2172,345 +2173,142 @@
                 if (rawVisits) visitsHistory = JSON.parse(rawVisits);
             } catch (e) {}
 
-        // استبعاد أي زيارات لصفحات الإدارة واستبعاد أي سجلات وهمية سابقة (vis_seed_) لضمان مصداقية الأرقام 100%
-        visitsHistory = (Array.isArray(visitsHistory) ? visitsHistory : []).filter(v => {
-            if (!v || !v.visitorId) return false;
-            if (String(v.visitorId).startsWith('vis_seed_')) return false;
-            if (v.page && (v.page.includes('admin') || v.page.includes('calibrator'))) return false;
-            return true;
-        });
-
-        // تصحيح وتحديث أي زيارات سابقة لنضال أو المراجعين الدوليين لتطابق بياناتهم الحقيقية
-        visitsHistory.forEach(v => {
-            if (!v || !v.visitorId) return;
-            const vid = String(v.visitorId).toLowerCase();
-            if (vid.includes('0792137704') || vid.includes('mu6q7oco') || vid.includes('frankfurt')) {
-                v.country = 'ألمانيا';
-                v.flag = '🇩🇪';
-                v.countryCode = 'DE';
-                if (!v.city || v.city === 'غير محدد' || v.city === 'Amman' || v.city === 'عمّان') v.city = 'فرانكفورت';
-            } else if (vid.includes('0044') || vid.includes('7591819171') || vid.includes('mu5tth1d')) {
-                v.country = 'المملكة المتحدة';
-                v.flag = '🇬🇧';
-                v.countryCode = 'GB';
-                if (!v.city || v.city === 'غير محدد') v.city = 'لندن';
-            } else if (vid.includes('0790044458') || vid.includes('ragheb')) {
-                v.country = 'الأردن';
-                v.flag = '🇯🇴';
-                v.countryCode = 'JO';
-                if (!v.city || v.city === 'غير محدد') v.city = 'عمّان';
-            }
-        });
-
-        // دمج زيارات المراجعين الفعليين المتاحين سحابياً ومحلياً وفي لقطة العيادة الشاملة
-        const snapshotPatients = (window.CLINIC_BACKUP_SNAPSHOT && window.CLINIC_BACKUP_SNAPSHOT.snapshot && Array.isArray(window.CLINIC_BACKUP_SNAPSHOT.snapshot.patients))
-            ? window.CLINIC_BACKUP_SNAPSHOT.snapshot.patients
-            : [];
-
-        const candidatePatients = [
-            ...getCloudSyncedPatients(),
-            ...JSON.parse(localStorage.getItem('smart_all_patients') || '[]'),
-            ...snapshotPatients
-        ];
-        const seenIds = new Set(visitsHistory.map(v => v.visitorId));
-
-        for (const p of candidatePatients) {
-            if (!p) continue;
-            const pId = p.patientId || p.id || p.phone;
-            if (!pId) continue;
-
-            const pName = (p.fullName || p.name || '').toLowerCase();
-            const pAllIds = (p.allMergedIds || []).map(id => String(id).toLowerCase());
-            let ph = (p.phone || '').replace(/\D/g, '');
-            if (ph.startsWith('00')) ph = ph.slice(2);
-
-            let pCountry = (p.country && p.country !== 'غير محدد' && p.country !== 'دولي') ? p.country : '';
-            let pFlag = p.flag || '🌐';
-            let pCity = (p.city && p.city !== 'غير محدد') ? p.city : '';
-
-            // تمييز دقيق للدول المعتمدة
-            if (ph.startsWith('49') || pAllIds.some(id => id.includes('frankfurt') || id.includes('germany')) || pName.includes('نضال') || ph === '0792137704') {
-                pCountry = 'ألمانيا'; pFlag = '🇩🇪'; pCity = (pCity && pCity !== 'عمّان' && pCity !== 'Amman') ? pCity : 'فرانكفورت';
-            } else if (ph.startsWith('44') || pName.includes('رشا') || ph === '447591819171') {
-                pCountry = 'المملكة المتحدة'; pFlag = '🇬🇧'; pCity = (pCity && pCity !== 'عمّان' && pCity !== 'Amman') ? pCity : 'لندن';
-            } else if (ph.startsWith('966') || ph.startsWith('05') || (pCountry && pCountry.toLowerCase().includes('saudi'))) {
-                pCountry = 'المملكة العربية السعودية'; pFlag = '🇸🇦'; pCity = (pCity && pCity !== 'عمّان') ? pCity : 'الرياض';
-            } else if (ph.startsWith('971') || (pCountry && pCountry.toLowerCase().includes('emirates'))) {
-                pCountry = 'الإمارات العربية المتحدة'; pFlag = '🇦🇪'; pCity = pCity || 'دبي';
-            } else if (ph.startsWith('970') || ph.startsWith('972') || (pCountry && pCountry.includes('فلسطين'))) {
-                pCountry = 'فلسطين'; pFlag = '🇵🇸'; pCity = pCity || 'القدس';
-            } else if (ph.startsWith('964') || (pCountry && pCountry.includes('العراق'))) {
-                pCountry = 'العراق'; pFlag = '🇮🇶'; pCity = pCity || 'بغداد';
-            } else if (ph.startsWith('20') || (pCountry && pCountry.includes('مصر'))) {
-                pCountry = 'مصر'; pFlag = '🇪🇬'; pCity = pCity || 'القاهرة';
-            } else if (ph.startsWith('965') || (pCountry && pCountry.includes('الكويت'))) {
-                pCountry = 'الكويت'; pFlag = '🇰🇼'; pCity = pCity || 'الكويت';
-            } else if (ph.startsWith('974') || (pCountry && pCountry.includes('قطر'))) {
-                pCountry = 'قطر'; pFlag = '🇶🇦'; pCity = pCity || 'الدوحة';
-            } else if (ph.startsWith('968') || (pCountry && pCountry.includes('عمان'))) {
-                pCountry = 'سلطنة عمان'; pFlag = '🇴🇲'; pCity = pCity || 'مسقط';
-            } else if (ph.startsWith('973') || (pCountry && pCountry.includes('البحرين'))) {
-                pCountry = 'البحرين'; pFlag = '🇧🇭'; pCity = pCity || 'المنامة';
-            } else if (ph.startsWith('961') || (pCountry && pCountry.includes('لبنان'))) {
-                pCountry = 'لبنان'; pFlag = '🇱🇧'; pCity = pCity || 'بيروت';
-            } else if (ph.startsWith('1') && ph.length >= 10 && !ph.startsWith('1789')) {
-                pCountry = 'الولايات المتحدة'; pFlag = '🇺🇸'; pCity = pCity || 'واشنطن';
-            } else if (!pCountry || pCountry === 'Jordan') {
-                pCountry = 'الأردن'; pFlag = '🇯🇴'; pCity = pCity || 'عمّان';
-            }
-
-            const cCode = (pFlag === '🇬🇧' ? 'GB' : (pFlag === '🇩🇪' ? 'DE' : (pFlag === '🇸🇦' ? 'SA' : (pFlag === '🇦🇪' ? 'AE' : (pFlag === '🇵🇸' ? 'PS' : (pFlag === '🇮🇶' ? 'IQ' : (pFlag === '🇪🇬' ? 'EG' : (pFlag === '🇰🇼' ? 'KW' : (pFlag === '🇶🇦' ? 'QA' : (pFlag === '🇴🇲' ? 'OM' : (pFlag === '🇺🇸' ? 'US' : 'JO')))))))))));
-
-            if (seenIds.has('vis_' + pId)) {
-                // تحديث الزيارة المسجلة بالدولة الصحيحة
-                const existing = visitsHistory.find(v => v.visitorId === 'vis_' + pId);
-                if (existing) {
-                    existing.country = pCountry;
-                    existing.countryCode = p.countryCode || cCode;
-                    existing.flag = pFlag;
-                    if (pCity && pCity !== 'غير محدد') existing.city = pCity;
-                }
-                continue;
-            }
-
-            seenIds.add('vis_' + pId);
-
-            visitsHistory.push({
-                visitorId: 'vis_' + pId,
-                country: pCountry,
-                countryCode: p.countryCode || cCode,
-                city: pCity || 'عمّان',
-                flag: pFlag,
-                device: p.device || 'Mobile',
-                deviceIcon: p.deviceIcon || (p.device === 'Desktop' ? '💻' : '📱'),
-                timestamp: p.lastActiveAt || p.lastUpdated || p.createdAt || p.timestamp || new Date().toISOString(),
-                page: '/'
-            });
-        }
-
-        // ترتيب كافة الزيارات تنازلياً بحيث تظهر أحدث الزيارات والنشاطات أولاً
-        visitsHistory.sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
-
-        const standardClinicCountries = [
-            { country: 'الأردن', flag: '🇯🇴', code: 'JO', cities: ['عمّان', 'إربد', 'الزرقاء', 'العقبة'], weight: 0.36 },
-            { country: 'المملكة العربية السعودية', flag: '🇸🇦', code: 'SA', cities: ['الرياض', 'جدة', 'الدمام', 'مكة المكرمة'], weight: 0.18 },
-            { country: 'ألمانيا', flag: '🇩🇪', code: 'DE', cities: ['فرانكفورت', 'برلين', 'ميونخ'], weight: 0.08 },
-            { country: 'فلسطين', flag: '🇵🇸', code: 'PS', cities: ['القدس', 'رام الله', 'نابلس'], weight: 0.08 },
-            { country: 'المملكة المتحدة', flag: '🇬🇧', code: 'GB', cities: ['لندن', 'مانشستر', 'غريمسبي'], weight: 0.06 },
-            { country: 'الإمارات العربية المتحدة', flag: '🇦🇪', code: 'AE', cities: ['دبي', 'أبوظبي', 'الشارقة', 'عجمان'], weight: 0.06 },
-            { country: 'العراق', flag: '🇮🇶', code: 'IQ', cities: ['بغداد', 'أربيل', 'البصرة'], weight: 0.04 },
-            { country: 'مصر', flag: '🇪🇬', code: 'EG', cities: ['القاهرة', 'الإسكندرية', 'الجيزة'], weight: 0.04 },
-            { country: 'الكويت', flag: '🇰🇼', code: 'KW', cities: ['مدينة الكويت', 'حولي', 'السالمية'], weight: 0.03 },
-            { country: 'قطر', flag: '🇶🇦', code: 'QA', cities: ['الدوحة', 'الريان', 'الوكرة'], weight: 0.03 },
-            { country: 'سلطنة عمان', flag: '🇴🇲', code: 'OM', cities: ['مسقط', 'صلالة', 'صحار'], weight: 0.02 },
-            { country: 'الولايات المتحدة', flag: '🇺🇸', code: 'US', cities: ['واشنطن', 'نيويورك', 'شيكاغو'], weight: 0.02 }
-        ];
-
-        const countryMap = {};
-        let lastVisit = visitsHistory.length > 0 ? visitsHistory[0] : null;
-
-        // 1. تجميع وتوزيع الزيارات الفعلية الموثقة بدقة أولاً
-        visitsHistory.forEach((v, idx) => {
-            const norm = normalizeCountryInfo(v.country, v.countryCode, v.flag);
-            const cName = norm.name;
-            const flag = norm.flag;
-            const code = norm.code;
-            const key = cName;
-
-            v.country = cName;
-            v.flag = flag;
-            v.countryCode = code;
-
-            if (!countryMap[key]) {
-                const std = standardClinicCountries.find(s => s.country === key);
-                countryMap[key] = {
-                    country: cName,
-                    countryCode: code,
-                    flag: flag,
-                    totalVisits: 0,
-                    count: 0,
-                    cities: {},
-                    devices: { mobile: 0, desktop: 0, tablet: 0 },
-                    recentVisits: []
-                };
-            }
-
-            countryMap[key].totalVisits++;
-            countryMap[key].count++;
-
-            const cityName = (v.city && v.city !== 'غير محدد' && v.city !== '—') ? v.city : 'المركز الرئيسي';
-            countryMap[key].cities[cityName] = (countryMap[key].cities[cityName] || 0) + 1;
-
-            const dev = (v.device || 'Mobile').toLowerCase();
-            if (dev.includes('desktop')) countryMap[key].devices.desktop++;
-            else if (dev.includes('tablet')) countryMap[key].devices.tablet++;
-            else countryMap[key].devices.mobile++;
-
-            const visitTime = v.timestamp || new Date().toISOString();
-            countryMap[key].recentVisits.unshift({
-                visitorId: v.visitorId || ('vis_' + idx),
-                city: cityName,
-                device: dev.includes('desktop') ? 'Desktop' : (dev.includes('tablet') ? 'Tablet' : 'Mobile'),
-                deviceIcon: dev.includes('desktop') ? '💻' : (dev.includes('tablet') ? '📟' : '📱'),
-                time: visitTime,
-                timestamp: visitTime,
-                page: v.page || '/'
+            // استبعاد أي زيارات لصفحات الإدارة واستبعاد أي سجلات وهمية سابقة نهائياً (vis_seed_ أو vis_std_ أو vis_local)
+            visitsHistory = (Array.isArray(visitsHistory) ? visitsHistory : []).filter(v => {
+                if (!v || !v.visitorId) return false;
+                const vid = String(v.visitorId);
+                if (vid.startsWith('vis_seed_') || vid.startsWith('vis_std_') || vid === 'vis_local') return false;
+                if (v.page && (v.page.includes('admin') || v.page.includes('calibrator'))) return false;
+                return true;
             });
 
-            if (!lastVisit || new Date(v.timestamp) > new Date(lastVisit.timestamp)) {
-                lastVisit = v;
-            }
-        });
+            // تنظيف التخزين المحلي فوراً لضمان عدم بقاء أي زيارات وهمية مخزنة سابقاً في المتصفح
+            try {
+                localStorage.setItem('smart_geo_visits_history', JSON.stringify(visitsHistory));
+            } catch (e) {}
 
-        // 2. إكمال شبكة دول العيادة الـ 12 المعتمدة بحصص متوازنة بدقة 100%
-        const baseVisitsPool = Math.max(visitsHistory.length, 25);
-        standardClinicCountries.forEach((std, sIdx) => {
-            const key = std.country;
-            if (!countryMap[key]) {
-                const countryVisits = Math.max(1, Math.round(std.weight * baseVisitsPool));
-                const cObj = {
-                    country: std.country,
-                    countryCode: std.code,
-                    flag: std.flag,
-                    totalVisits: countryVisits,
-                    count: countryVisits,
-                    cities: {},
-                    devices: { mobile: 0, desktop: 0, tablet: 0 },
-                    recentVisits: []
-                };
+            // ترتيب كافة الزيارات الفعلية تنازلياً بحيث تظهر أحدث الزيارات أولاً
+            visitsHistory.sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
 
-                // مطابقة تامة: مجموع الأجهزة = إجمالي زيارات الدولة
-                const mobCount = Math.max(1, Math.round(countryVisits * 0.75));
-                const deskCount = countryVisits - mobCount;
-                cObj.devices = { mobile: mobCount, desktop: deskCount, tablet: 0 };
+            const countryMap = {};
+            let lastVisit = visitsHistory.length > 0 ? visitsHistory[0] : null;
 
-                // مطابقة تامة: مجموع المدن = إجمالي زيارات الدولة بدقة
-                let remainingVisits = countryVisits;
-                std.cities.forEach((cName, cIdx) => {
-                    if (remainingVisits <= 0) return;
-                    if (cIdx === std.cities.length - 1 || remainingVisits === 1) {
-                        cObj.cities[cName] = remainingVisits;
-                        remainingVisits = 0;
-                    } else {
-                        const share = Math.max(1, Math.min(remainingVisits - 1, Math.round(remainingVisits * 0.55)));
-                        cObj.cities[cName] = share;
-                        remainingVisits -= share;
-                    }
-                });
+            // تجميع وتوزيع الزيارات الحقيقية فقط حسب الدول والمدن والأجهزة
+            visitsHistory.forEach((v, idx) => {
+                const norm = normalizeCountryInfo(v.country, v.countryCode, v.flag);
+                const cName = norm.name;
+                const flag = norm.flag;
+                const code = norm.code;
+                const key = cName;
 
-                const nowTs = Date.now();
-                Object.entries(cObj.cities).forEach(([cName, cCnt], cIdx) => {
-                    for (let k = 0; k < cCnt; k++) {
-                        const ts = new Date(nowTs - (sIdx * 3600000 + cIdx * 900000 + k * 180000)).toISOString();
-                        cObj.recentVisits.push({
-                            visitorId: `vis_std_${std.code.toLowerCase()}_${cIdx}_${k}`,
-                            city: cName,
-                            device: (cIdx === 1 && k === 0 && deskCount > 0) ? 'Desktop' : 'Mobile',
-                            deviceIcon: (cIdx === 1 && k === 0 && deskCount > 0) ? '💻' : '📱',
-                            time: ts,
-                            timestamp: ts,
-                            page: '/'
-                        });
-                    }
-                });
+                v.country = cName;
+                v.flag = flag;
+                v.countryCode = code;
 
-                countryMap[key] = cObj;
-            }
-        });
-
-        // 3. 🎯 المعايرة الرياضية الحاسمة: (إجمالي الزيارات = مجموع الأجهزة = مجموع المدن لكل دولة دون أي خلل)
-        const sortedCountries = Object.values(countryMap).map(c => {
-            c.totalVisits = Math.max(1, parseInt(c.totalVisits || c.count || 1));
-            c.count = c.totalVisits;
-
-            // أ) مطابقة مجموع الأجهزة 100% مع totalVisits
-            const currentDevSum = (c.devices.mobile || 0) + (c.devices.desktop || 0) + (c.devices.tablet || 0);
-            if (currentDevSum !== c.totalVisits) {
-                const mob = Math.max(1, Math.round(c.totalVisits * 0.75));
-                c.devices = {
-                    mobile: mob,
-                    desktop: Math.max(0, c.totalVisits - mob),
-                    tablet: 0
-                };
-            }
-
-            // ب) مطابقة مجموع أعداد المدن 100% مع totalVisits
-            const cityEntries = Object.entries(c.cities || {});
-            const citySum = cityEntries.reduce((acc, [, cnt]) => acc + cnt, 0);
-            if (citySum !== c.totalVisits) {
-                if (cityEntries.length > 0) {
-                    const diff = c.totalVisits - citySum;
-                    c.cities[cityEntries[0][0]] = Math.max(1, (cityEntries[0][1] || 1) + diff);
-                } else {
-                    c.cities['المركز الرئيسي'] = c.totalVisits;
+                if (!countryMap[key]) {
+                    countryMap[key] = {
+                        country: cName,
+                        countryCode: code,
+                        flag: flag,
+                        totalVisits: 0,
+                        count: 0,
+                        cities: {},
+                        devices: { mobile: 0, desktop: 0, tablet: 0 },
+                        recentVisits: []
+                    };
                 }
-            }
 
-            // ت) توليد مصفوفة المدن بتفاصيل النسب المئوية الدقيقة
-            c.citiesList = Object.entries(c.cities)
-                .filter(([, count]) => count > 0)
-                .map(([city, count]) => ({
-                    name: city,
-                    city: city,
-                    count: count,
-                    percentage: Math.round((count / c.totalVisits) * 100)
-                }))
-                .sort((a, b) => b.count - a.count);
+                countryMap[key].totalVisits++;
+                countryMap[key].count++;
 
-            c.cities = c.citiesList;
-            if (c.recentVisits.length > 30) c.recentVisits = c.recentVisits.slice(0, 30);
-            c.recentLogs = c.recentVisits.map(rv => ({
-                city: rv.city,
-                device: rv.device,
-                time: rv.time || rv.timestamp,
-                page: rv.page || '/'
-            }));
-            return c;
-        }).sort((a, b) => b.totalVisits - a.totalVisits);
+                const cityName = (v.city && v.city !== 'غير محدد' && v.city !== '—') ? v.city : 'المركز الرئيسي';
+                countryMap[key].cities[cityName] = (countryMap[key].cities[cityName] || 0) + 1;
 
-        // 4. احتساب المجاميع والنسب المئوية العامة بدقة رياضية متكاملة
-        const grandTotalVisits = sortedCountries.reduce((acc, c) => acc + c.totalVisits, 0);
-        const grandMobile = sortedCountries.reduce((acc, c) => acc + (c.devices.mobile || 0), 0);
-        const grandDesktop = sortedCountries.reduce((acc, c) => acc + (c.devices.desktop || 0), 0);
-        const grandTablet = sortedCountries.reduce((acc, c) => acc + (c.devices.tablet || 0), 0);
+                const dev = (v.device || 'Mobile').toLowerCase();
+                if (dev.includes('desktop')) countryMap[key].devices.desktop++;
+                else if (dev.includes('tablet')) countryMap[key].devices.tablet++;
+                else countryMap[key].devices.mobile++;
 
-        sortedCountries.forEach(c => {
-            c.percentage = grandTotalVisits > 0 ? Math.round((c.totalVisits / grandTotalVisits) * 100) : 0;
-        });
+                const visitTime = v.timestamp || new Date().toISOString();
+                countryMap[key].recentVisits.unshift({
+                    visitorId: v.visitorId || ('vis_' + idx),
+                    city: cityName,
+                    device: dev.includes('desktop') ? 'Desktop' : (dev.includes('tablet') ? 'Tablet' : 'Mobile'),
+                    deviceIcon: dev.includes('desktop') ? '💻' : (dev.includes('tablet') ? '📟' : '📱'),
+                    time: visitTime,
+                    timestamp: visitTime,
+                    page: v.page || '/'
+                });
 
-        const mobilePct = grandTotalVisits > 0 ? Math.round((grandMobile / grandTotalVisits) * 100) : 80;
-        const desktopPct = grandTotalVisits > 0 ? (100 - mobilePct) : 20;
+                if (!lastVisit || new Date(v.timestamp) > new Date(lastVisit.timestamp)) {
+                    lastVisit = v;
+                }
+            });
 
-        return {
-            totalVisits: grandTotalVisits,
-            totalCountries: sortedCountries.length,
-            uniqueCountriesCount: sortedCountries.length,
-            mobileCount: grandMobile,
-            desktopCount: grandDesktop,
-            tabletCount: grandTablet,
-            mobilePct: mobilePct,
-            mobilePercentage: mobilePct,
-            desktopPct: desktopPct,
-            desktopPercentage: desktopPct,
-            tabletPct: 0,
-            tabletPercentage: 0,
-            countries: sortedCountries,
-            lastVisit: lastVisit,
-            rawVisits: visitsHistory
-        };
-        } catch(detailedErr) {
+            const grandTotalVisits = visitsHistory.length;
+
+            // إعداد مصفوفة الدول الحقيقية المرتبة فقط
+            const sortedCountries = Object.values(countryMap).map(c => {
+                c.percentage = grandTotalVisits > 0 ? Math.round((c.totalVisits / grandTotalVisits) * 100) : 0;
+
+                c.citiesList = Object.entries(c.cities)
+                    .map(([city, count]) => ({
+                        name: city,
+                        city: city,
+                        count: count,
+                        percentage: c.totalVisits > 0 ? Math.round((count / c.totalVisits) * 100) : 0
+                    }))
+                    .sort((a, b) => b.count - a.count);
+
+                c.cities = c.citiesList;
+                if (c.recentVisits.length > 30) c.recentVisits = c.recentVisits.slice(0, 30);
+                c.recentLogs = c.recentVisits.map(rv => ({
+                    city: rv.city,
+                    device: rv.device,
+                    time: rv.time || rv.timestamp,
+                    page: rv.page || '/'
+                }));
+                return c;
+            }).sort((a, b) => b.totalVisits - a.totalVisits);
+
+            const grandMobile = sortedCountries.reduce((acc, c) => acc + (c.devices.mobile || 0), 0);
+            const grandDesktop = sortedCountries.reduce((acc, c) => acc + (c.devices.desktop || 0), 0);
+            const grandTablet = sortedCountries.reduce((acc, c) => acc + (c.devices.tablet || 0), 0);
+
+            const mobilePct = grandTotalVisits > 0 ? Math.round((grandMobile / grandTotalVisits) * 100) : 0;
+            const desktopPct = grandTotalVisits > 0 ? Math.round((grandDesktop / grandTotalVisits) * 100) : 0;
+            const tabletPct = grandTotalVisits > 0 ? Math.round((grandTablet / grandTotalVisits) * 100) : 0;
+
+            return {
+                totalVisits: grandTotalVisits,
+                totalCountries: sortedCountries.length,
+                uniqueCountriesCount: sortedCountries.length,
+                mobileCount: grandMobile,
+                desktopCount: grandDesktop,
+                tabletCount: grandTablet,
+                mobilePct: mobilePct,
+                mobilePercentage: mobilePct,
+                desktopPct: desktopPct,
+                desktopPercentage: desktopPct,
+                tabletPct: tabletPct,
+                tabletPercentage: tabletPct,
+                countries: sortedCountries,
+                lastVisit: lastVisit,
+                rawVisits: visitsHistory
+            };
+        } catch (detailedErr) {
             console.warn('[CloudSync] getDetailedVisitorStats fallback:', detailedErr);
             return {
-                totalVisits: 54,
-                totalCountries: 12,
-                uniqueCountriesCount: 12,
-                mobileCount: 27,
-                desktopCount: 12,
+                totalVisits: 0,
+                totalCountries: 0,
+                uniqueCountriesCount: 0,
+                mobileCount: 0,
+                desktopCount: 0,
                 tabletCount: 0,
-                mobilePct: 69,
-                mobilePercentage: 69,
-                desktopPct: 31,
-                desktopPercentage: 31,
+                mobilePct: 0,
+                mobilePercentage: 0,
+                desktopPct: 0,
+                desktopPercentage: 0,
                 tabletPct: 0,
                 tabletPercentage: 0,
                 countries: [],
@@ -2604,10 +2402,10 @@
         let desktopCount = 0;
         let tabletCount = 0;
 
-        // 1. فحص المتواجدين عبر نبضات MQTT (مع مهلة احتفاظ متزنة 3 دقائق لمنع التذبذب على الموبايل)
+        // 1. فحص المتواجدين عبر نبضات MQTT (خلال آخر دقيقتين 120000ms)
         for (const sId in activePresenceMap) {
             const s = activePresenceMap[sId];
-            if (!s || (now - (s.lastPing || 0)) > 180000) {
+            if (!s || (now - (s.lastPing || 0)) > 120000) {
                 delete activePresenceMap[sId];
             } else {
                 activeList.push(s);
@@ -2618,66 +2416,7 @@
             }
         }
 
-        // 2. دمج الزيارات النشطة الحديثة من آخر 15 دقيقة
-        try {
-            const rawVisits = localStorage.getItem('smart_geo_visits_history');
-            if (rawVisits) {
-                const list = JSON.parse(rawVisits);
-                if (Array.isArray(list)) {
-                    const fifteenMinAgo = now - 15 * 60 * 1000;
-                    list.forEach(v => {
-                        if (!v || !v.visitorId || String(v.visitorId).startsWith('vis_seed_')) return;
-                        const vTime = new Date(v.timestamp || 0).getTime();
-                        if (vTime >= fifteenMinAgo) {
-                            const exists = activeList.some(a => a.visitorId === v.visitorId || a.sessionId === v.visitorId);
-                            if (!exists) {
-                                const dev = (v.device || 'Mobile').toLowerCase();
-                                const isDesk = dev.includes('desktop');
-                                const isTab = dev.includes('tablet');
-                                if (isDesk) desktopCount++;
-                                else if (isTab) tabletCount++;
-                                else mobileCount++;
-                                activeList.push({
-                                    sessionId: 'vis_' + v.visitorId,
-                                    visitorId: v.visitorId,
-                                    device: v.device || 'Mobile',
-                                    deviceIcon: v.deviceIcon || (isDesk ? '💻' : '📱'),
-                                    deviceLabel: isDesk ? 'كمبيوتر محمول / مكتبي' : 'هاتف محمول',
-                                    country: v.country || 'الأردن',
-                                    countryCode: v.countryCode || 'JO',
-                                    flag: v.flag || '🇯🇴',
-                                    city: v.city || 'عمّان',
-                                    currentStage: v.currentStage || 'في الأداة',
-                                    painPointTitle: v.selectedPointTitle || '—',
-                                    lastPing: vTime
-                                });
-                            }
-                        }
-                    });
-                }
-            }
-        } catch(e) {}
-
-        // 3. ضمان احتساب الجلسة الحالية النشطة كحد أدنى 1 عند تشغيل اللوحة أو الأداة
-        if (activeList.length === 0) {
-            const isMob = /Mobi|Android|iPhone/i.test(navigator.userAgent);
-            activeList.push({
-                sessionId: 'local_active_session',
-                visitorId: 'vis_local',
-                device: isMob ? 'Mobile' : 'Desktop',
-                deviceIcon: isMob ? '📱' : '💻',
-                deviceLabel: isMob ? 'هاتف محمول' : 'كمبيوتر محمول / مكتبي',
-                country: 'الأردن',
-                countryCode: 'JO',
-                flag: '🇯🇴',
-                city: 'عمّان',
-                currentStage: 'في الأداة الطبية',
-                painPointTitle: '—',
-                lastPing: now
-            });
-            if (isMob) mobileCount = 1; else desktopCount = 1;
-        }
-
+        // لا نقوم بتصنيع أي جلسات وهمية إطلاقاً - إذا لم يكن هناك أحد متصلاً فإن العدد هو 0 تماماً
         return {
             totalOnline: activeList.length,
             mobileOnline: mobileCount,
@@ -2687,177 +2426,163 @@
         };
     }
 
-    // استخراج الإحصائيات الشاملة والموحدة للعيادة وقمع التحويل (Unified Analytics)
+    // استخراج الإحصائيات الشاملة والموحدة للعيادة وقمع التحويل (Unified Analytics) - بيانات حقيقية 100%
     function getUnifiedAnalytics() {
         try {
             const detailedStats = getDetailedVisitorStats();
             const presence = getRealtimePresence();
 
-        // 1. جلب مرضى العيادة الفعليين بدقة تامة ومطابقتهم 100%
-        let clinicPatients = [];
-        try {
-            if (typeof window !== 'undefined' && Array.isArray(window.allPatientsList) && window.allPatientsList.length > 0) {
-                clinicPatients = window.allPatientsList.map(item => item.patient || item).filter(Boolean);
-            } else {
-                const lsRaw = localStorage.getItem('smart_all_patients') || localStorage.getItem('smart_cloud_synced_patients');
-                if (lsRaw) {
-                    const parsed = JSON.parse(lsRaw);
-                    if (Array.isArray(parsed)) clinicPatients = parsed;
-                }
-            }
-        } catch(e) {}
-
-        if (!Array.isArray(clinicPatients) || clinicPatients.length === 0) {
-            clinicPatients = getCloudSyncedPatients();
-        }
-
-        if (!Array.isArray(clinicPatients) || clinicPatients.length === 0) {
-            if (typeof window !== 'undefined' && window.CLINIC_BACKUP_SNAPSHOT) {
-                const snap = window.CLINIC_BACKUP_SNAPSHOT.snapshot || window.CLINIC_BACKUP_SNAPSHOT;
-                const bPts = snap.patients || snap.allPatients || [];
-                if (Array.isArray(bPts)) clinicPatients = bPts;
-            }
-        }
-
-        if (!Array.isArray(clinicPatients)) {
-            clinicPatients = [];
-        }
-
-        // تصفية المحذوفين والمجهولين
-        clinicPatients = clinicPatients.filter(p => p && (p.patientId || p.id) && !isDeletedPatient(p.patientId || p.id) && !isPlaceholderOrAnonymousName(p.fullName || p.name));
-
-        const diagnosedTotal = Math.max(clinicPatients.length, 26);
-
-        // 2. تجميع نقاط الألم الأكثر طلباً وبحثاً سريرياً من سجلات جميع مرضى العيادة
-        const painPointMap = {};
-        clinicPatients.forEach(p => {
-            const rawTitle = p.painAreaTitle || p.painArea || p.selectedPoint || p.condition || '';
-            const title = String(rawTitle).trim();
-            if (title && title !== '—' && title !== 'غير محدد' && title.length > 2) {
-                if (!painPointMap[title]) {
-                    painPointMap[title] = { id: p.pointId || title, title: title, count: 0 };
-                }
-                painPointMap[title].count++;
-            }
-        });
-
-        // دمج أي نقرات أو تفاعلات مسجلة في الذاكرة
-        try {
-            const rawPts = localStorage.getItem('smart_analytics_pain_points');
-            if (rawPts) {
-                const savedMap = JSON.parse(rawPts);
-                Object.values(savedMap).forEach(sp => {
-                    if (sp && sp.title) {
-                        const t = String(sp.title).trim();
-                        if (!painPointMap[t]) {
-                            painPointMap[t] = { id: sp.id || t, title: t, count: sp.count || 1 };
-                        } else {
-                            painPointMap[t].count = Math.max(painPointMap[t].count, sp.count || 1);
-                        }
+            // 1. جلب مرضى العيادة الفعليين بدقة تامة ومطابقتهم 100%
+            let clinicPatients = [];
+            try {
+                if (typeof window !== 'undefined' && Array.isArray(window.allPatientsList) && window.allPatientsList.length > 0) {
+                    clinicPatients = window.allPatientsList.map(item => item.patient || item).filter(Boolean);
+                } else {
+                    const lsRaw = localStorage.getItem('smart_all_patients') || localStorage.getItem('smart_cloud_synced_patients');
+                    if (lsRaw) {
+                        const parsed = JSON.parse(lsRaw);
+                        if (Array.isArray(parsed)) clinicPatients = parsed;
                     }
-                });
+                }
+            } catch(e) {}
+
+            if (!Array.isArray(clinicPatients) || clinicPatients.length === 0) {
+                clinicPatients = getCloudSyncedPatients();
             }
-        } catch(e) {}
 
-        const painPointsStats = Object.values(painPointMap).sort((a, b) => (b.count || 0) - (a.count || 0));
-        const totalPainSelections = painPointsStats.reduce((acc, p) => acc + (p.count || 0), 0);
-        painPointsStats.forEach(p => {
-            p.percentage = totalPainSelections > 0 ? Math.round((p.count / totalPainSelections) * 100) : 0;
-        });
-        if (painPointsStats.length === 0) {
-            const defaultPoints = [
-                { id: 'lumbar_spine', title: 'الفقرات القطنية وأسفل الظهر', region: 'العمود الفقري', count: 14, percentage: 38 },
-                { id: 'cervical_spine', title: 'الفقرات العنقية وتشنج الرقبة', region: 'الرقبة والكتفين', count: 9, percentage: 24 },
-                { id: 'knee_joint', title: 'مفصل الركبة وصابونة الرضفة', region: 'الطرف السفلي', count: 7, percentage: 19 },
-                { id: 'sciatica_nerve', title: 'عرق النسا وانضغاط العصب الوركي', region: 'الحوض والفخذ', count: 5, percentage: 13 },
-                { id: 'shoulder_impingement', title: 'مفصل الكتف والكفة المدورة', region: 'أعلى الذراع', count: 3, percentage: 8 }
-            ];
-            painPointsStats.push(...defaultPoints);
-        }
-
-        // 3. تحليل مسارات الزوار وقمع التحويل السريري
-        const rawVisits = (detailedStats && detailedStats.rawVisits) ? detailedStats.rawVisits : [];
-        let startedExamsCount = 0;
-        let pwaCount = 0;
-
-        rawVisits.forEach(v => {
-            if (v.isPwa) pwaCount++;
-            if (v.reachedReport || (v.currentStage && v.currentStage.includes('التقرير')) || (v.selectedPointTitle && v.selectedPointTitle !== '—')) {
-                startedExamsCount++;
+            if (!Array.isArray(clinicPatients) || clinicPatients.length === 0) {
+                if (typeof window !== 'undefined' && window.CLINIC_BACKUP_SNAPSHOT) {
+                    const snap = window.CLINIC_BACKUP_SNAPSHOT.snapshot || window.CLINIC_BACKUP_SNAPSHOT;
+                    const bPts = snap.patients || snap.allPatients || [];
+                    if (Array.isArray(bPts)) clinicPatients = bPts;
+                }
             }
-        });
-        // ربط مباشر ودقيق 100%: عدد الزيارات الموحد هو نفس إجمالي زيارات الدول بالتطابق التام
-        const totalVisits = detailedStats.totalVisits || Math.max(diagnosedTotal, 26);
-        startedExamsCount = Math.min(totalVisits, Math.max(startedExamsCount, diagnosedTotal, Math.round(totalVisits * 0.78)));
-        const examStartRate = totalVisits > 0 ? Math.min(100, Math.round((startedExamsCount / totalVisits) * 100)) : 78;
-        const conversionRate = startedExamsCount > 0 ? Math.min(100, Math.round((diagnosedTotal / startedExamsCount) * 100)) : 70;
-        const pwaInstallRate = totalVisits > 0 ? Math.min(100, Math.max(12, Math.round((pwaCount / totalVisits) * 100))) : 16;
 
-        // 4. ترتيب مسار الزوار تنازلياً بحيث تظهر أحدث الزيارات أولاً
-        const sortedJourneys = [...rawVisits].sort((a, b) => {
-            return new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime();
-        });
+            if (!Array.isArray(clinicPatients)) {
+                clinicPatients = [];
+            }
 
-        const topCountriesList = detailedStats.countries || [];
-        const uniqueCountriesCount = detailedStats.uniqueCountriesCount || topCountriesList.length || 12;
+            // تصفية المحذوفين والمجهولين
+            clinicPatients = clinicPatients.filter(p => p && (p.patientId || p.id) && !isDeletedPatient(p.patientId || p.id) && !isPlaceholderOrAnonymousName(p.fullName || p.name));
 
-        return {
-            totalVisits: totalVisits,
-            totalCountries: uniqueCountriesCount,
-            uniqueCountriesCount: uniqueCountriesCount,
-            activeOnline: presence.totalOnline || 1,
-            totalOnline: presence.totalOnline || 1,
-            onlineCount: presence.totalOnline || 1,
-            mobileOnline: presence.mobileOnline != null ? presence.mobileOnline : 1,
-            desktopOnline: presence.desktopOnline || 0,
-            tabletOnline: presence.tabletOnline || 0,
-            activeSessions: presence.activeSessions || [],
-            startedExams: startedExamsCount,
-            diagnosedCases: diagnosedTotal,
-            examStartRate: examStartRate,
-            conversionRate: conversionRate,
-            pwaInstallRate: pwaInstallRate,
-            mobilePct: detailedStats.mobilePct || 85,
-            mobilePercentage: detailedStats.mobilePct || 85,
-            desktopPct: detailedStats.desktopPct || 15,
-            desktopPercentage: detailedStats.desktopPct || 15,
-            tabletPct: detailedStats.tabletPct || 0,
-            tabletPercentage: detailedStats.tabletPct || 0,
-            topPainPoints: painPointsStats.slice(0, 8),
-            topCountries: topCountriesList,
-            recentJourneys: sortedJourneys.slice(0, 20)
-        };
+            const diagnosedTotal = clinicPatients.length;
+
+            // 2. تجميع نقاط الألم الأكثر طلباً وبحثاً سريرياً من سجلات جميع مرضى العيادة الفعلية
+            const painPointMap = {};
+            clinicPatients.forEach(p => {
+                const rawTitle = p.painAreaTitle || p.painArea || p.selectedPoint || p.condition || '';
+                const title = String(rawTitle).trim();
+                if (title && title !== '—' && title !== 'غير محدد' && title.length > 2) {
+                    if (!painPointMap[title]) {
+                        painPointMap[title] = { id: p.pointId || title, title: title, region: p.painRegion || 'العمود الفقري والمفاصل', count: 0 };
+                    }
+                    painPointMap[title].count++;
+                }
+            });
+
+            // دمج أي نقرات أو تفاعلات حقيقية مسجلة في الذاكرة
+            try {
+                const rawPts = localStorage.getItem('smart_analytics_pain_points');
+                if (rawPts) {
+                    const savedMap = JSON.parse(rawPts);
+                    Object.values(savedMap).forEach(sp => {
+                        if (sp && sp.title) {
+                            const t = String(sp.title).trim();
+                            if (!painPointMap[t]) {
+                                painPointMap[t] = { id: sp.id || t, title: t, region: sp.region || 'العمود الفقري والمفاصل', count: sp.count || 1 };
+                            } else {
+                                painPointMap[t].count = Math.max(painPointMap[t].count, sp.count || 1);
+                            }
+                        }
+                    });
+                }
+            } catch(e) {}
+
+            const painPointsStats = Object.values(painPointMap).sort((a, b) => (b.count || 0) - (a.count || 0));
+            const totalPainSelections = painPointsStats.reduce((acc, p) => acc + (p.count || 0), 0);
+            painPointsStats.forEach(p => {
+                p.percentage = totalPainSelections > 0 ? Math.round((p.count / totalPainSelections) * 100) : 0;
+            });
+            // لا نضيف أي نقاط افتراضية وهمية إذا كانت القائمة فارغة - الشفافية والمصداقية أولاً
+
+            // 3. تحليل مسارات الزوار وقمع التحويل السريري الفعلي 100%
+            const rawVisits = (detailedStats && detailedStats.rawVisits) ? detailedStats.rawVisits : [];
+            let startedExamsCount = 0;
+            let pwaCount = 0;
+
+            rawVisits.forEach(v => {
+                if (v.isPwa) pwaCount++;
+                if (v.reachedReport || (v.currentStage && v.currentStage.includes('التقرير')) || (v.selectedPointTitle && v.selectedPointTitle !== '—')) {
+                    startedExamsCount++;
+                }
+            });
+
+            const totalVisits = detailedStats.totalVisits || 0;
+            const examStartRate = totalVisits > 0 ? Math.min(100, Math.round((startedExamsCount / totalVisits) * 100)) : 0;
+            const conversionRate = startedExamsCount > 0 ? Math.min(100, Math.round((diagnosedTotal / startedExamsCount) * 100)) : 0;
+            const pwaInstallRate = totalVisits > 0 ? Math.min(100, Math.round((pwaCount / totalVisits) * 100)) : 0;
+
+            // 4. ترتيب مسار الزوار تنازلياً بحيث تظهر أحدث الزيارات أولاً
+            const sortedJourneys = [...rawVisits].sort((a, b) => {
+                return new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime();
+            });
+
+            const topCountriesList = detailedStats.countries || [];
+            const uniqueCountriesCount = topCountriesList.length;
+
+            return {
+                totalVisits: totalVisits,
+                totalCountries: uniqueCountriesCount,
+                uniqueCountriesCount: uniqueCountriesCount,
+                activeOnline: presence.totalOnline || 0,
+                totalOnline: presence.totalOnline || 0,
+                onlineCount: presence.totalOnline || 0,
+                mobileOnline: presence.mobileOnline || 0,
+                desktopOnline: presence.desktopOnline || 0,
+                tabletOnline: presence.tabletOnline || 0,
+                activeSessions: presence.activeSessions || [],
+                startedExams: startedExamsCount,
+                diagnosedCases: diagnosedTotal,
+                examStartRate: examStartRate,
+                conversionRate: conversionRate,
+                pwaInstallRate: pwaInstallRate,
+                mobilePct: detailedStats.mobilePct || 0,
+                mobilePercentage: detailedStats.mobilePercentage || 0,
+                desktopPct: detailedStats.desktopPct || 0,
+                desktopPercentage: detailedStats.desktopPercentage || 0,
+                tabletPct: detailedStats.tabletPct || 0,
+                tabletPercentage: detailedStats.tabletPercentage || 0,
+                topPainPoints: painPointsStats.slice(0, 8),
+                topCountries: topCountriesList,
+                recentJourneys: sortedJourneys.slice(0, 20),
+                detailedStats: detailedStats,
+                lastVisit: detailedStats.lastVisit
+            };
         } catch(unifiedErr) {
             console.warn('[CloudSync] getUnifiedAnalytics fallback:', unifiedErr);
             return {
-                totalVisits: 54,
-                totalCountries: 12,
-                uniqueCountriesCount: 12,
-                activeOnline: 1,
-                totalOnline: 1,
-                onlineCount: 1,
-                mobileOnline: 1,
+                totalVisits: 0,
+                totalCountries: 0,
+                uniqueCountriesCount: 0,
+                activeOnline: 0,
+                totalOnline: 0,
+                onlineCount: 0,
+                mobileOnline: 0,
                 desktopOnline: 0,
                 tabletOnline: 0,
                 activeSessions: [],
-                startedExams: 38,
-                diagnosedCases: 26,
-                examStartRate: 70,
-                conversionRate: 68,
-                pwaInstallRate: 15,
-                mobilePct: 85,
-                mobilePercentage: 85,
-                desktopPct: 15,
-                desktopPercentage: 15,
+                startedExams: 0,
+                diagnosedCases: 0,
+                examStartRate: 0,
+                conversionRate: 0,
+                pwaInstallRate: 0,
+                mobilePct: 0,
+                mobilePercentage: 0,
+                desktopPct: 0,
+                desktopPercentage: 0,
                 tabletPct: 0,
                 tabletPercentage: 0,
-                topPainPoints: [
-                    { id: 'lumbar_spine', title: 'الفقرات القطنية وأسفل الظهر', region: 'العمود الفقري', count: 14, percentage: 38 },
-                    { id: 'cervical_spine', title: 'الفقرات العنقية وتشنج الرقبة', region: 'الرقبة والكتفين', count: 9, percentage: 24 },
-                    { id: 'knee_joint', title: 'مفصل الركبة وصابونة الرضفة', region: 'الطرف السفلي', count: 7, percentage: 19 },
-                    { id: 'sciatica_nerve', title: 'عرق النسا وانضغاط العصب الوركي', region: 'الحوض والفخذ', count: 5, percentage: 13 },
-                    { id: 'shoulder_impingement', title: 'مفصل الكتف والكفة المدورة', region: 'أعلى الذراع', count: 3, percentage: 8 }
-                ],
+                topPainPoints: [],
                 topCountries: [],
                 recentJourneys: []
             };
