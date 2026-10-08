@@ -1077,11 +1077,11 @@ const SmartDB = (function() {
             const isDup = list.some(x => x.id === newNotif.id || (x.patientId && x.patientId === newNotif.patientId && x.type === newNotif.type && Math.abs(new Date(x.time || 0).getTime() - new Date(newNotif.time || 0).getTime()) < 10000));
             if (!isDup) {
                 list.unshift(newNotif);
-                if (list.length > 50) list.length = 50;
+                if (list.length > 300) list.length = 300;
                 try {
                     localStorage.setItem('smart_admin_notifications', JSON.stringify(list));
                 } catch(qErr) {
-                    list.length = 15;
+                    list.length = 50;
                     try { localStorage.setItem('smart_admin_notifications', JSON.stringify(list)); } catch(e) {}
                 }
                 try { localStorage.setItem('smart_last_notif_time', Date.now().toString()); } catch(e) {}

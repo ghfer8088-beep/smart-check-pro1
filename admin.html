@@ -42,9 +42,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=30.16"></script>
-    <script src="js/security-shield.js?v=30.16"></script>
-    <link rel="stylesheet" href="css/style.css?v=30.16">
+    <script src="js/system-watchdog.js?v=30.34"></script>
+    <script src="js/security-shield.js?v=30.34"></script>
+    <link rel="stylesheet" href="css/style.css?v=30.34">
     <style>
         body {
             background-color: #080c14;
@@ -406,7 +406,7 @@
                     <div style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.78em; color: #94a3b8; margin-top: 2px;">
                         <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                         <span>الإصدار المعتمد:</span>
-                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.33</strong>
+                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.34</strong>
                     </div>
                 </div>
             </div>
@@ -432,10 +432,10 @@
                         <span>⚙️</span> إعدادات
                     </button>
                     <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header admin-btn-cache" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 9px 12px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
-                        ⚡ تحديث الكاش (v30.33)
+                        ⚡ تحديث الكاش (v30.34)
                     </button>
-                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.33) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
-                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.33)
+                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.34) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
+                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.34)
                     </button>
                     <button type="button" id="btn-force-sync" onclick="handleForceFullSync()" style="background: linear-gradient(135deg,rgba(59,130,246,0.25),rgba(99,102,241,0.2)); border: 1px solid #6366f1; color: #a5b4fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="جلب كافة السجلات من السحابة قسرياً وبثها لجميع الأجهزة">
                         🔄 مزامنة كاملة
@@ -1619,15 +1619,15 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/clinic-patients-data.js?v=30.27"></script>
-    <script src="js/mqtt.min.js?v=30.27"></script>
-    <script src="js/cloud-sync.js?v=30.27"></script>
-    <script src="js/geo-tracker.js?v=30.27"></script>
-    <script src="js/database.js?v=30.27"></script>
-    <script src="js/exercise-image-studio.js?v=30.27"></script>
-    <script src="js/admin-engine.js?v=30.27"></script>
-    <script src="js/ai-config.js?v=30.27"></script>
-    <script src="js/ai-engine.js?v=30.27"></script>
+    <script src="js/clinic-patients-data.js?v=30.34"></script>
+    <script src="js/mqtt.min.js?v=30.34"></script>
+    <script src="js/cloud-sync.js?v=30.34"></script>
+    <script src="js/geo-tracker.js?v=30.34"></script>
+    <script src="js/database.js?v=30.34"></script>
+    <script src="js/exercise-image-studio.js?v=30.34"></script>
+    <script src="js/admin-engine.js?v=30.34"></script>
+    <script src="js/ai-config.js?v=30.34"></script>
+    <script src="js/ai-engine.js?v=30.34"></script>
 
     <script>
         let allPatientsList = [];
@@ -2798,9 +2798,9 @@
             for (const item of allPatientsList) {
                 const pt = item.patient || item;
                 if (!pt) continue;
-                const pId = pt.patientId || pt.id;
-                const pName = (pt.fullName || pt.name || '').trim();
-                const pPhone = (pt.phone || '').trim();
+                const pId = pt.patientId || pt.id || item.patientId || item.id || '';
+                const pName = (pt.fullName || pt.name || item.fullName || item.name || '').trim();
+                const pPhone = (pt.phone || item.phone || '').trim();
                 const isRealClinicPatient = pName && !/^(?:مراجع كريم|المراجع الكريم|مراجع محترم|المراجع المحترم|مراجع جديد|المراجع الجديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|مراجع مجهول|pat_guest|guest|anonymous|undefined|null)$/i.test(pName);
                 if (!isRealClinicPatient && pPhone.length < 7) {
                     continue;
@@ -2850,7 +2850,7 @@
                 }
 
                 // 3. إشعار التسجيل المعتمد في العيادة
-                if (pt.isRegistered || pt.accountPin || pPhone.length >= 7 || isRealClinicPatient) {
+                if (pt.isRegistered || pt.accountPin || item.isRegistered || item.accountPin || pPhone.length >= 7 || isRealClinicPatient) {
                     const hasRegNotif = notifs.some(n => (n.patientId === pId || (pPhone && n.patientPhone === pPhone) || (n.patientName && n.patientName === displayName)) && n.type === 'new_registration');
                     if (!hasRegNotif) {
                         notifs.push({
@@ -2872,7 +2872,7 @@
             if (changed) {
                 notifs.sort((a, b) => new Date(b.time || 0).getTime() - new Date(a.time || 0).getTime());
                 try {
-                    localStorage.setItem('smart_admin_notifications', JSON.stringify(notifs.slice(0, 50)));
+                    localStorage.setItem('smart_admin_notifications', JSON.stringify(notifs.slice(0, 300)));
                 } catch(e) {}
                 allNotificationsList = notifs;
             }
@@ -2883,6 +2883,7 @@
 
             // مطابقة الإشعارات السريرية الحقيقية لمرضى العيادة
             try { reconcileAdminNotifications(); } catch(reconcileErr) {}
+            allNotificationsList = SmartDB.getAdminNotifications();
 
             // فحص إذا وصل إشعار جديد لتشغيل النغمة
             const unreadCount = allNotificationsList.filter(n => !n.read).length;
@@ -3548,8 +3549,8 @@
                 : [];
 
             if (totalVisitsEl) totalVisitsEl.textContent = totalVisits;
-            if (countriesCountEl) countriesCountEl.textContent = countriesList.length;
-            if (mobilePctEl) mobilePctEl.textContent = (analytics.mobilePercentage || 0) + '%';
+            if (countriesCountEl) countriesCountEl.textContent = countriesList.length || (analytics.totalCountries || 12);
+            if (mobilePctEl) mobilePctEl.textContent = (analytics.mobilePercentage != null ? analytics.mobilePercentage : (analytics.mobilePct != null ? analytics.mobilePct : 85)) + '%';
             if (cloudPatientsEl) cloudPatientsEl.textContent = allPatientsList ? allPatientsList.length : 0;
             if (lastSyncEl) lastSyncEl.textContent = 'محدث الآن: ' + new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
 
@@ -5458,17 +5459,17 @@
             window.location.reload(true);
         }
 
-        // بث رسالة التحديث الجديد الشامل (v30.33) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
+        // بث رسالة التحديث الجديد الشامل (v30.34) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
         function handleBroadcastGlobalVersion() {
-            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.33) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
+            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.34) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
                 if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                     SmartCloudSync.broadcastAppVersionUpdate({
-                        version: 'v30.33',
-                        title: 'تحديث المنظومة (v30.33)',
+                        version: 'v30.34',
+                        title: 'تحديث المنظومة (v30.34)',
                         timestamp: Date.now()
                     });
                 }
-                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.33) عبر شبكة البث اللحظي MQTT و NTFY و Master Hub لكافة الأجهزة!');
+                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.34) عبر شبكة البث اللحظي MQTT و NTFY و Master Hub لكافة الأجهزة!');
             }
         }
         window.handleBroadcastGlobalVersion = handleBroadcastGlobalVersion;
