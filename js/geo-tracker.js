@@ -438,6 +438,9 @@
                 return null;
             }
 
+            // 🌍 العداد العالمي الدائم (يحسب كل جهاز مرة واحدة يومياً من أي مكان بالعالم)
+            hitGlobalVisitCounters();
+
             const info = await fetchGeoLocation();
             const device = detectDeviceType();
             const now = new Date();
@@ -493,6 +496,21 @@
         } catch (e) {
             return null;
         }
+    }
+
+    // عداد سحابي دائم لا يُمسح: إجمالي الزوار + زوار كل يوم (زائر فريد لكل جهاز يومياً)
+    function hitGlobalVisitCounters() {
+        try {
+            const d = new Date();
+            const dayKey = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            const flagKey = 'smart_global_counted_day';
+            if (localStorage.getItem(flagKey) === dayKey) return;
+            localStorage.setItem(flagKey, dayKey);
+            const base = 'https://abacus.jasoncameron.dev/hit/smartchecktools-wada3an/';
+            const opts = { mode: 'cors', cache: 'no-store' };
+            fetch(base + 'visitors-total', opts).catch(() => {});
+            fetch(base + 'visitors-' + dayKey, opts).catch(() => {});
+        } catch (e) {}
     }
 
     // =========================================================================

@@ -42,9 +42,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=30.37"></script>
-    <script src="js/security-shield.js?v=30.37"></script>
-    <link rel="stylesheet" href="css/style.css?v=30.37">
+    <script src="js/system-watchdog.js?v=30.38"></script>
+    <script src="js/security-shield.js?v=30.38"></script>
+    <link rel="stylesheet" href="css/style.css?v=30.38">
     <style>
         body {
             background-color: #080c14;
@@ -406,7 +406,7 @@
                     <div style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.78em; color: #94a3b8; margin-top: 2px;">
                         <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                         <span>الإصدار المعتمد:</span>
-                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.37</strong>
+                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.38</strong>
                     </div>
                 </div>
             </div>
@@ -432,10 +432,10 @@
                         <span>⚙️</span> إعدادات
                     </button>
                     <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header admin-btn-cache" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 9px 12px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
-                        ⚡ تحديث الكاش (v30.37)
+                        ⚡ تحديث الكاش (v30.38)
                     </button>
-                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.37) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
-                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.37)
+                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.38) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
+                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.38)
                     </button>
                     <button type="button" id="btn-force-sync" onclick="handleForceFullSync()" style="background: linear-gradient(135deg,rgba(59,130,246,0.25),rgba(99,102,241,0.2)); border: 1px solid #6366f1; color: #a5b4fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="جلب كافة السجلات من السحابة قسرياً وبثها لجميع الأجهزة">
                         🔄 مزامنة كاملة
@@ -1647,15 +1647,15 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/clinic-patients-data.js?v=30.37"></script>
-    <script src="js/mqtt.min.js?v=30.37"></script>
-    <script src="js/cloud-sync.js?v=30.37"></script>
-    <script src="js/geo-tracker.js?v=30.37"></script>
-    <script src="js/database.js?v=30.37"></script>
-    <script src="js/exercise-image-studio.js?v=30.37"></script>
-    <script src="js/admin-engine.js?v=30.37"></script>
-    <script src="js/ai-config.js?v=30.37"></script>
-    <script src="js/ai-engine.js?v=30.37"></script>
+    <script src="js/clinic-patients-data.js?v=30.38"></script>
+    <script src="js/mqtt.min.js?v=30.38"></script>
+    <script src="js/cloud-sync.js?v=30.38"></script>
+    <script src="js/geo-tracker.js?v=30.38"></script>
+    <script src="js/database.js?v=30.38"></script>
+    <script src="js/exercise-image-studio.js?v=30.38"></script>
+    <script src="js/admin-engine.js?v=30.38"></script>
+    <script src="js/ai-config.js?v=30.38"></script>
+    <script src="js/ai-engine.js?v=30.38"></script>
 
     <script>
         let allPatientsList = [];
@@ -2656,6 +2656,8 @@
             if (statPtCountEl) {
                 statPtCountEl.textContent = allPatientsList.length;
             }
+            // مشاركة قائمة المراجعين الفعلية مع محرك إحصائيات الزوار (كل ملف مسجل = زائر حقيقي)
+            window.SMART_ADMIN_PATIENTS = allPatientsList.map(it => (it && it.patient) ? it.patient : it).filter(Boolean);
 
             // توثيق وحماية عدد الجلسات المنفذة الحقيقية ومطابقتها التامة
             try {
@@ -2742,6 +2744,7 @@
             try { updatePatientFilterCounts(); } catch(e) { console.warn(e); }
             try { renderTable(getFilteredPatientsList()); } catch(e) { console.error('renderTable error:', e); }
             try { renderGeoAnalytics(); } catch(e) { console.warn(e); }
+            try { renderRadarLiveMetrics(); } catch(e) { console.warn(e); }
             try { renderRealtimePresence(); } catch(e) { console.warn(e); }
         }
         window.loadAdminData = loadAdminData;
@@ -4841,15 +4844,35 @@
                 modal.style.display = 'flex';
                 // عرض البيانات المحلية فوراً دون انتظار السحابة (يضمن السرعة اللحظية)
                 renderVisitorAnalyticsModalContent();
-                // ثم تحديث البيانات السحابية في الخلفية
-                if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.fetchCloudVisits === 'function') {
+                // ثم تحديث البيانات السحابية والعداد العالمي الدائم في الخلفية
+                if (typeof SmartCloudSync !== 'undefined') {
                     try {
-                        await SmartCloudSync.fetchCloudVisits();
+                        await Promise.all([
+                            typeof SmartCloudSync.fetchCloudVisits === 'function' ? SmartCloudSync.fetchCloudVisits().catch(() => {}) : Promise.resolve(),
+                            typeof SmartCloudSync.refreshGlobalVisitCounters === 'function' ? SmartCloudSync.refreshGlobalVisitCounters().catch(() => {}) : Promise.resolve()
+                        ]);
                         renderVisitorAnalyticsModalContent(); // تحديث العرض بعد استلام السحابة
+                        if (typeof renderRadarLiveMetrics === 'function') renderRadarLiveMetrics();
                     } catch(e) {}
                 }
             }
         }
+
+        // تحديث العداد العالمي الدائم تلقائياً عند فتح اللوحة وكل دقيقتين
+        (function initGlobalVisitCounterRefresh() {
+            const run = async () => {
+                try {
+                    if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.refreshGlobalVisitCounters === 'function') {
+                        await SmartCloudSync.refreshGlobalVisitCounters();
+                        if (typeof renderRadarLiveMetrics === 'function') renderRadarLiveMetrics();
+                        const m = document.getElementById('visitor-analytics-modal');
+                        if (m && m.style.display === 'flex') renderVisitorAnalyticsModalContent();
+                    }
+                } catch (e) {}
+            };
+            setTimeout(run, 1500);
+            setInterval(run, 120000);
+        })();
 
         async function triggerManualCloudSync() {
             const icon = document.getElementById('sync-spin-icon');
@@ -5555,17 +5578,17 @@
             window.location.reload(true);
         }
 
-        // بث رسالة التحديث الجديد الشامل (v30.37) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
+        // بث رسالة التحديث الجديد الشامل (v30.38) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
         function handleBroadcastGlobalVersion() {
-            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.37) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
+            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.38) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
                 if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                     SmartCloudSync.broadcastAppVersionUpdate({
-                        version: 'v30.37',
-                        title: 'تحديث المنظومة (v30.37)',
+                        version: 'v30.38',
+                        title: 'تحديث المنظومة (v30.38)',
                         timestamp: Date.now()
                     });
                 }
-                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.37) عبر شبكة البث اللحظي MQTT و NTFY و Master Hub لكافة الأجهزة!');
+                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.38) عبر شبكة البث اللحظي MQTT و NTFY و Master Hub لكافة الأجهزة!');
             }
         }
         window.handleBroadcastGlobalVersion = handleBroadcastGlobalVersion;

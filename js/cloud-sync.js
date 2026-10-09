@@ -2163,6 +2163,65 @@
         };
     }
 
+    // =========================================================================
+    // 🌍 العداد العالمي الدائم للزوار (يجمع زوار كل الأجهزة من كل العالم ولا يُمسح)
+    // سجل ntfy يحتفظ بالرسائل ~12 ساعة فقط والتخزين المحلي خاص بكل جهاز، لذلك نعتمد عداداً دائماً
+    // =========================================================================
+    const GLOBAL_COUNTER_GET_BASE = 'https://abacus.jasoncameron.dev/get/smartchecktools-wada3an/';
+    const GLOBAL_COUNTER_START_DAY = '2026-10-09'; // تاريخ تفعيل العداد العالمي الدائم
+    const GLOBAL_COUNTER_CACHE_KEY = 'smart_global_visit_counters_cache';
+
+    function localDayKey(d) {
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function getGlobalVisitCountersCache() {
+        try {
+            const raw = localStorage.getItem(GLOBAL_COUNTER_CACHE_KEY);
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) { return null; }
+    }
+
+    async function fetchGlobalCounterValue(key) {
+        try {
+            const resp = await fetch(GLOBAL_COUNTER_GET_BASE + key, { mode: 'cors', cache: 'no-store' });
+            if (resp.status === 404) return 0; // لا زيارات بعد لهذا المفتاح
+            if (!resp.ok) return null;
+            const data = await resp.json();
+            return (data && typeof data.value === 'number') ? data.value : 0;
+        } catch (e) { return null; }
+    }
+
+    async function refreshGlobalVisitCounters() {
+        try {
+            const start = new Date(GLOBAL_COUNTER_START_DAY + 'T00:00:00');
+            const now = new Date();
+            const prevCache = getGlobalVisitCountersCache() || { days: {} };
+            const recentLimitKey = localDayKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 2));
+            const dayKeys = [];
+            for (let d = new Date(now.getFullYear(), now.getMonth(), now.getDate()); d >= start && dayKeys.length < 400; d.setDate(d.getDate() - 1)) {
+                const k = localDayKey(d);
+                // الأيام الماضية لا تتغير؛ نجلب فقط آخر 3 أيام أو الأيام غير المخزنة
+                if (k >= recentLimitKey || !(prevCache.days && k in prevCache.days)) dayKeys.push(k);
+            }
+            const [total, ...dayValues] = await Promise.all([
+                fetchGlobalCounterValue('visitors-total'),
+                ...dayKeys.map(k => fetchGlobalCounterValue('visitors-' + k))
+            ]);
+            if (total === null && dayValues.every(v => v === null)) return getGlobalVisitCountersCache();
+            const prev = getGlobalVisitCountersCache() || { days: {} };
+            const days = Object.assign({}, prev.days || {});
+            dayKeys.forEach((k, i) => {
+                if (dayValues[i] !== null) days[k] = Math.max(dayValues[i], days[k] || 0);
+            });
+            const cache = { total: total !== null ? total : (prev.total || 0), days: days, fetchedAt: Date.now() };
+            localStorage.setItem(GLOBAL_COUNTER_CACHE_KEY, JSON.stringify(cache));
+            return cache;
+        } catch (e) {
+            return getGlobalVisitCountersCache();
+        }
+    }
+
     // استخراج تحليلات الزوار التفصيلية الحقيقية 100% مع تفصيل المدن والأجهزة والتوقيت لكل دولة
     // استخراج تحليلات الزوار الشاملة: إجمالي الزيارات الموثقة منذ إطلاق الأداة والنشاط اليومي (اليوم، أمس، الأيام السابقة)
     function getDetailedVisitorStats() {
@@ -2177,7 +2236,7 @@
             visitsHistory = (Array.isArray(visitsHistory) ? visitsHistory : []).filter(v => {
                 if (!v || !v.visitorId) return false;
                 const vid = String(v.visitorId);
-                if (vid.startsWith('vis_seed_') || vid.startsWith('vis_std_') || vid === 'vis_local') return false;
+                if (vid.startsWith('vis_seed_') || vid.startsWith('vis_std_') || vid === 'vis_local' || vid.startsWith('vis_pat_')) return false;
                 if (v.page && (v.page.includes('admin') || v.page.includes('calibrator'))) return false;
                 return true;
             });
@@ -2192,7 +2251,9 @@
                 storedPatients = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
             } catch (e) {}
 
+            const adminPatients = (typeof window !== 'undefined' && Array.isArray(window.SMART_ADMIN_PATIENTS)) ? window.SMART_ADMIN_PATIENTS : [];
             const candidatePatients = [
+                ...adminPatients,
                 ...(typeof getCloudSyncedPatients === 'function' ? getCloudSyncedPatients() : []),
                 ...(Array.isArray(storedPatients) ? storedPatients : []),
                 ...snapshotPatients
@@ -2204,6 +2265,8 @@
             candidatePatients.forEach((p, idx) => {
                 if (!p) return;
                 const pId = p.patientId || p.id || ('pat_' + idx);
+                if (String(pId).startsWith('pat_guest')) return;
+                if (typeof isDeletedPatient === 'function' && isDeletedPatient(pId)) return;
                 let cleanPhone = (p.phone || '').replace(/\D/g, '');
                 if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.slice(2);
 
@@ -2265,60 +2328,68 @@
                 });
             });
 
-            // حفظ النسخة الموحدة لتاريخ الزيارات في التخزين المحلي
-            try {
-                localStorage.setItem('smart_geo_visits_history', JSON.stringify(visitsHistory.slice(0, 500)));
-            } catch (e) {}
+            // ملاحظة: لا نكتب السجلات المدمجة في التخزين المحلي حتى لا تتلوث بيانات الزيارات الأصلية
 
             // ترتيب الزيارات تنازلياً بحيث تظهر أحدث الزيارات أولاً
             visitsHistory.sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
 
-            // احتساب النشاط اليومي الدقيق (اليوم، أمس، الأسبوع، والجدول الزمني)
+            // احتساب النشاط اليومي بتوقيت الجهاز المحلي (وليس UTC)
             const now = new Date();
-            const todayDateStr = now.toDateString();
-            const yesterdayDate = new Date(Date.now() - 86400000);
-            const yesterdayDateStr = yesterdayDate.toDateString();
-            const sevenDaysAgoTs = Date.now() - 7 * 86400000;
+            const todayKey = localDayKey(now);
+            const yesterdayKey = localDayKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
+            const weekStartKey = localDayKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6));
 
-            let todayVisits = 0;
-            let yesterdayVisits = 0;
-            let thisWeekVisits = 0;
             const dailyMap = {};
+            const ensureDay = (dateKey) => {
+                if (!dailyMap[dateKey]) {
+                    dailyMap[dateKey] = { dateKey: dateKey, dateLabel: '', count: 0, localCount: 0, globalCount: 0, mobile: 0, desktop: 0, cities: {} };
+                }
+                return dailyMap[dateKey];
+            };
 
             visitsHistory.forEach(v => {
                 const vDate = new Date(v.timestamp || Date.now());
-                const ds = vDate.toDateString();
-                const vTs = vDate.getTime();
-
-                if (ds === todayDateStr) todayVisits++;
-                if (ds === yesterdayDateStr) yesterdayVisits++;
-                if (vTs >= sevenDaysAgoTs) thisWeekVisits++;
-
-                const dateKey = vDate.toISOString().slice(0, 10);
-                if (!dailyMap[dateKey]) {
-                    let label = vDate.toLocaleDateString('ar-EG', { weekday: 'long', month: 'short', day: 'numeric' });
-                    if (ds === todayDateStr) label = 'اليوم (' + label + ')';
-                    else if (ds === yesterdayDateStr) label = 'أمس (' + label + ')';
-
-                    dailyMap[dateKey] = {
-                        dateKey: dateKey,
-                        dateLabel: label,
-                        count: 0,
-                        mobile: 0,
-                        desktop: 0,
-                        cities: {}
-                    };
-                }
-                dailyMap[dateKey].count++;
+                if (isNaN(vDate.getTime())) return;
+                const day = ensureDay(localDayKey(vDate));
+                day.localCount++;
                 const dev = (v.device || 'Mobile').toLowerCase();
-                if (dev.includes('desktop')) dailyMap[dateKey].desktop++;
-                else dailyMap[dateKey].mobile++;
-
-                const cCity = (v.city && v.city !== 'غير محدد') ? v.city : 'المركز الرئيسي';
-                dailyMap[dateKey].cities[cCity] = (dailyMap[dateKey].cities[cCity] || 0) + 1;
+                if (dev.includes('desktop')) day.desktop++;
+                else day.mobile++;
+                const cCity = (v.city && v.city !== 'غير محدد') ? v.city : 'غير محدد';
+                day.cities[cCity] = (day.cities[cCity] || 0) + 1;
             });
 
-            const dailyTimeline = Object.values(dailyMap).sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+            // دمج العداد العالمي الدائم (كل الأجهزة من كل العالم) بدءاً من تاريخ تفعيله
+            const globalData = getGlobalVisitCountersCache();
+            const globalActive = Boolean(globalData && globalData.days);
+            if (globalActive) {
+                Object.keys(globalData.days).forEach(k => {
+                    if (k < GLOBAL_COUNTER_START_DAY) return;
+                    ensureDay(k).globalCount = globalData.days[k] || 0;
+                });
+            }
+
+            // قبل تفعيل العداد العالمي نعتمد السجلات الموثقة، وبعده نأخذ الأكبر بين العداد العالمي والسجلات المحلية
+            Object.values(dailyMap).forEach(day => {
+                day.count = (globalActive && day.dateKey >= GLOBAL_COUNTER_START_DAY)
+                    ? Math.max(day.globalCount, day.localCount)
+                    : day.localCount;
+                const d = new Date(day.dateKey + 'T12:00:00');
+                let label = d.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                if (day.dateKey === todayKey) label = 'اليوم (' + label + ')';
+                else if (day.dateKey === yesterdayKey) label = 'أمس (' + label + ')';
+                day.dateLabel = label;
+            });
+
+            const dailyTimeline = Object.values(dailyMap)
+                .filter(d => d.count > 0)
+                .sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+
+            const allTimeVisitors = dailyTimeline.reduce((acc, d) => acc + d.count, 0);
+            const todayVisits = dailyMap[todayKey] ? dailyMap[todayKey].count : 0;
+            const yesterdayVisits = dailyMap[yesterdayKey] ? dailyMap[yesterdayKey].count : 0;
+            const thisWeekVisits = dailyTimeline.filter(d => d.dateKey >= weekStartKey).reduce((acc, d) => acc + d.count, 0);
+            const registeredPatientsCount = visitsHistory.filter(v => String(v.visitorId).startsWith('vis_pat_')).length;
 
             // تجميع وتوزيع الزيارات حسب الدول والمدن والأجهزة مع تطابق رياضي تام 100%
             const countryMap = {};
@@ -2411,7 +2482,11 @@
             const tabletPct = grandTotalVisits > 0 ? Math.round((grandTablet / grandTotalVisits) * 100) : 0;
 
             return {
-                totalVisits: grandTotalVisits,
+                totalVisits: allTimeVisitors,
+                locatedVisits: grandTotalVisits,
+                registeredPatients: registeredPatientsCount,
+                globalCounterActive: globalActive,
+                globalCounterStartDay: GLOBAL_COUNTER_START_DAY,
                 todayVisits: todayVisits,
                 yesterdayVisits: yesterdayVisits,
                 thisWeekVisits: thisWeekVisits,
@@ -3380,6 +3455,7 @@
         subscribe: subscribeToPatientUpdates,
         dispatchVisit: dispatchVisitToCloud,
         fetchCloudVisits: fetchCloudVisits,
+        refreshGlobalVisitCounters: refreshGlobalVisitCounters,
         dispatchPresence: dispatchPresence,
         dispatchPainPointStat: dispatchPainPointStat,
         getRealtimePresence: getRealtimePresence,
