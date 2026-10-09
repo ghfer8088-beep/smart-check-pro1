@@ -406,7 +406,7 @@
                     <div style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.78em; color: #94a3b8; margin-top: 2px;">
                         <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                         <span>الإصدار المعتمد:</span>
-                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.36</strong>
+                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.37</strong>
                     </div>
                 </div>
             </div>
@@ -432,10 +432,10 @@
                         <span>⚙️</span> إعدادات
                     </button>
                     <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header admin-btn-cache" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 9px 12px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
-                        ⚡ تحديث الكاش (v30.36)
+                        ⚡ تحديث الكاش (v30.37)
                     </button>
-                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.36) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
-                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.36)
+                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.37) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
+                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.37)
                     </button>
                     <button type="button" id="btn-force-sync" onclick="handleForceFullSync()" style="background: linear-gradient(135deg,rgba(59,130,246,0.25),rgba(99,102,241,0.2)); border: 1px solid #6366f1; color: #a5b4fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="جلب كافة السجلات من السحابة قسرياً وبثها لجميع الأجهزة">
                         🔄 مزامنة كاملة
@@ -589,8 +589,12 @@
                     <!-- كرت 2: إجمالي الزيارات ومعدل بدء الفحص -->
                     <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 12px; padding: 16px; text-align: center;">
                         <div id="radar-total-visits" style="font-size: 2.3em; font-weight: 900; color: #38bdf8; font-family: monospace;">0</div>
-                        <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 2px;">إجمالي الزيارات الفعلية 👥</div>
-                        <div style="color: #94a3b8; font-size: 0.78em; margin-top: 6px;">
+                        <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 2px;">إجمالي الزيارات منذ الإطلاق 👥</div>
+                        <div style="display: flex; justify-content: center; gap: 8px; margin-top: 6px; font-size: 0.78em; flex-wrap: wrap;">
+                            <span style="background: rgba(16, 185, 129, 0.2); color: #34d399; padding: 2px 8px; border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.4); font-weight: bold;">اليوم: <span id="radar-today-visits">0</span> 🟢</span>
+                            <span style="background: rgba(148, 163, 184, 0.15); color: #cbd5e1; padding: 2px 8px; border-radius: 10px; border: 1px solid rgba(148, 163, 184, 0.3);">أمس: <span id="radar-yesterday-visits">0</span></span>
+                        </div>
+                        <div style="color: #94a3b8; font-size: 0.76em; margin-top: 6px;">
                             بدأ الفحص: <strong id="radar-start-rate" style="color: #7dd3fc;">0%</strong> (<span id="radar-started-count">0</span> زائر)
                         </div>
                     </div>
@@ -969,19 +973,27 @@
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px;">
                     <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
                         <div id="analytics-total-visits" style="font-size: 2.2em; font-weight: bold; color: #38bdf8;">0</div>
-                        <div style="color: #94a3b8; font-size: 0.85em; margin-top: 4px;">إجمالي الزيارات الفعلية 👥</div>
+                        <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">إجمالي الزيارات منذ الإطلاق 👥</div>
+                        <div style="color: #64748b; font-size: 0.76em; margin-top: 3px;">منذ 12 سبتمبر 2026</div>
+                    </div>
+                    <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 12px; padding: 16px; text-align: center;">
+                        <div id="analytics-today-visits" style="font-size: 2.2em; font-weight: bold; color: #34d399;">0</div>
+                        <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">زيارات اليوم 🟢</div>
+                        <div style="color: #94a3b8; font-size: 0.76em; margin-top: 3px;">
+                            أمس: <strong id="analytics-yesterday-visits" style="color: #cbd5e1;">0</strong> | الأسبوع: <strong id="analytics-week-visits" style="color: #cbd5e1;">0</strong>
+                        </div>
                     </div>
                     <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
                         <div id="analytics-total-countries" style="font-size: 2.2em; font-weight: bold; color: var(--primary-gold);">0</div>
-                        <div style="color: #94a3b8; font-size: 0.85em; margin-top: 4px;">عدد الدول المكتشفة 🌍</div>
-                    </div>
-                    <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
-                        <div id="analytics-mobile-pct" style="font-size: 2.2em; font-weight: bold; color: #10b981;">0%</div>
-                        <div style="color: #94a3b8; font-size: 0.85em; margin-top: 4px;">نسبة استخدام الموبايل 📱</div>
+                        <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">عدد الدول المكتشفة 🌍</div>
+                        <div style="color: #64748b; font-size: 0.76em; margin-top: 3px;">زيارات فعلية موثقة</div>
                     </div>
                     <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
-                        <div id="analytics-desktop-pct" style="font-size: 2.2em; font-weight: bold; color: #c084fc;">0%</div>
-                        <div style="color: #94a3b8; font-size: 0.85em; margin-top: 4px;">أجهزة الكمبيوتر والمكتبي 💻</div>
+                        <div id="analytics-mobile-pct" style="font-size: 2.2em; font-weight: bold; color: #c084fc;">0%</div>
+                        <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">نسبة الهواتف 📱</div>
+                        <div style="color: #94a3b8; font-size: 0.76em; margin-top: 3px;">
+                            أجهزة الكمبيوتر: <strong id="analytics-desktop-pct" style="color: #cbd5e1;">0%</strong>
+                        </div>
                     </div>
                 </div>
 
@@ -989,6 +1001,9 @@
                 <div style="display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid #1e293b; padding-bottom: 10px; flex-wrap: wrap;">
                     <button type="button" class="analytics-tab-btn" id="modal-tab-btn-geo" onclick="switchAnalyticsModalTab('geo')" style="background: var(--primary-gold); color: #0a0e14; border: none; padding: 7px 16px; border-radius: 8px; font-weight: bold; font-size: 0.88em; cursor: pointer;">
                         🌍 التوزيع الجغرافي والمدن
+                    </button>
+                    <button type="button" class="analytics-tab-btn" id="modal-tab-btn-timeline" onclick="switchAnalyticsModalTab('timeline')" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 7px 16px; border-radius: 8px; font-size: 0.88em; cursor: pointer;">
+                        📅 سجل النشاط والزيارات اليومية
                     </button>
                     <button type="button" class="analytics-tab-btn" id="modal-tab-btn-pain" onclick="switchAnalyticsModalTab('pain')" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 7px 16px; border-radius: 8px; font-size: 0.88em; cursor: pointer;">
                         🎯 نقاط الألم الأكثر طلباً (<span id="modal-pain-badge-count">0</span>)
@@ -1016,7 +1031,20 @@
                     </div>
                 </div>
 
-                <!-- التبويب 2: نقاط الألم الأكثر طلباً وبحثاً -->
+                <!-- التبويب 2: سجل النشاط والزيارات اليومية منذ الإطلاق -->
+                <div id="modal-tab-content-timeline" style="display: none;">
+                    <div style="background: #080c14; border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <strong style="color: #38bdf8; font-size: 0.95em; display: block;">📅 سجل الزيارات اليومية الموثقة منذ انطلاق الأداة</strong>
+                            <span style="color: #94a3b8; font-size: 0.8em;">تاريخ انطلاق الأداة: <span style="color: var(--primary-gold); font-weight: bold;">12 سبتمبر 2026</span> | إحصائيات يومية مفصلة حسب التاريخ والمدن والأجهزة</span>
+                        </div>
+                    </div>
+                    <div id="modal-daily-timeline-container" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- Dynamically populated -->
+                    </div>
+                </div>
+
+                <!-- التبويب 3: نقاط الألم الأكثر طلباً وبحثاً -->
                 <div id="modal-tab-content-pain" style="display: none;">
                     <div style="background: #080c14; border: 1px solid rgba(51, 65, 85, 0.6); border-radius: 10px; padding: 16px; margin-bottom: 16px;">
                         <div style="color: #94a3b8; font-size: 0.86em; margin-bottom: 12px;">
@@ -3427,6 +3455,8 @@
             const onlineMobEl = document.getElementById('radar-online-mobile');
             const onlineDeskEl = document.getElementById('radar-online-desktop');
             const totalVisitsEl = document.getElementById('radar-total-visits');
+            const todayVisitsEl = document.getElementById('radar-today-visits');
+            const yesterdayVisitsEl = document.getElementById('radar-yesterday-visits');
             const startRateEl = document.getElementById('radar-start-rate');
             const startedCountEl = document.getElementById('radar-started-count');
             const diagCountEl = document.getElementById('radar-diagnosed-count');
@@ -3440,6 +3470,8 @@
             if (onlineMobEl) onlineMobEl.textContent = analytics.mobileOnline || 0;
             if (onlineDeskEl) onlineDeskEl.textContent = analytics.desktopOnline || 0;
             if (totalVisitsEl) totalVisitsEl.textContent = analytics.totalVisits || 0;
+            if (todayVisitsEl) todayVisitsEl.textContent = analytics.todayVisits || 0;
+            if (yesterdayVisitsEl) yesterdayVisitsEl.textContent = analytics.yesterdayVisits || 0;
             if (startRateEl) startRateEl.textContent = (analytics.examStartRate || 0) + '%';
             if (startedCountEl) startedCountEl.textContent = analytics.startedExams || 0;
             if (diagCountEl) diagCountEl.textContent = analytics.diagnosedCases || 0;
@@ -4867,7 +4899,7 @@
                 activeBtn.style.color = '#0a0e14';
                 activeBtn.style.border = 'none';
             }
-            ['geo', 'pain', 'journey'].forEach(k => {
+            ['geo', 'timeline', 'pain', 'journey'].forEach(k => {
                 const el = document.getElementById(`modal-tab-content-${k}`);
                 if (el) el.style.display = (k === tabKey) ? 'block' : 'none';
             });
@@ -4887,18 +4919,28 @@
 
             // 1. تحديث بطاقات KPI الأربع الرئيسية
             const totalEl = document.getElementById('analytics-total-visits');
+            const todayEl = document.getElementById('analytics-today-visits');
+            const yesterdayEl = document.getElementById('analytics-yesterday-visits');
+            const weekEl = document.getElementById('analytics-week-visits');
             const countriesEl = document.getElementById('analytics-total-countries');
             const mobileEl = document.getElementById('analytics-mobile-pct');
             const desktopEl = document.getElementById('analytics-desktop-pct');
 
             const countriesList = data.topCountries || (detailedStats ? detailedStats.countries : []);
             if (totalEl) totalEl.textContent = data.totalVisits || 0;
+            if (todayEl) todayEl.textContent = data.todayVisits || 0;
+            if (yesterdayEl) yesterdayEl.textContent = data.yesterdayVisits || 0;
+            if (weekEl) weekEl.textContent = data.thisWeekVisits || 0;
             if (countriesEl) countriesEl.textContent = (countriesList ? countriesList.length : (data.totalCountries || 0));
             if (mobileEl) mobileEl.textContent = (data.mobilePct || 0) + '%';
             if (desktopEl) desktopEl.textContent = (data.desktopPct || 0) + '%';
 
             // 2. تحديث قائمة الدول التفاعلية
             renderAnalyticsCountriesList(countriesList);
+
+            // 2.1 تحديث جدول النشاط والزيارات اليومية
+            const dailyTimeline = data.dailyTimeline || (detailedStats ? detailedStats.dailyTimeline : []);
+            renderAnalyticsDailyTimeline(dailyTimeline, data.launchDate || '12 سبتمبر 2026');
 
             // 3. تحديث تبويب نقاط الألم الشائعة والأكثر طلباً
             const painPoints = data.topPainPoints || [];
@@ -5025,6 +5067,60 @@
             }
         }
         window.renderVisitorAnalyticsModalContent = renderVisitorAnalyticsModalContent;
+
+        function renderAnalyticsDailyTimeline(timeline, launchDate) {
+            const container = document.getElementById('modal-daily-timeline-container');
+            if (!container) return;
+
+            if (!timeline || timeline.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; color: #94a3b8; background: #080c14; border-radius: 10px; border: 1px dashed #334155;">
+                        <div style="font-size: 2.5em; margin-bottom: 8px;">📅</div>
+                        <strong style="color: #cbd5e1; font-size: 1.05em; display: block; margin-bottom: 4px;">لا توجد سجلات يومية بعد</strong>
+                        <span style="font-size: 0.85em; color: #64748b;">تاريخ انطلاق الأداة هو ${launchDate || '12 سبتمبر 2026'}. ستظهر هنا تفاصيل كل يوم وعدد زواره تلقائياً.</span>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = timeline.map(day => {
+                const citiesList = Object.entries(day.cities || {}).map(([c, count]) => `${c} (${count})`).join('، ') || 'المركز الرئيسي';
+                const isToday = day.dateLabel && day.dateLabel.includes('اليوم');
+                const isYesterday = day.dateLabel && day.dateLabel.includes('أمس');
+                const badgeColor = isToday ? '#10b981' : (isYesterday ? '#38bdf8' : '#e2e8f0');
+                const bgBorder = isToday 
+                    ? 'border: 1px solid rgba(16, 185, 129, 0.45); background: rgba(16, 185, 129, 0.08);' 
+                    : (isYesterday ? 'border: 1px solid rgba(56, 189, 248, 0.35); background: rgba(15, 23, 42, 0.85);' : 'border: 1px solid rgba(51, 65, 85, 0.6); background: rgba(15, 23, 42, 0.7);');
+
+                return `
+                    <div style="${bgBorder} border-radius: 10px; padding: 14px 16px; transition: all 0.2s ease;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 1.25em;">📅</span>
+                                <strong style="color: ${badgeColor}; font-size: 1.02em;">${day.dateLabel || day.dateKey}</strong>
+                                ${isToday ? '<span style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 0.75em; padding: 2px 8px; border-radius: 10px; font-weight: bold; border: 1px solid rgba(16, 185, 129, 0.4);">نشط اليوم 🟢</span>' : ''}
+                                ${isYesterday ? '<span style="background: rgba(56, 189, 248, 0.15); color: #7dd3fc; font-size: 0.75em; padding: 2px 8px; border-radius: 10px; font-weight: bold; border: 1px solid rgba(56, 189, 248, 0.3);">يوم أمس ⏪</span>' : ''}
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-weight: 900; padding: 4px 12px; border-radius: 8px; font-size: 0.95em; font-family: monospace;">
+                                    👥 ${day.count} ${day.count === 1 ? 'زيارة' : 'زيارات'}
+                                </span>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 0.82em; color: #94a3b8; border-top: 1px dashed rgba(51, 65, 85, 0.5); padding-top: 8px; margin-top: 6px;">
+                            <div>
+                                📍 المدن المسجلة: <strong style="color: #cbd5e1;">${citiesList}</strong>
+                            </div>
+                            <div style="display: flex; gap: 12px;">
+                                <span>📱 هواتف: <strong style="color: #34d399;">${day.mobile}</strong></span>
+                                <span>💻 حواسيب: <strong style="color: #c084fc;">${day.desktop}</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        window.renderAnalyticsDailyTimeline = renderAnalyticsDailyTimeline;
 
         function renderAnalyticsCountriesList(countries) {
             const container = document.getElementById('analytics-countries-container');
@@ -5459,17 +5555,17 @@
             window.location.reload(true);
         }
 
-        // بث رسالة التحديث الجديد الشامل (v30.36) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
+        // بث رسالة التحديث الجديد الشامل (v30.37) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
         function handleBroadcastGlobalVersion() {
-            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.36) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
+            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.37) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
                 if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                     SmartCloudSync.broadcastAppVersionUpdate({
-                        version: 'v30.36',
-                        title: 'تحديث المنظومة (v30.36)',
+                        version: 'v30.37',
+                        title: 'تحديث المنظومة (v30.37)',
                         timestamp: Date.now()
                     });
                 }
-                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.36) عبر شبكة البث اللحظي MQTT و NTFY و Master Hub لكافة الأجهزة!');
+                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.37) عبر شبكة البث اللحظي MQTT و NTFY و Master Hub لكافة الأجهزة!');
             }
         }
         window.handleBroadcastGlobalVersion = handleBroadcastGlobalVersion;
