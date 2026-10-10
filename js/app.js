@@ -3619,11 +3619,19 @@ function getReportSaveCardHTML(patientPhone = '', patientName = '') {
                         <label style="display: block; color: #cbd5e1; font-size: 0.84em; margin-bottom: 5px; font-weight: bold;">🔑 أنشئ رمز سري خاص بك (PIN من 4 أرقام):</label>
                         <input type="password" id="report-save-pin-input" maxlength="6" placeholder="مثال: 1234" style="width: 100%; background: #080c14; border: 1.5px solid var(--primary-gold); padding: 10px 12px; border-radius: 8px; color: #fef08a; font-size: 1.1em; text-align: center; letter-spacing: 4px; box-sizing: border-box;">
                     </div>
-                    <div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                         <button type="button" onclick="handleRegisterFromReport()" style="width: 100%; background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; border: none; padding: 11px 16px; border-radius: 8px; font-weight: bold; font-size: 0.98em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(212,175,55,0.35);">
-                            <span>💾</span> <span>حفظ وإنشاء ملفي الطبي</span>
+                            <span>🔒</span> <span>حفظ وإنشاء ملفي الطبي (برمز PIN)</span>
                         </button>
                     </div>
+                </div>
+                <div style="margin-top: 10px; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+                    <button type="button" onclick="saveClinicalReport()" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 16px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <span>💾</span> حفظ التقرير في هذا المتصفح فوراً بدون رمز سري
+                    </button>
+                    <button type="button" onclick="printClinicalReport()" style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #7dd3fc; padding: 8px 16px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <span>🖨️</span> طباعة التقرير أو حفظه كـ PDF
+                    </button>
                 </div>
                 <div id="report-save-status-msg" style="display: none; margin-top: 10px; padding: 8px 12px; border-radius: 6px; font-size: 0.85em; font-weight: bold;"></div>
             </div>
@@ -3825,13 +3833,16 @@ function renderSpecializedClinicalReportStep3(data, reportContainer) {
                     </div>
                 </div>
                 
-                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <a href="${waUrl}" target="_blank" class="btn-header no-print btn-whatsapp-cta" style="padding: 10px 20px; font-weight: bold; font-size: 0.9em; border-radius: 10px; display: inline-flex; align-items: gap: 8px; text-decoration: none; box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);">
-                        <span>💬</span> إرسال للمعالج واتساب
-                    </a>
-                    <button type="button" onclick="window.print()" class="btn-header no-print" style="background: #3b82f6; color: #fff; border: 1.5px solid #60a5fa; padding: 10px 18px; font-weight: bold; font-size: 0.9em; border-radius: 10px; cursor: pointer;">
-                        🖨️ طباعة / PDF
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <button type="button" onclick="saveClinicalReport()" class="btn-header no-print btn-header-emerald" style="padding: 10px 16px; font-weight: bold; font-size: 0.88em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <span>💾</span> حفظ التقرير
                     </button>
+                    <button type="button" onclick="printClinicalReport()" class="btn-header no-print" style="background: #3b82f6; color: #fff; border: 1.5px solid #60a5fa; padding: 10px 16px; font-weight: bold; font-size: 0.88em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <span>🖨️</span> طباعة / PDF
+                    </button>
+                    <a href="${waUrl}" target="_blank" class="btn-header no-print btn-whatsapp-cta" style="padding: 10px 18px; font-weight: bold; font-size: 0.88em; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);">
+                        <span>💬</span> إرسال واتساب
+                    </a>
                 </div>
             </div>
 
@@ -4158,6 +4169,9 @@ async function ensureAndDisplayReport() {
     currentAssessmentData = assess;
     try {
         localStorage.setItem('smart_current_assessment', JSON.stringify(assess));
+        if (typeof SmartDB !== 'undefined' && typeof SmartDB.saveAssessment === 'function') {
+            SmartDB.saveAssessment(assess).catch(() => {});
+        }
     } catch(e) {}
 
     displayDiagnosticReport(assess);
@@ -4168,6 +4182,181 @@ async function ensureAndDisplayReport() {
     return true;
 }
 window.ensureAndDisplayReport = ensureAndDisplayReport;
+
+// حفظ التقرير الطبي السريري فوراً في الذاكرة المحلية وقاعدة البيانات SmartDB
+async function saveClinicalReport() {
+    try {
+        let assess = (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) ? currentAssessmentData : null;
+        if (!assess) {
+            try {
+                const raw = localStorage.getItem('smart_current_assessment');
+                if (raw) assess = JSON.parse(raw);
+            } catch(e) {}
+        }
+        if (!assess && typeof activePatient !== 'undefined' && activePatient) {
+            assess = activePatient.assessment || activePatient.latestAssessment || null;
+        }
+
+        if (!assess) {
+            if (typeof showToast === 'function') {
+                showToast('⚠️ لا يوجد تقرير سريري مفتوح لحفظه حالياً', 'warning');
+            }
+            return false;
+        }
+
+        const patientId = assess.patientId 
+            || (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : null)
+            || (typeof activePatient !== 'undefined' ? activePatient?.patientId : null)
+            || localStorage.getItem('smart_current_patient_id')
+            || ('P-' + Date.now().toString().slice(-6));
+
+        assess.patientId = patientId;
+        assess.savedAt = new Date().toISOString();
+        assess.lastUpdated = assess.savedAt;
+
+        // 1. الحفظ في الذاكرة المحلية LocalStorage
+        try {
+            localStorage.setItem('smart_current_assessment', JSON.stringify(assess));
+            const lsKey = 'smart_assessments_' + patientId;
+            const existing = JSON.parse(localStorage.getItem(lsKey) || '[]');
+            const idx = existing.findIndex(a => a.id === assess.id || (a.savedAt && Math.abs(new Date(a.savedAt) - new Date(assess.savedAt)) < 5000));
+            if (idx >= 0) existing[idx] = assess;
+            else existing.push(assess);
+            localStorage.setItem(lsKey, JSON.stringify(existing));
+        } catch(e) {}
+
+        // 2. الحفظ في قاعدة البيانات SmartDB (IndexedDB)
+        if (typeof SmartDB !== 'undefined') {
+            if (typeof SmartDB.saveAssessment === 'function') {
+                try { await SmartDB.saveAssessment(assess); } catch(e) {}
+            }
+            if (typeof activePatient !== 'undefined' && activePatient) {
+                activePatient.assessment = assess;
+                activePatient.latestAssessment = assess;
+                if (typeof SmartDB.savePatient === 'function') {
+                    try { await SmartDB.savePatient(activePatient); } catch(e) {}
+                }
+            }
+        }
+
+        if (typeof showToast === 'function') {
+            showToast('✅ تم حفظ التقرير الطبي بنجاح في ملفك الشخصي!', 'success');
+        }
+
+        const saveCardMsg = document.getElementById('report-save-status-msg');
+        if (saveCardMsg) {
+            saveCardMsg.style.display = 'block';
+            saveCardMsg.style.background = 'rgba(16, 185, 129, 0.2)';
+            saveCardMsg.style.border = '1px solid #10b981';
+            saveCardMsg.style.color = '#6ee7b7';
+            saveCardMsg.textContent = '✅ تم حفظ التقرير في ملفك الطبي بنجاح!';
+        }
+
+        return true;
+    } catch(err) {
+        console.error('Error in saveClinicalReport:', err);
+        if (typeof showToast === 'function') {
+            showToast('⚠️ حدث خطأ أثناء حفظ التقرير', 'warning');
+        }
+        return false;
+    }
+}
+window.saveClinicalReport = saveClinicalReport;
+
+// نافذة طباعة بديلة للمتصفحات التي تقيّد window.print داخل تطبيقات الهواتف
+function fallbackPrintWindow() {
+    const reportEl = document.querySelector('.clinical-report-printable');
+    if (!reportEl) return;
+    const printWin = window.open('', '_blank');
+    if (!printWin) {
+        if (typeof showToast === 'function') {
+            showToast('يرجى السماح بالنوافذ المنبثقة لطباعة التقرير أو حفظه كـ PDF', 'info');
+        }
+        return;
+    }
+    const cleanHTML = reportEl.innerHTML;
+    printWin.document.write(`<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>التقرير الطبي السريري - وداعاً للألم</title>
+    <style>
+        body { font-family: 'Cairo', 'Almarai', Tahoma, sans-serif; direction: rtl; color: #0f172a; background: #fff; padding: 20px; }
+        .no-print, button, input, select { display: none !important; }
+        h1, h2, h3, h4 { color: #000; }
+        div, p, span, li { color: #1e293b; }
+        div[style*="background"] { background: #f8fafc !important; border: 1px solid #cbd5e1 !important; border-radius: 8px; margin-bottom: 12px; padding: 12px; }
+    </style>
+</head>
+<body>
+    <div style="border: 2px solid #0f172a; padding: 20px; border-radius: 8px;">
+        ${cleanHTML}
+    </div>
+    <script>
+        window.onload = function() {
+            setTimeout(function() { window.print(); }, 200);
+        };
+    <\/script>
+</body>
+</html>`);
+    printWin.document.close();
+}
+window.fallbackPrintWindow = fallbackPrintWindow;
+
+// طباعة أو تصدير التقرير الطبي السريري بجودة ملكية خالية من أي تشويه
+async function printClinicalReport() {
+    try {
+        // 1. ضمان حفظ التقرير أولاً لحماية بيانات المريض
+        await saveClinicalReport();
+
+        // 2. إيقاف أي أصوات تعمل في الخلفية
+        if (typeof currentActiveStationAudio !== 'undefined' && currentActiveStationAudio) {
+            try { currentActiveStationAudio.pause(); } catch(e) {}
+        }
+        if (typeof Wada3anAiEngine !== 'undefined') {
+            try { Wada3anAiEngine.stopSpeaking(); } catch(e) {}
+        }
+
+        // 3. التحقق من وجود حاوية التقرير
+        const reportContainer = document.getElementById('clinical-report-container');
+        if (!reportContainer || !reportContainer.querySelector('.clinical-report-printable')) {
+            if (typeof ensureAndDisplayReport === 'function') {
+                await ensureAndDisplayReport();
+            }
+        }
+
+        // 4. إخفاء العناصر المعيقة مؤقتاً
+        const stickyBar = document.getElementById('sticky-patient-guidance-bar');
+        const prevStickyDisplay = stickyBar ? stickyBar.style.display : '';
+        if (stickyBar) stickyBar.style.display = 'none';
+
+        // 5. استدعاء الطباعة القياسية مع صمام أمان لإعادة العناصر
+        let restored = false;
+        const restoreElements = () => {
+            if (restored) return;
+            restored = true;
+            if (stickyBar) stickyBar.style.display = prevStickyDisplay;
+            try { window.removeEventListener('afterprint', restoreElements); } catch(e) {}
+        };
+        try { window.addEventListener('afterprint', restoreElements); } catch(e) {}
+
+        // تشغيل نافذة الطباعة بعد مهلة قصيرة لإتمام إعادة تموضع الـ DOM
+        setTimeout(() => {
+            try {
+                window.print();
+            } catch (printErr) {
+                console.warn('Native window.print failed, attempting fallback:', printErr);
+                fallbackPrintWindow();
+            }
+            // صمام استرجاع احتياطي في حال لم يعمل afterprint
+            setTimeout(restoreElements, 3000);
+        }, 120);
+    } catch (err) {
+        console.error('Error in printClinicalReport:', err);
+        try { window.print(); } catch(e) {}
+    }
+}
+window.printClinicalReport = printClinicalReport;
 
 // عرض التقرير الطبي الملكي عالي الاحترافية (Royal Medical Report)
 function displayDiagnosticReport(data) {
@@ -4316,11 +4505,16 @@ function displayDiagnosticReport(data) {
                         <div style="color: var(--primary-gold); font-weight: bold; font-size: 1.05em;">${data.confidenceScore}%</div>
                         <div style="color: #94a3b8; font-size: 0.72em;">مؤشر الثقة</div>
                     </div>
-                    <div class="report-header-buttons" style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; flex: 2 1 180px; width: 100%; max-width: 100%; box-sizing: border-box;">
-                        <button type="button" onclick="sendWhatsAppDiagnosticReport()" class="btn-header no-print btn-whatsapp-cta" style="width: 100%; padding: 8px 6px; font-weight: bold; font-size: 0.8em; border-radius: 8px; white-space: nowrap; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 4px;">
-                            💬 إرسال واتساب
+                    <div class="report-header-buttons" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; flex: 3 1 250px; width: 100%; max-width: 100%; box-sizing: border-box;">
+                        <button type="button" onclick="saveClinicalReport()" class="btn-header no-print btn-header-emerald" style="flex: 1 1 75px; padding: 8px 6px; font-weight: bold; font-size: 0.8em; border-radius: 8px; white-space: nowrap; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer;">
+                            <span>💾</span> حفظ التقرير
                         </button>
-                        <button type="button" onclick="window.print()" class="btn-header no-print" style="width: 100%; background: #3b82f6; color: #fff; border-color: #3b82f6; padding: 8px 6px; font-weight: bold; font-size: 0.8em; border-radius: 8px; white-space: nowrap; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 4px;">🖨️ طباعة / PDF</button>
+                        <button type="button" onclick="printClinicalReport()" class="btn-header no-print" style="flex: 1 1 75px; background: #3b82f6; color: #fff; border: 1.5px solid #60a5fa; padding: 8px 6px; font-weight: bold; font-size: 0.8em; border-radius: 8px; white-space: nowrap; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer;">
+                            <span>🖨️</span> طباعة / PDF
+                        </button>
+                        <button type="button" onclick="sendWhatsAppDiagnosticReport()" class="btn-header no-print btn-whatsapp-cta" style="flex: 1 1 85px; padding: 8px 6px; font-weight: bold; font-size: 0.8em; border-radius: 8px; white-space: nowrap; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer;">
+                            <span>💬</span> واتساب
+                        </button>
                     </div>
                 </div>
             </div>
@@ -8140,7 +8334,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.38';
+const CURRENT_APP_VERSION = 'v30.39';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 

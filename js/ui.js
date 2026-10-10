@@ -259,7 +259,13 @@ function loadState() {
 }
 
 function resetAll() { if(confirm("إعادة تعيين كل البيانات؟")){ localStorage.removeItem('smartProState'); location.reload(); } }
-function printOrSaveAsPDF() { window.print(); }
+function printOrSaveAsPDF() {
+    if (typeof printClinicalReport === 'function') {
+        printClinicalReport();
+    } else {
+        window.print();
+    }
+}
 
 // تحديث مؤشرات الخطوات
 function updateStepIndicator(step) {
