@@ -42,9 +42,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=30.42"></script>
-    <script src="js/security-shield.js?v=30.42"></script>
-    <link rel="stylesheet" href="css/style.css?v=30.42">
+    <script src="js/system-watchdog.js?v=30.43"></script>
+    <script src="js/security-shield.js?v=30.43"></script>
+    <link rel="stylesheet" href="css/style.css?v=30.43">
     <style>
         body {
             background-color: #080c14;
@@ -406,7 +406,7 @@
                     <div style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.78em; color: #94a3b8; margin-top: 2px;">
                         <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                         <span>الإصدار المعتمد:</span>
-                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.42</strong>
+                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.43</strong>
                     </div>
                 </div>
             </div>
@@ -435,10 +435,10 @@
                         <span>⚙️</span> إعدادات
                     </button>
                     <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header admin-btn-cache" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 9px 12px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
-                        ⚡ تحديث الكاش (v30.42)
+                        ⚡ تحديث الكاش (v30.43)
                     </button>
-                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.42) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
-                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.42)
+                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.43) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
+                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.43)
                     </button>
                     <button type="button" id="btn-force-sync" onclick="handleForceFullSync()" style="background: linear-gradient(135deg,rgba(59,130,246,0.25),rgba(99,102,241,0.2)); border: 1px solid #6366f1; color: #a5b4fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="جلب كافة السجلات من السحابة قسرياً وبثها لجميع الأجهزة">
                         🔄 مزامنة كاملة
@@ -524,6 +524,9 @@
                     </button>
                     <button type="button" class="notif-filter-btn" onclick="setNotifFilter('payment_received', this)" style="background: #1e293b; color: #fed7aa; border: 1px solid #f97316; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 0.85em; cursor: pointer;">
                         💳 دفعات أورانج (<span id="count-filter-payments">0</span>)
+                    </button>
+                    <button type="button" class="notif-filter-btn" onclick="setNotifFilter('humanitarian_request', this)" style="background: #1e293b; color: #6ee7b7; border: 1px solid #10b981; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 0.85em; cursor: pointer;">
+                        🌿 طلبات الإعفاء (<span id="count-filter-humanitarian">0</span>)
                     </button>
                     <button type="button" class="notif-filter-btn" onclick="setNotifFilter('new_registration', this)" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 6px 14px; border-radius: 20px; font-size: 0.85em; cursor: pointer;">
                         👤 مشتركين جدد (<span id="count-filter-new">0</span>)
@@ -1768,15 +1771,15 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/clinic-patients-data.js?v=30.42"></script>
-    <script src="js/mqtt.min.js?v=30.42"></script>
-    <script src="js/cloud-sync.js?v=30.42"></script>
-    <script src="js/geo-tracker.js?v=30.42"></script>
-    <script src="js/database.js?v=30.42"></script>
-    <script src="js/exercise-image-studio.js?v=30.42"></script>
-    <script src="js/admin-engine.js?v=30.42"></script>
-    <script src="js/ai-config.js?v=30.42"></script>
-    <script src="js/ai-engine.js?v=30.42"></script>
+    <script src="js/clinic-patients-data.js?v=30.43"></script>
+    <script src="js/mqtt.min.js?v=30.43"></script>
+    <script src="js/cloud-sync.js?v=30.43"></script>
+    <script src="js/geo-tracker.js?v=30.43"></script>
+    <script src="js/database.js?v=30.43"></script>
+    <script src="js/exercise-image-studio.js?v=30.43"></script>
+    <script src="js/admin-engine.js?v=30.43"></script>
+    <script src="js/ai-config.js?v=30.43"></script>
+    <script src="js/ai-engine.js?v=30.43"></script>
 
     <script>
         let allPatientsList = [];
@@ -3064,13 +3067,15 @@
 
             const countAll = allNotificationsList.length;
             const countPayments = allNotificationsList.filter(n => n.type === 'payment_received').length;
-            const countNew = allNotificationsList.filter(n => n.type === 'new_registration').length;
+            const countHumanitarian = allNotificationsList.filter(n => n.type === 'humanitarian_request' || (n.type === 'new_registration' && n.meta?.paymentType === 'humanitarian')).length;
+            const countNew = allNotificationsList.filter(n => n.type === 'new_registration' && n.meta?.paymentType !== 'humanitarian').length;
             const countPlan = allNotificationsList.filter(n => n.type === 'plan_completed').length;
             const countFlags = allNotificationsList.filter(n => n.type === 'red_flag').length;
             const countSessions = allNotificationsList.filter(n => n.type === 'session_done' || n.type === 'session_completed').length;
 
             if (document.getElementById('count-filter-all')) document.getElementById('count-filter-all').textContent = countAll;
             if (document.getElementById('count-filter-payments')) document.getElementById('count-filter-payments').textContent = countPayments;
+            if (document.getElementById('count-filter-humanitarian')) document.getElementById('count-filter-humanitarian').textContent = countHumanitarian;
             if (document.getElementById('count-filter-new')) document.getElementById('count-filter-new').textContent = countNew;
             if (document.getElementById('count-filter-plan')) document.getElementById('count-filter-plan').textContent = countPlan;
             if (document.getElementById('count-filter-flags')) document.getElementById('count-filter-flags').textContent = countFlags;
@@ -3103,6 +3108,7 @@
             if (activeNotifFilter !== 'all') {
                 filtered = allNotificationsList.filter(n => {
                     if (activeNotifFilter === 'session_done') return n.type === 'session_done' || n.type === 'session_completed';
+                    if (activeNotifFilter === 'humanitarian_request') return n.type === 'humanitarian_request' || (n.type === 'new_registration' && n.meta?.paymentType === 'humanitarian');
                     return n.type === activeNotifFilter;
                 });
             }
@@ -3122,10 +3128,21 @@
                 let cardClass = 'notif-card-session';
                 let typeBadge = '<span style="background: rgba(148, 163, 184, 0.2); color: #cbd5e1; padding: 2px 8px; border-radius: 4px; font-size: 0.78em;">معلومات</span>';
                 
+                const isHumReq = n.type === 'humanitarian_request' || (n.type === 'new_registration' && n.meta?.paymentType === 'humanitarian');
+                const isApproved = Boolean(n.meta?.approved);
+                const computedPin = n.meta?.unlockPin || n.meta?.unlockCode || generateAdminUnlockPin(n.patientPhone || n.patientName || '');
+
                 if (n.type === 'payment_received') {
                     cardClass = 'notif-card-plan';
                     const amt = n.meta?.amountJod || 3;
-                    typeBadge = `<span style="background: linear-gradient(135deg, rgba(249, 115, 22, 0.35), rgba(212, 175, 55, 0.3)); color: #fed7aa; border: 1.5px solid #f97316; padding: 2px 10px; border-radius: 6px; font-size: 0.8em; font-weight: 900;">💳 دفعة محفظة أورانج (${amt} د.أ)</span>`;
+                    typeBadge = isApproved
+                        ? `<span style="background: rgba(16, 185, 129, 0.25); color: #6ee7b7; border: 1.5px solid #10b981; padding: 2px 10px; border-radius: 6px; font-size: 0.8em; font-weight: 900;">✅ تم تأكيد حوالة أورانج (${amt} د.أ) وتفعيل التقرير</span>`
+                        : `<span style="background: linear-gradient(135deg, rgba(249, 115, 22, 0.35), rgba(212, 175, 55, 0.3)); color: #fed7aa; border: 1.5px solid #f97316; padding: 2px 10px; border-radius: 6px; font-size: 0.8em; font-weight: 900;">💳 حوالة أورانج (${amt} د.أ) — بانتظار تأكيدك</span>`;
+                } else if (isHumReq) {
+                    cardClass = 'notif-card-new';
+                    typeBadge = isApproved
+                        ? '<span style="background: rgba(16, 185, 129, 0.25); color: #6ee7b7; border: 1.5px solid #10b981; padding: 2px 10px; border-radius: 6px; font-size: 0.8em; font-weight: 900;">✅ تمت الموافقة على الإعفاء الإنساني</span>'
+                        : '<span style="background: rgba(16, 185, 129, 0.25); color: #fef08a; border: 1.5px solid var(--primary-gold); padding: 2px 10px; border-radius: 6px; font-size: 0.8em; font-weight: 900;">🌿 طلب إعفاء لغير المقتدرين (بانتظار موافقتك)</span>';
                 } else if (n.type === 'plan_completed') {
                     cardClass = 'notif-card-plan';
                     typeBadge = '<span style="background: rgba(212, 175, 55, 0.25); color: var(--primary-gold); border: 1px solid var(--primary-gold); padding: 2px 8px; border-radius: 4px; font-size: 0.78em; font-weight: bold;">🏆 إتمام الـ 7 أيام - مؤهل للتقويم اليدوي</span>';
@@ -3134,10 +3151,7 @@
                     typeBadge = '<span style="background: rgba(239, 68, 68, 0.25); color: #fca5a5; border: 1px solid #ef4444; padding: 2px 8px; border-radius: 4px; font-size: 0.78em; font-weight: bold;">🚨 حالة طارئة</span>';
                 } else if (n.type === 'new_registration') {
                     cardClass = 'notif-card-new';
-                    const isHum = n.meta?.paymentType === 'humanitarian';
-                    typeBadge = isHum
-                        ? '<span style="background: rgba(16, 185, 129, 0.25); color: #6ee7b7; border: 1px solid #10b981; padding: 2px 8px; border-radius: 4px; font-size: 0.78em; font-weight: bold;">🌿 إعفاء إنساني (صدقة جارية)</span>'
-                        : '<span style="background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border: 1px solid #38bdf8; padding: 2px 8px; border-radius: 4px; font-size: 0.78em;">👤 مشترك جديد</span>';
+                    typeBadge = '<span style="background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border: 1px solid #38bdf8; padding: 2px 8px; border-radius: 4px; font-size: 0.78em;">👤 مشترك جديد</span>';
                 } else if (n.type === 'session_done' || n.type === 'session_completed') {
                     typeBadge = '<span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid #10b981; padding: 2px 8px; border-radius: 4px; font-size: 0.78em;">📝 جلسة يومية</span>';
                 }
@@ -3148,7 +3162,7 @@
                 const safeSubPhone = (n.patientPhone || '').replace(/['"\\]/g, '');
 
                 return `
-                <div class="notif-card ${cardClass} ${isUnread ? 'unread' : ''}" style="border-radius: 10px; padding: 14px 16px; border-right-color: ${n.type === 'payment_received' ? '#f97316' : (isUnread ? 'var(--primary-gold)' : 'transparent')}; ${n.type === 'payment_received' ? 'background: linear-gradient(135deg, rgba(124, 45, 18, 0.28) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1px solid rgba(249, 115, 22, 0.45);' : ''} position: relative;">
+                <div class="notif-card ${cardClass} ${isUnread ? 'unread' : ''}" style="border-radius: 10px; padding: 14px 16px; border-right-color: ${n.type === 'payment_received' ? '#f97316' : (isHumReq ? '#10b981' : (isUnread ? 'var(--primary-gold)' : 'transparent'))}; ${n.type === 'payment_received' ? 'background: linear-gradient(135deg, rgba(124, 45, 18, 0.28) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1px solid rgba(249, 115, 22, 0.45);' : (isHumReq ? 'background: linear-gradient(135deg, rgba(6, 78, 59, 0.35) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1px solid rgba(16, 185, 129, 0.5);' : '')} position: relative;">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px;">
                         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                             <span style="font-weight: bold; color: #fff; font-size: 0.98em;">${n.title}</span>
@@ -3160,19 +3174,24 @@
 
                     <div style="color: #cbd5e1; font-size: 0.88em; line-height: 1.5; margin-bottom: 10px;">
                         ${n.message}
-                        ${n.meta?.unlockPin ? `<span style="display: inline-block; margin-right: 8px; background: rgba(212, 175, 55, 0.2); border: 1px solid var(--primary-gold); color: #fef08a; padding: 1px 8px; border-radius: 6px; font-family: monospace; font-weight: bold;">كود التفعيل: ${n.meta.unlockPin}</span>` : ''}
+                        ${(n.type === 'payment_received' || isHumReq) ? `<span style="display: inline-block; margin-right: 8px; background: rgba(212, 175, 55, 0.2); border: 1px solid var(--primary-gold); color: #fef08a; padding: 2px 10px; border-radius: 6px; font-family: monospace; font-weight: 900;">🔑 كود التفعيل السري للمشترك: ${computedPin}</span>` : ''}
                     </div>
 
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;">
                         <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
                             ${n.type === 'payment_received' ? `
-                                <button type="button" onclick="quickAdminUnlockPatient('${n.patientId || ''}', '${safeSubPhone}', '${safeSubName}')" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: #fff; border: none; padding: 5px 12px; border-radius: 6px; font-size: 0.82em; font-weight: 900; cursor: pointer;">
-                                    🔓 تأكيد وتفعيل خطة المشترك فوراً
+                                <button type="button" onclick="quickAdminUnlockPatient('${n.patientId || ''}', '${safeSubPhone}', '${safeSubName}', 'paid_orange_wallet', '${n.id}')" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: #fff; border: 1px solid #fed7aa; padding: 6px 14px; border-radius: 6px; font-size: 0.84em; font-weight: 900; cursor: pointer; box-shadow: 0 4px 12px rgba(249,115,22,0.35);">
+                                    ${isApproved ? '🔓 إعادة بث فتح التقرير والخطة' : '✅ تأكيد وصول الحوالة وفتح التقرير والتمارين فوراً'}
+                                </button>
+                            ` : ''}
+                            ${isHumReq ? `
+                                <button type="button" onclick="quickAdminUnlockPatient('${n.patientId || ''}', '${safeSubPhone}', '${safeSubName}', 'humanitarian', '${n.id}')" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; border: 1px solid #6ee7b7; padding: 6px 14px; border-radius: 6px; font-size: 0.84em; font-weight: 900; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.35);">
+                                    ${isApproved ? '🔓 إعادة بث فتح الإعفاء' : '✅ الموافقة على الإعفاء وفتح التقرير والتمارين فوراً'}
                                 </button>
                             ` : ''}
                             ${cleanPhone ? `
                                 <a href="https://wa.me/${cleanPhone}?text=${waMessage}" target="_blank" style="display: inline-flex; align-items: center; gap: 4px; background: #25d366; color: #fff; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-size: 0.82em; font-weight: bold;">
-                                    💬 ${n.type === 'payment_received' ? 'تأكيد الاستلام واتساب' : 'تواصل واتساب'}
+                                    💬 ${n.type === 'payment_received' ? `إرسال كود التفعيل واتساب (${computedPin})` : (isHumReq ? `إرسال موافقة الإعفاء واتساب (${computedPin})` : 'تواصل واتساب')}
                                 </a>
                                 <a href="tel:${cleanPhone}" style="display: inline-flex; align-items: center; gap: 4px; background: #1e293b; color: #93c5fd; border: 1px solid #3b82f6; text-decoration: none; padding: 5px 10px; border-radius: 6px; font-size: 0.82em;">
                                     📞 اتصال
@@ -3203,9 +3222,12 @@
         function getNotificationWhatsAppText(notif) {
             const name = notif.patientName || 'عزيزي المراجع';
             if (notif.type === 'payment_received') {
-                const pin = notif.meta?.unlockPin || generateAdminUnlockPin(notif.patientPhone || name);
+                const pin = notif.meta?.unlockPin || notif.meta?.unlockCode || generateAdminUnlockPin(notif.patientPhone || name);
                 const amt = notif.meta?.amountJod || 3;
-                return `مرحباً ${name}، تم استلام حوالة محفظة أورانج (${amt} دنانير) بنجاح في عيادة «وداعاً للألم» للكايروبراكتيك مع المعالج جمال قبها ✅\nتم تفعيل خطة التعافي المنزلي (7 أيام) الخاصة بك بالكامل!\n🔑 كود التفعيل الاحتياطي الخاص بك هو: *${pin}*\nنتمنى لك الشفاء العاجل.`;
+                return `مرحباً ${name}، تم التحقق من حوالة محفظة أورانج (${amt} دنانير) بنجاح في عيادة «وداعاً للألم» للكايروبراكتيك مع المعالج جمال قبها ✅\nتم فتح التقرير الطبي السريري وخطة التعافي المنزلي (7 أيام) على شاشتك مباشرة!\n🔑 كما يمكنك الدخول باستخدام كود التفعيل المعتمد الخاص بك: *${pin}*\nنتمنى لك الشفاء العاجل.`;
+            } else if (notif.type === 'humanitarian_request' || (notif.type === 'new_registration' && notif.meta?.paymentType === 'humanitarian')) {
+                const pin = notif.meta?.unlockPin || notif.meta?.unlockCode || generateAdminUnlockPin(notif.patientPhone || name);
+                return `مرحباً ${name}، تمت الموافقة من المعالج جمال قبها على طلب الإعفاء الإنساني الخاص بك (صدقة جارية عن روح والده المرحوم) ✅🌿\nتم فتح التقرير الطبي الكامل وبرنامج التمارين العلاجية (7 أيام) على شاشتك مباشرة!\n🔑 كود التفعيل الفوري الخاص بك هو: *${pin}*\nنسألكم الدعاء ونتمنى لك الشفاء العاجل.`;
             } else if (notif.type === 'plan_completed') {
                 return `مرحباً ${name}، نبارك لك من «وداعاً للألم» إتمام خطة الـ 7 أيام للتعافي المنزلي بنجاح! 🏆\nيسعدنا حجز موعد لجلسة تقييم سريري وتقويم يدوي للعمود الفقري (Chiropractic) مع المعالج جمال لتثبيت نتائجك واستكمال الشفاء.`;
             } else if (notif.type === 'red_flag') {
@@ -3348,12 +3370,16 @@
                         const pPayType = p.paymentType || '';
                         const pPayStatus = p.paymentStatus || '';
                         let paymentBadgeHTML = '';
-                        if (pPayType === 'paid_orange_wallet' || pPayType === 'orange_money' || pPayStatus.includes('أورانج') || p.amountPaid > 0) {
+                        const isPendingUnlock = pPayStatus.includes('بانتظار') || Boolean(p.pendingUnlockRequest);
+                        const ptUnlockPin = generateAdminUnlockPin(p.phone || p.fullName || p.name || '');
+                        if (isPendingUnlock && !p.isPaidUnlocked) {
+                            paymentBadgeHTML = `<span style="background: rgba(245, 158, 11, 0.22); border: 1.5px solid #f59e0b; color: #fde047; padding: 2px 8px; border-radius: 4px; font-size: 0.72em; font-weight: 900; display: inline-flex; align-items: center; gap: 3px;">${pPayStatus}</span>`;
+                        } else if (pPayType === 'paid_orange_wallet' || pPayType === 'orange_money' || pPayStatus.includes('أورانج') || p.amountPaid > 0) {
                             paymentBadgeHTML = `<span style="background: linear-gradient(135deg, rgba(249, 115, 22, 0.35), rgba(212, 175, 55, 0.25)); border: 1px solid #f97316; color: #fed7aa; padding: 2px 8px; border-radius: 4px; font-size: 0.7em; font-weight: 900; display: inline-flex; align-items: center; gap: 3px;">💳 مدفوع (${p.amountPaid || 3} د.أ)</span>`;
                         } else if (pPayType === 'humanitarian' || pPayType === 'humanitarian_waiver' || pPayStatus.includes('إنساني')) {
-                            paymentBadgeHTML = `<span style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; padding: 2px 8px; border-radius: 4px; font-size: 0.7em; font-weight: bold; display: inline-flex; align-items: center; gap: 3px;">🌿 إعفاء إنساني</span>`;
+                            paymentBadgeHTML = `<span style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; padding: 2px 8px; border-radius: 4px; font-size: 0.7em; font-weight: bold; display: inline-flex; align-items: center; gap: 3px;">🌿 إعفاء إنساني معتمد</span>`;
                         } else if (pPayType === 'test_free' || pPayType === 'promo_or_test' || pPayStatus.includes('اختبار')) {
-                            paymentBadgeHTML = `<span style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #7dd3fc; padding: 2px 8px; border-radius: 4px; font-size: 0.7em; font-weight: bold; display: inline-flex; align-items: center; gap: 3px;">🧪 تفعيل اختباري</span>`;
+                            paymentBadgeHTML = `<span style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #7dd3fc; padding: 2px 8px; border-radius: 4px; font-size: 0.7em; font-weight: bold; display: inline-flex; align-items: center; gap: 3px;">🔑 مفعل بكود</span>`;
                         }
 
                         return `
@@ -3429,6 +3455,11 @@
 
                             <!-- الإجراءات الرئيسية للمدير: زر التقرير الملكي البارز في القمة -->
                             <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;">
+                                ${!p.isPaidUnlocked ? `
+                                <button type="button" onclick="quickAdminUnlockPatient('${p.patientId}', '${cleanPhone}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}', '${p.pendingUnlockRequest?.requestType || 'paid_orange_wallet'}')" style="width: 100%; background: linear-gradient(135deg, #d4af37 0%, #b45309 100%); color: #050911; border: 1.5px solid #fef08a; padding: 11px; border-radius: 9px; font-size: 0.94em; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);">
+                                    <span>🔓 موافقة وفتح التقرير والتمارين للمريض فوراً (كود: ${ptUnlockPin})</span>
+                                </button>
+                                ` : ''}
                                 <button type="button" onclick="openAdminPatientReportModal('${p.patientId}')" style="width: 100%; background: linear-gradient(135deg, #059669 0%, #10b981 50%, #047857 100%); color: #ffffff; border: none; padding: 13px; border-radius: 9px; font-size: 1.02em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);">
                                     <span>👁️ عرض التقرير السريري والطبي الكامل</span>
                                 </button>
@@ -5546,16 +5577,16 @@
                 walletProvider: 'محفظة أورانج (Orange Money)',
                 allowHumanitarian: true,
                 allowFreeTestMode: false,
-                customPromoCode: 'FREE2026'
+                customPromoCode: 'JK3090'
             };
         }
 
         function generateAdminUnlockPin(phoneOrName) {
             const clean = String(phoneOrName || '').replace(/\D/g, '');
-            const seed = clean.length >= 4 ? clean.slice(-6) : String(phoneOrName || '7777');
-            let hash = 2026;
+            const seed = clean.length >= 6 ? clean.slice(-6) : (clean.length >= 4 ? clean.slice(-4) : '8492');
+            let hash = 5381;
             for (let i = 0; i < seed.length; i++) {
-                hash = ((hash * 33) + seed.charCodeAt(i)) % 9000;
+                hash = ((hash * 33) ^ seed.charCodeAt(i)) & 0x7fffffff;
             }
             return String(1000 + (hash % 9000));
         }
@@ -5704,18 +5735,62 @@
             }
         }
 
-        function quickAdminUnlockPatient(patientId, patientPhone, patientName) {
+        function quickAdminUnlockPatient(patientId, patientPhone, patientName, unlockType = 'paid_orange_wallet', notifId = '') {
             const cfg = getAdminPaymentGateConfig();
+            const resolvedType = unlockType || 'paid_orange_wallet';
+            const resolvedAmt = resolvedType === 'humanitarian' ? 0 : (cfg.priceJod || 3);
+
             if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.broadcastPatientPaymentUnlock === 'function') {
                 SmartCloudSync.broadcastPatientPaymentUnlock({
                     patientId: patientId || '',
                     patientPhone: patientPhone || '',
                     patientName: patientName || 'مشترك معتمد',
-                    unlockType: 'paid_orange_wallet',
-                    amountPaid: cfg.priceJod || 3
+                    unlockType: resolvedType,
+                    amountPaid: resolvedAmt
                 });
             }
-            alert(`🔓 تم بث أمر التفعيل الفوري لخطة المشترك (${patientName || patientPhone || patientId}) بنجاح! ستفتح خطة الـ 7 أيام على هاتفه فوراً.`);
+
+            // تحديث حالة الإشعار إلى معتمد ومقروء
+            try {
+                const notifs = SmartDB.getAdminNotifications() || [];
+                let nChanged = false;
+                notifs.forEach(n => {
+                    if ((notifId && n.id === notifId) || (patientId && n.patientId === patientId) || (patientPhone && n.patientPhone && n.patientPhone.replace(/\D/g, '').slice(-8) === patientPhone.replace(/\D/g, '').slice(-8))) {
+                        n.read = true;
+                        n.meta = n.meta || {};
+                        n.meta.approved = true;
+                        n.meta.approvedAt = new Date().toISOString();
+                        nChanged = true;
+                    }
+                });
+                if (nChanged) {
+                    localStorage.setItem('smart_admin_notifications', JSON.stringify(notifs));
+                    allNotificationsList = notifs;
+                }
+            } catch (e) {}
+
+            // تحديث سجل المريض في القائمة المحلية
+            try {
+                if (Array.isArray(allPatientsList)) {
+                    allPatientsList.forEach(item => {
+                        const p = item.patient || {};
+                        const pPh = String(p.phone || '').replace(/\D/g, '');
+                        const tPh = String(patientPhone || '').replace(/\D/g, '');
+                        if ((patientId && p.patientId === patientId) || (tPh.length >= 7 && pPh.length >= 7 && pPh.slice(-8) === tPh.slice(-8))) {
+                            p.isPaidUnlocked = true;
+                            p.paymentType = resolvedType;
+                            p.paymentStatus = resolvedType === 'humanitarian' ? 'إعفاء إنساني معتمد (صدقة جارية)' : `مدفوع محفظة أورانج (${resolvedAmt} د.أ)`;
+                            p.amountPaid = resolvedAmt;
+                            delete p.pendingUnlockRequest;
+                        }
+                    });
+                }
+                loadNotificationsData(false);
+                renderTable(getFilteredPatientsList());
+            } catch (e) {}
+
+            const pin = generateAdminUnlockPin(patientPhone || patientName || '');
+            alert(`✅ تم اعتماد وتفعيل التقرير الطبي وخطة الـ 7 أيام للمراجع (${patientName || patientPhone || patientId}) بنجاح!\n\n📡 تم بث أمر الفتح المباشر لشاشته فوراً.\n🔑 كود التفعيل السري الخاص به (في حال أردت إرساله له): ${pin}`);
         }
 
         function triggerRemoteSubscriberUnlockFromAdmin() {
@@ -5955,17 +6030,17 @@
             window.location.reload(true);
         }
 
-        // بث رسالة التحديث الجديد الشامل (v30.42) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
+        // بث رسالة التحديث الجديد الشامل (v30.43) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
         function handleBroadcastGlobalVersion() {
-            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.42) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
+            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.43) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
                 if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                     SmartCloudSync.broadcastAppVersionUpdate({
-                        version: 'v30.42',
-                        title: 'تحديث المنظومة (v30.42)',
+                        version: 'v30.43',
+                        title: 'تحديث المنظومة (v30.43)',
                         timestamp: Date.now()
                     });
                 }
-                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.42) عبر شبكة البث اللحظي MQTT و NTFY و Master Hub لكافة الأجهزة!');
+                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.43) عبر شبكة البث اللحظي MQTT و NTFY و Master Hub لكافة الأجهزة!');
             }
         }
         window.handleBroadcastGlobalVersion = handleBroadcastGlobalVersion;

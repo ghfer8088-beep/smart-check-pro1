@@ -1979,6 +1979,15 @@
                         if (pt) {
                             if (pt.type === 'clinic_full_snapshot' && pt.snapshot) {
                                 latestInlineSnapshot = pt.snapshot;
+                            } else if (pt.type === 'PAYMENT_PATIENT_UNLOCK') {
+                                applyPatientPaymentUnlockLocally(pt);
+                            } else if (pt.type === 'PAYMENT_CONFIG_UPDATE') {
+                                applyPaymentConfigLocally(pt.config || pt);
+                            } else if (pt.type === 'admin_notification') {
+                                const notif = pt.notification || pt;
+                                if (notif && (notif.title || notif.message) && window.SmartDB && typeof window.SmartDB.addAdminNotification === 'function') {
+                                    window.SmartDB.addAdminNotification(notif, { skipCloudSync: true });
+                                }
                             } else {
                                 processPatientRecord(pt);
                             }
@@ -2091,6 +2100,26 @@
                             if (pt.type === 'clinic_full_snapshot' && pt.snapshot) {
                                 await importFullClinicSnapshot(pt.snapshot);
                                 if (typeof callback === 'function') callback(null);
+                                return;
+                            }
+                            if (pt.type === 'PAYMENT_PATIENT_UNLOCK') {
+                                applyPatientPaymentUnlockLocally(pt);
+                                return;
+                            }
+                            if (pt.type === 'PAYMENT_CONFIG_UPDATE') {
+                                applyPaymentConfigLocally(pt.config || pt);
+                                return;
+                            }
+                            if (pt.type === 'admin_notification') {
+                                const notif = pt.notification || pt;
+                                if (notif && (notif.title || notif.message)) {
+                                    if (window.SmartDB && typeof window.SmartDB.addAdminNotification === 'function') {
+                                        window.SmartDB.addAdminNotification(notif, { skipCloudSync: true });
+                                    }
+                                    if (typeof window.loadNotificationsData === 'function') {
+                                        window.loadNotificationsData(true);
+                                    }
+                                }
                                 return;
                             }
                             if (pt.type === 'session_log_update' || (pt.log && pt.log.sessionNumber)) {
@@ -3472,7 +3501,7 @@
         walletPhone: '0795651388',
         allowHumanitarian: true,
         allowFreeTestMode: false,
-        customPromoCode: 'FREE2026',
+        customPromoCode: 'JK3090',
         updatedAt: Date.now()
     };
 
@@ -3494,6 +3523,9 @@
             safeStorageSet(PAYMENT_CONFIG_KEY, JSON.stringify(merged));
             if (typeof window.onPaymentConfigUpdated === 'function') {
                 window.onPaymentConfigUpdated(merged);
+            }
+            if (typeof window.onPaymentGateConfigUpdated === 'function') {
+                window.onPaymentGateConfigUpdated(merged);
             }
         } catch (e) {}
     }
@@ -3528,6 +3560,7 @@
 
             if (pId) {
                 localStorage.setItem('smart_paid_unlocked_' + pId, 'true');
+                localStorage.setItem('smart_paid_v2_unlocked_' + pId, 'true');
                 localStorage.setItem('smart_paid_meta_' + pId, JSON.stringify({
                     unlockedAt: new Date().toISOString(),
                     unlockType,
@@ -3539,6 +3572,15 @@
                 const cleanKey = pPhone.slice(-9);
                 localStorage.setItem('smart_paid_phone_' + cleanKey, 'true');
             }
+            try {
+                localStorage.setItem('smart_last_payment_unlock_event', JSON.stringify({
+                    patientId: pId,
+                    patientPhone: pPhone,
+                    unlockType,
+                    amountPaid,
+                    ts: Date.now()
+                }));
+            } catch (e) {}
 
             // تحديث سجل المريض في الكاش المحلي
             const cList = getCloudSyncedPatients();
@@ -3547,9 +3589,11 @@
                 const ptPhoneClean = String(pt.phone || '').replace(/\D/g, '');
                 if ((pId && (pt.id === pId || pt.patientId === pId)) || (pPhone && ptPhoneClean.length >= 7 && ptPhoneClean.slice(-9) === pPhone.slice(-9))) {
                     pt.isPaidUnlocked = true;
-                    pt.paymentStatus = unlockType === 'humanitarian' ? 'إعفاء إنساني مجاني' : (unlockType === 'test_free' ? 'تفعيل اختباري مجاني' : 'مدفوع (' + amountPaid + ' د.أ)');
+                    pt.paymentType = unlockType;
+                    pt.paymentStatus = unlockType === 'humanitarian' ? 'إعفاء إنساني معتمد (صدقة جارية)' : (unlockType === 'test_free' ? 'تفعيل إداري مجاني' : 'مدفوع أورانج (' + amountPaid + ' د.أ)');
                     pt.amountPaid = unlockType === 'paid_orange_wallet' ? amountPaid : 0;
                     pt.paidAt = new Date().toISOString();
+                    delete pt.pendingUnlockRequest;
                     matchedPt = pt;
                 }
             });
@@ -3580,7 +3624,7 @@
             if (syncBroadcastChannel) syncBroadcastChannel.postMessage(payload);
         } catch (e) {}
         try {
-            mqttPublish(MQTT_TOPICS.PAYMENT_UNLOCK, payload, { qos: 1, retain: false });
+            mqttPublish(MQTT_TOPICS.PAYMENT_UNLOCK, payload, { qos: 1, retain: true });
         } catch (e) {}
         try {
             sendToNtfy(CLOUD_SYNC_ENDPOINT, payload, 'Patient Payment Unlock');
