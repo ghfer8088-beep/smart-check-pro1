@@ -42,9 +42,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=30.46"></script>
-    <script src="js/security-shield.js?v=30.46"></script>
-    <link rel="stylesheet" href="css/style.css?v=30.46">
+    <script src="js/system-watchdog.js?v=30.47"></script>
+    <script src="js/security-shield.js?v=30.47"></script>
+    <link rel="stylesheet" href="css/style.css?v=30.47">
     <style>
         body {
             background-color: #080c14;
@@ -406,7 +406,7 @@
                     <div style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.78em; color: #94a3b8; margin-top: 2px;">
                         <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                         <span>الإصدار المعتمد:</span>
-                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.46</strong>
+                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.47</strong>
                     </div>
                 </div>
             </div>
@@ -435,10 +435,10 @@
                         <span>⚙️</span> إعدادات
                     </button>
                     <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header admin-btn-cache" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 9px 12px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
-                        ⚡ تحديث الكاش (v30.46)
+                        ⚡ تحديث الكاش (v30.47)
                     </button>
-                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.46) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
-                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.46)
+                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.47) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
+                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.47)
                     </button>
                     <button type="button" id="btn-force-sync" onclick="handleForceFullSync()" style="background: linear-gradient(135deg,rgba(59,130,246,0.25),rgba(99,102,241,0.2)); border: 1px solid #6366f1; color: #a5b4fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="جلب كافة السجلات من السحابة قسرياً وبثها لجميع الأجهزة">
                         🔄 مزامنة كاملة
@@ -730,7 +730,13 @@
                     </div>
 
                     <div style="display: flex; align-items: center; gap: 10px; flex: 1; justify-content: flex-end; flex-wrap: wrap;">
-                        <div style="position: relative; min-width: 240px; max-width: 400px; flex: 1;">
+                        <select id="patients-sort-order" onchange="filterPatients()" style="background: #0b111e; border: 1.5px solid var(--primary-gold); color: #fef08a; padding: 10px 14px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.5);">
+                            <option value="newest" selected>⏱️ الأحدث أولاً (الأولوية للطلبات المعلقة)</option>
+                            <option value="oldest">⌛ الأقدم أولاً</option>
+                            <option value="sessions">🏋️ الأكثر جلسات منجزة</option>
+                            <option value="score">📈 أعلى نسبة تعافي</option>
+                        </select>
+                        <div style="position: relative; min-width: 220px; max-width: 360px; flex: 1;">
                             <input type="text" id="search-patients" oninput="filterPatients()" placeholder="🔍 ابحث بالاسم، الجوال، المدينة..." style="width: 100%; background: #0b111e; border: 1px solid #334155; padding: 10px 14px; border-radius: 8px; color: #fff; font-size: 0.9em; box-sizing: border-box;">
                         </div>
                     </div>
@@ -1802,15 +1808,15 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/clinic-patients-data.js?v=30.46"></script>
-    <script src="js/mqtt.min.js?v=30.46"></script>
-    <script src="js/cloud-sync.js?v=30.46"></script>
-    <script src="js/geo-tracker.js?v=30.46"></script>
-    <script src="js/database.js?v=30.46"></script>
-    <script src="js/exercise-image-studio.js?v=30.46"></script>
-    <script src="js/admin-engine.js?v=30.46"></script>
-    <script src="js/ai-config.js?v=30.46"></script>
-    <script src="js/ai-engine.js?v=30.46"></script>
+    <script src="js/clinic-patients-data.js?v=30.47"></script>
+    <script src="js/mqtt.min.js?v=30.47"></script>
+    <script src="js/cloud-sync.js?v=30.47"></script>
+    <script src="js/geo-tracker.js?v=30.47"></script>
+    <script src="js/database.js?v=30.47"></script>
+    <script src="js/exercise-image-studio.js?v=30.47"></script>
+    <script src="js/admin-engine.js?v=30.47"></script>
+    <script src="js/ai-config.js?v=30.47"></script>
+    <script src="js/ai-engine.js?v=30.47"></script>
 
     <script>
         let allPatientsList = [];
@@ -2943,6 +2949,83 @@
             renderTable(getFilteredPatientsList());
         }
 
+        function getAdminRecordSortTimestamp(item) {
+            if (!item) return 0;
+            const p = item.patient || item;
+            const dates = [
+                item.lastActiveAt, p.lastActiveAt, p.paidUnlockedAt, p.lastUpdated,
+                item.createdAt, p.createdAt, p.timestamp, p.date,
+                p.pendingUnlockRequest?.timestamp, p.pendingUnlockRequest?.createdAt, p.pendingUnlockRequest?.time,
+                p.latestAssessment?.date, p.latestAssessment?.createdAt, p.latestAssessment?.timestamp,
+                p.assessment?.date, p.assessment?.createdAt
+            ];
+            let max = 0;
+            for (const d of dates) {
+                if (!d) continue;
+                const ms = (typeof d === 'number') ? d : new Date(d).getTime();
+                if (!isNaN(ms) && ms > max) max = ms;
+            }
+            const ids = [p.patientId, p.id, item.patientId, item.id, p.examId];
+            for (const id of ids) {
+                if (typeof id === 'string') {
+                    const m = id.match(/(\d{10,13})/);
+                    if (m) {
+                        const n = Number(m[1]);
+                        const ms = (n < 10000000000) ? n * 1000 : n;
+                        if (!isNaN(ms) && ms > 1500000000000 && ms < 2500000000000 && ms > max) max = ms;
+                    }
+                }
+            }
+            return max;
+        }
+        window.getAdminRecordSortTimestamp = getAdminRecordSortTimestamp;
+
+        function formatArabicDateSmart(ts) {
+            if (!ts) return 'تاريخ غير محدد';
+            try {
+                const d = new Date(ts);
+                if (isNaN(d.getTime())) return 'تاريخ غير محدد';
+                const now = Date.now();
+                const diffMin = Math.floor((now - d.getTime()) / 60000);
+                if (diffMin < 2) return 'الآن';
+                if (diffMin < 60) return `منذ ${diffMin} دقيقة`;
+                const diffHr = Math.floor(diffMin / 60);
+                if (diffHr < 24) return `منذ ${diffHr} ساعة`;
+                const diffDays = Math.floor(diffHr / 24);
+                if (diffDays < 7) return `منذ ${diffDays} يوم`;
+                return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            } catch (e) {
+                return 'تاريخ غير محدد';
+            }
+        }
+        window.formatArabicDateSmart = formatArabicDateSmart;
+
+        function sortAdminPatientsList(list, sortOrder = 'newest') {
+            if (!Array.isArray(list)) return [];
+            const copy = [...list];
+            if (sortOrder === 'oldest') {
+                copy.sort((a, b) => getAdminRecordSortTimestamp(a) - getAdminRecordSortTimestamp(b));
+            } else if (sortOrder === 'sessions') {
+                copy.sort((a, b) => (b.logsCount || (b.patient?.dailyLogs?.length || 0)) - (a.logsCount || (a.patient?.dailyLogs?.length || 0)));
+            } else if (sortOrder === 'score') {
+                copy.sort((a, b) => (b.recoveryScore || 0) - (a.recoveryScore || 0));
+            } else {
+                // 'newest' (الافتراضي): الأولوية للطلبات المعلقة ثم الأحدث تسجيلاً أو نشاطاً
+                copy.sort((a, b) => {
+                    const pA = a.patient || a;
+                    const pB = b.patient || b;
+                    const isPendingA = !pA.isPaidUnlocked && Boolean(pA.pendingUnlockRequest || String(pA.paymentStatus || '').includes('بانتظار'));
+                    const isPendingB = !pB.isPaidUnlocked && Boolean(pB.pendingUnlockRequest || String(pB.paymentStatus || '').includes('بانتظار'));
+                    if (isPendingA && !isPendingB) return -1;
+                    if (!isPendingA && isPendingB) return 1;
+
+                    return getAdminRecordSortTimestamp(b) - getAdminRecordSortTimestamp(a);
+                });
+            }
+            return copy;
+        }
+        window.sortAdminPatientsList = sortAdminPatientsList;
+
         function getFilteredPatientsList() {
             let list = allPatientsList;
             if (activePtFilter === 'registered') {
@@ -2972,7 +3055,9 @@
                 });
             }
 
-            return list;
+            const sortSelect = document.getElementById('patients-sort-order');
+            const sortMode = (sortSelect && sortSelect.value) ? sortSelect.value : 'newest';
+            return sortAdminPatientsList(list, sortMode);
         }
 
         // مطابقة وتوليد الإشعارات السريرية التلقائية لجميع مراجعي العيادة الفعليين
@@ -3480,6 +3565,9 @@
                             paymentBadgeHTML = `<span style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #7dd3fc; padding: 2px 8px; border-radius: 4px; font-size: 0.7em; font-weight: bold; display: inline-flex; align-items: center; gap: 3px;">🔑 مفعل بكود</span>`;
                         }
 
+                        const recordTs = getAdminRecordSortTimestamp(item);
+                        const dateBadge = formatArabicDateSmart(recordTs);
+
                         return `
                         <div class="royal-patient-card">
                             <!-- رأس بطاقة المريض الفاخرة -->
@@ -3498,6 +3586,7 @@
                                         <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 0.82em; color: #94a3b8; flex-wrap: wrap;">
                                             <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 7px; border-radius: 4px; color: #7dd3fc; font-weight: bold;">${locationDisplay}</span>
                                             <span style="color: #cbd5e1;">${deviceIcon} ${p.device || 'Mobile'}</span>
+                                            <span style="background: rgba(148, 163, 184, 0.12); border: 1px solid rgba(148, 163, 184, 0.25); padding: 2px 7px; border-radius: 4px; color: #fef08a; font-weight: 600;" title="تاريخ التسجيل أو آخر نشاط">⏱️ ${dateBadge}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -3717,21 +3806,7 @@
 
         function filterPatients(resetPage = true) {
             if (resetPage) currentCardsPage = 1;
-            const q = document.getElementById('search-patients').value.trim().toLowerCase();
-            if (!q) {
-                renderTable(allPatientsList);
-                return;
-            }
-            const filtered = allPatientsList.filter(item => {
-                const p = item.patient || {};
-                const pDisplayName = p.fullName || p.name || '';
-                return (pDisplayName && pDisplayName.toLowerCase().includes(q)) ||
-                       (p.patientId && p.patientId.toLowerCase().includes(q)) ||
-                       (p.phone && p.phone.includes(q)) ||
-                       (p.country && p.country.toLowerCase().includes(q)) ||
-                       (p.city && p.city.toLowerCase().includes(q));
-            });
-            renderTable(filtered);
+            renderTable(getFilteredPatientsList());
         }
 
         function formatTimeAgoArabic(date) {
@@ -6298,17 +6373,17 @@ function copyAdminCode(code) {
             }, 250);
         }
 
-        // بث رسالة التحديث الجديد الشامل (v30.46) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
+        // بث رسالة التحديث الجديد الشامل (v30.47) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
         function handleBroadcastGlobalVersion() {
-            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.46) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
+            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.47) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
                 if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                     SmartCloudSync.broadcastAppVersionUpdate({
-                        version: 'v30.46',
-                        title: 'تحديث المنظومة (v30.46)',
+                        version: 'v30.47',
+                        title: 'تحديث المنظومة (v30.47)',
                         timestamp: Date.now()
                     });
                 }
-                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.46) عبر شبكة البث اللحظي MQTT و NTFY و Master Hub لكافة الأجهزة!');
+                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.47) عبر شبكة البث اللحظي MQTT و NTFY و Master Hub لكافة الأجهزة!');
             }
         }
         window.handleBroadcastGlobalVersion = handleBroadcastGlobalVersion;
@@ -6777,7 +6852,7 @@ function copyAdminCode(code) {
 <script>
 // ===== تحديث تلقائي للوحة الإدارة: تقارن إصدارها بإصدار الأداة المنشور (sw.js) وتحدّث نفسها =====
 (function () {
-    const ADMIN_VER = 'v30.46';
+    const ADMIN_VER = 'v30.47';
     window.ADMIN_VER = ADMIN_VER;
     let busy = false;
     async function check(force) {

@@ -831,8 +831,8 @@ const AdminEngine = (function() {
                     baselinePain: baselinePain,
                     latestDiagnosis: resolvedDiagnosis,
                     painArea: resolvedPainArea,
-                    createdAt: p.createdAt,
-                    lastActiveAt: p.lastActiveAt || p.createdAt
+                    createdAt: p.createdAt || p.date || p.timestamp || p.lastUpdated || new Date().toISOString(),
+                    lastActiveAt: p.lastActiveAt || p.lastUpdated || p.createdAt || p.date || new Date().toISOString()
                 });
             }
 
@@ -990,11 +990,48 @@ const AdminEngine = (function() {
             }
             const cleanOverview = finalOverviewList;
 
-            // 7. الترتيب الزمني السريري الدقيق: الأحدث تسجيلاً ونشاطاً يظهر أولاً في القمة
+            // 7. الترتيب الزمني السريري الدقيق: المراجعون بانتظار الموافقة في القمة، ثم الأحدث تسجيلاً ونشاطاً
+            function _extractOverviewTs(item) {
+                if (!item) return 0;
+                const p = item.patient || item;
+                const dates = [
+                    item.lastActiveAt, p.lastActiveAt, p.paidUnlockedAt, p.lastUpdated,
+                    item.createdAt, p.createdAt, p.timestamp, p.date,
+                    p.pendingUnlockRequest?.timestamp, p.pendingUnlockRequest?.createdAt, p.pendingUnlockRequest?.time,
+                    p.latestAssessment?.date, p.latestAssessment?.createdAt, p.latestAssessment?.timestamp,
+                    p.assessment?.date, p.assessment?.createdAt
+                ];
+                let max = 0;
+                for (const d of dates) {
+                    if (!d) continue;
+                    const ms = (typeof d === 'number') ? d : new Date(d).getTime();
+                    if (!isNaN(ms) && ms > max) max = ms;
+                }
+                const ids = [p.patientId, p.id, item.patientId, item.id, p.examId];
+                for (const id of ids) {
+                    if (typeof id === 'string') {
+                        const m = id.match(/(\d{10,13})/);
+                        if (m) {
+                            const n = Number(m[1]);
+                            const ms = (n < 10000000000) ? n * 1000 : n;
+                            if (!isNaN(ms) && ms > 1500000000000 && ms < 2500000000000 && ms > max) max = ms;
+                        }
+                    }
+                }
+                return max;
+            }
+
             cleanOverview.sort((a, b) => {
-                const timeA = new Date(a.lastActiveAt || a.patient?.lastActiveAt || a.patient?.lastUpdated || a.patient?.createdAt || a.createdAt || 0).getTime();
-                const timeB = new Date(b.lastActiveAt || b.patient?.lastActiveAt || b.patient?.lastUpdated || b.patient?.createdAt || b.createdAt || 0).getTime();
-                return timeB - timeA;
+                const pA = a.patient || a;
+                const pB = b.patient || b;
+                const isPendingA = !pA.isPaidUnlocked && Boolean(pA.pendingUnlockRequest || String(pA.paymentStatus || '').includes('بانتظار'));
+                const isPendingB = !pB.isPaidUnlocked && Boolean(pB.pendingUnlockRequest || String(pB.paymentStatus || '').includes('بانتظار'));
+                if (isPendingA && !isPendingB) return -1;
+                if (!isPendingA && isPendingB) return 1;
+
+                const tsA = _extractOverviewTs(a);
+                const tsB = _extractOverviewTs(b);
+                return tsB - tsA;
             });
 
             // 7. حفظ التخزين المحلي فورياً مع الحفاظ على كافة السجلات الحقيقية الخالية من التكرار
