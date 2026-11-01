@@ -274,6 +274,36 @@ const AdminEngine = (function() {
                     if (!resolvedName) continue;
 
                     const notifPtId = notif.patientId || ('pat_notif_' + (cleanPh || (Date.now().toString(36) + Math.random().toString(36).substr(2, 4))));
+                    const isHumNotif = notif.type === 'humanitarian_request' || (notif.meta && notif.meta.paymentType === 'humanitarian');
+                    const isPayNotif = notif.type === 'payment_received';
+                    const isApprovedNotif = Boolean(notif.meta && notif.meta.approved);
+                    let notifPayStatus = '';
+                    let notifPendingReq = null;
+                    if (isHumNotif) {
+                        notifPayStatus = isApprovedNotif ? 'إعفاء إنساني معتمد (صدقة جارية)' : '⏳ طلب إعفاء إنساني بانتظار موافقة الإدارة';
+                        if (!isApprovedNotif) {
+                            notifPendingReq = {
+                                patientId: notifPtId,
+                                requestType: 'humanitarian',
+                                subscriberName: resolvedName,
+                                subscriberPhone: phoneVal,
+                                waiverReason: (notif.meta && notif.meta.waiverReason) || 'أقرّ بالقسم الشرعي أنه فقير وغير مقتدر مادياً (في ذمته ليوم الدين)'
+                            };
+                        }
+                    } else if (isPayNotif) {
+                        const amt = (notif.meta && notif.meta.amountJod) || 3;
+                        notifPayStatus = isApprovedNotif ? `مدفوع محفظة أورانج (${amt} د.أ)` : `⏳ بانتظار تأكيد حوالة أورانج (${amt} د.أ)`;
+                        if (!isApprovedNotif) {
+                            notifPendingReq = {
+                                patientId: notifPtId,
+                                requestType: 'paid_orange_wallet',
+                                subscriberName: resolvedName,
+                                subscriberPhone: phoneVal,
+                                transferRef: (notif.meta && notif.meta.transferRef) || '',
+                                amountJod: amt
+                            };
+                        }
+                    }
                     candidatePool.push({
                         patientId: notifPtId,
                         id: notifPtId,
@@ -286,6 +316,10 @@ const AdminEngine = (function() {
                         diagnosisTitle: chiefDiag,
                         completedSessions: completedSess,
                         logsCount: completedSess,
+                        isPaidUnlocked: isApprovedNotif,
+                        paymentType: isHumNotif ? 'humanitarian' : (isPayNotif ? 'paid_orange_wallet' : ''),
+                        paymentStatus: notifPayStatus,
+                        pendingUnlockRequest: notifPendingReq,
                         createdAt: notif.time || new Date().toISOString(),
                         timestamp: notif.time || new Date().toISOString(),
                         lastActiveAt: notif.time || new Date().toISOString(),
@@ -483,9 +517,12 @@ const AdminEngine = (function() {
 
                     // التواريخ
                     const rDate = r.createdAt || r.timestamp;
+                    const rActive = r.lastActiveAt || r.lastUpdated || r.createdAt || r.timestamp;
                     if (rDate) {
                         if (!earliestDate || new Date(rDate) < new Date(earliestDate)) earliestDate = rDate;
-                        if (!latestActiveDate || new Date(rDate) > new Date(latestActiveDate)) latestActiveDate = rDate;
+                    }
+                    if (rActive) {
+                        if (!latestActiveDate || new Date(rActive) > new Date(latestActiveDate)) latestActiveDate = rActive;
                     }
 
                     // الجلسات اليومية المنفذة
@@ -502,6 +539,25 @@ const AdminEngine = (function() {
                         unified.logsCount = Math.max(unified.logsCount || 0, r.dailyLogs.length);
                     }
                     unified.recoveryScore = Math.max(unified.recoveryScore || 0, r.recoveryScore || 0);
+
+                    // حالة الدفع وطلب الإعفاء الإنساني المعلق (ضمان عدم ضياع طلب الإعفاء عند دمج السجلات)
+                    if (r.isPaidUnlocked) {
+                        unified.isPaidUnlocked = true;
+                        unified.paymentType = r.paymentType || unified.paymentType || 'paid_orange_wallet';
+                        unified.paymentStatus = r.paymentStatus || unified.paymentStatus || 'مفعل ومعتمد';
+                        if (r.amountPaid != null) unified.amountPaid = r.amountPaid;
+                        delete unified.pendingUnlockRequest;
+                    } else if (!unified.isPaidUnlocked) {
+                        if (r.pendingUnlockRequest) {
+                            unified.pendingUnlockRequest = r.pendingUnlockRequest;
+                        }
+                        if (r.paymentStatus && (!unified.paymentStatus || r.paymentStatus.includes('بانتظار') || r.paymentStatus.includes('إعفاء') || r.paymentStatus.includes('أورانج'))) {
+                            unified.paymentStatus = r.paymentStatus;
+                        }
+                        if (r.paymentType && !unified.paymentType) {
+                            unified.paymentType = r.paymentType;
+                        }
+                    }
                 }
 
                 allDailyLogs.sort((a, b) => (a.sessionNumber || a.day || 0) - (b.sessionNumber || b.day || 0));
@@ -857,6 +913,25 @@ const AdminEngine = (function() {
                     // تقرير الرنين
                     if (!existing.patient.mriReportText && p.mriReportText) {
                         existing.patient.mriReportText = p.mriReportText;
+                    }
+
+                    // دمج حالة الدفع وطلب الإعفاء الإنساني المعلق
+                    if (p.isPaidUnlocked) {
+                        existing.patient.isPaidUnlocked = true;
+                        existing.patient.paymentType = p.paymentType || existing.patient.paymentType || 'paid_orange_wallet';
+                        existing.patient.paymentStatus = p.paymentStatus || existing.patient.paymentStatus || 'مفعل ومعتمد';
+                        if (p.amountPaid != null) existing.patient.amountPaid = p.amountPaid;
+                        delete existing.patient.pendingUnlockRequest;
+                    } else if (!existing.patient.isPaidUnlocked) {
+                        if (p.pendingUnlockRequest) {
+                            existing.patient.pendingUnlockRequest = p.pendingUnlockRequest;
+                        }
+                        if (p.paymentStatus && (!existing.patient.paymentStatus || p.paymentStatus.includes('بانتظار') || p.paymentStatus.includes('إعفاء') || p.paymentStatus.includes('أورانج'))) {
+                            existing.patient.paymentStatus = p.paymentStatus;
+                        }
+                        if (p.paymentType && !existing.patient.paymentType) {
+                            existing.patient.paymentType = p.paymentType;
+                        }
                     }
 
                     // مقارنة مستوى التفاعل والإنجاز

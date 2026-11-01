@@ -1833,10 +1833,22 @@ async function runDiagnosticAnalysis() {
             date: new Date().toISOString()
         };
 
+        // ترحيل وتوثيق بيانات المريض والتشخيص إلى قاعدة بيانات الإدارة فوراً بمعرف الفحص أو الحساب المسجل
+        const targetPatientId = (clinicalDialogueState && clinicalDialogueState.patientId)
+            || (authPatientData && (authPatientData.patientId || authPatientData.id))
+            || (activePatient && activePatient.patientId)
+            || ('pat_' + (pPhone ? String(pPhone).replace(/\D/g, '') : Date.now().toString(36)) + '_' + Math.random().toString(36).substr(2, 5));
+        if (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState) {
+            clinicalDialogueState.patientId = targetPatientId;
+        }
+        currentAssessmentData.patientId = targetPatientId;
+
         try {
             const newExamId = 'EX_' + Date.now();
             localStorage.setItem('smart_current_exam_id', newExamId);
+            localStorage.setItem('smart_current_patient_id', targetPatientId);
             sessionStorage.setItem('scp_current_exam_id', newExamId);
+            sessionStorage.setItem('scp_active_patient_id', targetPatientId);
             sessionStorage.removeItem('scp_current_exam_paid_unlocked');
             currentAssessmentData.examId = newExamId;
             localStorage.setItem('smart_current_assessment', JSON.stringify(currentAssessmentData));
@@ -1849,15 +1861,6 @@ async function runDiagnosticAnalysis() {
         }
 
         const painDisplayStr = hasExplicitPain ? `${explicitPain}/10` : 'مستند للأعراض السريرية';
-
-        // ترحيل وتوثيق بيانات المريض والتشخيص إلى قاعدة بيانات الإدارة فوراً بمعرف الفحص أو الحساب المسجل
-        const targetPatientId = (clinicalDialogueState && clinicalDialogueState.patientId)
-            || (authPatientData && (authPatientData.patientId || authPatientData.id))
-            || (activePatient && activePatient.patientId)
-            || ('pat_' + (pPhone ? String(pPhone).replace(/\D/g, '') : Date.now().toString(36)) + '_' + Math.random().toString(36).substr(2, 5));
-        if (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState) {
-            clinicalDialogueState.patientId = targetPatientId;
-        }
 
         // إشعار طارئ للإدارة في حال وجود علامات حمراء تستوجب المتابعة
         if (redFlagsSelected && redFlagsSelected.length > 0) {
@@ -5167,7 +5170,7 @@ function contactInternationalPatientCoordinator() {
 }
 
 // =========================================================================
-// 👑 محرك البوابة الملكية للاشتراك والاعتماد الإداري الموثق (SmartPaymentGate v30.43)
+// 👑 محرك البوابة الملكية للاشتراك والاعتماد الإداري الموثق (SmartPaymentGate v30.44)
 // =========================================================================
 function getActivePaymentGateConfig() {
     if (window.SmartCloudSync && typeof window.SmartCloudSync.getPaymentConfig === 'function') {
@@ -5234,6 +5237,39 @@ function savePendingUnlockRequest(reqObj) {
     } catch (e) {}
 }
 
+// إشعار ملكي عائم بارز يظهر للمريض فور إرسال طلب الإعفاء أو الحوالة أو عند اعتماد التفعيل
+function showRoyalPaymentToast(message, type = 'success') {
+    try {
+        let toastEl = document.getElementById('royal-payment-floating-toast');
+        if (!toastEl) {
+            toastEl = document.createElement('div');
+            toastEl.id = 'royal-payment-floating-toast';
+            toastEl.style.cssText = 'position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 999999; max-width: 92vw; width: 540px; padding: 15px 20px; border-radius: 16px; font-family: "Cairo", "Almarai", sans-serif; font-weight: 900; font-size: 0.98em; line-height: 1.6; text-align: center; box-shadow: 0 18px 45px rgba(0,0,0,0.88); transition: all 0.3s ease;';
+            document.body.appendChild(toastEl);
+        }
+        if (type === 'error' || type === 'warning') {
+            toastEl.style.background = 'linear-gradient(135deg, #450a0a 0%, #1e1b4b 100%)';
+            toastEl.style.border = '2px solid #ef4444';
+            toastEl.style.color = '#fecaca';
+        } else {
+            toastEl.style.background = 'linear-gradient(135deg, #064e3b 0%, #050911 100%)';
+            toastEl.style.border = '2px solid #d4af37';
+            toastEl.style.color = '#fef08a';
+        }
+        toastEl.innerHTML = message;
+        toastEl.style.display = 'block';
+        toastEl.style.opacity = '1';
+        clearTimeout(window._royalToastHideTimer);
+        window._royalToastHideTimer = setTimeout(() => {
+            if (toastEl) {
+                toastEl.style.opacity = '0';
+                setTimeout(() => { if (toastEl) toastEl.style.display = 'none'; }, 300);
+            }
+        }, 6500);
+    } catch (e) {}
+}
+window.showRoyalPaymentToast = showRoyalPaymentToast;
+
 function isCurrentPatientPlanUnlocked(patientId, patientPhone) {
     const cfg = getActivePaymentGateConfig();
     if (!cfg.enabled || cfg.allowFreeTestMode) return true;
@@ -5246,14 +5282,70 @@ function isCurrentPatientPlanUnlocked(patientId, patientPhone) {
             return true;
         }
         const pendingReq = getPendingUnlockRequest();
-        const pId = patientId || pendingReq?.patientId || (typeof activePatient !== 'undefined' && activePatient?.patientId) || localStorage.getItem('smart_current_patient_id') || '';
-        if (pId && (localStorage.getItem('smart_paid_v2_unlocked_' + pId) === 'true' || localStorage.getItem('smart_paid_unlocked_' + pId) === 'true')) {
-            return true;
+        const candidateIds = [
+            patientId,
+            pendingReq?.patientId,
+            (typeof activePatient !== 'undefined' && (activePatient?.patientId || activePatient?.id)),
+            (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.patientId),
+            (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState?.patientId),
+            sessionStorage.getItem('scp_active_patient_id'),
+            localStorage.getItem('smart_current_patient_id')
+        ].filter(Boolean);
+
+        for (const idKey of candidateIds) {
+            if (localStorage.getItem('smart_paid_v2_unlocked_' + idKey) === 'true' || localStorage.getItem('smart_paid_unlocked_' + idKey) === 'true') {
+                return true;
+            }
         }
-        const rawPh = patientPhone || pendingReq?.subscriberPhone || (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') || localStorage.getItem('smart_patient_phone') || '';
-        const cleanPh = String(rawPh).replace(/\D/g, '');
-        if (cleanPh.length >= 7 && localStorage.getItem('smart_paid_phone_' + cleanPh.slice(-9)) === 'true') {
-            return true;
+
+        const candidatePhones = [
+            patientPhone,
+            pendingReq?.subscriberPhone,
+            document.getElementById('pay-subscriber-phone')?.value,
+            document.getElementById('hum-subscriber-phone')?.value,
+            (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : ''),
+            (typeof activePatient !== 'undefined' && activePatient?.phone),
+            (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.patientPhone),
+            localStorage.getItem('smart_patient_phone')
+        ].filter(Boolean);
+
+        for (const phRaw of candidatePhones) {
+            const cleanPh = String(phRaw).replace(/\D/g, '');
+            if (cleanPh.length >= 7) {
+                if (localStorage.getItem('smart_paid_phone_' + cleanPh.slice(-9)) === 'true' || localStorage.getItem('smart_paid_phone_' + cleanPh.slice(-8)) === 'true') {
+                    return true;
+                }
+            }
+        }
+
+        const candidateNames = [
+            pendingReq?.subscriberName,
+            document.getElementById('pay-subscriber-name')?.value,
+            document.getElementById('hum-subscriber-name')?.value,
+            (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : ''),
+            (typeof activePatient !== 'undefined' && (activePatient?.fullName || activePatient?.name)),
+            (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.patientName),
+            localStorage.getItem('smart_patient_name')
+        ].filter(Boolean);
+
+        for (const nmRaw of candidateNames) {
+            const cleanNmKey = String(nmRaw).trim().replace(/\s+/g, '_').toLowerCase();
+            if (cleanNmKey.length >= 2 && localStorage.getItem('smart_paid_name_' + cleanNmKey) === 'true') {
+                return true;
+            }
+        }
+
+        // فحص مباشر لحدث فتح القفل الصادر من لوحة الإدارة على نفس المتصفح أو عبر السحابة
+        const rawEvt = localStorage.getItem('smart_last_payment_unlock_event');
+        if (rawEvt) {
+            const evt = JSON.parse(rawEvt);
+            if (evt && evt.ts && (Date.now() - evt.ts < 600000)) {
+                if (evt.sameBrowserForceUnlock) return true;
+                const evtIds = [evt.patientId, ...(Array.isArray(evt.allMergedIds) ? evt.allMergedIds : [])].filter(Boolean);
+                if (candidateIds.some(cid => evtIds.includes(cid))) return true;
+                const evtPh = String(evt.patientPhone || '').replace(/\D/g, '');
+                if (evtPh.length >= 7 && candidatePhones.some(p => String(p).replace(/\D/g, '').slice(-8) === evtPh.slice(-8))) return true;
+            }
         }
     } catch (e) {}
     return false;
@@ -5353,9 +5445,7 @@ function completePreReportUnlockAndRevealReport(unlockMeta = {}) {
         } else {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-        if (typeof showToast === 'function') {
-            showToast('👑 تم اعتماد تفعيل باقتك وفتح التقرير الطبي الكامل وخطة الـ 7 أيام بنجاح!', 'success');
-        }
+        showRoyalPaymentToast('👑 تم اعتماد تفعيل باقتك من الإدارة وفتح التقرير الطبي الكامل وخطة الـ 7 أيام بنجاح!', 'success');
         if (typeof playStationAudio === 'function') {
             setTimeout(() => { playStationAudio('diagnosis_guide'); }, 350);
         }
@@ -5363,7 +5453,7 @@ function completePreReportUnlockAndRevealReport(unlockMeta = {}) {
 }
 window.completePreReportUnlockAndRevealReport = completePreReportUnlockAndRevealReport;
 
-// مراقب حي فوري يفتح شاشة المريض تلقائياً بمجرد ضغط الأدمن على زر الموافقة في لوحة التحكم
+// مراقب حي فوري يعمل دائماً طالما شاشة الدفع معروضة ليفتح شاشة المريض تلقائياً بمجرد ضغط الأدمن على القفل في لوحة التحكم
 function startPendingUnlockLiveWatcher() {
     stopPendingUnlockLiveWatcher();
     let tickCount = 0;
@@ -5382,18 +5472,28 @@ function startPendingUnlockLiveWatcher() {
             if (tickCount % 2 === 0 && window.SmartCloudSync && typeof window.SmartCloudSync.fetchCloudPatients === 'function') {
                 const cloudPts = await window.SmartCloudSync.fetchCloudPatients();
                 const pendingReq = getPendingUnlockRequest();
-                const myId = pendingReq?.patientId || (typeof activePatient !== 'undefined' && activePatient?.patientId) || localStorage.getItem('smart_current_patient_id') || '';
+                const myIds = [
+                    pendingReq?.patientId,
+                    (typeof activePatient !== 'undefined' && (activePatient?.patientId || activePatient?.id)),
+                    (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.patientId),
+                    sessionStorage.getItem('scp_active_patient_id'),
+                    localStorage.getItem('smart_current_patient_id')
+                ].filter(Boolean);
                 const myPhone = String(pendingReq?.subscriberPhone || (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') || localStorage.getItem('smart_patient_phone') || '').replace(/\D/g, '');
+                const myName = String(pendingReq?.subscriberName || (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || localStorage.getItem('smart_patient_name') || '').trim();
                 if (Array.isArray(cloudPts)) {
                     const matched = cloudPts.find(pt => {
                         if (!pt || !pt.isPaidUnlocked) return false;
                         const ptId = pt.patientId || pt.id || '';
                         const ptPhone = String(pt.phone || '').replace(/\D/g, '');
-                        return (myId && ptId === myId) || (myPhone.length >= 7 && ptPhone.length >= 7 && ptPhone.slice(-9) === myPhone.slice(-9));
+                        const ptName = String(pt.fullName || pt.name || '').trim();
+                        return (ptId && myIds.includes(ptId)) ||
+                               (myPhone.length >= 7 && ptPhone.length >= 7 && ptPhone.slice(-8) === myPhone.slice(-8)) ||
+                               (myName.length >= 3 && ptName.length >= 3 && ptName === myName);
                     });
                     if (matched) {
                         completePreReportUnlockAndRevealReport({
-                            patientId: matched.patientId || matched.id || myId,
+                            patientId: matched.patientId || matched.id || myIds[0] || '',
                             subscriberName: matched.fullName || matched.name,
                             subscriberPhone: matched.phone || myPhone,
                             unlockType: matched.paymentType || pendingReq?.requestType || 'paid_orange_wallet',
@@ -5403,7 +5503,7 @@ function startPendingUnlockLiveWatcher() {
                 }
             }
         } catch (e) {}
-    }, 3000);
+    }, 1500);
 }
 
 // متاح فقط لجلسة الأدمن المعتمدة (محظور تماماً على المستخدم العادي)
@@ -5500,7 +5600,8 @@ function renderPreReportPaywallGate(data, reportContainer) {
         </div>
     `;
 
-    if (getPendingUnlockRequest() && !isCurrentPatientPlanUnlocked()) {
+    // تشغيل المراقب الحي دائماً طالما شاشة الدفع معروضة ليتم الفتح الفوري بمجرد نقر الأدمن على القفل في سجل الحالة
+    if (!isCurrentPatientPlanUnlocked()) {
         startPendingUnlockLiveWatcher();
     }
 
@@ -5712,9 +5813,13 @@ async function submitOrangeWalletPaymentNotification() {
     if (reportContainer) {
         renderPreReportPaywallGate(currentAssessmentData || {}, reportContainer);
     }
-    if (typeof showToast === 'function') {
-        showToast('📤 تم رفع إشعار التحويل للإدارة! سيفتح تقريرك تلقائياً فور تأكيد الحوالة.', 'info');
-    }
+    setTimeout(() => {
+        const masterCard = document.getElementById('recovery-plan-master-card');
+        if (masterCard) {
+            masterCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, 100);
+    showRoyalPaymentToast('✅ تم إرسال إشعار التحويل إلى إدارة العيادة بنجاح! سيفتح التقرير والتمارين تلقائياً فور تأكيد الحوالة.', 'success');
 }
 window.submitOrangeWalletPaymentNotification = submitOrangeWalletPaymentNotification;
 
@@ -5745,31 +5850,30 @@ function sendWhatsAppHumanitarianRequest() {
     const pendingReq = getPendingUnlockRequest();
     const subName = pendingReq?.subscriberName || (document.getElementById('hum-subscriber-name')?.value || '').trim() || 'طالب إعفاء';
     const subPhone = pendingReq?.subscriberPhone || (document.getElementById('hum-subscriber-phone')?.value || '').trim() || '';
-    const waiverReason = pendingReq?.waiverReason || (document.getElementById('hum-waiver-reason')?.value || '').trim() || 'غير مقتدر مالياً';
     const painArea = pendingReq?.painArea || currentAssessmentData?.painAreaTitle || currentSelectedPoint?.title || 'العمود الفقري';
 
     const waText = `السلام عليكم دكتور جمال قبها،\n` +
-        `رفعت طلب إعفاء إنساني (لغير المقتدرين - صدقة جارية عن روح والدكم المرحوم) لفتح التقرير الطبي وخطة التمارين:\n\n` +
+        `رفعت طلب إعفاء إنساني (للفقراء وغير المقتدرين - صدقة جارية عن روح والدكم المرحوم) لفتح التقرير الطبي وخطة التمارين:\n\n` +
         `👤 *الاسم:* ${subName}\n` +
         `📱 *رقم الهاتف:* ${subPhone}\n` +
         `🩺 *منطقة الألم:* ${painArea}\n` +
-        `📝 *الحالة / سبب الطلب:* ${waiverReason}\n\n` +
+        `⚖️ *الإقرار الشرعي:* أقررتُ أمام الله أنني غير مقتدر مادياً والله على ما أقول شهيد، وإن كنت مقتدراً فهي في ذمتي ليوم الدين.\n\n` +
         `رحم الله والدكم وجزاكم الله خيراً، بانتظار موافقتكم الكريمة من لوحة التحكم.`;
 
     window.open(`https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent(waText)}`, '_blank');
 }
 window.sendWhatsAppHumanitarianRequest = sendWhatsAppHumanitarianRequest;
 
-// 2. رفع طلب إعفاء لغير المقتدرين مالياً (صدقة جارية) — يشترط موافقة الأدمن في لوحة التحكم ولا يفعل تلقائياً!
+// 2. رفع طلب إعفاء للفقراء وغير المقتدرين مالياً (صدقة جارية) — يشترط الإقرار الشرعي وموافقة الأدمن في لوحة التحكم!
 async function submitHumanitarianFreeActivation() {
     const nameInput = document.getElementById('hum-subscriber-name');
     const phoneInput = document.getElementById('hum-subscriber-phone');
-    const reasonInput = document.getElementById('hum-waiver-reason');
+    const oathCheckbox = document.getElementById('hum-oath-checkbox');
+    const oathLabelBox = document.getElementById('hum-oath-box-label');
     const msgEl = document.getElementById('paywall-status-feedback');
 
     const subName = (nameInput?.value || '').trim();
     const subPhone = (phoneInput?.value || '').trim();
-    const waiverReason = (reasonInput?.value || '').trim();
 
     if (!subName || subName.length < 3) {
         if (msgEl) {
@@ -5779,6 +5883,7 @@ async function submitHumanitarianFreeActivation() {
             msgEl.style.color = '#fca5a5';
             msgEl.innerHTML = '⚠️ يرجى كتابة <strong>اسمك الثلاثي الكريم</strong> لرفع طلب الإعفاء للإدارة.';
         }
+        showRoyalPaymentToast('⚠️ يرجى كتابة اسمك الثلاثي الكريم أولاً.', 'warning');
         nameInput?.focus();
         return;
     }
@@ -5790,23 +5895,31 @@ async function submitHumanitarianFreeActivation() {
             msgEl.style.background = 'rgba(239, 68, 68, 0.18)';
             msgEl.style.border = '1px solid #ef4444';
             msgEl.style.color = '#fca5a5';
-            msgEl.innerHTML = '⚠️ يرجى إدخال <strong>رقم هاتفك الصحيح (الواتساب)</strong> ليتم إشعارك فور موافقة الإدارة على الإعفاء.';
+            msgEl.innerHTML = '⚠️ يرجى إدخال <strong>رقم هاتفك الصحيح (الواتساب)</strong> ليتم فتح التقرير وإشعارك فور موافقة الإدارة.';
         }
+        showRoyalPaymentToast('⚠️ يرجى إدخال رقم هاتفك الصحيح أولاً.', 'warning');
         phoneInput?.focus();
         return;
     }
 
-    if (!waiverReason || waiverReason.length < 4) {
+    if (!oathCheckbox || !oathCheckbox.checked) {
         if (msgEl) {
             msgEl.style.display = 'block';
-            msgEl.style.background = 'rgba(239, 68, 68, 0.18)';
-            msgEl.style.border = '1px solid #ef4444';
-            msgEl.style.color = '#fca5a5';
-            msgEl.innerHTML = '⚠️ يرجى كتابة <strong>توضيح مختصر للحالة أو سبب طلب الإعفاء</strong> ليتم اعتماده من الإدارة.';
+            msgEl.style.background = 'rgba(239, 68, 68, 0.22)';
+            msgEl.style.border = '1.5px solid #ef4444';
+            msgEl.style.color = '#fecaca';
+            msgEl.innerHTML = '⚠️ <strong>تنبيه شرعي:</strong> يرجى وضع علامة (✓) في مربع الإقرار والقسم بأنك غير مقتدر مادياً قبل إرسال الطلب.';
         }
-        reasonInput?.focus();
+        if (oathLabelBox) {
+            oathLabelBox.style.borderColor = '#ef4444';
+            oathLabelBox.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.45)';
+            oathLabelBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        showRoyalPaymentToast('⚠️ يجب وضع علامة (✓) في مربع الإقرار الشرعي بأنك غير مقتدر مادياً لإرسال الطلب.', 'warning');
         return;
     }
+
+    const waiverReason = 'أقرّ بالقسم الشرعي أنه فقير وغير مقتدر مادياً (في ذمته ليوم الدين)';
 
     try {
         localStorage.setItem('smart_patient_name', subName);
@@ -5819,7 +5932,7 @@ async function submitHumanitarianFreeActivation() {
         }
     } catch (e) {}
 
-    const pId = (typeof activePatient !== 'undefined' && activePatient?.patientId) || localStorage.getItem('smart_current_patient_id') || ('P-' + Date.now().toString().slice(-6));
+    const pId = (typeof activePatient !== 'undefined' && activePatient?.patientId) || (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.patientId) || localStorage.getItem('smart_current_patient_id') || ('P-' + Date.now().toString().slice(-6));
     const painArea = currentAssessmentData?.painAreaTitle || currentSelectedPoint?.title || 'العمود الفقري والمفاصل';
     const unlockPin = generatePatientPinUnlockCode(subPhone);
 
@@ -5830,7 +5943,8 @@ async function submitHumanitarianFreeActivation() {
         subscriberPhone: subPhone,
         waiverReason: waiverReason,
         amountJod: 0,
-        painArea: painArea
+        painArea: painArea,
+        justSubmitted: true
     };
     savePendingUnlockRequest(pendingObj);
     syncPendingPatientRequestToAdmin(pId, subName, subPhone, painArea, '⏳ طلب إعفاء إنساني بانتظار موافقة الإدارة', pendingObj);
@@ -5839,7 +5953,7 @@ async function submitHumanitarianFreeActivation() {
         SmartDB.addAdminNotification({
             type: 'humanitarian_request',
             title: `🌿 طلب إعفاء لغير المقتدرين (بانتظار موافقتك): ${subName}`,
-            message: `رفع المراجع [${subName}] (هاتف: ${subPhone}) طلب إعفاء إنساني (صدقة جارية) لفتح التقرير وخطة الـ 7 أيام لمنطقة (${painArea}). سبب الطلب: «${waiverReason}». اضغط (الموافقة وتفعيل الخطة) لاعتماد الإعفاء فوراً.`,
+            message: `رفع المراجع [${subName}] (هاتف: ${subPhone}) طلب إعفاء إنساني (صدقة جارية) لفتح التقرير وخطة الـ 7 أيام لمنطقة (${painArea}). الإقرار الشرعي: «${waiverReason}». اضغط (الموافقة على الإعفاء) لاعتماد الإعفاء وفتح شاشته فوراً.`,
             patientId: pId,
             patientName: subName,
             patientPhone: subPhone,
@@ -5860,9 +5974,13 @@ async function submitHumanitarianFreeActivation() {
     if (reportContainer) {
         renderPreReportPaywallGate(currentAssessmentData || {}, reportContainer);
     }
-    if (typeof showToast === 'function') {
-        showToast('🌿 تم رفع طلب الإعفاء للإدارة بنجاح! سيفتح التقرير تلقائياً فور موافقة الإدارة.', 'info');
-    }
+    setTimeout(() => {
+        const masterCard = document.getElementById('recovery-plan-master-card');
+        if (masterCard) {
+            masterCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, 100);
+    showRoyalPaymentToast('✅ تم إرسال طلب الإعفاء لوجه الله إلى إدارة العيادة بنجاح! سيفتح التقرير والتمارين تلقائياً على شاشتك فور موافقة الإدارة.', 'success');
 }
 window.submitHumanitarianFreeActivation = submitHumanitarianFreeActivation;
 
@@ -5951,16 +6069,43 @@ window.submitPromoOrTestUnlockCode = submitPromoOrTestUnlockCode;
 window.onRemotePatientPaymentUnlock = function(unlockData) {
     if (!unlockData) return;
     const pendingReq = getPendingUnlockRequest();
-    const myId = pendingReq?.patientId || (typeof activePatient !== 'undefined' && activePatient?.patientId) || localStorage.getItem('smart_current_patient_id') || '';
-    const myPhone = String(pendingReq?.subscriberPhone || (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') || localStorage.getItem('smart_patient_phone') || '').replace(/\D/g, '');
-    const targetId = unlockData.patientId || '';
-    const targetPhone = String(unlockData.patientPhone || '').replace(/\D/g, '');
+    const myIds = [
+        pendingReq?.patientId,
+        (typeof activePatient !== 'undefined' && (activePatient?.patientId || activePatient?.id)),
+        (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.patientId),
+        (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState?.patientId),
+        sessionStorage.getItem('scp_active_patient_id'),
+        localStorage.getItem('smart_current_patient_id')
+    ].filter(Boolean);
+    const myPhone = String(
+        pendingReq?.subscriberPhone ||
+        document.getElementById('pay-subscriber-phone')?.value ||
+        document.getElementById('hum-subscriber-phone')?.value ||
+        (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') ||
+        localStorage.getItem('smart_patient_phone') || ''
+    ).replace(/\D/g, '');
+    const myName = String(
+        pendingReq?.subscriberName ||
+        document.getElementById('pay-subscriber-name')?.value ||
+        document.getElementById('hum-subscriber-name')?.value ||
+        (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') ||
+        localStorage.getItem('smart_patient_name') || ''
+    ).trim();
 
-    const isMatch = (myId && targetId && myId === targetId) || (myPhone.length >= 7 && targetPhone.length >= 7 && myPhone.slice(-9) === targetPhone.slice(-9));
+    const targetIds = [unlockData.patientId, ...(Array.isArray(unlockData.allMergedIds) ? unlockData.allMergedIds : [])].filter(Boolean);
+    const targetPhone = String(unlockData.patientPhone || '').replace(/\D/g, '');
+    const targetName = String(unlockData.patientName || '').trim();
+
+    const isMatch = Boolean(unlockData.sameBrowserForceUnlock) ||
+                    targetIds.some(tid => myIds.includes(tid)) ||
+                    (myPhone.length >= 7 && targetPhone.length >= 7 && myPhone.slice(-8) === targetPhone.slice(-8)) ||
+                    (myName.length >= 3 && targetName.length >= 3 && myName === targetName) ||
+                    isCurrentPatientPlanUnlocked();
+
     if (isMatch) {
         completePreReportUnlockAndRevealReport({
-            patientId: myId || targetId,
-            subscriberName: unlockData.patientName || pendingReq?.subscriberName,
+            patientId: myIds[0] || unlockData.patientId || '',
+            subscriberName: unlockData.patientName || pendingReq?.subscriberName || myName,
             subscriberPhone: unlockData.patientPhone || myPhone,
             unlockType: unlockData.unlockType || pendingReq?.requestType || 'paid_orange_wallet',
             amountPaid: unlockData.amountPaid
@@ -5971,7 +6116,14 @@ window.onRemotePatientPaymentUnlock = function(unlockData) {
 // استماع لتغييرات التخزين المحلي (في حال فتح الأدمن والمريض على نفس المتصفح)
 window.addEventListener('storage', function(e) {
     if (!e || !e.key) return;
-    if (e.key.startsWith('smart_paid_unlocked_') || e.key.startsWith('smart_paid_phone_') || e.key === 'smart_last_payment_unlock_event') {
+    if (
+        e.key.startsWith('smart_paid_unlocked_') ||
+        e.key.startsWith('smart_paid_v2_') ||
+        e.key.startsWith('smart_paid_phone_') ||
+        e.key.startsWith('smart_paid_name_') ||
+        e.key === 'smart_last_payment_unlock_event' ||
+        e.key === 'smart_active_patient'
+    ) {
         if (isCurrentPatientPlanUnlocked()) {
             const gateWrapper = document.getElementById('pre-report-subscription-gate-wrapper');
             if (gateWrapper) {
@@ -5985,15 +6137,27 @@ window.addEventListener('storage', function(e) {
 function renderRoyalPendingApprovalCardHTML(pendingReq, cfg) {
     const isHum = pendingReq.requestType === 'humanitarian';
     const badgeColor = isHum ? '#10b981' : '#d4af37';
+    const sentBannerTitle = isHum
+        ? '✅ تم إرسال طلب الإعفاء لوجه الله بنجاح إلى إدارة العيادة!'
+        : `✅ تم إرسال إشعار تحويل محفظة أورانج (${cfg.priceJod} د.أ) بنجاح إلى إدارة العيادة!`;
+    const sentBannerSub = isHum
+        ? 'طلبك وصل الآن إلى شاشة المعالج جمال قبها في لوحة التحكم، وبمجرد ضغطه على أيقونة الموافقة سيفتح تقريرك الطبي الكامل والتمارين على هذه الشاشة تلقائياً.'
+        : 'بيانات حوالتك وصلت الآن إلى لوحة التحكم للمطابقة، وبمجرد التأكد منها سيفتح تقريرك الطبي الكامل والتمارين على هذه الشاشة تلقائياً.';
     const titleText = isHum
-        ? '🌿 طلب الإعفاء الإنساني قيد الاعتماد لدى إدارة العيادة'
+        ? '🌿 طلب الإعفاء الإنساني قيد الاعتماد المباشر لدى الإدارة'
         : `💳 إشعار حوالة محفظة أورانج (${cfg.priceJod} د.أ) قيد المصادقة الفورية`;
     const descText = isHum
-        ? `تم رفع طلب الإعفاء الخاص بك باسم <strong style="color:#fff;">(${pendingReq.subscriberName})</strong> ورقم الهاتف <strong style="color:#fef08a;" dir="ltr">(${pendingReq.subscriberPhone})</strong> إلى لوحة تحكم المعالج جمال قبها. بمجرد ضغط الإدارة على زر الموافقة، <strong>سيفتح تقريرك الطبي الكامل وتمارين اليوم الأول على هذه الشاشة تلقائياً!</strong>`
+        ? `تم توثيق طلب الإعفاء باسم <strong style="color:#fff;">(${pendingReq.subscriberName})</strong> ورقم الهاتف <strong style="color:#fef08a;" dir="ltr">(${pendingReq.subscriberPhone})</strong> بموجب الإقرار الشرعي لغير المقتدرين. <strong>ابقَ على هذه الشاشة أو تواصل عبر واتساب لتسريع الاعتماد الفوري!</strong>`
         : `تم استلام بيانات حوالتك باسم <strong style="color:#fff;">(${pendingReq.subscriberName})</strong> ورقم الهاتف <strong style="color:#fef08a;" dir="ltr">(${pendingReq.subscriberPhone})</strong> (مرجع: <code style="color:#fdba74;">${pendingReq.transferRef}</code>). تقوم الإدارة الآن بمطابقة الحوالة في محفظة أورانج، <strong>وسيفتح التقرير والتمارين أمامك تلقائياً فور تأكيدها!</strong>`;
 
     return `
         <div id="recovery-plan-master-card" class="recovery-plan-distinct-card no-print" style="padding: 28px 22px; margin-bottom: 25px; background: radial-gradient(circle at top, rgba(212, 175, 55, 0.14) 0%, rgba(8, 13, 25, 0.98) 65%); border: 2px solid ${badgeColor}; border-radius: 22px; box-shadow: 0 18px 45px rgba(0,0,0,0.8);">
+            <!-- شريط تأكيد إرسال الطلب البارز في قمة البطاقة -->
+            <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.28) 0%, rgba(6, 78, 59, 0.65) 100%); border: 2px solid #10b981; border-radius: 16px; padding: 16px 18px; margin-bottom: 22px; text-align: center; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.25);">
+                <div style="color: #fef08a; font-size: 1.15em; font-weight: 900; margin-bottom: 6px;">${sentBannerTitle}</div>
+                <div style="color: #e2e8f0; font-size: 0.92em; line-height: 1.6;">${sentBannerSub}</div>
+            </div>
+
             <div style="text-align: center; max-width: 680px; margin: 0 auto;">
                 <!-- أيقونة الرادار الحي النابض -->
                 <div style="width: 74px; height: 74px; margin: 0 auto 14px auto; border-radius: 50%; background: rgba(212, 175, 55, 0.12); border: 2px solid ${badgeColor}; display: flex; align-items: center; justify-content: center; font-size: 2.1em; box-shadow: 0 0 25px rgba(212, 175, 55, 0.35); animation: pulse 2s infinite;">
@@ -6181,34 +6345,47 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
                 </div>
             </div>
 
-            <!-- التبويب 2: طلب الإعفاء الإنساني لغير المقتدرين (بموافقة الإدارة) -->
+            <!-- التبويب 2: طلب الإعفاء الإنساني للفقراء وغير المقتدرين فقط (بموافقة الإدارة وإقرار الذمة) -->
             <div id="paywall-pane-humanitarian" style="display: none; background: rgba(5, 9, 18, 0.95); border: 1.5px solid #10b981; border-radius: 16px; padding: 20px;">
-                <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(212, 175, 55, 0.12) 100%); border: 1px solid rgba(16, 185, 129, 0.5); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
-                    <div style="color: #6ee7b7; font-weight: 900; font-size: 1em; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
-                        <span>🌿</span> <span>نظام الإعفاء الإنساني لغير المقتدرين مالياً (صدقة جارية عن روح المرحوم والد المعالج جمال قبها)</span>
+                <!-- بيان أدبي وشرعي بارز يوضح أن الإعفاء للفقراء فقط وأنه أمانة في الذمة ليوم الدين -->
+                <div style="background: linear-gradient(135deg, rgba(120, 53, 15, 0.32) 0%, rgba(6, 78, 59, 0.35) 55%, rgba(9, 14, 26, 0.98) 100%); border: 2px solid #d4af37; border-radius: 14px; padding: 18px 18px; margin-bottom: 18px; box-shadow: 0 8px 25px rgba(0,0,0,0.5);">
+                    <div style="color: #fef08a; font-weight: 900; font-size: 1.05em; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                        <span>⚖️</span> <span>أمانةٌ أمام الله: التفعيل المجاني مخصّصٌ للفقراء وغير المقتدرين فقط</span>
                     </div>
-                    <div style="color: #cbd5e1; font-size: 0.88em; line-height: 1.65;">
-                        حرصاً على وصول الخدمة العلاجية لمستحقيها الفعليين، يتم رفع طلب الإعفاء مباشرة إلى <strong>إدارة العيادة للمراجعة والموافقة الفورية</strong>. بمجرد اعتماد طلبك من الإدارة سيفتح تقريرك الطبي وخطة التمارين تلقائياً على شاشتك لوجه الله تعالى 🤲
+                    <div style="color: #f8fafc; font-size: 0.93em; line-height: 1.85; text-align: justify;">
+                        جُعل هذا الإعفاءُ المجاني <strong>صدقةً جاريةً خالصةً لوجه الله تعالى عن روح المرحوم والد المعالج جمال قبها</strong>، رحمةً وعوناً لكل مريضٍ متألمٍ ضاقت به السُّبل وعجز حقاً عن توفير رسوم الاشتراك الرمزية (${cfg.priceJod} دنانير).
+                        <span style="color: #fde68a; font-weight: 800; display: block; margin-top: 6px;">
+                            ⚠️ تذكيرٌ بالذمّة والأمانة: إن كنتَ مقتدراً مادياً على دفع الرسوم ولم تدفعها واستخدمتَ هذا الإعفاء المخصص للفقراء، فإنّ حقّها باقٍ في ذمّتك وعنقك أمام الله إلى يوم الدين.
+                        </span>
                     </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 16px;">
                     <div>
-                        <label style="color: #e2e8f0; font-size: 0.84em; display: block; margin-bottom: 6px; font-weight: 800;">👤 الاسم الثلاثي الكريم: *</label>
-                        <input type="text" id="hum-subscriber-name" value="${defaultName}" placeholder="أدخل اسمك الثلاثي الكريم" style="width: 100%; background: #0b1324; border: 1.5px solid #334155; padding: 12px; border-radius: 10px; color: #fff; font-size: 0.92em; box-sizing: border-box;">
+                        <label style="color: #e2e8f0; font-size: 0.86em; display: block; margin-bottom: 6px; font-weight: 800;">👤 الاسم الثلاثي الكريم: *</label>
+                        <input type="text" id="hum-subscriber-name" value="${defaultName}" placeholder="أدخل اسمك الثلاثي الكريم" style="width: 100%; background: #0b1324; border: 1.5px solid #475569; padding: 12px; border-radius: 10px; color: #fff; font-size: 0.95em; box-sizing: border-box;">
                     </div>
                     <div>
-                        <label style="color: #e2e8f0; font-size: 0.84em; display: block; margin-bottom: 6px; font-weight: 800;">📱 رقم الهاتف (الواتساب لإشعارك بالموافقة): *</label>
-                        <input type="tel" id="hum-subscriber-phone" value="${defaultPhone}" placeholder="079xxxxxxx" style="width: 100%; background: #0b1324; border: 1.5px solid #334155; padding: 12px; border-radius: 10px; color: #fff; font-size: 0.92em; direction: ltr; text-align: left; box-sizing: border-box;">
-                    </div>
-                    <div style="grid-column: 1 / -1;">
-                        <label style="color: #6ee7b7; font-size: 0.84em; display: block; margin-bottom: 6px; font-weight: 800;">📝 نبذة مختصرة عن الحالة / سبب طلب الإعفاء للإدارة: *</label>
-                        <input type="text" id="hum-waiver-reason" placeholder="مثال: غير مقتدر مالياً حالياً وبحاجة للبرنامج العلاجي..." style="width: 100%; background: #0b1324; border: 1.5px solid rgba(16, 185, 129, 0.5); padding: 12px; border-radius: 10px; color: #fff; font-size: 0.92em; box-sizing: border-box;">
+                        <label style="color: #e2e8f0; font-size: 0.86em; display: block; margin-bottom: 6px; font-weight: 800;">📱 رقم الهاتف (الواتساب لإشعارك بالموافقة): *</label>
+                        <input type="tel" id="hum-subscriber-phone" value="${defaultPhone}" placeholder="079xxxxxxx" style="width: 100%; background: #0b1324; border: 1.5px solid #475569; padding: 12px; border-radius: 10px; color: #fff; font-size: 0.95em; direction: ltr; text-align: left; box-sizing: border-box;">
                     </div>
                 </div>
 
-                <button type="button" onclick="submitHumanitarianFreeActivation()" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: #ffffff; border: 1px solid #6ee7b7; padding: 14px 20px; border-radius: 12px; font-size: 1.02em; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);">
-                    <span>🤲</span> <span>رفع طلب الإعفاء للإدارة للموافقة وفتح التقرير (صدقة جارية)</span>
+                <!-- مربع الاختيار الفارغ للإقرار الشرعي الإلزامي (بدون خانة ذكر الأسباب) -->
+                <label id="hum-oath-box-label" for="hum-oath-checkbox" style="display: flex; align-items: flex-start; gap: 14px; background: rgba(16, 185, 129, 0.12); border: 2px solid #10b981; border-radius: 14px; padding: 16px 18px; margin-bottom: 18px; cursor: pointer; transition: all 0.25s; box-shadow: inset 0 0 18px rgba(16, 185, 129, 0.1);">
+                    <input type="checkbox" id="hum-oath-checkbox" onchange="const lbl=document.getElementById('hum-oath-box-label'); if(lbl){lbl.style.borderColor=this.checked?'#fef08a':'#10b981'; lbl.style.background=this.checked?'rgba(16,185,129,0.24)':'rgba(16,185,129,0.12)';}" style="width: 24px; height: 24px; margin-top: 3px; accent-color: #10b981; cursor: pointer; flex-shrink: 0;">
+                    <div style="flex: 1;">
+                        <div style="color: #fef08a; font-weight: 900; font-size: 1.02em; line-height: 1.7;">
+                            «أنا غير مقتدر مادياً والله على ما أقول شهيد، وإذا كنتُ مقتدراً فهي في ذمتي ليوم الدين.»
+                        </div>
+                        <div style="color: #a7f3d0; font-size: 0.82em; margin-top: 4px; font-weight: 700;">
+                            ☑️ بوضعك علامة (صح) في هذا المربع، فإنك تُقرّ أمام الله بأنك فقير وغير قادر على دفع رسوم الاشتراك (${cfg.priceJod} دنانير).
+                        </div>
+                    </div>
+                </label>
+
+                <button type="button" onclick="submitHumanitarianFreeActivation()" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: #ffffff; border: 1.5px solid #6ee7b7; padding: 15px 20px; border-radius: 12px; font-size: 1.04em; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);">
+                    <span>🤲</span> <span>إرسال طلب التفعيل لوجه الله إلى الإدارة للموافقة</span>
                 </button>
             </div>
 
@@ -9386,7 +9563,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.43';
+const CURRENT_APP_VERSION = 'v30.44';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 

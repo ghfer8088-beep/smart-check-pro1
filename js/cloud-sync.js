@@ -1263,7 +1263,12 @@
                 status: enhancedRecord.status || 'new',
                 logsCount: enhancedRecord.logsCount || 0,
                 completedSessions: enhancedRecord.completedSessions || 0,
-                recoveryScore: enhancedRecord.recoveryScore || 0
+                recoveryScore: enhancedRecord.recoveryScore || 0,
+                isPaidUnlocked: Boolean(enhancedRecord.isPaidUnlocked),
+                paymentStatus: enhancedRecord.paymentStatus || '',
+                paymentType: enhancedRecord.paymentType || '',
+                amountPaid: enhancedRecord.amountPaid || 0,
+                pendingUnlockRequest: enhancedRecord.pendingUnlockRequest || null
             };
             if (enhancedRecord.assessment && typeof enhancedRecord.assessment === 'object') {
                 compactForCloud.assessment = {
@@ -2172,13 +2177,20 @@
         // تفعيل الاستماع السحابي المباشر عبر EventSource
         initCloudListener(callback);
 
-        // استماع عبر BroadcastChannel
+        // استماع عبر BroadcastChannel (دعم تعدد المستمعين دون الكتابة فوق المستمع الرئيسي)
         if (syncBroadcastChannel) {
-            syncBroadcastChannel.onmessage = (event) => {
+            syncBroadcastChannel.addEventListener('message', (event) => {
                 if (event.data && event.data.type === 'NEW_PATIENT_DISPATCHED') {
                     callback(event.data.patient);
+                } else if (event.data && event.data.type === 'NEW_NOTIFICATION') {
+                    if (typeof window.loadNotificationsData === 'function') {
+                        window.loadNotificationsData(true);
+                    }
+                    callback(event.data.notification);
+                } else if (event.data && event.data.type === 'PAYMENT_PATIENT_UNLOCK') {
+                    applyPatientPaymentUnlockLocally(event.data);
                 }
-            };
+            });
         }
 
         // استماع عبر أحداث التخزين المحلي (لقنوات النوافذ المتعددة)
@@ -3554,30 +3566,76 @@
         if (!unlockData) return;
         try {
             const pId = unlockData.patientId || '';
+            const allIds = Array.from(new Set([pId, ...(Array.isArray(unlockData.allMergedIds) ? unlockData.allMergedIds : [])].filter(Boolean)));
             const pPhone = String(unlockData.patientPhone || '').replace(/\D/g, '');
+            const pNameRaw = String(unlockData.patientName || '').trim();
+            const cleanNameKey = pNameRaw ? pNameRaw.replace(/\s+/g, '_').toLowerCase() : '';
             const unlockType = unlockData.unlockType || 'paid_orange_wallet';
             const amountPaid = unlockData.amountPaid != null ? Number(unlockData.amountPaid) : getPaymentConfig().priceJod;
+            const resolvedStatusText = unlockType === 'humanitarian'
+                ? 'إعفاء إنساني معتمد (صدقة جارية)'
+                : (unlockType === 'test_free' ? 'تفعيل إداري مجاني' : 'مدفوع أورانج (' + amountPaid + ' د.أ)');
 
-            if (pId) {
-                localStorage.setItem('smart_paid_unlocked_' + pId, 'true');
-                localStorage.setItem('smart_paid_v2_unlocked_' + pId, 'true');
-                localStorage.setItem('smart_paid_meta_' + pId, JSON.stringify({
+            allIds.forEach(idKey => {
+                localStorage.setItem('smart_paid_unlocked_' + idKey, 'true');
+                localStorage.setItem('smart_paid_v2_unlocked_' + idKey, 'true');
+                localStorage.setItem('smart_paid_meta_' + idKey, JSON.stringify({
                     unlockedAt: new Date().toISOString(),
                     unlockType,
                     amountPaid,
                     approvedBy: unlockData.approvedBy || 'admin'
                 }));
-            }
+            });
+
             if (pPhone && pPhone.length >= 7) {
-                const cleanKey = pPhone.slice(-9);
-                localStorage.setItem('smart_paid_phone_' + cleanKey, 'true');
+                localStorage.setItem('smart_paid_phone_' + pPhone.slice(-9), 'true');
+                localStorage.setItem('smart_paid_phone_' + pPhone.slice(-8), 'true');
             }
+            if (cleanNameKey && cleanNameKey.length >= 2) {
+                localStorage.setItem('smart_paid_name_' + cleanNameKey, 'true');
+            }
+
+            try {
+                // تحديث سجل المريض النشط أو الفحص الحالي في المتصفح إن كان مفتوحاً
+                const curActiveRaw = localStorage.getItem('smart_active_patient');
+                if (curActiveRaw) {
+                    const curActive = JSON.parse(curActiveRaw);
+                    const curActId = curActive.patientId || curActive.id || '';
+                    const curActPh = String(curActive.phone || '').replace(/\D/g, '');
+                    const curActNm = String(curActive.fullName || curActive.name || '').trim().replace(/\s+/g, '_').toLowerCase();
+                    if (
+                        unlockData.sameBrowserForceUnlock ||
+                        (curActId && allIds.includes(curActId)) ||
+                        (pPhone.length >= 7 && curActPh.length >= 7 && curActPh.slice(-8) === pPhone.slice(-8)) ||
+                        (cleanNameKey && curActNm && curActNm === cleanNameKey)
+                    ) {
+                        curActive.isPaidUnlocked = true;
+                        curActive.paymentType = unlockType;
+                        curActive.paymentStatus = resolvedStatusText;
+                        curActive.amountPaid = unlockType === 'paid_orange_wallet' ? amountPaid : 0;
+                        delete curActive.pendingUnlockRequest;
+                        localStorage.setItem('smart_active_patient', JSON.stringify(curActive));
+                        if (curActId) {
+                            localStorage.setItem('smart_paid_unlocked_' + curActId, 'true');
+                            localStorage.setItem('smart_paid_v2_unlocked_' + curActId, 'true');
+                        }
+                    }
+                }
+                const curExamId = localStorage.getItem('smart_current_exam_id');
+                if (curExamId && unlockData.sameBrowserForceUnlock) {
+                    localStorage.setItem('smart_paid_v2_exam_' + curExamId, 'true');
+                }
+            } catch (e) {}
+
             try {
                 localStorage.setItem('smart_last_payment_unlock_event', JSON.stringify({
                     patientId: pId,
+                    allMergedIds: allIds,
                     patientPhone: pPhone,
+                    patientName: pNameRaw,
                     unlockType,
                     amountPaid,
+                    sameBrowserForceUnlock: Boolean(unlockData.sameBrowserForceUnlock),
                     ts: Date.now()
                 }));
             } catch (e) {}
@@ -3586,11 +3644,17 @@
             const cList = getCloudSyncedPatients();
             let matchedPt = null;
             cList.forEach(pt => {
+                const ptId = pt.id || pt.patientId || '';
                 const ptPhoneClean = String(pt.phone || '').replace(/\D/g, '');
-                if ((pId && (pt.id === pId || pt.patientId === pId)) || (pPhone && ptPhoneClean.length >= 7 && ptPhoneClean.slice(-9) === pPhone.slice(-9))) {
+                const ptNameClean = String(pt.fullName || pt.name || '').trim().replace(/\s+/g, '_').toLowerCase();
+                if (
+                    (ptId && allIds.includes(ptId)) ||
+                    (pPhone && ptPhoneClean.length >= 7 && ptPhoneClean.slice(-8) === pPhone.slice(-8)) ||
+                    (cleanNameKey && ptNameClean && ptNameClean === cleanNameKey)
+                ) {
                     pt.isPaidUnlocked = true;
                     pt.paymentType = unlockType;
-                    pt.paymentStatus = unlockType === 'humanitarian' ? 'إعفاء إنساني معتمد (صدقة جارية)' : (unlockType === 'test_free' ? 'تفعيل إداري مجاني' : 'مدفوع أورانج (' + amountPaid + ' د.أ)');
+                    pt.paymentStatus = resolvedStatusText;
                     pt.amountPaid = unlockType === 'paid_orange_wallet' ? amountPaid : 0;
                     pt.paidAt = new Date().toISOString();
                     delete pt.pendingUnlockRequest;
