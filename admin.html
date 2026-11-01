@@ -42,9 +42,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=30.44"></script>
-    <script src="js/security-shield.js?v=30.44"></script>
-    <link rel="stylesheet" href="css/style.css?v=30.44">
+    <script src="js/system-watchdog.js?v=30.46"></script>
+    <script src="js/security-shield.js?v=30.46"></script>
+    <link rel="stylesheet" href="css/style.css?v=30.46">
     <style>
         body {
             background-color: #080c14;
@@ -406,7 +406,7 @@
                     <div style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.78em; color: #94a3b8; margin-top: 2px;">
                         <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                         <span>الإصدار المعتمد:</span>
-                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.44</strong>
+                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.46</strong>
                     </div>
                 </div>
             </div>
@@ -435,10 +435,10 @@
                         <span>⚙️</span> إعدادات
                     </button>
                     <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header admin-btn-cache" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 9px 12px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
-                        ⚡ تحديث الكاش (v30.44)
+                        ⚡ تحديث الكاش (v30.46)
                     </button>
-                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.44) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
-                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.44)
+                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.46) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
+                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.46)
                     </button>
                     <button type="button" id="btn-force-sync" onclick="handleForceFullSync()" style="background: linear-gradient(135deg,rgba(59,130,246,0.25),rgba(99,102,241,0.2)); border: 1px solid #6366f1; color: #a5b4fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="جلب كافة السجلات من السحابة قسرياً وبثها لجميع الأجهزة">
                         🔄 مزامنة كاملة
@@ -1245,6 +1245,27 @@
                             </label>
                         </div>
 
+                        <!-- أسعار الباقات وأكواد الإدارة للتجربة -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px;">
+                            <div style="background:#080c14; border:1px solid #334155; border-radius:10px; padding:12px;">
+                                <label style="color:#fed7aa; font-size:0.85em; font-weight:bold;">📦 سعر باقة 5 تشخيصات (د.أ)</label>
+                                <input type="number" id="paycfg-price-pkg5" min="1" step="0.5" value="10" style="width:100%; background:#111827; border:1.5px solid #f97316; color:#fff; padding:9px; border-radius:8px; text-align:center; font-weight:900; box-sizing:border-box; margin-top:6px;">
+                            </div>
+                            <div style="background:#080c14; border:1px solid #334155; border-radius:10px; padding:12px;">
+                                <label style="color:#fed7aa; font-size:0.85em; font-weight:bold;">👑 سعر باقة 10 تشخيصات (د.أ)</label>
+                                <input type="number" id="paycfg-price-pkg10" min="1" step="0.5" value="15" style="width:100%; background:#111827; border:1.5px solid #f97316; color:#fff; padding:9px; border-radius:8px; text-align:center; font-weight:900; box-sizing:border-box; margin-top:6px;">
+                            </div>
+                        </div>
+                        <div style="background: rgba(212,175,55,0.08); border: 1.5px solid var(--primary-gold); border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+                            <div style="color: var(--primary-gold); font-weight: 900; margin-bottom: 8px;">🧪 أكواد الإدارة للتجربة والتفعيل الفوري (تعمل على أي مستخدم)</div>
+                            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                <button type="button" onclick="copyAdminCode('JK3090')" style="background:#1e293b; color:#fef08a; border:1px solid #d4af37; border-radius:8px; padding:8px 14px; cursor:pointer; font-weight:bold;">🔑 تشخيص واحد: JK3090 📋</button>
+                                <button type="button" onclick="copyAdminCode('JK5555')" style="background:#1e293b; color:#fef08a; border:1px solid #d4af37; border-radius:8px; padding:8px 14px; cursor:pointer; font-weight:bold;">📦 باقة 5: JK5555 📋</button>
+                                <button type="button" onclick="copyAdminCode('JK1010')" style="background:#1e293b; color:#fef08a; border:1px solid #d4af37; border-radius:8px; padding:8px 14px; cursor:pointer; font-weight:bold;">👑 باقة 10: JK1010 📋</button>
+                                <button type="button" onclick="resetAdminTestWalletOnThisBrowser()" style="background:rgba(239,68,68,0.15); color:#fca5a5; border:1px solid #ef4444; border-radius:8px; padding:8px 14px; cursor:pointer;">🧹 تصفير رصيد الباقات على هذا المتصفح</button>
+                            </div>
+                        </div>
+
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                             <button type="button" onclick="saveAndBroadcastPaymentGateConfig()" style="flex: 1; min-width: 240px; background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: #ffffff; border: none; padding: 13px 20px; border-radius: 10px; font-weight: 900; font-size: 1em; cursor: pointer; box-shadow: 0 6px 20px rgba(249, 115, 22, 0.35);">
                                 💾 حفظ إعدادات السعر والدفع وبثها فوراً لجميع الأجهزة
@@ -1264,15 +1285,25 @@
                         <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
                             <input type="text" id="admin-unlock-subscriber-phone" placeholder="رقم هاتف المشترك (مثال: 079xxxxxxx)" oninput="updateGeneratedSubscriberPinPreview()" style="flex: 1; min-width: 200px; background: #111827; border: 1px solid #475569; color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 0.92em;">
                             <input type="text" id="admin-unlock-subscriber-name" placeholder="اسم المشترك (اختياري)" style="flex: 1; min-width: 180px; background: #111827; border: 1px solid #475569; color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 0.92em;">
-                            <div style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); padding: 8px 14px; border-radius: 8px; color: #fef08a; font-weight: bold; font-size: 0.9em;">
-                                كود المشترك: <strong id="admin-generated-pin-display" style="font-family: monospace; font-size: 1.2em; color: #fff;">----</strong>
+                            <div style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); padding: 8px 14px; border-radius: 8px; color: #fef08a; font-weight: bold; font-size: 0.9em; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                                <span>1: <strong id="admin-generated-pin-display" style="font-family: monospace; color: #fff;">----</strong></span>
+                                <span>5: <strong id="admin-generated-pin5-display" style="font-family: monospace; color: #fff;">----</strong></span>
+                                <span>10: <strong id="admin-generated-pin10-display" style="font-family: monospace; color: #fff;">----</strong></span>
                             </div>
-                            <button type="button" onclick="triggerRemoteSubscriberUnlockFromAdmin()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 0.9em; cursor: pointer;">
-                                📡 فتح الخطة على هاتف المشترك الآن
-                            </button>
+                            <button type="button" onclick="const s=document.getElementById('admin-unlock-subscriber-phone').value||document.getElementById('admin-unlock-subscriber-name').value; if(s) adminBumpSerialAndRefresh(s);" style="background:none; border:1px dashed #64748b; color:#94a3b8; border-radius:8px; padding:8px 12px; cursor:pointer; font-size:0.8em;">🔄 كود جديد</button>
                             <button type="button" onclick="sendSubscriberUnlockCodeViaWhatsApp()" style="background: #25d366; color: #fff; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; font-size: 0.9em; cursor: pointer;">
                                 💬 إرسال الكود واتساب
                             </button>
+                        </div>
+                        <div style="margin-top:16px; padding-top:14px; border-top:1px dashed #475569;">
+                            <div style="color:#fef08a; font-weight:bold; font-size:0.95em; margin-bottom:8px;">🎁 مولّد أكواد الإهداء (تشخيص واحد — صالح مرة واحدة لأي شخص)</div>
+                            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                                <input type="text" id="admin-gift-recipient" placeholder="اسم المُهدى له (اختياري)" style="flex:1; min-width:180px; background:#111827; border:1px solid #475569; color:#fff; padding:10px 14px; border-radius:8px; font-size:0.92em;">
+                                <button type="button" onclick="adminGenerateGiftCode()" style="background:#d4af37; color:#000; border:none; padding:10px 16px; border-radius:8px; font-weight:bold; cursor:pointer;">🎁 توليد كود إهداء جديد</button>
+                                <strong id="admin-gift-code-display" style="font-family:monospace; color:#fff; font-size:1.15em; background:rgba(212,175,55,0.15); border:1px solid var(--primary-gold); padding:8px 14px; border-radius:8px;">----</strong>
+                                <button type="button" onclick="copyAdminCode(document.getElementById('admin-gift-code-display').textContent)" style="background:none; border:1px solid #64748b; color:#cbd5e1; border-radius:8px; padding:8px 12px; cursor:pointer;">📋 نسخ</button>
+                                <button type="button" onclick="adminSendGiftCodeWA()" style="background:#25d366; color:#fff; border:none; padding:10px 16px; border-radius:8px; font-weight:bold; cursor:pointer;">💬 واتساب</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1771,15 +1802,15 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/clinic-patients-data.js?v=30.44"></script>
-    <script src="js/mqtt.min.js?v=30.44"></script>
-    <script src="js/cloud-sync.js?v=30.44"></script>
-    <script src="js/geo-tracker.js?v=30.44"></script>
-    <script src="js/database.js?v=30.44"></script>
-    <script src="js/exercise-image-studio.js?v=30.44"></script>
-    <script src="js/admin-engine.js?v=30.44"></script>
-    <script src="js/ai-config.js?v=30.44"></script>
-    <script src="js/ai-engine.js?v=30.44"></script>
+    <script src="js/clinic-patients-data.js?v=30.46"></script>
+    <script src="js/mqtt.min.js?v=30.46"></script>
+    <script src="js/cloud-sync.js?v=30.46"></script>
+    <script src="js/geo-tracker.js?v=30.46"></script>
+    <script src="js/database.js?v=30.46"></script>
+    <script src="js/exercise-image-studio.js?v=30.46"></script>
+    <script src="js/admin-engine.js?v=30.46"></script>
+    <script src="js/ai-config.js?v=30.46"></script>
+    <script src="js/ai-engine.js?v=30.46"></script>
 
     <script>
         let allPatientsList = [];
@@ -3193,7 +3224,7 @@
                 
                 const isHumReq = n.type === 'humanitarian_request' || (n.type === 'new_registration' && n.meta?.paymentType === 'humanitarian');
                 const isApproved = Boolean(n.meta?.approved);
-                const computedPin = n.meta?.unlockPin || n.meta?.unlockCode || generateAdminUnlockPin(n.patientPhone || n.patientName || '');
+                const computedPin = getAdminNotifCode(n);
 
                 if (n.type === 'payment_received') {
                     cardClass = 'notif-card-plan';
@@ -3237,7 +3268,7 @@
 
                     <div style="color: #cbd5e1; font-size: 0.88em; line-height: 1.5; margin-bottom: 10px;">
                         ${n.message}
-                        ${(n.type === 'payment_received' || isHumReq) ? `<span style="display: inline-block; margin-right: 8px; background: rgba(212, 175, 55, 0.2); border: 1px solid var(--primary-gold); color: #fef08a; padding: 2px 10px; border-radius: 6px; font-family: monospace; font-weight: 900;">🔑 كود التفعيل السري للمشترك: ${computedPin}</span>` : ''}
+                        ${(n.type === 'payment_received' || isHumReq) ? adminCodesBoxHTML(n.patientPhone, n.patientName, Number(n.meta?.packageSize) || 1) : ''}
                     </div>
 
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;">
@@ -3285,12 +3316,12 @@
         function getNotificationWhatsAppText(notif) {
             const name = notif.patientName || 'عزيزي المراجع';
             if (notif.type === 'payment_received') {
-                const pin = notif.meta?.unlockPin || notif.meta?.unlockCode || generateAdminUnlockPin(notif.patientPhone || name);
+                const pin = getAdminNotifCode(notif);
                 const amt = notif.meta?.amountJod || 3;
-                return `مرحباً ${name}، تم التحقق من حوالة محفظة أورانج (${amt} دنانير) بنجاح في عيادة «وداعاً للألم» للكايروبراكتيك مع المعالج جمال قبها ✅\nتم فتح التقرير الطبي السريري وخطة التعافي المنزلي (7 أيام) على شاشتك مباشرة!\n🔑 كما يمكنك الدخول باستخدام كود التفعيل المعتمد الخاص بك: *${pin}*\nنتمنى لك الشفاء العاجل.`;
+                return `مرحباً ${name}، تم التحقق من حوالة محفظة أورانج (${amt} دنانير) بنجاح في عيادة «وداعاً للألم» للكايروبراكتيك مع المعالج جمال قبها ✅\n🔑 كود التفعيل الخاص بك (لتشخيص واحد) *${pin}* — أدخله في خانة الكود في الأداة لفتح التقرير والتمارين.\nنتمنى لك الشفاء العاجل.`;
             } else if (notif.type === 'humanitarian_request' || (notif.type === 'new_registration' && notif.meta?.paymentType === 'humanitarian')) {
-                const pin = notif.meta?.unlockPin || notif.meta?.unlockCode || generateAdminUnlockPin(notif.patientPhone || name);
-                return `مرحباً ${name}، تمت الموافقة من المعالج جمال قبها على طلب الإعفاء الإنساني الخاص بك (صدقة جارية عن روح والده المرحوم) ✅🌿\nتم فتح التقرير الطبي الكامل وبرنامج التمارين العلاجية (7 أيام) على شاشتك مباشرة!\n🔑 كود التفعيل الفوري الخاص بك هو: *${pin}*\nنسألكم الدعاء ونتمنى لك الشفاء العاجل.`;
+                const pin = getAdminNotifCode(notif);
+                return `مرحباً ${name}، تمت الموافقة من المعالج جمال قبها على طلب الإعفاء الإنساني الخاص بك (صدقة جارية عن روح والده المرحوم) ✅🌿\n🔑 كود التفعيل الخاص بك (لتشخيص واحد) *${pin}* — أدخله في خانة الكود في الأداة لفتح التقرير والتمارين.\nنسألكم الدعاء ونتمنى لك الشفاء العاجل.`;
             } else if (notif.type === 'plan_completed') {
                 return `مرحباً ${name}، نبارك لك من «وداعاً للألم» إتمام خطة الـ 7 أيام للتعافي المنزلي بنجاح! 🏆\nيسعدنا حجز موعد لجلسة تقييم سريري وتقويم يدوي للعمود الفقري (Chiropractic) مع المعالج جمال لتثبيت نتائجك واستكمال الشفاء.`;
             } else if (notif.type === 'red_flag') {
@@ -3533,6 +3564,7 @@
                                     <div style="color: #e2e8f0;">مرجع الحوالة: <strong>${p.pendingUnlockRequest?.transferRef || '—'}</strong></div>
                                 </div>
                                 ` : '')}
+                                ${adminCodesBoxHTML(p.phone, p.fullName || p.name, Number(p.pendingUnlockRequest?.packageSize) || 1)}
                                 ${!p.isPaidUnlocked ? `
                                 <button type="button" onclick="quickAdminUnlockPatient('${p.patientId}', '${cleanPhone}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}', '${isPendingHumReq ? 'humanitarian' : (p.pendingUnlockRequest?.requestType || 'paid_orange_wallet')}')" style="width: 100%; background: ${isPendingHumReq ? 'linear-gradient(135deg, #10b981 0%, #047857 100%)' : 'linear-gradient(135deg, #d4af37 0%, #b45309 100%)'}; color: ${isPendingHumReq ? '#ffffff' : '#050911'}; border: 1.5px solid ${isPendingHumReq ? '#6ee7b7' : '#fef08a'}; padding: 12px; border-radius: 9px; font-size: 0.95em; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);">
                                     <span>${isPendingHumReq ? `✅ موافقة على الإعفاء وفتح التقرير والتمارين فوراً (كود: ${ptUnlockPin})` : `🔓 موافقة وفتح التقرير والتمارين للمريض فوراً (كود: ${ptUnlockPin})`}</span>
@@ -5664,14 +5696,103 @@
             };
         }
 
-        function generateAdminUnlockPin(phoneOrName) {
-            const clean = String(phoneOrName || '').replace(/\D/g, '');
-            const seed = clean.length >= 6 ? clean.slice(-6) : (clean.length >= 4 ? clean.slice(-4) : '8492');
+        // ===== أكواد التفعيل المرتبطة بالمستخدم (متطابقة 100% مع js/app.js) =====
+        function _adminNormSeed(raw) {
+            const s = String(raw || '').trim();
+            if (!s) return '';
+            const digits = s.replace(/\D/g, '');
+            if (digits.length >= 7 && !/[A-Za-z\u0600-\u06FF]/.test(s)) return 'P' + digits.slice(-7);
+            return 'N' + s.replace(/[\u064B-\u0652\u0640]/g, '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/\s+/g, ' ').toLowerCase();
+        }
+        function getAdminCodeSerial(seedRaw) {
+            try { return Number((JSON.parse(localStorage.getItem('smart_admin_code_serial') || '{}'))[_adminNormSeed(seedRaw)] || 0); } catch (e) { return 0; }
+        }
+        function bumpAdminCodeSerial(seedRaw) {
+            try {
+                const m = JSON.parse(localStorage.getItem('smart_admin_code_serial') || '{}');
+                const k = _adminNormSeed(seedRaw);
+                m[k] = Math.min(9, Number(m[k] || 0) + 1);
+                localStorage.setItem('smart_admin_code_serial', JSON.stringify(m));
+            } catch (e) {}
+        }
+        function generateAdminUnlockPin(phoneOrName, tier = 1, serial) {
+            const seed = _adminNormSeed(phoneOrName);
+            if (!seed) return '----';
+            const k = (serial == null) ? getAdminCodeSerial(phoneOrName) : serial;
+            const str = seed + '#' + k;
             let hash = 5381;
-            for (let i = 0; i < seed.length; i++) {
-                hash = ((hash * 33) ^ seed.charCodeAt(i)) & 0x7fffffff;
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash * 33) ^ str.charCodeAt(i)) & 0x7fffffff;
             }
-            return String(1000 + (hash % 9000));
+            const pin = String(1000 + (hash % 9000));
+            return tier === 10 ? '10' + pin : (tier === 5 ? '5' + pin : pin);
+        }
+        function getAdminNotifCode(n) {
+            return generateAdminUnlockPin(n.patientPhone || n.patientName || '', Number(n.meta?.packageSize) || 1);
+        }
+        function _adminGiftCode(n) {
+    let hash = 5381;
+    const str = 'GIFT#' + n;
+    for (let i = 0; i < str.length; i++) hash = ((hash * 33) ^ str.charCodeAt(i)) & 0x7fffffff;
+    return 'GF' + String(100000 + (hash % 900000));
+}
+function adminGenerateGiftCode() {
+    let n = parseInt(localStorage.getItem('smart_admin_gift_n') || '0', 10) + 1;
+    if (n > 5000) { alert('انتهت أكواد الإهداء المتاحة'); return; }
+    localStorage.setItem('smart_admin_gift_n', String(n));
+    const code = _adminGiftCode(n);
+    document.getElementById('admin-gift-code-display').textContent = code;
+    return code;
+}
+function adminSendGiftCodeWA() {
+    const el = document.getElementById('admin-gift-code-display');
+    let code = el.textContent.trim();
+    if (!/^GF\d{6}$/.test(code)) code = adminGenerateGiftCode();
+    if (!code) return;
+    const who = (document.getElementById('admin-gift-recipient').value || '').trim();
+    const msg = '🎁 هدية من وداعاً للألم' + (who ? ' إلى ' + who : '') + '\n\nكود تشخيص مجاني واحد: ' + code + '\n\nأدخله في خانة "لدي كود تفعيل" عند وصولك لشاشة الاشتراك. الكود صالح لاستخدام واحد.';
+    window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+}
+function copyAdminCode(code) {
+            try { navigator.clipboard.writeText(String(code)); } catch (e) {
+                const t = document.createElement('input'); t.value = code; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t);
+            }
+            alert('✅ تم نسخ الكود: ' + code);
+        }
+        function sendAdminCodeWA(phone, name, tier) {
+            const seed = phone || name;
+            const code = generateAdminUnlockPin(seed, tier);
+            const what = tier === 1 ? 'لتشخيص واحد' : ('باقة ' + tier + ' تشخيصات');
+            const text = `مرحباً ${name || ''}، تم اعتماد اشتراكك في «وداعاً للألم» ✅\n🔑 كود التفعيل (${what}): *${code}*\nأدخله في خانة الكود في الأداة لفتح التقرير والتمارين.`;
+            const cp = String(phone || '').replace(/\D/g, '');
+            window.open((cp ? `https://wa.me/${cp}` : 'https://wa.me/') + '?text=' + encodeURIComponent(text), '_blank');
+        }
+        function adminBumpSerialAndRefresh(seed) {
+            if (!confirm('إصدار كود جديد لهذا المستخدم (لتشخيص جديد)؟ سيتوقف الكود القديم عن الظهور هنا.')) return;
+            bumpAdminCodeSerial(seed);
+            try { renderTable(getFilteredPatientsList()); loadNotificationsData(false); } catch (e) {}
+            try { updateGeneratedSubscriberPinPreview(); } catch (e) {}
+        }
+        function adminCodesBoxHTML(phone, name, highlightTier) {
+            const seed = (phone && String(phone).replace(/\D/g, '').length >= 7) ? phone : (name || '');
+            if (!seed) return '';
+            const sp = String(seed).replace(/['"\\]/g, '');
+            const sn = String(name || '').replace(/['"\\]/g, '');
+            const ph = String(phone || '').replace(/['"\\]/g, '');
+            const row = (tier, label) => {
+                const c = generateAdminUnlockPin(seed, tier);
+                const hl = (highlightTier === tier);
+                return `<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; background:${hl ? 'rgba(212,175,55,0.2)' : 'rgba(8,12,20,0.7)'}; border:1px solid ${hl ? '#d4af37' : '#334155'}; border-radius:8px; padding:5px 8px;">
+                    <span style="color:#cbd5e1; font-size:0.8em; min-width:96px;">${label}</span>
+                    <strong style="font-family:monospace; color:#fef08a; font-size:1.1em; letter-spacing:2px;">${c}</strong>
+                    <button type="button" onclick="copyAdminCode('${c}')" style="background:#1e293b; color:#fef08a; border:1px solid #d4af37; border-radius:6px; padding:2px 8px; cursor:pointer; font-size:0.78em;">📋 نسخ</button>
+                    <button type="button" onclick="sendAdminCodeWA('${ph}','${sn}',${tier})" style="background:#25d366; color:#fff; border:none; border-radius:6px; padding:3px 8px; cursor:pointer; font-size:0.78em;">💬</button>
+                </div>`;
+            };
+            return `<div style="display:flex; flex-direction:column; gap:5px; margin:8px 0;">
+                ${row(1, '🔑 تشخيص واحد')}${row(5, '📦 باقة 5')}${row(10, '👑 باقة 10')}
+                <button type="button" onclick="adminBumpSerialAndRefresh('${sp}')" style="align-self:flex-start; background:none; border:1px dashed #64748b; color:#94a3b8; border-radius:6px; padding:3px 10px; cursor:pointer; font-size:0.75em;">🔄 كود جديد (لتشخيص جديد لنفس المستخدم)</button>
+            </div>`;
         }
 
         function updateGeneratedSubscriberPinPreview() {
@@ -5683,7 +5804,19 @@
                 disp.textContent = '----';
                 return;
             }
-            disp.textContent = generateAdminUnlockPin(ph || nm);
+            disp.textContent = generateAdminUnlockPin(ph || nm, 1);
+            const d5 = document.getElementById('admin-generated-pin5-display');
+            const d10 = document.getElementById('admin-generated-pin10-display');
+            if (d5) d5.textContent = generateAdminUnlockPin(ph || nm, 5);
+            if (d10) d10.textContent = generateAdminUnlockPin(ph || nm, 10);
+        }
+
+        function resetAdminTestWalletOnThisBrowser() {
+            try {
+                localStorage.removeItem('smart_pkg_wallet');
+                Object.keys(localStorage).filter(k => k.indexOf('smart_used_code_') === 0 || k.indexOf('smart_paid_v2_exam_') === 0).forEach(k => localStorage.removeItem(k));
+            } catch (e) {}
+            alert('✅ تم تصفير رصيد الباقات وأكواد التجربة على هذا المتصفح.');
         }
 
         function updateAdminPaymentRevenueStats() {
@@ -5770,6 +5903,8 @@
             const freeTestChk = document.getElementById('paycfg-free-test-mode');
 
             if (priceIn) priceIn.value = cfg.priceJod != null ? cfg.priceJod : 3;
+            const p5In = document.getElementById('paycfg-price-pkg5'); if (p5In) p5In.value = cfg.pricePkg5 != null ? cfg.pricePkg5 : 10;
+            const p10In = document.getElementById('paycfg-price-pkg10'); if (p10In) p10In.value = cfg.pricePkg10 != null ? cfg.pricePkg10 : 15;
             if (walletIn) walletIn.value = cfg.walletPhone || '0795651388';
             if (promoIn) promoIn.value = cfg.customPromoCode || 'FREE2026';
             if (enabledChk) enabledChk.checked = cfg.enabled !== false;
@@ -5789,6 +5924,8 @@
 
             const newCfg = {
                 enabled,
+                pricePkg5: parseFloat(document.getElementById('paycfg-price-pkg5')?.value || '10') || 10,
+                pricePkg10: parseFloat(document.getElementById('paycfg-price-pkg10')?.value || '15') || 15,
                 priceJod: isNaN(priceVal) || priceVal <= 0 ? 3 : priceVal,
                 walletPhone: walletPhone || '0795651388',
                 walletProvider: 'محفظة أورانج (Orange Money)',
@@ -5912,7 +6049,7 @@
             } catch (e) {}
 
             const pin = generateAdminUnlockPin(patientPhone || patientName || '');
-            alert(`✅ تم اعتماد وتفعيل التقرير الطبي وخطة الـ 7 أيام للمراجع (${patientName || patientPhone || patientId}) بنجاح!\n\n📡 تم بث أمر الفتح المباشر لشاشته فوراً.\n🔑 كود التفعيل السري الخاص به (في حال أردت إرساله له): ${pin}`);
+            alert(`✅ تم اعتماد الطلب للمراجع (${patientName || patientPhone || patientId}).\n\n🔑 أرسل له الكود (تشخيص واحد: ${pin} — باقة 5: ${generateAdminUnlockPin(patientPhone || patientName || '', 5)} — باقة 10: ${generateAdminUnlockPin(patientPhone || patientName || '', 10)}) ليدخله في الأداة.`);
         }
 
         function triggerRemoteSubscriberUnlockFromAdmin() {
@@ -5928,9 +6065,11 @@
         function sendSubscriberUnlockCodeViaWhatsApp() {
             const ph = document.getElementById('admin-unlock-subscriber-phone')?.value?.trim() || '';
             const nm = document.getElementById('admin-unlock-subscriber-name')?.value?.trim() || 'عزيزي المشترك';
-            const pin = generateAdminUnlockPin(ph || nm);
+            const pin = generateAdminUnlockPin(ph || nm, 1);
+            const pin5 = generateAdminUnlockPin(ph || nm, 5);
+            const pin10 = generateAdminUnlockPin(ph || nm, 10);
             const cleanPh = ph.replace(/[^0-9]/g, '');
-            const text = `مرحباً ${nm}، تم اعتماد اشتراكك في خطة التعافي الذكية (7 أيام) من عيادة «وداعاً للألم» مع المعالج جمال قبها ✅\n🔑 كود التفعيل الفوري الخاص بك هو: *${pin}*\nأدخله في خانة (كود التفعيل) أو ادخل مباشرة لجلستك الأولى.`;
+            const text = `مرحباً ${nm}، تم اعتماد اشتراكك في «وداعاً للألم» ✅\n🔑 كود تشخيص واحد: *${pin}*\n(باقة 5: ${pin5} — باقة 10: ${pin10})\nأدخل الكود الخاص بما اشتركت به في خانة الكود في الأداة.`;
             const url = cleanPh ? `https://wa.me/${cleanPh}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
             window.open(url, '_blank');
         }
@@ -6149,20 +6288,27 @@
             } catch (e) {
                 console.log('Cache clear error:', e);
             }
-            window.location.reload(true);
+            setTimeout(() => {
+                try {
+                    const base = window.location.href.split('?')[0].split('#')[0];
+                    window.location.replace(base + '?v=' + Date.now());
+                } catch (e) {
+                    window.location.reload();
+                }
+            }, 250);
         }
 
-        // بث رسالة التحديث الجديد الشامل (v30.44) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
+        // بث رسالة التحديث الجديد الشامل (v30.46) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
         function handleBroadcastGlobalVersion() {
-            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.44) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
+            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.46) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
                 if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                     SmartCloudSync.broadcastAppVersionUpdate({
-                        version: 'v30.44',
-                        title: 'تحديث المنظومة (v30.44)',
+                        version: 'v30.46',
+                        title: 'تحديث المنظومة (v30.46)',
                         timestamp: Date.now()
                     });
                 }
-                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.44) عبر شبكة البث اللحظي MQTT و NTFY و Master Hub لكافة الأجهزة!');
+                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.46) عبر شبكة البث اللحظي MQTT و NTFY و Master Hub لكافة الأجهزة!');
             }
         }
         window.handleBroadcastGlobalVersion = handleBroadcastGlobalVersion;
@@ -6628,5 +6774,39 @@
         }
         window.handleClearIncidentsLogs = handleClearIncidentsLogs;
     </script>
+<script>
+// ===== تحديث تلقائي للوحة الإدارة: تقارن إصدارها بإصدار الأداة المنشور (sw.js) وتحدّث نفسها =====
+(function () {
+    const ADMIN_VER = 'v30.46';
+    window.ADMIN_VER = ADMIN_VER;
+    let busy = false;
+    async function check(force) {
+        if (busy) return;
+        busy = true;
+        try {
+            const r = await fetch('sw.js?_chk=' + Date.now(), { cache: 'no-store' });
+            if (!r.ok) return;
+            const m = (await r.text()).match(/CACHE_NAME\s*=\s*['"]wada3an-alam-(v[\d.]+)['"]/);
+            if (!m) return;
+            const remote = m[1];
+            if (remote !== ADMIN_VER) {
+                const tried = sessionStorage.getItem('admin_reload_try');
+                if (tried === remote) return; // منع الحلقات
+                sessionStorage.setItem('admin_reload_try', remote);
+                try {
+                    if ('caches' in window) { const ks = await caches.keys(); await Promise.all(ks.map(k => caches.delete(k))); }
+                    if ('serviceWorker' in navigator) { const rs = await navigator.serviceWorker.getRegistrations(); for (const x of rs) { try { await x.unregister(); } catch (e) {} } }
+                } catch (e) {}
+                location.replace(location.href.split('?')[0].split('#')[0] + '?v=' + Date.now());
+            }
+        } catch (e) {} finally { busy = false; }
+    }
+    setTimeout(() => check(true), 1500);
+    setInterval(check, 120000);
+    window.addEventListener('focus', check);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+})();
+</script>
 </body>
+
 </html>

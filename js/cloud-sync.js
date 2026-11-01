@@ -3507,6 +3507,8 @@
     const DEFAULT_PAYMENT_CONFIG = {
         enabled: true,
         priceJod: 3,
+        pricePkg5: 10,
+        pricePkg10: 15,
         originalPriceJod: 10,
         currencyLabel: 'دنانير أردنية',
         walletName: 'محفظة أورانج (Orange Money)',
@@ -3621,10 +3623,7 @@
                         }
                     }
                 }
-                const curExamId = localStorage.getItem('smart_current_exam_id');
-                if (curExamId && unlockData.sameBrowserForceUnlock) {
-                    localStorage.setItem('smart_paid_v2_exam_' + curExamId, 'true');
-                }
+                // تم تعطيل فتح الفحص الحالي عن بُعد: التفعيل بالأكواد فقط
             } catch (e) {}
 
             try {
