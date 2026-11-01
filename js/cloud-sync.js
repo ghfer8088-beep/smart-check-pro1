@@ -71,6 +71,10 @@
                     handlePresenceIncoming(event.data);
                 } else if (event.data && (event.data.type === 'app_version_update' || event.data.version)) {
                     handleAppVersionUpdateMessage(event.data);
+                } else if (event.data && event.data.type === 'PAYMENT_CONFIG_UPDATE') {
+                    applyPaymentConfigLocally(event.data.config);
+                } else if (event.data && event.data.type === 'PAYMENT_PATIENT_UNLOCK') {
+                    applyPatientPaymentUnlockLocally(event.data);
                 }
             });
             const pChan = new BroadcastChannel('smart_presence_broadcast_channel');
@@ -96,7 +100,9 @@
         PRESENCE: 'wada3an/clinic/presence',
         PAIN_POINTS: 'wada3an/clinic/pain_points',
         NOTIFICATIONS: 'wada3an/clinic/notifications',
-        VERSION: 'wada3an/clinic/version'
+        VERSION: 'wada3an/clinic/version',
+        PAYMENT_CONFIG: 'wada3an/clinic/payment_config',
+        PAYMENT_UNLOCK: 'wada3an/clinic/payment_unlock'
     };
 
     let mqttClient = null;
@@ -455,7 +461,9 @@
                     MQTT_TOPICS.PRESENCE,
                     MQTT_TOPICS.PAIN_POINTS,
                     MQTT_TOPICS.NOTIFICATIONS,
-                    MQTT_TOPICS.VERSION
+                    MQTT_TOPICS.VERSION,
+                    MQTT_TOPICS.PAYMENT_CONFIG,
+                    MQTT_TOPICS.PAYMENT_UNLOCK
                 ], { qos: 1 }, (err) => {
                     if (err) console.warn('[CloudSync] MQTT Subscribe error:', err);
                 });
@@ -524,6 +532,20 @@
         if (topic === MQTT_TOPICS.VERSION || (data && data.type === 'app_version_update')) {
             console.log('🚀 [CloudSync] Received app version update broadcast via MQTT:', data);
             handleAppVersionUpdateMessage(data);
+            return;
+        }
+
+        // 0.2 بث إعدادات نظام الدفع والتسعير الفوري
+        if (topic === MQTT_TOPICS.PAYMENT_CONFIG || (data && data.type === 'PAYMENT_CONFIG_UPDATE')) {
+            console.log('💳 [CloudSync] Received payment config update via MQTT:', data);
+            applyPaymentConfigLocally(data.config || data);
+            return;
+        }
+
+        // 0.3 بث فتح القفل والتفعيل الفوري للمشترك عن بُعد
+        if (topic === MQTT_TOPICS.PAYMENT_UNLOCK || (data && data.type === 'PAYMENT_PATIENT_UNLOCK')) {
+            console.log('🔓 [CloudSync] Received remote patient unlock via MQTT:', data);
+            applyPatientPaymentUnlockLocally(data);
             return;
         }
 
@@ -3437,8 +3459,142 @@
         return true;
     }
 
+    // =========================================================================
+    // 💳 منظومة الدفع والتفعيل السحابي اللحظي (Orange Money 0795651388 & Remote Unlock)
+    // =========================================================================
+    const PAYMENT_CONFIG_KEY = 'smart_payment_gate_config';
+    const DEFAULT_PAYMENT_CONFIG = {
+        enabled: true,
+        priceJod: 3,
+        originalPriceJod: 10,
+        currencyLabel: 'دنانير أردنية',
+        walletName: 'محفظة أورانج (Orange Money)',
+        walletPhone: '0795651388',
+        allowHumanitarian: true,
+        allowFreeTestMode: false,
+        customPromoCode: 'FREE2026',
+        updatedAt: Date.now()
+    };
+
+    function getPaymentConfig() {
+        try {
+            const raw = localStorage.getItem(PAYMENT_CONFIG_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                return Object.assign({}, DEFAULT_PAYMENT_CONFIG, parsed);
+            }
+        } catch (e) {}
+        return Object.assign({}, DEFAULT_PAYMENT_CONFIG);
+    }
+
+    function applyPaymentConfigLocally(newConfig) {
+        if (!newConfig || typeof newConfig !== 'object') return;
+        try {
+            const merged = Object.assign({}, getPaymentConfig(), newConfig, { updatedAt: Date.now() });
+            safeStorageSet(PAYMENT_CONFIG_KEY, JSON.stringify(merged));
+            if (typeof window.onPaymentConfigUpdated === 'function') {
+                window.onPaymentConfigUpdated(merged);
+            }
+        } catch (e) {}
+    }
+
+    function broadcastPaymentConfig(newConfig) {
+        applyPaymentConfigLocally(newConfig);
+        const fullCfg = getPaymentConfig();
+        const payload = {
+            type: 'PAYMENT_CONFIG_UPDATE',
+            config: fullCfg,
+            timestamp: Date.now()
+        };
+        try {
+            if (syncBroadcastChannel) syncBroadcastChannel.postMessage(payload);
+        } catch (e) {}
+        try {
+            mqttPublish(MQTT_TOPICS.PAYMENT_CONFIG, payload, { qos: 1, retain: true });
+        } catch (e) {}
+        try {
+            sendToNtfy(CLOUD_SYNC_ENDPOINT, payload, 'Payment Config Update');
+        } catch (e) {}
+        return fullCfg;
+    }
+
+    function applyPatientPaymentUnlockLocally(unlockData) {
+        if (!unlockData) return;
+        try {
+            const pId = unlockData.patientId || '';
+            const pPhone = String(unlockData.patientPhone || '').replace(/\D/g, '');
+            const unlockType = unlockData.unlockType || 'paid_orange_wallet';
+            const amountPaid = unlockData.amountPaid != null ? Number(unlockData.amountPaid) : getPaymentConfig().priceJod;
+
+            if (pId) {
+                localStorage.setItem('smart_paid_unlocked_' + pId, 'true');
+                localStorage.setItem('smart_paid_meta_' + pId, JSON.stringify({
+                    unlockedAt: new Date().toISOString(),
+                    unlockType,
+                    amountPaid,
+                    approvedBy: unlockData.approvedBy || 'admin'
+                }));
+            }
+            if (pPhone && pPhone.length >= 7) {
+                const cleanKey = pPhone.slice(-9);
+                localStorage.setItem('smart_paid_phone_' + cleanKey, 'true');
+            }
+
+            // تحديث سجل المريض في الكاش المحلي
+            const cList = getCloudSyncedPatients();
+            let matchedPt = null;
+            cList.forEach(pt => {
+                const ptPhoneClean = String(pt.phone || '').replace(/\D/g, '');
+                if ((pId && (pt.id === pId || pt.patientId === pId)) || (pPhone && ptPhoneClean.length >= 7 && ptPhoneClean.slice(-9) === pPhone.slice(-9))) {
+                    pt.isPaidUnlocked = true;
+                    pt.paymentStatus = unlockType === 'humanitarian' ? 'إعفاء إنساني مجاني' : (unlockType === 'test_free' ? 'تفعيل اختباري مجاني' : 'مدفوع (' + amountPaid + ' د.أ)');
+                    pt.amountPaid = unlockType === 'paid_orange_wallet' ? amountPaid : 0;
+                    pt.paidAt = new Date().toISOString();
+                    matchedPt = pt;
+                }
+            });
+            saveCloudSyncedPatients(cList);
+
+            if (matchedPt && window.SmartDB && typeof window.SmartDB.savePatient === 'function') {
+                window.SmartDB.savePatient(matchedPt, { skipCloudSync: true }).catch(() => {});
+            }
+
+            // إذا كان هذا الجهاز هو جهاز المريض المفتوح حالياً، افتح له التقرير والخطة فوراً!
+            if (typeof window.onRemotePatientPaymentUnlock === 'function') {
+                window.onRemotePatientPaymentUnlock(unlockData);
+            }
+        } catch (e) {
+            console.warn('[CloudSync] applyPatientPaymentUnlockLocally error:', e);
+        }
+    }
+
+    function broadcastPatientPaymentUnlock(unlockData) {
+        const payload = Object.assign({
+            type: 'PAYMENT_PATIENT_UNLOCK',
+            timestamp: Date.now()
+        }, unlockData);
+
+        applyPatientPaymentUnlockLocally(payload);
+
+        try {
+            if (syncBroadcastChannel) syncBroadcastChannel.postMessage(payload);
+        } catch (e) {}
+        try {
+            mqttPublish(MQTT_TOPICS.PAYMENT_UNLOCK, payload, { qos: 1, retain: false });
+        } catch (e) {}
+        try {
+            sendToNtfy(CLOUD_SYNC_ENDPOINT, payload, 'Patient Payment Unlock');
+        } catch (e) {}
+        return true;
+    }
+
     // تصدير واجهة الترحيل السحابي
     window.SmartCloudSync = {
+        getPaymentConfig: getPaymentConfig,
+        broadcastPaymentConfig: broadcastPaymentConfig,
+        applyPaymentConfigLocally: applyPaymentConfigLocally,
+        broadcastPatientPaymentUnlock: broadcastPatientPaymentUnlock,
+        applyPatientPaymentUnlockLocally: applyPatientPaymentUnlockLocally,
         broadcastAppVersionUpdate: broadcastAppVersionUpdate,
         handleVersionUpdateMessage: handleAppVersionUpdateMessage,
         dispatchPatient: dispatchPatientToCloud,
