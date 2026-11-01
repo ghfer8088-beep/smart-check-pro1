@@ -4094,8 +4094,8 @@ async function ensureAndDisplayReport() {
     const reportContainer = document.getElementById('clinical-report-container');
     if (!reportContainer) return false;
 
-    // إذا كان التقرير مطبوعاً وموجوداً بالفعل في الصفحة، نكتفي به
-    if (reportContainer.querySelector('.clinical-report-printable')) {
+    // إذا كان التقرير أو بوابة الاشتراك موجودة بالفعل في الصفحة، نكتفي بها لمنع إعادة الرسم المتكرر واهتزاز الشاشة
+    if (reportContainer.querySelector('.clinical-report-printable') || reportContainer.querySelector('#pre-report-subscription-gate-wrapper')) {
         return true;
     }
 
@@ -5334,6 +5334,14 @@ window.unlockForFreeToolTesting = unlockForFreeToolTesting;
 // رسم بوابة الاشتراك والتفعيل في المرحلة 3 قبل ظهور التقرير التشخيصي والتمارين
 function renderPreReportPaywallGate(data, reportContainer) {
     if (!reportContainer) return;
+    const curExamId = (function() {
+        try { return sessionStorage.getItem('scp_current_exam_id') || localStorage.getItem('smart_current_exam_id') || 'default_exam'; } catch (e) { return 'default_exam'; }
+    })();
+    const existingGate = reportContainer.querySelector('#pre-report-subscription-gate-wrapper');
+    if (existingGate && existingGate.getAttribute('data-exam-id') === curExamId) {
+        return;
+    }
+
     const auth = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
     const isRegisteredPatient = Boolean(auth && (auth.isRegistered || auth.phone));
     const resolvedReportPhone = (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') || auth?.originalPhone || auth?.phone || data?.patientPhone || '';
@@ -5343,7 +5351,7 @@ function renderPreReportPaywallGate(data, reportContainer) {
     const confScore = data?.confidenceScore || data?.probability || 94;
 
     reportContainer.innerHTML = `
-        <div id="pre-report-subscription-gate-wrapper" style="max-width: 880px; margin: 0 auto 30px auto; animation: fadeIn 0.35s ease;">
+        <div id="pre-report-subscription-gate-wrapper" data-exam-id="${curExamId}" style="max-width: 880px; margin: 0 auto 30px auto;">
             <!-- بطاقة اكتمال الفحص السريري وجاهزية التقرير والخطة -->
             <div style="background: linear-gradient(135deg, #0d1526 0%, #112239 100%); border: 2px solid var(--primary-gold); border-radius: 18px; padding: 24px 20px; margin-bottom: 20px; box-shadow: 0 12px 35px rgba(0,0,0,0.6); position: relative; overflow: hidden;">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; border-bottom: 1.5px solid rgba(212, 175, 55, 0.3); padding-bottom: 16px; margin-bottom: 18px;">
@@ -5393,7 +5401,9 @@ function renderPreReportPaywallGate(data, reportContainer) {
             ${getRecoveryPlanPaywallCardHTML(data || {}, isRegisteredPatient, resolvedReportName, resolvedReportPhone, cleanDigitsPhone, auth)}
         </div>
     `;
-    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {}
+    if (typeof SmartGuidance !== 'undefined' && typeof SmartGuidance.guideStep3 === 'function') {
+        SmartGuidance.guideStep3();
+    }
 }
 window.renderPreReportPaywallGate = renderPreReportPaywallGate;
 
@@ -5895,10 +5905,16 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
 window.getRecoveryPlanPaywallCardHTML = getRecoveryPlanPaywallCardHTML;
 
 // تحديث فوري لبطاقة الدفع في حال قام الأدمن بتغيير السعر أو تفعيل الوضع المجاني على الهواء
+let _lastPaywallConfigHash = '';
 window.onPaymentGateConfigUpdated = function(newConfig) {
     try {
+        const newHash = JSON.stringify(newConfig || {});
+        if (newHash === _lastPaywallConfigHash) return;
+        _lastPaywallConfigHash = newHash;
+
         const masterCard = document.getElementById('recovery-plan-master-card');
         if (masterCard && typeof getRecoveryPlanPaywallCardHTML === 'function') {
+            if (document.activeElement && masterCard.contains(document.activeElement)) return;
             const curAssessment = (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) || window.currentAssessmentData || {};
             const auth = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
             const rName = typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : (auth?.name || '');
@@ -9029,7 +9045,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.41';
+const CURRENT_APP_VERSION = 'v30.42';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -9431,13 +9447,17 @@ function goToStep(stepNum, options = {}) {
         }
     } catch (e) {}
 
+    const targetSection = document.getElementById(`step-section-${stepNum}`);
+    const wasAlreadyVisible = targetSection && targetSection.style.display === 'block';
+
     document.querySelectorAll('.app-step-section').forEach(s => s.style.display = 'none');
 
     // إظهار قسم الخطوة المحددة بدقة (الخطوات 1 إلى 6 أصبحت مستقلة تماماً)
-    const targetSection = document.getElementById(`step-section-${stepNum}`);
     if (targetSection) {
         targetSection.style.display = 'block';
-        try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {}
+        if (!wasAlreadyVisible) {
+            try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) {}
+        }
     }
 
     // تحديث مؤشرات شريط الخطوات الذكي مع المحافظة على جميع الخطوات المنجزة
@@ -9448,7 +9468,7 @@ function goToStep(stepNum, options = {}) {
         SmartGuidance.updateStep(stepNum);
     }
 
-    // إذا دخل المراجع الخطوة 3 (بوابة التفعيل / التقرير الطبي)، ضمان رسم البوابة أو التقرير فوراً وتركيز الشاشة بنعومة عليه
+    // إذا دخل المراجع الخطوة 3 (بوابة التفعيل / التقرير الطبي)، ضمان رسم البوابة أو التقرير فوراً دون اهتزاز التمرير
     if (stepNum === 3) {
         setTimeout(async () => {
             const reportEl = document.getElementById('clinical-report-container');
@@ -9458,7 +9478,6 @@ function goToStep(stepNum, options = {}) {
                         try { await ensureAndDisplayReport(); } catch(e) {}
                     }
                 }
-                reportEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }, 50);
     }

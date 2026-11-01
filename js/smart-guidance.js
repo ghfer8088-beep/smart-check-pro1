@@ -317,8 +317,9 @@ const SmartGuidance = (function() {
     }
 
     // -------------------------------------------------------------------------
-    // المرحلة 3: التقرير والتشخيص السريري
+    // المرحلة 3: التقرير والتشخيص السريري (أو بوابة التفعيل المسبقة)
     // -------------------------------------------------------------------------
+    let _isEnsuringStep3Report = false;
     function renderStep3Bar() {
         const iconEl = document.getElementById('sticky-guidance-icon');
         const subEl = document.getElementById('sticky-guidance-sub');
@@ -330,17 +331,20 @@ const SmartGuidance = (function() {
         if (!btn) return;
 
         const hasReport = !!document.querySelector('#clinical-report-container .clinical-report-printable');
+        const hasPaywallGate = !!document.querySelector('#clinical-report-container #pre-report-subscription-gate-wrapper');
         const loadingModal = document.getElementById('royal-report-loading-modal');
         const isLoadingModalVisible = loadingModal && loadingModal.style.display !== 'none' && window.getComputedStyle(loadingModal).display !== 'none';
 
-        if (!hasReport || isLoadingModalVisible) {
-            // تشغيل التقرير تلقائياً إذا كان المريض منجزاً لمراحل أو التقرير متوفراً
-            if (!isLoadingModalVisible && typeof window.ensureAndDisplayReport === 'function') {
+        if ((!hasReport && !hasPaywallGate) || isLoadingModalVisible) {
+            // تشغيل التقرير مرة واحدة فقط إذا لم يكن مرسوماً بعد
+            if (!isLoadingModalVisible && !_isEnsuringStep3Report && typeof window.ensureAndDisplayReport === 'function') {
+                _isEnsuringStep3Report = true;
                 window.ensureAndDisplayReport().then(ok => {
-                    if (ok) renderStep3Bar();
-                }).catch(() => {});
+                    _isEnsuringStep3Report = false;
+                }).catch(() => {
+                    _isEnsuringStep3Report = false;
+                });
             }
-            // حالة التحضير: الشاشة مركزة على مكان إصدار التقرير والانتظار
             activeSubState = 'step3_loading';
             updateStageFlowBanner(3, 1);
             if (iconEl) iconEl.textContent = '⏳';
@@ -350,31 +354,34 @@ const SmartGuidance = (function() {
             btn.className = 'sticky-guidance-action-btn state-pending';
             if (btnIcon) btnIcon.textContent = '⏳';
             if (btnText) btnText.textContent = 'جاري إعداد التقرير...';
+        } else if (hasPaywallGate && !hasReport) {
+            // حالة بوابة الاشتراك والتفعيل قبل عرض التقرير والتمارين
+            activeSubState = 'step3_paywall_gate';
+            updateStageFlowBanner(3, 1);
+            if (iconEl) iconEl.textContent = '💎';
+            if (subEl) subEl.textContent = 'المرحلة 3 من 6: اكتمل الفحص — تفعيل باقة التقرير والتمارين';
+            if (mainEl) mainEl.textContent = 'اختر طريقة التفعيل بالأسفل (محفظة أورانج 3 د.أ / إعفاء غير المقتدرين / تفعيل اختباري) لفتح التقرير والتمارين';
+
+            btn.className = 'sticky-guidance-action-btn state-ready';
+            if (btnIcon) btnIcon.textContent = '🔓';
+            if (btnText) btnText.textContent = 'اختر طريقة التفعيل لفتح التقرير ❯';
         } else {
-            // حالة ظهور التقرير: اختفاء حالة الإعداد فوراً والتوجيه لتفعيل الخطة بعد القراءة
+            // حالة ظهور التقرير بعد التفعيل: التوجيه لبدء تمارين اليوم الأول
             activeSubState = 'step3_ready';
             updateStageFlowBanner(3, 2);
             if (iconEl) iconEl.textContent = '📋';
-            if (subEl) subEl.textContent = 'المرحلة 3 من 6: تشخيصك الطبي جاهز ومعتمد';
-            if (mainEl) mainEl.textContent = 'اضغط على زر تفعيل الخطة المجانية لعرض رسالة الصدقة الجارية وبدء تمارين اليوم الأول';
+            if (subEl) subEl.textContent = 'المرحلة 3 من 6: تشخيصك الطبي الكامل جاهز ومعتمد';
+            if (mainEl) mainEl.textContent = 'يمكنك قراءة وحفظ تقريرك الطبي، ثم الضغط لبدء تمارين الجلسة الأولى (اليوم 1)';
 
             btn.className = 'sticky-guidance-action-btn state-ready';
-            if (btnIcon) btnIcon.textContent = '🎁';
-            if (btnText) btnText.textContent = 'تفعيل الخطة المجانية وبدء اليوم الأول ❯';
+            if (btnIcon) btnIcon.textContent = '🏋️';
+            if (btnText) btnText.textContent = 'الدخول لتمارين اليوم الأول ❯';
         }
     }
 
     function onReportRendered() {
         currentStep = 3;
         renderStep3Bar();
-
-        // التمرير السلس الهادئ إلى بداية التقرير الطبي ليقرأه المريض
-        setTimeout(() => {
-            const reportEl = document.getElementById('clinical-report-container');
-            if (reportEl) {
-                reportEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        }, 150);
     }
 
     // -------------------------------------------------------------------------
@@ -801,7 +808,19 @@ const SmartGuidance = (function() {
             }
 
             case 3: {
-                // التقرير الطبي: تفعيل الخطة المجانية فوراً وعرض نافذة الصدقة الجارية دائماً
+                const hasPaywallGate = !!document.querySelector('#clinical-report-container #pre-report-subscription-gate-wrapper');
+                const isPlanUnlocked = (typeof window.isCurrentPatientPlanUnlocked === 'function') ? window.isCurrentPatientPlanUnlocked() : !hasPaywallGate;
+                if (hasPaywallGate || !isPlanUnlocked) {
+                    const masterCard = document.getElementById('recovery-plan-master-card');
+                    if (masterCard) {
+                        masterCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    if (typeof showToast === 'function') {
+                        showToast('💎 اختر طريقة التفعيل (محفظة أورانج 3 د.أ / إعفاء غير المقتدرين / تفعيل اختباري) لفتح التقرير والتمارين', 'info', 3500);
+                    }
+                    break;
+                }
+                // التقرير الطبي مفتوح ومعتمد: الانتقال لتمارين اليوم الأول وعرض نافذة الدعاء
                 if (typeof window.activateRecoveryPlanInstantly === 'function') {
                     window.activateRecoveryPlanInstantly();
                 } else if (typeof activateRecoveryPlanInstantly === 'function') {
