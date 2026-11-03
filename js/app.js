@@ -3416,24 +3416,26 @@ function generateVertebralMappingCard(painArea, contextText = '') {
     `;
 }
 
-// الفحوصات المخبرية والتكاملية الموصى بها
+// الفحوصات المخبرية والتكاملية الموصى بها (مدمجة وقابلة للتوسيع لتفادي الزحام)
 function generateIntegrativeLabCard() {
     return `
-        <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(49, 46, 129, 0.25) 100%); border: 1.5px solid #a855f7; border-radius: 14px; padding: 20px; margin-bottom: 22px; box-shadow: 0 6px 25px rgba(0,0,0,0.45);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid rgba(168, 85, 247, 0.25); padding-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+        <details class="no-print" style="background: rgba(15, 23, 42, 0.75); border: 1.5px solid rgba(168, 85, 247, 0.4); border-radius: 12px; padding: 12px 18px; margin-bottom: 22px; cursor: pointer;">
+            <summary style="display: flex; justify-content: space-between; align-items: center; list-style: none; user-select: none;">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 1.6em;">🔬</span>
+                    <span style="font-size: 1.4em;">🔬</span>
                     <div>
-                        <h4 style="color: #c084fc; margin: 0; font-size: 1.1em; font-weight: 800;">الفحوصات المخبرية والتكاملية الموصى بها (نقص الفيتامينات والمعادن)</h4>
-                        <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">لاستبعاد المسببات الأيضية وتغذية الأعصاب الداعمة لسرعة الاستشفاء</div>
+                        <h4 style="color: #c084fc; margin: 0; font-size: 1em; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
+                            الفحوصات المخبرية الداعمة المقترحة (الفيتامينات والمعادن)
+                        </h4>
+                        <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">اضغط للاطلاع على الفحوصات المخبرية لاستبعاد المسببات الأيضية وتغذية الأعصاب</div>
                     </div>
                 </div>
-                <span style="background: rgba(168, 85, 247, 0.15); border: 1px solid #a855f7; color: #d8b4fe; font-size: 0.78em; padding: 3px 10px; border-radius: 12px; font-weight: bold;">
-                    طب تكاملي شامل
+                <span style="color: #d8b4fe; font-size: 0.82em; background: rgba(168, 85, 247, 0.18); border: 1px solid #a855f7; padding: 3px 10px; border-radius: 12px; font-weight: bold;">
+                    عرض التفاصيل ▾
                 </span>
-            </div>
+            </summary>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 14px; border-top: 1px solid rgba(168, 85, 247, 0.2); padding-top: 14px; cursor: default;">
                 <!-- فيتامين B12 -->
                 <div style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 10px; padding: 12px;">
                     <div style="color: #fef08a; font-weight: bold; font-size: 0.92em; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
@@ -3474,7 +3476,7 @@ function generateIntegrativeLabCard() {
                     </p>
                 </div>
             </div>
-        </div>
+        </details>
     `;
 }
 
@@ -4162,6 +4164,14 @@ function playSarahCharityIntroAudio(patientName = '', isUserManualClick = false)
     };
 
     try {
+        const isHumanitarian = (localStorage.getItem('smart_paid_plan_type') === 'humanitarian' || (typeof activePatient !== 'undefined' && activePatient?.paymentType === 'humanitarian'));
+        if (!isHumanitarian) {
+            if (typeof Wada3anAiEngine !== 'undefined' && typeof Wada3anAiEngine.speak === 'function') {
+                const welcomeText = `أهلاً بك يا ${patientName || 'المراجع العزيز'}. تم اعتماد وتفعيل خطتك التأهيلية بنجاح. سنبدأ الآن جلسة اليوم الأول، اتبع التوجيهات بدقة لتحقيق أفضل نتيجة سريرية.`;
+                Wada3anAiEngine.speak(welcomeText, onFinish);
+                return;
+            }
+        }
         if (typeof playStationAudio === 'function') {
             playStationAudio('recovery', onFinish);
         } else {
@@ -4894,21 +4904,33 @@ function displayDiagnosticReport(data) {
             </div>
 
 
-            <!-- ================= 6. حاسبة التوفير المالي والأمان الصحي ================= -->
-            <div class="no-print">
-                ${getTreatmentCostCalculatorHTML()}
-            </div>
-
             <!-- ================= 7. بوابة تفعيل الخطة التأهيلية الذكية (7 أيام) ونظام الاشتراك الرمزي / الإعفاء الإنساني ================= -->
             ${typeof getRecoveryPlanPaywallCardHTML === 'function' ? getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedReportName, resolvedReportPhone, cleanDigitsPhone, auth) : ''}
 
             <!-- بطاقة حفظ التقرير في الملف الطبي للمراجع (اختياري 100%) -->
             ${getReportSaveCardHTML(data.patientPhone || (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : ''), data.patientName || activePatient?.name)}
 
-            <!-- ================= 8. الزيارات المنزلية وخدمة مرضى خارج الأردن ================= -->
-            <div class="no-print">
-                ${getHomeVisitCardHTML()}
-                ${getInternationalPatientsCardHTML()}
+            <!-- ================= 8. خدمات الرعاية المتقدمة (الزيارات المنزلية واستشارات الخارج) ================= -->
+            <div class="no-print" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(212, 175, 55, 0.12) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 18px 20px; margin-top: 18px; margin-bottom: 22px; box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                    <div style="display: flex; align-items: center; gap: 12px; flex: 1 1 300px;">
+                        <span style="font-size: 2em;">👑</span>
+                        <div>
+                            <h4 style="color: var(--primary-gold); margin: 0; font-size: 1.12em; font-weight: 800;">خدمات الرعاية المتقدمة (العيادة المباشرة والزيارات المنزلية)</h4>
+                            <p style="color: #cbd5e1; font-size: 0.86em; line-height: 1.5; margin: 3px 0 0 0;">
+                                نوفر جلسات التقويم اليدوي والزيارات المنزلية داخل الأردن، وتنسيق استشارات قراءة صور الرنين لمرضانا الكرام من خارج الأردن.
+                            </p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <a href="https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent('مرحباً دكتور جمال، أود الاستفسار عن ترتيب جلسة علاجية / زيارة منزلية (داخل الأردن) بخصوص حالتي.')}" target="_blank" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; padding: 9px 16px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.86em; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(16,185,129,0.3);">
+                            <span>🏠</span> طلب زيارة منزلية
+                        </a>
+                        <a href="https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent('مرحباً دكتور جمال، أنا مقيم خارج الأردن وأود التنسيق معكم لقراءة صورة الرنين / استشارة دولية عن بُعد.')}" target="_blank" style="background: rgba(56, 189, 248, 0.18); border: 1px solid #38bdf8; color: #7dd3fc; padding: 9px 16px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.86em; display: inline-flex; align-items: center; gap: 6px;">
+                            <span>🌍</span> استشارة مرضى الخارج
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     `;
@@ -5270,7 +5292,7 @@ function contactInternationalPatientCoordinator() {
 }
 
 // =========================================================================
-// 👑 محرك البوابة الملكية للاشتراك والاعتماد الإداري الموثق (SmartPaymentGate v30.50)
+// 👑 محرك البوابة الملكية للاشتراك والاعتماد الإداري الموثق (SmartPaymentGate v30.51)
 // =========================================================================
 function getActivePaymentGateConfig() {
     if (window.SmartCloudSync && typeof window.SmartCloudSync.getPaymentConfig === 'function') {
@@ -7507,8 +7529,20 @@ async function submitPatientRegistrationAndStart() {
         });
     } catch (e) {}
 
-    // إظهار نافذة الإهداء والدعاء الملكي لضمان قراءتها والتأمين عليها
-    showRoyalDuaaModal(patientId);
+    // إظهار نافذة الإهداء والدعاء حصراً لمن اختار الإعفاء الإنساني (لوجه الله) دون إرباك المشترك المدفوع
+    const isHumanitarian = (patientObj?.paymentType === 'humanitarian' || localStorage.getItem('smart_paid_plan_type') === 'humanitarian');
+    if (isHumanitarian) {
+        showRoyalDuaaModal(patientId);
+    } else {
+        if (typeof goToStep === 'function') goToStep(4);
+        if (typeof renderStep4IndependentDay1 === 'function') renderStep4IndependentDay1(patientId);
+        setTimeout(() => {
+            const pName = (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || activePatient?.name || '';
+            if (typeof playSarahCharityIntroAudio === 'function') {
+                playSarahCharityIntroAudio(pName);
+            }
+        }, 300);
+    }
 }
 
 // التحكم بنافذة الدعاء الملكي والصدقة الجارية
@@ -8062,7 +8096,8 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                 </div>
             </div>
 
-            <!-- بطاقة إهداء الصدقة الجارية وكلمة د. سارة الصوتية الترحيبية -->
+            <!-- بطاقة الترحيب السريري والتوجيهات الطبية لليوم الأول (مخصصة حسب نوع الاشتراك دون إرباك المراجع المدفوع) -->
+            ${(sessionData.patient?.paymentType === 'humanitarian' || localStorage.getItem('smart_paid_plan_type') === 'humanitarian') ? `
             <div id="sarah-charity-voice-banner" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 14px 18px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
                 <div style="display: flex; align-items: center; gap: 12px; flex: 1 1 300px;">
                     <span style="font-size: 2.2em; background: rgba(16, 185, 129, 0.2); border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 1.5px solid #10b981; flex-shrink: 0;">👩‍⚕️</span>
@@ -8085,6 +8120,27 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                     </button>
                 </div>
             </div>
+            ` : `
+            <div id="sarah-charity-voice-banner" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 14px 18px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+                <div style="display: flex; align-items: center; gap: 12px; flex: 1 1 300px;">
+                    <span style="font-size: 2.2em; background: rgba(212, 175, 55, 0.2); border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--primary-gold); flex-shrink: 0;">👩‍⚕️</span>
+                    <div>
+                        <div style="color: #fef08a; font-weight: 800; font-size: 1em; display: flex; align-items: center; gap: 6px;">
+                            <span>د. سارة (المستشارة الطبية):</span>
+                            <span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 2px 8px; border-radius: 10px; font-size: 0.78em;">👑 اشتراك معتمد</span>
+                        </div>
+                        <div style="color: #f1f5f9; font-size: 0.92em; line-height: 1.6; margin-top: 3px;">
+                            «أهلاً بك يا ${(sessionData.patient?.name || 'المراجع العزيز')}. تم اعتماد وتفعيل خطتك التأهيلية المخصصة بنجاح. سنبدأ الآن جلسة اليوم الأول، اتبع التوجيهات والتكرارات بدقة لتحقيق أفضل نتيجة سريرية.»
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" id="btn-replay-sarah-charity" onclick="playSarahCharityIntroAudio('${(sessionData.patient?.name || '').replace(/'/g, "\\'")}', true)" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(16, 185, 129, 0.3) 100%); border: 1.5px solid var(--primary-gold); color: #fef08a; padding: 8px 16px; border-radius: 20px; font-weight: 800; font-size: 0.86em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+                        <span id="sarah-charity-voice-status">🔊 استمع للتوجيهات</span>
+                    </button>
+                </div>
+            </div>
+            `}
 
             <!-- بنر علوي للاستشارة المباشرة مع المعالج -->
             <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(15, 23, 42, 0.9) 100%); border: 1px solid var(--primary-gold); border-radius: 10px; padding: 12px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
@@ -10290,7 +10346,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.50';
+const CURRENT_APP_VERSION = 'v30.51';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 

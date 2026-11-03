@@ -28,11 +28,11 @@
     </script>
 
     <!-- منظومة الأمان السيبراني وحماية الملكية الفكرية وقفل النطاق -->
-    <script src="js/security-shield.js?v=30.50"></script>
-    <script src="js/system-watchdog.js?v=30.50"></script>
+    <script src="js/security-shield.js?v=30.51"></script>
+    <script src="js/system-watchdog.js?v=30.51"></script>
 
     <!-- وسوم تطبيق الويب التقدمي PWA والأيقونات الرسمية -->
-    <link rel="manifest" href="manifest.json?v=30.50">
+    <link rel="manifest" href="manifest.json?v=30.51">
     <link rel="icon" type="image/png" href="assets/logo.png">
     <link rel="shortcut icon" href="assets/logo.png">
     <link rel="apple-touch-icon" href="assets/logo.png">
@@ -44,11 +44,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=30.50">
+    <link rel="stylesheet" href="css/style.css?v=30.51">
     <script>
         // التحقق من وصول أحدث إصدار وبث التحديث عالمياً لجميع الأجهزة
         (function() {
-            const APP_TARGET_VER = '30.50';
+            const APP_TARGET_VER = '30.51';
             window.APP_TARGET_VER = APP_TARGET_VER;
         })();
     </script>
@@ -149,7 +149,7 @@
                 <div class="brand-version-badge" onclick="event.stopPropagation(); if(typeof forceAppUpdateAndClearCache==='function') forceAppUpdateAndClearCache();" title="انقر لتحديث وتنشيط التطبيق فوراً" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72em; color: #94a3b8; margin-top: 1px; cursor: pointer; user-select: none;">
                     <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                     <span>الإصدار:</span>
-                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v30.50</strong>
+                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v30.51</strong>
                 </div>
             </div>
         </div>
@@ -226,22 +226,6 @@
         }
     </script>
 
-    <!-- 🟢 شريط التفاعل الحي والمصداقية اللحظية (Social Proof & Live Visitors Counter < 100) -->
-    <div id="live-online-bar" class="no-print" style="background: linear-gradient(90deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.95) 50%, rgba(15, 23, 42, 0.98) 100%); border-bottom: 1.5px solid rgba(212, 175, 55, 0.35); padding: 9px 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 0.88em; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
-        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 8px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.45); padding: 4px 14px; border-radius: 20px;">
-                <span style="display: inline-block; width: 9px; height: 9px; background: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981; animation: pulseOnline 1.8s infinite;"></span>
-                <span style="color: #6ee7b7; font-weight: 700;">أونلاين الآن:</span>
-                <span id="live-online-users-count" style="color: #fff; font-weight: 800; font-size: 1.1em; min-width: 26px; text-align: center;">1</span>
-                <span style="color: #cbd5e1; font-size: 0.92em;">مراجعاً في الفحص والاستشارة</span>
-            </div>
-            <div id="visitor-geo-badge" style="display: inline-flex; align-items: center; gap: 6px; color: #94a3b8; font-size: 0.88em;">
-                <span>📍</span>
-                <span id="visitor-detected-location">جاري كشف موقعك الجغرافي...</span>
-            </div>
-        </div>
-    </div>
-
     <!-- شريط تتبع الخطوات المنطقي القابل للنقر للتنقل الحر (6 مراحل سريرية معيارية) -->
     <div class="stepper-container no-print">
         <div class="stepper-node active" id="stepper-node-1" onclick="handleStepperClick(1)" style="cursor: pointer;" title="المرحلة 1: موضع الألم">
@@ -276,24 +260,8 @@
         <!-- ================= الخطوة 1: فحص وتحديد موضع الألم ================= -->
         <section id="step-section-1" class="app-step-section">
 
-            <!-- شريط مسار المرحلة 1 -->
-            <div class="stage-flow-banner no-print" id="stage-flow-banner-1">
-                <div class="stage-flow-title">
-                    <span>🧭</span> <strong>مسار المرحلة الأولى (تحديد موضع الألم):</strong>
-                </div>
-                <div class="stage-flow-steps">
-                    <div class="stage-flow-step active" id="sfb-1-1">
-                        <span>1️⃣</span> انقر على موضع ألمك من المجسم
-                    </div>
-                    <span class="stage-flow-arrow">➔</span>
-                    <div class="stage-flow-step" id="sfb-1-2">
-                        <span>2️⃣</span> اضغط زر المتابعة للفحص السريري
-                    </div>
-                </div>
-            </div>
-
             <!-- بنر استئناف الجلسة العلاجية الجارية تلقائياً لحماية المراجع من أي فقدان لجلسته -->
-            <div id="step1-active-session-banner" class="no-print" style="display: none; background: linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(15, 23, 42, 0.95) 100%); border: 2px solid #10b981; border-radius: 14px; padding: 14px 18px; margin-bottom: 18px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.35); align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div id="step1-active-session-banner" class="no-print" style="display: none; background: linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(15, 23, 42, 0.95) 100%); border: 2px solid #10b981; border-radius: 14px; padding: 14px 18px; margin-bottom: 14px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.35); align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <span style="font-size: 1.8em;">🌿</span>
                     <div>
@@ -307,84 +275,23 @@
                 </button>
             </div>
 
-            <!-- وسام الريادة العالمية: منظومة الفحص والعلاج الذكية الأولى والوحيدة في العالم (تصميم عصري رشيق للهاتف والكمبيوتر) -->
-            <div class="prestige-compact-showcase no-print" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.16) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 14px 20px; margin-bottom: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-                <div style="display: flex; align-items: center; gap: 14px;">
-                    <div style="width: 58px; height: 78px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; filter: drop-shadow(0 4px 12px rgba(212, 175, 55, 0.55));">
-                        <!-- وسام التميز السريري الملكي فائق الفخامة والريادة (تصميم فيكتور SVG مخصص فائق الدقة) -->
-                        <img src="assets/royal-excellence-medal.svg?v=17.2" alt="وسام التميز السريري والريادة العالمية" style="width: 100%; height: 100%; object-fit: contain;">
-                    </div>
-                    <div>
-                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 2px;">
-                            <h2 style="color: #ffffff; margin: 0; font-size: 1.15em; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
-                                منظومة الفحص والعلاج الذكية <span style="color: var(--primary-gold); text-shadow: 0 0 10px rgba(212, 175, 55, 0.4);">الأولى والوحيدة في العالم</span>
-                            </h2>
-                            <span style="background: rgba(212, 175, 55, 0.22); border: 1px solid var(--primary-gold); color: #fef08a; font-size: 0.72em; padding: 2px 8px; border-radius: 12px; font-weight: bold;">براءة ابتكار سريري</span>
-                        </div>
-                        <p style="color: #cbd5e1; margin: 0; font-size: 0.84em; line-height: 1.4;">
-                            فحص سريري فوري ذاتي وتصميم خطط الراحة والاستشفاء بتقنية الكايروبراكتيك المعتمدة • «وداعاً للألم»
-                        </p>
-                    </div>
+            <!-- نطاق الحالات السريرية المعالجة (تصميم رشيق وموجز وأنيق بدون حيز رأسي) -->
+            <div class="clinical-scope-strip no-print" style="background: rgba(15, 23, 42, 0.78); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 8px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 6px; color: var(--primary-gold); font-size: 0.88em; font-weight: 800;">
+                    <span>🩺</span>
+                    <span>نطاق الحالات التي تعالجها المنظومة:</span>
                 </div>
-                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                    <span style="background: rgba(16, 185, 129, 0.18); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.82em; font-weight: bold; padding: 5px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px;">
-                        <span>✓</span> فحص مجاني متاح للجميع 100%
-                    </span>
-                </div>
-            </div>
-
-            <!-- شريط المشاكل والتخصصات السريرية التي نعالجها في وداعاً للألم -->
-            <div class="clinical-specialties-banner no-print">
-                <div class="specialties-header">
-                    <div class="specialties-title-wrap">
-                        <span class="specialties-icon">🩺</span>
-                        <h3 class="specialties-title">نطاق الحالات والمشاكل التي نعالجها في «وداعاً للألم»</h3>
-                    </div>
-                    <span class="specialties-tag">تقنية الكايروبراكتيك المعتمدة</span>
-                </div>
-                <div class="specialties-grid">
-                    <div class="specialty-chip">
-                        <span class="chip-icon">🦴</span>
-                        <div class="chip-content">
-                            <strong>مشاكل الفقرات</strong>
-                            <span>الديسك، انزلاق الفقرات، احتكاك وتضيق القناة الشوكية</span>
-                        </div>
-                    </div>
-                    <div class="specialty-chip">
-                        <span class="chip-icon">💪</span>
-                        <div class="chip-content">
-                            <strong>مشاكل العضلات والأوتار</strong>
-                            <span>متلازمة الأبهر، التشنج المزمن، وتمزق وإجهاد الأوتار</span>
-                        </div>
-                    </div>
-                    <div class="specialty-chip">
-                        <span class="chip-icon">⚡</span>
-                        <div class="chip-content">
-                            <strong>مشاكل الخدر والتنميل</strong>
-                            <span>عرق النسا (سياتيكا)، النفق الرسغي، وانضغاط الأعصاب</span>
-                        </div>
-                    </div>
-                    <div class="specialty-chip">
-                        <span class="chip-icon">🛡️</span>
-                        <div class="chip-content">
-                            <strong>مشاكل الأكتاف والمفاصل</strong>
-                            <span>تجمد الكتف، الكفة المدورة، احتكاك الركبتين والحوض</span>
-                        </div>
-                    </div>
-                    <div class="specialty-chip" onclick="startSpecializedConsultation('stroke')" style="cursor: pointer;" title="انقر لبدء استشارة تأهيل ما بعد الجلطات">
-                        <span class="chip-icon">🧠</span>
-                        <div class="chip-content">
-                            <strong>التأهيل لمرضى الجلطات والمشاكل الحركية</strong>
-                            <span>استعادة المشي والتوازن، وتليين التصلب وضعف الحركة ⬅️</span>
-                        </div>
-                    </div>
-                    <div class="specialty-chip" onclick="startSpecializedConsultation('scoliosis')" style="cursor: pointer;" title="انقر لبدء استشارة تقويم الجنف">
-                        <span class="chip-icon">📐</span>
-                        <div class="chip-content">
-                            <strong>الجنف (Scoliosis)</strong>
-                            <span>تقويم انحراف واعوجاج العمود الفقري وتعديل التوازن ⬅️</span>
-                        </div>
-                    </div>
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 0.82em;">
+                    <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #f1f5f9; padding: 3px 10px; border-radius: 20px;">🦴 الفقرات والديسك</span>
+                    <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #f1f5f9; padding: 3px 10px; border-radius: 20px;">⚡ الأعصاب وعرق النسا</span>
+                    <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #f1f5f9; padding: 3px 10px; border-radius: 20px;">💪 العضلات والأبهر</span>
+                    <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #f1f5f9; padding: 3px 10px; border-radius: 20px;">🛡️ المفاصل والأكتاف</span>
+                    <button type="button" onclick="startSpecializedConsultation('stroke')" style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #7dd3fc; padding: 3px 10px; border-radius: 20px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="استشارة تأهيل ما بعد الجلطات">
+                        <span>🧠</span> تأهيل الجلطات ⬅️
+                    </button>
+                    <button type="button" onclick="startSpecializedConsultation('scoliosis')" style="background: rgba(212, 175, 55, 0.18); border: 1px solid var(--primary-gold); color: #fef08a; padding: 3px 10px; border-radius: 20px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="استشارة تقويم الجنف">
+                        <span>📐</span> الجنف ⬅️
+                    </button>
                 </div>
             </div>
 
@@ -516,25 +423,7 @@
         <!-- ================= الخطوة 2: التقييم السريري (العيادة الافتراضية الذكية) ================= -->
         <section id="step-section-2" class="app-step-section" style="display: none;">
 
-            <!-- شريط مسار المرحلة 2 -->
-            <div class="stage-flow-banner no-print" id="stage-flow-banner-2">
-                <div class="stage-flow-title">
-                    <span>🧭</span> <strong>مسار المرحلة الثانية (الاستشارة السريرية):</strong>
-                </div>
-                <div class="stage-flow-steps">
-                    <div class="stage-flow-step active" id="sfb-2-1">
-                        <span>1️⃣</span> توثيق مؤشراتك الحيوية
-                    </div>
-                    <span class="stage-flow-arrow">➔</span>
-                    <div class="stage-flow-step" id="sfb-2-2">
-                        <span>2️⃣</span> الإجابة على أسئلة الطبيب
-                    </div>
-                    <span class="stage-flow-arrow">➔</span>
-                    <div class="stage-flow-step" id="sfb-2-3">
-                        <span>3️⃣</span> إصدار التقرير الطبي والتشخيص
-                    </div>
-                </div>
-            </div>
+
 
             <div style="background: var(--bg-card); border: 1px solid var(--border-gold-subtle); border-radius: 16px; padding: 25px; box-shadow: var(--shadow-gold-glow);">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
@@ -774,23 +663,6 @@
 
         <!-- ================= الخطوة 3: التقرير الطبي ================= -->
         <section id="step-section-3" class="app-step-section" style="display: none;">
-
-            <!-- شريط مسار المرحلة 3 -->
-            <div class="stage-flow-banner no-print" id="stage-flow-banner-3">
-                <div class="stage-flow-title">
-                    <span>🧭</span> <strong>مسار المرحلة الثالثة (التقرير والتشخيص):</strong>
-                </div>
-                <div class="stage-flow-steps">
-                    <div class="stage-flow-step active" id="sfb-3-1">
-                        <span>1️⃣</span> قراءة ملخص التشخيص السريري
-                    </div>
-                    <span class="stage-flow-arrow">➔</span>
-                    <div class="stage-flow-step" id="sfb-3-2">
-                        <span>2️⃣</span> تفعيل الخطة وبدء جلسة اليوم الأول
-                    </div>
-                </div>
-            </div>
-
             <div id="clinical-report-container">
                 <div style="text-align: center; padding: 45px 20px; background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.95) 100%); border-radius: 16px; border: 2px solid var(--primary-gold); margin: 25px auto; max-width: 620px; box-shadow: 0 10px 40px rgba(0,0,0,0.7);">
                     <div style="font-size: 3em; margin-bottom: 15px; animation: pulse 1.5s infinite;">⏳</div>
@@ -809,23 +681,6 @@
 
         <!-- ================= الخطوة 4: الجلسة الأولى (مستقلة) ================= -->
         <section id="step-section-4" class="app-step-section" style="display: none;">
-
-            <!-- شريط مسار المرحلة 4 -->
-            <div class="stage-flow-banner no-print" id="stage-flow-banner-4">
-                <div class="stage-flow-title">
-                    <span>🧭</span> <strong>مسار المرحلة الرابعة (تمارين اليوم الأول):</strong>
-                </div>
-                <div class="stage-flow-steps">
-                    <div class="stage-flow-step active" id="sfb-4-1">
-                        <span>1️⃣</span> أداء التمارين مع المؤقت والتوجيه الصوتي
-                    </div>
-                    <span class="stage-flow-arrow">➔</span>
-                    <div class="stage-flow-step" id="sfb-4-2">
-                        <span>2️⃣</span> توثيق إنجاز الجلسة وبدء الاستشفاء (24 س)
-                    </div>
-                </div>
-            </div>
-
             <div id="step4-day1-container"></div>
             <div id="patient-recovery-dashboard"></div>
         </section>
@@ -1840,21 +1695,21 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=30.50"></script>
-    <script src="js/cloud-sync.js?v=30.50"></script>
-    <script src="js/geo-tracker.js?v=30.50"></script>
-    <script src="js/database.js?v=30.50"></script>
-    <script src="js/exercise-image-studio.js?v=30.50"></script>
-    <script src="js/exercises-db.js?v=30.50"></script>
-    <script src="js/diagnostic-engine.js?v=30.50"></script>
-    <script src="js/audio-pacer.js?v=30.50"></script>
-    <script src="js/patient-flow.js?v=30.50"></script>
-    <script src="js/admin-engine.js?v=30.50"></script>
-    <script src="js/ai-config.js?v=30.50"></script>
-    <script src="js/ai-engine.js?v=30.50"></script>
-    <script src="js/app.js?v=30.50"></script>
-    <script src="js/text-editor.js?v=30.50"></script>
-    <script src="js/smart-guidance.js?v=30.50"></script>
+    <script src="js/mqtt.min.js?v=30.51"></script>
+    <script src="js/cloud-sync.js?v=30.51"></script>
+    <script src="js/geo-tracker.js?v=30.51"></script>
+    <script src="js/database.js?v=30.51"></script>
+    <script src="js/exercise-image-studio.js?v=30.51"></script>
+    <script src="js/exercises-db.js?v=30.51"></script>
+    <script src="js/diagnostic-engine.js?v=30.51"></script>
+    <script src="js/audio-pacer.js?v=30.51"></script>
+    <script src="js/patient-flow.js?v=30.51"></script>
+    <script src="js/admin-engine.js?v=30.51"></script>
+    <script src="js/ai-config.js?v=30.51"></script>
+    <script src="js/ai-engine.js?v=30.51"></script>
+    <script src="js/app.js?v=30.51"></script>
+    <script src="js/text-editor.js?v=30.51"></script>
+    <script src="js/smart-guidance.js?v=30.51"></script>
 
     <script>
         // مؤشر المراجعين المتواجدين أونلاين الآن (متزامن بدقة مع السحابة ولوحة الإدارة)
