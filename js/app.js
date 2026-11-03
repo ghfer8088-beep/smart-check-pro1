@@ -5266,22 +5266,14 @@ function isCurrentPatientPlanUnlocked(pId, pPhone) {
         // 1. فحص فوري لجلسة الفحص الحالي المفتوحة بنجاح
         if (sessionStorage.getItem('scp_current_exam_paid_unlocked') === 'true') return true;
 
-        // 2. فحص كائن التقييم والمريض الحالي
+        // 2. فحص كائن التقييم الحالي (خاص بهذا الفحص فقط وليس بالمريض أو حسابه السابق)
         if (typeof currentAssessmentData !== 'undefined' && currentAssessmentData && currentAssessmentData.isPaidUnlocked) return true;
-        if (typeof activePatient !== 'undefined' && activePatient && activePatient.isPaidUnlocked) return true;
 
         // 3. فحص معرّف الفحص في الذاكرة المحلية
         const ex = getCurrentExamGateId();
         if (ex && localStorage.getItem('smart_paid_v2_exam_' + ex) === 'true') return true;
 
-        // 4. فحص معرّف المريض
-        const resolvedId = pId || (typeof activePatient !== 'undefined' && (activePatient?.patientId || activePatient?.id)) || (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.patientId) || localStorage.getItem('smart_current_patient_id') || sessionStorage.getItem('scp_active_patient_id');
-        if (resolvedId) {
-            if (localStorage.getItem('smart_paid_v2_unlocked_' + resolvedId) === 'true') return true;
-            if (localStorage.getItem('smart_paid_unlocked_' + resolvedId) === 'true') return true;
-        }
-
-        // 5. محفظة رصيد الباقات (باقات 5 أو 10) — يُخصم منها تشخيص واحد فقط إذا كان الفحص جديداً وغير محسوب
+        // 4. محفظة رصيد الباقات (باقات 5 أو 10) — يُخصم منها تشخيص واحد فقط إذا كان الفحص جديداً وغير محسوب
         const w = getPkgWallet();
         if (w && typeof w.remaining === 'number' && w.remaining > 0) {
             w.ids = w.ids || [];
@@ -5409,6 +5401,22 @@ function verifyActivationCode(entered, cfg) {
 }
 
 async function submitPromoOrTestUnlockCode(inputIdOverride) {
+    try {
+        return await _submitPromoOrTestUnlockCodeCore(inputIdOverride);
+    } catch (err) {
+        console.error('submitPromoOrTestUnlockCode error:', err);
+        const msgEl = document.getElementById('paywall-status-feedback');
+        if (msgEl) {
+            msgEl.style.display = 'block';
+            msgEl.style.background = 'rgba(239,68,68,0.18)';
+            msgEl.style.border = '1.5px solid #ef4444';
+            msgEl.style.color = '#fca5a5';
+            msgEl.textContent = '⚠️ تعذر إتمام التفعيل: ' + (err && err.message ? err.message : err) + ' — يرجى تحديث الصفحة والمحاولة مجدداً أو التواصل مع الإدارة.';
+        }
+        if (typeof showRoyalPaymentToast === 'function') showRoyalPaymentToast('⚠️ تعذر إتمام التفعيل، حدّث الصفحة وحاول مجدداً.', 'warning');
+    }
+}
+async function _submitPromoOrTestUnlockCodeCore(inputIdOverride) {
     const cfg = getActivePaymentGateConfig();
     const codeInput = document.getElementById(inputIdOverride || 'pay-promo-code-input')
         || document.getElementById('pending-pin-code-input')
@@ -5503,13 +5511,32 @@ async function submitPromoOrTestUnlockCode(inputIdOverride) {
     say(tierMsg, true);
 
     setTimeout(() => {
-        completePreReportUnlockAndRevealReport({
-            patientId: pend?.patientId,
-            unlockType: type,
-            subscriberName: nameUsed,
-            subscriberPhone: phoneUsed,
-            amountPaid: type === 'paid_orange_wallet' ? (getPkgPrices(cfg)[res.tier] || cfg.priceJod) : 0
-        });
+        const finishUnlockFallback = () => {
+            // شبكة أمان: إذا بقيت بوابة الدفع ظاهرة بعد التفعيل، نعيد تحميل الصفحة مع الحفاظ على حالة الفتح المحفوظة
+            setTimeout(() => {
+                try {
+                    const gate = document.getElementById('pre-report-subscription-gate-wrapper');
+                    if (gate && gate.offsetParent !== null && isCurrentPatientPlanUnlocked()) {
+                        window.location.reload();
+                    }
+                } catch (e) {}
+            }, 1200);
+        };
+        try {
+            completePreReportUnlockAndRevealReport({
+                patientId: pend?.patientId,
+                unlockType: type,
+                subscriberName: nameUsed,
+                subscriberPhone: phoneUsed,
+                amountPaid: type === 'paid_orange_wallet' ? (getPkgPrices(cfg)[res.tier] || cfg.priceJod) : 0
+            });
+        } catch (err) {
+            console.error('Unlock reveal error:', err);
+            say('⚠️ تم قبول الكود وحفظ التفعيل، جاري تحديث الصفحة لعرض التقرير... (' + (err && err.message ? err.message : err) + ')', true);
+            setTimeout(() => { try { window.location.reload(); } catch (e) {} }, 900);
+            return;
+        }
+        finishUnlockFallback();
     }, 250);
 }
 window.submitPromoOrTestUnlockCode = submitPromoOrTestUnlockCode;
