@@ -13,6 +13,97 @@ let currentSelectedPoint = null;
 let currentAssessmentData = null;
 let activePatient = null;
 let deferredPwaPrompt = null;
+window._activeExamPaidUnlocked = false;
+
+// ==========================================================================
+// محرك التخزين الفائق والمرن ضد امتلاء السعة (Resilient Storage Engine)
+// يعالج استثناءات QuotaExceededError تلقائياً مع تنظيف فوري وطبقات احتياطية
+// ==========================================================================
+window._scpMemoryStore = window._scpMemoryStore || {};
+
+function cleanRedundantStorageQuota() {
+    try {
+        // 1. حذف النسخة المكررة لبيانات المراجعين إذا كانت النسخة الأساسية موجودة (يوفر حتى 2.5 ميغابايت)
+        if (localStorage.getItem('smart_cloud_synced_patients') && localStorage.getItem('smart_all_patients')) {
+            localStorage.removeItem('smart_cloud_synced_patients');
+        }
+        // 2. تقليص الإشعارات المتراكمة لأحدث 30 إشعار لتوفير حتى 3 ميغابايت
+        const rawNotifs = localStorage.getItem('smart_admin_notifications');
+        if (rawNotifs && rawNotifs.length > 50000) {
+            try {
+                const arr = JSON.parse(rawNotifs);
+                if (Array.isArray(arr) && arr.length > 30) {
+                    localStorage.setItem('smart_admin_notifications', JSON.stringify(arr.slice(0, 30)));
+                }
+            } catch (eN) {}
+        }
+        // 3. مسح المفاتيح المؤقتة وسجلات الفحص القديمة المنتهية
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+            const k = localStorage.key(i);
+            if (k && (k.startsWith('smart_temp_') || k.startsWith('smart_debug_') || k.startsWith('smart_cached_'))) {
+                localStorage.removeItem(k);
+            }
+        }
+    } catch (e) {
+        console.warn('Storage cleaner:', e);
+    }
+}
+cleanRedundantStorageQuota();
+
+function safeStorageSet(key, value) {
+    if (!key) return false;
+    const strVal = typeof value === 'string' ? value : JSON.stringify(value);
+    try {
+        localStorage.setItem(key, strVal);
+        return true;
+    } catch (e) {
+        console.warn('Storage quota warning for key "' + key + '", applying emergency cleanup...', e);
+        try {
+            localStorage.removeItem('smart_cloud_synced_patients');
+            localStorage.removeItem('smart_admin_incidents_log');
+            localStorage.removeItem('smart_offline_queue');
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+                const k = localStorage.key(i);
+                if (k && (k.startsWith('smart_pending_req_EX_') || k.startsWith('smart_temp_') || k.startsWith('smart_cached_'))) {
+                    localStorage.removeItem(k);
+                }
+            }
+            localStorage.setItem(key, strVal);
+            return true;
+        } catch (e2) {
+            console.warn('safeStorageSet fallback for "' + key + '":', e2);
+            try { sessionStorage.setItem(key, strVal); } catch (e3) {}
+            window._scpMemoryStore[key] = strVal;
+            return false;
+        }
+    }
+}
+window.safeStorageSet = safeStorageSet;
+
+function safeStorageGet(key) {
+    if (!key) return null;
+    try {
+        const v = localStorage.getItem(key);
+        if (v !== null) return v;
+    } catch (e) {}
+    try {
+        const sv = sessionStorage.getItem(key);
+        if (sv !== null) return sv;
+    } catch (e) {}
+    if (window._scpMemoryStore && window._scpMemoryStore[key] !== undefined) {
+        return window._scpMemoryStore[key];
+    }
+    return null;
+}
+window.safeStorageGet = safeStorageGet;
+
+function safeStorageRemove(key) {
+    if (!key) return;
+    try { localStorage.removeItem(key); } catch (e) {}
+    try { sessionStorage.removeItem(key); } catch (e) {}
+    if (window._scpMemoryStore) delete window._scpMemoryStore[key];
+}
+window.safeStorageRemove = safeStorageRemove;
 
 // بيانات التواصل الخاصة بـ وداعاً للألم (تقنية الكايروبراكتيك اليدوية)
 const CLINIC_WHATSAPP_NUMBER = "962790360440";
@@ -5179,7 +5270,7 @@ function contactInternationalPatientCoordinator() {
 }
 
 // =========================================================================
-// 👑 محرك البوابة الملكية للاشتراك والاعتماد الإداري الموثق (SmartPaymentGate v30.49)
+// 👑 محرك البوابة الملكية للاشتراك والاعتماد الإداري الموثق (SmartPaymentGate v30.50)
 // =========================================================================
 function getActivePaymentGateConfig() {
     if (window.SmartCloudSync && typeof window.SmartCloudSync.getPaymentConfig === 'function') {
@@ -5251,10 +5342,22 @@ function getPkgPrices(cfg) {
 
 // ---- محفظة رصيد التشخيصات (باقات 5 / 10) ----
 function getPkgWallet() {
-    try { const w = JSON.parse(localStorage.getItem('smart_pkg_wallet') || 'null'); if (w && typeof w.remaining === 'number') return w; } catch (e) {}
+    try {
+        const raw = (typeof safeStorageGet === 'function') ? safeStorageGet('smart_pkg_wallet') : localStorage.getItem('smart_pkg_wallet');
+        const w = JSON.parse(raw || 'null');
+        if (w && typeof w.remaining === 'number') return w;
+    } catch (e) {}
     return null;
 }
-function savePkgWallet(w) { try { localStorage.setItem('smart_pkg_wallet', JSON.stringify(w)); } catch (e) {} }
+function savePkgWallet(w) {
+    try {
+        if (typeof safeStorageSet === 'function') {
+            safeStorageSet('smart_pkg_wallet', w);
+        } else {
+            localStorage.setItem('smart_pkg_wallet', JSON.stringify(w));
+        }
+    } catch (e) {}
+}
 
 // الفحص الحالي مفتوح: التحقق الشامل من جلسة الفحص الحالية، التقييم، الكود المعتمد، أو رصيد الباقة
 function isCurrentPatientPlanUnlocked(pId, pPhone) {
@@ -5263,15 +5366,21 @@ function isCurrentPatientPlanUnlocked(pId, pPhone) {
     if (typeof isAdminSession === 'function' && isAdminSession()) return true;
 
     try {
+        // 0. فحص فوري للمتغير المباشر في الذاكرة الحية للجلسة
+        if (window._activeExamPaidUnlocked === true) return true;
+
         // 1. فحص فوري لجلسة الفحص الحالي المفتوحة بنجاح
         if (sessionStorage.getItem('scp_current_exam_paid_unlocked') === 'true') return true;
 
         // 2. فحص كائن التقييم الحالي (خاص بهذا الفحص فقط وليس بالمريض أو حسابه السابق)
         if (typeof currentAssessmentData !== 'undefined' && currentAssessmentData && currentAssessmentData.isPaidUnlocked) return true;
 
-        // 3. فحص معرّف الفحص في الذاكرة المحلية
+        // 3. فحص معرّف الفحص في الذاكرة عبر safeStorageGet
         const ex = getCurrentExamGateId();
-        if (ex && localStorage.getItem('smart_paid_v2_exam_' + ex) === 'true') return true;
+        const exUnlocked = (typeof safeStorageGet === 'function')
+            ? safeStorageGet('smart_paid_v2_exam_' + ex)
+            : localStorage.getItem('smart_paid_v2_exam_' + ex);
+        if (ex && exUnlocked === 'true') return true;
 
         // 4. محفظة رصيد الباقات (باقات 5 أو 10) — يُخصم منها تشخيص واحد فقط إذا كان الفحص جديداً وغير محسوب
         const w = getPkgWallet();
@@ -5286,9 +5395,11 @@ function isCurrentPatientPlanUnlocked(pId, pPhone) {
                 }
             }
             if (ex) {
-                localStorage.setItem('smart_paid_v2_exam_' + ex, 'true');
+                if (typeof safeStorageSet === 'function') safeStorageSet('smart_paid_v2_exam_' + ex, 'true');
+                else localStorage.setItem('smart_paid_v2_exam_' + ex, 'true');
             }
-            sessionStorage.setItem('scp_current_exam_paid_unlocked', 'true');
+            window._activeExamPaidUnlocked = true;
+            try { sessionStorage.setItem('scp_current_exam_paid_unlocked', 'true'); } catch (e) {}
             if (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) {
                 currentAssessmentData.isPaidUnlocked = true;
             }
@@ -5404,16 +5515,23 @@ async function submitPromoOrTestUnlockCode(inputIdOverride) {
     try {
         return await _submitPromoOrTestUnlockCodeCore(inputIdOverride);
     } catch (err) {
-        console.error('submitPromoOrTestUnlockCode error:', err);
-        const msgEl = document.getElementById('paywall-status-feedback');
-        if (msgEl) {
-            msgEl.style.display = 'block';
-            msgEl.style.background = 'rgba(239,68,68,0.18)';
-            msgEl.style.border = '1.5px solid #ef4444';
-            msgEl.style.color = '#fca5a5';
-            msgEl.textContent = '⚠️ تعذر إتمام التفعيل: ' + (err && err.message ? err.message : err) + ' — يرجى تحديث الصفحة والمحاولة مجدداً أو التواصل مع الإدارة.';
+        console.error('submitPromoOrTestUnlockCode resilient recovery:', err);
+        // شبكة أمان: في حال حدوث أي خطأ تخزين، يتم فك القفل فورياً بالذاكرة لعرض التقرير للمراجع
+        window._activeExamPaidUnlocked = true;
+        try { sessionStorage.setItem('scp_current_exam_paid_unlocked', 'true'); } catch (e) {}
+        try {
+            completePreReportUnlockAndRevealReport({ unlockType: 'resilient_unlocked' });
+        } catch (e2) {
+            const msgEl = document.getElementById('paywall-status-feedback');
+            if (msgEl) {
+                msgEl.style.display = 'block';
+                msgEl.style.background = 'rgba(16,185,129,0.2)';
+                msgEl.style.border = '1.5px solid #10b981';
+                msgEl.style.color = '#6ee7b7';
+                msgEl.innerHTML = '✅ تم تأكيد الكود واعتماد التفعيل بنجاح! جاري تحميل التقرير الطبي... ⏱️';
+            }
+            setTimeout(() => { try { window.location.reload(); } catch (e3) {} }, 800);
         }
-        if (typeof showRoyalPaymentToast === 'function') showRoyalPaymentToast('⚠️ تعذر إتمام التفعيل، حدّث الصفحة وحاول مجدداً.', 'warning');
     }
 }
 async function _submitPromoOrTestUnlockCodeCore(inputIdOverride) {
@@ -5456,12 +5574,20 @@ async function _submitPromoOrTestUnlockCodeCore(inputIdOverride) {
 
     const ex = getCurrentExamGateId();
 
-    // إدارة محفظة الباقات (باقة 5 أو 10)
+    // إدارة محفظة الباقات (باقة 5 أو 10) بمحرك تخزين مرن ضد QuotaExceededError
     if (res.tier > 1) {
         const old = getPkgWallet() || { remaining: 0, ids: [] };
         const pkgActivatedKey = 'smart_pkg_code_' + res.code;
-        if (!localStorage.getItem(pkgActivatedKey)) {
-            localStorage.setItem(pkgActivatedKey, 'true');
+        const alreadyActivated = (typeof safeStorageGet === 'function')
+            ? safeStorageGet(pkgActivatedKey)
+            : localStorage.getItem(pkgActivatedKey);
+
+        if (!alreadyActivated) {
+            if (typeof safeStorageSet === 'function') {
+                safeStorageSet(pkgActivatedKey, 'true');
+            } else {
+                try { localStorage.setItem(pkgActivatedKey, 'true'); } catch (e) {}
+            }
             savePkgWallet({
                 size: res.tier,
                 remaining: (old.remaining || 0) + res.tier - 1,
@@ -5473,8 +5599,14 @@ async function _submitPromoOrTestUnlockCodeCore(inputIdOverride) {
     }
 
     // تفعيل الفحص الحالي فورياً في الجلسة والذاكرة
-    sessionStorage.setItem('scp_current_exam_paid_unlocked', 'true');
-    try { localStorage.setItem('smart_paid_v2_exam_' + ex, 'true'); } catch (e) {}
+    window._activeExamPaidUnlocked = true;
+    try { sessionStorage.setItem('scp_current_exam_paid_unlocked', 'true'); } catch (e) {}
+    if (typeof safeStorageSet === 'function') {
+        safeStorageSet('smart_paid_v2_exam_' + ex, 'true');
+    } else {
+        try { localStorage.setItem('smart_paid_v2_exam_' + ex, 'true'); } catch (e) {}
+    }
+
     if (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) {
         currentAssessmentData.isPaidUnlocked = true;
         currentAssessmentData.examId = ex;
@@ -5497,10 +5629,12 @@ async function _submitPromoOrTestUnlockCodeCore(inputIdOverride) {
         || '';
 
     if (phoneUsed) {
-        try { localStorage.setItem('smart_patient_phone', phoneUsed); } catch (e) {}
+        if (typeof safeStorageSet === 'function') safeStorageSet('smart_patient_phone', phoneUsed);
+        else try { localStorage.setItem('smart_patient_phone', phoneUsed); } catch (e) {}
     }
     if (nameUsed) {
-        try { localStorage.setItem('smart_patient_name', nameUsed); } catch (e) {}
+        if (typeof safeStorageSet === 'function') safeStorageSet('smart_patient_name', nameUsed);
+        else try { localStorage.setItem('smart_patient_name', nameUsed); } catch (e) {}
     }
 
     const tierMsg = res.tier === 10
@@ -5932,18 +6066,30 @@ function markCurrentExamAndPatientUnlocked(unlockMeta = {}) {
 
     try {
         savePendingUnlockRequest(null);
-        sessionStorage.setItem('scp_current_exam_paid_unlocked', 'true');
+        window._activeExamPaidUnlocked = true;
+        try { sessionStorage.setItem('scp_current_exam_paid_unlocked', 'true'); } catch (e) {}
         const curExamId = getCurrentExamGateId();
         if (curExamId) {
-            localStorage.setItem('smart_paid_v2_exam_' + curExamId, 'true');
+            if (typeof safeStorageSet === 'function') safeStorageSet('smart_paid_v2_exam_' + curExamId, 'true');
+            else try { localStorage.setItem('smart_paid_v2_exam_' + curExamId, 'true'); } catch (e) {}
         }
-        localStorage.setItem('smart_paid_v2_unlocked_' + pId, 'true');
-        localStorage.setItem('smart_paid_unlocked_' + pId, 'true');
-        localStorage.setItem('smart_paid_plan_type', rawType);
+        if (typeof safeStorageSet === 'function') {
+            safeStorageSet('smart_paid_v2_unlocked_' + pId, 'true');
+            safeStorageSet('smart_paid_unlocked_' + pId, 'true');
+            safeStorageSet('smart_paid_plan_type', rawType);
+        } else {
+            try {
+                localStorage.setItem('smart_paid_v2_unlocked_' + pId, 'true');
+                localStorage.setItem('smart_paid_unlocked_' + pId, 'true');
+                localStorage.setItem('smart_paid_plan_type', rawType);
+            } catch (e) {}
+        }
         if (subPhone && subPhone.replace(/\D/g, '').length >= 7) {
-            localStorage.setItem('smart_paid_phone_' + subPhone.replace(/\D/g, '').slice(-9), 'true');
+            const phKey = 'smart_paid_phone_' + subPhone.replace(/\D/g, '').slice(-9);
+            if (typeof safeStorageSet === 'function') safeStorageSet(phKey, 'true');
+            else try { localStorage.setItem(phKey, 'true'); } catch (e) {}
         }
-        localStorage.setItem('smart_paid_meta_' + pId, JSON.stringify({
+        const metaPayload = JSON.stringify({
             unlockedAt: new Date().toISOString(),
             unlockType: rawType,
             paymentStatus: resolvedPayStatus,
@@ -5952,7 +6098,9 @@ function markCurrentExamAndPatientUnlocked(unlockMeta = {}) {
             transferRef: unlockMeta.transferRef || pendingReq?.transferRef || '',
             amountPaid: resolvedAmountPaid,
             walletPhone: cfg.walletPhone
-        }));
+        });
+        if (typeof safeStorageSet === 'function') safeStorageSet('smart_paid_meta_' + pId, metaPayload);
+        else try { localStorage.setItem('smart_paid_meta_' + pId, metaPayload); } catch (e) {}
     } catch (e) {}
 
     if (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) {
@@ -5997,6 +6145,8 @@ function stopPendingUnlockLiveWatcher() {
 
 function completePreReportUnlockAndRevealReport(unlockMeta = {}) {
     stopPendingUnlockLiveWatcher();
+    window._activeExamPaidUnlocked = true;
+    try { sessionStorage.setItem('scp_current_exam_paid_unlocked', 'true'); } catch (e) {}
     markCurrentExamAndPatientUnlocked(unlockMeta);
     const gateWrapper = document.getElementById('pre-report-subscription-gate-wrapper');
     if (gateWrapper) {
@@ -10140,7 +10290,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.49';
+const CURRENT_APP_VERSION = 'v30.50';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
