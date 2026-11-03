@@ -1022,13 +1022,6 @@ const AdminEngine = (function() {
             }
 
             cleanOverview.sort((a, b) => {
-                const pA = a.patient || a;
-                const pB = b.patient || b;
-                const isPendingA = !pA.isPaidUnlocked && Boolean(pA.pendingUnlockRequest || String(pA.paymentStatus || '').includes('بانتظار'));
-                const isPendingB = !pB.isPaidUnlocked && Boolean(pB.pendingUnlockRequest || String(pB.paymentStatus || '').includes('بانتظار'));
-                if (isPendingA && !isPendingB) return -1;
-                if (!isPendingA && isPendingB) return 1;
-
                 const tsA = _extractOverviewTs(a);
                 const tsB = _extractOverviewTs(b);
                 return tsB - tsA;
