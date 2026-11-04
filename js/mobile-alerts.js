@@ -1,5 +1,5 @@
 /**
- * SmartMobileAlerts (v30.56)
+ * SmartMobileAlerts (v30.57)
  * =========================================================================
  * منظومة إشعارات الموبايل الفورية الخاصة بالطبيب / الإدارة
  * ترسل تنبيهاً فورياً مع رنة واهتزاز إلى هاتف الطبيب لكل مشترك جديد أو طلب كود
@@ -142,14 +142,53 @@ const SmartMobileAlerts = (function() {
         return `https://api.whatsapp.com/send?phone=${digits}&text=${encodeURIComponent(text)}`;
     }
 
-    // منع تكرار نفس التنبيه في نفس الـ 5 ثوانٍ
-    function isDuplicate(key) {
+    const SENT_ALERTS_KEY = 'smart_sent_push_alerts_v2';
+    const _inFlightKeys = new Set();
+    const DEDUPE_TTL_MS = 6 * 60 * 60 * 1000; // منع كامل لأي تكرار لنفس المريض والطلب لمدة 6 ساعات
+
+    // التحقق الصارم ومنع تكرار الإشعار عبر التخزين الدائم (localStorage) وقفل التزامن اللحظي
+    function isDuplicateAlert(key) {
         if (!key) return false;
-        const now = Date.now();
-        const prev = _recentAlertsMap.get(key) || 0;
-        if (now - prev < 5000) return true;
-        _recentAlertsMap.set(key, now);
-        return false;
+        if (_inFlightKeys.has(key)) {
+            console.log('[MobileAlerts] Alert in-flight locked, skipping duplicate:', key);
+            return true;
+        }
+
+        try {
+            let alerts = {};
+            try {
+                const raw = (typeof localStorage !== 'undefined') ? localStorage.getItem(SENT_ALERTS_KEY) : null;
+                if (raw) alerts = JSON.parse(raw);
+            } catch(e) {}
+
+            const now = Date.now();
+            const lastSent = alerts[key];
+
+            // إذا أُرسل إشعار لنفس المريض والطلب قبل أقل من 6 ساعات، يتم إيقافه فوراً
+            if (lastSent && (now - lastSent) < DEDUPE_TTL_MS) {
+                console.log(`[MobileAlerts] Duplicate alert suppressed (already sent ${(now - lastSent) / 1000}s ago):`, key);
+                return true;
+            }
+
+            // قفل لحظي لمدة 15 ثانية لمنع النقر المتعدد أو التزامن المزدوج
+            _inFlightKeys.add(key);
+            setTimeout(() => _inFlightKeys.delete(key), 15000);
+
+            // تسجيل وقت الإرسال وحفظه في التخزين الدائم
+            alerts[key] = now;
+
+            // تنظيف السجلات القديمة أكثر من 24 ساعة
+            Object.keys(alerts).forEach(k => {
+                if (now - alerts[k] > 24 * 60 * 60 * 1000) delete alerts[k];
+            });
+
+            if (typeof localStorage !== 'undefined') {
+                localStorage.setItem(SENT_ALERTS_KEY, JSON.stringify(alerts));
+            }
+            return false;
+        } catch(e) {
+            return false;
+        }
     }
 
     // إرسال تنبيه Push لهاتف الطبيب
@@ -202,20 +241,36 @@ const SmartMobileAlerts = (function() {
         return { success: true, topic };
     }
 
-    // إرسال تنبيه مشترك جديد يطلب كود التفعيل مع تحديد الباقة والرسالة الجاهزة
+    // إرسال تنبيه مشترك جديد يطلب كود التفعيل (دفع باقة أو إعفاء إنساني فقط!)
     function notifyUnlockRequest(data) {
-        if (!data) return;
-        const subName = data.name || data.subscriberName || 'مشترك جديد';
-        const subPhone = data.phone || data.subscriberPhone || '';
+        if (!data) return null;
+        const subName = (data.name || data.subscriberName || 'مشترك جديد').trim();
+        const subPhone = (data.phone || data.subscriberPhone || '').trim();
         const painArea = data.painArea || 'فحص واستشارة سريرية';
-        const reqType = data.requestType || data.paymentType || '';
+        const rawReqType = String(data.requestType || data.paymentType || '').toLowerCase();
         const pkgSize = data.packageSize || 1;
 
-        const dedupeKey = `req_${subPhone}_${reqType}_${pkgSize}`;
-        if (isDuplicate(dedupeKey)) return;
+        // فلترة صارمة: الإشعار يرسل فقط وفقط عند الدفع أو الإعفاء الإنساني
+        const isHumanitarian = (rawReqType.includes('human') || rawReqType.includes('waiver') || rawReqType.includes('free'));
+        const isPaid = (rawReqType.includes('paid') || rawReqType.includes('orange') || rawReqType.includes('wallet') || rawReqType.includes('payment'));
+
+        if (!isHumanitarian && !isPaid) {
+            console.log('[MobileAlerts] Ignored non-payment/non-humanitarian request:', rawReqType);
+            return null;
+        }
+
+        // بناء مفتاح التمييز الصارم لمنع التكرار (رقم هاتف المريض أو اسمه + نوع الطلب)
+        const cleanPhoneDigits = subPhone.replace(/\D/g, '').slice(-9);
+        const patientIdentity = cleanPhoneDigits || subName.toLowerCase().replace(/\s+/g, '_');
+        const dedupeKey = `req_${patientIdentity}_${isHumanitarian ? 'humanitarian' : 'paid'}`;
+
+        if (isDuplicateAlert(dedupeKey)) {
+            console.log('[MobileAlerts] Push notification already sent for this request, skipped:', dedupeKey);
+            return null;
+        }
 
         // 1. تحديد الباقة
-        const pkgInfo = formatPackageInfo(reqType, pkgSize);
+        const pkgInfo = formatPackageInfo(rawReqType, pkgSize);
 
         // 2. توليد الكود المطابق تماماً للباقة
         const finalCode = getMatchedCode(subPhone || subName, pkgInfo.tier, data.pin || data.unlockPin);
@@ -261,57 +316,16 @@ const SmartMobileAlerts = (function() {
         });
     }
 
-    // إرسال تنبيه من كائن الإشعار الداخلي (SmartDB.addAdminNotification)
+    // إشعارات الإدارة الداخلية الأخرى (تم إلغاء إرسالها للهاتف نهائياً لأن المطلوب فقط عند الدفع أو الإعفاء الإنساني)
     function notifyAdminNotification(notif) {
-        if (!notif) return;
-        if (notif.type === 'payment_received' || notif.type === 'humanitarian_request') {
-            notifyUnlockRequest({
-                name: notif.patientName,
-                phone: notif.patientPhone,
-                painArea: notif.meta?.painArea || 'فحص سريري',
-                requestType: notif.type === 'humanitarian_request' ? 'humanitarian' : (notif.meta?.paymentType || 'paid_orange_wallet'),
-                packageSize: notif.meta?.packageSize || 1,
-                pin: notif.meta?.unlockPin || notif.meta?.unlockCode || ''
-            });
-        } else if (notif.type === 'new_registration') {
-            notifyNewSubscriber({
-                name: notif.patientName,
-                phone: notif.patientPhone,
-                painArea: notif.meta?.painArea || 'تسجيل حساب جديد',
-                pin: notif.meta?.unlockPin || ''
-            });
-        }
+        // معطل بالكامل لمنع أي إشعارات متكررة أو غير ضرورية على هاتف الطبيب
+        return null;
     }
 
-    // إرسال تنبيه تسجيل مشترك جديد
+    // إرسال تنبيه تسجيل مشترك جديد (معطل بالكامل بناء على رغبة الطبيب لعدم الإزعاج)
     function notifyNewSubscriber(data) {
-        if (!data) return;
-        const name = data.name || data.fullName || 'مشترك جديد';
-        const phone = data.phone || '';
-        const painArea = data.painArea || data.painAreaTitle || 'فحص واستشارة سريرية';
-
-        const dedupeKey = `reg_${phone}_${name}`;
-        if (isDuplicate(dedupeKey)) return;
-
-        const cleanCode = getMatchedCode(phone || name, 1, data.pin);
-        const readyWhatsAppMsg = `مرحباً بك أخي/أختي ${name} 🌸\nيسعدنا تسجيلك في عيادة «وداعاً للألم» للكايروبراكتيك.\nنحن بخدمتك دائماً لتقييم حالتك ومتابعة خطتك العلاجية.\n— د. جمال`;
-        const waLink = buildWhatsAppUrl(phone, readyWhatsAppMsg);
-
-        const actions = [];
-        if (waLink) {
-            actions.push({ action: 'view', label: '💬 محادثة واتساب', url: waLink });
-        }
-        actions.push({ action: 'view', label: '🖥️ لوحة الإدارة', url: 'https://smartchecktools.com/admin.html' });
-
-        return sendPushToPhone({
-            title: `🌟 مشترك جديد بالعيادة: ${name}`,
-            message: `👤 الاسم: ${name}\n📱 الهاتف: ${phone || 'بدون هاتف'}\n🩺 موضع الشكوى: ${painArea}\n🔑 كود المراجع: ${cleanCode}`,
-            priority: 4,
-            tags: ['sparkles', 'busts_in_silhouette'],
-            click: 'https://smartchecktools.com/admin.html',
-            pin: cleanCode,
-            actions: actions
-        });
+        // معطل بالكامل: الإشعار يرسل فقط عند طلب كود باقة أو إعفاء إنساني
+        return null;
     }
 
     // فحص واختبار وصول الإشعار لهاتف الطبيب مع رسالة واتساب جاهزة ونموذج باقة 5

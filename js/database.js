@@ -1103,13 +1103,6 @@ const SmartDB = (function() {
                 } catch(csErr) {}
             }
 
-            // ✅ بث فوري ومباشر لهاتف الطبيب مع رنة واهتزاز (Push Notification عبر NTFY ورسالة واتساب جاهزة)
-            try {
-                if (typeof SmartMobileAlerts !== 'undefined' && typeof SmartMobileAlerts.notifyAdminNotification === 'function') {
-                    SmartMobileAlerts.notifyAdminNotification(newNotif);
-                }
-            } catch(alertErr) {}
-
             return newNotif;
         } catch (e) {
             console.error('Error adding admin notification:', e);
