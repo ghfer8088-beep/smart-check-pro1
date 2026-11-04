@@ -1103,6 +1103,28 @@ const SmartDB = (function() {
                 } catch(csErr) {}
             }
 
+            // ✅ بث فوري ومباشر لهاتف الطبيب مع رنة واهتزاز (Push Notification عبر NTFY)
+            try {
+                if (typeof SmartMobileAlerts !== 'undefined' && typeof SmartMobileAlerts.sendPushToPhone === 'function') {
+                    if (newNotif.type === 'payment_received' || newNotif.type === 'humanitarian_request' || newNotif.type === 'new_registration') {
+                        const isReq = (newNotif.type === 'payment_received' || newNotif.type === 'humanitarian_request');
+                        const cleanPhone = (newNotif.patientPhone || '').replace(/\D/g, '');
+                        const waUrl = cleanPhone ? `https://wa.me/962${cleanPhone.slice(-9)}` : '';
+                        SmartMobileAlerts.sendPushToPhone({
+                            title: newNotif.title,
+                            message: newNotif.message,
+                            priority: isReq ? 5 : 4,
+                            tags: isReq ? ['bell', 'warning', 'key', 'moneybag'] : ['sparkles', 'busts_in_silhouette'],
+                            pin: newNotif.meta?.unlockPin || newNotif.meta?.unlockCode || '',
+                            actions: [
+                                { action: 'view', label: '🖥️ لوحة الإدارة', url: 'https://smartchecktools.com/admin.html' },
+                                ...(waUrl ? [{ action: 'view', label: '💬 محادثة واتساب', url: waUrl }] : [])
+                            ]
+                        }).catch(() => {});
+                    }
+                }
+            } catch(alertErr) {}
+
             return newNotif;
         } catch (e) {
             console.error('Error adding admin notification:', e);

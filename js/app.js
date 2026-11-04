@@ -6549,6 +6549,19 @@ async function submitOrangeWalletPaymentNotification() {
     savePendingUnlockRequest(pendingObj);
     syncPendingPatientRequestToAdmin(pId, subName, subPhone, painArea, `⏳ بانتظار تأكيد حوالة أورانج (${cfg.priceJod} د.أ)`, pendingObj);
 
+    // 🔔 إرسال تنبيه فوري لهاتف الطبيب (Push Notification)
+    try {
+        if (typeof SmartMobileAlerts !== 'undefined' && typeof SmartMobileAlerts.notifyUnlockRequest === 'function') {
+            SmartMobileAlerts.notifyUnlockRequest({
+                name: subName,
+                phone: subPhone,
+                painArea: painArea,
+                requestType: 'paid_orange_wallet',
+                pin: generateUserBoundCode(subPhone, window._selPkg || 1, 0)
+            });
+        }
+    } catch (pushErr) {}
+
     // إرسال آلي فوري لكود التفعيل للعميل إذا تم تفعيل الإرسال الذاتي 24/7
     try {
         if (typeof SmartWhatsApp !== 'undefined') {
@@ -6732,6 +6745,19 @@ async function submitHumanitarianFreeActivation() {
     };
     savePendingUnlockRequest(pendingObj);
     syncPendingPatientRequestToAdmin(pId, subName, subPhone, painArea, '⏳ طلب إعفاء إنساني بانتظار موافقة الإدارة', pendingObj);
+
+    // 🔔 إرسال تنبيه فوري لهاتف الطبيب (Push Notification)
+    try {
+        if (typeof SmartMobileAlerts !== 'undefined' && typeof SmartMobileAlerts.notifyUnlockRequest === 'function') {
+            SmartMobileAlerts.notifyUnlockRequest({
+                name: subName,
+                phone: subPhone,
+                painArea: painArea,
+                requestType: 'humanitarian',
+                pin: unlockPin
+            });
+        }
+    } catch (pushErr) {}
 
     if (typeof SmartDB !== 'undefined' && typeof SmartDB.addAdminNotification === 'function') {
         SmartDB.addAdminNotification({
@@ -10382,7 +10408,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.54';
+const CURRENT_APP_VERSION = 'v30.55';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 

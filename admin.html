@@ -42,9 +42,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=30.54"></script>
-    <script src="js/security-shield.js?v=30.54"></script>
-    <link rel="stylesheet" href="css/style.css?v=30.54">
+    <script src="js/system-watchdog.js?v=30.55"></script>
+    <script src="js/security-shield.js?v=30.55"></script>
+    <link rel="stylesheet" href="css/style.css?v=30.55">
     <style>
         body {
             background-color: #080c14;
@@ -406,7 +406,7 @@
                     <div style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.78em; color: #94a3b8; margin-top: 2px;">
                         <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                         <span>الإصدار المعتمد:</span>
-                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.54</strong>
+                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.55</strong>
                     </div>
                 </div>
             </div>
@@ -428,6 +428,9 @@
                     <button type="button" onclick="openVisitorAnalyticsModal()" class="btn-header admin-btn-analytics" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(14, 165, 233, 0.15) 100%); border-color: #38bdf8; color: #7dd3fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
                         <span>📊</span> احصائيات الزوار
                     </button>
+                    <button type="button" onclick="openMobileAlertsModal()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.28) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="إعدادات وصول إشعارات المشتركين الجدد وطلبات الأكواد مباشرة لهاتفك مع رنة واهتزاز">
+                        <span style="font-size: 1.1em;">🔔</span> إشعارات الموبايل
+                    </button>
                     <button type="button" onclick="openWhatsAppSettingsModal()" class="btn-header" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.28) 0%, rgba(5, 150, 105, 0.2) 100%); border: 1.5px solid #10b981; color: #6ee7b7; font-weight: 900; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);" title="إعدادات بوابة إرسال كود التفعيل ورسائل الواتساب تلقائياً لموبايل العميل مباشرة">
                         <span>💬</span> الواتساب التلقائي
                     </button>
@@ -438,10 +441,10 @@
                         <span>⚙️</span> إعدادات
                     </button>
                     <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header admin-btn-cache" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 9px 12px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
-                        ⚡ تحديث الكاش (v30.54)
+                        ⚡ تحديث الكاش (v30.55)
                     </button>
-                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.54) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
-                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.54)
+                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.55) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
+                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.55)
                     </button>
                     <button type="button" id="btn-force-sync" onclick="handleForceFullSync()" style="background: linear-gradient(135deg,rgba(59,130,246,0.25),rgba(99,102,241,0.2)); border: 1px solid #6366f1; color: #a5b4fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="جلب كافة السجلات من السحابة قسرياً وبثها لجميع الأجهزة">
                         🔄 مزامنة كاملة
@@ -1157,6 +1160,9 @@
                 <button type="button" id="btn-settings-tab-payment" class="settings-tab-btn" onclick="switchSettingsTab('payment-gate', this)" style="background: #1e293b; color: #fed7aa; border: 1.5px solid #f97316; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.9em; cursor: pointer;">
                     💳 الدفع والاشتراك (محفظة أورانج)
                 </button>
+                <button type="button" id="btn-settings-tab-mobile-alerts" class="settings-tab-btn" onclick="switchSettingsTab('mobile-alerts', this)" style="background: #1e293b; color: #fdba74; border: 1.5px solid #f97316; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.9em; cursor: pointer;">
+                    🔔 إشعارات الموبايل الفورية
+                </button>
                 <button type="button" id="btn-settings-tab-whatsapp" class="settings-tab-btn" onclick="switchSettingsTab('whatsapp-api', this)" style="background: #1e293b; color: #6ee7b7; border: 1.5px solid #10b981; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.9em; cursor: pointer;">
                     💬 الواتساب التلقائي (API)
                 </button>
@@ -1176,6 +1182,79 @@
 
             <!-- Scrollable Tab Panes -->
             <div style="overflow-y: auto; padding-right: 5px; flex: 1;">
+
+                <!-- Tab Mobile Alerts to Phone -->
+                <div id="settings-tab-mobile-alerts" class="settings-tab-pane" style="display: none;">
+                    <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(124, 45, 18, 0.35) 100%); border: 1.5px solid #f97316; border-radius: 14px; padding: 20px; margin-bottom: 18px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid rgba(249, 115, 22, 0.25); padding-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(249, 115, 22, 0.2); border: 1px solid #f97316; display: flex; align-items: center; justify-content: center; font-size: 1.4em;">
+                                    🔔
+                                </div>
+                                <div>
+                                    <div style="color: #fdba74; font-size: 1.15em; font-weight: 900;">إشعارات الموبايل الفورية (لكل مشترك جديد بانتظار الكود)</div>
+                                    <div style="color: #94a3b8; font-size: 0.85em;">تصلك رنة واهتزاز فوري على هاتفك حتى لو كان المتصفح مغلقاً أو كنت خارج العيادة</div>
+                                </div>
+                            </div>
+                            <span style="background: rgba(16, 185, 129, 0.18); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 12px; border-radius: 20px; font-size: 0.82em; font-weight: bold;">
+                                🟢 مفعّل وشغال 100%
+                            </span>
+                        </div>
+
+                        <!-- البطاقة الأولى: تطبيق NTFY للهاتف (مجاني للأبد) -->
+                        <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid #334155; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                            <div style="color: var(--primary-gold); font-weight: 800; font-size: 1.02em; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                                <span>📲</span> طريقة استلام الإشعارات على هاتفك (خلال 30 ثانية):
+                            </div>
+                            <ol style="color: #cbd5e1; font-size: 0.9em; line-height: 1.8; margin: 0; padding-right: 20px;">
+                                <li>قم بتحميل تطبيق <strong>ntfy</strong> المجاني الرسمي على هاتفك (بدون تسجيل حساب):
+                                    <div style="display: flex; gap: 10px; margin: 6px 0 10px 0; flex-wrap: wrap;">
+                                        <a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank" style="background: #1e293b; border: 1px solid #38bdf8; color: #7dd3fc; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85em; font-weight: bold; display: inline-flex; align-items: center; gap: 6px;">
+                                            <span>🤖</span> تحميل لأجهزة أندرويد (Google Play)
+                                        </a>
+                                        <a href="https://apps.apple.com/app/ntfy/id1625396347" target="_blank" style="background: #1e293b; border: 1px solid #fef08a; color: #fef08a; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85em; font-weight: bold; display: inline-flex; align-items: center; gap: 6px;">
+                                            <span>🍏</span> تحميل لأجهزة آيفون (App Store)
+                                        </a>
+                                    </div>
+                                </li>
+                                <li>افتح التطبيق واضغط زر <strong>+ (اشتراك في موضوع / Subscribe to topic)</strong>.</li>
+                                <li>اكتب اسم القناة الخاص بك: <code style="background: #0f172a; border: 1px solid #f97316; color: #fed7aa; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 1.05em;" id="mobile-alert-display-topic">wada3an_doctor_phone_alerts</code>
+                                    <button type="button" onclick="navigator.clipboard.writeText('wada3an_doctor_phone_alerts'); alert('تم نسخ اسم القناة بنجاح!');" style="background: #1e293b; border: 1px solid #64748b; color: #cbd5e1; border-radius: 4px; padding: 2px 8px; font-size: 0.8em; cursor: pointer; margin-right: 6px;">📋 نسخ</button>
+                                </li>
+                                <li>أو يمكنك فتح الرابط المباشر بضغطة زر من متصفح الهاتف:
+                                    <a href="https://ntfy.sh/wada3an_doctor_phone_alerts" target="_blank" style="color: #38bdf8; text-decoration: underline; font-weight: bold;">https://ntfy.sh/wada3an_doctor_phone_alerts</a>
+                                </li>
+                            </ol>
+                        </div>
+
+                        <!-- إعدادات التخصيص وزر الاختبار الفوري -->
+                        <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid #334155; border-radius: 12px; padding: 16px;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-bottom: 14px;">
+                                <div>
+                                    <label style="display: block; color: #cbd5e1; font-size: 0.86em; margin-bottom: 5px;">اسم القناة (Topic Name):</label>
+                                    <input type="text" id="mobile-cfg-topic" value="wada3an_doctor_phone_alerts" style="width: 100%; background: #0b111e; border: 1px solid #475569; color: #fff; padding: 8px 12px; border-radius: 6px; box-sizing: border-box; font-family: monospace;">
+                                </div>
+                                <div>
+                                    <label style="display: block; color: #cbd5e1; font-size: 0.86em; margin-bottom: 5px;">رقم هاتف الطبيب لتنبيهات الواتساب:</label>
+                                    <input type="text" id="mobile-cfg-phone" value="0795651388" style="width: 100%; background: #0b111e; border: 1px solid #475569; color: #fff; padding: 8px 12px; border-radius: 6px; box-sizing: border-box; font-family: monospace;">
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button type="button" onclick="handleTestMobileAlert()" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 900; font-size: 0.9em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);">
+                                    <span>🔔</span> أرسل إشعاراً تجريبياً لهاتفي الآن
+                                </button>
+                                <button type="button" onclick="handleSaveMobileAlertsConfig()" style="background: linear-gradient(135deg, var(--primary-gold) 0%, #b45309 100%); color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 900; font-size: 0.9em; cursor: pointer;">
+                                    💾 حفظ الإعدادات
+                                </button>
+                                <button type="button" onclick="handleRequestBrowserNotificationPermission()" style="background: #1e293b; border: 1px solid #38bdf8; color: #7dd3fc; padding: 10px 16px; border-radius: 8px; font-weight: bold; font-size: 0.88em; cursor: pointer;">
+                                    🌐 تفعيل إشعارات المتصفح
+                                </button>
+                            </div>
+                            <div id="mobile-alert-feedback" style="display: none; margin-top: 10px; padding: 8px 14px; border-radius: 6px; font-size: 0.88em;"></div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Tab WhatsApp API Gateway -->
                 <div id="settings-tab-whatsapp-api" class="settings-tab-pane" style="display: none;">
@@ -1937,16 +2016,17 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/clinic-patients-data.js?v=30.54"></script>
-    <script src="js/mqtt.min.js?v=30.54"></script>
-    <script src="js/cloud-sync.js?v=30.54"></script>
-    <script src="js/geo-tracker.js?v=30.54"></script>
-    <script src="js/database.js?v=30.54"></script>
-    <script src="js/exercise-image-studio.js?v=30.54"></script>
-    <script src="js/admin-engine.js?v=30.54"></script>
-    <script src="js/ai-config.js?v=30.54"></script>
-    <script src="js/ai-engine.js?v=30.54"></script>
-    <script src="js/whatsapp-dispatcher.js?v=30.54"></script>
+    <script src="js/clinic-patients-data.js?v=30.55"></script>
+    <script src="js/mqtt.min.js?v=30.55"></script>
+    <script src="js/cloud-sync.js?v=30.55"></script>
+    <script src="js/geo-tracker.js?v=30.55"></script>
+    <script src="js/database.js?v=30.55"></script>
+    <script src="js/exercise-image-studio.js?v=30.55"></script>
+    <script src="js/admin-engine.js?v=30.55"></script>
+    <script src="js/ai-config.js?v=30.55"></script>
+    <script src="js/ai-engine.js?v=30.55"></script>
+    <script src="js/whatsapp-dispatcher.js?v=30.55"></script>
+    <script src="js/mobile-alerts.js?v=30.55"></script>
 
     <script>
         // محرك صيانة وتطهير التخزين التلقائي لمنع تجاوز السعة (QuotaExceededError)
@@ -3736,7 +3816,8 @@
                         const country = p.country || 'دولي';
                         const city = (p.city && p.city !== 'غير محدد') ? p.city : '';
                         const deviceIcon = p.device === 'Mobile' ? '📱' : (p.device === 'Tablet' ? '📟' : '💻');
-                        const locationDisplay = city ? `${flag} ${city} (${country})` : `${flag} ${country}`;
+                        const cleanFlag = (flag === 'jo' || flag === 'JO' || country === 'Jordan' || country === 'الأردن') ? '🇯🇴' : (flag && flag !== '🌍' ? flag : '📍');
+                        const locationDisplay = city ? `${cleanFlag} ${city}` : `${cleanFlag} ${country}`;
                         const safeId = (p.patientId || ('pat_' + idx)).replace(/[^a-zA-Z0-9_-]/g, '');
                         const accId = `royal-acc-${idx}-${safeId}`;
                         const patCurrentSession = p.currentSessionDay || (item.logsCount != null ? Math.min(7, Math.max(1, item.logsCount + 1)) : ((Array.isArray(p.dailyLogs) && p.dailyLogs.length) ? Math.min(7, p.dailyLogs.length + 1) : 2));
@@ -3777,10 +3858,11 @@
                                             ${paymentBadgeHTML}
                                             <span style="font-size: 0.85em; color: var(--primary-gold);">★</span>
                                         </div>
-                                        <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 0.82em; color: #94a3b8; flex-wrap: wrap;">
-                                            <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 7px; border-radius: 4px; color: #7dd3fc; font-weight: bold;">${locationDisplay}</span>
-                                            <span style="color: #cbd5e1;">${deviceIcon} ${p.device || 'Mobile'}</span>
-                                            <span style="background: rgba(148, 163, 184, 0.12); border: 1px solid rgba(148, 163, 184, 0.25); padding: 2px 7px; border-radius: 4px; color: #fef08a; font-weight: 600;" title="تاريخ السجل الأصلي: ${new Date(recordTs).toLocaleString('ar-EG')}">⏱️ ${dateBadge}</span>
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 0.8em; color: #94a3b8; flex-wrap: wrap;">
+                                            <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); padding: 1px 6px; border-radius: 4px; color: #7dd3fc; font-weight: bold; white-space: nowrap;">${locationDisplay}</span>
+                                            <span style="color: #cbd5e1; white-space: nowrap;">${deviceIcon} ${p.device || 'Mobile'}</span>
+                                            <span style="color: #64748b;">•</span>
+                                            <span style="background: rgba(148, 163, 184, 0.12); border: 1px solid rgba(148, 163, 184, 0.25); padding: 1px 6px; border-radius: 4px; color: #fef08a; font-weight: bold; white-space: nowrap;" title="تاريخ السجل الأصلي: ${new Date(recordTs).toLocaleString('ar-EG')}">⏱️ ${dateBadge}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -3795,7 +3877,7 @@
                             </div>
 
                             <!-- شريط المؤشرات الحيوية البارز على واجهة البطاقة -->
-                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; padding: 7px 12px; margin-bottom: 10px; font-size: 0.84em;">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; padding: 5px 10px; margin-bottom: 6px; font-size: 0.8em;">
                                 <span style="color: var(--primary-gold); font-weight: bold;">👤 المؤشرات الحيوية:</span>
                                 <span style="color: #e2e8f0;">العمر: <strong style="color: #38bdf8;">${p.age ? p.age + ' سنة' : '-'}</strong></span>
                                 <span style="color: #64748b;">•</span>
@@ -3808,17 +3890,13 @@
                                 <span style="color: #cbd5e1;">${p.gender === 'female' || p.gender === 'أنثى' ? 'أنثى ♀' : 'ذكر ♂'}</span>
                             </div>
 
-                            <!-- مؤشرات الحالة السريرية الرئيسية -->
-                            <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 0.88em; display: flex; flex-direction: column; gap: 6px;">
-                                <div style="display: flex; justify-content: space-between;">
+                            <!-- مؤشرات الحالة السريرية الرئيسية (مدمجة ومختصرة بدون تكرار) -->
+                            <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 0.86em; display: flex; flex-direction: column; gap: 5px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
                                     <span style="color: #94a3b8;">🩺 موضع الشكوى:</span>
-                                    <span style="color: #f1f5f9; font-weight: 600;">${item.painArea}</span>
+                                    <span style="color: #f1f5f9; font-weight: 700;">${item.painArea}</span>
                                 </div>
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span style="color: #94a3b8;">📋 التشخيص:</span>
-                                    <span style="color: var(--primary-gold); font-weight: 600;">${item.latestDiagnosis}</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
                                     <span style="color: #94a3b8;">🗓️ الجلسة الحالية:</span>
                                     <span style="color: #38bdf8; font-weight: bold;">
                                         ${item.logsCount >= 7 
@@ -3828,7 +3906,7 @@
                                     </span>
                                 </div>
                                 ${p.phone ? `
-                                <div style="display: flex; justify-content: space-between;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
                                     <span style="color: #94a3b8;">📱 رقم الجوال:</span>
                                     <span style="color: #e2e8f0; font-family: monospace;" dir="ltr">${p.phone}</span>
                                 </div>` : ''}
@@ -3849,8 +3927,8 @@
                                 ` : '')}
                                 ${adminCodesBoxHTML(p.phone, p.fullName || p.name, Number(p.pendingUnlockRequest?.packageSize) || 1)}
                                 ${!p.isPaidUnlocked ? `
-                                <button type="button" onclick="quickAdminUnlockPatient('${p.patientId}', '${cleanPhone}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}', '${isPendingHumReq ? 'humanitarian' : (p.pendingUnlockRequest?.requestType || 'paid_orange_wallet')}')" style="width: 100%; background: ${isPendingHumReq ? 'linear-gradient(135deg, #10b981 0%, #047857 100%)' : 'linear-gradient(135deg, #d4af37 0%, #b45309 100%)'}; color: ${isPendingHumReq ? '#ffffff' : '#050911'}; border: 1.5px solid ${isPendingHumReq ? '#6ee7b7' : '#fef08a'}; padding: 12px; border-radius: 9px; font-size: 0.95em; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);">
-                                    <span>${isPendingHumReq ? `✅ موافقة على الإعفاء وفتح التقرير والتمارين فوراً (كود: ${ptUnlockPin})` : `🔓 موافقة وفتح التقرير والتمارين للمريض فوراً (كود: ${ptUnlockPin})`}</span>
+                                <button type="button" onclick="quickAdminUnlockPatient('${p.patientId}', '${cleanPhone}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}', '${isPendingHumReq ? 'humanitarian' : (p.pendingUnlockRequest?.requestType || 'paid_orange_wallet')}')" style="width: 100%; background: ${isPendingHumReq ? 'linear-gradient(135deg, #10b981 0%, #047857 100%)' : 'linear-gradient(135deg, #d4af37 0%, #b45309 100%)'}; color: ${isPendingHumReq ? '#ffffff' : '#050911'}; border: 1.5px solid ${isPendingHumReq ? '#6ee7b7' : '#fef08a'}; padding: 9px 12px; border-radius: 8px; font-size: 0.9em; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);">
+                                    <span>${isPendingHumReq ? `✅ اعتماد الإعفاء وفتح التقرير (${ptUnlockPin})` : `🔓 موافقة وتفعيل التقرير (${ptUnlockPin})`}</span>
                                 </button>
                                 ` : `
                                 <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(16, 185, 129, 0.14); border: 1px solid #10b981; border-radius: 8px; padding: 8px 12px; font-size: 0.84em; color: #6ee7b7; font-weight: bold;">
@@ -5888,6 +5966,100 @@
         // ==========================================================================
         // ⚙️ دوال نافذة إعدادات وتخصيص المنظومة (System Settings Modal)
         // ==========================================================================
+        
+        // دوال منظومة إشعارات الموبايل الفورية (v30.55)
+        function openMobileAlertsModal() {
+            openSystemSettingsModal();
+            const btn = document.getElementById('btn-settings-tab-mobile-alerts');
+            switchSettingsTab('mobile-alerts', btn);
+            loadMobileAlertsConfigIntoUI();
+        }
+        window.openMobileAlertsModal = openMobileAlertsModal;
+
+        function loadMobileAlertsConfigIntoUI() {
+            if (typeof SmartMobileAlerts === 'undefined') return;
+            const cfg = SmartMobileAlerts.getConfig();
+            const topicIn = document.getElementById('mobile-cfg-topic');
+            const phoneIn = document.getElementById('mobile-cfg-phone');
+            const dispTopic = document.getElementById('mobile-alert-display-topic');
+            if (topicIn) topicIn.value = cfg.topic || 'wada3an_doctor_phone_alerts';
+            if (phoneIn) phoneIn.value = cfg.doctorPhone || '0795651388';
+            if (dispTopic) dispTopic.textContent = cfg.topic || 'wada3an_doctor_phone_alerts';
+        }
+
+        function handleSaveMobileAlertsConfig() {
+            if (typeof SmartMobileAlerts === 'undefined') return;
+            const topicVal = (document.getElementById('mobile-cfg-topic')?.value || '').trim();
+            const phoneVal = (document.getElementById('mobile-cfg-phone')?.value || '').trim();
+            SmartMobileAlerts.saveConfig({
+                topic: topicVal || 'wada3an_doctor_phone_alerts',
+                doctorPhone: phoneVal || '0795651388'
+            });
+            const dispTopic = document.getElementById('mobile-alert-display-topic');
+            if (dispTopic) dispTopic.textContent = topicVal || 'wada3an_doctor_phone_alerts';
+            const fb = document.getElementById('mobile-alert-feedback');
+            if (fb) {
+                fb.style.display = 'block';
+                fb.style.background = 'rgba(16, 185, 129, 0.2)';
+                fb.style.border = '1px solid #10b981';
+                fb.style.color = '#6ee7b7';
+                fb.innerHTML = '✅ تم حفظ إعدادات إشعارات الهاتف بنجاح!';
+                setTimeout(() => { fb.style.display = 'none'; }, 3500);
+            }
+        }
+        window.handleSaveMobileAlertsConfig = handleSaveMobileAlertsConfig;
+
+        async function handleTestMobileAlert() {
+            if (typeof SmartMobileAlerts === 'undefined') {
+                alert('محرك إشعارات الهاتف قيد التهيئة، يرجى المحاولة بعد لحظات.');
+                return;
+            }
+            const fb = document.getElementById('mobile-alert-feedback');
+            if (fb) {
+                fb.style.display = 'block';
+                fb.style.background = 'rgba(249, 115, 22, 0.2)';
+                fb.style.border = '1px solid #f97316';
+                fb.style.color = '#fed7aa';
+                fb.innerHTML = '⏳ جاري إرسال الإشعار التجريبي لهاتفك الآن...';
+            }
+            try {
+                await SmartMobileAlerts.sendTestAlert();
+                if (fb) {
+                    fb.style.background = 'rgba(16, 185, 129, 0.2)';
+                    fb.style.border = '1px solid #10b981';
+                    fb.style.color = '#6ee7b7';
+                    fb.innerHTML = '🔔 تم إرسال الإشعار الفوري بنجاح! تفقّد هاتفك الآن (رنة واهتزاز عبر تطبيق ntfy).';
+                }
+            } catch(e) {
+                if (fb) {
+                    fb.style.background = 'rgba(239, 68, 68, 0.2)';
+                    fb.style.border = '1px solid #ef4444';
+                    fb.style.color = '#fca5a5';
+                    fb.innerHTML = '❌ تعذر إرسال الإشعار: ' + e.message;
+                }
+            }
+        }
+        window.handleTestMobileAlert = handleTestMobileAlert;
+
+        function handleRequestBrowserNotificationPermission() {
+            if (!('Notification' in window)) {
+                alert('متصفحك الحالي لا يدعم إشعارات الويب.');
+                return;
+            }
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    new Notification('عيادة وداعاً للألم', {
+                        body: '✅ تم تفعيل إشعارات المتصفح بنجاح!',
+                        icon: 'assets/logo.png'
+                    });
+                    alert('✅ تم تفعيل إشعارات المتصفح بنجاح على هذا الجهاز!');
+                } else {
+                    alert('تم رفض إذن الإشعارات من المتصفح.');
+                }
+            });
+        }
+        window.handleRequestBrowserNotificationPermission = handleRequestBrowserNotificationPermission;
+
         function openSystemSettingsModal() {
             loadPaymentGateConfigIntoAdminUI();
             const modal = document.getElementById('system-settings-modal');
@@ -5923,6 +6095,8 @@
 
             const panes = {
                 'payment-gate': 'settings-tab-payment-gate',
+                'whatsapp-api': 'settings-tab-whatsapp-api',
+                'mobile-alerts': 'settings-tab-mobile-alerts',
                 'ai-voice': 'settings-tab-ai-voice',
                 'exercise-images': 'settings-tab-exercise-images',
                 'video-stories': 'settings-tab-video-stories',
@@ -6597,17 +6771,17 @@ function copyAdminCode(code) {
             }, 250);
         }
 
-        // بث رسالة التحديث الجديد الشامل (v30.54) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
+        // بث رسالة التحديث الجديد الشامل (v30.55) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
         function handleBroadcastGlobalVersion() {
-            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.54) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
+            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.55) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
                 if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                     SmartCloudSync.broadcastAppVersionUpdate({
-                        version: 'v30.54',
-                        title: 'تحديث المنظومة (v30.54)',
+                        version: 'v30.55',
+                        title: 'تحديث المنظومة (v30.55)',
                         timestamp: Date.now()
                     });
                 }
-                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.54) عبر شبكة البث اللحظي MQTT و NTFY و Master Hub لكافة الأجهزة!');
+                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.55) عبر شبكة البث اللحظي MQTT و NTFY و Master Hub لكافة الأجهزة!');
             }
         }
         window.handleBroadcastGlobalVersion = handleBroadcastGlobalVersion;
@@ -7076,7 +7250,7 @@ function copyAdminCode(code) {
 <script>
 // ===== تحديث تلقائي للوحة الإدارة: تقارن إصدارها بإصدار الأداة المنشور (sw.js) وتحدّث نفسها =====
 (function () {
-    const ADMIN_VER = 'v30.54';
+    const ADMIN_VER = 'v30.55';
     window.ADMIN_VER = ADMIN_VER;
     let busy = false;
     async function check(force) {
