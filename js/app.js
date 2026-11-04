@@ -6557,6 +6557,7 @@ async function submitOrangeWalletPaymentNotification() {
                 phone: subPhone,
                 painArea: painArea,
                 requestType: 'paid_orange_wallet',
+                packageSize: window._selPkg || 1,
                 pin: generateUserBoundCode(subPhone, window._selPkg || 1, 0)
             });
         }
@@ -10408,7 +10409,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.55';
+const CURRENT_APP_VERSION = 'v30.56';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 

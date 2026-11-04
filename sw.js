@@ -3,7 +3,7 @@
 // استراتيجية Network-First لضمان وصول المريض لأحدث التحديثات فوراً
 // ==========================================================================
 
-const CACHE_NAME = 'wada3an-alam-v30.55';
+const CACHE_NAME = 'wada3an-alam-v30.56';
 const STATIC_ASSETS = [
     './',
     './index.html',
