@@ -5307,7 +5307,7 @@ function contactInternationalPatientCoordinator() {
 }
 
 // =========================================================================
-// 👑 محرك البوابة الملكية للاشتراك والاعتماد الإداري الموثق (SmartPaymentGate v30.52)
+// 👑 محرك البوابة الملكية للاشتراك والاعتماد الإداري الموثق (SmartPaymentGate v30.53)
 // =========================================================================
 function getActivePaymentGateConfig() {
     if (window.SmartCloudSync && typeof window.SmartCloudSync.getPaymentConfig === 'function') {
@@ -6548,6 +6548,27 @@ async function submitOrangeWalletPaymentNotification() {
     };
     savePendingUnlockRequest(pendingObj);
     syncPendingPatientRequestToAdmin(pId, subName, subPhone, painArea, `⏳ بانتظار تأكيد حوالة أورانج (${cfg.priceJod} د.أ)`, pendingObj);
+
+    // إرسال آلي فوري لكود التفعيل للعميل إذا تم تفعيل الإرسال الذاتي 24/7
+    try {
+        if (typeof SmartWhatsApp !== 'undefined') {
+            const waCfg = SmartWhatsApp.getConfig();
+            if (waCfg && waCfg.enabled && waCfg.autoSendOnInstantRequest && subPhone) {
+                const autoPin = generateUserBoundCode(subPhone, window._selPkg || 1, 0);
+                SmartWhatsApp.sendAutomatedWhatsApp({
+                    phone: subPhone,
+                    name: subName,
+                    code: autoPin,
+                    plan: `باقة ${window._selPkg || 1} تشخيصات`
+                }).then(res => {
+                    if (res && res.success) {
+                        console.log('✅ تم إرسال كود التفعيل الذاتي لموبايل العميل:', subPhone, autoPin);
+                    }
+                }).catch(() => {});
+            }
+        }
+    } catch (waErr) {}
+    
 
     if (typeof SmartDB !== 'undefined' && typeof SmartDB.addAdminNotification === 'function') {
         SmartDB.addAdminNotification({
@@ -10361,7 +10382,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.52';
+const CURRENT_APP_VERSION = 'v30.53';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 

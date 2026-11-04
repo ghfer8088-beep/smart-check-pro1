@@ -42,9 +42,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=30.52"></script>
-    <script src="js/security-shield.js?v=30.52"></script>
-    <link rel="stylesheet" href="css/style.css?v=30.52">
+    <script src="js/system-watchdog.js?v=30.53"></script>
+    <script src="js/security-shield.js?v=30.53"></script>
+    <link rel="stylesheet" href="css/style.css?v=30.53">
     <style>
         body {
             background-color: #080c14;
@@ -406,7 +406,7 @@
                     <div style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.78em; color: #94a3b8; margin-top: 2px;">
                         <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                         <span>الإصدار المعتمد:</span>
-                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.52</strong>
+                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.53</strong>
                     </div>
                 </div>
             </div>
@@ -428,6 +428,9 @@
                     <button type="button" onclick="openVisitorAnalyticsModal()" class="btn-header admin-btn-analytics" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(14, 165, 233, 0.15) 100%); border-color: #38bdf8; color: #7dd3fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
                         <span>📊</span> احصائيات الزوار
                     </button>
+                    <button type="button" onclick="openWhatsAppSettingsModal()" class="btn-header" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.28) 0%, rgba(5, 150, 105, 0.2) 100%); border: 1.5px solid #10b981; color: #6ee7b7; font-weight: 900; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);" title="إعدادات بوابة إرسال كود التفعيل ورسائل الواتساب تلقائياً لموبايل العميل مباشرة">
+                        <span>💬</span> الواتساب التلقائي
+                    </button>
                     <button type="button" onclick="openPaymentSettingsModal()" class="btn-header" style="background: linear-gradient(135deg, rgba(249, 115, 22, 0.28) 0%, rgba(212, 175, 55, 0.22) 100%); border: 1.5px solid #f97316; color: #fed7aa; font-weight: 900; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="إدارة سعر الاشتراك (3 د.أ)، محفظة أورانج، الإعفاء الإنساني، ووضع الاختبار المجاني">
                         <span>💳</span> الدفع والاشتراك (<span id="header-price-badge">3</span> د.أ)
                     </button>
@@ -435,10 +438,10 @@
                         <span>⚙️</span> إعدادات
                     </button>
                     <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header admin-btn-cache" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 9px 12px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
-                        ⚡ تحديث الكاش (v30.52)
+                        ⚡ تحديث الكاش (v30.53)
                     </button>
-                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.52) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
-                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.52)
+                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.53) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
+                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.53)
                     </button>
                     <button type="button" id="btn-force-sync" onclick="handleForceFullSync()" style="background: linear-gradient(135deg,rgba(59,130,246,0.25),rgba(99,102,241,0.2)); border: 1px solid #6366f1; color: #a5b4fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="جلب كافة السجلات من السحابة قسرياً وبثها لجميع الأجهزة">
                         🔄 مزامنة كاملة
@@ -1154,6 +1157,9 @@
                 <button type="button" id="btn-settings-tab-payment" class="settings-tab-btn" onclick="switchSettingsTab('payment-gate', this)" style="background: #1e293b; color: #fed7aa; border: 1.5px solid #f97316; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.9em; cursor: pointer;">
                     💳 الدفع والاشتراك (محفظة أورانج)
                 </button>
+                <button type="button" id="btn-settings-tab-whatsapp" class="settings-tab-btn" onclick="switchSettingsTab('whatsapp-api', this)" style="background: #1e293b; color: #6ee7b7; border: 1.5px solid #10b981; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.9em; cursor: pointer;">
+                    💬 الواتساب التلقائي (API)
+                </button>
                 <button type="button" class="settings-tab-btn active" onclick="switchSettingsTab('ai-voice', this)" style="background: var(--primary-gold); color: #0a0e14; border: 1px solid var(--primary-gold); padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.9em; cursor: pointer;">
                     🤖 الذكاء الاصطناعي والصوت
                 </button>
@@ -1170,6 +1176,129 @@
 
             <!-- Scrollable Tab Panes -->
             <div style="overflow-y: auto; padding-right: 5px; flex: 1;">
+
+                <!-- Tab WhatsApp API Gateway -->
+                <div id="settings-tab-whatsapp-api" class="settings-tab-pane" style="display: none;">
+                    <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(6, 78, 59, 0.35) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 20px; margin-bottom: 18px;">
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid rgba(16, 185, 129, 0.25); padding-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span style="font-size: 2.2em;">💬</span>
+                                <div>
+                                    <h3 style="margin: 0; color: #6ee7b7; font-size: 1.25em; font-weight: 900;">بوابة إرسال الواتساب التلقائي الصامت (Automated WhatsApp Dispatch)</h3>
+                                    <div style="color: #94a3b8; font-size: 0.85em; margin-top: 3px;">
+                                        إرسال كود التفعيل ورسائل الاعتماد لموبايل العميل آلياً 24/7 دون فتح تطبيق واتساب على جهازك
+                                    </div>
+                                </div>
+                            </div>
+                            <span id="wa-admin-status-badge" style="background: rgba(148, 163, 184, 0.15); border: 1px solid #64748b; color: #94a3b8; padding: 6px 14px; border-radius: 20px; font-size: 0.85em; font-weight: bold;">
+                                ⚪ البوابة متوقفة / غير مهيأة
+                            </span>
+                        </div>
+
+                        <!-- كرت الدليل السريع للربط بـ UltraMsg في دقيقة واحدة -->
+                        <div style="background: rgba(8, 12, 20, 0.85); border: 1.5px dashed rgba(16, 185, 129, 0.45); border-radius: 12px; padding: 14px 18px; margin-bottom: 18px;">
+                            <div style="color: #fef08a; font-weight: bold; font-size: 0.92em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                                <span>⚡</span> خطوات ربط رقم العيادة في دقيقة واحدة مجاناً (UltraMsg):
+                            </div>
+                            <ol style="margin: 0; padding-right: 20px; color: #cbd5e1; font-size: 0.85em; line-height: 1.7;">
+                                <li>ادخل إلى موقع <a href="https://ultramsg.com" target="_blank" rel="noopener" style="color: #38bdf8; font-weight: bold; text-decoration: underline;">ultramsg.com</a> وسجل حساباً مجانياً.</li>
+                                <li>امسح رمز الاستجابة السريعة (QR Code) بكاميرا واتساب من هاتفك لربط رقم العيادة (مثل واتساب ويب تماماً).</li>
+                                <li>انسخ <strong>Instance ID</strong> (معرف النسخة) و <strong>Token</strong> (رمز الوصول) والصقهما في الحقول بالأسفل ثم احفظ الإعدادات!</li>
+                            </ol>
+                        </div>
+
+                        <!-- خيارات الإعدادات الأساسية -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 16px;">
+                            <label style="display: flex; align-items: center; gap: 10px; background: rgba(8, 12, 20, 0.7); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 12px; cursor: pointer;">
+                                <input type="checkbox" id="wa-cfg-enabled" style="width: 20px; height: 20px; accent-color: #10b981;">
+                                <div>
+                                    <strong style="color: #6ee7b7; font-size: 0.92em; display: block;">تفعيل الإرسال الآلي المباشر (Enable API)</strong>
+                                    <small style="color: #94a3b8; font-size: 0.78em;">تشغيل محرك الإرسال في الخلفية</small>
+                                </div>
+                            </label>
+
+                            <div style="background: rgba(8, 12, 20, 0.7); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 10px 14px;">
+                                <label style="color: #cbd5e1; font-size: 0.8em; font-weight: bold; display: block; margin-bottom: 4px;">مزود خدمة واتساب (Provider):</label>
+                                <select id="wa-cfg-provider" onchange="toggleCustomUrlFieldVisibility()" style="width: 100%; background: #0f172a; color: #fff; border: 1px solid #334155; padding: 8px 10px; border-radius: 8px; font-weight: bold;">
+                                    <option value="ultramsg">UltraMsg (الأسهل والموصى به - مسح QR)</option>
+                                    <option value="green-api">Green-API (مسح QR)</option>
+                                    <option value="custom">رابط مخصص / Webhook / Cloud API</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- حقول الاعتماد والربط -->
+                        <div id="wa-cfg-standard-credentials-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-bottom: 16px;">
+                            <div>
+                                <label style="color: #e2e8f0; font-size: 0.82em; font-weight: bold; display: block; margin-bottom: 4px;">معرف النسخة (Instance ID): *</label>
+                                <input type="text" id="wa-cfg-instance-id" placeholder="مثال: instance12345" style="width: 100%; background: #0b1324; border: 1px solid #334155; color: #fef08a; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 0.95em; box-sizing: border-box;">
+                            </div>
+                            <div>
+                                <label style="color: #e2e8f0; font-size: 0.82em; font-weight: bold; display: block; margin-bottom: 4px;">رمز الوصول / الرمز السري (Token): *</label>
+                                <input type="password" id="wa-cfg-token" placeholder="أدخل Token الخاص بك هنا" style="width: 100%; background: #0b1324; border: 1px solid #334155; color: #fef08a; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 0.95em; box-sizing: border-box;">
+                            </div>
+                            <div>
+                                <label style="color: #e2e8f0; font-size: 0.82em; font-weight: bold; display: block; margin-bottom: 4px;">رقم هاتف العيادة المرسل (للتوثيق):</label>
+                                <input type="text" id="wa-cfg-sender-phone" value="0795651388" placeholder="0795651388" style="width: 100%; background: #0b1324; border: 1px solid #334155; color: #93c5fd; padding: 10px; border-radius: 8px; direction: ltr; font-size: 0.92em; box-sizing: border-box;">
+                            </div>
+                        </div>
+
+                        <div id="wa-cfg-custom-url-row" style="display: none; margin-bottom: 16px;">
+                            <label style="color: #e2e8f0; font-size: 0.82em; font-weight: bold; display: block; margin-bottom: 4px;">رابط الـ Webhook المخصص (Custom Endpoint URL): *</label>
+                            <input type="url" id="wa-cfg-custom-url" placeholder="https://your-server.com/api/send-whatsapp" style="width: 100%; background: #0b1324; border: 1px solid #334155; color: #38bdf8; padding: 10px; border-radius: 8px; direction: ltr; font-size: 0.92em; box-sizing: border-box;">
+                        </div>
+
+                        <!-- خيارات سلوك الإرسال التلقائي -->
+                        <div style="background: rgba(8, 12, 20, 0.7); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+                            <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.9em; margin-bottom: 10px;">⚡ سلوك الإرسال الآلي:</div>
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #e2e8f0; font-size: 0.86em;">
+                                    <input type="checkbox" id="wa-cfg-auto-approve" checked style="width: 18px; height: 18px; accent-color: #10b981;">
+                                    <span><strong>إرسال آلي فوري عند الاعتماد:</strong> إرسال الكود للعميل تلقائياً في الخلفية فور نقرك على «تأكيد وصول الحوالة» أو «الموافقة على الإعفاء».</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #e2e8f0; font-size: 0.86em;">
+                                    <input type="checkbox" id="wa-cfg-auto-instant" style="width: 18px; height: 18px; accent-color: #f59e0b;">
+                                    <span><strong>إرسال فوري ذاتي بمجرد الطلب:</strong> إرسال الكود لموبايل العميل فور إدخاله لرقم التحويل في الموقع دون انتظار مراجعة يدوية (أتمتة كاملة 100%).</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- محرر قالب الرسالة -->
+                        <div style="margin-bottom: 18px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <label style="color: #fef08a; font-size: 0.88em; font-weight: bold;">📝 قالب رسالة الواتساب المرسلة للعميل:</label>
+                                <div style="color: #94a3b8; font-size: 0.76em;">
+                                    المتغيرات المتاحة: <code style="color: #38bdf8;">{name}</code> | <code style="color: #10b981;">{code}</code> | <code style="color: #f59e0b;">{plan}</code> | <code style="color: #e2e8f0;">{link}</code>
+                                </div>
+                            </div>
+                            <textarea id="wa-cfg-template" rows="5" style="width: 100%; background: #0b1324; border: 1.5px solid #334155; color: #fff; padding: 12px; border-radius: 10px; font-size: 0.9em; line-height: 1.6; box-sizing: border-box; font-family: inherit;"></textarea>
+                        </div>
+
+                        <!-- قسم الفحص والاختبار المباشر -->
+                        <div style="background: rgba(15, 23, 42, 0.95); border: 1.5px solid #38bdf8; border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+                            <div style="color: #38bdf8; font-weight: bold; font-size: 0.92em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                                <span>🧪</span> فحص الاتصال واختبار الإرسال الفوري:
+                            </div>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <input type="tel" id="wa-test-phone-input" placeholder="أدخل رقم هاتفك للتجربة (مثال: 0795651388)" style="flex: 2 1 220px; background: #0b1324; border: 1px solid #38bdf8; color: #fff; padding: 10px; border-radius: 8px; direction: ltr; font-size: 0.9em; box-sizing: border-box;">
+                                <button type="button" onclick="handleTestWhatsAppConnection()" style="flex: 1 1 180px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #fff; border: 1px solid #7dd3fc; padding: 10px 16px; border-radius: 8px; font-weight: bold; font-size: 0.88em; cursor: pointer; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);">
+                                    🚀 إرسال رسالة تجريبية الآن
+                                </button>
+                            </div>
+                            <div id="wa-test-feedback" style="display: none; margin-top: 10px; padding: 10px 14px; border-radius: 8px; font-size: 0.85em; line-height: 1.5;"></div>
+                        </div>
+
+                        <!-- زر الحفظ والإشعار -->
+                        <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-end;">
+                            <div id="wa-cfg-feedback" style="display: none; padding: 8px 14px; border-radius: 8px; font-size: 0.88em; font-weight: bold;"></div>
+                            <button type="button" onclick="saveWhatsAppConfigFromAdminUI()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; border: 1.5px solid #34d399; padding: 10px 24px; border-radius: 8px; font-weight: 900; font-size: 0.95em; cursor: pointer; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);">
+                                💾 حفظ إعدادات الواتساب وتفعيلها سحابياً
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
 
                 <!-- Tab 0: Payment & Subscription Gate (3 JOD Orange Money + Humanitarian + Test Mode) -->
                 <div id="settings-tab-payment-gate" class="settings-tab-pane" style="display: none;">
@@ -1808,15 +1937,16 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/clinic-patients-data.js?v=30.52"></script>
-    <script src="js/mqtt.min.js?v=30.52"></script>
-    <script src="js/cloud-sync.js?v=30.52"></script>
-    <script src="js/geo-tracker.js?v=30.52"></script>
-    <script src="js/database.js?v=30.52"></script>
-    <script src="js/exercise-image-studio.js?v=30.52"></script>
-    <script src="js/admin-engine.js?v=30.52"></script>
-    <script src="js/ai-config.js?v=30.52"></script>
-    <script src="js/ai-engine.js?v=30.52"></script>
+    <script src="js/clinic-patients-data.js?v=30.53"></script>
+    <script src="js/mqtt.min.js?v=30.53"></script>
+    <script src="js/cloud-sync.js?v=30.53"></script>
+    <script src="js/geo-tracker.js?v=30.53"></script>
+    <script src="js/database.js?v=30.53"></script>
+    <script src="js/exercise-image-studio.js?v=30.53"></script>
+    <script src="js/admin-engine.js?v=30.53"></script>
+    <script src="js/ai-config.js?v=30.53"></script>
+    <script src="js/ai-engine.js?v=30.53"></script>
+    <script src="js/whatsapp-dispatcher.js?v=30.53"></script>
 
     <script>
         // محرك صيانة وتطهير التخزين التلقائي لمنع تجاوز السعة (QuotaExceededError)
@@ -3383,7 +3513,10 @@
                                 </button>
                             ` : ''}
                             ${cleanPhone ? `
-                                <a href="https://wa.me/${cleanPhone}?text=${waMessage}" target="_blank" style="display: inline-flex; align-items: center; gap: 4px; background: #25d366; color: #fff; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-size: 0.82em; font-weight: bold;">
+                                <button type="button" id="btn-auto-wa-${n.id}" onclick="handleTriggerAutoWhatsAppFromNotif('${n.id}', '${safeSubPhone}', '${safeSubName}', '${computedPin}', '${n.type}')" style="display: inline-flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #fff; border: 1.5px solid #34d399; padding: 5px 12px; border-radius: 6px; font-size: 0.82em; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);" title="إرسال رسالة الواتساب مباشرة إلى هاتف العميل عبر الـ API التلقائي دون فتح التطبيق">
+                                     ⚡ إرسال الكود آلياً بالواتساب
+                                 </button>
+                                 <a href="https://wa.me/${cleanPhone}?text=${waMessage}" target="_blank" style="display: inline-flex; align-items: center; gap: 4px; background: #25d366; color: #fff; text-decoration: none; padding: 5px 12px; border-radius: 6px; font-size: 0.82em; font-weight: bold;">
                                     💬 ${n.type === 'payment_received' ? `إرسال كود التفعيل واتساب (${computedPin})` : (isHumReq ? `إرسال موافقة الإعفاء واتساب (${computedPin})` : 'تواصل واتساب')}
                                 </a>
                                 <a href="tel:${cleanPhone}" style="display: inline-flex; align-items: center; gap: 4px; background: #1e293b; color: #93c5fd; border: 1px solid #3b82f6; text-decoration: none; padding: 5px 10px; border-radius: 6px; font-size: 0.82em;">
@@ -5757,6 +5890,9 @@
                 const targetEl = document.getElementById(targetId);
                 if (targetEl) targetEl.style.display = 'block';
             }
+            if (tabName === 'whatsapp-api') {
+                loadWhatsAppConfigIntoAdminUI();
+            }
             if (tabName === 'payment-gate') {
                 loadPaymentGateConfigIntoAdminUI();
             }
@@ -6142,6 +6278,27 @@ function copyAdminCode(code) {
             } catch (e) {}
 
             const pin = generateAdminUnlockPin(patientPhone || patientName || '');
+            // إرسال آلي صامت عبر واتساب إذا كانت البوابة مفعلة
+            try {
+                if (typeof SmartWhatsApp !== 'undefined') {
+                    const waCfg = SmartWhatsApp.getConfig();
+                    if (waCfg && waCfg.enabled && waCfg.autoSendOnApproval && resolvedPhone) {
+                        SmartWhatsApp.sendAutomatedWhatsApp({
+                            phone: resolvedPhone,
+                            name: resolvedName,
+                            code: pin,
+                            plan: resolvedType === 'humanitarian' ? 'إعفاء إنساني معتمد' : 'باقة الاستشارة وخطة التمارين'
+                        }).then(res => {
+                            if (res && res.success) {
+                                console.log('✅ تم إرسال كود التفعيل عبر واتساب آلياً:', resolvedPhone, pin);
+                            } else {
+                                console.warn('⚠️ تنبيه الواتساب الآلي:', res?.error);
+                            }
+                        }).catch(err => console.error('Auto WA send notice:', err));
+                    }
+                }
+            } catch (waErr) {}
+            
             alert(`✅ تم اعتماد الطلب للمراجع (${patientName || patientPhone || patientId}).\n\n🔑 أرسل له الكود (تشخيص واحد: ${pin} — باقة 5: ${generateAdminUnlockPin(patientPhone || patientName || '', 5)} — باقة 10: ${generateAdminUnlockPin(patientPhone || patientName || '', 10)}) ليدخله في الأداة.`);
         }
 
@@ -6391,17 +6548,17 @@ function copyAdminCode(code) {
             }, 250);
         }
 
-        // بث رسالة التحديث الجديد الشامل (v30.52) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
+        // بث رسالة التحديث الجديد الشامل (v30.53) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
         function handleBroadcastGlobalVersion() {
-            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.52) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
+            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.53) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
                 if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                     SmartCloudSync.broadcastAppVersionUpdate({
-                        version: 'v30.52',
-                        title: 'تحديث المنظومة (v30.52)',
+                        version: 'v30.53',
+                        title: 'تحديث المنظومة (v30.53)',
                         timestamp: Date.now()
                     });
                 }
-                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.52) عبر شبكة البث اللحظي MQTT و NTFY و Master Hub لكافة الأجهزة!');
+                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.53) عبر شبكة البث اللحظي MQTT و NTFY و Master Hub لكافة الأجهزة!');
             }
         }
         window.handleBroadcastGlobalVersion = handleBroadcastGlobalVersion;
@@ -6870,7 +7027,7 @@ function copyAdminCode(code) {
 <script>
 // ===== تحديث تلقائي للوحة الإدارة: تقارن إصدارها بإصدار الأداة المنشور (sw.js) وتحدّث نفسها =====
 (function () {
-    const ADMIN_VER = 'v30.52';
+    const ADMIN_VER = 'v30.53';
     window.ADMIN_VER = ADMIN_VER;
     let busy = false;
     async function check(force) {
