@@ -23,6 +23,57 @@ const AdminEngine = (function() {
     // استخراج تقرير إحصائي شامل وترتيب المرضى (الأحدث أولاً في أعلى القائمة)
     async function loadPatientsOverview() {
         try {
+            // دالة استخراج التاريخ الحقيقي الأصلي للمراجع واستبعاد تواريخ المزامنة المؤقتة
+            function _extractOverviewTs(item) {
+                if (!item) return 0;
+                const p = item.patient || item;
+                // 1. التواريخ الحقيقية الموثقة لإنشاء السجل أو التقييم السريري الأصلي (استبعاد lastUpdated وتحديثات المزامنة)
+                const candidateDates = [
+                    p.createdAt,
+                    item.createdAt,
+                    p.registeredAt,
+                    p.timestamp,
+                    p.date,
+                    p.examDate,
+                    p.latestAssessment?.createdAt,
+                    p.latestAssessment?.date,
+                    p.latestAssessment?.timestamp,
+                    p.assessment?.createdAt,
+                    p.assessment?.date,
+                    p.pendingUnlockRequest?.timestamp,
+                    p.pendingUnlockRequest?.createdAt
+                ];
+                for (const d of candidateDates) {
+                    if (!d) continue;
+                    const ms = (typeof d === 'number') ? d : new Date(d).getTime();
+                    if (!isNaN(ms) && ms > 1500000000000 && ms <= Date.now() + 86400000) {
+                        return ms;
+                    }
+                }
+                // 2. استخراج التاريخ الحقيقي المشفر في معرف المريض أو الفحص السريري (مثل pat_1789... أو EX_1789...)
+                const ids = [p.patientId, p.id, item.patientId, item.id, p.examId];
+                for (const id of ids) {
+                    if (typeof id === 'string') {
+                        const m = id.match(/(17\d{11}|16\d{11}|18\d{11})/);
+                        if (m) {
+                            const ms = Number(m[1]);
+                            if (!isNaN(ms) && ms > 1500000000000 && ms <= Date.now() + 86400000) {
+                                return ms;
+                            }
+                        }
+                    }
+                }
+                // 3. تاريخ أول جلسة علاجية مسجلة
+                const logs = Array.isArray(p.dailyLogs) ? p.dailyLogs : (Array.isArray(p.logs) ? p.logs : []);
+                if (logs.length > 0 && logs[0] && logs[0].date) {
+                    const ms = new Date(logs[0].date).getTime();
+                    if (!isNaN(ms) && ms > 1500000000000 && ms <= Date.now() + 86400000) {
+                        return ms;
+                    }
+                }
+                return 1726700000000;
+            }
+
             // ملاحظة: fetchCloudPatients تُستدعى قبل هذه الدالة في initAdminPage - لا نكررها هنا
             let rawPatients = [];
             try {
@@ -822,6 +873,8 @@ const AdminEngine = (function() {
                     continue;
                 }
 
+                const trueTs = _extractOverviewTs({ patient: p, latestAssessment });
+                const trueIso = new Date(trueTs).toISOString();
                 overview.push({
                     patient: p,
                     isRegistered: !!p.isRegistered,
@@ -831,8 +884,8 @@ const AdminEngine = (function() {
                     baselinePain: baselinePain,
                     latestDiagnosis: resolvedDiagnosis,
                     painArea: resolvedPainArea,
-                    createdAt: p.createdAt || p.date || p.timestamp || p.lastUpdated || new Date().toISOString(),
-                    lastActiveAt: p.lastActiveAt || p.lastUpdated || p.createdAt || p.date || new Date().toISOString()
+                    createdAt: (p.createdAt || p.date || p.timestamp) ? (p.createdAt || p.date || p.timestamp) : trueIso,
+                    lastActiveAt: p.lastActiveAt || (p.createdAt || p.date || p.timestamp) || trueIso
                 });
             }
 
@@ -990,37 +1043,7 @@ const AdminEngine = (function() {
             }
             const cleanOverview = finalOverviewList;
 
-            // 7. الترتيب الزمني السريري الدقيق: المراجعون بانتظار الموافقة في القمة، ثم الأحدث تسجيلاً ونشاطاً
-            function _extractOverviewTs(item) {
-                if (!item) return 0;
-                const p = item.patient || item;
-                const dates = [
-                    item.lastActiveAt, p.lastActiveAt, p.paidUnlockedAt, p.lastUpdated,
-                    item.createdAt, p.createdAt, p.timestamp, p.date,
-                    p.pendingUnlockRequest?.timestamp, p.pendingUnlockRequest?.createdAt, p.pendingUnlockRequest?.time,
-                    p.latestAssessment?.date, p.latestAssessment?.createdAt, p.latestAssessment?.timestamp,
-                    p.assessment?.date, p.assessment?.createdAt
-                ];
-                let max = 0;
-                for (const d of dates) {
-                    if (!d) continue;
-                    const ms = (typeof d === 'number') ? d : new Date(d).getTime();
-                    if (!isNaN(ms) && ms > max) max = ms;
-                }
-                const ids = [p.patientId, p.id, item.patientId, item.id, p.examId];
-                for (const id of ids) {
-                    if (typeof id === 'string') {
-                        const m = id.match(/(\d{10,13})/);
-                        if (m) {
-                            const n = Number(m[1]);
-                            const ms = (n < 10000000000) ? n * 1000 : n;
-                            if (!isNaN(ms) && ms > 1500000000000 && ms < 2500000000000 && ms > max) max = ms;
-                        }
-                    }
-                }
-                return max;
-            }
-
+            // 7. الترتيب الزمني السريري الحقيقي الصارم: الأحدث تسجيلاً وفحصاً في القمة
             cleanOverview.sort((a, b) => {
                 const tsA = _extractOverviewTs(a);
                 const tsB = _extractOverviewTs(b);
