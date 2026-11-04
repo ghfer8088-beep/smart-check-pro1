@@ -402,7 +402,9 @@ function startSpecializedConsultation(specialtyKey) {
     };
 
     currentSelectedPoint = specPoint;
+    currentAssessmentData = null;
     try {
+        localStorage.removeItem('smart_current_assessment');
         const newExamId = 'EX_' + Date.now();
         localStorage.setItem('smart_current_exam_id', newExamId);
         sessionStorage.setItem('scp_current_exam_id', newExamId);
@@ -684,7 +686,9 @@ function selectAnatomyPoint(point, element) {
     if (typeof SmartVisitorTracker !== 'undefined' && typeof SmartVisitorTracker.trackPainPoint === 'function') {
         SmartVisitorTracker.trackPainPoint(point);
     }
+    currentAssessmentData = null;
     try {
+        localStorage.removeItem('smart_current_assessment');
         const newExamId = 'EX_' + Date.now();
         localStorage.setItem('smart_current_exam_id', newExamId);
         sessionStorage.setItem('scp_current_exam_id', newExamId);
@@ -815,6 +819,22 @@ function playStep1AudioGuide() {
 async function getMaxUnlockedStep() {
     let maxStep = 1;
     try {
+        const isFreshExam = sessionStorage.getItem('scp_is_fresh_new_exam') === 'true' 
+            || window._freshNewExamMode === true 
+            || (!currentAssessmentData && !localStorage.getItem('smart_current_assessment'));
+
+        // فحص جديد: يتم حصر التقدم الصارم بما أُنجز في هذا الفحص فقط ومنع الارتباط بفحوصات سابقة
+        if (isFreshExam) {
+            if (currentSelectedPoint && currentSelectedPoint.id) {
+                maxStep = 2;
+            }
+            if (currentAssessmentData && (currentAssessmentData.primaryDiagnosis || currentAssessmentData.diagnosisTitle)) {
+                maxStep = 3;
+            }
+            localStorage.setItem('smart_max_reached_step', String(maxStep));
+            return maxStep;
+        }
+
         const urlParams = new URLSearchParams(window.location.search);
         const queryPid = urlParams.get('patient_id') || urlParams.get('id');
         const sessionPid = sessionStorage.getItem('scp_active_patient_id');
@@ -825,33 +845,30 @@ async function getMaxUnlockedStep() {
             || localStorage.getItem('smart_last_active_patient_id')
             || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null);
 
-        if (savedPatientId) {
-            let logs = await SmartDB.getPatientDailyLogs(savedPatientId);
-            if ((!logs || logs.length === 0) && activePatient && Array.isArray(activePatient.dailyLogs)) {
-                logs = activePatient.dailyLogs;
-            }
-            if (!logs || logs.length === 0) {
-                try {
-                    logs = JSON.parse(localStorage.getItem('smart_daily_logs_' + savedPatientId) || '[]');
-                } catch(e) {}
-            }
-            if (logs && logs.length >= 7) {
-                maxStep = Math.max(maxStep, 6);
-            } else if (logs && logs.length >= 1) {
-                maxStep = Math.max(maxStep, 5);
-            } else if (localStorage.getItem('smart_plan_activated_' + savedPatientId) === 'true' || localStorage.getItem('smart_plan_activated') === 'true' || (activePatient && activePatient.isPlanActivated)) {
-                maxStep = Math.max(maxStep, 4);
-            } else {
-                maxStep = Math.max(maxStep, 3);
-            }
-        }
-
-        if (currentAssessmentData && currentAssessmentData.primaryDiagnosis) {
-            maxStep = Math.max(maxStep, 3);
-        }
-
         if (currentSelectedPoint && currentSelectedPoint.id) {
             maxStep = Math.max(maxStep, 2);
+        }
+
+        if (currentAssessmentData && (currentAssessmentData.primaryDiagnosis || currentAssessmentData.diagnosisTitle)) {
+            maxStep = Math.max(maxStep, 3);
+            if (savedPatientId) {
+                let logs = await SmartDB.getPatientDailyLogs(savedPatientId);
+                if ((!logs || logs.length === 0) && activePatient && Array.isArray(activePatient.dailyLogs)) {
+                    logs = activePatient.dailyLogs;
+                }
+                if (!logs || logs.length === 0) {
+                    try {
+                        logs = JSON.parse(localStorage.getItem('smart_daily_logs_' + savedPatientId) || '[]');
+                    } catch(e) {}
+                }
+                if (logs && logs.length >= 7) {
+                    maxStep = Math.max(maxStep, 6);
+                } else if (logs && logs.length >= 1) {
+                    maxStep = Math.max(maxStep, 5);
+                } else if (localStorage.getItem('smart_plan_activated_' + savedPatientId) === 'true' || localStorage.getItem('smart_plan_activated') === 'true' || (activePatient && activePatient.isPlanActivated)) {
+                    maxStep = Math.max(maxStep, 4);
+                }
+            }
         }
 
         // الحفاظ الصارم على أعلى خطوة تم الوصول إليها مسبقاً مع التحقق من بوابة الاشتراك المدفوع / الإعفاء
@@ -874,6 +891,15 @@ window.getMaxUnlockedStep = getMaxUnlockedStep;
 
 function getMaxUnlockedStepSync() {
     try {
+        const isFreshExam = sessionStorage.getItem('scp_is_fresh_new_exam') === 'true' 
+            || window._freshNewExamMode === true 
+            || (!currentAssessmentData && !localStorage.getItem('smart_current_assessment'));
+        if (isFreshExam) {
+            if (currentAssessmentData && (currentAssessmentData.primaryDiagnosis || currentAssessmentData.diagnosisTitle)) return 3;
+            if (currentSelectedPoint && currentSelectedPoint.id) return 2;
+            return 1;
+        }
+
         const stored = parseInt(localStorage.getItem('smart_max_reached_step'), 10);
         const curStep = parseInt(localStorage.getItem('smart_current_step'), 10);
         let syncMax = 1;
@@ -1011,6 +1037,14 @@ async function restoreActiveSessionState() {
         activePatient = SmartDB.sanitizePatientData(activePatient);
     }
 
+    // إذا كان المراجع قد بدأ فحصاً جديداً: يمنع استرجاع تشخيصات أو تقارير الفحوصات السابقة
+    const isFreshExamMode = sessionStorage.getItem('scp_is_fresh_new_exam') === 'true' || window._freshNewExamMode === true;
+    if (isFreshExamMode) {
+        currentAssessmentData = null;
+        currentSelectedPoint = null;
+        return;
+    }
+
     if (savedPatientId && !currentAssessmentData) {
         try {
             const assessments = await SmartDB.getPatientAssessments(savedPatientId);
@@ -1123,45 +1157,17 @@ async function handleStepperClick(stepNum) {
     await restoreActiveSessionState();
     const maxUnlocked = await getMaxUnlockedStep();
 
-    // صمام أمان فوري: المرحلة 3 مفتوحة دائماً عند النقر عليها مع ضمان جاهزية التقرير فوراً بدون أي تعليق
-    if (stepNum === 3) {
-        if (typeof hideRoyalReportLoadingModal === 'function') {
-            hideRoyalReportLoadingModal();
-        }
-        const loadingModal = document.getElementById('royal-report-loading-modal');
-        if (loadingModal) {
-            loadingModal.style.display = 'none';
-            loadingModal.style.opacity = '0';
-            loadingModal.style.pointerEvents = 'none';
-        }
-        if (typeof ensureAndDisplayReport === 'function') {
-            await ensureAndDisplayReport();
-        }
-        goToStep(3);
-        return;
-    }
-
-    // حارس بوابة الاشتراك قبل السماح بالانتقال للتمارين (الخطوة 4 فما فوق)
-    if (stepNum >= 4 && typeof isCurrentPatientPlanUnlocked === 'function' && !isCurrentPatientPlanUnlocked()) {
-        showToast('🔒 يرجى تفعيل الاشتراك أو الإعفاء المجاني أولاً لفتح التقرير الطبي والتمارين العلاجية', 'info');
-        if (typeof ensureAndDisplayReport === 'function') {
-            await ensureAndDisplayReport();
-        }
-        goToStep(3);
-        return;
-    }
-
-    // التحقق من الصلاحية: هل المرحلة منجزة أو مفتوحة للمستخدم؟
+    // التحقق الصارم: يمنع تجاوز أي مرحلة لم تنجز بعد في الفحص الحالي
     if (stepNum > maxUnlocked) {
         if (stepNum === 2) {
-            showToast('يرجى تحديد مكان الألم على المجسم أولاً للانتقال إلى التقييم السريري', 'info');
+            showToast('⚠️ يرجى تحديد مكان الألم على المجسم أولاً للانتقال إلى التقييم السريري', 'info');
             goToStep(1);
         } else if (stepNum === 3) {
-            showToast('يرجى إكمال التقييم السريري الذكي أولاً لصدور التقرير الطبي', 'info');
+            showToast('⚠️ يرجى إكمال التقييم والتشخيص السريري أولاً (المرحلة 2) لصدور التقرير الطبي', 'info');
             if (currentSelectedPoint) goToStep(2);
             else goToStep(1);
         } else if (stepNum === 4) {
-            showToast('🔒 يرجى تفعيل باقة التقرير وخطة التعافي أولاً لبدء الجلسة الأولى والتمارين', 'info');
+            showToast('🔒 يرجى إكمال الفحص وتفعيل باقة التقرير وخطة التعافي أولاً لبدء الجلسة الأولى', 'info');
             if (currentAssessmentData) goToStep(3);
             else if (currentSelectedPoint) goToStep(2);
             else goToStep(1);
@@ -1190,6 +1196,40 @@ async function handleStepperClick(stepNum) {
                 goToStep(3);
             }
         }
+        return;
+    }
+
+    // التحقق الصارم الإضافي عند النقر على المرحلة 3: لا تقرير قبل إكمال التشخيص السريري
+    if (stepNum === 3) {
+        if (!currentAssessmentData || (!currentAssessmentData.primaryDiagnosis && !currentAssessmentData.diagnosisTitle)) {
+            showToast('⚠️ يرجى إكمال التقييم السريري أولاً لصدور التقرير الطبي', 'info');
+            if (currentSelectedPoint) goToStep(2);
+            else goToStep(1);
+            return;
+        }
+        if (typeof hideRoyalReportLoadingModal === 'function') {
+            hideRoyalReportLoadingModal();
+        }
+        const loadingModal = document.getElementById('royal-report-loading-modal');
+        if (loadingModal) {
+            loadingModal.style.display = 'none';
+            loadingModal.style.opacity = '0';
+            loadingModal.style.pointerEvents = 'none';
+        }
+        if (typeof ensureAndDisplayReport === 'function') {
+            await ensureAndDisplayReport();
+        }
+        goToStep(3);
+        return;
+    }
+
+    // حارس بوابة الاشتراك قبل السماح بالانتقال للتمارين (الخطوة 4 فما فوق)
+    if (stepNum >= 4 && typeof isCurrentPatientPlanUnlocked === 'function' && !isCurrentPatientPlanUnlocked()) {
+        showToast('🔒 يرجى تفعيل الاشتراك أو الإعفاء المجاني أولاً لفتح التقرير الطبي والتمارين العلاجية', 'info');
+        if (typeof ensureAndDisplayReport === 'function') {
+            await ensureAndDisplayReport();
+        }
+        goToStep(3);
         return;
     }
 
@@ -1953,6 +1993,8 @@ async function runDiagnosticAnalysis() {
             localStorage.removeItem('smart_paid_v2_unlocked_' + targetPatientId);
             currentAssessmentData.examId = newExamId;
             currentAssessmentData.isPaidUnlocked = false;
+            sessionStorage.removeItem('scp_is_fresh_new_exam');
+            window._freshNewExamMode = false;
             localStorage.setItem('smart_current_assessment', JSON.stringify(currentAssessmentData));
             localStorage.setItem('smart_max_reached_step', '3');
             if (typeof updateStepperVisuals === 'function') updateStepperVisuals(3);
@@ -4232,6 +4274,14 @@ async function ensureAndDisplayReport() {
         } catch(e) {}
     }
 
+    const isFreshExam = sessionStorage.getItem('scp_is_fresh_new_exam') === 'true' || window._freshNewExamMode === true;
+    if (isFreshExam) {
+        if (!assess || (!assess.primaryDiagnosis && !assess.chiefDiagnosis && !assess.diagnosisTitle)) {
+            console.warn('[ensureAndDisplayReport] Fresh exam mode: no report generated yet.');
+            return false;
+        }
+    }
+
     if (!assess && typeof activePatient !== 'undefined' && activePatient) {
         assess = activePatient.assessment || activePatient.latestAssessment || null;
     }
@@ -4315,7 +4365,15 @@ async function saveClinicalReport() {
                 if (raw) assess = JSON.parse(raw);
             } catch(e) {}
         }
-        if (!assess && typeof activePatient !== 'undefined' && activePatient) {
+        const isFreshExam = sessionStorage.getItem('scp_is_fresh_new_exam') === 'true' || window._freshNewExamMode === true;
+    if (isFreshExam) {
+        if (!assess || (!assess.primaryDiagnosis && !assess.chiefDiagnosis && !assess.diagnosisTitle)) {
+            console.warn('[ensureAndDisplayReport] Fresh exam mode: no report generated yet.');
+            return false;
+        }
+    }
+
+    if (!assess && typeof activePatient !== 'undefined' && activePatient) {
             assess = activePatient.assessment || activePatient.latestAssessment || null;
         }
 
@@ -10409,7 +10467,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.57';
+const CURRENT_APP_VERSION = 'v30.58';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -10824,9 +10882,19 @@ function goToStep(stepNum, options = {}) {
         currentActiveStationAudio = null;
     }
 
-    // حماية بوابة الاشتراك المدفوع: منع الانتقال للخطوات 4 أو 5 أو 6 قبل تفعيل باقة الفحص والتقرير والتمارين في الخطوة 3
-    if (stepNum >= 4 && typeof isCurrentPatientPlanUnlocked === 'function' && !isCurrentPatientPlanUnlocked()) {
-        stepNum = 3;
+    // حماية تسلسل مراحل الفحص الجديد: يمنع القفز لأي مرحلة متقدمة دون إنجاز المراحل السابقة
+    if (stepNum === 2 && !currentSelectedPoint) {
+        stepNum = 1;
+    }
+    if (stepNum === 3 && (!currentAssessmentData || (!currentAssessmentData.primaryDiagnosis && !currentAssessmentData.diagnosisTitle))) {
+        stepNum = currentSelectedPoint ? 2 : 1;
+    }
+    if (stepNum >= 4) {
+        if (!currentAssessmentData || (!currentAssessmentData.primaryDiagnosis && !currentAssessmentData.diagnosisTitle)) {
+            stepNum = currentSelectedPoint ? 2 : 1;
+        } else if (typeof isCurrentPatientPlanUnlocked === 'function' && !isCurrentPatientPlanUnlocked()) {
+            stepNum = 3;
+        }
     }
 
     // حفظ الخطوة الحالية فوراً في الذاكرة الدائمة لضمان عدم ضياع أي مرحلة تحت أي ظرف
@@ -11067,11 +11135,18 @@ function resetToInitialState(force = false) {
     delete window._specializedConsultationType;
     window._specializedConsultationData = null;
     delete window._specializedConsultationData;
+
+    // تمييز صريح بأن جلسة فحص جديد بدأت لمنع أي تقدم بالمراحل أو استرجاع بيانات فحص سابق
+    sessionStorage.setItem('scp_is_fresh_new_exam', 'true');
+    window._freshNewExamMode = true;
+    window._activeExamPaidUnlocked = false;
+
     try {
         localStorage.removeItem('smart_current_point');
         localStorage.removeItem('smart_current_assessment');
         localStorage.removeItem('smart_plan_activated');
-        localStorage.removeItem('smart_max_reached_step');
+        localStorage.setItem('smart_max_reached_step', '1');
+        localStorage.setItem('smart_current_step', '1');
         localStorage.removeItem('smart_current_patient_id');
         localStorage.removeItem('smart_last_active_patient_id');
         localStorage.removeItem('smart_active_patient');
@@ -11081,7 +11156,6 @@ function resetToInitialState(force = false) {
         localStorage.removeItem('smart_user_phone');
         // فحص جديد = جلسة نظيفة تماماً: لا فحص حالي، لا طلبات معلّقة، لا بقايا تفعيل للفحص السابق
         localStorage.removeItem('smart_current_exam_id');
-        localStorage.removeItem('smart_current_step');
         localStorage.removeItem('smart_pending_req_latest');
         Object.keys(localStorage).forEach(k => {
             if (
@@ -11102,6 +11176,10 @@ function resetToInitialState(force = false) {
             window.history.replaceState({}, document.title, window.location.pathname);
         }
     } catch (e) {}
+
+    // تفريغ حاوية التقرير الطبي تماماً لضمان عدم ظهور أي تقرير سابق
+    const reportContainer = document.getElementById('clinical-report-container');
+    if (reportContainer) reportContainer.innerHTML = '';
     updateStepperVisuals(1);
 
     document.querySelectorAll('.anatomy-hotspot').forEach(p => p.classList.remove('active'));
