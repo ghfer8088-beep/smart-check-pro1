@@ -861,9 +861,11 @@ async function getMaxUnlockedStep() {
                         logs = JSON.parse(localStorage.getItem('smart_daily_logs_' + savedPatientId) || '[]');
                     } catch(e) {}
                 }
-                if (logs && logs.length >= 7) {
+                const hasCompletedAll7 = logs && (logs.length >= 7 || logs.some(l => Number(l.sessionNumber || l.day) === 7));
+                const hasCompletedDay1 = logs && logs.some(l => Number(l.sessionNumber || l.day) === 1);
+                if (hasCompletedAll7) {
                     maxStep = Math.max(maxStep, 6);
-                } else if (logs && logs.length >= 1) {
+                } else if (hasCompletedDay1) {
                     maxStep = Math.max(maxStep, 5);
                 } else if (localStorage.getItem('smart_plan_activated_' + savedPatientId) === 'true' || localStorage.getItem('smart_plan_activated') === 'true' || (activePatient && activePatient.isPlanActivated)) {
                     maxStep = Math.max(maxStep, 4);
@@ -1178,7 +1180,10 @@ async function handleStepperClick(stepNum) {
                 const lsLogs = JSON.parse(localStorage.getItem('smart_daily_logs_' + savedPatientId) || '[]');
                 day1Done = lsLogs.some(l => Number(l.sessionNumber || l.day) === 1);
             } catch(e) {}
-            if (day1Done || (activePatient && Array.isArray(activePatient.dailyLogs) && activePatient.dailyLogs.length > 0)) {
+            if (activePatient && Array.isArray(activePatient.dailyLogs) && activePatient.dailyLogs.some(l => Number(l.sessionNumber || l.day) === 1)) {
+                day1Done = true;
+            }
+            if (day1Done) {
                 await renderStep5SessionsDashboard(savedPatientId);
                 return;
             }
@@ -4727,21 +4732,7 @@ function displayDiagnosticReport(data) {
                 </div>
             </div>
 
-            <!-- مشغل الشرح الصوتي للتقرير بصوت د. سارة (متوافق 100% مع iOS Safari) -->
-            <div id="report-audio-player-bar" class="no-print" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid var(--primary-gold); border-radius: 12px; padding: 12px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <span style="font-size: 2em;">🎙️</span>
-                    <div>
-                        <div id="report-audio-status-title" style="color: #ffffff; font-weight: bold; font-size: 0.92em;">استمع للشرح الصوتي للتقرير السريري (د. سارة)</div>
-                        <div id="report-audio-status-desc" style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">توجيهات صوتية فورية توضح أبعاد حالتك وخطة الراحة الحركية</div>
-                    </div>
-                </div>
-                <button type="button" id="btn-play-report-audio" onclick="toggleReportVoiceAudio()" class="btn-header btn-header-gold" style="padding: 8px 18px; font-weight: bold; font-size: 0.88em; border-radius: 20px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);">
-                    <span>🔊</span> تشغيل الصوت
-                </button>
-            </div>
-
-            <!-- شريط التنقل السريع التفاعلي في التقرير (مريح وسلس للهواتف) -->
+            <!-- شريط التنقل السريع<!-- شريط التنقل السريع التفاعلي في التقرير (مريح وسلس للهواتف) -->
             <div class="no-print report-quick-nav-bar" style="display: flex; gap: 6px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 6px; -webkit-overflow-scrolling: touch;">
                 <button type="button" onclick="document.getElementById('report-section-diagnosis')?.scrollIntoView({behavior: 'smooth'})" class="btn-header btn-header-gold" style="font-size: 0.8em; padding: 6px 12px; border-radius: 16px; flex-shrink: 0; white-space: nowrap;">🩺 التشخيص</button>
                 <button type="button" onclick="document.getElementById('recovery-plan-master-card')?.scrollIntoView({behavior: 'smooth'})" class="btn-header btn-header-emerald" style="font-size: 0.8em; padding: 6px 12px; border-radius: 16px; flex-shrink: 0; white-space: nowrap;">🎁 تفعيل الخطة المجانية</button>
@@ -4772,9 +4763,6 @@ function displayDiagnosticReport(data) {
                     <strong>التشخيص التفريقي المصاحب (Differential Diagnosis):</strong> ${formattedSec}
                 </div>
             </div>
-
-            <!-- ================= 2.1 التحديد التشريحي للفقرات المصابة المحتملة (Vertebral Mapping) ================= -->
-            ${generateVertebralMappingCard(data.painAreaTitle || data.painArea || data.selectedPoint || data.pointTitle || '', data.notes || (data.collectedSymptoms ? data.collectedSymptoms.join(' ') : ''))}
 
             <!-- ================= 3. تقرير وتفسير الطبيب الافتراضي المباشر (Gemini AI Clinical Engine) ================= -->
             <div id="ai-clinical-insight-card" class="ai-clinical-card" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(6, 78, 59, 0.28) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 24px; margin-bottom: 22px; box-shadow: 0 8px 30px rgba(0,0,0,0.55); position: relative;">
@@ -4825,6 +4813,10 @@ function displayDiagnosticReport(data) {
                     </div>
                 </div>
             </div>
+
+            
+            <!-- ================= 2.1 التحديد التشريحي للفقرات المصابة المحتملة (Vertebral Mapping) ================= -->
+            ${generateVertebralMappingCard(data.painAreaTitle || data.painArea || data.selectedPoint || data.pointTitle || '', data.notes || (data.collectedSymptoms ? data.collectedSymptoms.join(' ') : ''))}
 
             <!-- ================= 3.1 الفحوصات المخبرية والتكاملية الموصى بها (نقص الفيتامينات والمعادن) ================= -->
             ${generateIntegrativeLabCard()}
@@ -4955,27 +4947,57 @@ function displayDiagnosticReport(data) {
                 return '';
             })()}
 
-            <!-- ================= 6. مسار الشفاء السريري: الراحة الذاتية مقابل الحل الجذري ================= -->
-            <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(212, 175, 55, 0.12) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px; margin-bottom: 22px; box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 1.3em;">🎯</span>
-                        <h4 style="color: var(--primary-gold); margin: 0; font-size: 1.15em;">مسار الشفاء السريري: الراحة الذاتية مقابل الحل الجذري</h4>
+            <!-- ================= 6. مسار الشفاء السريري: التأهيل والعلاج الذاتي والكايروبراكتيك ================= -->
+            <div id="report-healing-path-card" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.85) 100%); border: 2px solid var(--primary-gold); border-radius: 16px; padding: 22px; margin-bottom: 22px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid rgba(212, 175, 55, 0.25); padding-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 1.6em;">🎯</span>
+                        <div>
+                            <h4 style="color: var(--primary-gold); margin: 0; font-size: 1.2em; font-weight: 900;">مسار الشفاء السريري المتكامل (خارطة طريق التعافي)</h4>
+                            <div style="color: #94a3b8; font-size: 0.82em; margin-top: 2px;">بروتوكول علمي متدرج يعالج الأعراض الحركية من الجذور</div>
+                        </div>
                     </div>
-                    <span style="color: #38bdf8; font-size: 0.82em; font-weight: bold; background: rgba(56, 189, 248, 0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.3);">إشراف المعالج جمال</span>
+                    <span style="color: #6ee7b7; font-size: 0.82em; font-weight: bold; background: rgba(16, 185, 129, 0.15); border: 1.5px solid #10b981; padding: 5px 14px; border-radius: 20px;">طريقة العلاج المعتمدة: الكايروبراكتيك والتقويم الحيوي</span>
                 </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-top: 10px;">
-                    <div style="background: rgba(17, 24, 39, 0.7); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 14px;">
-                        <div style="color: #10b981; font-weight: bold; font-size: 0.92em; margin-bottom: 6px;">🏋️ أولاً: خطة الـ 7 أيام المنزلية للتأهيل الحركي</div>
-                        <div style="color: #cbd5e1; font-size: 0.85em; line-height: 1.6;">تمارين استطالة وتليين حركي مدروسة صُممت خصيصاً لتسكين آلامك فورياً عبر البرنامج التفاعلي لمدة 7 أيام كاملة فور تفعيل خطتك أدناه.</div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; margin-top: 14px;">
+                    <!-- المرحلة الأولى: التأهيل والعلاج الذاتي -->
+                    <div style="background: rgba(17, 24, 39, 0.85); border: 1.5px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div style="color: #10b981; font-weight: 900; font-size: 1em; display: flex; align-items: center; gap: 6px;">
+                                    <span>🏠</span> المرحلة الأولى: التأهيل والعلاج الذاتي (برنامج الـ 7 أيام)
+                                </div>
+                                <span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; font-size: 0.76em; padding: 2px 8px; border-radius: 6px; font-weight: bold;">تسكين منزلي فوري</span>
+                            </div>
+                            <p style="color: #cbd5e1; font-size: 0.88em; line-height: 1.7; margin: 0 0 10px 0;">
+                                تمارين استطالة وحركات تليين بيوميكانيكية مدروسة لتخفيف الضغط العصبي، وتقليل التهاب الأنسجة، واستعادة المدى الحركي ذاتياً عبر المنظومة التفاعلية خطوة بخطوة.
+                            </p>
+                        </div>
+                        <div style="background: rgba(15, 23, 42, 0.9); border-right: 3px solid #10b981; padding: 8px 12px; border-radius: 6px; color: #a7f3d0; font-size: 0.82em;">
+                            ⚡ <strong>الهدف السريري:</strong> تخفيف حدة الألم بنسبة تتجاوز 70% وتفريغ الإجهاد العضلي خلال الأسبوع الأول.
+                        </div>
                     </div>
-                    <div style="background: rgba(17, 24, 39, 0.7); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 10px; padding: 14px;">
-                        <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.92em; margin-bottom: 6px;">👐 ثانياً: الحل الجذري النهائي (الكايروبراكتيك)</div>
-                        <div style="color: #cbd5e1; font-size: 0.85em; line-height: 1.6;">لإزالة سبب الألم نهائياً، يتطلب الأمر تقويماً يدوياً وتفريغ ضغط الفقرات والمفاصل مع المعالج جمال (جلسات مباشرة أو زيارات منزلية داخل الأردن).</div>
+
+                    <!-- المرحلة الثانية: الكايروبراكتيك الجذري -->
+                    <div style="background: rgba(17, 24, 39, 0.85); border: 1.5px solid rgba(212, 175, 55, 0.45); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div style="color: var(--primary-gold); font-weight: 900; font-size: 1em; display: flex; align-items: center; gap: 6px;">
+                                    <span>👐</span> المرحلة الثانية: العلاج بالكايروبراكتيك (الحل الجذري المباشر)
+                                </div>
+                                <span style="background: rgba(212, 175, 55, 0.2); color: #fef08a; font-size: 0.76em; padding: 2px 8px; border-radius: 6px; font-weight: bold;">تصحيح ميكانيكي دائم</span>
+                            </div>
+                            <p style="color: #cbd5e1; font-size: 0.88em; line-height: 1.7; margin: 0 0 10px 0;">
+                                علاج المسبب الجذري للألم نهائياً عبر تقنية الكايروبراكتيك والتقويم اليدوي التخصصي لضبط استقامة الفقرات والمفاصل وتحرير الأعصاب من الانضغاط مع المعالج جمال قبها.
+                            </p>
+                        </div>
+                        <div style="background: rgba(15, 23, 42, 0.9); border-right: 3px solid var(--primary-gold); padding: 8px 12px; border-radius: 6px; color: #fef08a; font-size: 0.82em;">
+                            💎 <strong>الخدمة الميدانية:</strong> جلسات مباشرة أو زيارات منزلية داخل الأردن، وتنسيق قراءة الرنين لمرضى الخارج.
+                        </div>
                     </div>
                 </div>
             </div>
-
 
             <!-- ================= 7. بوابة تفعيل الخطة التأهيلية الذكية (7 أيام) ونظام الاشتراك الرمزي / الإعفاء الإنساني ================= -->
             ${typeof getRecoveryPlanPaywallCardHTML === 'function' ? getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedReportName, resolvedReportPhone, cleanDigitsPhone, auth) : ''}
@@ -4991,7 +5013,7 @@ function displayDiagnosticReport(data) {
                         <div>
                             <h4 style="color: var(--primary-gold); margin: 0; font-size: 1.12em; font-weight: 800;">خدمات الرعاية المتقدمة (العيادة المباشرة والزيارات المنزلية)</h4>
                             <p style="color: #cbd5e1; font-size: 0.86em; line-height: 1.5; margin: 3px 0 0 0;">
-                                نوفر جلسات التقويم اليدوي والزيارات المنزلية داخل الأردن، وتنسيق استشارات قراءة صور الرنين لمرضانا الكرام من خارج الأردن.
+                                نوفر جلسات التقويم اليدوي (كايروبراكتيك) والزيارات المنزلية داخل الأردن، وتنسيق استشارات قراءة صور الرنين لمرضانا الكرام من خارج الأردن.
                             </p>
                         </div>
                     </div>
@@ -5823,7 +5845,7 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
                     <div>
                         <h3 style="color: #d4af37; margin: 0 0 6px 0; font-size: 1.25em; font-weight: 900; display: inline-flex; align-items: center; gap: 8px;">
                             <span>👑</span>
-                            <span>خطة التأهيل والراحة الملكية (7 أيام — مفعّلة ومعتمدة لك)</span>
+                            <span>خطة التأهيل والعلاج الذاتي (7 أيام — مفعّلة ومعتمدة لك)</span>
                         </h3>
                         <p style="color: #e2e8f0; font-size: 0.92em; margin: 0;">برنامج علاجي مخصص لمنطقة <strong style="color: #fef08a;">${data?.painAreaTitle || 'الألم'}</strong> مبني بالكامل على تقييمك السريري.</p>
                     </div>
@@ -7088,7 +7110,7 @@ function _legacyPaywallCardHTML(data, isRegisteredPatient, resolvedReportName, r
                     <div>
                         <h3 style="color: #d4af37; margin: 0 0 6px 0; font-size: 1.25em; font-weight: 900; display: inline-flex; align-items: center; gap: 8px;">
                             <span style="font-size: 1.25em;">👑</span>
-                            <span>خطة الراحة والتأهيل المنزلي الملكية (7 أيام — مفعّلة ومعتمدة لك)</span>
+                            <span>خطة التأهيل والعلاج الذاتي (7 أيام — مفعّلة ومعتمدة لك)</span>
                         </h3>
                         <p style="color: #e2e8f0; font-size: 0.92em; margin: 0; line-height: 1.5;">برنامج راحة واستطالة مؤتمت مخصص لمنطقة <strong style="color: #fef08a;">${data.painAreaTitle || 'الألم'}</strong> مبني بالكامل على تشخيصك السريري.</p>
                     </div>
@@ -8045,10 +8067,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
     const container = document.getElementById('step4-day1-container') || document.getElementById('patient-recovery-dashboard');
     if (!container) return;
 
-    const maxReached = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
-    const isDay1Completed = (sessionData?.dailyLogs && sessionData.dailyLogs.length >= 1)
-                         || (sessionData?.currentSessionDay && sessionData.currentSessionDay >= 2)
-                         || (maxReached >= 5);
+    const isDay1Completed = (sessionData?.dailyLogs || []).some(l => Number(l.sessionNumber || l.day) === 1);
 
     const curAssData = sessionData.latestAssessment || (typeof currentAssessmentData !== 'undefined' ? currentAssessmentData : null) || {};
     const curPt = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint : null;
@@ -8639,8 +8658,14 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         const container = document.getElementById('step5-sessions-container');
         if (!container) return;
 
-        // تحديد اليوم الحالي لتقدم مسار المريض
-        const progressionDay = sessionData.isPlanCompleted ? 7 : Math.min(7, Math.max(2, Math.max(sessionData.currentSessionDay || 2, highestCompleted5 + 1)));
+        // إذا لم تكتمل الجلسة الأولى، توجيه المريض إلى تمارين اليوم الأول بالمرحلة 4 فوراً
+        if (highestCompleted5 === 0 && !sessionData.isPlanCompleted) {
+            renderStep4IndependentDay1(patientId, sessionData);
+            return;
+        }
+
+        // تحديد اليوم الحالي لتقدم مسار المريض: يستند حصراً للجلسات المنجزة فعلياً
+        const progressionDay = sessionData.isPlanCompleted ? 7 : Math.min(7, Math.max(1, highestCompleted5 + 1));
 
         // تحديد اليوم المعروض حالياً: إذا تم تمرير targetDay (مثلاً عند إتمام جلسة سابقة أو النقر المباشر)، يُعرض مباشرة
         let activeDay = progressionDay;
@@ -8820,7 +8845,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 })()}
                 ${[2, 3, 4, 5, 6, 7].map(d => {
                     const hasCompletedLog = (sessionData.dailyLogs || []).some(l => Number(l.sessionNumber || l.day) === d);
-                    const isCompleted = (hasCompletedLog || d < progressionDay || sessionData.isPlanCompleted);
+                    const isCompleted = (hasCompletedLog || sessionData.isPlanCompleted);
                     const isCurrentActive = (d === activeDay);
                     const isCurrentProgression = (!sessionData.isPlanCompleted && d === progressionDay && !hasCompletedLog);
                     const isFutureLocked = (!sessionData.isPlanCompleted && !hasCompletedLog && d > progressionDay);
@@ -10467,7 +10492,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.58';
+const CURRENT_APP_VERSION = 'v30.59';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 

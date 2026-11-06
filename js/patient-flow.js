@@ -375,13 +375,9 @@ const PatientFlow = (function() {
 
         const isPlanCompleted = highestCompletedSession >= 7 || (dailyLogs && dailyLogs.length >= 7) || !!(patient.isPlanCompleted || patient.planCompleted || ((patient.fullName || patient.name || '').includes('راغب') || (patient.phone && String(patient.phone).includes('0790044458'))));
         
-        let currentSessionDay = isPlanCompleted ? 7 : Math.min(7, Math.max(2, highestCompletedSession + 1));
-        if (!isPlanCompleted && patient && patient.currentSessionDay && patient.currentSessionDay >= 1 && patient.currentSessionDay <= 7) {
-            currentSessionDay = Math.max(currentSessionDay, patient.currentSessionDay);
-        }
-        if (!isPlanCompleted && typeof window !== 'undefined' && window.activePatient && window.activePatient.currentSessionDay) {
-            currentSessionDay = Math.max(currentSessionDay, window.activePatient.currentSessionDay);
-        }
+        let currentSessionDay = isPlanCompleted ? 7 : Math.min(7, highestCompletedSession + 1);
+        if (patient) patient.currentSessionDay = currentSessionDay;
+        if (typeof window !== 'undefined' && window.activePatient) window.activePatient.currentSessionDay = currentSessionDay;
 
         // حساب مؤشرات التحسن الثلاثة المحددة بدقة ومن مدخلات المريض الفعلية حصراً
         const latestAssessment = assessments.length > 0 ? assessments[assessments.length - 1] : null;
@@ -417,31 +413,6 @@ const PatientFlow = (function() {
                 }
             }
             dailyLogs = synthesizedLogs;
-        } else if (!isPlanCompleted && currentSessionDay > 2 && (!dailyLogs || dailyLogs.length < (currentSessionDay - 1))) {
-            // ضمان وجود سجلات تسلسلية مكتملة لكافة الأيام السابقة للجلسة الحالية لمنع ظهور جلسات سابقة مقفلة
-            const filledLogs = [...(dailyLogs || [])];
-            const pBase = (typeof baselinePain === 'number' && baselinePain > 0) ? baselinePain : 8;
-            for (let i = 1; i < currentSessionDay; i++) {
-                const existing = filledLogs.find(l => Number(l.sessionNumber || l.day) === i);
-                if (!existing) {
-                    const factor = (i - 1) / 6;
-                    const pScore = Math.max(0, Math.round(pBase * (1 - factor)));
-                    filledLogs.push({
-                        sessionNumber: i,
-                        day: i,
-                        painScore: pScore,
-                        mobilityRate: Math.min(100, Math.round(45 + 55 * factor)),
-                        sleepRate: Math.min(100, Math.round(55 + 45 * factor)),
-                        exercisesDone: true,
-                        goodPosture: true,
-                        walkingDone: true,
-                        heatDone: true,
-                        date: new Date(Date.now() - (currentSessionDay - i) * 86400000).toISOString()
-                    });
-                }
-            }
-            filledLogs.sort((a, b) => Number(a.sessionNumber || a.day) - Number(b.sessionNumber || b.day));
-            dailyLogs = filledLogs;
         }
 
         const latestLog = (dailyLogs && dailyLogs.length > 0) ? dailyLogs[dailyLogs.length - 1] : null;
