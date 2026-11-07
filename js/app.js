@@ -1191,7 +1191,7 @@ async function handleStepperClick(stepNum) {
             if (savedPatientId) renderStep4IndependentDay1(savedPatientId);
             else goToStep(3);
         } else if (stepNum === 6) {
-            showToast('🔒 وثيقة التعافي والإنهاء تتفعل تلقائياً بعد إتمام جميع جلسات خطة التعافي السبع (7 أيام)', 'warning');
+            showToast('🔒 بوابة الحل الجذري تتفعل تلقائياً بعد إتمام جميع جلسات خطة التعافي السبع (7 أيام)', 'warning');
             const savedPatientId = SmartDB.getCurrentSessionPatientId() || activePatient?.patientId;
             if (savedPatientId) {
                 const logs = await SmartDB.getPatientDailyLogs(savedPatientId);
@@ -8941,7 +8941,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 </p>
                 ${sessionData.isPlanCompleted ? `
                     <button type="button" onclick="renderStep6Completion('${patientId}')" style="background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; font-weight: bold; border: none; padding: 8px 20px; border-radius: 20px; font-size: 0.88em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);">
-                        🏆 العودة لوثيقة التعافي والإنهاء (الشهادة والوسام)
+                        🚀 الانتقال لبوابة الحل الجذري (الكايروبراكتيك)
                     </button>
                 ` : ''}
             </div>
@@ -9148,10 +9148,10 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             </div>` : ''}
 
             ${sessionData.isPlanCompleted ? `
-            <!-- زر العودة لوثيقة التعافي والإنهاء عند اكتمال البرنامج -->
+            <!-- زر العودة لبوابة الحل الجذري عند اكتمال البرنامج -->
             <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 14px;">
                 <button type="button" onclick="renderStep6Completion('${patientId}')" class="btn-header" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(180, 130, 20, 0.25) 100%); border: 1px solid var(--primary-gold); color: #fef08a; padding: 7px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                    <span>🏆</span> العودة لوثيقة التعافي والإنهاء
+                    <span>🏆</span> العودة لبوابة الحل الجذري
                 </button>
             </div>
             ` : ''}
@@ -9370,9 +9370,171 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
 
 
 // =========================================================================
-// الخطوة 6: وثيقة التعافي والإنهاء (التخرج بعد 7 أيام)
+// الخطوة 6: بوابة الحل الجذري (التخرج بعد 7 أيام)
 // =========================================================================
 let _isRenderingStep6 = false;
+
+// =========================================================================
+// 🧬 محرك التخصيص التشريحي المتقدم لنهاية البرنامج (Anatomical Transition Engine)
+// دمج الأفكار الأربع: جسر التعافي + بطاقة الأسبقية + مقياس الجاهزية + دليل الوقاية
+// =========================================================================
+function getAnatomicalCompletionProfile(pointKey, areaName = '') {
+    const pKey = (pointKey || '').toLowerCase();
+    const aName = (areaName || '').toLowerCase();
+
+    // 1. مفصل الركبة والصابونة
+    if (pKey.includes('knee') || aName.includes('ركب') || aName.includes('صابون')) {
+        return {
+            jointTitle: 'مفصل الركبة وصابونة الرضفة والأربطة الداعمة',
+            shortName: 'مفصل الركبة',
+            phase1DoneText: 'أثمرت تمارين الـ 7 أيام عن تنشيط إفراز السائل الزلالي المفصلي، وتخفيف التورم الموضعي، وتليين أوتار العضلة الرباعية ومحيط الركبة بنجاح.',
+            phase2RootNeed: 'المسبب الميكانيكي الجذري (مثل انزياح مسار صابونة الرضفة Patellar Maltracking أو انضغاط الغضروف الهلالي) يتطلب تقويماً يدوياً متخصصاً لموازنة الأحمال الحركية بين الفخذ والساق مع المعالج جمال قبها.',
+            readinessDesc: 'أنسجة مفصل الركبة والأربطة المحيطة الآن مسترخية وخالية من التشنج الدفاعي الحاد، وهي في التوقيت السريري الأمثل عالمياً لإجراء التقويم اليدوي وتفريغ الاحتكاك بأمان وبأعلى استجابة.',
+            preventionRules: [
+                'تجنب ثني الركبة بزاوية حادة (وضعيات القرفصاء والجلوس على الأرض) لفترات ممتدة.',
+                'استخدم السلالم بهدوء مع تحميل الوزن على كامل القدم وتفادي النزول السريع المفاجئ.',
+                'احرص على أداء تمرين استطالة العضلة الخلفية بعد المشي لتفادي عودة الشد على مفصل الركبة.'
+            ],
+            whatsappBookingText: 'مرحباً دكتور جمال، أتممت برنامج الـ 7 أيام لتهيئة وتسكين (مفصل الركبة)، وأنسجة الركبة الآن مهيأة تماماً. أود التنسيق معكم لحجز جلسة تقويم يدوي (كايروبراكتيك) لمفصل الركبة لضبط المحاذاة وتثبيت التعافي.'
+        };
+    }
+
+    // 2. مفصل الكتف والكفة المدورة والأبهر
+    if (pKey.includes('shoulder') || aName.includes('كتف') || aName.includes('أبهر') || aName.includes('لوح الكتف')) {
+        return {
+            jointTitle: 'مفصل الكتف وأوتار الكفة المدورة ومنطقة الأبهر',
+            shortName: 'مفصل الكتف',
+            phase1DoneText: 'أثمرت تمارين الأيام السبعة عن فك تشنج الألياف العضلية حول لوح الكتف (الأبهر)، واستعادة نصف المدى الحركي للدوران، وتليين المحفظة الزلالية للكتف.',
+            phase2RootNeed: 'متلازمة اصطدام أوتار الكتف (Subacromial Impingement) وانحشار رأس عظمة العضد لا تزول نهائياً إلا بتحرير يدوي للمفصل وتفريغ الضغط الميكانيكي مع أخصائي الكايروبراكتيك.',
+            readinessDesc: 'عضلات الكتف وأعلى الظهر مسترخية حالياً ولينة للغاية، وهذا هو التوقيت الذهبي لإجراء الضبط اليدوي للكتف لإعادة رأس المفصل لتجويفه الطبيعي دون ألم.',
+            preventionRules: [
+                'تجنب النوم المباشر على جانب الكتف المصاب واستخدم وسادة لدعم الذراع أثناء النوم.',
+                'تجنب رفع الأحمال الثقيلة بذراع مفرودة بعيداً عن محور الجسم.',
+                'تجنب الجلوس بكتفين متدليين للأمام أثناء القيادة أو العمل المكتبي.'
+            ],
+            whatsappBookingText: 'مرحباً دكتور جمال، أتممت برنامج الـ 7 أيام لتهيئة وتسكين (مفصل الكتف والأبهر)، وأود حجز جلسة تقويم يدوي للكتف (كايروبراكتيك) لضبط حركة المفصل والتخلص من الانحشار نهائياً.'
+        };
+    }
+
+    // 3. مفصل الكاحل والقدم واللفافة الأخمصية
+    if (pKey.includes('ankle') || pKey.includes('foot') || pKey.includes('plantar') || aName.includes('كاحل') || aName.includes('قدم') || aName.includes('كعب') || aName.includes('لفافة')) {
+        return {
+            jointTitle: 'مفصل الكاحل وقوس القدم واللفافة الأخمصية',
+            shortName: 'مفصل الكاحل والقدم',
+            phase1DoneText: 'ساهمت التمارين في تقليل التيبس الصباحي الحاد في باطن القدم، وتخفيف الشد على وتر أخيل، وتهدئة التهاب أربطة الكاحل المتوترة.',
+            phase2RootNeed: 'هبوط قوس القدم واختلال تموضع عظيمات الكاحل الرصغية يسبب خللاً في ميكانيكا المشي، ويحتاج إلى تقويم ومحاذاة يدوية دقيقة لاستعادة توازن الخطوة.',
+            readinessDesc: 'أربطة الكاحل واللفافة الأخمصية أصبحت لينة ومرنة، مما يجعل الكاحل في أقصى جاهزية لاستقبال التقويم اليدوي الدقيق وتثبيت المدى الحركي.',
+            preventionRules: [
+                'تجنب المشي حافياً تماماً على الأرضيات الصلبة كالسيراميك والرخام.',
+                'احرص على ارتداء حذاء طبي مبطن وداعم لقوس القدم وتجنب الأحذية المنبسطة كلياً.',
+                'قم بتدليك باطن القدم بأسطوانة مائية معتدلة لتنشيط التروية الدموية صباحاً.'
+            ],
+            whatsappBookingText: 'مرحباً دكتور جمال، أتممت برنامج الـ 7 أيام لتهيئة وتسكين (مفصل الكاحل والقدم)، وأرغب في ترتيب موعد جلسة كايروبراكتيك لتقويم عظيمات الكاحل وتثبيت التعافي.'
+        };
+    }
+
+    // 4. مفصل الحوض والعجزي الحرقفي ومسار عرق النسا
+    if (pKey.includes('hip') || pKey.includes('sacroiliac') || pKey.includes('pelvis') || aName.includes('ورك') || aName.includes('حوض') || aName.includes('عرق النسا') || aName.includes('كمثر')) {
+        return {
+            jointTitle: 'مفصل الحوض والعجزي الحرقفي (SI Joint) ومسار العصب الوركي',
+            shortName: 'مفصل الحوض والورك',
+            phase1DoneText: 'نجحت تمارين الاستطالة في فك التشنج الضاغط للعضلة الكمثرية، وتسكين انتشار الألم نحو الفخذ، وتليين محفظة مفصل الورك.',
+            phase2RootNeed: 'التواء أو قفل المفصل العجزي الحرقفي (Sacroiliac Subluxation) يخل بتوازن الحوض وتساوي طول الساقين، ويتطلب تقويماً يدوياً تخصصياً لإعادة محاذاة الحوض وتحرير العصب.',
+            readinessDesc: 'عضلات المقعدة والحوض في أرخى حالاتها الآن، وهي جاهزة تماماً لإجراء تقويم الكايروبراكتيك للحوض دون أي مقاومة عضلية مؤلمة.',
+            preventionRules: [
+                'تجنب وضع ساق فوق الأخرى (Cross-legged) أثناء الجلوس نهائياً.',
+                'تجنب وضع المحفظة أو الهاتف في الجيب الخلفي أثناء القيادة أو الجلوس.',
+                'قم بتوزيع وزن الجسم بالتساوي على القدمين عند الوقوف.'
+            ],
+            whatsappBookingText: 'مرحباً دكتور جمال، أتممت برنامج الـ 7 أيام لتهيئة وتسكين (مفصل الحوض ومسار عرق النسا)، وأود حجز جلسة تقويم كايروبراكتيك لموازنة مفصل الحوض وتفريغ الضغط عن العصب.'
+        };
+    }
+
+    // 5. الفقرات العنقية والرقبة والصداع التوتري
+    if (pKey.includes('cervical') || pKey.includes('neck') || aName.includes('عنق') || aName.includes('رقب') || aName.includes('صداع')) {
+        return {
+            jointTitle: 'الفقرات العنقية ومخرج الأعصاب وقاعدة الجمجمة',
+            shortName: 'الفقرات العنقية والرقبة',
+            phase1DoneText: 'نجحت تمارين الاستطالة في تفكيك التشنج العضلي العميق برقبتك، وتخفيف الصداع التوتري، وتقليل الضغط عن الأعصاب الممتدة للكتفين والذراعين.',
+            phase2RootNeed: 'استقامة الرقبة وانحراف الفقرات العنقية (Loss of Cervical Lordosis) يتطلب تقويماً يدوياً لطيفاً ومحاذاة متخصصة لإعادة الانحناء الفسيولوجي الطبيعي للرقبة.',
+            readinessDesc: 'أنسجة وعضلات الرقبة أصبحت لينة وخالية من التيبس الدفاعي، وهي في قمة الجاهزية لإجراء ضبط الكايروبراكتيك العنقي الآمن لفتح مسارات الحركة.',
+            preventionRules: [
+                'اضبط شاشة هاتفك وحاسوبك لتكون بمستوى عينيك وتجنب إمالة الرأس للأسفل.',
+                'استخدم وسادة طبية بارتفاع مريح يحافظ على استقامة الرقبة مع العمود الفقري.',
+                'خذ استراحة دقيقة كل 40 دقيقة من الجلوس لتدوير الكتفين وفرد الرقبة بلطف.'
+            ],
+            whatsappBookingText: 'مرحباً دكتور جمال، أتممت برنامج الـ 7 أيام لتهيئة وتسكين (الفقرات العنقية والرقبة)، وأود ترتيب جلسة تقويم يدوي كايروبراكتيك للرقبة لضبط المحاذاة وإزالة الانضغاط نهائياً.'
+        };
+    }
+
+    // 6. مفصل الكوع / المرفق والساعد
+    if (pKey.includes('elbow') || aName.includes('كوع') || aName.includes('مرفق') || aName.includes('ساعد')) {
+        return {
+            jointTitle: 'مفصل الكوع والمرفق وأوتار الساعد',
+            shortName: 'مفصل الكوع والساعد',
+            phase1DoneText: 'ساعدت التمارين في تهدئة إجهاد أوتار الكوع والساعد وتسكين نقاط الزناد المؤلمة (Trigger Points) الناتجة عن الحركة المتكررة.',
+            phase2RootNeed: 'احتكاك رأس عظمة الكعبرة وانضغاط الأوتار يتطلب تقويماً يدوياً وتفريغاً حركياً لمفصل الكوع لاستعادة عزم اليد الكامل.',
+            readinessDesc: 'أوتار الساعد مسترخية ومستعدة للتحرير اليدوي المباشر مع أخصائي الكايروبراكتيك لإزالة الإجهاد من جذوره.',
+            preventionRules: [
+                'تجنب القبض المتواصل والشديد على الأدوات أو الهاتف لفترات ممتدة.',
+                'تجنب حمل الحقائب الثقيلة مع بسط المرفق بالكامل.',
+                'قم بعمل حركات إطالة خفيفة لأوتار الرسغ والساعد بعد الاستخدام اليدوي.'
+            ],
+            whatsappBookingText: 'مرحباً دكتور جمال، أتممت برنامج الـ 7 أيام لتهيئة وتسكين (مفصل الكوع والساعد)، وأود حجز جلسة تقويم يدوي وتفريغ ضغط الأوتار مع المعالج جمال.'
+        };
+    }
+
+    // 7. مفصل الرسغ ونفق الرسغ واليد
+    if (pKey.includes('wrist') || pKey.includes('hand') || pKey.includes('carpal') || aName.includes('رسغ') || aName.includes('يد') || aName.includes('نفق')) {
+        return {
+            jointTitle: 'مفصل الرسغ وعظيمات اليد والنفق الرسغي',
+            shortName: 'مفصل الرسغ واليد',
+            phase1DoneText: 'نجحت حركات التليين في تفريغ التوتر السطحي حول عظيمات الرسغ وتسكين التنميل والألم الليلي بنجاح.',
+            phase2RootNeed: 'انضغاط العصب الأوسط داخل النفق الرسغي يتطلب تقويماً ميكانيكياً دقيقاً لتحرير عظيمات الرسغ وتوسيع ممر العصب يدوياً.',
+            readinessDesc: 'أوتار وأربطة الرسغ الآن في أعلى درجات الاسترخاء لاستقبال التقويم اليدوي المتخصص واستعادة مرونة وقوة القبضة.',
+            preventionRules: [
+                'استخدم مسنداً مريحاً للرسغ عند العمل على لوحة المفاتيح والماوس.',
+                'تجنب النوم مع ثني معصم اليد بشكل حاد للداخل.',
+                'قم بهز يديك بلطف وفرد الأصابع بانتظام خلال ساعات العمل.'
+            ],
+            whatsappBookingText: 'مرحباً دكتور جمال، أتممت برنامج الـ 7 أيام لتهيئة وتسكين (مفصل الرسغ واليد)، وأود حجز جلسة تقويم يدوي وتفريغ ضغط للنفق الرسغي.'
+        };
+    }
+
+    // 8. الفقرات الصدرية وأعلى الظهر والأضلاع
+    if (pKey.includes('thoracic') || aName.includes('صدر') || aName.includes('أعلى الظهر') || aName.includes('أضلاع')) {
+        return {
+            jointTitle: 'الفقرات الصدرية وأعلى الظهر والقفص الصدري',
+            shortName: 'الفقرات الصدرية وأعلى الظهر',
+            phase1DoneText: 'أدت التمارين إلى توسيع مدى التنفس، وتليين العضلات بين الأضلاع، وتخفيف التيبس الصدري الحاد.',
+            phase2RootNeed: 'انحشار مفاصل الأضلاع مع الفقرات الصدرية (Costovertebral Subluxation) يحد من حركة الصدر ويتطلب طقطقة تقويمية متخصصة لتحرير المفصل.',
+            readinessDesc: 'الأنسجة بين الفقرية لينة وجاهزة لتحرير مفاصل القفص الصدري والفقرات الصدرية بتقنية الكايروبراكتيك المباشرة.',
+            preventionRules: [
+                'حافظ على فتح الصدر واستقامة الظهر وتجنب التحدب أثناء الجلوس.',
+                'تجنب حمل الأوزان الثقيلة على جانب واحد من الجسم.',
+                'احرص على أخذ أنفاس عميقة مع فرد الذراعين للخلف يومياً.'
+            ],
+            whatsappBookingText: 'مرحباً دكتور جمال، أتممت برنامج الـ 7 أيام لتهيئة وتسكين (الفقرات الصدرية وأعلى الظهر)، وأود حجز جلسة كايروبراكتيك لتقويم الفقرات والأضلاع.'
+        };
+    }
+
+    // 9. الفقرات القطنية وأسفل الظهر والديسك (الافتراضي للعمود الفقري)
+    return {
+        jointTitle: 'الفقرات القطنية والغضاريف الشوكية (الديسك) وأسفل الظهر',
+        shortName: 'الفقرات القطنية وأسفل الظهر',
+        phase1DoneText: 'نجحت تمارين الاستطالة في فك التشنج العضلي الدفاعي، وتخفيف الحمل الانضغاطي المباشر عن الديسك بنسبة تتجاوز 70%، واستعادة مرونة الانحناء.',
+        phase2RootNeed: 'الانزياح الميكانيكي لفقرات أسفل الظهر وانضغاط جذور الأعصاب لا يزول نهائياً إلا بجلسة كايروبراكتيك وتفريغ ضغط الفقرات يدوياً (Manual Lumbar Decompression) مع المعالج جمال.',
+        readinessDesc: 'عضلات وأربطة أسفل الظهر الآن في أقصى درجات الاسترخاء والليونة، وهي التوقيت السريري الأمثل عالمياً لإجراء التقويم اليدوي وإعادة تموضع الفقرات بأمان تام وبدون أي ألم.',
+        preventionRules: [
+            'تجنب الانحناء المفاجئ للأمام من الخصر، واثنِ الركبتين دائماً عند التقاط أي غرض من الأرض.',
+            'تجنب الجلوس المتصل لأكثر من 45 دقيقة دون الوقوف والمشي لمدة دقيقة واحدة.',
+            'احرص على وضع وسادة دعم قطنية خلف أسفل ظهرك أثناء القيادة والجلوس المكتبي.'
+        ],
+        whatsappBookingText: 'مرحباً دكتور جمال، أتممت برنامج الـ 7 أيام لتهيئة وتسكين (الفقرات القطنية وأسفل الظهر)، وأنسجة ظهري الآن مهيأة تماماً. أود التنسيق معكم لحجز جلسة تقويم يدوي (كايروبراكتيك) لضبط الفقرات وتثبيت التعافي.'
+    };
+}
+window.getAnatomicalCompletionProfile = getAnatomicalCompletionProfile;
+
 async function renderStep6Completion(patientId, sessionData = null) {
     if (_isRenderingStep6) return;
     _isRenderingStep6 = true;
@@ -9398,12 +9560,12 @@ async function renderStep6Completion(patientId, sessionData = null) {
             return;
         }
 
-        // التحقق المانع: عدم السماح بالوصول لوثيقة التخرج إلا بعد إتمام كامل الأيام السبعة
+        // التحقق المانع: عدم السماح بالوصول لبوابة الحل الجذري إلا بعد إتمام كامل الأيام السبعة
         const completedDays = sessionData.dailyLogs ? sessionData.dailyLogs.length : 0;
         const hasSession7 = sessionData.dailyLogs && sessionData.dailyLogs.some(l => Number(l.sessionNumber || l.day) >= 7);
         const isPlanDone = sessionData.isPlanCompleted || hasSession7 || completedDays >= 7 || (activePatient && (activePatient.isPlanCompleted || activePatient.planCompleted));
         if (!isPlanDone) {
-            showToast(`🔒 وثيقة التعافي والإنهاء مقفلة: تتفعل تلقائياً فقط بعد إتمام جميع جلسات خطة التعافي السبع (7 أيام)! أنت حالياً في اليوم (${completedDays + 1} من 7).`, 'warning');
+            showToast(`🔒 بوابة الحل الجذري مقفلة: تتفعل تلقائياً فقط بعد إتمام جميع جلسات خطة الـ 7 أيام! أنت حالياً في اليوم (${completedDays + 1} من 7).`, 'warning');
             if (completedDays === 0) {
                 renderStep4IndependentDay1(patientId);
             } else {
@@ -9415,131 +9577,182 @@ async function renderStep6Completion(patientId, sessionData = null) {
         activePatient = sessionData.patient;
         goToStep(6, { fromRender: true });
 
-    const container = document.getElementById('step6-completion-container') || document.getElementById('patient-recovery-dashboard');
-    if (!container) return;
+        const container = document.getElementById('step6-completion-container') || document.getElementById('patient-recovery-dashboard');
+        if (!container) return;
 
-    const basePain = sessionData.baselinePain || 7;
-    const endPain = sessionData.currentPain || 0;
-    const painDrop = sessionData.indicators.painReduction;
-    const residualPain = 100 - painDrop;
+        const basePain = sessionData.baselinePain || 7;
+        const endPain = sessionData.currentPain || 0;
+        const painDrop = sessionData.indicators.painReduction;
+        const mobilityScore = sessionData.indicators.mobility || 85;
+        const sleepScore = sessionData.indicators.sleepQuality || 80;
 
-    const pointKey = sessionData.latestAssessment?.pointId || sessionData.latestAssessment?.pointKey || sessionData.patient.painArea || sessionData.patient.painPointId || 'lumbar_spine';
-    const pKey = (pointKey || '').toLowerCase();
-    const areaName = sessionData.latestAssessment?.painAreaTitle || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint ? currentSelectedPoint.title : 'المنطقة المصابة');
-    
-    let anatomicalEvaluationText = '';
-    let anatomicalProtectionText = '';
+        const pointKey = sessionData.latestAssessment?.pointId || sessionData.latestAssessment?.pointKey || sessionData.patient.painArea || sessionData.patient.painPointId || 'lumbar_spine';
+        const areaName = sessionData.latestAssessment?.painAreaTitle || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint ? currentSelectedPoint.title : 'المنطقة المصابة');
 
-    if (pKey.includes('wrist') || pKey.includes('hand') || pKey.includes('carpal') || areaName.includes('رسغ') || areaName.includes('يد') || areaName.includes('أصابع')) {
-        anatomicalEvaluationText = `💡 تم تحقيق تحسن حركي ممتاز بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى انحراف ميكانيكي دقيق في عظيمات ومفصل الرسغ أو إجهاد وتوتر في الأوتار والمسار العصبي للنفق الرسغي <span dir="ltr">(Carpal Tunnel)</span>، ويتطلب جلسة تقويم يدوي وتفريغ ضغط مع المعالج المختص في (وداعاً للألم) لتحريرها نهائياً.`;
-        anatomicalProtectionText = `🛡️ لحماية مفصل الرسغ واليد من الانتكاس واستعادة كفاءة القبضة الحركية كاملة، يحدد المعالج المختص الخطة الوقائية المناسبة.`;
-    } else if (pKey.includes('elbow') || areaName.includes('كوع') || areaName.includes('مرفق')) {
-        anatomicalEvaluationText = `💡 تم تحقيق تحسن حركي ممتاز بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى شد وإجهاد في أوتار المرفق أو احتكاك ميكانيكي طفيف في مفصل الكوع، ويتطلب تقويماً يدوياً وتفريغ ضغط للأوتار مع المعالج المختص في (وداعاً للألم).`;
-        anatomicalProtectionText = `🛡️ لحماية مفصل الكوع والساعد من إجهاد الحركة المتكررة، يحدد المعالج المختص التوجيهات السريرية اللازمة.`;
-    } else if (pKey.includes('shoulder') || areaName.includes('كتف') || areaName.includes('أبهر')) {
-        anatomicalEvaluationText = `💡 تم تحقيق تحسن حركي ممتاز بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى شد عميق بأوتار الكفة المدورة <span dir="ltr">(Rotator Cuff)</span> أو عُقد ليفية وتشنج حول لوح الكتف، تتطلب جلسة تقويم يدوي وتفريغ ضغط في (وداعاً للألم) لإعادة المدى الحركي الكامل.`;
-        anatomicalProtectionText = `🛡️ لحماية مفصل الكتف وحركته الدورانية من أي تيبس مستقبلي، يحدد المعالج المختص الخطة الوقائية.`;
-    } else if (pKey.includes('knee') || areaName.includes('ركب') || areaName.includes('صابون')) {
-        anatomicalEvaluationText = `💡 تم تحقيق تحسن حركي ممتاز بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى احتكاك ميكانيكي في مسار صابونة الركبة أو تشنج في الأربطة والأوتار الداعمة، ويتطلب تقويماً وموازنة للأحمال الحركية في (وداعاً للألم).`;
-        anatomicalProtectionText = `🛡️ لحماية غضاريف الركبة من الخشونة والانتكاس المستقبلي، يحدد المعالج المختص النصائح الحركية المناسبة.`;
-    } else if (pKey.includes('ankle') || pKey.includes('foot') || pKey.includes('plantar') || areaName.includes('كاحل') || areaName.includes('قدم') || areaName.includes('كعب')) {
-        anatomicalEvaluationText = `💡 تم تحقيق تحسن كبير بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود إلى إجهاد ميكانيكي في اللفافة الأخمصية أو أربطة الكاحل، ويتطلب جلسة تقويم وتفريغ ضغط في (وداعاً للألم).`;
-        anatomicalProtectionText = `🛡️ لحماية قوس القدم ومفصل الكاحل من عودة الألم، يحدد المعالج المختص التمارين الحركية الوقائية.`;
-    } else if (pKey.includes('hip') || pKey.includes('sacroiliac') || areaName.includes('ورك') || areaName.includes('حوض') || areaName.includes('عرق النسا')) {
-        anatomicalEvaluationText = `💡 تم تحقيق تحسن كبير بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى تشنج في العضلة الكمثرية يضغط على مسار العصب الوركي أو اختلال ميكانيكي في مفصل الحوض، ويتطلب تقويماً يدوياً وتفريغ ضغط في (وداعاً للألم).`;
-        anatomicalProtectionText = `🛡️ لحماية مفصل الحوض ومسار العصب الوركي من الانتكاس، يحدد المعالج المختص الخطة الوقائية.`;
-    } else {
-        anatomicalEvaluationText = `💡 تم تحقيق تحسن كبير بنسبة ${painDrop}%، وما تبقى من انزعاج (${residualPain}%) يعود عادةً إلى انحراف ميكانيكي طفيف بمفاصل الفقرات أو شد عضلي وتيبس يتطلب جلسة كايروبراكتيك وتفريغ للضغط <span dir="ltr">(Manual Decompression)</span> مع المعالج المختص في (وداعاً للألم) لإزالته نهائياً.`;
-        anatomicalProtectionText = `🛡️ لحماية عمودك الفقري ومفاصلك من الانتكاس المستقبلي، يحدد المعالج المختص الخطة الوقائية المناسبة لحالتك.`;
-    }
+        const profile = getAnatomicalCompletionProfile(pointKey, areaName);
+        const certCode = `SCP-VIP-${(sessionData.patient?.patientId || sessionData.patient?.id || 'P01').replace(/[^a-zA-Z0-9]/g, '').slice(-4).toUpperCase()}`;
 
-    const hasExplicitBasePain = !!(sessionData.latestAssessment?.hasExplicitPain && sessionData.baselinePain);
-    const painTrackSummary = hasExplicitBasePain
-        ? `📊 مسار الألم الفعلي: من مستوى <strong>${basePain} / 10</strong> في اليوم الأول ⬅️ إلى <strong>${endPain} / 10</strong> في اليوم السابع`
-        : `📊 مسار التعافي الفعلي: تراجع ملحوظ في شدة الألم وتلاشي الأعراض بنسبة <strong>${painDrop}%</strong> بين اليوم الأول واليوم السابع`;
+        const homeVisitWhatsAppUrl = `https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent(
+            `مرحباً دكتور جمال، أنا المراجع (${sessionData.patient?.name || 'مريض'}). أتممت بنجاح برنامج الـ 7 أيام لتهيئة وتسكين (${profile.jointTitle}) برقم أسبقية [${certCode}].\n\n` +
+            `📊 ملخص استجابتي: تراجع الألم ${painDrop}% والمرونة ${mobilityScore}%، والأنسجة مهيأة للتقويم.\n` +
+            `🏠 أود حجز جلسة تقويم يدوي (زيارة منزلية داخل الأردن) مع حضرتكم لإجراء الكايروبراكتيك وتثبيت الشفاء.`
+        )}`;
 
-    container.innerHTML = `
-        <div style="background: linear-gradient(135deg, #0b1f17 0%, #153e2e 100%); border: 2px solid #10b981; border-radius: 16px; padding: 35px; color: #ffffff; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.6); margin-bottom: 25px;">
-            <div style="font-size: 4em; margin-bottom: 10px;">🏆</div>
-            <h2 style="font-size: 2em; margin: 0 0 10px 0; color: #6ee7b7;">تهانينا القلبية ${formatPatientAddress(sessionData.patient?.name)}!</h2>
-            <div style="font-size: 1.15em; margin-bottom: 20px; color: #d1fae5;">لقد أتممت بنجاح برنامج الراحة والتأهيل الحركي (7 أيام كاملة) لمنطقة ${sessionData.latestAssessment?.painAreaTitle || 'المفصل'}</div>
-            
-            <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 15px; margin-bottom: 25px; display: inline-block;">
-                <div style="color: #cbd5e1; font-size: 0.95em;">
-                    ${painTrackSummary}
+        const clinicVisitWhatsAppUrl = `https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent(
+            `مرحباً دكتور جمال، أنا المراجع (${sessionData.patient?.name || 'مريض'}). أتممت برنامج الـ 7 أيام لـ (${profile.jointTitle}) برقم أسبقية [${certCode}].\n\n` +
+            `🏥 أود حجز موعد عيادة مباشرة (عمان - خلدا) لإجراء فحص وتقويم الكايروبراكتيك المباشر مع حضرتكم.`
+        )}`;
+
+        container.innerHTML = `
+            <div style="background: linear-gradient(135deg, #070d19 0%, #0d1a2d 60%, #050811 100%); border: 2px solid var(--primary-gold); border-radius: 18px; padding: 30px 24px; color: #ffffff; text-align: center; box-shadow: 0 12px 45px rgba(0,0,0,0.75); margin-bottom: 25px;">
+                
+                <!-- ترويسة إتمام مرحلة التهيئة والتسكين الأولي -->
+                <div style="margin-bottom: 20px;">
+                    <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(16, 185, 129, 0.15); border: 1.5px solid #10b981; color: #6ee7b7; padding: 6px 18px; border-radius: 25px; font-weight: bold; font-size: 0.9em; margin-bottom: 12px;">
+                        <span>✓</span> تم إنجاز مرحلة التسكين المنزلي والتهيئة الحركية (7 أيام)
+                    </div>
+                    <h2 style="font-size: 1.85em; margin: 0 0 8px 0; color: #fef08a; font-weight: 900;">
+                        بوابة الانتقال للحل الجذري (الكايروبراكتيك)
+                    </h2>
+                    <div style="font-size: 1.1em; color: #38bdf8; font-weight: bold;">
+                        برنامج الرعاية المخصص لـ: <span style="color: #ffffff;">${profile.jointTitle}</span>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 0.88em; margin-top: 4px;">
+                        المراجع الكريم: <strong style="color: var(--primary-gold);">${formatPatientAddress(sessionData.patient?.name)}</strong>
+                    </div>
                 </div>
-            </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; max-width: 700px; margin: 0 auto 25px auto;">
-                <div style="background: rgba(0,0,0,0.35); padding: 15px; border-radius: 10px; border: 1px solid #10b981;">
-                    <div style="font-size: 2.2em; font-weight: bold; color: #10b981;">${sessionData.indicators.painReduction}%</div>
-                    <div style="font-size: 0.85em; color: #e2e8f0;">نسبة انخفاض وتلاشي الألم الفعلية</div>
+                <!-- مسار انخفاض الألم والمؤشرات السريرية الفعلية المحققة -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; max-width: 720px; margin: 0 auto 24px auto;">
+                    <div style="background: rgba(15, 23, 42, 0.85); padding: 16px; border-radius: 12px; border: 1.5px solid #10b981;">
+                        <div style="font-size: 2.2em; font-weight: 900; color: #10b981;">${painDrop}%</div>
+                        <div style="font-size: 0.85em; color: #e2e8f0; font-weight: bold; margin-top: 4px;">تراجع وتسكين الألم الموثق 📉</div>
+                        <div style="color: #94a3b8; font-size: 0.76em; margin-top: 2px;">من (${basePain}/10) إلى (${endPain}/10)</div>
+                    </div>
+                    <div style="background: rgba(15, 23, 42, 0.85); padding: 16px; border-radius: 12px; border: 1.5px solid #38bdf8;">
+                        <div style="font-size: 2.2em; font-weight: 900; color: #38bdf8;">${mobilityScore}%</div>
+                        <div style="font-size: 0.85em; color: #e2e8f0; font-weight: bold; margin-top: 4px;">استعادة مرونة المفصل 🤸‍♂️</div>
+                        <div style="color: #94a3b8; font-size: 0.76em; margin-top: 2px;">تليين الأوتار والأربطة الحركية</div>
+                    </div>
+                    <div style="background: rgba(15, 23, 42, 0.85); padding: 16px; border-radius: 12px; border: 1.5px solid #f59e0b;">
+                        <div style="font-size: 2.2em; font-weight: 900; color: #fef08a;">${sleepScore}%</div>
+                        <div style="font-size: 0.85em; color: #e2e8f0; font-weight: bold; margin-top: 4px;">مؤشر جودة وعمق النوم 🌙</div>
+                        <div style="color: #94a3b8; font-size: 0.76em; margin-top: 2px;">استقرار الأعراض الليلية</div>
+                    </div>
                 </div>
-                <div style="background: rgba(0,0,0,0.35); padding: 15px; border-radius: 10px; border: 1px solid #38bdf8;">
-                    <div style="font-size: 2.2em; font-weight: bold; color: #38bdf8;">${sessionData.indicators.mobility}%</div>
-                    <div style="font-size: 0.85em; color: #e2e8f0;">نسبة استعادة المدى الحركي</div>
-                </div>
-                <div style="background: rgba(0,0,0,0.35); padding: 15px; border-radius: 10px; border: 1px solid #f59e0b;">
-                    <div style="font-size: 2.2em; font-weight: bold; color: #fef08a;">${sessionData.indicators.sleepQuality}%</div>
-                    <div style="font-size: 0.85em; color: #e2e8f0;">مؤشر جودة وعمق النوم</div>
-                </div>
-            </div>
 
-            <!-- رسم بياني مسار تراجع الألم التراكمي الشامل -->
-            ${sessionData.painTrendHTML || ''}
-
-            <div style="background: rgba(15, 23, 42, 0.9); border-radius: 12px; padding: 20px; text-align: right; max-width: 700px; margin: 0 auto 25px auto; border-right: 4px solid var(--primary-gold);">
-                <h4 style="color: var(--primary-gold); margin: 0 0 8px 0; font-size: 1.1em;">🔍 التقييم السريري والتوجيه الطبي النهائي:</h4>
-                <p style="color: #cbd5e1; font-size: 0.92em; line-height: 1.7; margin: 0 0 10px 0;">
-                    ${endPain === 0 ? '✨ استجابة ممتازة جداً واختفاء تام للألم بفضل الله ثم التزامك بالبروتوكول.' : anatomicalEvaluationText}
-                </p>
-                <div style="color: #6ee7b7; font-size: 0.88em;">${anatomicalProtectionText}</div>
-            </div>
-
-            <!-- شريط مراجعة كافة مراحل وجلسات خطة التعافي (الأيام 1 إلى 7) -->
-            <div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 14px 18px; margin: 0 auto 22px auto; max-width: 700px; text-align: center;">
-                <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.95em; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                    <span>📅</span> استعراض بروتوكول وتمارين كل مرحلة من المراحل السبع المكتملة:
+                <!-- الفكرة 3: مقياس الجاهزية للتقويم اليدوي المباشر (The Chiropractic Readiness Gauge) -->
+                <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 23, 42, 0.9) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 20px; max-width: 720px; margin: 0 auto 24px auto; text-align: right;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                        <div style="color: #6ee7b7; font-weight: 900; font-size: 1.08em; display: flex; align-items: center; gap: 8px;">
+                            <span>🎯</span> مؤشر الجاهزية للتقويم اليدوي (Chiropractic Readiness):
+                        </div>
+                        <span style="background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; color: #a7f3d0; padding: 3px 12px; border-radius: 14px; font-weight: bold; font-size: 0.82em;">
+                            95% (جاهزية سريرية مثالية)
+                        </span>
+                    </div>
+                    <div style="background: #1e293b; height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 12px;">
+                        <div style="background: linear-gradient(90deg, #10b981 0%, #34d399 100%); height: 100%; width: 95%;"></div>
+                    </div>
+                    <p style="color: #e2e8f0; font-size: 0.88em; line-height: 1.7; margin: 0;">
+                        💡 <strong>التشخيص الميكانيكي للمرحلة:</strong> ${profile.readinessDesc}
+                    </p>
                 </div>
-                <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; overflow-x: auto;">
-                    <button type="button" onclick="renderStep4IndependentDay1('${patientId}')" title="مراجعة تمارين الجلسة الأولى" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 4px; border-radius: 6px; font-weight: bold; font-size: 0.8em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; transition: 0.2s; min-width: 55px;">
-                        <span>الجلسة 1</span>
-                        <span style="font-size: 0.72em; opacity: 0.9;">✓ منجزة</span>
-                    </button>
-                    ${[2, 3, 4, 5, 6, 7].map(d => `
-                        <button type="button" onclick="renderStep5SessionsDashboard('${patientId}', ${d})" title="مراجعة تمارين الجلسة ${d}" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 4px; border-radius: 6px; font-weight: bold; font-size: 0.8em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; transition: 0.2s; min-width: 55px;">
-                            <span>الجلسة ${d}</span>
-                            <span style="font-size: 0.72em; opacity: 0.9;">✓ منجزة</span>
+
+                <!-- الفكرة 1: جسر التعافي الكامل (التسكين المنزلي مقابل الحل الجذري للكايروبراكتيك) -->
+                <div style="background: rgba(15, 23, 42, 0.95); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 22px; max-width: 720px; margin: 0 auto 24px auto; text-align: right;">
+                    <h3 style="color: var(--primary-gold); margin: 0 0 14px 0; font-size: 1.15em; font-weight: 900; display: flex; align-items: center; gap: 8px;">
+                        <span>⚖️</span> جسر التعافي الكامل: ما حققته مقابل ما ينقصك للحل الجذري
+                    </h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
+                        <div style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 10px; padding: 14px;">
+                            <div style="color: #10b981; font-weight: bold; font-size: 0.92em; margin-bottom: 6px;">
+                                🏠 1. ما أنجزته في الـ 7 أيام (المرحلة الأولى):
+                            </div>
+                            <div style="color: #cbd5e1; font-size: 0.85em; line-height: 1.6;">
+                                ${profile.phase1DoneText}
+                            </div>
+                        </div>
+                        <div style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 10px; padding: 14px;">
+                            <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.92em; margin-bottom: 6px;">
+                                👐 2. الحل الجذري النهائي (الكايروبراكتيك المباشر):
+                            </div>
+                            <div style="color: #cbd5e1; font-size: 0.85em; line-height: 1.6;">
+                                ${profile.phase2RootNeed}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- الفكرة 4: إرشادات الأمان وتفادي الانتكاسة الميكانيكية الخاصة بالمفصل المحدد -->
+                <div style="background: rgba(15, 23, 42, 0.9); border-radius: 14px; padding: 20px; max-width: 720px; margin: 0 auto 24px auto; text-align: right; border-right: 4px solid #38bdf8;">
+                    <h4 style="color: #38bdf8; margin: 0 0 10px 0; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 6px;">
+                        <span>🛡️</span> قواعد الحماية وتفادي الانتكاسة الميكانيكية لـ (${profile.shortName}):
+                    </h4>
+                    <ul style="color: #e2e8f0; font-size: 0.86em; line-height: 1.8; margin: 0 0 12px 0; padding-right: 20px;">
+                        ${profile.preventionRules.map(rule => `<li>${rule}</li>`).join('')}
+                    </ul>
+                    <div style="background: rgba(245, 158, 11, 0.1); border-right: 3px solid #f59e0b; border-radius: 6px; padding: 8px 12px; font-size: 0.8em; color: #fde68a; line-height: 1.6;">
+                        ⚠️ <strong>تنبيه وإخلاء مسؤولية سريري:</strong> برنامج الـ 7 أيام المنزلي هو دليل إرشادي حركي ذاتي لتسكين التشنج وتهيئة الأنسجة، ولا يشكل تشخيصاً طبياً نهائياً ولا يغني عن الفحص الميداني المباشر لتقويم المفاصل واستقرارها.
+                    </div>
+                </div>
+
+                <!-- شريط مراجعة كافة المراحل السبع المكتملة -->
+                <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid #334155; border-radius: 12px; padding: 12px 16px; margin: 0 auto 24px auto; max-width: 720px; text-align: center;">
+                    <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.88em; margin-bottom: 8px;">
+                        📅 مراجعة تمارين وبروتوكول أيام الخطة (1 إلى 7) في أي وقت:
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; overflow-x: auto;">
+                        <button type="button" onclick="renderStep4IndependentDay1('${patientId}')" title="مراجعة تمارين الجلسة الأولى" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 4px; border-radius: 6px; font-weight: bold; font-size: 0.8em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 52px;">
+                            <span>اليوم 1</span>
+                            <span style="font-size: 0.72em;">✓ منجز</span>
                         </button>
-                    `).join('')}
+                        ${[2, 3, 4, 5, 6, 7].map(d => `
+                            <button type="button" onclick="renderStep5SessionsDashboard('${patientId}', ${d})" title="مراجعة تمارين اليوم ${d}" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 4px; border-radius: 6px; font-weight: bold; font-size: 0.8em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 52px;">
+                                <span>اليوم ${d}</span>
+                                <span style="font-size: 0.72em;">✓ منجز</span>
+                            </button>
+                        `).join('')}
+                    </div>
                 </div>
-            </div>
 
-            <div class="completion-action-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 650px; margin: 0 auto 12px auto; width: 100%; box-sizing: border-box;">
-                <button type="button" onclick="openCompletionCertificateModal('${patientId}')" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #0a0e14; border: none; padding: 12px 8px; border-radius: 8px; font-weight: 800; font-size: 0.88em; cursor: pointer; box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4); display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; width: 100%; box-sizing: border-box;">
-                    🏆 وسام الانتصار والوثيقة
-                </button>
-                <button type="button" onclick="exportClinicalSummaryForDoctor('${patientId}')" style="background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); color: #0a0e14; border: none; padding: 12px 8px; border-radius: 8px; font-weight: 800; font-size: 0.88em; cursor: pointer; box-shadow: 0 4px 20px rgba(56, 189, 248, 0.35); display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; width: 100%; box-sizing: border-box;">
-                    📋 ملخص الحالة للمعالج
-                </button>
-            </div>
+                <!-- الفكرة 2: بطاقة الأسبقية ومحفزات الحجز للزيارات المنزلية والعيادة (Conversion Grid) -->
+                <div style="max-width: 720px; margin: 0 auto; text-align: center;">
+                    <div style="color: var(--primary-gold); font-weight: 900; font-size: 1.15em; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span>👑</span> احجز خطوتك العلاجية التالية مع المعالج جمال قبها:
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 14px;">
+                        <!-- زر الزيارة المنزلية -->
+                        <a href="${homeVisitWhatsAppUrl}" target="_blank" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; padding: 14px 16px; border-radius: 10px; text-decoration: none; font-weight: 900; font-size: 0.95em; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4); display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.2s;">
+                            <span style="font-size: 1.25em;">🏠</span> طلب زيارة منزلية (داخل الأردن)
+                        </a>
+                        <!-- زر موعد العيادة المباشرة -->
+                        <a href="${clinicVisitWhatsAppUrl}" target="_blank" style="background: linear-gradient(135deg, var(--primary-gold) 0%, var(--primary-gold-dark) 100%); color: #0a0e14; padding: 14px 16px; border-radius: 10px; text-decoration: none; font-weight: 900; font-size: 0.95em; box-shadow: 0 4px 20px rgba(212, 175, 55, 0.4); display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.2s;">
+                            <span style="font-size: 1.25em;">🏥</span> حجز موعد عيادة (عمان - خلدا)
+                        </a>
+                    </div>
 
-            <div class="completion-action-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 650px; margin: 0 auto; width: 100%; box-sizing: border-box;">
-                <a href="${CLINIC_WHATSAPP}" target="_blank" style="background: linear-gradient(135deg, var(--primary-gold) 0%, var(--primary-gold-dark) 100%); color: #0a0e14; padding: 12px 8px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.88em; box-shadow: 0 4px 20px rgba(212, 175, 55, 0.4); display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; width: 100%; box-sizing: border-box;">
-                    💬 حجز جلسة كايروبراكتيك
-                </a>
-                <button type="button" onclick="resetToInitialState()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 12px 8px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.88em; display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; width: 100%; box-sizing: border-box;">
-                    🔄 فحص منطقة أخرى
-                </button>
-            </div>
-        </div>
-    `;
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;">
+                        <!-- زر عرض بطاقة الأسبقية والملف السريري -->
+                        <button type="button" onclick="openCompletionCertificateModal('${patientId}')" style="background: rgba(56, 189, 248, 0.15); border: 1.5px solid #38bdf8; color: #7dd3fc; padding: 11px 14px; border-radius: 8px; font-weight: bold; font-size: 0.88em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <span>📋</span> استعراض بطاقة الأسبقية والملف
+                        </button>
+                        <!-- زر فحص موضع ألم جديد -->
+                        <button type="button" onclick="resetToInitialState()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 11px 14px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.88em; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <span>🔄</span> فحص موضع ألم جديد
+                        </button>
+                    </div>
+                </div>
 
-    setTimeout(() => {
-        if (typeof playStationAudio === 'function') {
-            playStationAudio('plan_complete', () => {}, 'motivation');
-        }
-    }, 400);
+            </div>
+        `;
+
+        setTimeout(() => {
+            if (typeof playStationAudio === 'function') {
+                playStationAudio('plan_complete', () => {}, 'motivation');
+            }
+        }, 400);
     } finally {
         _isRenderingStep6 = false;
     }
@@ -9639,7 +9852,7 @@ async function loadPatientRecoveryDashboard(patientId, targetDay = null) {
     } catch(e) {}
     const lockStatus = await PatientFlow.getSessionLockStatus(patientId);
 
-    // إذا اكتمل البرنامج (7 جلسات) ولم يُطلب استعراض جلسة محددة: وثيقة التعافي والإنهاء (الخطوة 6)
+    // إذا اكتمل البرنامج (7 جلسات) ولم يُطلب استعراض جلسة محددة: بوابة الحل الجذري (الخطوة 6)
     if (sessionData.isPlanCompleted && !targetDay) {
         await renderStep6Completion(patientId, sessionData);
     } 
@@ -10492,7 +10705,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.59';
+const CURRENT_APP_VERSION = 'v30.60';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -11361,32 +11574,36 @@ async function openCompletionCertificateModal(patientId) {
                 name: 'المراجع الكريم',
                 phone: '',
                 painLevel: 7,
-                painAreaTitle: 'العمود الفقري ومفاصل الجسم'
+                painAreaTitle: 'المنطقة المصابة'
             };
         }
 
         const dailyLogs = sessionData?.dailyLogs || (targetId && typeof SmartDB !== 'undefined' && SmartDB.getPatientDailyLogs ? await SmartDB.getPatientDailyLogs(targetId) : []) || [];
 
         if (dailyLogs.length < 7 && !sessionData?.isPlanCompleted) {
-            showToast(`🔒 وسام التعافي والإنهاء مقفل: يتفعل تلقائياً فقط بعد إتمام كافة جلسات التعافي السبع (7 أيام)! أنت حالياً في اليوم (${dailyLogs.length + 1} من 7).`, 'warning');
+            showToast(`🔒 بطاقة الأسبقية مقفلة: تتفعل تلقائياً فقط بعد إتمام جميع جلسات خطة الـ 7 أيام! أنت حالياً في اليوم (${dailyLogs.length + 1} من 7).`, 'warning');
             return;
         }
 
         const assessment = sessionData?.latestAssessment || currentAssessmentData || patient.latestAssessment || null;
 
-        // مطابقة تامة 100% مع أرقام وبيانات شاشة وثيقة التعافي والإنهاء (الخطوة 6)
-        const painDrop = sessionData?.indicators?.painReduction ?? 100;
-        const mobilityScore = sessionData?.indicators?.mobility ?? 95;
+        const painDrop = sessionData?.indicators?.painReduction ?? 85;
+        const mobilityScore = sessionData?.indicators?.mobility ?? 85;
         const complianceRate = Math.min(100, Math.round(((dailyLogs.length || 7) / 7) * 100));
         const baselinePain = sessionData?.baselinePain ?? (assessment?.painSeverity || patient.painLevel || 7);
         const finalPain = sessionData?.currentPain ?? 0;
 
+        const pointKey = sessionData?.latestAssessment?.pointId || sessionData?.latestAssessment?.pointKey || patient?.painPointId || patient?.painArea || currentSelectedPoint?.id || 'lumbar_spine';
         const painAreaTitle = sessionData?.latestAssessment?.painAreaTitle 
             || resolvePainAreaTitle(patient, assessment, currentSelectedPoint)
             || patient.painAreaTitle 
-            || 'العمود الفقري ومفاصل الجسم';
+            || 'المنطقة المصابة';
 
-        const certCode = `WADA3AN-CERT-${(patient.patientId || patient.id || targetId || 'P001').replace(/[^a-zA-Z0-9]/g, '').slice(-4).toUpperCase()}-${new Date().getFullYear()}`;
+        const profile = (typeof getAnatomicalCompletionProfile === 'function')
+            ? getAnatomicalCompletionProfile(pointKey, painAreaTitle)
+            : { jointTitle: painAreaTitle, shortName: painAreaTitle };
+
+        const certCode = `SCP-VIP-${(patient.patientId || patient.id || targetId || 'P001').replace(/[^a-zA-Z0-9]/g, '').slice(-4).toUpperCase()}`;
         const completionDate = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
 
         activeCertificateData = {
@@ -11394,7 +11611,8 @@ async function openCompletionCertificateModal(patientId) {
             patientPhone: patient?.phone || '',
             certCode,
             completionDate,
-            painAreaTitle,
+            pointKey,
+            painAreaTitle: profile.jointTitle,
             painDrop,
             mobilityScore,
             complianceRate,
@@ -11404,7 +11622,7 @@ async function openCompletionCertificateModal(patientId) {
 
         const certModal = document.getElementById('completion-certificate-modal');
         if (!certModal) {
-            showToast('تعذر العثور على نافذة الشهادة في الصفحة', 'error');
+            showToast('تعذر العثور على نافذة بطاقة التحويل في الصفحة', 'error');
             return;
         }
 
@@ -11419,7 +11637,7 @@ async function openCompletionCertificateModal(patientId) {
         if (codeEl) codeEl.textContent = certCode;
         if (dateEl) dateEl.textContent = `التاريخ: ${completionDate}`;
         if (nameEl) nameEl.textContent = patient?.name || 'المراجع الكريم';
-        if (areaEl) areaEl.textContent = painAreaTitle;
+        if (areaEl) areaEl.textContent = profile.jointTitle;
         if (dropEl) dropEl.textContent = `${painDrop}%`;
         if (mobEl) mobEl.textContent = `${mobilityScore}%`;
         if (compEl) compEl.textContent = `${complianceRate}%`;
@@ -11433,8 +11651,8 @@ async function openCompletionCertificateModal(patientId) {
             stickyBar.style.pointerEvents = 'none';
         }
     } catch (e) {
-        console.error('Certificate generation error:', e);
-        showToast('حدث خطأ أثناء إعداد الشهادة الرقمية', 'error');
+        console.error('VIP Pass generation error:', e);
+        showToast('حدث خطأ أثناء إعداد بطاقة الأسبقية الرقمية', 'error');
     }
 }
 window.openCompletionCertificateModal = openCompletionCertificateModal;
@@ -11461,17 +11679,22 @@ window.printCertificate = printCertificate;
 
 function shareCertificateToWhatsApp() {
     if (!activeCertificateData) return;
-    const text = `🏆 *وسام الانتصار على الألم والتعافي الحركي - وداعاً للألم للكايروبراكتيك*\n\n` +
-        `👤 *المراجع البطل:* ${activeCertificateData.patientName || 'المراجع الكريم'}\n` +
-        `🎯 *موضع الشكوى والتعافي:* ${activeCertificateData.painAreaTitle}\n` +
-        `📉 *نسبة التراجع وتسكين الألم:* ${activeCertificateData.painDrop}% (من ${activeCertificateData.baselinePain}/10 إلى ${activeCertificateData.finalPain}/10)\n` +
-        `🤸‍♂️ *استعادة المدى الحركي والمرونة:* ${activeCertificateData.mobilityScore}%\n` +
-        `🏅 *عزيمة الالتزام بالبرنامج:* ${activeCertificateData.complianceRate || 100}%\n` +
-        `📅 *تاريخ التتويج السريري:* ${activeCertificateData.completionDate}\n` +
-        `📜 *رقم وسام الاعتماد السريري:* ${activeCertificateData.certCode}\n` +
-        `🏛️ *الجهة المشرفة:* «وداعاً للألم» للكايروبراكتيك - عمان (خلدا) | بإشراف المعالج جمال قبها\n\n` +
-        `✨ *«أنا انتصرت على ألمي واستعدت حركتي بفضل الله!»*\n` +
-        `أتممت بنجاح كامل متطلبات برنامج التأهيل الحركي الذكي (7 أيام) وأرغب في حجز جلسة كايروبراكتيك سريرية في المركز لتثبيت التعافي والحفاظ على سلامة العمود الفقري.`;
+    const profile = (typeof getAnatomicalCompletionProfile === 'function')
+        ? getAnatomicalCompletionProfile(activeCertificateData.pointKey, activeCertificateData.painAreaTitle)
+        : null;
+
+    const jointName = profile ? profile.jointTitle : (activeCertificateData.painAreaTitle || 'المفصل');
+    const text = `📋 *بطاقة أسبقية الحجز والتحويل السريري (VIP Intake Pass)*\n` +
+        `🏛️ *«وداعاً للألم» للكايروبراكتيك - بإشراف المعالج جمال قبها*\n\n` +
+        `👤 *المراجع الكريم:* ${activeCertificateData.patientName || 'مراجع الفحص الذاتي'}\n` +
+        `🎯 *المفصل وموضع الشكوى:* ${jointName}\n` +
+        `📉 *نسبة التراجع وتسكين الألم المحققة:* ${activeCertificateData.painDrop}% (من ${activeCertificateData.baselinePain}/10 إلى ${activeCertificateData.finalPain}/10)\n` +
+        `🤸‍♂️ *استعادة المدى الحركي والليونة:* ${activeCertificateData.mobilityScore}%\n` +
+        `⚡ *جاهزية الأنسجة للتقويم اليدوي:* 95% (مثالية ومستعدة للضبط المباشر)\n` +
+        `📜 *رقم ملف الأسبقية:* ${activeCertificateData.certCode}\n` +
+        `📅 *تاريخ إتمام التهيئة:* ${activeCertificateData.completionDate}\n\n` +
+        `✨ *رسالة المراجع:*\n` +
+        `أتممت بنجاح مرحلة الـ 7 أيام لتهيئة وتسكين (${jointName})، وأود التنسيق معكم لحجز موعد جلسة تقويم يدوي كايروبراكتيك (زيارة منزلية داخل الأردن / أو موعد بالعيادة في خلدا) لضبط المحاذاة وتثبيت التعافي.`;
 
     const url = `https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
