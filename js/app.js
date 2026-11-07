@@ -10344,7 +10344,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.61';
+const CURRENT_APP_VERSION = 'v30.62';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -14160,11 +14160,9 @@ async function sendChatMessage() {
             };
             window.doDirectTransitionToReport = doTransition;
 
-            // مهلة أمان قصوى 58 ثانية لمنع تعليق الشاشة في حال حجب الصوت من المتصفح
-            setTimeout(doTransition, 58000);
-            playStationAudio('transition', () => {
-                doTransition();
-            });
+            // انتقال فوري وسلس خلال 1.2 ثانية دون أي تعليق أو انتظار لملفات الصوت الطويلة
+            setTimeout(doTransition, 1200);
+            try { playStationAudio('transition'); } catch (e) {}
             return;
 
         } else {
@@ -14354,9 +14352,7 @@ async function sendChatMessage() {
             if (typeof Wada3anAiEngine !== 'undefined') {
                 Wada3anAiEngine.stopSpeaking();
             }
-            playStationAudio('transition', () => {
-                finishChatIntakeAndGenerateReport();
-            });
+            finishChatIntakeAndGenerateReport();
         };
         window.doDirectTransitionToReport = executeTransition;
 
@@ -14400,12 +14396,12 @@ async function sendChatMessage() {
             setTimeout(() => {
                 clearInterval(checkSpeakingInterval);
                 if (!transitionExecuted) executeTransition();
-            }, 10000);
+            }, 2500);
         } else {
-            // إذا لم يكن الصوت مفعلاً، نترك مهلة مناسبة (7 ثوانٍ) للمراجع لقراءة الخاتمة والنقر على الزر بنفسه
+            // تحويل تلقائي سريع خلال 1.5 ثانية دون تعليق
             setTimeout(() => {
                 if (!transitionExecuted) executeTransition();
-            }, 7000);
+            }, 1500);
         }
         return;
     }
@@ -14857,11 +14853,11 @@ async function stopAndSendVoiceNote() {
         renderChatQuickReplies(result.quickReplies);
 
 
-        // حارس رقم الهاتف الإلزامي: يمنع التحويل للتشخيص في الرسائل الصوتية دون رقم هاتف صحيح
+        // حارس رقم الهاتف الإلزامي: التحويل الفوري للتقرير بعد اكتمال الرسائل الصوتية
         if (clinicalDialogueState.step === 'completed' && isValidPhoneNumber(clinicalDialogueState.patientPhone)) {
-            playStationAudio('transition', () => {
+            setTimeout(() => {
                 finishChatIntakeAndGenerateReport();
-            });
+            }, 1200);
         }
     }
 }
