@@ -2143,6 +2143,7 @@ async function runDiagnosticAnalysis() {
         try {
             if (currentAssessmentData) {
                 displayDiagnosticReport(currentAssessmentData);
+                goToStep(3);
             }
         } catch (subErr) {}
     } finally {
@@ -6096,6 +6097,159 @@ function renderPreReportPaywallGate(data, reportContainer) {
     }
 }
 window.renderPreReportPaywallGate = renderPreReportPaywallGate;
+
+// =========================================================================
+// دوال إدارة وتوثيق فتح الفحص والمراقبة الحية لبوابة الاشتراك
+// =========================================================================
+function markCurrentExamAndPatientUnlocked(unlockMeta = {}) {
+    const cfg = getActivePaymentGateConfig();
+    const pendingReq = getPendingUnlockRequest();
+    const pId = unlockMeta.patientId || pendingReq?.patientId || (typeof activePatient !== 'undefined' && activePatient?.patientId) || (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.patientId) || localStorage.getItem('smart_current_patient_id') || ('P-' + Date.now().toString().slice(-6));
+    const subName = unlockMeta.subscriberName || pendingReq?.subscriberName || (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || 'مشترك معتمد';
+    const subPhone = unlockMeta.subscriberPhone || pendingReq?.subscriberPhone || (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') || '';
+    const rawType = unlockMeta.unlockType || pendingReq?.requestType || 'paid_orange_wallet';
+    const priceVal = Number(cfg.priceJod ?? 3);
+    const isOrangePaid = (rawType === 'paid_orange_wallet' || rawType === 'orange_money');
+    const isHumanitarian = (rawType === 'humanitarian' || rawType === 'humanitarian_waiver');
+    const resolvedPayStatus = isOrangePaid
+        ? `مدفوع محفظة أورانج (${priceVal} د.أ)`
+        : (isHumanitarian ? 'إعفاء إنساني معتمد (صدقة جارية)' : 'مفعل بكود معتمد');
+    const resolvedAmountPaid = unlockMeta.amountPaid != null ? unlockMeta.amountPaid : (isOrangePaid ? priceVal : 0);
+
+    const curExamId = getCurrentExamGateId();
+
+    try {
+        savePendingUnlockRequest(null);
+        sessionStorage.setItem('scp_current_exam_paid_unlocked', 'true');
+        if (curExamId) {
+            localStorage.setItem('smart_paid_v2_exam_' + curExamId, 'true');
+        }
+        localStorage.setItem('smart_paid_v2_unlocked_' + pId, 'true');
+        localStorage.setItem('smart_paid_unlocked_' + pId, 'true');
+        localStorage.setItem('smart_paid_plan_type', rawType);
+        if (subPhone && subPhone.replace(/\D/g, '').length >= 7) {
+            localStorage.setItem('smart_paid_phone_' + subPhone.replace(/\D/g, '').slice(-9), 'true');
+        }
+        localStorage.setItem('smart_paid_meta_' + pId, JSON.stringify({
+            unlockedAt: new Date().toISOString(),
+            unlockType: rawType,
+            paymentStatus: resolvedPayStatus,
+            subscriberName: subName,
+            subscriberPhone: subPhone,
+            transferRef: unlockMeta.transferRef || pendingReq?.transferRef || '',
+            amountPaid: resolvedAmountPaid,
+            walletPhone: cfg.walletPhone
+        }));
+    } catch (e) {}
+
+    window._activeExamPaidUnlocked = true;
+    window._activeExamPaidId = curExamId;
+
+    if (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) {
+        if (subName && subName !== 'مشترك معتمد') currentAssessmentData.patientName = subName;
+        if (subPhone) currentAssessmentData.patientPhone = subPhone;
+        currentAssessmentData.isPaidUnlocked = true;
+        currentAssessmentData.paymentType = rawType;
+        currentAssessmentData.paymentStatus = resolvedPayStatus;
+        currentAssessmentData.amountPaid = resolvedAmountPaid;
+        try { localStorage.setItem('smart_current_assessment', JSON.stringify(currentAssessmentData)); } catch (e) {}
+    }
+
+    if (typeof activePatient !== 'undefined' && activePatient) {
+        if (subName && subName !== 'مشترك معتمد') {
+            activePatient.name = subName;
+            activePatient.fullName = subName;
+        }
+        if (subPhone) activePatient.phone = subPhone;
+        activePatient.isPaidUnlocked = true;
+        activePatient.paymentType = rawType;
+        activePatient.paymentStatus = resolvedPayStatus;
+        activePatient.amountPaid = resolvedAmountPaid;
+        activePatient.paidUnlockedAt = new Date().toISOString();
+        try {
+            localStorage.setItem('smart_active_patient', JSON.stringify(activePatient));
+            if (typeof SmartDB !== 'undefined' && typeof SmartDB.savePatient === 'function') {
+                SmartDB.savePatient(activePatient).catch(() => {});
+            }
+        } catch (e) {}
+    }
+}
+window.markCurrentExamAndPatientUnlocked = markCurrentExamAndPatientUnlocked;
+
+let _pendingUnlockWatcherTimer = null;
+function stopPendingUnlockLiveWatcher() {
+    if (_pendingUnlockWatcherTimer) {
+        clearInterval(_pendingUnlockWatcherTimer);
+        _pendingUnlockWatcherTimer = null;
+    }
+}
+window.stopPendingUnlockLiveWatcher = stopPendingUnlockLiveWatcher;
+
+function completePreReportUnlockAndRevealReport(unlockMeta = {}) {
+    stopPendingUnlockLiveWatcher();
+    markCurrentExamAndPatientUnlocked(unlockMeta);
+    const assessData = (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) || window.currentAssessmentData || {};
+    window._forceRerenderPaywallGate = true;
+    displayDiagnosticReport(assessData);
+    setTimeout(() => {
+        const reportEl = document.getElementById('clinical-report-container');
+        if (reportEl) {
+            reportEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        if (typeof showToast === 'function') {
+            showToast('👑 تم اعتماد تفعيل باقتك وفتح التقرير الطبي الكامل وخطة الـ 7 أيام بنجاح!', 'success');
+        }
+        if (typeof playStationAudio === 'function') {
+            setTimeout(() => { playStationAudio('diagnosis_guide'); }, 350);
+        }
+    }, 120);
+}
+window.completePreReportUnlockAndRevealReport = completePreReportUnlockAndRevealReport;
+
+function startPendingUnlockLiveWatcher() {
+    stopPendingUnlockLiveWatcher();
+    let tickCount = 0;
+    _pendingUnlockWatcherTimer = setInterval(async () => {
+        try {
+            const gateWrapper = document.getElementById('pre-report-subscription-gate-wrapper');
+            if (!gateWrapper) {
+                stopPendingUnlockLiveWatcher();
+                return;
+            }
+            if (isCurrentPatientPlanUnlocked()) {
+                completePreReportUnlockAndRevealReport({});
+                return;
+            }
+            tickCount++;
+            if (tickCount % 2 === 0 && window.SmartCloudSync && typeof window.SmartCloudSync.fetchCloudPatients === 'function') {
+                const cloudPts = await window.SmartCloudSync.fetchCloudPatients();
+                const pendingReq = getPendingUnlockRequest();
+                const myId = pendingReq?.patientId || (typeof activePatient !== 'undefined' && activePatient?.patientId) || localStorage.getItem('smart_current_patient_id') || '';
+                const myPhone = String(pendingReq?.subscriberPhone || (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') || localStorage.getItem('smart_patient_phone') || '').replace(/\D/g, '');
+                if (Array.isArray(cloudPts)) {
+                    const matched = cloudPts.find(pt => {
+                        if (!pt || !pt.isPaidUnlocked) return false;
+                        const ptId = pt.patientId || pt.id || '';
+                        const ptPhone = String(pt.phone || '').replace(/\D/g, '');
+                        return (myId && ptId === myId) || (myPhone.length >= 7 && ptPhone.length >= 7 && ptPhone.slice(-9) === myPhone.slice(-9));
+                    });
+                    if (matched) {
+                        completePreReportUnlockAndRevealReport({
+                            patientId: matched.patientId || matched.id || myId,
+                            subscriberName: matched.fullName || matched.name,
+                            subscriberPhone: matched.phone || myPhone,
+                            unlockType: matched.paymentType || pendingReq?.requestType || 'paid_orange_wallet',
+                            amountPaid: matched.amountPaid
+                        });
+                    }
+                }
+            }
+        } catch (e) {}
+    }, 3000);
+}
+window.startPendingUnlockLiveWatcher = startPendingUnlockLiveWatcher;
 
 function copyOrangeWalletNumber(walletNum = '0795651388') {
     try {
@@ -10367,7 +10521,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.63';
+const CURRENT_APP_VERSION = 'v30.64';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -14181,7 +14335,11 @@ async function sendChatMessage() {
                 if (typeof Wada3anAiEngine !== 'undefined') Wada3anAiEngine.stopSpeaking();
                 finishChatIntakeAndGenerateReport();
             };
-            window.doDirectTransitionToReport = doTransition;
+            window.doDirectTransitionToReport = () => {
+                window._isDialogueConcluding = false;
+                if (typeof Wada3anAiEngine !== 'undefined') Wada3anAiEngine.stopSpeaking();
+                finishChatIntakeAndGenerateReport();
+            };
 
             // انتقال فوري وسلس خلال 1.2 ثانية دون أي تعليق أو انتظار لملفات الصوت الطويلة
             setTimeout(doTransition, 1200);
