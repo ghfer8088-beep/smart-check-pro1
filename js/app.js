@@ -5492,6 +5492,42 @@ function getCurrentExamGateId() {
 }
 window.getCurrentExamGateId = getCurrentExamGateId;
 
+// استرجاع وحفظ طلبات التفعيل المعلقة (محفظة أورانج أو إعفاء إنساني)
+function getPendingUnlockRequest() {
+    try {
+        const examId = getCurrentExamGateId();
+        const raw = (examId ? localStorage.getItem('smart_pending_req_' + examId) : null)
+            || localStorage.getItem('smart_pending_req_latest');
+        if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return null;
+}
+window.getPendingUnlockRequest = getPendingUnlockRequest;
+
+function savePendingUnlockRequest(reqObj) {
+    try {
+        const examId = getCurrentExamGateId();
+        if (!reqObj) {
+            if (examId) localStorage.removeItem('smart_pending_req_' + examId);
+            localStorage.removeItem('smart_pending_req_latest');
+            return;
+        }
+        const payload = Object.assign({ examId, requestedAt: new Date().toISOString() }, reqObj);
+        if (examId) localStorage.setItem('smart_pending_req_' + examId, JSON.stringify(payload));
+        localStorage.setItem('smart_pending_req_latest', JSON.stringify(payload));
+    } catch (e) {}
+}
+window.savePendingUnlockRequest = savePendingUnlockRequest;
+
+function showRoyalPaymentToast(msg, type = 'info') {
+    if (typeof showToast === 'function') {
+        showToast(msg, type);
+    } else {
+        alert(msg);
+    }
+}
+window.showRoyalPaymentToast = showRoyalPaymentToast;
+
 // الفحص الحالي مفتوح: التحقق الشامل من جلسة الفحص الحالية، التقييم، الكود المعتمد، أو رصيد الباقة
 function isCurrentPatientPlanUnlocked(pId, pPhone) {
     const cfg = getActivePaymentGateConfig();
@@ -10521,7 +10557,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.64';
+const CURRENT_APP_VERSION = 'v30.65';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
