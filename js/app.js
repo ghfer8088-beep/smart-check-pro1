@@ -5478,6 +5478,19 @@ function savePkgWallet(w) {
     } catch (e) {}
 }
 
+// استرجاع معرّف الفحص الحالي من التخزين المحلي أو الجلسة
+function getCurrentExamGateId() {
+    try {
+        return sessionStorage.getItem('scp_current_exam_id')
+            || localStorage.getItem('smart_current_exam_id')
+            || (typeof currentAssessmentData !== 'undefined' && currentAssessmentData && currentAssessmentData.examId)
+            || null;
+    } catch (e) {
+        return null;
+    }
+}
+window.getCurrentExamGateId = getCurrentExamGateId;
+
 // الفحص الحالي مفتوح: التحقق الشامل من جلسة الفحص الحالية، التقييم، الكود المعتمد، أو رصيد الباقة
 function isCurrentPatientPlanUnlocked(pId, pPhone) {
     const cfg = getActivePaymentGateConfig();
@@ -6191,20 +6204,25 @@ async function submitOrangeWalletPaymentNotification() {
     const refInput = document.getElementById('pay-transfer-ref');
     const msgEl = document.getElementById('paywall-status-feedback');
 
-    const subName = (nameInput?.value || '').trim();
+    let subName = (nameInput?.value || '').trim();
     const subPhone = (phoneInput?.value || '').trim();
     const transferRef = (refInput?.value || '').trim();
 
     if (!subName || subName.length < 3) {
-        if (msgEl) {
-            msgEl.style.display = 'block';
-            msgEl.style.background = 'rgba(239, 68, 68, 0.18)';
-            msgEl.style.border = '1px solid #ef4444';
-            msgEl.style.color = '#fca5a5';
-            msgEl.innerHTML = '⚠️ يرجى إدخال <strong>الاسم الثلاثي للمشترك / المحوّل</strong> لمطابقة الحوالة المالية بدقة.';
+        const cleanPhone = subPhone.replace(/\D/g, '');
+        if (cleanPhone.length >= 7) {
+            subName = `مراجع (${cleanPhone.slice(-4)})`;
+        } else {
+            if (msgEl) {
+                msgEl.style.display = 'block';
+                msgEl.style.background = 'rgba(239, 68, 68, 0.18)';
+                msgEl.style.border = '1px solid #ef4444';
+                msgEl.style.color = '#fca5a5';
+                msgEl.innerHTML = '⚠️ يرجى إدخال <strong>الاسم</strong> أو <strong>رقم الهاتف</strong> على الأقل.';
+            }
+            nameInput?.focus();
+            return;
         }
-        nameInput?.focus();
-        return;
     }
 
     const cleanPhoneDigits = subPhone.replace(/\D/g, '');
@@ -6389,20 +6407,25 @@ async function submitHumanitarianFreeActivation() {
     const oathLabelBox = document.getElementById('hum-oath-box-label');
     const msgEl = document.getElementById('paywall-status-feedback');
 
-    const subName = (nameInput?.value || '').trim();
+    let subName = (nameInput?.value || '').trim();
     const subPhone = (phoneInput?.value || '').trim();
 
     if (!subName || subName.length < 3) {
-        if (msgEl) {
-            msgEl.style.display = 'block';
-            msgEl.style.background = 'rgba(239, 68, 68, 0.18)';
-            msgEl.style.border = '1px solid #ef4444';
-            msgEl.style.color = '#fca5a5';
-            msgEl.innerHTML = '⚠️ يرجى كتابة <strong>اسمك الثلاثي الكريم</strong> لرفع طلب الإعفاء للإدارة.';
+        const cleanPhone = subPhone.replace(/\D/g, '');
+        if (cleanPhone.length >= 7) {
+            subName = `مراجع (${cleanPhone.slice(-4)})`;
+        } else {
+            if (msgEl) {
+                msgEl.style.display = 'block';
+                msgEl.style.background = 'rgba(239, 68, 68, 0.18)';
+                msgEl.style.border = '1px solid #ef4444';
+                msgEl.style.color = '#fca5a5';
+                msgEl.innerHTML = '⚠️ يرجى كتابة <strong>اسمك الكريم</strong> أو <strong>رقم هاتفك</strong> لرفع طلب الإعفاء.';
+            }
+            showRoyalPaymentToast('⚠️ يرجى كتابة اسمك الكريم أولاً.', 'warning');
+            nameInput?.focus();
+            return;
         }
-        showRoyalPaymentToast('⚠️ يرجى كتابة اسمك الثلاثي الكريم أولاً.', 'warning');
-        nameInput?.focus();
-        return;
     }
 
     const cleanPhoneDigits = subPhone.replace(/\D/g, '');
@@ -10344,7 +10367,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.62';
+const CURRENT_APP_VERSION = 'v30.63';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
