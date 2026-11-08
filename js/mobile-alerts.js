@@ -1,5 +1,5 @@
 /**
- * SmartMobileAlerts (v30.58)
+ * SmartMobileAlerts (v30.66)
  * =========================================================================
  * منظومة إشعارات الموبايل الفورية الخاصة بالطبيب / الإدارة
  * ترسل تنبيهاً فورياً مع رنة واهتزاز إلى هاتف الطبيب لكل مشترك جديد أو طلب كود
@@ -144,7 +144,7 @@ const SmartMobileAlerts = (function() {
 
     const SENT_ALERTS_KEY = 'smart_sent_push_alerts_v2';
     const _inFlightKeys = new Set();
-    const DEDUPE_TTL_MS = 6 * 60 * 60 * 1000; // منع كامل لأي تكرار لنفس المريض والطلب لمدة 6 ساعات
+    const DEDUPE_TTL_MS = 15 * 1000; // 15 ثانية لمنع النقر المزدوج المتتالي فقط والسماح بالتجربة وإعادة الطلب فوراً
 
     // التحقق الصارم ومنع تكرار الإشعار عبر التخزين الدائم (localStorage) وقفل التزامن اللحظي
     function isDuplicateAlert(key) {
@@ -164,22 +164,22 @@ const SmartMobileAlerts = (function() {
             const now = Date.now();
             const lastSent = alerts[key];
 
-            // إذا أُرسل إشعار لنفس المريض والطلب قبل أقل من 6 ساعات، يتم إيقافه فوراً
+            // إذا أُرسل إشعار لنفس المريض والطلب قبل أقل من 15 ثانية، يتم منعه منعاً للنقر المزدوج
             if (lastSent && (now - lastSent) < DEDUPE_TTL_MS) {
                 console.log(`[MobileAlerts] Duplicate alert suppressed (already sent ${(now - lastSent) / 1000}s ago):`, key);
                 return true;
             }
 
-            // قفل لحظي لمدة 15 ثانية لمنع النقر المتعدد أو التزامن المزدوج
+            // قفل لحظي لمدة 10 ثوانٍ لمنع النقر المتعدد أو التزامن المزدوج
             _inFlightKeys.add(key);
-            setTimeout(() => _inFlightKeys.delete(key), 15000);
+            setTimeout(() => _inFlightKeys.delete(key), 10000);
 
             // تسجيل وقت الإرسال وحفظه في التخزين الدائم
             alerts[key] = now;
 
-            // تنظيف السجلات القديمة أكثر من 24 ساعة
+            // تنظيف السجلات القديمة أكثر من ساعة واحدة
             Object.keys(alerts).forEach(k => {
-                if (now - alerts[k] > 24 * 60 * 60 * 1000) delete alerts[k];
+                if (now - alerts[k] > 60 * 60 * 1000) delete alerts[k];
             });
 
             if (typeof localStorage !== 'undefined') {
@@ -191,13 +191,12 @@ const SmartMobileAlerts = (function() {
         }
     }
 
-    // إرسال تنبيه Push لهاتف الطبيب
+    // إرسال تنبيه Push لهاتف الطبيب عبر كافة القنوات المعتمدة لضمان الوصول 100%
     async function sendPushToPhone(alertData) {
         if (!alertData) return { success: false, reason: 'empty_data' };
         const cfg = getConfig();
         if (!cfg.enabled) return { success: false, reason: 'disabled' };
 
-        const topic = cfg.topic || DEFAULT_TOPIC;
         const title = alertData.title || '🔔 مشترك جديد بانتظار الكود';
         const message = alertData.message || '';
         const priority = alertData.priority || 5; // 5 = Urgent (صوت واهتزاز عالي)
@@ -207,25 +206,34 @@ const SmartMobileAlerts = (function() {
             { action: 'view', label: '🖥️ لوحة الإدارة', url: clickUrl }
         ];
 
-        try {
-            fetch('https://ntfy.sh', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    topic: topic,
-                    title: title,
-                    message: message,
-                    priority: priority,
-                    tags: tags,
-                    click: clickUrl,
-                    actions: actions
-                })
-            }).then(r => r.json()).then(res => {
-                console.log('[MobileAlerts] Push notification delivered via NTFY:', res?.id || 'OK');
-            }).catch(err => {
-                console.warn('[MobileAlerts] Push error:', err);
-            });
-        } catch(e) {}
+        // قائمة القنوات المعتمدة لضمان وصول الإشعار مهما كانت قناة الهاتف المشترك بها
+        const targetTopics = Array.from(new Set([
+            cfg.topic,
+            DEFAULT_TOPIC,
+            'smartcheckpro_updates'
+        ].filter(Boolean)));
+
+        targetTopics.forEach(topic => {
+            try {
+                fetch('https://ntfy.sh', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        topic: topic,
+                        title: title,
+                        message: message,
+                        priority: priority,
+                        tags: tags,
+                        click: clickUrl,
+                        actions: actions
+                    })
+                }).then(r => r.json()).then(res => {
+                    console.log(`[MobileAlerts] Push notification delivered via NTFY [${topic}]:`, res?.id || 'OK');
+                }).catch(err => {
+                    console.warn(`[MobileAlerts] Push error [${topic}]:`, err);
+                });
+            } catch(e) {}
+        });
 
         // إشعار المتصفح الأصلي (Native Web Notification)
         try {
@@ -238,7 +246,7 @@ const SmartMobileAlerts = (function() {
             }
         } catch(e) {}
 
-        return { success: true, topic };
+        return { success: true, topics: targetTopics };
     }
 
     // إرسال تنبيه مشترك جديد يطلب كود التفعيل (دفع باقة أو إعفاء إنساني فقط!)
