@@ -5885,7 +5885,7 @@ window.selectPaywallPackage = selectPaywallPackage;
 function renderRoyalPendingApprovalCardHTML(pendingReq, cfg) {
     const isHum = pendingReq.requestType === 'humanitarian';
     const pkg = pendingReq.packageSize || 1;
-    const what = isHum ? 'طلب التفعيل لوجه الله (غير مقتدر)' : (pkg > 1 ? 'اشتراك باقة ' + pkg + ' تشخيصات' : 'اشتراك تشخيص واحد');
+    const what = isHum ? 'طلب الاستفادة من مبادرة الرعاية الإنسانية' : (pkg > 1 ? 'اشتراك باقة ' + pkg + ' تشخيصات' : 'اشتراك تشخيص واحد');
     return `
         <div id="recovery-plan-master-card" class="recovery-plan-distinct-card no-print" style="max-width: 920px; margin: 0 auto 28px auto; padding: 28px 22px; background: radial-gradient(circle at top, rgba(212,175,55,0.14) 0%, rgba(8,13,25,0.98) 65%); border: 2.5px solid ${isHum ? '#10b981' : '#d4af37'}; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.85); text-align: center;">
             <div style="color: #6ee7b7; font-weight: 900; font-size: 1.25em; margin-bottom: 6px;">✅ تم إرسال ${what} بنجاح إلى الإدارة</div>
@@ -6028,7 +6028,7 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
                 </button>
                 ${cfg.allowHumanitarian !== false ? `
                 <button type="button" id="paywall-tab-btn-humanitarian" onclick="switchPaywallOptionTab('humanitarian')" style="flex: 1.1 1 130px; background: rgba(11,18,32,0.9); color: #cbd5e1; border: 1.5px solid rgba(212,175,55,0.25); padding: 12px 14px; border-radius: 12px; font-weight: 800; font-size: 0.88em; cursor: pointer;">
-                    🤍 إعفاء لوجه الله (للأسر غير المقتدرة)
+                    ❤️ مبادرة الرعاية الإنسانية (مجاناً)
                 </button>` : ''}
             </div>
 
@@ -6138,31 +6138,46 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
                 <div style="color: #94a3b8; font-size: 0.82em;">💡 يتم التعرف تلقائياً على نوع اشتراكك (تشخيص واحد أو باقة) فور إدخال الكود.</div>
             </div>
 
-            <!-- التبويب 3: إعفاء لوجه الله مخصص حصراً للفقراء -->
-            <div id="paywall-pane-humanitarian" style="display: none; background: rgba(5, 9, 18, 0.96); border: 2px solid #10b981; border-radius: 16px; padding: 22px 18px;">
-                <div style="color: #6ee7b7; font-weight: 900; font-size: 1.18em; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 1.3em;">🤍</span>
-                    <span>باقة الإعفاء الإنساني (لوجه الله تعالى — مخصصة حصراً للفقراء وغير المقتدرين)</span>
-                </div>
-                <div style="color: #cbd5e1; font-size: 0.9em; line-height: 1.7; margin-bottom: 16px;">
-                    هذه الخدمة هي <strong>صدقة جارية عن روح والد المعالج جمال قبها رحمه الله</strong>، وُضعت لمساعدة المرضى المحتاجين الذين يعجزون تماماً عن دفع تكلفة الكشف الطبي وخطة التأهيل.
-                </div>
-
-                <!-- صندوق التنبيه الشرعي الصارم والأمانة -->
-                <div style="background: rgba(239, 68, 68, 0.12); border: 2px solid #ef4444; border-radius: 14px; padding: 14px 18px; margin-bottom: 18px;">
-                    <div style="color: #fca5a5; font-weight: 900; font-size: 1.02em; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 1.3em;">⚠️</span>
-                        <span>تنبيه وأمانة شرعية أمام الله تعالى:</span>
+            <!-- التبويب 3: مبادرة الرعاية الإنسانية -->
+            <div id="paywall-pane-humanitarian" style="display: none; background: rgba(5, 9, 18, 0.96); border: 2px solid #10b981; border-radius: 16px; padding: 24px 20px;">
+                
+                <!-- عنوان المبادرة -->
+                <div style="text-align: center; margin-bottom: 16px;">
+                    <div style="color: #f87171; font-weight: 900; font-size: 1.3em; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span style="font-size: 1.2em;">❤️</span>
+                        <span>مبادرة الرعاية الإنسانية</span>
                     </div>
-                    <div style="color: #fed7aa; font-size: 0.9em; line-height: 1.75;">
-                        هذه الباقة <strong>مخصصة حصراً للفقراء والأسر غير المقتدرة مادياً</strong>. نلفت عناية المراجعين الكرام إلى مخافة الله ومراقبته؛ فإن <strong>أي شخص مقتدر مالياً يطلب هذه الباقة ستبقى قيمتها ديناً وأمانة في ذمته أمام الله عز وجل إلى يوم القيامة</strong>.
+                    <div style="color: #fde68a; font-size: 0.95em; font-weight: 700; line-height: 1.5;">
+                        لأن كرامة الإنسان وصحته تستحقان الاهتمام.
                     </div>
                 </div>
 
-                <!-- حقول المشترك -->
+                <!-- وصف المبادرة -->
+                <div style="color: #cbd5e1; font-size: 0.9em; line-height: 1.85; margin-bottom: 18px; text-align: justify;">
+                    هذه المبادرة مخصصة لمساندة الأشخاص الذين تحول ظروفهم المادية دون تحمل تكاليف الرعاية العلاجية، انطلاقاً من إيماننا بأن الظروف المادية لا ينبغي أن تحرم الإنسان من فرصة الاهتمام بصحته.
+                    <br><br>
+                    وقد أُطلقت هذه المبادرة <strong style="color: #6ee7b7;">ابتغاء مرضاة الله تعالى</strong>، ونسأل الله أن يجعلها باب خير ونفع لكل من يحتاج إليها.
+                </div>
+
+                <!-- صندوق تنويه الأمانة -->
+                <div style="background: rgba(234, 179, 8, 0.08); border: 2px solid #d4af37; border-radius: 14px; padding: 16px 18px; margin-bottom: 20px;">
+                    <div style="color: #fde68a; font-weight: 900; font-size: 1.05em; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.3em;">⚖️</span>
+                        <span>تنويه مهم: هذه المبادرة أمانة</span>
+                    </div>
+                    <div style="color: #e2e8f0; font-size: 0.88em; line-height: 1.85; text-align: justify;">
+                        نضع هذه المبادرة بين أيديكم ثقةً بضمائركم، وتذكيراً بأن الأمانة والصدق أساس كل عمل خيري.
+                        <br><br>
+                        نرجو ممن يتقدم للاستفادة من هذه المبادرة أن <strong style="color: #fef08a;">يراعي الله في طلبه</strong>، وألا يتقدم إليها إلا إذا كانت ظروفه المادية تستدعي ذلك فعلاً، فهذه المساعدة وُضعت لتصل إلى من يحتاجها، وهي أمانة نسأل الله أن نؤديها على الوجه الذي يرضيه.
+                        <br><br>
+                        <strong style="color: #fcd34d;">فالله مطّلع على السرائر، والأمانة مسؤولية أمامه قبل أن تكون مسؤولية أمام الناس.</strong>
+                    </div>
+                </div>
+
+                <!-- حقول المستفيد -->
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px;">
                     <div>
-                        <label style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px;">الاسم الكريم للمريض *</label>
+                        <label style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px;">الاسم الكريم للمستفيد *</label>
                         <input type="text" id="hum-subscriber-name" value="${defName}" placeholder="أدخل اسمك الكريم" style="${inp}">
                     </div>
                     <div>
@@ -6171,20 +6186,23 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
                     </div>
                 </div>
 
-                <!-- مربع القسم والإقرار الشرعي -->
-                <label id="hum-oath-box-label" for="hum-oath-checkbox" style="display: flex; align-items: flex-start; gap: 12px; background: rgba(16, 185, 129, 0.12); border: 2px solid #10b981; border-radius: 12px; padding: 14px 16px; margin-bottom: 18px; cursor: pointer; transition: all 0.2s;">
-                    <input type="checkbox" id="hum-oath-checkbox" style="width: 22px; height: 22px; accent-color: #10b981; margin-top: 2px; flex-shrink: 0; cursor: pointer;">
-                    <span style="color: #fef08a; font-weight: 800; font-size: 0.92em; line-height: 1.6;">
-                        أشهد الله تعالى وأقسم بالله العظيم أنني فقير وغير مقتدر مادياً على دفع قيمة الكشف، وأطلب هذا الإعفاء لوجه الله تعالى خالصاً.
-                    </span>
+                <!-- مربع إقرار المستفيد -->
+                <label id="hum-oath-box-label" for="hum-oath-checkbox" style="display: flex; align-items: flex-start; gap: 12px; background: rgba(16, 185, 129, 0.1); border: 2px solid #10b981; border-radius: 14px; padding: 16px 18px; margin-bottom: 20px; cursor: pointer; transition: all 0.2s;">
+                    <input type="checkbox" id="hum-oath-checkbox" style="width: 24px; height: 24px; accent-color: #10b981; margin-top: 2px; flex-shrink: 0; cursor: pointer;">
+                    <div>
+                        <div style="color: #6ee7b7; font-weight: 900; font-size: 0.92em; margin-bottom: 4px;">☑️ إقرار المستفيد</div>
+                        <span style="color: #e2e8f0; font-weight: 600; font-size: 0.88em; line-height: 1.7; display: block;">
+                            أقرّ بأن ظروفي المادية الحالية تحول دون قدرتي على تحمّل تكاليف الرعاية العلاجية، وأن طلبي للاستفادة من هذه المبادرة نابع من حاجتي الفعلية إليها، وأتعهد بالصدق والأمانة فيما قدمته من معلومات، مستشعراً أن هذه المبادرة أمانة وحق لمن يحتاج إليها.
+                        </span>
+                    </div>
                 </label>
 
-                <button type="button" onclick="submitHumanitarianFreeActivation()" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: #ffffff; border: 1.5px solid #6ee7b7; padding: 14px; border-radius: 12px; font-weight: 900; font-size: 1.05em; cursor: pointer; box-shadow: 0 4px 18px rgba(16,185,129,0.35); display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <span>🤲</span> <span>تأكيد القسم وإرسال طلب الإعفاء لوجه الله</span>
+                <button type="button" onclick="submitHumanitarianFreeActivation()" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: #ffffff; border: 1.5px solid #6ee7b7; padding: 15px; border-radius: 14px; font-weight: 900; font-size: 1.08em; cursor: pointer; box-shadow: 0 4px 20px rgba(16,185,129,0.35); display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <span>إرسال طلب الاستفادة من المبادرة</span> <span>❤️</span>
                 </button>
             </div>
 
-            <div id="paywall-status-feedback" style="display: none; margin-top: 14px; padding: 12px 16px; border-radius: 12px; font-size: 0.92em; line-height: 1.5;"></div>
+<div id="paywall-status-feedback" style="display: none; margin-top: 14px; padding: 12px 16px; border-radius: 12px; font-size: 0.92em; line-height: 1.5;"></div>
         </div>
     `;
 }
@@ -6749,7 +6767,7 @@ async function submitHumanitarianFreeActivation() {
             msgEl.style.background = 'rgba(239, 68, 68, 0.22)';
             msgEl.style.border = '1.5px solid #ef4444';
             msgEl.style.color = '#fecaca';
-            msgEl.innerHTML = '⚠️ <strong>تنبيه شرعي:</strong> يرجى وضع علامة (✓) في مربع الإقرار والقسم بأنك غير مقتدر مادياً قبل إرسال الطلب.';
+            msgEl.innerHTML = '⚠️ <strong>تنبيه:</strong> يرجى وضع علامة (✓) في مربع إقرار المستفيد قبل إرسال الطلب.';
         }
         if (oathLabelBox) {
             oathLabelBox.style.borderColor = '#ef4444';
@@ -6760,7 +6778,7 @@ async function submitHumanitarianFreeActivation() {
         return;
     }
 
-    const waiverReason = 'أقسم بالله العظيم بأنه فقير وغير مقتدر، وإن كان مقتدراً فإن قيمتها ستبقى في ذمته وديناً عليه أمام الله إلى يوم القيامة';
+    const waiverReason = 'أقرّ بأن ظروفي المادية تحول دون قدرتي على تحمّل تكاليف الرعاية العلاجية، وأن طلبي نابع من حاجتي الفعلية، وأتعهد بالصدق والأمانة';
 
     try {
         localStorage.setItem('smart_patient_name', subName);
@@ -6788,7 +6806,7 @@ async function submitHumanitarianFreeActivation() {
         justSubmitted: true
     };
     savePendingUnlockRequest(pendingObj);
-    syncPendingPatientRequestToAdmin(pId, subName, subPhone, painArea, '⏳ طلب إعفاء إنساني (لوجه الله) بانتظار موافقة الإدارة', pendingObj);
+    syncPendingPatientRequestToAdmin(pId, subName, subPhone, painArea, '⏳ طلب مبادرة الرعاية الإنسانية بانتظار الاعتماد', pendingObj);
 
     // 🔔 1. إرسال تنبيه فوري لهاتف الطبيب عبر منظومة SmartMobileAlerts
     try {
@@ -6806,14 +6824,14 @@ async function submitHumanitarianFreeActivation() {
     // 🔔 2. بث مباشر ومضمون إلى هاتف الطبيب عبر NTFY للقناتين المعتمدتين مع زر واتساب
     try {
         const cleanDigits = subPhone.replace(/\D/g, '').replace(/^0/, '962');
-        const waDirectMsg = `مرحباً بك أخي/أختي ${subName} 🌸\nعيادة «وداعاً للألم» للكايروبراكتيك.\nتم اعتماد طلب الإعفاء الإنساني لوجه الله تعالى.\n🔑 كود التفعيل المعتمد لفتح تقريرك هو:\n👉 *${unlockPin}* 👈\nنسأل الله لك الشفاء العاجل 🤲`;
+        const waDirectMsg = `مرحباً بك أخي/أختي ${subName} 🌸\nعيادة «وداعاً للألم» للكايروبراكتيك ترحب بك.\nتم اعتماد طلبك في «مبادرة الرعاية الإنسانية» بنجاح.\n🔑 كود التفعيل المعتمد لفتح تقريرك هو:\n👉 *${unlockPin}* 👈\nنسأل الله لك دوام الصحة والعافية 🤲`;
         const waDirectUrl = `https://api.whatsapp.com/send?phone=${cleanDigits}&text=${encodeURIComponent(waDirectMsg)}`;
 
         const pushPayload = {
-            title: `🌿 طلب إعفاء لوجه الله (فقير): ${subName}`,
-            message: `👤 المشترك: ${subName}\n📱 الهاتف: ${subPhone}\n🩺 موضع الألم: ${painArea}\n🤍 نوع الطلب: إعفاء إنساني (أقسم بأنه فقير وغير مقتدر)\n🔑 كود التفعيل: ${unlockPin}\n👉 اضغط الزر بالأسفل لمراسلة المريض بالواتساب فوراً!`,
+            title: `❤️ طلب مبادرة الرعاية الإنسانية: ${subName}`,
+            message: `👤 المستفيد: ${subName}\n📱 الهاتف: ${subPhone}\n🩺 موضع الألم: ${painArea}\n❤️ نوع الطلب: مبادرة الرعاية الإنسانية\n🔑 كود التفعيل: ${unlockPin}\n👉 اضغط الزر بالأسفل لمراسلة المستفيد بالواتساب فوراً!`,
             priority: 5,
-            tags: ['seedling', 'hands', 'key', 'warning'],
+            tags: ['heart', 'hands', 'key', 'seedling'],
             click: 'https://smartchecktools.com/admin.html',
             actions: [
                 { action: 'view', label: '💬 إرسال الكود بالواتساب', url: waDirectUrl },
@@ -6833,8 +6851,8 @@ async function submitHumanitarianFreeActivation() {
     if (typeof SmartDB !== 'undefined' && typeof SmartDB.addAdminNotification === 'function') {
         SmartDB.addAdminNotification({
             type: 'humanitarian_request',
-            title: `🌿 طلب إعفاء لغير المقتدرين (بانتظار موافقتك): ${subName}`,
-            message: `رفع المراجع [${subName}] (هاتف: ${subPhone}) طلب إعفاء إنساني (صدقة جارية) لفتح التقرير وخطة الـ 7 أيام لمنطقة (${painArea}). الإقرار الشرعي: «${waiverReason}». اضغط (الموافقة على الإعفاء) لاعتماد الإعفاء وفتح شاشته فوراً.`,
+            title: `❤️ طلب مبادرة الرعاية الإنسانية: ${subName}`,
+            message: `رفع المستفيد [${subName}] (هاتف: ${subPhone}) طلب الاستفادة من مبادرة الرعاية الإنسانية لمنطقة (${painArea}). إقرار المستفيد: «${waiverReason}». اضغط (الموافقة والتفعيل) لاعتماد الطلب وفتح التقرير فوراً.`,
             patientId: pId,
             patientName: subName,
             patientPhone: subPhone,
@@ -6861,7 +6879,7 @@ async function submitHumanitarianFreeActivation() {
             masterCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }, 100);
-    showRoyalPaymentToast('✅ وصل طلبك إلى الإدارة بإذن الله. أدخل كود التفعيل عند وصوله.', 'success');
+    showRoyalPaymentToast('✅ تم إرسال طلب الاستفادة من المبادرة بنجاح. سيصلك كود التفعيل قريباً.', 'success');
 }
 window.submitHumanitarianFreeActivation = submitHumanitarianFreeActivation;
 
@@ -10695,7 +10713,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.66';
+const CURRENT_APP_VERSION = 'v30.67';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 

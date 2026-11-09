@@ -1,5 +1,5 @@
 /**
- * SmartMobileAlerts (v30.66)
+ * SmartMobileAlerts (v30.67)
  * =========================================================================
  * منظومة إشعارات الموبايل الفورية الخاصة بالطبيب / الإدارة
  * ترسل تنبيهاً فورياً مع رنة واهتزاز إلى هاتف الطبيب لكل مشترك جديد أو طلب كود
@@ -43,8 +43,8 @@ const SmartMobileAlerts = (function() {
         const isHum = strType.includes('hum') || strType.includes('إعفاء') || strType.includes('waiver') || strType.includes('free');
         if (isHum) {
             return {
-                title: '🌿 إعفاء إنساني (لوجه الله تعالى - مجاني)',
-                shortBadge: 'لوجه الله 🌿',
+                title: '❤️ مبادرة الرعاية الإنسانية (مجاني)',
+                shortBadge: 'رعاية إنسانية ❤️',
                 tier: 1,
                 price: 'مجاني',
                 isHumanitarian: true
@@ -296,7 +296,7 @@ const SmartMobileAlerts = (function() {
 
         // 5. صياغة العنوان ونص الإشعار
         const alertTitle = pkgInfo.isHumanitarian 
-            ? `🌿 طلب إعفاء لوجه الله: ${subName}`
+            ? `❤️ طلب مبادرة الرعاية الإنسانية: ${subName}`
             : `💳 طلب كود [${pkgInfo.shortBadge}]: ${subName}`;
 
         const alertMessage = 
