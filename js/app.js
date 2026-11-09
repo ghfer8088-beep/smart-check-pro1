@@ -6554,8 +6554,14 @@ async function submitOrangeWalletPaymentNotification() {
         }
     } catch (e) {}
 
-    const pId = (typeof activePatient !== 'undefined' && activePatient?.patientId) || localStorage.getItem('smart_current_patient_id') || ('P-' + Date.now().toString().slice(-6));
-    const painArea = currentAssessmentData?.painAreaTitle || currentSelectedPoint?.title || 'العمود الفقري والمفاصل';
+    const pId = (typeof activePatient !== 'undefined' && activePatient?.patientId)
+        || (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.patientId)
+        || (typeof localStorage !== 'undefined' && localStorage.getItem('smart_current_patient_id'))
+        || ('P-' + Date.now().toString().slice(-6));
+    const painArea = (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.painAreaTitle)
+        || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint?.title)
+        || (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState?.painArea)
+        || 'العمود الفقري والمفاصل';
     const chosenPkg = window._selPkg || 1;
     const pkgPrices = getPkgPrices(cfg);
     const chosenPrice = pkgPrices[chosenPkg] || 3;
@@ -6665,7 +6671,7 @@ async function submitOrangeWalletPaymentNotification() {
     window._forceRerenderPaywallGate = true;
     const reportContainer = document.getElementById('clinical-report-container');
     if (reportContainer) {
-        renderPreReportPaywallGate(currentAssessmentData || {}, reportContainer);
+        renderPreReportPaywallGate(typeof currentAssessmentData !== 'undefined' ? (currentAssessmentData || {}) : {}, reportContainer);
     }
     setTimeout(() => {
         const masterCard = document.getElementById('recovery-plan-master-card');
@@ -6791,8 +6797,14 @@ async function submitHumanitarianFreeActivation() {
         }
     } catch (e) {}
 
-    const pId = (typeof activePatient !== 'undefined' && activePatient?.patientId) || (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.patientId) || localStorage.getItem('smart_current_patient_id') || ('P-' + Date.now().toString().slice(-6));
-    const painArea = currentAssessmentData?.painAreaTitle || currentSelectedPoint?.title || 'العمود الفقري والمفاصل';
+    const pId = (typeof activePatient !== 'undefined' && activePatient?.patientId)
+        || (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.patientId)
+        || (typeof localStorage !== 'undefined' && localStorage.getItem('smart_current_patient_id'))
+        || ('P-' + Date.now().toString().slice(-6));
+    const painArea = (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.painAreaTitle)
+        || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint?.title)
+        || (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState?.painArea)
+        || 'العمود الفقري والمفاصل';
     const unlockPin = generateUserBoundCode(subPhone, 1, 0);
 
     const pendingObj = {
@@ -6871,7 +6883,7 @@ async function submitHumanitarianFreeActivation() {
     window._forceRerenderPaywallGate = true;
     const reportContainer = document.getElementById('clinical-report-container');
     if (reportContainer) {
-        renderPreReportPaywallGate(currentAssessmentData || {}, reportContainer);
+        renderPreReportPaywallGate(typeof currentAssessmentData !== 'undefined' ? (currentAssessmentData || {}) : {}, reportContainer);
     }
     setTimeout(() => {
         const masterCard = document.getElementById('recovery-plan-master-card');
@@ -6890,7 +6902,7 @@ function cancelPendingRequestAndEdit() {
     window._forceRerenderPaywallGate = true;
     const reportContainer = document.getElementById('clinical-report-container');
     if (reportContainer) {
-        renderPreReportPaywallGate(currentAssessmentData || {}, reportContainer);
+        renderPreReportPaywallGate(typeof currentAssessmentData !== 'undefined' ? (currentAssessmentData || {}) : {}, reportContainer);
     }
 }
 window.cancelPendingRequestAndEdit = cancelPendingRequestAndEdit;
@@ -10713,7 +10725,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.67';
+const CURRENT_APP_VERSION = 'v30.68';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
