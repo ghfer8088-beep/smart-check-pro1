@@ -4788,13 +4788,13 @@ function displayDiagnosticReport(data) {
                     </div>
                 </div>
 
-                <!-- مساحة التحليل البيوميكانيكي والسريري المخصص -->
+                <!-- مساحة التحليل البيوميكانيكي والسريري المخصص (تأثير نابض يحدد مكان التقرير بدقة) -->
                 <div id="ai-insight-content-area" style="min-height: 90px; margin-bottom: 18px;">
-                    <div style="display: flex; align-items: center; gap: 14px; color: #ffffff; background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(15, 23, 42, 0.85) 100%); border: 1.5px solid rgba(212, 175, 55, 0.45); border-radius: 12px; padding: 16px 20px; font-size: 0.98em;">
-                        <span style="font-size: 2em; animation: spin 1.2s linear infinite; display: inline-block;">⏳</span>
+                    <div class="report-target-beacon" style="display: flex; align-items: center; gap: 16px; color: #ffffff; background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(15, 23, 42, 0.92) 100%); border: 2px solid var(--primary-gold); border-radius: 14px; padding: 18px 22px; font-size: 0.98em; box-shadow: 0 0 28px rgba(212, 175, 55, 0.45);">
+                        <span style="font-size: 2.2em; animation: reportPointerBounce 1.2s infinite ease-in-out; display: inline-block;">👇</span>
                         <div>
-                            <div style="color: var(--primary-gold); font-size: 1.15em; font-weight: 900; margin-bottom: 4px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">تقريرك قيد التحضير يرجى الانتظار</div>
-                            <div style="color: #f1f5f9; font-size: 0.88em; font-weight: 500;">يقوم النظام الطبي بتحليل الأعراض وصياغة التفسير البيوميكانيكي المخصص لحالتك...</div>
+                            <div style="color: var(--primary-gold); font-size: 1.18em; font-weight: 900; margin-bottom: 4px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">تقريرك الطبي المعتمد سيظهر هنا مباشرة</div>
+                            <div style="color: #f1f5f9; font-size: 0.88em; font-weight: 500;">يقوم النظام بصياغة التفسير السريري والبيوميكانيكي المخصص لحالتك، يُرجى البقاء هنا ثوانٍ معدودة...</div>
                         </div>
                     </div>
                 </div>
@@ -8098,12 +8098,12 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
         userNotes: sessionData.latestAssessment?.userNotes || curAssData?.userNotes || ""
     });
 
-    // مؤشرات الجلسة الأولى الثلاثة (المقارنة ببيانات الفحص الأولي وتوحيد المنظومة)
+    // مؤشرات الجلسة الأولى الثلاثة (المقارنة ببيانات الفحص الأولي وتوحيد المنظومة - خالية تماماً من أي أرقام عشوائية)
     const basePain = Number(sessionData.baselinePain || sessionData.patient?.painLevel || curAssData?.painSeverity || 7);
     const day1Log = (sessionData.dailyLogs || []).find(l => Number(l.sessionNumber || l.day) === 1);
     let s4PainReduction = 0;
-    let s4Mobility = 50;
-    let s4Sleep = 55;
+    let s4Mobility = null; // لا نضع أي رقم افتراضي: قيد القياس حتى يوثق المريض تمارينه
+    let s4Sleep = null;    // لا نضع أي رقم افتراضي: قيد التقييم حتى يوثق المريض تمارينه
 
     if (day1Log) {
         if (typeof day1Log.painScore === 'number' && basePain > 0) {
@@ -8374,24 +8374,33 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
             <!-- ساعة التوقيت المعتمدة / حالة استشفاء اليوم الأول -->
             ${clockSectionHTML}
 
+            <!-- صندوق الشفافية السريرية لتوضيح مصدر البيانات المعتمدة -->
+            <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px dashed rgba(212, 175, 55, 0.45); border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; display: flex; align-items: flex-start; gap: 12px;">
+                <span style="font-size: 1.5em; line-height: 1;">🎯</span>
+                <div style="font-size: 0.86em; color: #e2e8f0; line-height: 1.6;">
+                    <strong style="color: var(--primary-gold);">شفافية القياسات السريرية المعتمدة:</strong>
+                    هذه المؤشرات دقيقة وتعتمد بنسبة 100% على إجاباتك وتوثيقك الفعلي؛ يبدأ مؤشر الألم من نقطة الأساس المسجلة في فحصك الأولي (${basePain}/10)، بينما مؤشرا المدى الحركي والنوم يبقيان (قيد التقييم) حتى توثق إجاباتك السريرية بعد أداء تمارين اليوم الأول وتجربتها، ولا نعتمد أبداً على أرقام افتراضية.
+                </div>
+            </div>
+
             <!-- مؤشرات التحسن الثلاثة المعتمدة للجلسة الأولى (تطابق كامل مع الجلسات 2-7) -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 24px;">
                 <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3); text-align: center;">
-                    <div style="font-size: 2em; font-weight: bold; color: #ef4444;">${s4PainReduction}%</div>
+                    <div style="font-size: 2em; font-weight: bold; color: #ef4444;">${day1Log ? s4PainReduction + '%' : '0%'}</div>
                     <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر انخفاض وتلاشي الألم</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${day1Log ? `مستوى الألم المسجل (${day1Log.painScore}/10) مقارنة بالبداية (${basePain}/10)` : `مقارنة بألم البداية المسجل (${basePain}/10) - يُحدّث بعد التوثيق`}</div>
+                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${day1Log ? `مستوى الألم المسجل (${day1Log.painScore}/10) مقارنة بالبداية (${basePain}/10)` : `نقطة الانطلاق (ألم البداية المسجل: ${basePain}/10) - يُقاس بعد التوثيق`}</div>
                 </div>
 
                 <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3); text-align: center;">
-                    <div style="font-size: 2em; font-weight: bold; color: #38bdf8;">${s4Mobility}%</div>
+                    <div style="font-size: 2em; font-weight: bold; color: #38bdf8;">${day1Log && s4Mobility !== null ? s4Mobility + '%' : '<span style="font-size: 0.62em; color: #38bdf8; letter-spacing: 0.5px;">قيد القياس ⏱️</span>'}</div>
                     <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر استعادة المدى الحركي</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${day1Log ? `المرونة الموثقة للجلسة الأولى: ${s4Mobility}%` : 'المرونة المقدرة لليوم الأول - تُحدّث بعد التوثيق'}</div>
+                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${day1Log && s4Mobility !== null ? `المرونة الموثقة للجلسة الأولى: ${s4Mobility}%` : 'سيُحسب من إجابتك على فحص الحركة بعد أداء التمارين'}</div>
                 </div>
 
                 <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); text-align: center;">
-                    <div style="font-size: 2em; font-weight: bold; color: #10b981;">${s4Sleep}%</div>
+                    <div style="font-size: 2em; font-weight: bold; color: #10b981;">${day1Log && s4Sleep !== null ? s4Sleep + '%' : '<span style="font-size: 0.62em; color: #10b981; letter-spacing: 0.5px;">قيد التقييم ⏱️</span>'}</div>
                     <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر جودة وعمق النوم</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${day1Log ? `جودة النوم الموثقة: ${s4Sleep}%` : 'جودة النوم الحالية - تُحدّث بعد التوثيق'}</div>
+                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${day1Log && s4Sleep !== null ? `جودة النوم الموثقة: ${s4Sleep}%` : 'سيُحسب من تقييمك لجودة نومك في نهاية اليوم'}</div>
                 </div>
             </div>
 
@@ -9229,15 +9238,15 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 </div>
 
                 <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3); text-align: center;">
-                    <div style="font-size: 2em; font-weight: bold; color: #38bdf8;">${displayMobility}%</div>
+                    <div style="font-size: 2em; font-weight: bold; color: #38bdf8;">${(activeDayLog || lastPrevLog) && displayMobility ? displayMobility + '%' : '<span style="font-size: 0.62em; color: #38bdf8;">قيد القياس ⏱️</span>'}</div>
                     <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر استعادة المدى الحركي</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${(activeDayLog && (typeof activeDayLog.mobilityRate === 'number' || typeof activeDayLog.movementScore === 'number')) ? 'المرونة الموثقة للجلسة ' + activeDay : (lastPrevLog ? `استناداً لتقييم الحركة في الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day}` : 'بانتظار تقييمك للجلسة الأولى')}</div>
+                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${(activeDayLog && (typeof activeDayLog.mobilityRate === 'number' || typeof activeDayLog.movementScore === 'number')) ? 'المرونة الموثقة للجلسة ' + activeDay : (lastPrevLog ? `استناداً لتقييم الحركة في الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day}` : 'سيُحسب بعد تقييمك لتمارين الجلسة الأولى')}</div>
                 </div>
 
                 <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); text-align: center;">
-                    <div style="font-size: 2em; font-weight: bold; color: #10b981;">${displaySleep}%</div>
+                    <div style="font-size: 2em; font-weight: bold; color: #10b981;">${(activeDayLog || lastPrevLog) && displaySleep ? displaySleep + '%' : '<span style="font-size: 0.62em; color: #10b981;">قيد التقييم ⏱️</span>'}</div>
                     <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر جودة وعمق النوم</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${(activeDayLog && (typeof activeDayLog.sleepRate === 'number' || typeof activeDayLog.sleepQuality === 'number')) ? 'جودة النوم الموثقة للجلسة ' + activeDay : (lastPrevLog ? `استناداً لتقييم النوم في الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day}` : 'بانتظار تقييمك للجلسة الأولى')}</div>
+                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${(activeDayLog && (typeof activeDayLog.sleepRate === 'number' || typeof activeDayLog.sleepQuality === 'number')) ? 'جودة النوم الموثقة للجلسة ' + activeDay : (lastPrevLog ? `استناداً لتقييم النوم في الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day}` : 'سيُحسب بعد تقييمك لجودة النوم في الجلسة الأولى')}</div>
                 </div>
             </div>
 
@@ -10725,7 +10734,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.68';
+const CURRENT_APP_VERSION = 'v30.69';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -14538,11 +14547,19 @@ async function sendChatMessage() {
                 window._isDialogueConcluding = false;
                 if (typeof Wada3anAiEngine !== 'undefined') Wada3anAiEngine.stopSpeaking();
                 finishChatIntakeAndGenerateReport();
+                setTimeout(() => {
+                    const repTarget = document.getElementById('clinical-report-container') || document.getElementById('step-section-3');
+                    if (repTarget) repTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
             };
             window.doDirectTransitionToReport = () => {
                 window._isDialogueConcluding = false;
                 if (typeof Wada3anAiEngine !== 'undefined') Wada3anAiEngine.stopSpeaking();
                 finishChatIntakeAndGenerateReport();
+                setTimeout(() => {
+                    const repTarget = document.getElementById('clinical-report-container') || document.getElementById('step-section-3');
+                    if (repTarget) repTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
             };
 
             // انتقال فوري وسلس خلال 1.2 ثانية دون أي تعليق أو انتظار لملفات الصوت الطويلة
@@ -14746,13 +14763,18 @@ async function sendChatMessage() {
         if (messagesBox && !document.getElementById('chat-direct-report-button-box')) {
             const btnCard = document.createElement('div');
             btnCard.id = 'chat-direct-report-button-box';
-            btnCard.style.cssText = 'margin: 16px auto 12px auto; text-align: center; width: 100%; max-width: 360px; animation: pulse 2s infinite;';
+            btnCard.className = 'report-target-beacon';
+            btnCard.style.cssText = 'margin: 16px auto 12px auto; text-align: center; width: 100%; max-width: 420px; padding: 16px; background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%); border: 2px solid var(--primary-gold); border-radius: 18px; box-shadow: 0 0 30px rgba(212, 175, 55, 0.5);';
             const btnText = isRegisteredPatient ? '⏳ إنتظر لتجهيز ملفك' : '📄 اضغط هنا لمشاهدة التقرير';
             const btnSubText = isRegisteredPatient
                 ? '✅ اكتمل التقييم السريري بنجاح، جاري تحويلك تلقائياً لملفك الطبي'
                 : '✅ اكتمل التقييم السريري بنجاح، ملفك الطبي جاهز للعرض';
 
             btnCard.innerHTML = `
+                <div style="font-size: 2.2em; animation: reportPointerBounce 1.2s infinite ease-in-out; display: inline-block; margin-bottom: 6px;">👇</div>
+                <div style="color: #ffffff; font-weight: 900; font-size: 1.05rem; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.6);">
+                    تقريرك الطبي المعتمد وخطة التعافي ستظهر هنا مباشرة
+                </div>
                 <button type="button" onclick="window.doDirectTransitionToReport && window.doDirectTransitionToReport()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: 2px solid #34d399; padding: 14px 24px; border-radius: 30px; font-size: 1.12rem; font-weight: bold; cursor: pointer; box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45); display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
                     <span>${btnText}</span>
                     <span style="font-size: 1.3rem;">⬅️</span>

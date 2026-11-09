@@ -788,6 +788,10 @@ const SmartGuidance = (function() {
                     } else if (typeof finishChatIntakeAndGenerateReport === 'function') {
                         finishChatIntakeAndGenerateReport();
                     }
+                    setTimeout(() => {
+                        const repTarget = document.getElementById('clinical-report-container') || document.getElementById('step-section-3');
+                        if (repTarget) repTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 250);
                 } else if (activeSubState === 'step2_ready_diagnosis') {
                     if (typeof runDiagnosticAnalysisWithCheck === 'function') {
                         runDiagnosticAnalysisWithCheck();
