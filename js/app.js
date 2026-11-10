@@ -9424,7 +9424,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             }
         }, lockStatus.totalDurationMs);
     }
-    // تفعيل الاستعلام السحابي اللحظي المستمر كل ثانيتين لتحديث الساعة والزر تلقائياً إذا تم التعديل من الإدارة
+    // إيقاف أي دورة استعلام متكررة لمنع استنزاف الشبكة وحدوث حظر 429، حيث تعتمد المنظومة على البث اللحظي المباشر SSE
     if (window.step5TimingPollInterval) {
         clearInterval(window.step5TimingPollInterval);
         window.step5TimingPollInterval = null;
@@ -9433,16 +9433,6 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         if (window.SmartCloudSync && typeof window.SmartCloudSync.fetchRemoteTimingUpdates === 'function') {
             window.SmartCloudSync.fetchRemoteTimingUpdates();
         }
-        window.step5TimingPollInterval = setInterval(() => {
-            const wrapper = document.getElementById('session-completion-control-wrapper');
-            const countdownEl = document.getElementById('countdown-hours');
-            if ((wrapper || countdownEl) && !document.hidden && window.SmartCloudSync && typeof window.SmartCloudSync.fetchRemoteTimingUpdates === 'function') {
-                window.SmartCloudSync.fetchRemoteTimingUpdates();
-            } else if (!wrapper && !countdownEl) {
-                clearInterval(window.step5TimingPollInterval);
-                window.step5TimingPollInterval = null;
-            }
-        }, 2500);
     }
     } finally {
         window._isRenderingStep5 = false;
@@ -10813,7 +10803,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.74';
+const CURRENT_APP_VERSION = 'v30.75';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -12436,24 +12426,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     const queryPatientId = urlParams.get('patient_id') || urlParams.get('id');
     const forceViewReport = urlParams.get('view_report') === '1' || urlParams.get('view_report') === '3';
 
-    // معالجة فورية لمعاملات التوقيت والفتح المباشر القادمة من الإدارة أو الواتساب (?unlock=1 أو ?time=69)
+    // معالجة فورية لمعاملات التوقيت والفتح المباشر القادمة من الإدارة أو الواتساب (?unlock=1 أو ?time=15 أو ?session=4)
     const queryUnlock = urlParams.get('unlock') === '1' || urlParams.get('unlock') === 'true';
     const queryTime = urlParams.get('time') || urlParams.get('rem');
-    const querySession = parseInt(urlParams.get('session')) || 2;
-    if (queryUnlock || queryTime !== null) {
+    const querySession = parseInt(urlParams.get('session')) || 0;
+    if (queryUnlock || queryTime !== null || querySession > 0) {
         try {
-            const targetPid = queryPatientId || sessionStorage.getItem('scp_active_patient_id') || '';
+            const targetPid = queryPatientId || sessionStorage.getItem('scp_active_patient_id') || localStorage.getItem('smart_current_patient_id') || '';
             const totalSec = parseInt(queryTime) || 0;
             const now = Date.now();
             const keys = [targetPid, 'global'].filter(Boolean);
-            if (queryUnlock || totalSec <= 0) {
+
+            if (querySession >= 1 && querySession <= 7) {
+                localStorage.setItem('targeted_session_global', String(querySession));
+                if (targetPid) localStorage.setItem(`targeted_session_${targetPid}`, String(querySession));
+            }
+
+            if (queryUnlock || (queryTime !== null && totalSec <= 0)) {
                 for (const k of keys) {
                     localStorage.setItem(`force_unlock_${k}`, 'true');
                     localStorage.removeItem(`custom_target_time_${k}`);
                     localStorage.removeItem(`custom_total_duration_${k}`);
-                    localStorage.removeItem(`sessionStartTime_${k}_${querySession}`);
+                    for (let s = 1; s <= 7; s++) {
+                        localStorage.removeItem(`sessionStartTime_${k}_${s}`);
+                    }
                 }
-            } else {
+            } else if (queryTime !== null && totalSec > 0) {
                 const targetMs = now + (totalSec * 1000);
                 for (const k of keys) {
                     localStorage.setItem(`custom_target_time_${k}`, String(targetMs));

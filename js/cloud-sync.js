@@ -2134,7 +2134,7 @@
         if (cloudEventSource) return;
 
         try {
-            cloudEventSource = new EventSource(`${CLOUD_SYNC_ENDPOINT}/sse`);
+            cloudEventSource = new EventSource(`${CLOUD_SYNC_ENDPOINT}/sse?since=1h`);
             cloudEventSource.onmessage = async (event) => {
                 try {
                     const data = JSON.parse(event.data);
@@ -2971,59 +2971,23 @@
 
         const rawJson = JSON.stringify(payload);
 
-        // 3. إرسال فوري ومباشر دون انتظار الطابور إلى قناة التوقيت وقناة المزامنة مع دعم sendBeacon
+        // 3. إرسال فوري ومباشر ونظيف إلى قناة التوقيت المخصصة عبر NTFY
         try {
-            if (navigator.sendBeacon) {
-                try { navigator.sendBeacon(CLOUD_TIMING_ENDPOINT, rawJson); } catch(e) {}
-                try { navigator.sendBeacon(CLOUD_SYNC_ENDPOINT, rawJson); } catch(e) {}
-            }
             fetch(CLOUD_TIMING_ENDPOINT, {
                 method: 'POST',
                 mode: 'cors',
                 credentials: 'omit',
-                headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Title': 'Timing Update', 'Priority': '5' },
+                headers: { 
+                    'Content-Type': 'text/plain; charset=utf-8', 
+                    'Title': 'Timing Update', 
+                    'Priority': 'urgent',
+                    'Tags': 'stopwatch,alarm_clock'
+                },
                 body: rawJson
             }).catch(() => {
                 try { fetch(CLOUD_TIMING_ENDPOINT, { method: 'POST', mode: 'no-cors', body: rawJson }).catch(() => {}); } catch(e) {}
             });
-            fetch(CLOUD_SYNC_ENDPOINT, {
-                method: 'POST',
-                mode: 'cors',
-                credentials: 'omit',
-                headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Title': 'Timing Update Sync', 'Priority': '5' },
-                body: rawJson
-            }).catch(() => {
-                try { fetch(CLOUD_SYNC_ENDPOINT, { method: 'POST', mode: 'no-cors', body: rawJson }).catch(() => {}); } catch(e) {}
-            });
         } catch(e) {}
-
-        // 4. إرسال احتياطي عبر طابور ntfy المقنن
-        sendToNtfy(CLOUD_TIMING_ENDPOINT, rawJson, 'Timing Update');
-
-        // 6. حفظ التحديث اللحظي في السحابة المركزية العالمية (Master Cloud Hub) إن كانت متاحة
-        if (isMasterHubAllowed()) {
-            try {
-                fetch(CLOUD_MASTER_HUB_ENDPOINT, { cache: 'no-store' })
-                    .then(r => {
-                        if (!r.ok) { recordMasterHubFailure(r.status); return null; }
-                        return r.json();
-                    })
-                    .then(masterObj => {
-                        if (!masterObj) return;
-                        const currentData = (masterObj && masterObj.data) ? masterObj.data : {};
-                        currentData.latestTimingUpdate = payload;
-                        currentData.lastTimingTimestamp = now;
-                        return fetch(CLOUD_MASTER_HUB_ENDPOINT, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                name: 'SmartCheck_Global_Clinic_Master_Hub',
-                                data: currentData
-                            })
-                        });
-                    }).catch(() => {});
-            } catch(e) {}
-        }
     }
 
     // تحديث مباشر وفوري لعناصر الساعة وأزرار القفل في الصفحة المعروضة حالياً
@@ -3480,109 +3444,64 @@
     // جلب التعديلات السحابية للتوقيت مع حماية صارمة من التراكم والتأخير
     let isFetchingTiming = false;
     let lastTimingFetchTime = 0;
+    let timingNtfyRateLimitedUntil = 0;
     async function fetchRemoteTimingUpdates() {
-        if (isFetchingTiming) return;
-        if (Date.now() - lastTimingFetchTime < 2000) return; // مهلة استجابة سريعة (ثانيتان فقط)
-        if (Date.now() < ntfyRateLimitedUntil) return [];
+        if (isFetchingTiming) return [];
+        const now = Date.now();
+        if (now - lastTimingFetchTime < 3000) return [];
+        if (now < timingNtfyRateLimitedUntil) return [];
         isFetchingTiming = true;
-        lastTimingFetchTime = Date.now();
+        lastTimingFetchTime = now;
 
         const candidateUpdates = [];
 
         try {
-            // 1. جلب من قناة التوقيت المخصصة عبر NTFY مع مهلة آمنة (7 ثوانٍ)
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 7000);
-                const resp = await fetch(`${CLOUD_TIMING_ENDPOINT}/json?poll=1&since=all`, {
-                    cache: 'no-store',
-                    mode: 'cors',
-                    credentials: 'omit',
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                if (resp.status === 429) {
-                    ntfyRateLimitedUntil = Date.now() + 30000;
-                } else if (resp.ok) {
-                    const text = await resp.text();
-                    if (text) {
-                        const lines = text.trim().split('\n');
-                        for (const line of lines) {
-                            if (!line.trim()) continue;
-                            try {
-                                const item = JSON.parse(line);
-                                if (item.event === 'message' && item.message) {
-                                    let parsed = null;
-                                    try { parsed = JSON.parse(item.message); } catch(e) { parsed = item.message; }
-                                    if (parsed && (parsed.type === 'session_timing_update' || parsed.forceUnlock !== undefined || parsed.targetTime !== undefined)) {
-                                        candidateUpdates.push(parsed);
-                                    }
+            // جلب من قناة التوقيت المخصصة عبر NTFY مع مهلة آمنة (5 ثوانٍ) واسترجاع آخر ساعة فقط لمنع البطء
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            const resp = await fetch(`${CLOUD_TIMING_ENDPOINT}/json?poll=1&since=1h`, {
+                cache: 'no-store',
+                mode: 'cors',
+                credentials: 'omit',
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            if (resp.status === 429) {
+                timingNtfyRateLimitedUntil = Date.now() + 20000;
+            } else if (resp.ok) {
+                const text = await resp.text();
+                if (text) {
+                    const lines = text.trim().split('\n');
+                    for (const line of lines) {
+                        if (!line.trim()) continue;
+                        try {
+                            const item = JSON.parse(line);
+                            if (item.event === 'message' && item.message) {
+                                let parsed = null;
+                                try { parsed = JSON.parse(item.message); } catch(e) { parsed = item.message; }
+                                if (parsed && (parsed.type === 'session_timing_update' || parsed.forceUnlock !== undefined || parsed.targetTime !== undefined)) {
+                                    candidateUpdates.push(parsed);
                                 }
-                            } catch(e) {}
-                        }
+                            }
+                        } catch(e) {}
                     }
                 }
-            } catch(e) {}
-
-            // 2. جلب أيضاً من القناة المركزية للعيادة كاحتياطي دائم بمهلة قصوى 2 ثانية
-            try {
-                const controller2 = new AbortController();
-                const timeoutId2 = setTimeout(() => controller2.abort(), 2000);
-                const resp2 = await fetch(`${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=all`, {
-                    cache: 'no-store',
-                    mode: 'cors',
-                    credentials: 'omit',
-                    signal: controller2.signal
-                });
-                clearTimeout(timeoutId2);
-                if (resp2.status === 429) {
-                    ntfyRateLimitedUntil = Date.now() + 30000;
-                } else if (resp2.ok) {
-                    const text2 = await resp2.text();
-                    if (text2) {
-                        const lines2 = text2.trim().split('\n');
-                        for (const line of lines2) {
-                            if (!line.trim()) continue;
-                            try {
-                                const item = JSON.parse(line);
-                                if (item.event === 'message' && item.message) {
-                                    let parsed = null;
-                                    try { parsed = JSON.parse(item.message); } catch(e) { parsed = item.message; }
-                                    if (parsed && (parsed.type === 'session_timing_update' || parsed.forceUnlock !== undefined || parsed.targetTime !== undefined)) {
-                                        candidateUpdates.push(parsed);
-                                    }
-                                }
-                            } catch(e) {}
-                        }
-                    }
-                }
-            } catch(e) {}
-
-            // 3. جلب من السحابة المركزية العالمية Master Cloud Hub إن كانت متاحة
-            if (isMasterHubAllowed()) {
-                try {
-                    const controller3 = new AbortController();
-                    const timeoutId3 = setTimeout(() => controller3.abort(), 1800);
-                    const resp3 = await fetch(CLOUD_MASTER_HUB_ENDPOINT, {
-                        cache: 'no-store',
-                        signal: controller3.signal
-                    });
-                    clearTimeout(timeoutId3);
-                    if (resp3.ok) {
-                        const masterObj = await resp3.json();
-                        if (masterObj && masterObj.data && masterObj.data.latestTimingUpdate) {
-                            candidateUpdates.push(masterObj.data.latestTimingUpdate);
-                        }
-                    }
-                } catch(e) {}
             }
+        } catch(e) {
         } finally {
             isFetchingTiming = false;
         }
 
-        // فرز كافة التحديثات وتطبيق أحدث تحديث وارد ينطبق على هذا المريض
+        // فرز كافة التحديثات بدقة بالغة وتطبيق أحدث تحديث وارد ينطبق على هذا المريض
         if (candidateUpdates.length > 0) {
-            candidateUpdates.sort((a, b) => (Number(a.updatedAt || a.timestamp || 0) || 0) - (Number(b.updatedAt || b.timestamp || 0) || 0));
+            const getTs = x => {
+                if (!x) return 0;
+                if (typeof x.updatedAt === 'number' && !isNaN(x.updatedAt)) return x.updatedAt;
+                if (x.updatedAt) { const n = Number(x.updatedAt); if (!isNaN(n) && n > 0) return n; }
+                if (x.timestamp) { const t = new Date(x.timestamp).getTime(); if (!isNaN(t) && t > 0) return t; }
+                return 0;
+            };
+            candidateUpdates.sort((a, b) => getTs(a) - getTs(b));
             for (let i = candidateUpdates.length - 1; i >= 0; i--) {
                 const applied = applyTimingUpdateLocally(candidateUpdates[i]);
                 if (applied) break; // أول تحديث ينطبق بنجاح على هذا المريض نكتفي به
@@ -3590,13 +3509,13 @@
         }
     }
 
-    // الاستماع اللحظي الدائم (SSE) على هاتف المريض
+    // الاستماع اللحظي الدائم (SSE) على هاتف المريض مع استرجاع سجل آخر ساعة فورياً عند الاتصال
     function initTimingListener() {
         if (typeof EventSource === 'undefined') return;
         if (timingEventSource) return;
 
         try {
-            timingEventSource = new EventSource(`${CLOUD_TIMING_ENDPOINT}/sse`);
+            timingEventSource = new EventSource(`${CLOUD_TIMING_ENDPOINT}/sse?since=1h`);
             timingEventSource.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
@@ -3623,7 +3542,7 @@
             timingEventSource.onerror = () => {
                 try { if (timingEventSource) timingEventSource.close(); } catch(e) {}
                 timingEventSource = null;
-                setTimeout(initTimingListener, 3500);
+                setTimeout(initTimingListener, 4000);
             };
         } catch (e) {}
 

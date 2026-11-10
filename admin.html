@@ -42,9 +42,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=30.74"></script>
-    <script src="js/security-shield.js?v=30.74"></script>
-    <link rel="stylesheet" href="css/style.css?v=30.74">
+    <script src="js/system-watchdog.js?v=30.75"></script>
+    <script src="js/security-shield.js?v=30.75"></script>
+    <link rel="stylesheet" href="css/style.css?v=30.75">
     <style>
         body {
             background-color: #080c14;
@@ -406,7 +406,7 @@
                     <div style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.78em; color: #94a3b8; margin-top: 2px;">
                         <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                         <span>الإصدار المعتمد:</span>
-                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.74</strong>
+                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.75</strong>
                     </div>
                 </div>
             </div>
@@ -441,10 +441,10 @@
                         <span>⚙️</span> إعدادات
                     </button>
                     <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header admin-btn-cache" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 9px 12px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
-                        ⚡ تحديث الكاش (v30.74)
+                        ⚡ تحديث الكاش (v30.75)
                     </button>
-                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.74) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
-                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.74)
+                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.75) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
+                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.75)
                     </button>
                     <button type="button" id="btn-force-sync" onclick="handleForceFullSync()" style="background: linear-gradient(135deg,rgba(59,130,246,0.25),rgba(99,102,241,0.2)); border: 1px solid #6366f1; color: #a5b4fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="جلب كافة السجلات من السحابة قسرياً وبثها لجميع الأجهزة">
                         🔄 مزامنة كاملة
@@ -848,9 +848,12 @@
                 </div>
 
                 <!-- خيار الفتح الفوري -->
-                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 8px; padding: 12px; margin-bottom: 15px; text-align: center;">
-                    <button type="button" onclick="quickUnlockSessionNow()" style="background: #10b981; color: #fff; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; font-size: 1.02em; cursor: pointer; width: 100%;">
-                        ⚡ فتح الجلسة فوراً للمريض الآن (تصفير العداد)
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                    <button type="button" onclick="quickUnlockSessionNow()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; border: none; padding: 12px 14px; border-radius: 8px; font-weight: 900; font-size: 0.95em; cursor: pointer; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);">
+                        ⚡ فتح الجلسة فوراً (0 ث)
+                    </button>
+                    <button type="button" onclick="quickSet15SecondsTest()" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #fff; border: none; padding: 12px 14px; border-radius: 8px; font-weight: 900; font-size: 0.95em; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);">
+                        ⏱️ تجربة 15 ثانية (بث حي)
                     </button>
                 </div>
 
@@ -877,12 +880,17 @@
                 </button>
 
                 <!-- أزرار إرسال الرابط المباشر للمريض عبر واتساب والنسخ -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; margin-bottom: 8px;">
                     <button type="button" onclick="sendDirectTimingViaWhatsApp()" style="background: #25D366; color: #ffffff; border: none; padding: 11px; border-radius: 8px; font-weight: bold; font-size: 0.9em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
                         <span>💬 إرسال عبر واتساب</span>
                     </button>
                     <button type="button" onclick="copyDirectTimingLink()" style="background: #1e293b; color: #38bdf8; border: 1.5px solid #38bdf8; padding: 11px; border-radius: 8px; font-weight: bold; font-size: 0.9em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
                         <span>📋 نسخ رابط التفعيل</span>
+                    </button>
+                </div>
+                <div>
+                    <button type="button" onclick="copyDirectUnlockLinkOnly()" style="width: 100%; background: rgba(16, 185, 129, 0.15); border: 1.5px solid #10b981; color: #6ee7b7; padding: 10px; border-radius: 8px; font-weight: 800; font-size: 0.88em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <span>🔓 نسخ رابط فتح الجلسة الفوري المباشر (مفتوحة 100% بلا مؤقت)</span>
                     </button>
                 </div>
             </div>
@@ -2016,17 +2024,17 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/clinic-patients-data.js?v=30.74"></script>
-    <script src="js/mqtt.min.js?v=30.74"></script>
-    <script src="js/cloud-sync.js?v=30.74"></script>
-    <script src="js/geo-tracker.js?v=30.74"></script>
-    <script src="js/database.js?v=30.74"></script>
-    <script src="js/exercise-image-studio.js?v=30.74"></script>
-    <script src="js/admin-engine.js?v=30.74"></script>
-    <script src="js/ai-config.js?v=30.74"></script>
-    <script src="js/ai-engine.js?v=30.74"></script>
-    <script src="js/whatsapp-dispatcher.js?v=30.74"></script>
-    <script src="js/mobile-alerts.js?v=30.74"></script>
+    <script src="js/clinic-patients-data.js?v=30.75"></script>
+    <script src="js/mqtt.min.js?v=30.75"></script>
+    <script src="js/cloud-sync.js?v=30.75"></script>
+    <script src="js/geo-tracker.js?v=30.75"></script>
+    <script src="js/database.js?v=30.75"></script>
+    <script src="js/exercise-image-studio.js?v=30.75"></script>
+    <script src="js/admin-engine.js?v=30.75"></script>
+    <script src="js/ai-config.js?v=30.75"></script>
+    <script src="js/ai-engine.js?v=30.75"></script>
+    <script src="js/whatsapp-dispatcher.js?v=30.75"></script>
+    <script src="js/mobile-alerts.js?v=30.75"></script>
 
     <script>
         // محرك صيانة وتطهير التخزين التلقائي لمنع تجاوز السعة (QuotaExceededError)
@@ -4382,6 +4390,17 @@
             }
         }
 
+        function quickSet15SecondsTest() {
+            try {
+                if (document.getElementById('timing-hours')) document.getElementById('timing-hours').value = 0;
+                if (document.getElementById('timing-mins')) document.getElementById('timing-mins').value = 0;
+                if (document.getElementById('timing-secs')) document.getElementById('timing-secs').value = 15;
+                saveCustomTimingValues();
+            } catch(e) {
+                console.error("Error in quickSet15SecondsTest:", e);
+            }
+        }
+
         function saveCustomTimingValues() {
             try {
                 const patientId = document.getElementById('target-patient-id').value;
@@ -4550,25 +4569,28 @@
         }
         window.applyPastedSyncToken = applyPastedSyncToken;
 
-        function generateDirectTimingUrl() {
+        function generateDirectTimingUrl(forceUnlock = false, overrideSec = null) {
             const patientId = document.getElementById('target-patient-id').value;
             const sNumSelect = document.getElementById('timing-session-num');
-            const targetSNum = sNumSelect ? parseInt(sNumSelect.value) || activeTargetSessionNum : activeTargetSessionNum;
+            const targetVal = sNumSelect ? sNumSelect.value : String(activeTargetSessionNum);
+            const targetSNum = (targetVal === 'all') ? 0 : (parseInt(targetVal) || activeTargetSessionNum);
             const h = parseInt(document.getElementById('timing-hours').value) || 0;
             const m = parseInt(document.getElementById('timing-mins').value) || 0;
             const s = parseInt(document.getElementById('timing-secs').value) || 0;
-            const totalSec = (h * 3600) + (m * 60) + s;
+            const totalSec = (overrideSec !== null) ? overrideSec : ((h * 3600) + (m * 60) + s);
             
-            const baseUrl = window.location.origin + window.location.pathname.replace(/admin\.html.*$/, 'index.html');
+            const liveDomain = (window.location.protocol.startsWith('http') && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1'))
+                ? (window.location.origin + window.location.pathname.replace(/admin\.html.*$/, 'index.html'))
+                : 'https://smartchecktools.com/';
             const params = new URLSearchParams();
             if (patientId) params.set('patient_id', patientId);
-            params.set('session', String(targetSNum));
-            if (totalSec <= 0) {
+            if (targetSNum) params.set('session', String(targetSNum));
+            if (forceUnlock || totalSec <= 0) {
                 params.set('unlock', '1');
             } else {
                 params.set('time', String(totalSec));
             }
-            return `${baseUrl}?${params.toString()}`;
+            return `${liveDomain}?${params.toString()}`;
         }
 
         function sendDirectTimingViaWhatsApp() {
@@ -4591,6 +4613,19 @@
                 });
             } else {
                 prompt('انسخ الرابط التالي:', link);
+            }
+        }
+
+        function copyDirectUnlockLinkOnly() {
+            const link = generateDirectTimingUrl(true);
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(link).then(() => {
+                    alert('🔓 تم نسخ رابط فتح الجلسة الفوري بنجاح (الجلسة مفتوحة فوراً دون انتظار):\n' + link);
+                }).catch(() => {
+                    prompt('انسخ رابط الفتح المباشر:', link);
+                });
+            } else {
+                prompt('انسخ رابط الفتح المباشر:', link);
             }
         }
 
@@ -6043,7 +6078,7 @@
         // ⚙️ دوال نافذة إعدادات وتخصيص المنظومة (System Settings Modal)
         // ==========================================================================
         
-        // دوال منظومة إشعارات الموبايل الفورية (v30.74)
+        // دوال منظومة إشعارات الموبايل الفورية (v30.75)
         function openMobileAlertsModal() {
             openSystemSettingsModal();
             const btn = document.getElementById('btn-settings-tab-mobile-alerts');
@@ -6853,17 +6888,17 @@ function copyAdminCode(code) {
             }, 250);
         }
 
-        // بث رسالة التحديث الجديد الشامل (v30.74) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
+        // بث رسالة التحديث الجديد الشامل (v30.75) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
         function handleBroadcastGlobalVersion() {
-            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.74) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
+            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.75) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
                 if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                     SmartCloudSync.broadcastAppVersionUpdate({
-                        version: 'v30.74',
-                        title: 'تحديث المنظومة (v30.74)',
+                        version: 'v30.75',
+                        title: 'تحديث المنظومة (v30.75)',
                         timestamp: Date.now()
                     });
                 }
-                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.74) عبر شبكة البث اللحظي MQTT و NTFY و Master Hub لكافة الأجهزة!');
+                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.75) عبر شبكة البث اللحظي MQTT و NTFY لكافة الأجهزة!');
             }
         }
         window.handleBroadcastGlobalVersion = handleBroadcastGlobalVersion;
@@ -7332,7 +7367,7 @@ function copyAdminCode(code) {
 <script>
 // ===== تحديث تلقائي للوحة الإدارة: تقارن إصدارها بإصدار الأداة المنشور (sw.js) وتحدّث نفسها =====
 (function () {
-    const ADMIN_VER = 'v30.74';
+    const ADMIN_VER = 'v30.75';
     window.ADMIN_VER = ADMIN_VER;
     let busy = false;
     async function check(force) {
