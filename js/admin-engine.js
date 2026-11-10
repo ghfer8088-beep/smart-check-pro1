@@ -1150,13 +1150,30 @@ const AdminEngine = (function() {
         const s = parseInt(seconds) || 0;
         const totalDurationMs = ((h * 3600) + (m * 60) + s) * 1000;
         const forceUnlock = totalDurationMs <= 0;
+        const isAllSessions = (sessionNum === 0 || sessionNum === 'all');
+        const numSession = isAllSessions ? 0 : (parseInt(sessionNum) || 1);
         let targetTime = 0;
 
         const cleanPhone = patientPhone ? String(patientPhone).replace(/\D/g, '') : '';
 
         try {
+            if (isAllSessions) {
+                // فتح وإتاحة جميع الـ 7 جلسات بالكامل للمريض فوراً
+                safeStorageSet(`force_unlock_all_${patientId}`, 'true');
+                safeStorageSet('force_unlock_all_global', 'true');
+                safeStorageSet('force_unlock_all', 'true');
+                if (cleanPhone) safeStorageSet(`force_unlock_all_${cleanPhone}`, 'true');
+            }
+
+            if (numSession >= 1 && numSession <= 7) {
+                // تثبيت رقم الجلسة المستهدفة المحددة
+                safeStorageSet(`targeted_session_${patientId}`, String(numSession));
+                safeStorageSet('targeted_session_global', String(numSession));
+                if (cleanPhone) safeStorageSet(`targeted_session_${cleanPhone}`, String(numSession));
+            }
+
             if (forceUnlock) {
-                // فتح الجلسة فوراً لكافة الجلسات المحتملة لمنع أي تعارض في رقم الجلسة بين الأجهزة
+                // فتح فوري وتصفير العداد لكافة الجلسات المحتملة لمنع أي تعارض في رقم الجلسة
                 safeStorageSet(`force_unlock_${patientId}`, 'true');
                 safeStorageRemove(`custom_target_time_${patientId}`);
                 safeStorageRemove(`custom_total_duration_${patientId}`);
@@ -1198,7 +1215,7 @@ const AdminEngine = (function() {
             console.warn('LocalStorage save warning in setPatientSessionTiming:', storageErr);
         }
 
-        // حفظ التوقيت داخل كائن المريض نفسه في SmartDB
+        // حفظ التوقيت والجلسة المستهدفة داخل كائن المريض نفسه في SmartDB
         try {
             if (window.SmartDB && typeof window.SmartDB.getPatient === 'function') {
                 window.SmartDB.getPatient(patientId).then(pt => {
@@ -1210,11 +1227,16 @@ const AdminEngine = (function() {
                         pt.customTimingMinutes = m;
                         pt.customTimingSeconds = s;
                         pt.lastTimingUpdated = Date.now();
-                        if (sessionNum && sessionNum >= 1 && sessionNum <= 7) {
-                            pt.currentSessionDay = sessionNum;
-                            pt.targetedSessionNum = sessionNum;
+                        if (isAllSessions) {
+                            pt.forceUnlockAllSessions = true;
+                            pt.allSessionsUnlocked = true;
                         }
-                        window.SmartDB.savePatient(pt);
+                        if (numSession >= 1 && numSession <= 7) {
+                            pt.currentSessionDay = numSession;
+                            pt.targetedSessionNum = numSession;
+                            pt.activeSessionDay = numSession;
+                        }
+                        window.SmartDB.savePatient(pt, { skipCloudSync: false });
                     }
                 }).catch(() => {});
             }
@@ -1227,7 +1249,9 @@ const AdminEngine = (function() {
                     patientId: patientId,
                     patientPhone: patientPhone,
                     patientName: patientName,
-                    sessionNum: sessionNum,
+                    sessionNum: numSession,
+                    isAllSessions: isAllSessions,
+                    forceUnlockAllSessions: isAllSessions,
                     hours: h,
                     minutes: m,
                     seconds: s,
@@ -1378,12 +1402,40 @@ const AdminEngine = (function() {
         });
 
         // 5. بث التحديث سحابياً لكافة الأجهزة
-        if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.dispatchSessionLog === 'function') {
-            logs.forEach(l => {
-                try { SmartCloudSync.dispatchSessionLog(l); } catch(e) {}
-            });
+        if (count >= 7) {
+            safeStorageSet(`force_unlock_all_${patientId}`, 'true');
+            safeStorageSet('force_unlock_all_global', 'true');
+            safeStorageSet('force_unlock_all', 'true');
+            if (cleanPhone) safeStorageSet(`force_unlock_all_${cleanPhone}`, 'true');
         }
 
+        if (typeof SmartCloudSync !== 'undefined') {
+            if (typeof SmartCloudSync.dispatchSessionLog === 'function') {
+                logs.forEach(l => {
+                    try { SmartCloudSync.dispatchSessionLog(l); } catch(e) {}
+                });
+            }
+            if (typeof SmartCloudSync.dispatchTimingUpdate === 'function') {
+                SmartCloudSync.dispatchTimingUpdate({
+                    patientId: patientId,
+                    patientPhone: patientPhone,
+                    patientName: patientName,
+                    sessionNum: count >= 7 ? 7 : count,
+                    isAllSessions: count >= 7,
+                    forceUnlockAllSessions: count >= 7,
+                    forceUnlock: true,
+                    isPlanCompleted: count >= 7,
+                    broadcastToAll: true,
+                    global: true,
+                    updatedAt: Date.now()
+                });
+            }
+            if (typeof SmartCloudSync.broadcastSnapshot === 'function') {
+                setTimeout(() => SmartCloudSync.broadcastSnapshot(), 120);
+            }
+        }
+
+        safeStorageSet('countdownUpdated', Date.now().toString());
         return { success: true, count, isCompleted: count >= 7 };
     }
 

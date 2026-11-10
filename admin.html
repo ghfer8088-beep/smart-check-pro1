@@ -406,7 +406,7 @@
                     <div style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.78em; color: #94a3b8; margin-top: 2px;">
                         <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                         <span>الإصدار المعتمد:</span>
-                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.69</strong>
+                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.70</strong>
                     </div>
                 </div>
             </div>
@@ -441,10 +441,10 @@
                         <span>⚙️</span> إعدادات
                     </button>
                     <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header admin-btn-cache" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 9px 12px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
-                        ⚡ تحديث الكاش (v30.69)
+                        ⚡ تحديث الكاش (v30.70)
                     </button>
-                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.69) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
-                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.69)
+                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.70) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
+                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.70)
                     </button>
                     <button type="button" id="btn-force-sync" onclick="handleForceFullSync()" style="background: linear-gradient(135deg,rgba(59,130,246,0.25),rgba(99,102,241,0.2)); border: 1px solid #6366f1; color: #a5b4fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="جلب كافة السجلات من السحابة قسرياً وبثها لجميع الأجهزة">
                         🔄 مزامنة كاملة
@@ -3899,13 +3899,57 @@
                                 </div>
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
                                     <span style="color: #94a3b8;">🗓️ الجلسة الحالية:</span>
-                                    <span style="color: #38bdf8; font-weight: bold;">
+                                    <span style="font-weight: 900;">
                                         ${item.logsCount >= 7 
-                                            ? '<span style="color: #6ee7b7;">🏆 أتم الـ 7 جلسات (مكتمل)</span>' 
-                                            : `اليوم ${Math.min(7, (item.logsCount || 0) + 1)} من 7 <span style="color: #94a3b8; font-size: 0.85em; font-weight: normal;">(أنجز ${item.logsCount || 0})</span>`
+                                            ? '<span style="color: #6ee7b7; background: rgba(16, 185, 129, 0.2); padding: 2px 8px; border-radius: 4px; border: 1px solid #10b981;">🏆 أتم الـ 7 جلسات (مكتمل)</span>' 
+                                            : `<span style="background: linear-gradient(135deg, #d4af37, #0284c7); color: #000; padding: 2px 10px; border-radius: 6px; font-weight: 900; box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);">🌟 الجلسة #${patCurrentSession} (الحالية)</span> <span style="color: #94a3b8; font-size: 0.85em; font-weight: normal; margin-right: 4px;">(أنجز ${item.logsCount || 0} من 7)</span>`
                                         }
                                     </span>
                                 </div>
+                            </div>
+
+                            <!-- مسار الجلسات السريرية الـ 7 التفاعلي مع تمييز فائق للجلسة الحالية -->
+                            <div style="background: rgba(11, 16, 27, 0.95); border: 1.5px solid rgba(212, 175, 55, 0.35); border-radius: 10px; padding: 9px 12px; margin-bottom: 10px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; flex-wrap: wrap; gap: 4px;">
+                                    <span style="color: var(--primary-gold); font-size: 0.82em; font-weight: bold;">🎯 مسار الجلسات (اضغط أي جلسة لضبطها أو فتحها):</span>
+                                    <span style="font-size: 0.78em; color: #94a3b8;">
+                                        ${item.logsCount >= 7 ? '<strong style="color: #6ee7b7;">🏆 مكتمل 100%</strong>' : `الحالية: <strong style="color: #fef08a;">#${patCurrentSession}</strong>`}
+                                    </span>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;">
+                                    ${[1, 2, 3, 4, 5, 6, 7].map(sNum => {
+                                        const isCompletedS = (item.logsCount >= sNum) || (item.logsCount >= 7);
+                                        const isCurrentS = (sNum === patCurrentSession && item.logsCount < 7);
+                                        
+                                        let sBg = '#1e293b';
+                                        let sBorder = '1px solid #334155';
+                                        let sColor = '#94a3b8';
+                                        let sClass = '';
+                                        let sBadge = '🔒';
+
+                                        if (isCurrentS) {
+                                            sClass = 'admin-current-session-badge';
+                                            sBg = 'linear-gradient(135deg, #d4af37 0%, #0284c7 100%)';
+                                            sBorder = '2px solid #fef08a';
+                                            sColor = '#060b13';
+                                            sBadge = '🌟 الحالية';
+                                        } else if (isCompletedS) {
+                                            sBg = 'rgba(16, 185, 129, 0.2)';
+                                            sBorder = '1px solid #10b981';
+                                            sColor = '#6ee7b7';
+                                            sBadge = '✓ منجزة';
+                                        }
+
+                                        return `
+                                            <button type="button" onclick="openPatientTimingModal('${p.patientId}', '${((p.fullName || p.name) || '').replace(/['\\\\]/g, '')}', ${sNum}, '${p.phone || ''}')" title="جلسة #${sNum} - اضغط لضبط توقيتها أو فتحها" class="${sClass}" style="background: ${sBg}; border: ${sBorder}; color: ${sColor}; padding: 5px 2px; border-radius: 6px; font-size: 0.75em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'">
+                                                <span style="font-weight: 900;">#${sNum}</span>
+                                                <span style="font-size: 0.7em; white-space: nowrap;">${sBadge}</span>
+                                            </button>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                            <div style="display: none;">
                                 ${p.phone ? `
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
                                     <span style="color: #94a3b8;">📱 رقم الجوال:</span>
@@ -4274,9 +4318,19 @@
             activeTargetPatientPhone = patientPhone || '';
             activeTargetPatientName = patientName || '';
             document.getElementById('target-patient-id').value = patientId;
-            document.getElementById('timing-patient-name').textContent = `المريض: ${patientName} (${patientPhone || 'بلا هاتف'}) - الجلسة الحالية: #${activeTargetSessionNum}`;
+            document.getElementById('timing-patient-name').innerHTML = `المريض: <strong>${patientName}</strong> (${patientPhone || 'بلا هاتف'}) — <span style="background: linear-gradient(135deg, #d4af37, #0284c7); color: #000; padding: 2px 8px; border-radius: 4px; font-weight: 900;">الجلسة الحالية: #${activeTargetSessionNum} 🌟</span>`;
             const sNumSelect = document.getElementById('timing-session-num');
             if (sNumSelect) {
+                for (let i = 1; i <= 7; i++) {
+                    const opt = sNumSelect.querySelector(`option[value="${i}"]`);
+                    if (opt) {
+                        if (i === activeTargetSessionNum) {
+                            opt.textContent = `🎯 الجلسة ${i} (جلسته الحالية النشطة 🌟)`;
+                        } else {
+                            opt.textContent = `الجلسة ${i}`;
+                        }
+                    }
+                }
                 const matchOpt = Array.from(sNumSelect.options).find(o => o.value === String(activeTargetSessionNum));
                 sNumSelect.value = matchOpt ? String(activeTargetSessionNum) : '2';
             }
@@ -4297,7 +4351,10 @@
 
                 AdminEngine.setPatientSessionTiming(patientId, sNum, 0, 0, 0, activeTargetPatientPhone, activeTargetPatientName, isBroadcast);
                 document.getElementById('patient-timing-modal').style.display = 'none';
-                alert(`✅ تم فتح الجلسة فورياً للمريض وبث أمر الفتح لهاتفه سحابياً بنجاح!`);
+                const unlockMsg = (targetVal === 'all') 
+                    ? `✅ تم فتح وإتاحة جميع الـ 7 جلسات بالكامل للمريض وبث أمر الفتح الشامل لهاتفه سحابياً!`
+                    : `✅ تم فتح الجلسة (${sNum}) فورياً للمريض وبث أمر الفتح لهاتفه سحابياً بنجاح!`;
+                alert(unlockMsg);
                 loadAdminData();
             } catch(e) {
                 console.error("Error in quickUnlockSessionNow:", e);
@@ -5968,7 +6025,7 @@
         // ⚙️ دوال نافذة إعدادات وتخصيص المنظومة (System Settings Modal)
         // ==========================================================================
         
-        // دوال منظومة إشعارات الموبايل الفورية (v30.69)
+        // دوال منظومة إشعارات الموبايل الفورية (v30.70)
         function openMobileAlertsModal() {
             openSystemSettingsModal();
             const btn = document.getElementById('btn-settings-tab-mobile-alerts');
@@ -6778,17 +6835,17 @@ function copyAdminCode(code) {
             }, 250);
         }
 
-        // بث رسالة التحديث الجديد الشامل (v30.69) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
+        // بث رسالة التحديث الجديد الشامل (v30.70) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
         function handleBroadcastGlobalVersion() {
-            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.69) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
+            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.70) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
                 if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                     SmartCloudSync.broadcastAppVersionUpdate({
-                        version: 'v30.69',
-                        title: 'تحديث المنظومة (v30.69)',
+                        version: 'v30.70',
+                        title: 'تحديث المنظومة (v30.70)',
                         timestamp: Date.now()
                     });
                 }
-                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.69) عبر شبكة البث اللحظي MQTT و NTFY و Master Hub لكافة الأجهزة!');
+                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.70) عبر شبكة البث اللحظي MQTT و NTFY و Master Hub لكافة الأجهزة!');
             }
         }
         window.handleBroadcastGlobalVersion = handleBroadcastGlobalVersion;
@@ -7257,7 +7314,7 @@ function copyAdminCode(code) {
 <script>
 // ===== تحديث تلقائي للوحة الإدارة: تقارن إصدارها بإصدار الأداة المنشور (sw.js) وتحدّث نفسها =====
 (function () {
-    const ADMIN_VER = 'v30.69';
+    const ADMIN_VER = 'v30.70';
     window.ADMIN_VER = ADMIN_VER;
     let busy = false;
     async function check(force) {

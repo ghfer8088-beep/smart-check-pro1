@@ -3181,13 +3181,32 @@
         keysToUpdate.add('global');
 
         const now = Date.now();
+        const isAllUnlocked = Boolean(update.forceUnlockAllSessions || update.isAllSessions || update.sessionNum === 0 || update.sessionNum === 'all');
+        const numSession = (typeof update.sessionNum === 'number' && update.sessionNum >= 1 && update.sessionNum <= 7) ? update.sessionNum : null;
+
+        if (isAllUnlocked) {
+            localStorage.setItem('force_unlock_all', 'true');
+            localStorage.setItem('force_unlock_all_global', 'true');
+        }
+
+        if (numSession) {
+            localStorage.setItem('targeted_session_global', String(numSession));
+        }
+
         for (const key of keysToUpdate) {
+            if (isAllUnlocked) {
+                localStorage.setItem(`force_unlock_all_${key}`, 'true');
+            }
+            if (numSession) {
+                localStorage.setItem(`targeted_session_${key}`, String(numSession));
+            }
             if (update.forceUnlock) {
                 localStorage.setItem(`force_unlock_${key}`, 'true');
                 localStorage.removeItem(`custom_target_time_${key}`);
                 localStorage.removeItem(`custom_total_duration_${key}`);
-                localStorage.removeItem(`sessionStartTime_${key}_${update.sessionNum || 1}`);
-                localStorage.removeItem(`sessionStartTime_${key}_${update.sessionNum || 2}`);
+                for (let i = 1; i <= 7; i++) {
+                    localStorage.removeItem(`sessionStartTime_${key}_${i}`);
+                }
             } else if (update.targetTime && update.targetTime > now) {
                 localStorage.setItem(`custom_target_time_${key}`, String(update.targetTime));
                 if (update.totalDurationMs) {
@@ -3199,6 +3218,19 @@
 
         // تحديث كائن المريض النشط وقاعدة البيانات محلياً
         if (window.activePatient) {
+            if (isAllUnlocked) {
+                window.activePatient.forceUnlockAllSessions = true;
+                window.activePatient.allSessionsUnlocked = true;
+            }
+            if (numSession) {
+                window.activePatient.targetedSessionNum = numSession;
+                window.activePatient.currentSessionDay = numSession;
+                window.activePatient.activeSessionDay = numSession;
+            }
+            if (update.isPlanCompleted) {
+                window.activePatient.isPlanCompleted = true;
+                window.activePatient.recoveryScore = 100;
+            }
             if (update.forceUnlock) {
                 window.activePatient.forceUnlock = true;
                 delete window.activePatient.customTargetTime;
@@ -3214,6 +3246,19 @@
             if (targetKey) {
                 window.SmartDB.getPatient(targetKey).then(pt => {
                     if (pt) {
+                        if (isAllUnlocked) {
+                            pt.forceUnlockAllSessions = true;
+                            pt.allSessionsUnlocked = true;
+                        }
+                        if (numSession) {
+                            pt.targetedSessionNum = numSession;
+                            pt.currentSessionDay = numSession;
+                            pt.activeSessionDay = numSession;
+                        }
+                        if (update.isPlanCompleted) {
+                            pt.isPlanCompleted = true;
+                            pt.recoveryScore = 100;
+                        }
                         if (update.forceUnlock) {
                             pt.forceUnlock = true;
                             delete pt.customTargetTime;
@@ -3240,11 +3285,12 @@
         // تحديث عناصر الساعة وأزرار القفل في الصفحة فوراً
         updateLiveClockDomElements(update);
 
-        // إعادة تنشيط لوحة المريض بالكامل
+        // إعادة تنشيط لوحة المريض بالكامل مع فتح الجلسة المستهدفة مباشرة إن وُجدت
+        const targetDayToOpen = numSession || (isAllUnlocked ? (window.activePatient?.currentSessionDay || 2) : null);
         if (typeof window.loadPatientRecoveryDashboard === 'function') {
-            window.loadPatientRecoveryDashboard(pKey);
+            window.loadPatientRecoveryDashboard(pKey, targetDayToOpen);
         } else if (typeof loadPatientRecoveryDashboard === 'function') {
-            loadPatientRecoveryDashboard(pKey);
+            loadPatientRecoveryDashboard(pKey, targetDayToOpen);
         }
 
         if (typeof window.updatePatientCountdown === 'function') {

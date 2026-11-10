@@ -534,6 +534,16 @@ const PatientFlow = (function() {
         }
 
         const cleanPhone = (patient && patient.phone) ? String(patient.phone).replace(/\D/g, '') : '';
+        // التحقق من فتح جميع الجلسات بالكامل من الإدارة
+        const isAllUnlocked = (localStorage.getItem("force_unlock_all_global") === "true") ||
+                              (localStorage.getItem("force_unlock_all") === "true") ||
+                              (effectiveId && localStorage.getItem(`force_unlock_all_${effectiveId}`) === "true") ||
+                              (patientId && localStorage.getItem(`force_unlock_all_${patientId}`) === "true") ||
+                              (cleanPhone ? localStorage.getItem(`force_unlock_all_${cleanPhone}`) === "true" : false) ||
+                              (patient && (patient.forceUnlockAllSessions === true || patient.allSessionsUnlocked === true));
+        if (isAllUnlocked) {
+            return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true, allUnlocked: true };
+        }
         const forceUnlock = (localStorage.getItem('force_unlock_global') === 'true') || 
                             localStorage.getItem(`force_unlock_${effectiveId}`) === 'true' || 
                             (patientId && localStorage.getItem(`force_unlock_${patientId}`) === 'true') || 

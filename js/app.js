@@ -8121,7 +8121,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
         : { isLocked: false, remainingMs: 0 };
 
     let s4InitialH = '00', s4InitialM = '00', s4InitialS = '00';
-    if (isDay1Completed && lockStatus.isLocked && lockStatus.remainingMs > 0) {
+    if (lockStatus.isLocked && lockStatus.remainingMs > 0) {
         const totalSec = Math.floor(lockStatus.remainingMs / 1000);
         s4InitialH = String(Math.floor(totalSec / 3600)).padStart(2, '0');
         s4InitialM = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
@@ -8129,7 +8129,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
     }
 
     let clockSectionHTML = '';
-    if (isDay1Completed) {
+    if (lockStatus.isLocked && lockStatus.remainingMs > 0) {
         if (lockStatus.isLocked && lockStatus.remainingMs > 0) {
             clockSectionHTML = `
                 <div style="background: linear-gradient(135deg, #0b101b 0%, #172033 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
@@ -8687,19 +8687,41 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         const container = document.getElementById('step5-sessions-container');
         if (!container) return;
 
-        // إذا لم تكتمل الجلسة الأولى، توجيه المريض إلى تمارين اليوم الأول بالمرحلة 4 فوراً
-        if (highestCompleted5 === 0 && !sessionData.isPlanCompleted) {
+        // التحقق من فتح الإدارة لكافة الجلسات أو تحديد جلسة مستهدفة
+        const isAllUnlockedNow = (localStorage.getItem('force_unlock_all_global') === 'true') ||
+                                 (localStorage.getItem('force_unlock_all') === 'true') ||
+                                 (localStorage.getItem(`force_unlock_all_${effectivePid}`) === 'true') ||
+                                 (sessionData.patient?.forceUnlockAllSessions === true) ||
+                                 (sessionData.patient?.allSessionsUnlocked === true) ||
+                                 sessionData.isPlanCompleted;
+
+        const targetedSessionAdmin = parseInt(
+            sessionData.patient?.targetedSessionNum ||
+            sessionData.patient?.currentSessionDay ||
+            localStorage.getItem(`targeted_session_${effectivePid}`) ||
+            localStorage.getItem('targeted_session_global') || 0
+        );
+
+        // إذا لم تكتمل الجلسة الأولى، توجيه المريض إلى اليوم الأول فقط إذا لم يتم فتح الجلسات من الإدارة
+        if (highestCompleted5 === 0 && !sessionData.isPlanCompleted && !isAllUnlockedNow && (!targetDay || targetDay <= 1) && (!targetedSessionAdmin || targetedSessionAdmin <= 1)) {
             renderStep4IndependentDay1(patientId, sessionData);
             return;
         }
 
-        // تحديد اليوم الحالي لتقدم مسار المريض: يستند حصراً للجلسات المنجزة فعلياً
-        const progressionDay = sessionData.isPlanCompleted ? 7 : Math.min(7, Math.max(1, highestCompleted5 + 1));
+        // تحديد اليوم الحالي لتقدم مسار المريض: يستند للجلسات المنجزة أو فتح الإدارة الشامل
+        let progressionDay = sessionData.isPlanCompleted ? 7 : Math.min(7, Math.max(1, highestCompleted5 + 1));
+        if (isAllUnlockedNow) {
+            progressionDay = 7;
+        } else if (targetedSessionAdmin && targetedSessionAdmin > progressionDay) {
+            progressionDay = Math.min(7, targetedSessionAdmin);
+        }
 
-        // تحديد اليوم المعروض حالياً: إذا تم تمرير targetDay (مثلاً عند إتمام جلسة سابقة أو النقر المباشر)، يُعرض مباشرة
+        // تحديد اليوم المعروض حالياً: إذا تم تمرير targetDay أو حددت الإدارة جلسة
         let activeDay = progressionDay;
         if (targetDay) {
-            activeDay = Math.max(2, Math.min(7, targetDay));
+            activeDay = Math.max(1, Math.min(7, targetDay));
+        } else if (targetedSessionAdmin && targetedSessionAdmin >= 1 && targetedSessionAdmin <= 7) {
+            activeDay = targetedSessionAdmin;
         }
 
         if (activePatient) {
@@ -8877,7 +8899,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                     const isCompleted = (hasCompletedLog || sessionData.isPlanCompleted);
                     const isCurrentActive = (d === activeDay);
                     const isCurrentProgression = (!sessionData.isPlanCompleted && d === progressionDay && !hasCompletedLog);
-                    const isFutureLocked = (!sessionData.isPlanCompleted && !hasCompletedLog && d > progressionDay);
+                    const isFutureLocked = (!isAllUnlockedNow && !sessionData.isPlanCompleted && !hasCompletedLog && d > progressionDay);
 
                     let bg = '#1e293b';
                     let border = '1px solid #334155';
@@ -8952,7 +8974,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             } catch(e) { return false; }
         })();
 
-    const isDay1NotDone = (activeDay === 2 && !hasCompletedDay1 && !hasExplicitAdminTimingOrUnlock);
+    const isDay1NotDone = (activeDay === 2 && !hasCompletedDay1 && !hasExplicitAdminTimingOrUnlock && !isAllUnlockedNow && (!targetedSessionAdmin || targetedSessionAdmin <= 1));
 
     if (isDayAlreadyCompleted) {
         clock24HTML = `
@@ -10734,7 +10756,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.69';
+const CURRENT_APP_VERSION = 'v30.70';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -12288,9 +12310,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     // الاستماع الفوري لتحديثات التوقيت من لوحة الإدارة
     window.addEventListener('storage', (e) => {
         if (e.key === 'countdownUpdated') {
-            const savedPatientId = SmartDB.getCurrentSessionPatientId();
+            const savedPatientId = (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null)
+                || (window.activePatient && (window.activePatient.patientId || window.activePatient.id))
+                || localStorage.getItem('smart_current_patient_id')
+                || (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function' && SmartDB.getAuthPatient()?.patientId)
+                || 'pat_guest';
+            const targetDay = parseInt(localStorage.getItem('targeted_session_global') || localStorage.getItem(`targeted_session_${savedPatientId}`) || '0') || null;
             if (savedPatientId) {
-                loadPatientRecoveryDashboard(savedPatientId);
+                loadPatientRecoveryDashboard(savedPatientId, targetDay);
             }
         }
     });
