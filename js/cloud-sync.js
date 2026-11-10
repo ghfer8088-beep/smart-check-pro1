@@ -1959,8 +1959,8 @@
         tasks.push((async () => {
             if (Date.now() < ntfyRateLimitedUntil) return null;
             try {
-                // ✅ v29.30: جلب 'all' دائماً لضمان تحميل أي مريض تم تسجيله أو تحديثه سحابياً وعدم تفويته
-                const sinceParam = 'all';
+                // ✅ v30.79: جلب آخر 15 دقيقة فقط لمنع إعادة استيراد سجلات الاختبار القديمة التالفة
+                const sinceParam = '15m';
                 const controller2 = new AbortController();
                 const timeoutId2 = setTimeout(() => controller2.abort(), 8000);
                 const pollUrl = `${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=${sinceParam}`;
@@ -2123,6 +2123,7 @@
 
                 let latestAttachmentItem = null;
                 let latestInlineSnapshot = null;
+                let latestSyncTimingUpdate = null;
 
                 for (const line of lines) {
                     if (!line.trim()) continue;
@@ -2140,15 +2141,14 @@
                             if (pt.type === 'app_version_update' && pt.version) {
                                 console.log('🚀 [CloudSync] Received app version update via SSE:', pt.version);
                                 handleAppVersionUpdateMessage(pt);
-                                return;
+                                continue;
                             }
-                            // ✅ معالجة بث تحديث التوقيت عبر SSE (للأجهزة التي تستمع على قناة SYNC)
+                            // ✅ معالجة بث تحديث التوقيت عبر SSE (تخزين الأحدث فقط لتطبيقه بعد الحلقة)
                             if (pt.type === 'session_timing_update' || pt.type === 'timing_broadcast_refresh' || pt.forceUnlock !== undefined || pt.targetTime !== undefined) {
-                                console.log('⏱️ [CloudSync] Received timing update via SSE:', pt.type);
-                                if (typeof applyTimingUpdateLocally === 'function') {
-                                    applyTimingUpdateLocally(pt);
+                                if (!latestSyncTimingUpdate || (Number(pt.updatedAt) || 0) >= (Number(latestSyncTimingUpdate.updatedAt) || 0)) {
+                                    latestSyncTimingUpdate = pt;
                                 }
-                                return;
+                                continue;
                             }
                             if (pt.type === 'clinic_full_snapshot' && pt.snapshot) {
                                 latestInlineSnapshot = pt.snapshot;
@@ -2174,6 +2174,10 @@
                             }
                         }
                     } catch(e) {}
+                }
+
+                if (latestSyncTimingUpdate && typeof applyTimingUpdateLocally === 'function') {
+                    try { applyTimingUpdateLocally(latestSyncTimingUpdate); } catch (e) {}
                 }
 
                 // استيراد أحدث حزمة سحابية مدمجة لمرة واحدة فقط لتوفير الوقت ومنع التعليق
@@ -3179,7 +3183,7 @@
                             <div style="background: rgba(16, 185, 129, 0.15); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px; margin-bottom: 14px; color: #6ee7b7; font-weight: bold; font-size: 0.95em;">
                                 🔓 تم فتح الجلسة لك الآن من قبل المعالج! يمكنك حفظ التقييم ومتابعة الخطة 🚀
                             </div>
-                            <button type="button" onclick="openSessionAssessmentModal('${pId}', ${currentDay})" class="royal-clinical-next-btn active-unlocked" style="width: 100%; max-width: 620px; margin: 0 auto; background: linear-gradient(180deg, #10b981 0%, #059669 50%, #047857 51%, #065f46 100%) !important; color: #ffffff !important; border: 2px solid #6ee7b7 !important; border-radius: 50px !important; padding: 10px 24px 10px 14px !important; font-size: 1.15em !important; font-weight: 900 !important; letter-spacing: 0.5px; cursor: pointer; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 14px !important; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.7), 0 2px 4px rgba(0, 0, 0, 0.3) !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important; box-sizing: border-box;">
+                            <button type="button" onclick="if (typeof handleStep5CompletionClick === 'function') { handleStep5CompletionClick('${pId}', ${currentDay}); } else if (typeof openSessionAssessmentModal === 'function') { openSessionAssessmentModal('${pId}', ${currentDay}); }" class="royal-clinical-next-btn active-unlocked" style="width: 100%; max-width: 620px; margin: 0 auto; background: linear-gradient(180deg, #10b981 0%, #059669 50%, #047857 51%, #065f46 100%) !important; color: #ffffff !important; border: 2px solid #6ee7b7 !important; border-radius: 50px !important; padding: 10px 24px 10px 14px !important; font-size: 1.15em !important; font-weight: 900 !important; letter-spacing: 0.5px; cursor: pointer; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 14px !important; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.7), 0 2px 4px rgba(0, 0, 0, 0.3) !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important; box-sizing: border-box;">
                                 <!-- Left Glossy Orb Icon Circle -->
                                 <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 45%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.4) 100%), linear-gradient(135deg, #10b981 0%, #047857 100%); border: 2.5px solid #ffffff; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.8); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                                     <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff" style="margin-left: 2px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));"><polygon points="6,4 20,12 6,20"/></svg>
@@ -3366,23 +3370,27 @@
             return false;
         }
 
-        // منع إعادة تطبيق نفس التحديث بالضبط إذا سبق تطبيقه، مع السماح بأي تحديث جديد أو مختلف في قيمته
+        // منع إعادة تطبيق نفس التحديث بالضبط إذا سبق تطبيقه، إلا إذا كانت الساعة على الشاشة لا تزال عالقة على عداد الـ 24 ساعة
+        const elHCheck = document.getElementById('countdown-hours');
+        const domShows24h = Boolean(elHCheck && parseInt(elHCheck.textContent, 10) > 0);
         const incomingSig = `${update.patientId || 'all'}_${update.sessionNum || 4}_${update.forceUnlock ? 'unlocked' : (update.targetTime || 0)}_${update.totalDurationMs || 0}_${updTimestamp || 0}`;
         const prevSig = localStorage.getItem('smart_last_applied_timing_sig') || '';
-        if (incomingSig === prevSig && updTimestamp > 0 && updTimestamp <= lastAppliedTimingTimestamp) {
-            return false;
-        }
-        if (updTimestamp > 0 && updTimestamp < lastAppliedTimingTimestamp) {
-            return false;
+        if (!domShows24h) {
+            if (incomingSig === prevSig && updTimestamp > 0 && updTimestamp <= lastAppliedTimingTimestamp) {
+                return false;
+            }
+            if (updTimestamp > 0 && updTimestamp < lastAppliedTimingTimestamp) {
+                return false;
+            }
         }
 
-        // معالجة ذكية لمدة العداد: إذا أرسل الأدمن مؤقتاً جديداً (خلال آخر 60 ثانية) نعتمد كامل المدة المحددة (مثل 15 ثانية) بدءاً من لحظة الاستلام
+        // معالجة ذكية لمدة العداد: إذا أرسل الأدمن مؤقتاً جديداً (خلال آخر 5 دقائق) نعتمد كامل المدة المحددة (مثل 15 ثانية) بدءاً من لحظة الاستلام
         if (update.totalDurationMs !== undefined && update.totalDurationMs <= 0) {
             update.forceUnlock = true;
             delete update.targetTime;
             delete update.totalDurationMs;
         } else if (!update.forceUnlock && update.totalDurationMs > 0) {
-            if (!updTimestamp || Math.abs(now - updTimestamp) < 60000) {
+            if (!updTimestamp || Math.abs(now - updTimestamp) < 300000) {
                 update.targetTime = now + update.totalDurationMs;
             } else if (update.targetTime && update.targetTime <= now) {
                 update.forceUnlock = true;
@@ -3395,13 +3403,27 @@
             delete update.totalDurationMs;
         }
 
+        const safeSet = (k, v) => {
+            try {
+                localStorage.setItem(k, v);
+            } catch (e) {
+                try {
+                    localStorage.removeItem('smart_cloud_synced_patients');
+                    localStorage.removeItem('smart_geo_visits_history');
+                    localStorage.removeItem('smart_admin_notifications');
+                    localStorage.setItem(k, v);
+                } catch (e2) {}
+            }
+        };
+        const safeRem = (k) => {
+            try { localStorage.removeItem(k); } catch (e) {}
+        };
+
         // تسجيل أحدث طابع زمني وبصمة التحديث لتفادي المعالجة المكررة
         const effectiveUpdTs = updTimestamp || now;
         lastAppliedTimingTimestamp = Math.max(lastAppliedTimingTimestamp, effectiveUpdTs);
-        try { 
-            localStorage.setItem('smart_last_timing_sync_ts', String(lastAppliedTimingTimestamp));
-            localStorage.setItem('smart_last_applied_timing_sig', incomingSig);
-        } catch(e) {}
+        safeSet('smart_last_timing_sync_ts', String(lastAppliedTimingTimestamp));
+        safeSet('smart_last_applied_timing_sig', incomingSig);
 
         const pKey = currentPid || targetPid;
         const keysToUpdate = new Set();
@@ -3412,56 +3434,72 @@
         if (authP && (authP.patientId || authP.id)) keysToUpdate.add(authP.patientId || authP.id);
         keysToUpdate.add('global');
 
-        // حساب رقم الجلسة الفعلية للمريض لمنع الرجوع إلى جلسة مكتملة سابقاً (مثل الجلسة 2)
+        // حساب رقم الجلسة الفعلية للمريض لمنع الرجوع إلى جلسة مكتملة سابقاً (مثل الجلسة 2) أو القفز للجلسة 7 بالخطأ
         let completedLogsCount = 0;
         try {
             const actLogs = (window.activePatient && Array.isArray(window.activePatient.dailyLogs)) ? window.activePatient.dailyLogs : [];
             const lsLogs = pKey ? JSON.parse(localStorage.getItem('smart_daily_logs_' + pKey) || '[]') : [];
-            completedLogsCount = Math.max(actLogs.length, Array.isArray(lsLogs) ? lsLogs.length : 0);
+            const validAct = actLogs.filter(l => !(l && l.goodPosture === true && l.walkingDone === true && l.heatDone === true && Number(l.sessionNumber) > 3));
+            const validLs = Array.isArray(lsLogs) ? lsLogs.filter(l => !(l && l.goodPosture === true && l.walkingDone === true && l.heatDone === true && Number(l.sessionNumber) > 3)) : [];
+            completedLogsCount = Math.max(validAct.length, validLs.length);
         } catch(e) {}
         const progressionDay = completedLogsCount >= 7 ? 7 : Math.min(7, Math.max(1, completedLogsCount + 1));
 
         const isAllUnlocked = Boolean(update.forceUnlockAllSessions || update.isAllSessions || update.sessionNum === 0 || update.sessionNum === 'all');
-        const rawSession = (typeof update.sessionNum === 'number' && update.sessionNum >= 1 && update.sessionNum <= 7) ? update.sessionNum : null;
-        const numSession = rawSession ? Math.max(rawSession, progressionDay) : progressionDay;
+        const numSession = isAllUnlocked ? 7 : progressionDay;
+
+        // ✅ حفظ التعديل فوراً في الذاكرة الحية لضمان عمله حتى لو امتلأت مساحة localStorage
+        window._scpLiveTimingOverride = {
+            patientId: pKey || targetPid || 'global',
+            forceUnlock: Boolean(update.forceUnlock),
+            forceUnlockAllSessions: isAllUnlocked,
+            targetTime: update.forceUnlock ? 0 : (update.targetTime || 0),
+            totalDurationMs: update.forceUnlock ? 0 : (update.totalDurationMs || (update.targetTime ? Math.max(0, update.targetTime - now) : 0)),
+            sessionNum: numSession,
+            updatedAt: effectiveUpdTs
+        };
 
         if (isAllUnlocked) {
-            localStorage.setItem('force_unlock_all', 'true');
-            localStorage.setItem('force_unlock_all_global', 'true');
+            safeSet('force_unlock_all', 'true');
+            safeSet('force_unlock_all_global', 'true');
         } else if (!update.forceUnlock && update.targetTime && update.targetTime > now) {
-            localStorage.removeItem('force_unlock_all');
-            localStorage.removeItem('force_unlock_all_global');
-            localStorage.removeItem('force_unlock_global');
+            safeRem('force_unlock_all');
+            safeRem('force_unlock_all_global');
+            safeRem('force_unlock_global');
+        } else if (update.forceUnlock) {
+            safeSet('force_unlock_global', 'true');
+            safeRem('custom_target_time_global');
+            safeRem('custom_total_duration_global');
         }
 
         if (numSession) {
-            localStorage.setItem('targeted_session_global', String(numSession));
+            safeSet('targeted_session_global', String(numSession));
         }
 
         for (const key of keysToUpdate) {
             if (isAllUnlocked) {
-                localStorage.setItem(`force_unlock_all_${key}`, 'true');
+                safeSet(`force_unlock_all_${key}`, 'true');
             }
             if (numSession) {
-                localStorage.setItem(`targeted_session_${key}`, String(numSession));
+                safeSet(`targeted_session_${key}`, String(numSession));
             }
             if (update.forceUnlock) {
-                localStorage.setItem(`force_unlock_${key}`, 'true');
-                localStorage.removeItem(`custom_target_time_${key}`);
-                localStorage.removeItem(`custom_total_duration_${key}`);
+                safeSet(`force_unlock_${key}`, 'true');
+                safeRem(`custom_target_time_${key}`);
+                safeRem(`custom_total_duration_${key}`);
                 for (let i = 1; i <= 7; i++) {
-                    localStorage.removeItem(`sessionStartTime_${key}_${i}`);
+                    safeRem(`sessionStartTime_${key}_${i}`);
                 }
             } else if (update.targetTime && update.targetTime > now) {
-                localStorage.setItem(`custom_target_time_${key}`, String(update.targetTime));
-                localStorage.setItem(`custom_total_duration_${key}`, String(update.totalDurationMs || (update.targetTime - now)));
-                localStorage.removeItem(`force_unlock_${key}`);
-                localStorage.removeItem(`force_unlock_all_${key}`);
+                safeSet(`custom_target_time_${key}`, String(update.targetTime));
+                safeSet(`custom_total_duration_${key}`, String(update.totalDurationMs || (update.targetTime - now)));
+                safeRem(`force_unlock_${key}`);
+                safeRem(`force_unlock_all_${key}`);
             } else if (update.targetTime && update.targetTime <= now) {
                 // الوقت المحدد قد انقضى بالفعل: اعتماد فتح الجلسة فوراً وتثبيته
-                localStorage.setItem(`force_unlock_${key}`, 'true');
-                localStorage.removeItem(`custom_target_time_${key}`);
-                localStorage.removeItem(`custom_total_duration_${key}`);
+                safeSet(`force_unlock_${key}`, 'true');
+                safeRem(`custom_target_time_${key}`);
+                safeRem(`custom_total_duration_${key}`);
             }
         }
 
@@ -3551,11 +3589,11 @@
         } catch(e) {}
 
         // إطلاق إشعار التحديث المحلي لعداد الثواني
-        localStorage.setItem('countdownUpdated', String(now));
+        safeSet('countdownUpdated', String(now));
 
         // تحديث عناصر الساعة وأزرار القفل في الصفحة فوراً قبل إعادة رسم اللوحة
         update.sessionNum = numSession;
-        updateLiveClockDomElements(update);
+        try { updateLiveClockDomElements(update); } catch (e) {}
 
         const targetKey = currentPid || targetPid || (authP && (authP.patientId || authP.id));
         const triggerDashboardReload = () => {
@@ -3563,12 +3601,20 @@
                 if (typeof window._isRenderingStep5 !== 'undefined') window._isRenderingStep5 = false;
             } catch(e) {}
             const targetDayToOpen = numSession || progressionDay;
-            if (typeof window.loadPatientRecoveryDashboard === 'function') {
-                window.loadPatientRecoveryDashboard(pKey, targetDayToOpen);
-            } else if (typeof loadPatientRecoveryDashboard === 'function') {
-                loadPatientRecoveryDashboard(pKey, targetDayToOpen);
-            }
+            try {
+                if (typeof window.loadPatientRecoveryDashboard === 'function') {
+                    window.loadPatientRecoveryDashboard(pKey, targetDayToOpen);
+                } else if (typeof loadPatientRecoveryDashboard === 'function') {
+                    loadPatientRecoveryDashboard(pKey, targetDayToOpen);
+                }
+            } catch (e) {}
+            setTimeout(() => {
+                try { updateLiveClockDomElements(update); } catch (e2) {}
+            }, 80);
         };
+
+        // تحديث الواجهة فوراً في نفس اللحظة ثم حفظ الكائن في SmartDB بالخلفية
+        triggerDashboardReload();
 
         if (window.SmartDB && typeof window.SmartDB.getPatient === 'function' && targetKey) {
             window.SmartDB.getPatient(targetKey).then(async pt => {
@@ -3576,12 +3622,7 @@
                     applyTimingToPtObj(pt);
                     try { await window.SmartDB.savePatient(pt, { skipCloudSync: true }); } catch(e) {}
                 }
-                triggerDashboardReload();
-            }).catch(() => {
-                triggerDashboardReload();
-            });
-        } else {
-            triggerDashboardReload();
+            }).catch(() => {});
         }
 
         if (typeof window.updatePatientCountdown === 'function') {
@@ -3607,10 +3648,11 @@
     let isFetchingTiming = false;
     let lastTimingFetchTime = 0;
     let timingNtfyRateLimitedUntil = 0;
+    let timingWebSocket = null;
     async function fetchRemoteTimingUpdates() {
         if (isFetchingTiming) return [];
         const now = Date.now();
-        if (now - lastTimingFetchTime < 2500) return [];
+        if (now - lastTimingFetchTime < 1500) return [];
         if (now < timingNtfyRateLimitedUntil) return [];
         isFetchingTiming = true;
         lastTimingFetchTime = now;
@@ -3663,19 +3705,57 @@
                 if (x.timestamp) { const t = new Date(x.timestamp).getTime(); if (!isNaN(t) && t > 0) return t; }
                 return 0;
             };
+            const elHCheck = document.getElementById('countdown-hours');
+            const domShows24h = Boolean(elHCheck && parseInt(elHCheck.textContent, 10) > 0);
             candidateUpdates.sort((a, b) => getTs(a) - getTs(b));
             for (let i = candidateUpdates.length - 1; i >= 0; i--) {
                 const cand = candidateUpdates[i];
                 const candTs = getTs(cand);
-                if (candTs > 0 && candTs <= lastAppliedTimingTimestamp) break;
+                if (!domShows24h && candTs > 0 && candTs <= lastAppliedTimingTimestamp) break;
                 const applied = applyTimingUpdateLocally(cand);
                 if (applied) break; // أول تحديث ينطبق بنجاح على هذا المريض نكتفي به
             }
         }
     }
 
-    // الاستماع اللحظي الدائم (SSE) على هاتف المريض للرسائل الجديدة الحية فقط
+    // الاستماع اللحظي الدائم (WebSocket + SSE) على هاتف المريض للرسائل الجديدة الحية
     function initTimingListener() {
+        // 1. اتصال WebSocket مباشر وفوري (<50ms) مع قناة التوقيت
+        if (typeof WebSocket !== 'undefined' && !timingWebSocket) {
+            try {
+                const wsUrl = CLOUD_TIMING_ENDPOINT.replace(/^https:\/\//i, 'wss://').replace(/^http:\/\//i, 'ws://') + '/ws?since=10m';
+                timingWebSocket = new WebSocket(wsUrl);
+                timingWebSocket.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data && data.event === 'message' && data.message) {
+                            let parsed = null;
+                            try { parsed = JSON.parse(data.message); } catch(e) { parsed = data.message; }
+                            if (!parsed || typeof parsed !== 'object') return;
+                            if (parsed.type === 'app_version_update' && parsed.version) {
+                                handleAppVersionUpdateMessage(parsed);
+                                return;
+                            }
+                            if (parsed.type === 'session_timing_update' || parsed.type === 'timing_broadcast_refresh' || parsed.forceUnlock !== undefined || parsed.targetTime !== undefined) {
+                                console.log('⚡ [TimingWS] Incoming live timing update:', parsed);
+                                applyTimingUpdateLocally(parsed);
+                            }
+                        }
+                    } catch (e) {}
+                };
+                timingWebSocket.onclose = () => {
+                    timingWebSocket = null;
+                    setTimeout(initTimingListener, 3000);
+                };
+                timingWebSocket.onerror = () => {
+                    try { if (timingWebSocket) timingWebSocket.close(); } catch (e) {}
+                    timingWebSocket = null;
+                };
+            } catch (e) {
+                timingWebSocket = null;
+            }
+        }
+
         if (typeof EventSource === 'undefined') return;
         if (timingEventSource) return;
 
@@ -3734,7 +3814,7 @@
     function handleAppVersionUpdateMessage(data) {
         if (!data || !data.version) return;
         const newVer = String(data.version).trim();
-        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.78');
+        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.79');
         const numNew = _parseVersionNumber(newVer);
         const numCur = _parseVersionNumber(curVer);
 

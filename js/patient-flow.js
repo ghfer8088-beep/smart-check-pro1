@@ -553,6 +553,32 @@ const PatientFlow = (function() {
             return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, isDev: true };
         }
 
+        // ✅ أولوية قصوى للتعديل اللحظي المحفوظ في الذاكرة الحية من لوحة الأدمن (يعمل حتى لو امتلأت مساحة localStorage)
+        if (typeof window !== 'undefined' && window._scpLiveTimingOverride) {
+            const ov = window._scpLiveTimingOverride;
+            if (ov.forceUnlockAllSessions) {
+                return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true, allUnlocked: true };
+            }
+            if (ov.forceUnlock) {
+                return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
+            }
+            if (ov.targetTime && ov.targetTime > 0) {
+                const diffOv = ov.targetTime - Date.now();
+                if (diffOv <= 0) {
+                    ov.forceUnlock = true;
+                    ov.targetTime = 0;
+                    return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
+                }
+                return {
+                    isLocked: true,
+                    remainingHours: diffOv / (1000 * 60 * 60),
+                    remainingMs: diffOv,
+                    totalDurationMs: ov.totalDurationMs || diffOv,
+                    targetTime: ov.targetTime
+                };
+            }
+        }
+
         const cleanPhone = (patient && patient.phone) ? String(patient.phone).replace(/\D/g, '') : '';
         const localCustomTarget = (effectiveId ? localStorage.getItem(`custom_target_time_${effectiveId}`) : null) ||
                                   (patientId ? localStorage.getItem(`custom_target_time_${patientId}`) : null) ||

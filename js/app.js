@@ -8725,12 +8725,10 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         let progressionDay = sessionData.isPlanCompleted ? 7 : Math.min(7, Math.max(1, highestCompleted5 + 1));
         if (isAllUnlockedNow) {
             progressionDay = 7;
-        } else if (targetedSessionAdmin && targetedSessionAdmin > progressionDay) {
-            progressionDay = Math.min(7, targetedSessionAdmin);
         }
 
-        // تنظيف أي قيمة قديمة مخزنة في targeted_session إذا كانت أقل من جلسة التقدم الفعلية للمريض (تمنع الارتداد للجلسة 2 عند التحديث)
-        if (targetedSessionAdmin > 0 && targetedSessionAdmin < progressionDay) {
+        // تنظيف أي قيمة مخزنة في targeted_session لا تطابق جلسة التقدم الفعلية للمريض (تمنع الارتداد للجلسة 2 أو القفز للجلسة 7)
+        if (targetedSessionAdmin > 0 && targetedSessionAdmin !== progressionDay && !isAllUnlockedNow) {
             try {
                 localStorage.removeItem('targeted_session_global');
                 if (effectivePid) localStorage.removeItem(`targeted_session_${effectivePid}`);
@@ -9448,7 +9446,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 if (!document.hidden && window.SmartCloudSync && typeof window.SmartCloudSync.fetchRemoteTimingUpdates === 'function') {
                     window.SmartCloudSync.fetchRemoteTimingUpdates();
                 }
-            }, 15000);
+            }, 4000);
         }
     }
     if (window.SmartGuidance) {
@@ -10599,6 +10597,7 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
                               (activePatient && (activePatient.forceUnlockAllSessions === true || activePatient.allSessionsUnlocked === true));
 
         if (!isAllUnlocked) {
+            window._scpLiveTimingOverride = null;
             const lockDurationMs = 24 * 60 * 60 * 1000;
             const targetLockTime = Date.now() + lockDurationMs;
             const cleanP = (activePatient.phone || '').replace(/\D/g, '');
@@ -10825,7 +10824,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.78';
+const CURRENT_APP_VERSION = 'v30.79';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
