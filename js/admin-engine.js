@@ -1199,10 +1199,14 @@ const AdminEngine = (function() {
                 safeStorageSet(`custom_target_time_${patientId}`, String(targetTime));
                 safeStorageSet(`custom_total_duration_${patientId}`, String(totalDurationMs));
                 safeStorageRemove(`force_unlock_${patientId}`);
+                safeStorageRemove(`force_unlock_all_${patientId}`);
+                safeStorageRemove('force_unlock_all');
+                safeStorageRemove('force_unlock_all_global');
                 if (cleanPhone) {
                     safeStorageSet(`custom_target_time_${cleanPhone}`, String(targetTime));
                     safeStorageSet(`custom_total_duration_${cleanPhone}`, String(totalDurationMs));
                     safeStorageRemove(`force_unlock_${cleanPhone}`);
+                    safeStorageRemove(`force_unlock_all_${cleanPhone}`);
                 }
                 if (broadcastToAll) {
                     safeStorageSet('custom_target_time_global', String(targetTime));
@@ -1215,28 +1219,74 @@ const AdminEngine = (function() {
             console.warn('LocalStorage save warning in setPatientSessionTiming:', storageErr);
         }
 
+        // تحديث متزامن وفوري لكائن المريض في قوائم التخزين المحلية (smart_cloud_synced_patients و smart_all_patients)
+        const nowTimingTs = Date.now();
+        const applyTimingPropsToPt = (pt) => {
+            if (!pt) return;
+            if (forceUnlock) {
+                pt.forceUnlock = true;
+                delete pt.customTargetTime;
+                delete pt.custom_target_time;
+                delete pt.customDurationMs;
+            } else {
+                pt.customTargetTime = targetTime;
+                pt.customDurationMs = totalDurationMs;
+                pt.forceUnlock = false;
+                pt.forceUnlockAllSessions = false;
+                pt.allSessionsUnlocked = false;
+            }
+            pt.customTimingHours = h;
+            pt.customTimingMinutes = m;
+            pt.customTimingSeconds = s;
+            pt.lastTimingUpdated = nowTimingTs;
+            if (isAllSessions) {
+                pt.forceUnlockAllSessions = true;
+                pt.allSessionsUnlocked = true;
+            }
+            if (numSession >= 1 && numSession <= 7) {
+                pt.currentSessionDay = numSession;
+                pt.targetedSessionNum = numSession;
+                pt.activeSessionDay = numSession;
+            }
+        };
+
+        try {
+            ['smart_cloud_synced_patients', 'smart_all_patients'].forEach(lsKey => {
+                const raw = localStorage.getItem(lsKey);
+                if (!raw) return;
+                const list = JSON.parse(raw);
+                if (!Array.isArray(list)) return;
+                let modified = false;
+                list.forEach(pt => {
+                    if (!pt) return;
+                    const pId = pt.patientId || pt.id;
+                    const pPh = pt.phone ? String(pt.phone).replace(/\D/g, '') : '';
+                    if ((patientId && pId === patientId) || (cleanPhone && pPh && pPh.slice(-7) === cleanPhone.slice(-7))) {
+                        applyTimingPropsToPt(pt);
+                        modified = true;
+                    }
+                });
+                if (modified) safeStorageSet(lsKey, JSON.stringify(list));
+            });
+            const rawAct = localStorage.getItem('smart_active_patient');
+            if (rawAct) {
+                const actPt = JSON.parse(rawAct);
+                const aId = actPt?.patientId || actPt?.id;
+                const aPh = actPt?.phone ? String(actPt.phone).replace(/\D/g, '') : '';
+                if (actPt && ((patientId && aId === patientId) || (cleanPhone && aPh && aPh.slice(-7) === cleanPhone.slice(-7)) || broadcastToAll)) {
+                    applyTimingPropsToPt(actPt);
+                    safeStorageSet('smart_active_patient', JSON.stringify(actPt));
+                }
+            }
+        } catch(e) {}
+
         // حفظ التوقيت والجلسة المستهدفة داخل كائن المريض نفسه في SmartDB
         try {
             if (window.SmartDB && typeof window.SmartDB.getPatient === 'function') {
                 window.SmartDB.getPatient(patientId).then(pt => {
                     if (pt) {
-                        pt.customTargetTime = targetTime;
-                        pt.customDurationMs = totalDurationMs;
-                        pt.forceUnlock = forceUnlock;
-                        pt.customTimingHours = h;
-                        pt.customTimingMinutes = m;
-                        pt.customTimingSeconds = s;
-                        pt.lastTimingUpdated = Date.now();
-                        if (isAllSessions) {
-                            pt.forceUnlockAllSessions = true;
-                            pt.allSessionsUnlocked = true;
-                        }
-                        if (numSession >= 1 && numSession <= 7) {
-                            pt.currentSessionDay = numSession;
-                            pt.targetedSessionNum = numSession;
-                            pt.activeSessionDay = numSession;
-                        }
-                        window.SmartDB.savePatient(pt, { skipCloudSync: false });
+                        applyTimingPropsToPt(pt);
+                        window.SmartDB.savePatient(pt, { skipCloudSync: true });
                     }
                 }).catch(() => {});
             }
@@ -1260,13 +1310,8 @@ const AdminEngine = (function() {
                     forceUnlock: forceUnlock,
                     broadcastToAll: !!broadcastToAll,
                     global: !!broadcastToAll,
-                    updatedAt: Date.now()
+                    updatedAt: nowTimingTs
                 });
-
-                // تعميم حزمة المزامنة الكاملة فوراً لضمان احتفاظ السحابة بالتوقيت الجديد
-                if (typeof window.SmartCloudSync.broadcastSnapshot === 'function') {
-                    setTimeout(() => window.SmartCloudSync.broadcastSnapshot(), 100);
-                }
             }
         } catch(cloudErr) {
             console.error('Error in cloud timing dispatch:', cloudErr);

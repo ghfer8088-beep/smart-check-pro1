@@ -1434,10 +1434,36 @@
                             normalized.patientId = normalized.id;
                             currentList.unshift(normalized);
                         } else {
-                            currentList[idx] = { ...currentList[idx], ...normalized };
+                            // الحفاظ على إعدادات التوقيت المحلية الأحدث ومنع الكتابة فوقها من اللقطة السحابية القديمة
+                            const keepTiming = {};
+                            const localTs = Number(existing.lastTimingUpdated) || 0;
+                            const incomingTs = Number(normalized.lastTimingUpdated) || 0;
+                            if (localTs >= incomingTs && localTs > 0) {
+                                keepTiming.customTargetTime = existing.customTargetTime;
+                                keepTiming.customDurationMs = existing.customDurationMs;
+                                keepTiming.forceUnlock = existing.forceUnlock;
+                                keepTiming.forceUnlockAllSessions = existing.forceUnlockAllSessions;
+                                keepTiming.allSessionsUnlocked = existing.allSessionsUnlocked;
+                                keepTiming.lastTimingUpdated = existing.lastTimingUpdated;
+                                keepTiming.currentSessionDay = existing.currentSessionDay;
+                                keepTiming.targetedSessionNum = existing.targetedSessionNum;
+                            }
+                            currentList[idx] = { ...existing, ...normalized, ...keepTiming };
+                            Object.assign(normalized, keepTiming);
                         }
                     } else {
                         currentList.unshift(normalized);
+                    }
+                    // مزامنة التوقيت من localStorage قبل حفظ المريض في SmartDB لمنع مسح التوقيت المعدل
+                    const lsTargetSnap = localStorage.getItem(`custom_target_time_${pId}`) || localStorage.getItem('custom_target_time_global');
+                    const lsForceSnap = (localStorage.getItem(`force_unlock_${pId}`) === 'true') || (localStorage.getItem('force_unlock_global') === 'true');
+                    if (lsForceSnap) {
+                        normalized.forceUnlock = true;
+                        delete normalized.customTargetTime;
+                        delete normalized.customDurationMs;
+                    } else if (lsTargetSnap) {
+                        normalized.customTargetTime = parseInt(lsTargetSnap, 10);
+                        normalized.forceUnlock = false;
                     }
                     if (window.SmartDB && typeof window.SmartDB.savePatient === 'function') {
                         window.SmartDB.savePatient(normalized, { skipCloudSync: true }).catch(() => {});
@@ -1539,6 +1565,7 @@
                 });
 
                 if (matched) {
+                    const prevLogsCount = (window.activePatient && Array.isArray(window.activePatient.dailyLogs)) ? window.activePatient.dailyLogs.length : 0;
                     const logsKey = 'smart_daily_logs_' + (matched.id || matched.patientId);
                     const freshLogs = JSON.parse(localStorage.getItem(logsKey) || '[]');
                     if (freshLogs.length > 0) {
@@ -1550,9 +1577,17 @@
                         localStorage.setItem('force_unlock_all_global', 'true');
                         localStorage.setItem('force_unlock_all', 'true');
                     }
-                    window.activePatient = { ...(window.activePatient || {}), ...matched };
+                    const preservedTiming = {};
+                    if (window.activePatient) {
+                        if (window.activePatient.customTargetTime !== undefined) preservedTiming.customTargetTime = window.activePatient.customTargetTime;
+                        if (window.activePatient.customDurationMs !== undefined) preservedTiming.customDurationMs = window.activePatient.customDurationMs;
+                        if (window.activePatient.forceUnlock !== undefined) preservedTiming.forceUnlock = window.activePatient.forceUnlock;
+                        if (window.activePatient.currentSessionDay !== undefined) preservedTiming.currentSessionDay = window.activePatient.currentSessionDay;
+                    }
+                    window.activePatient = { ...(window.activePatient || {}), ...matched, ...preservedTiming };
                     localStorage.setItem('smart_active_patient', JSON.stringify(window.activePatient));
-                    if (typeof window.loadPatientRecoveryDashboard === 'function') {
+                    const newLogsCount = (window.activePatient && Array.isArray(window.activePatient.dailyLogs)) ? window.activePatient.dailyLogs.length : 0;
+                    if (newLogsCount > prevLogsCount && typeof window.loadPatientRecoveryDashboard === 'function') {
                         window.loadPatientRecoveryDashboard(matched.id || matched.patientId);
                     }
                 }
@@ -2134,7 +2169,7 @@
         if (cloudEventSource) return;
 
         try {
-            cloudEventSource = new EventSource(`${CLOUD_SYNC_ENDPOINT}/sse?since=1h`);
+            cloudEventSource = new EventSource(`${CLOUD_SYNC_ENDPOINT}/sse`);
             cloudEventSource.onmessage = async (event) => {
                 try {
                     const data = JSON.parse(event.data);
@@ -2971,23 +3006,22 @@
 
         const rawJson = JSON.stringify(payload);
 
-        // 3. إرسال فوري ومباشر ونظيف إلى قناة التوقيت المخصصة عبر NTFY
-        try {
-            fetch(CLOUD_TIMING_ENDPOINT, {
-                method: 'POST',
-                mode: 'cors',
-                credentials: 'omit',
-                headers: { 
-                    'Content-Type': 'text/plain; charset=utf-8', 
-                    'Title': 'Timing Update', 
-                    'Priority': 'urgent',
-                    'Tags': 'stopwatch,alarm_clock'
-                },
-                body: rawJson
-            }).catch(() => {
-                try { fetch(CLOUD_TIMING_ENDPOINT, { method: 'POST', mode: 'no-cors', body: rawJson }).catch(() => {}); } catch(e) {}
-            });
-        } catch(e) {}
+        // 3. إرسال فوري ومباشر ونظيف بدون ترويسات معقدة (Simple CORS Request) لضمان عبوره من file:// و https:// فوراً
+        const sendSimplePost = (url) => {
+            try {
+                fetch(url, {
+                    method: 'POST',
+                    mode: 'cors',
+                    credentials: 'omit',
+                    headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+                    body: rawJson
+                }).catch(() => {
+                    try { fetch(url, { method: 'POST', mode: 'no-cors', body: rawJson }).catch(() => {}); } catch(e) {}
+                });
+            } catch(e) {}
+        };
+        sendSimplePost(CLOUD_TIMING_ENDPOINT);
+        sendSimplePost(CLOUD_SYNC_ENDPOINT);
     }
 
     // تحديث مباشر وفوري لعناصر الساعة وأزرار القفل في الصفحة المعروضة حالياً
@@ -3156,15 +3190,7 @@
         }
 
         const now = Date.now();
-        // إذا كان التحديث يحمل targetTime وانقضى وقته، فهو فتح فوري ومؤكد للجلسة
-        if (update.targetTime && update.targetTime <= now) {
-            update.forceUnlock = true;
-            delete update.targetTime;
-            delete update.totalDurationMs;
-        }
-        if (update.totalDurationMs !== undefined && update.totalDurationMs <= 0) {
-            update.forceUnlock = true;
-        }
+        const updTimestamp = Number(update.updatedAt) || 0;
 
         const targetPid = update.patientId || '';
         const targetPhone = (update.patientPhone || '').replace(/\D/g, '');
@@ -3242,7 +3268,7 @@
             }
         }
 
-        // 4. تطابق ذكي بالاسم العربي (مثل "ياسمين" مع تطبيع الحروف والمسافات والهمزات)
+        // 4. تطابق ذكي بالاسم العربي
         const normalizeArabic = s => (s ? String(s).toLowerCase().replace(/[أإآ]/g, 'ا').replace(/[ىئ]/g, 'ي').replace(/ة/g, 'ه').replace(/[\u064B-\u065F]/g, '').replace(/\s+/g, ' ').trim() : '');
         if (!isMatch && targetName && currentName) {
             const nTarget = normalizeArabic(targetName);
@@ -3257,12 +3283,36 @@
             return false;
         }
 
+        // منع إعادة تطبيق التحديثات القديمة التي سبق تطبيقها
+        if (updTimestamp > 0 && updTimestamp <= lastAppliedTimingTimestamp) {
+            return false;
+        }
+
+        // معالجة ذكية لمدة العداد: إذا أرسل الأدمن مؤقتاً جديداً (خلال آخر 60 ثانية) نعتمد كامل المدة المحددة (مثل 15 ثانية) بدءاً من لحظة الاستلام
+        if (update.totalDurationMs !== undefined && update.totalDurationMs <= 0) {
+            update.forceUnlock = true;
+            delete update.targetTime;
+            delete update.totalDurationMs;
+        } else if (!update.forceUnlock && update.totalDurationMs > 0) {
+            if (!updTimestamp || Math.abs(now - updTimestamp) < 60000) {
+                update.targetTime = now + update.totalDurationMs;
+            } else if (update.targetTime && update.targetTime <= now) {
+                update.forceUnlock = true;
+                delete update.targetTime;
+                delete update.totalDurationMs;
+            }
+        } else if (update.targetTime && update.targetTime <= now) {
+            update.forceUnlock = true;
+            delete update.targetTime;
+            delete update.totalDurationMs;
+        }
+
         // تسجيل أحدث طابع زمني وبصمة التحديث لتفادي المعالجة المكررة
-        const updTimestamp = update.updatedAt || Date.now();
-        lastAppliedTimingTimestamp = Math.max(lastAppliedTimingTimestamp, updTimestamp);
+        const effectiveUpdTs = updTimestamp || now;
+        lastAppliedTimingTimestamp = Math.max(lastAppliedTimingTimestamp, effectiveUpdTs);
         try { 
             localStorage.setItem('smart_last_timing_sync_ts', String(lastAppliedTimingTimestamp));
-            const sig = `${update.patientId || 'all'}_${update.sessionNum || 2}_${update.forceUnlock ? 'unlocked' : (update.targetTime || 0)}_${update.totalDurationMs || 0}`;
+            const sig = `${update.patientId || 'all'}_${update.sessionNum || 4}_${update.forceUnlock ? 'unlocked' : (update.targetTime || 0)}_${update.totalDurationMs || 0}`;
             localStorage.setItem('smart_last_applied_timing_sig', sig);
         } catch(e) {}
 
@@ -3275,12 +3325,26 @@
         if (authP && (authP.patientId || authP.id)) keysToUpdate.add(authP.patientId || authP.id);
         keysToUpdate.add('global');
 
+        // حساب رقم الجلسة الفعلية للمريض لمنع الرجوع إلى جلسة مكتملة سابقاً (مثل الجلسة 2)
+        let completedLogsCount = 0;
+        try {
+            const actLogs = (window.activePatient && Array.isArray(window.activePatient.dailyLogs)) ? window.activePatient.dailyLogs : [];
+            const lsLogs = pKey ? JSON.parse(localStorage.getItem('smart_daily_logs_' + pKey) || '[]') : [];
+            completedLogsCount = Math.max(actLogs.length, Array.isArray(lsLogs) ? lsLogs.length : 0);
+        } catch(e) {}
+        const progressionDay = completedLogsCount >= 7 ? 7 : Math.min(7, Math.max(1, completedLogsCount + 1));
+
         const isAllUnlocked = Boolean(update.forceUnlockAllSessions || update.isAllSessions || update.sessionNum === 0 || update.sessionNum === 'all');
-        const numSession = (typeof update.sessionNum === 'number' && update.sessionNum >= 1 && update.sessionNum <= 7) ? update.sessionNum : null;
+        const rawSession = (typeof update.sessionNum === 'number' && update.sessionNum >= 1 && update.sessionNum <= 7) ? update.sessionNum : null;
+        const numSession = rawSession ? Math.max(rawSession, progressionDay) : progressionDay;
 
         if (isAllUnlocked) {
             localStorage.setItem('force_unlock_all', 'true');
             localStorage.setItem('force_unlock_all_global', 'true');
+        } else if (!update.forceUnlock && update.targetTime && update.targetTime > now) {
+            localStorage.removeItem('force_unlock_all');
+            localStorage.removeItem('force_unlock_all_global');
+            localStorage.removeItem('force_unlock_global');
         }
 
         if (numSession) {
@@ -3303,10 +3367,9 @@
                 }
             } else if (update.targetTime && update.targetTime > now) {
                 localStorage.setItem(`custom_target_time_${key}`, String(update.targetTime));
-                if (update.totalDurationMs) {
-                    localStorage.setItem(`custom_total_duration_${key}`, String(update.totalDurationMs));
-                }
+                localStorage.setItem(`custom_total_duration_${key}`, String(update.totalDurationMs || (update.targetTime - now)));
                 localStorage.removeItem(`force_unlock_${key}`);
+                localStorage.removeItem(`force_unlock_all_${key}`);
             } else if (update.targetTime && update.targetTime <= now) {
                 // الوقت المحدد قد انقضى بالفعل: اعتماد فتح الجلسة فوراً وتثبيته
                 localStorage.setItem(`force_unlock_${key}`, 'true');
@@ -3315,22 +3378,43 @@
             }
         }
 
-        // تحديث كائن المريض النشط وقاعدة البيانات محلياً
-        if (window.activePatient) {
+        const applyTimingToPtObj = (ptObj) => {
+            if (!ptObj) return;
             if (isAllUnlocked) {
-                window.activePatient.forceUnlockAllSessions = true;
-                window.activePatient.allSessionsUnlocked = true;
+                ptObj.forceUnlockAllSessions = true;
+                ptObj.allSessionsUnlocked = true;
+            } else if (!update.forceUnlock && update.targetTime && update.targetTime > now) {
+                ptObj.forceUnlockAllSessions = false;
+                ptObj.allSessionsUnlocked = false;
             }
             if (numSession) {
-                window.activePatient.targetedSessionNum = numSession;
-                window.activePatient.currentSessionDay = numSession;
-                window.activePatient.activeSessionDay = numSession;
+                ptObj.targetedSessionNum = numSession;
+                ptObj.currentSessionDay = numSession;
+                ptObj.activeSessionDay = numSession;
             }
             if (update.isPlanCompleted) {
-                window.activePatient.isPlanCompleted = true;
-                window.activePatient.recoveryScore = 100;
-                window.activePatient.completedSessions = 7;
-                window.activePatient.logsCount = 7;
+                ptObj.isPlanCompleted = true;
+                ptObj.recoveryScore = 100;
+                ptObj.completedSessions = 7;
+                ptObj.logsCount = 7;
+            }
+            if (update.forceUnlock) {
+                ptObj.forceUnlock = true;
+                delete ptObj.customTargetTime;
+                delete ptObj.custom_target_time;
+                delete ptObj.customDurationMs;
+            } else if (update.targetTime && update.targetTime > now) {
+                ptObj.customTargetTime = update.targetTime;
+                ptObj.customDurationMs = update.totalDurationMs || (update.targetTime - now);
+                ptObj.forceUnlock = false;
+            }
+            ptObj.lastTimingUpdated = effectiveUpdTs;
+        };
+
+        // تحديث كائن المريض النشط وقاعدة البيانات محلياً
+        if (window.activePatient) {
+            applyTimingToPtObj(window.activePatient);
+            if (update.isPlanCompleted) {
                 const pIdForLogs = pKey || currentPid || targetPid;
                 if (pIdForLogs) {
                     const logs = [];
@@ -3356,70 +3440,61 @@
                     }
                 }
             }
-            if (update.forceUnlock) {
-                window.activePatient.forceUnlock = true;
-                delete window.activePatient.customTargetTime;
-                delete window.activePatient.customDurationMs;
-            } else if (update.targetTime && update.targetTime > now) {
-                window.activePatient.customTargetTime = update.targetTime;
-                window.activePatient.customDurationMs = update.totalDurationMs;
-                window.activePatient.forceUnlock = false;
-            }
             try { localStorage.setItem('smart_active_patient', JSON.stringify(window.activePatient)); } catch(e) {}
         }
-        if (window.SmartDB && typeof window.SmartDB.getPatient === 'function') {
-            const targetKey = currentPid || targetPid || (authP && (authP.patientId || authP.id));
-            if (targetKey) {
-                window.SmartDB.getPatient(targetKey).then(pt => {
-                    if (pt) {
-                        if (isAllUnlocked) {
-                            pt.forceUnlockAllSessions = true;
-                            pt.allSessionsUnlocked = true;
-                        }
-                        if (numSession) {
-                            pt.targetedSessionNum = numSession;
-                            pt.currentSessionDay = numSession;
-                            pt.activeSessionDay = numSession;
-                        }
-                        if (update.isPlanCompleted) {
-                            pt.isPlanCompleted = true;
-                            pt.recoveryScore = 100;
-                        }
-                        if (update.forceUnlock) {
-                            pt.forceUnlock = true;
-                            delete pt.customTargetTime;
-                            delete pt.customDurationMs;
-                        } else if (update.targetTime && update.targetTime > now) {
-                            pt.customTargetTime = update.targetTime;
-                            pt.customDurationMs = update.totalDurationMs;
-                            pt.forceUnlock = false;
-                        }
-                        window.SmartDB.savePatient(pt, { skipCloudSync: true });
+
+        // تحديث قوائم المرضى المحلية بالتزامن
+        try {
+            ['smart_cloud_synced_patients', 'smart_all_patients'].forEach(lsKey => {
+                const raw = localStorage.getItem(lsKey);
+                if (!raw) return;
+                const list = JSON.parse(raw);
+                if (!Array.isArray(list)) return;
+                let changedList = false;
+                list.forEach(item => {
+                    if (!item) return;
+                    const itemId = item.patientId || item.id;
+                    if (itemId && (itemId === pKey || itemId === targetPid || itemId === currentPid)) {
+                        applyTimingToPtObj(item);
+                        changedList = true;
                     }
-                }).catch(() => {});
-            }
-        }
+                });
+                if (changedList) safeStorageSet(lsKey, JSON.stringify(list));
+            });
+        } catch(e) {}
 
         // إطلاق إشعار التحديث المحلي لعداد الثواني
         localStorage.setItem('countdownUpdated', String(now));
 
-        // إطلاق حدث في الـ DOM
-        try {
-            window.dispatchEvent(new CustomEvent('smart_countdown_updated', { detail: update }));
-        } catch(e) {}
-
-        // تحديث عناصر الساعة وأزرار القفل في الصفحة فوراً
+        // تحديث عناصر الساعة وأزرار القفل في الصفحة فوراً قبل إعادة رسم اللوحة
+        update.sessionNum = numSession;
         updateLiveClockDomElements(update);
 
-        // إعادة تنشيط لوحة المريض بالكامل مع فتح الجلسة المستهدفة مباشرة إن وُجدت
-        try {
-            if (typeof window._isRenderingStep5 !== 'undefined') window._isRenderingStep5 = false;
-        } catch(e) {}
-        const targetDayToOpen = numSession || (isAllUnlocked ? (window.activePatient?.currentSessionDay || 2) : null);
-        if (typeof window.loadPatientRecoveryDashboard === 'function') {
-            window.loadPatientRecoveryDashboard(pKey, targetDayToOpen);
-        } else if (typeof loadPatientRecoveryDashboard === 'function') {
-            loadPatientRecoveryDashboard(pKey, targetDayToOpen);
+        const targetKey = currentPid || targetPid || (authP && (authP.patientId || authP.id));
+        const triggerDashboardReload = () => {
+            try {
+                if (typeof window._isRenderingStep5 !== 'undefined') window._isRenderingStep5 = false;
+            } catch(e) {}
+            const targetDayToOpen = numSession || progressionDay;
+            if (typeof window.loadPatientRecoveryDashboard === 'function') {
+                window.loadPatientRecoveryDashboard(pKey, targetDayToOpen);
+            } else if (typeof loadPatientRecoveryDashboard === 'function') {
+                loadPatientRecoveryDashboard(pKey, targetDayToOpen);
+            }
+        };
+
+        if (window.SmartDB && typeof window.SmartDB.getPatient === 'function' && targetKey) {
+            window.SmartDB.getPatient(targetKey).then(async pt => {
+                if (pt) {
+                    applyTimingToPtObj(pt);
+                    try { await window.SmartDB.savePatient(pt, { skipCloudSync: true }); } catch(e) {}
+                }
+                triggerDashboardReload();
+            }).catch(() => {
+                triggerDashboardReload();
+            });
+        } else {
+            triggerDashboardReload();
         }
 
         if (typeof window.updatePatientCountdown === 'function') {
@@ -3448,7 +3523,7 @@
     async function fetchRemoteTimingUpdates() {
         if (isFetchingTiming) return [];
         const now = Date.now();
-        if (now - lastTimingFetchTime < 3000) return [];
+        if (now - lastTimingFetchTime < 2500) return [];
         if (now < timingNtfyRateLimitedUntil) return [];
         isFetchingTiming = true;
         lastTimingFetchTime = now;
@@ -3492,7 +3567,7 @@
             isFetchingTiming = false;
         }
 
-        // فرز كافة التحديثات بدقة بالغة وتطبيق أحدث تحديث وارد ينطبق على هذا المريض
+        // فرز كافة التحديثات بدقة بالغة وتطبيق أحدث تحديث وارد ينطبق على هذا المريض ولم يُطبّق بعد
         if (candidateUpdates.length > 0) {
             const getTs = x => {
                 if (!x) return 0;
@@ -3503,19 +3578,22 @@
             };
             candidateUpdates.sort((a, b) => getTs(a) - getTs(b));
             for (let i = candidateUpdates.length - 1; i >= 0; i--) {
-                const applied = applyTimingUpdateLocally(candidateUpdates[i]);
+                const cand = candidateUpdates[i];
+                const candTs = getTs(cand);
+                if (candTs > 0 && candTs <= lastAppliedTimingTimestamp) break;
+                const applied = applyTimingUpdateLocally(cand);
                 if (applied) break; // أول تحديث ينطبق بنجاح على هذا المريض نكتفي به
             }
         }
     }
 
-    // الاستماع اللحظي الدائم (SSE) على هاتف المريض مع استرجاع سجل آخر ساعة فورياً عند الاتصال
+    // الاستماع اللحظي الدائم (SSE) على هاتف المريض للرسائل الجديدة الحية فقط
     function initTimingListener() {
         if (typeof EventSource === 'undefined') return;
         if (timingEventSource) return;
 
         try {
-            timingEventSource = new EventSource(`${CLOUD_TIMING_ENDPOINT}/sse?since=1h`);
+            timingEventSource = new EventSource(`${CLOUD_TIMING_ENDPOINT}/sse`);
             timingEventSource.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
@@ -3561,19 +3639,29 @@
     // =========================================================================
     // 📢 منظومة بث التحديثات العالمية اللحظية (Global App Version Broadcast System)
     // =========================================================================
+    function _parseVersionNumber(verStr) {
+        const m = String(verStr || '').match(/(\d+(?:\.\d+)?)/);
+        return m ? parseFloat(m[1]) : 0;
+    }
+
     function handleAppVersionUpdateMessage(data) {
         if (!data || !data.version) return;
         const newVer = String(data.version).trim();
-        console.log(`📢 [CloudSync] Processing Global Version Broadcast: ${newVer}`);
+        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.77');
+        const numNew = _parseVersionNumber(newVer);
+        const numCur = _parseVersionNumber(curVer);
+
+        // تجاهل أي إشعار إصدار قديم أو مساوٍ للإصدار الحالي قطعياً لمنع حلقات التحديث اللانهائية
+        if (!numNew || numNew <= numCur) {
+            return;
+        }
+
+        console.log(`📢 [CloudSync] Processing Global Version Broadcast: ${newVer} (current: ${curVer})`);
         sessionStorage.setItem('scp_latest_remote_ver', newVer);
 
-        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.14');
         const lastReloaded = sessionStorage.getItem('scp_last_reloaded_ver');
-
-        if (data.forcePrompt || (newVer !== curVer && newVer !== lastReloaded)) {
-            if (typeof window._triggerAutoReloadCountdown === 'function') {
-                window._triggerAutoReloadCountdown(newVer);
-            }
+        if (newVer !== lastReloaded && typeof window._triggerAutoReloadCountdown === 'function') {
+            window._triggerAutoReloadCountdown(newVer);
         }
     }
 

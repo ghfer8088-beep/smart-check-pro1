@@ -3,7 +3,7 @@
 // استراتيجية Network-First لضمان وصول المريض لأحدث التحديثات فوراً
 // ==========================================================================
 
-const CACHE_NAME = 'wada3an-alam-v30.76';
+const CACHE_NAME = 'wada3an-alam-v30.77';
 const STATIC_ASSETS = [
     './',
     './index.html',
@@ -150,11 +150,13 @@ self.addEventListener('install', (event) => {
 
 
 self.addEventListener('activate', (event) => {
+    let hadOldCaches = false;
     event.waitUntil(
         caches.keys().then((keys) => {
             return Promise.all(
                 keys.map((key) => {
                     if (key !== CACHE_NAME) {
+                        hadOldCaches = true;
                         console.log('[SW] Deleting old cache:', key);
                         return caches.delete(key);
                     }
@@ -162,7 +164,8 @@ self.addEventListener('activate', (event) => {
             );
         }).then(() => self.clients.claim())
           .then(() => {
-              // 🔄 إبلاغ جميع الصفحات المفتوحة حول العالم بوجود نسخة جديدة نشطة
+              if (!hadOldCaches) return;
+              // 🔄 إبلاغ الصفحات المفتوحة فقط عند ترقية كاش قديم فعلياً
               return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
                   clients.forEach((client) => {
                       client.postMessage({ type: 'SW_ACTIVATED_NEW_VERSION', version: CACHE_NAME });

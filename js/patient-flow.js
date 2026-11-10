@@ -477,6 +477,26 @@ const PatientFlow = (function() {
 
         if (patient) {
             patient.currentSessionDay = currentSessionDay;
+            const cleanPh = patient.phone ? String(patient.phone).replace(/\D/g, '') : '';
+            const lsForce = (localStorage.getItem('force_unlock_global') === 'true') ||
+                            (patientId && localStorage.getItem(`force_unlock_${patientId}`) === 'true') ||
+                            (cleanPh && localStorage.getItem(`force_unlock_${cleanPh}`) === 'true');
+            const lsTarget = (patientId && localStorage.getItem(`custom_target_time_${patientId}`)) ||
+                             (cleanPh && localStorage.getItem(`custom_target_time_${cleanPh}`)) ||
+                             localStorage.getItem('custom_target_time_global');
+            const lsDur = (patientId && localStorage.getItem(`custom_total_duration_${patientId}`)) ||
+                          (cleanPh && localStorage.getItem(`custom_total_duration_${cleanPh}`)) ||
+                          localStorage.getItem('custom_total_duration_global');
+            if (lsForce) {
+                patient.forceUnlock = true;
+                delete patient.customTargetTime;
+                delete patient.custom_target_time;
+                delete patient.customDurationMs;
+            } else if (lsTarget) {
+                patient.customTargetTime = parseInt(lsTarget, 10);
+                if (lsDur) patient.customDurationMs = parseInt(lsDur, 10);
+                patient.forceUnlock = false;
+            }
         }
 
         return {
@@ -534,30 +554,33 @@ const PatientFlow = (function() {
         }
 
         const cleanPhone = (patient && patient.phone) ? String(patient.phone).replace(/\D/g, '') : '';
+        const localCustomTarget = (effectiveId ? localStorage.getItem(`custom_target_time_${effectiveId}`) : null) ||
+                                  (patientId ? localStorage.getItem(`custom_target_time_${patientId}`) : null) ||
+                                  (cleanPhone ? localStorage.getItem(`custom_target_time_${cleanPhone}`) : null) ||
+                                  localStorage.getItem('custom_target_time_global');
+        const isLocalForceUnlock = (localStorage.getItem('force_unlock_global') === 'true') ||
+                                   (effectiveId && localStorage.getItem(`force_unlock_${effectiveId}`) === 'true') ||
+                                   (patientId && localStorage.getItem(`force_unlock_${patientId}`) === 'true') ||
+                                   (cleanPhone ? localStorage.getItem(`force_unlock_${cleanPhone}`) === 'true' : false);
+
         // التحقق من فتح جميع الجلسات بالكامل من الإدارة
         const isAllUnlocked = (localStorage.getItem("force_unlock_all_global") === "true") ||
                               (localStorage.getItem("force_unlock_all") === "true") ||
                               (effectiveId && localStorage.getItem(`force_unlock_all_${effectiveId}`) === "true") ||
                               (patientId && localStorage.getItem(`force_unlock_all_${patientId}`) === "true") ||
                               (cleanPhone ? localStorage.getItem(`force_unlock_all_${cleanPhone}`) === "true" : false) ||
-                              (patient && (patient.forceUnlockAllSessions === true || patient.allSessionsUnlocked === true));
-        if (isAllUnlocked) {
+                              (!localCustomTarget && patient && (patient.forceUnlockAllSessions === true || patient.allSessionsUnlocked === true));
+        if (isAllUnlocked && !localCustomTarget) {
             return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true, allUnlocked: true };
         }
-        const forceUnlock = (localStorage.getItem('force_unlock_global') === 'true') || 
-                            localStorage.getItem(`force_unlock_${effectiveId}`) === 'true' || 
-                            (patientId && localStorage.getItem(`force_unlock_${patientId}`) === 'true') || 
-                            (cleanPhone ? localStorage.getItem(`force_unlock_${cleanPhone}`) === 'true' : false) ||
-                            (patient && (patient.forceUnlock === true || patient.force_unlock === true));
-        if (forceUnlock) {
+        const forceUnlock = isLocalForceUnlock ||
+                            (!localCustomTarget && patient && (patient.forceUnlock === true || patient.force_unlock === true));
+        if (forceUnlock && !localCustomTarget) {
             return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
         }
 
-        const customTarget = (patient && (patient.customTargetTime || patient.custom_target_time)) ||
-                             localStorage.getItem(`custom_target_time_${effectiveId}`) || 
-                             (patientId ? localStorage.getItem(`custom_target_time_${patientId}`) : null) || 
-                             (cleanPhone ? localStorage.getItem(`custom_target_time_${cleanPhone}`) : null) || 
-                             localStorage.getItem('custom_target_time_global');
+        const customTarget = localCustomTarget ||
+                             (!isLocalForceUnlock && patient && (patient.customTargetTime || patient.custom_target_time));
         if (customTarget) {
             const targetMs = parseInt(customTarget);
             const now = Date.now();

@@ -8578,8 +8578,9 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
 // 6. تمارين الجلسة المقررة مع المؤقتات ودليل التكنيك
 // =========================================================================
 window._isRenderingStep5 = false;
-async function renderStep5SessionsDashboard(patientId, targetDay = null, sessionData = null) {
-    if (window._isRenderingStep5) return;
+window._step5RenderSeq = 0;
+async function renderStep5SessionsDashboard(patientId, targetDay = null, sessionData = null, isUserTabClick = false) {
+    const myRenderSeq = ++window._step5RenderSeq;
     window._isRenderingStep5 = true;
     try {
         if (window.liveSessionClockInterval) {
@@ -8598,6 +8599,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 ]);
             } catch(e) {}
         }
+        if (myRenderSeq !== window._step5RenderSeq) return;
         if (!sessionData || !sessionData.patient) {
             const curAss = currentAssessmentData || (function() {
                 try { return JSON.parse(localStorage.getItem('smart_current_assessment')); } catch(e) { return null; }
@@ -8680,6 +8682,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         }
 
         const lockStatus = await PatientFlow.getSessionLockStatus(effectivePid);
+        if (myRenderSeq !== window._step5RenderSeq) return;
 
         // إذا كان المريض أنجز كل الـ 7 جلسات ولم يُطلب استعراض جلسة محددة، الانتقال لشاشة الإنهاء
         if (sessionData.isPlanCompleted && (!targetDay || targetDay > 7)) {
@@ -8726,10 +8729,20 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             progressionDay = Math.min(7, targetedSessionAdmin);
         }
 
-        // تحديد اليوم المعروض حالياً: إذا تم تمرير targetDay أو حددت الإدارة جلسة
+        // تنظيف أي قيمة قديمة مخزنة في targeted_session إذا كانت أقل من جلسة التقدم الفعلية للمريض (تمنع الارتداد للجلسة 2 عند التحديث)
+        if (targetedSessionAdmin > 0 && targetedSessionAdmin < progressionDay) {
+            try {
+                localStorage.removeItem('targeted_session_global');
+                if (effectivePid) localStorage.removeItem(`targeted_session_${effectivePid}`);
+            } catch(e) {}
+        }
+
+        // تحديد اليوم المعروض حالياً: يفتح دائماً على جلسة التقدم الحالية (مثل الجلسة 4) إلا إذا نقر المريض يدوياً على تبويب جلسة سابقة للمراجعة
         let activeDay = progressionDay;
-        if (targetDay) {
+        if (targetDay && isUserTabClick) {
             activeDay = Math.max(1, Math.min(7, targetDay));
+        } else if (targetDay && targetDay >= progressionDay) {
+            activeDay = Math.min(7, targetDay);
         } else if (targetedSessionAdmin && targetedSessionAdmin >= progressionDay && targetedSessionAdmin <= 7) {
             activeDay = targetedSessionAdmin;
         }
@@ -8914,7 +8927,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                     let bg = '#1e293b';
                     let border = '1px solid #334155';
                     let color = '#cbd5e1';
-                    let clickAction = `renderStep5SessionsDashboard('${patientId}', ${d})`;
+                    let clickAction = `renderStep5SessionsDashboard('${patientId}', ${d}, null, true)`;
 
                     if (isCurrentActive) {
                         bg = 'linear-gradient(135deg, rgba(212, 175, 55, 0.35) 0%, rgba(180, 130, 20, 0.25) 100%)';
@@ -9432,7 +9445,6 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             }
         }, lockStatus.totalDurationMs);
     }
-    // إيقاف أي دورة استعلام متكررة لمنع استنزاف الشبكة وحدوث حظر 429، حيث تعتمد المنظومة على البث اللحظي المباشر SSE
     if (window.step5TimingPollInterval) {
         clearInterval(window.step5TimingPollInterval);
         window.step5TimingPollInterval = null;
@@ -9440,6 +9452,11 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
     if (lockStatus.isLocked) {
         if (window.SmartCloudSync && typeof window.SmartCloudSync.fetchRemoteTimingUpdates === 'function') {
             window.SmartCloudSync.fetchRemoteTimingUpdates();
+            window.step5TimingPollInterval = setInterval(() => {
+                if (!document.hidden && window.SmartCloudSync && typeof window.SmartCloudSync.fetchRemoteTimingUpdates === 'function') {
+                    window.SmartCloudSync.fetchRemoteTimingUpdates();
+                }
+            }, 4000);
         }
     }
     } finally {
@@ -9448,19 +9465,28 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
 }
 
 // دالات الاختبار السريع المباشرة لفك القفل أو تجربة العداد من نفس الصفحة
-window.quickInPageUnlockSession = function() {
+window.quickInPageUnlockSession = async function() {
     try {
         localStorage.setItem('force_unlock_global', 'true');
-        const pid = (window.activePatient && (window.activePatient.patientId || window.activePatient.id)) || 'pat_mw9hp1n9_mw9hs3ws';
+        const pid = (window.activePatient && (window.activePatient.patientId || window.activePatient.id)) || localStorage.getItem('smart_current_patient_id') || 'pat_mw9hp1n9_mw9hs3ws';
+        const cleanPh = (window.activePatient && window.activePatient.phone) ? String(window.activePatient.phone).replace(/\D/g, '') : '';
         localStorage.setItem(`force_unlock_${pid}`, 'true');
+        if (cleanPh) localStorage.setItem(`force_unlock_${cleanPh}`, 'true');
         localStorage.removeItem('custom_target_time_global');
         localStorage.removeItem(`custom_target_time_${pid}`);
+        if (cleanPh) localStorage.removeItem(`custom_target_time_${cleanPh}`);
         localStorage.removeItem('custom_total_duration_global');
         localStorage.removeItem(`custom_total_duration_${pid}`);
+        if (cleanPh) localStorage.removeItem(`custom_total_duration_${cleanPh}`);
         if (window.activePatient) {
             window.activePatient.forceUnlock = true;
             delete window.activePatient.customTargetTime;
+            delete window.activePatient.custom_target_time;
             delete window.activePatient.customDurationMs;
+            try { localStorage.setItem('smart_active_patient', JSON.stringify(window.activePatient)); } catch(e) {}
+            if (typeof SmartDB !== 'undefined' && typeof SmartDB.savePatient === 'function') {
+                try { await SmartDB.savePatient(window.activePatient, { skipCloudSync: true }); } catch(e) {}
+            }
         }
         if (typeof showToast === 'function') showToast('⚡ تم فتح الجلسة فوراً للاختبار!', 'success');
         if (typeof loadPatientRecoveryDashboard === 'function') {
@@ -9473,20 +9499,36 @@ window.quickInPageUnlockSession = function() {
     }
 };
 
-window.quickInPageSet15s = function() {
+window.quickInPageSet15s = async function() {
     try {
         const targetMs = Date.now() + (15 * 1000);
-        const pid = (window.activePatient && (window.activePatient.patientId || window.activePatient.id)) || 'pat_mw9hp1n9_mw9hs3ws';
+        const pid = (window.activePatient && (window.activePatient.patientId || window.activePatient.id)) || localStorage.getItem('smart_current_patient_id') || 'pat_mw9hp1n9_mw9hs3ws';
+        const cleanPh = (window.activePatient && window.activePatient.phone) ? String(window.activePatient.phone).replace(/\D/g, '') : '';
         localStorage.removeItem('force_unlock_global');
+        localStorage.removeItem('force_unlock_all');
+        localStorage.removeItem('force_unlock_all_global');
         localStorage.removeItem(`force_unlock_${pid}`);
+        localStorage.removeItem(`force_unlock_all_${pid}`);
+        if (cleanPh) {
+            localStorage.removeItem(`force_unlock_${cleanPh}`);
+            localStorage.removeItem(`force_unlock_all_${cleanPh}`);
+        }
         localStorage.setItem('custom_target_time_global', String(targetMs));
         localStorage.setItem(`custom_target_time_${pid}`, String(targetMs));
+        if (cleanPh) localStorage.setItem(`custom_target_time_${cleanPh}`, String(targetMs));
         localStorage.setItem('custom_total_duration_global', String(15 * 1000));
         localStorage.setItem(`custom_total_duration_${pid}`, String(15 * 1000));
+        if (cleanPh) localStorage.setItem(`custom_total_duration_${cleanPh}`, String(15 * 1000));
         if (window.activePatient) {
             window.activePatient.forceUnlock = false;
+            window.activePatient.forceUnlockAllSessions = false;
+            window.activePatient.allSessionsUnlocked = false;
             window.activePatient.customTargetTime = targetMs;
             window.activePatient.customDurationMs = 15000;
+            try { localStorage.setItem('smart_active_patient', JSON.stringify(window.activePatient)); } catch(e) {}
+            if (typeof SmartDB !== 'undefined' && typeof SmartDB.savePatient === 'function') {
+                try { await SmartDB.savePatient(window.activePatient, { skipCloudSync: true }); } catch(e) {}
+            }
         }
         if (typeof showToast === 'function') showToast('⏱️ تم ضبط العداد على 15 ثانية للتجربة!', 'info');
         if (typeof loadPatientRecoveryDashboard === 'function') {
@@ -10655,6 +10697,7 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
                 }
                 activePatient.customTargetTime = targetLockTime;
                 activePatient.customTotalDuration = lockDurationMs;
+                activePatient.forceUnlock = false;
             } catch(e) {}
         } else {
             localStorage.setItem('force_unlock_global', 'true');
@@ -10863,9 +10906,14 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.76';
+const CURRENT_APP_VERSION = 'v30.77';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
+
+function _parseAppVerNum(v) {
+    const m = String(v || '').match(/(\d+(?:\.\d+)?)/);
+    return m ? parseFloat(m[1]) : 0;
+}
 
 // ============================================================
 // 🔄 شاشة التحديث التلقائي التنازلية المباشرة (Auto-Update Countdown Overlay)
@@ -10873,6 +10921,10 @@ let _autoReloadTriggered = false;
 // ============================================================
 function _triggerAutoReloadCountdown(targetVer = null) {
     const ver = targetVer || CURRENT_APP_VERSION;
+    const targetNum = _parseAppVerNum(ver);
+    const currentNum = _parseAppVerNum(CURRENT_APP_VERSION);
+    // منع قاطع لأي حلقة تحديث إذا كان الإصدار الوارد مساوياً أو أقدم من الإصدار الحالي
+    if (!targetNum || targetNum <= currentNum) return;
     if (_autoReloadTriggered) return;
     if (sessionStorage.getItem('scp_last_reloaded_ver') === ver) return;
     if (document.getElementById('auto-update-overlay')) return;
@@ -10999,8 +11051,10 @@ async function _checkRemoteVersionUpdate(force = false) {
             if (match && match[1]) {
                 const remoteVersion = match[1];
                 const lastReloadedVersion = sessionStorage.getItem('scp_last_reloaded_ver');
+                const remoteNum = _parseAppVerNum(remoteVersion);
+                const currentNum = _parseAppVerNum(CURRENT_APP_VERSION);
 
-                if (remoteVersion !== CURRENT_APP_VERSION && remoteVersion !== lastReloadedVersion) {
+                if (remoteNum > currentNum && remoteVersion !== lastReloadedVersion) {
                     console.log('[UpdateChecker] New version available:', remoteVersion);
                     _triggerAutoReloadCountdown(remoteVersion);
                 }
@@ -11368,13 +11422,13 @@ function goToStep(stepNum, options = {}) {
             const step5Box = document.getElementById('step5-sessions-container');
             if (step5Box && (!step5Box.children.length || !step5Box.querySelector('.patient-recovery-master-card'))) {
                 const targetId = (typeof getCleanPatientId === 'function') ? getCleanPatientId(activePatient?.patientId || activePatient?.id) : 'pat_guest';
-                if (typeof renderStep5SessionsDashboard === 'function') {
-                    renderStep5SessionsDashboard(targetId, 2);
-                } else if (typeof loadPatientRecoveryDashboard === 'function') {
-                    loadPatientRecoveryDashboard(targetId, 2);
+                if (typeof loadPatientRecoveryDashboard === 'function') {
+                    loadPatientRecoveryDashboard(targetId);
+                } else if (typeof renderStep5SessionsDashboard === 'function') {
+                    renderStep5SessionsDashboard(targetId);
                 }
             }
-        }, 120);
+        }, 500);
     }
 
     // إذا دخل المراجع الخطوة 6 (وثيقة الإنهاء)، التحقق من رسم الوثيقة فوراً
@@ -12422,9 +12476,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 || localStorage.getItem('smart_current_patient_id')
                 || (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function' && SmartDB.getAuthPatient()?.patientId)
                 || 'pat_guest';
-            const targetDay = parseInt(localStorage.getItem('targeted_session_global') || localStorage.getItem(`targeted_session_${savedPatientId}`) || '0') || null;
             if (savedPatientId) {
-                loadPatientRecoveryDashboard(savedPatientId, targetDay);
+                loadPatientRecoveryDashboard(savedPatientId);
             }
         }
     });
@@ -12756,7 +12809,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             await loadPatientRecoveryDashboard(effectivePatientId);
             return;
         } else if (savedTargetStep === 5) {
-            goToStep(5);
+            goToStep(5, { fromRender: true });
             try {
                 await loadPatientRecoveryDashboard(effectivePatientId);
             } catch(err) {
