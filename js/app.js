@@ -8560,7 +8560,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                 clearInterval(window.step4TimingPollInterval);
                 window.step4TimingPollInterval = null;
             }
-        }, 3000);
+        }, 15000);
     }
     } finally {
         _isRenderingStep4 = false;
@@ -9066,17 +9066,9 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                     </div>
                 </div>
 
-                <p style="color: #cbd5e1; font-size: 0.85em; margin: 0 0 10px 0; line-height: 1.6;">
+                <p style="color: #cbd5e1; font-size: 0.85em; margin: 0; line-height: 1.6;">
                     ⏳ يجري احتساب فترة استشفاء الأنسجة (24 ساعة). التزم بالتمارين المقررة أدناه واسترح حتى اكتمال العداد لتوثيق الجلسة.
                 </p>
-                <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
-                    <button type="button" onclick="window.quickInPageUnlockSession()" style="background: rgba(16, 185, 129, 0.2); border: 1.5px dashed #10b981; color: #6ee7b7; padding: 6px 16px; border-radius: 20px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(16,185,129,0.2);">
-                        <span>⚡</span> فتح الجلسة فوراً (تخطي العداد للاختبار)
-                    </button>
-                    <button type="button" onclick="window.quickInPageSet15s()" style="background: rgba(212, 175, 55, 0.2); border: 1.5px dashed #d4af37; color: #fef08a; padding: 6px 16px; border-radius: 20px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(212,175,55,0.2);">
-                        <span>⏱️</span> عداد 15 ثانية (تجربة العداد)
-                    </button>
-                </div>
             </div>
         `;
     } else {
@@ -9456,90 +9448,17 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 if (!document.hidden && window.SmartCloudSync && typeof window.SmartCloudSync.fetchRemoteTimingUpdates === 'function') {
                     window.SmartCloudSync.fetchRemoteTimingUpdates();
                 }
-            }, 4000);
+            }, 15000);
         }
+    }
+    if (window.SmartGuidance) {
+        if (typeof window.SmartGuidance.updateStep === 'function') window.SmartGuidance.updateStep(5);
+        if (typeof window.SmartGuidance.checkLiveGuidanceState === 'function') window.SmartGuidance.checkLiveGuidanceState();
     }
     } finally {
         window._isRenderingStep5 = false;
     }
 }
-
-// دالات الاختبار السريع المباشرة لفك القفل أو تجربة العداد من نفس الصفحة
-window.quickInPageUnlockSession = async function() {
-    try {
-        localStorage.setItem('force_unlock_global', 'true');
-        const pid = (window.activePatient && (window.activePatient.patientId || window.activePatient.id)) || localStorage.getItem('smart_current_patient_id') || 'pat_mw9hp1n9_mw9hs3ws';
-        const cleanPh = (window.activePatient && window.activePatient.phone) ? String(window.activePatient.phone).replace(/\D/g, '') : '';
-        localStorage.setItem(`force_unlock_${pid}`, 'true');
-        if (cleanPh) localStorage.setItem(`force_unlock_${cleanPh}`, 'true');
-        localStorage.removeItem('custom_target_time_global');
-        localStorage.removeItem(`custom_target_time_${pid}`);
-        if (cleanPh) localStorage.removeItem(`custom_target_time_${cleanPh}`);
-        localStorage.removeItem('custom_total_duration_global');
-        localStorage.removeItem(`custom_total_duration_${pid}`);
-        if (cleanPh) localStorage.removeItem(`custom_total_duration_${cleanPh}`);
-        if (window.activePatient) {
-            window.activePatient.forceUnlock = true;
-            delete window.activePatient.customTargetTime;
-            delete window.activePatient.custom_target_time;
-            delete window.activePatient.customDurationMs;
-            try { localStorage.setItem('smart_active_patient', JSON.stringify(window.activePatient)); } catch(e) {}
-            if (typeof SmartDB !== 'undefined' && typeof SmartDB.savePatient === 'function') {
-                try { await SmartDB.savePatient(window.activePatient, { skipCloudSync: true }); } catch(e) {}
-            }
-        }
-        if (typeof showToast === 'function') showToast('⚡ تم فتح الجلسة فوراً للاختبار!', 'success');
-        if (typeof loadPatientRecoveryDashboard === 'function') {
-            loadPatientRecoveryDashboard(pid);
-        } else if (typeof renderStep5SessionsDashboard === 'function') {
-            renderStep5SessionsDashboard(pid);
-        }
-    } catch(e) {
-        console.error('quickInPageUnlockSession error:', e);
-    }
-};
-
-window.quickInPageSet15s = async function() {
-    try {
-        const targetMs = Date.now() + (15 * 1000);
-        const pid = (window.activePatient && (window.activePatient.patientId || window.activePatient.id)) || localStorage.getItem('smart_current_patient_id') || 'pat_mw9hp1n9_mw9hs3ws';
-        const cleanPh = (window.activePatient && window.activePatient.phone) ? String(window.activePatient.phone).replace(/\D/g, '') : '';
-        localStorage.removeItem('force_unlock_global');
-        localStorage.removeItem('force_unlock_all');
-        localStorage.removeItem('force_unlock_all_global');
-        localStorage.removeItem(`force_unlock_${pid}`);
-        localStorage.removeItem(`force_unlock_all_${pid}`);
-        if (cleanPh) {
-            localStorage.removeItem(`force_unlock_${cleanPh}`);
-            localStorage.removeItem(`force_unlock_all_${cleanPh}`);
-        }
-        localStorage.setItem('custom_target_time_global', String(targetMs));
-        localStorage.setItem(`custom_target_time_${pid}`, String(targetMs));
-        if (cleanPh) localStorage.setItem(`custom_target_time_${cleanPh}`, String(targetMs));
-        localStorage.setItem('custom_total_duration_global', String(15 * 1000));
-        localStorage.setItem(`custom_total_duration_${pid}`, String(15 * 1000));
-        if (cleanPh) localStorage.setItem(`custom_total_duration_${cleanPh}`, String(15 * 1000));
-        if (window.activePatient) {
-            window.activePatient.forceUnlock = false;
-            window.activePatient.forceUnlockAllSessions = false;
-            window.activePatient.allSessionsUnlocked = false;
-            window.activePatient.customTargetTime = targetMs;
-            window.activePatient.customDurationMs = 15000;
-            try { localStorage.setItem('smart_active_patient', JSON.stringify(window.activePatient)); } catch(e) {}
-            if (typeof SmartDB !== 'undefined' && typeof SmartDB.savePatient === 'function') {
-                try { await SmartDB.savePatient(window.activePatient, { skipCloudSync: true }); } catch(e) {}
-            }
-        }
-        if (typeof showToast === 'function') showToast('⏱️ تم ضبط العداد على 15 ثانية للتجربة!', 'info');
-        if (typeof loadPatientRecoveryDashboard === 'function') {
-            loadPatientRecoveryDashboard(pid);
-        } else if (typeof renderStep5SessionsDashboard === 'function') {
-            renderStep5SessionsDashboard(pid);
-        }
-    } catch(e) {
-        console.error('quickInPageSet15s error:', e);
-    }
-};
 
 
 // =========================================================================
@@ -10906,7 +10825,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.77';
+const CURRENT_APP_VERSION = 'v30.78';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -12743,8 +12662,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // تجهيز التقرير في الخلفية دائماً إذا وُجدت بياناته لضمان عدم ظهور أي ساعة رملية فارغة
-    if (currentAssessmentData) {
+    // تجهيز التقرير في الخلفية فقط إذا كانت المرحلة المستهدفة هي التقرير (المرحلة 3 أو أقل) لمنع طغيان شريط التوجيه على المرحلة 5
+    if (currentAssessmentData && (!savedTargetStep || savedTargetStep <= 3)) {
         try { displayDiagnosticReport(currentAssessmentData); } catch(e) {}
     }
 

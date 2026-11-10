@@ -14,7 +14,7 @@
     const SYNC_EVENT_NAME = 'smart-patient-cloud-sync';
     const CLOUD_SYNC_ENDPOINT = 'https://ntfy.sh/wada3an_smart_check_clinic_sync_2026';
     const CLOUD_VISITS_ENDPOINT = 'https://ntfy.sh/wada3an_smart_check_visits_2026';
-    const CLOUD_TIMING_ENDPOINT = 'https://ntfy.sh/wada3an_smart_check_timing_sync_2026';
+    const CLOUD_TIMING_ENDPOINT = 'https://ntfy.sh/wada3an_scp_timing_live_2026';
     const CLOUD_MASTER_HUB_ENDPOINT = 'https://api.restful-api.dev/objects/ff808181a067127101a096bcda64034f';
 
     // خريطة الحضور والتواجد اللحظي في الذاكرة (Active Realtime Presence Map)
@@ -426,6 +426,37 @@
         } catch(e) {}
     }
 
+    const MQTT_BACKUP_BROKER_URL = 'wss://broker.hivemq.com:8884/mqtt';
+    let mqttBackupClient = null;
+    let mqttBackupConnected = false;
+    const pendingMqttPublishes = [];
+
+    function flushPendingMqttPublishes() {
+        while (pendingMqttPublishes.length > 0) {
+            const item = pendingMqttPublishes.shift();
+            if (!item) continue;
+            try {
+                if (mqttClient && mqttConnected) {
+                    mqttClient.publish(item.topic, item.raw, item.opts);
+                }
+                if (mqttBackupClient && mqttBackupConnected && item.topic === MQTT_TOPICS.TIMING) {
+                    mqttBackupClient.publish(item.topic, item.raw, item.opts);
+                }
+            } catch(e) {}
+        }
+    }
+
+    function reSubscribeTimingTopics() {
+        try {
+            if (mqttClient && mqttConnected) {
+                mqttClient.subscribe(MQTT_TOPICS.TIMING, { qos: 1 });
+            }
+            if (mqttBackupClient && mqttBackupConnected) {
+                mqttBackupClient.subscribe(MQTT_TOPICS.TIMING, { qos: 1 });
+            }
+        } catch(e) {}
+    }
+
     function initMqttBus() {
         const mqttLib = window.mqtt || (typeof mqtt !== 'undefined' ? mqtt : null);
         if (!mqttLib || typeof mqttLib.connect !== 'function') {
@@ -441,14 +472,15 @@
             mqttClient = mqttLib.connect(MQTT_BROKER_URL, {
                 clientId: clientId,
                 clean: true,
+                timerVariant: 'native',  // ✅ منع استخدام Web Worker Blob لضمان العمل عبر file:// وفي التبويبات الخلفية
                 connectTimeout: 12000,   // ✅ مهلة اتصال كافية (12 ثانية) لمنع connack timeout الزائف
-                reconnectPeriod: 15000,  // ✅ إعادة محاولة متزنة كل 15 ثانية لتفادي الضغط وتكرار الأخطاء
-                keepalive: 60            // ✅ 60 ثانية لثبات الاتصال ومنع keepalive timeout
+                reconnectPeriod: 4000,   // ✅ إعادة اتصال سريعة كل 4 ثوانٍ
+                keepalive: 45            // ✅ 45 ثانية لثبات الاتصال ومنع keepalive timeout
             });
 
             mqttClient.on('connect', () => {
                 mqttConnected = true;
-                console.log('🟢 [CloudSync] Connected to Realtime MQTT Bus:', clientId);
+                console.log('🟢 [CloudSync] Connected to Primary Realtime MQTT Bus (EMQX):', clientId);
                 updateMqttStatusBadge(true);
 
                 mqttClient.subscribe([
@@ -467,6 +499,8 @@
                 ], { qos: 1 }, (err) => {
                     if (err) console.warn('[CloudSync] MQTT Subscribe error:', err);
                 });
+
+                flushPendingMqttPublishes();
 
                 // طلب مزامنة فورية من أي جهاز نشط
                 mqttPublish(MQTT_TOPICS.SYNC_REQ, {
@@ -496,13 +530,47 @@
                     console.warn('[CloudSync] Realtime sync reconnecting in background (' + errMsg + ')');
                 }
                 mqttConnected = false;
-                updateMqttStatusBadge(false);
+                updateMqttStatusBadge(mqttBackupConnected);
             });
 
             mqttClient.on('close', () => {
                 mqttConnected = false;
-                updateMqttStatusBadge(false);
+                updateMqttStatusBadge(mqttBackupConnected);
             });
+
+            // ✅ خادم MQTT رديف ومستقل (HiveMQ) مخصص لضمان وصول تحديثات التوقيت اللحظية في أقل من 100ms
+            try {
+                const backupClientId = `${clientId}_hq`;
+                mqttBackupClient = mqttLib.connect(MQTT_BACKUP_BROKER_URL, {
+                    clientId: backupClientId,
+                    clean: true,
+                    timerVariant: 'native',
+                    connectTimeout: 10000,
+                    reconnectPeriod: 5000,
+                    keepalive: 45
+                });
+                mqttBackupClient.on('connect', () => {
+                    mqttBackupConnected = true;
+                    updateMqttStatusBadge(true);
+                    mqttBackupClient.subscribe([MQTT_TOPICS.TIMING, MQTT_TOPICS.PATIENTS, MQTT_TOPICS.VERSION], { qos: 1 });
+                    flushPendingMqttPublishes();
+                });
+                mqttBackupClient.on('message', (topic, payloadBuffer) => {
+                    try {
+                        const messageStr = payloadBuffer.toString();
+                        if (!messageStr || !messageStr.trim().startsWith('{')) return;
+                        const data = JSON.parse(messageStr);
+                        handleIncomingMqttMessage(topic, data, clientId);
+                    } catch (e) {}
+                });
+                mqttBackupClient.on('close', () => {
+                    mqttBackupConnected = false;
+                    updateMqttStatusBadge(mqttConnected);
+                });
+                mqttBackupClient.on('error', () => {
+                    mqttBackupConnected = false;
+                });
+            } catch (backupErr) {}
 
         } catch (e) {
             console.error('[CloudSync] Could not initialize MQTT:', e);
@@ -510,13 +578,28 @@
     }
 
     function mqttPublish(topic, obj, options = {}) {
-        if (!mqttClient || !mqttConnected || !mqttClient.connected) return false;
         try {
             const raw = JSON.stringify(obj);
-            mqttClient.publish(topic, raw, { qos: 1, retain: !!options.retain, ...options }, (err) => {
-                if (err && mqttConnected) console.warn(`[CloudSync] Publish to ${topic} error:`, err);
-            });
-            return true;
+            const pubOpts = { qos: 1, retain: !!options.retain, ...options };
+            let publishedAny = false;
+
+            if (mqttClient && mqttConnected && mqttClient.connected) {
+                mqttClient.publish(topic, raw, pubOpts, (err) => {
+                    if (err && mqttConnected) console.warn(`[CloudSync] Publish to ${topic} error:`, err);
+                });
+                publishedAny = true;
+            }
+            if (mqttBackupClient && mqttBackupConnected && mqttBackupClient.connected && (topic === MQTT_TOPICS.TIMING || topic === MQTT_TOPICS.PATIENTS || topic === MQTT_TOPICS.VERSION)) {
+                mqttBackupClient.publish(topic, raw, pubOpts);
+                publishedAny = true;
+            }
+            if (!publishedAny) {
+                if (pendingMqttPublishes.length < 30) {
+                    pendingMqttPublishes.push({ topic, raw, opts: pubOpts });
+                }
+                initMqttBus();
+            }
+            return publishedAny;
         } catch(e) {
             return false;
         }
@@ -3283,8 +3366,13 @@
             return false;
         }
 
-        // منع إعادة تطبيق التحديثات القديمة التي سبق تطبيقها
-        if (updTimestamp > 0 && updTimestamp <= lastAppliedTimingTimestamp) {
+        // منع إعادة تطبيق نفس التحديث بالضبط إذا سبق تطبيقه، مع السماح بأي تحديث جديد أو مختلف في قيمته
+        const incomingSig = `${update.patientId || 'all'}_${update.sessionNum || 4}_${update.forceUnlock ? 'unlocked' : (update.targetTime || 0)}_${update.totalDurationMs || 0}_${updTimestamp || 0}`;
+        const prevSig = localStorage.getItem('smart_last_applied_timing_sig') || '';
+        if (incomingSig === prevSig && updTimestamp > 0 && updTimestamp <= lastAppliedTimingTimestamp) {
+            return false;
+        }
+        if (updTimestamp > 0 && updTimestamp < lastAppliedTimingTimestamp) {
             return false;
         }
 
@@ -3312,8 +3400,7 @@
         lastAppliedTimingTimestamp = Math.max(lastAppliedTimingTimestamp, effectiveUpdTs);
         try { 
             localStorage.setItem('smart_last_timing_sync_ts', String(lastAppliedTimingTimestamp));
-            const sig = `${update.patientId || 'all'}_${update.sessionNum || 4}_${update.forceUnlock ? 'unlocked' : (update.targetTime || 0)}_${update.totalDurationMs || 0}`;
-            localStorage.setItem('smart_last_applied_timing_sig', sig);
+            localStorage.setItem('smart_last_applied_timing_sig', incomingSig);
         } catch(e) {}
 
         const pKey = currentPid || targetPid;
@@ -3531,10 +3618,10 @@
         const candidateUpdates = [];
 
         try {
-            // جلب من قناة التوقيت المخصصة عبر NTFY مع مهلة آمنة (5 ثوانٍ) واسترجاع آخر ساعة فقط لمنع البطء
+            // جلب من قناة التوقيت المخصصة عبر NTFY مع مهلة كافية (15 ثانية) واسترجاع آخر 15 دقيقة
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000);
-            const resp = await fetch(`${CLOUD_TIMING_ENDPOINT}/json?poll=1&since=1h`, {
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
+            const resp = await fetch(`${CLOUD_TIMING_ENDPOINT}/json?poll=1&since=15m`, {
                 cache: 'no-store',
                 mode: 'cors',
                 credentials: 'omit',
@@ -3647,7 +3734,7 @@
     function handleAppVersionUpdateMessage(data) {
         if (!data || !data.version) return;
         const newVer = String(data.version).trim();
-        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.77');
+        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.78');
         const numNew = _parseVersionNumber(newVer);
         const numCur = _parseVersionNumber(curVer);
 
@@ -4006,13 +4093,13 @@
             try {
                 initTimingListener();
                 setTimeout(fetchRemoteTimingUpdates, 300);
-                setTimeout(fetchRemoteTimingUpdates, 1500);
-                window.addEventListener('load', () => { initTimingListener(); fetchRemoteTimingUpdates(); });
-                window.addEventListener('focus', () => { initTimingListener(); fetchRemoteTimingUpdates(); });
+                setTimeout(fetchRemoteTimingUpdates, 2500);
+                window.addEventListener('load', () => { initTimingListener(); reSubscribeTimingTopics(); fetchRemoteTimingUpdates(); });
+                window.addEventListener('focus', () => { initTimingListener(); reSubscribeTimingTopics(); fetchRemoteTimingUpdates(); });
                 document.addEventListener('visibilitychange', () => {
-                    if (!document.hidden) { initTimingListener(); fetchRemoteTimingUpdates(); }
+                    if (!document.hidden) { initTimingListener(); reSubscribeTimingTopics(); fetchRemoteTimingUpdates(); }
                 });
-                window.addEventListener('online', () => { initTimingListener(); fetchRemoteTimingUpdates(); });
+                window.addEventListener('online', () => { initTimingListener(); reSubscribeTimingTopics(); fetchRemoteTimingUpdates(); });
             } catch(e) {}
         }
     } catch(e) {}
