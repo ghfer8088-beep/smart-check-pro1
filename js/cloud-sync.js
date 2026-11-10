@@ -1982,6 +1982,20 @@
                             try { pt = JSON.parse(item.message); } catch(e) {}
                         }
                         if (pt) {
+                            // ✅ معالجة بث التحديث العالمي للإصدار الجديد عبر SSE
+                            if (pt.type === 'app_version_update' && pt.version) {
+                                console.log('🚀 [CloudSync] Received app version update via SSE:', pt.version);
+                                handleAppVersionUpdateMessage(pt);
+                                return;
+                            }
+                            // ✅ معالجة بث تحديث التوقيت عبر SSE (للأجهزة التي تستمع على قناة SYNC)
+                            if (pt.type === 'session_timing_update' || pt.type === 'timing_broadcast_refresh' || pt.forceUnlock !== undefined || pt.targetTime !== undefined) {
+                                console.log('⏱️ [CloudSync] Received timing update via SSE:', pt.type);
+                                if (typeof applyTimingUpdateLocally === 'function') {
+                                    applyTimingUpdateLocally(pt);
+                                }
+                                return;
+                            }
                             if (pt.type === 'clinic_full_snapshot' && pt.snapshot) {
                                 latestInlineSnapshot = pt.snapshot;
                             } else if (pt.type === 'PAYMENT_PATIENT_UNLOCK') {
@@ -2102,6 +2116,20 @@
                             } catch(e) {}
                         }
                         if (pt) {
+                            // ✅ معالجة بث التحديث العالمي للإصدار الجديد عبر SSE
+                            if (pt.type === 'app_version_update' && pt.version) {
+                                console.log('🚀 [CloudSync] Received app version update via SSE:', pt.version);
+                                handleAppVersionUpdateMessage(pt);
+                                return;
+                            }
+                            // ✅ معالجة بث تحديث التوقيت عبر SSE (للأجهزة التي تستمع على قناة SYNC)
+                            if (pt.type === 'session_timing_update' || pt.type === 'timing_broadcast_refresh' || pt.forceUnlock !== undefined || pt.targetTime !== undefined) {
+                                console.log('⏱️ [CloudSync] Received timing update via SSE:', pt.type);
+                                if (typeof applyTimingUpdateLocally === 'function') {
+                                    applyTimingUpdateLocally(pt);
+                                }
+                                return;
+                            }
                             if (pt.type === 'clinic_full_snapshot' && pt.snapshot) {
                                 await importFullClinicSnapshot(pt.snapshot);
                                 if (typeof callback === 'function') callback(null);
@@ -3443,7 +3471,17 @@
                     if (data.event === 'message' && data.message) {
                         let parsed = null;
                         try { parsed = JSON.parse(data.message); } catch(e) { parsed = data.message; }
-                        if (parsed && (parsed.type === 'session_timing_update' || parsed.forceUnlock !== undefined || parsed.targetTime !== undefined)) {
+                        if (!parsed || typeof parsed !== 'object') return;
+
+                        // ✅ معالجة بث التحديث العالمي للإصدار عبر قناة التوقيت SSE
+                        if (parsed.type === 'app_version_update' && parsed.version) {
+                            console.log('🚀 [TimingSSE] Received app version update:', parsed.version);
+                            handleAppVersionUpdateMessage(parsed);
+                            return;
+                        }
+
+                        // ✅ معالجة بث تحديث التوقيت
+                        if (parsed.type === 'session_timing_update' || parsed.type === 'timing_broadcast_refresh' || parsed.forceUnlock !== undefined || parsed.targetTime !== undefined) {
                             const updateSig = `${parsed.patientId || 'all'}_${parsed.sessionNum || 2}_${parsed.forceUnlock ? 'unlocked' : (parsed.targetTime || 0)}_${parsed.totalDurationMs || 0}`;
                             const lastAppliedSig = localStorage.getItem('smart_last_applied_timing_sig');
                             const updTime = parsed.updatedAt || Date.now();
