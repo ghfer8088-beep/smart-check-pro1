@@ -942,8 +942,8 @@
         } catch (e) {}
     }
 
-    // تحديث بيانات التوقيت للمريض محلياً وتحديث الواجهة فوراً
-    function applyTimingUpdateLocally(data) {
+    // تحديث بيانات التوقيت للمريض محلياً وتحديث الواجهة فوراً (سجلات التقييم الحركي)
+    function applySessionLogDataLocally(data) {
         if (!data) return;
         const patientId = data.patientId || data.id;
         if (!patientId) return;
@@ -2935,22 +2935,30 @@
 
         const rawJson = JSON.stringify(payload);
 
-        // 3. إرسال فوري ومباشر دون انتظار الطابور إلى قناة التوقيت وقناة المزامنة
+        // 3. إرسال فوري ومباشر دون انتظار الطابور إلى قناة التوقيت وقناة المزامنة مع دعم sendBeacon
         try {
+            if (navigator.sendBeacon) {
+                try { navigator.sendBeacon(CLOUD_TIMING_ENDPOINT, rawJson); } catch(e) {}
+                try { navigator.sendBeacon(CLOUD_SYNC_ENDPOINT, rawJson); } catch(e) {}
+            }
             fetch(CLOUD_TIMING_ENDPOINT, {
                 method: 'POST',
                 mode: 'cors',
                 credentials: 'omit',
-                headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Title': 'Timing Update', 'Priority': '4' },
+                headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Title': 'Timing Update', 'Priority': '5' },
                 body: rawJson
-            }).catch(() => {});
+            }).catch(() => {
+                try { fetch(CLOUD_TIMING_ENDPOINT, { method: 'POST', mode: 'no-cors', body: rawJson }).catch(() => {}); } catch(e) {}
+            });
             fetch(CLOUD_SYNC_ENDPOINT, {
                 method: 'POST',
                 mode: 'cors',
                 credentials: 'omit',
-                headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Title': 'Timing Update Sync', 'Priority': '4' },
+                headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Title': 'Timing Update Sync', 'Priority': '5' },
                 body: rawJson
-            }).catch(() => {});
+            }).catch(() => {
+                try { fetch(CLOUD_SYNC_ENDPOINT, { method: 'POST', mode: 'no-cors', body: rawJson }).catch(() => {}); } catch(e) {}
+            });
         } catch(e) {}
 
         // 4. إرسال احتياطي عبر طابور ntfy المقنن
@@ -2990,7 +2998,7 @@
             const elSecs = document.getElementById('countdown-secs');
             const wrapper = document.getElementById('session-completion-control-wrapper');
 
-            if (update.forceUnlock) {
+            if (update.forceUnlock || update.forceUnlockAllSessions) {
                 if (elHours) elHours.textContent = '00';
                 if (elMins) elMins.textContent = '00';
                 if (elSecs) elSecs.textContent = '00';
@@ -2999,6 +3007,27 @@
                 if (window.activeCountdownInterval) {
                     clearInterval(window.activeCountdownInterval);
                     window.activeCountdownInterval = null;
+                }
+
+                // تحديث بطاقة ساعة الـ 24 ساعة العلوية إلى شارة الجلسة المفتوحة فوراً
+                const countdownCard = document.getElementById('countdown-hours')?.closest('div[style*="border: 1.5px solid"]');
+                if (countdownCard) {
+                    const activeD = update.sessionNum || 4;
+                    countdownCard.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                            <div style="color: #10b981; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                                <span>✅</span> الجلسة مفتوحة ومتاحة للبدء الآن (بأمر المعالج)
+                            </div>
+                            <span style="background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">
+                                الجلسة ${activeD} من 7 (جاهزة للتطبيق والتوثيق)
+                            </span>
+                        </div>
+                        <p style="color: #cbd5e1; font-size: 0.9em; margin: 0; line-height: 1.6;">
+                            🎉 قام المعالج بفتح الجلسة لك الآن! يمكنك أداء التمارين الموضحة أدناه ثم توثيق التقييم الحركي والانتقال للجلسة التالية.
+                        </p>
+                    `;
+                    countdownCard.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%)';
+                    countdownCard.style.borderColor = '#10b981';
                 }
 
                 // إيقاف دورة الاستعلام عند اكتمال الفتح
@@ -3337,6 +3366,9 @@
         updateLiveClockDomElements(update);
 
         // إعادة تنشيط لوحة المريض بالكامل مع فتح الجلسة المستهدفة مباشرة إن وُجدت
+        try {
+            if (typeof window._isRenderingStep5 !== 'undefined') window._isRenderingStep5 = false;
+        } catch(e) {}
         const targetDayToOpen = numSession || (isAllUnlocked ? (window.activePatient?.currentSessionDay || 2) : null);
         if (typeof window.loadPatientRecoveryDashboard === 'function') {
             window.loadPatientRecoveryDashboard(pKey, targetDayToOpen);
@@ -3380,7 +3412,7 @@
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 7000);
-                const resp = await fetch(`${CLOUD_TIMING_ENDPOINT}/json?poll=1&since=all`, {
+                const resp = await fetch(`${CLOUD_TIMING_ENDPOINT}/json?poll=1&since=30m`, {
                     cache: 'no-store',
                     mode: 'cors',
                     credentials: 'omit',
@@ -3414,7 +3446,7 @@
             try {
                 const controller2 = new AbortController();
                 const timeoutId2 = setTimeout(() => controller2.abort(), 2000);
-                const resp2 = await fetch(`${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=all`, {
+                const resp2 = await fetch(`${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=30m`, {
                     cache: 'no-store',
                     mode: 'cors',
                     credentials: 'omit',
@@ -3896,6 +3928,19 @@
         if (typeof window !== 'undefined') {
             setTimeout(flushPendingCloudVisits, 1000);
             setTimeout(flushPendingCloudVisits, 3500);
+
+            // ✅ تشغيل مستمع التوقيت اللحظي والاستعلام الفوري تلقائياً عند تحميل السكربت
+            try {
+                initTimingListener();
+                setTimeout(fetchRemoteTimingUpdates, 300);
+                setTimeout(fetchRemoteTimingUpdates, 1500);
+                window.addEventListener('load', () => { initTimingListener(); fetchRemoteTimingUpdates(); });
+                window.addEventListener('focus', () => { initTimingListener(); fetchRemoteTimingUpdates(); });
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) { initTimingListener(); fetchRemoteTimingUpdates(); }
+                });
+                window.addEventListener('online', () => { initTimingListener(); fetchRemoteTimingUpdates(); });
+            } catch(e) {}
         }
     } catch(e) {}
 

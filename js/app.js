@@ -9423,7 +9423,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 clearInterval(window.step5TimingPollInterval);
                 window.step5TimingPollInterval = null;
             }
-        }, 3000);
+        }, 2000);
     }
     } finally {
         _isRenderingStep5 = false;
@@ -10767,7 +10767,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.71';
+const CURRENT_APP_VERSION = 'v30.72';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -12335,9 +12335,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // الاستماع الفوري لحدث تحديث التوقيت الداخلي الموجه للمريض
     window.addEventListener('smart_countdown_updated', (e) => {
-        const savedPatientId = SmartDB.getCurrentSessionPatientId() || (activePatient && (activePatient.patientId || activePatient.id));
-        if (savedPatientId) {
-            loadPatientRecoveryDashboard(savedPatientId);
+        const savedPatientId = (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null) || (activePatient && (activePatient.patientId || activePatient.id)) || localStorage.getItem('smart_current_patient_id') || 'pat_guest';
+        const targetDay = (e && e.detail && e.detail.sessionNum) ? e.detail.sessionNum : null;
+        try { _isRenderingStep5 = false; window._isRenderingStep5 = false; } catch(err) {}
+        if (typeof loadPatientRecoveryDashboard === 'function') {
+            loadPatientRecoveryDashboard(savedPatientId, targetDay);
         }
     });
 

@@ -3,7 +3,7 @@
 // استراتيجية Network-First لضمان وصول المريض لأحدث التحديثات فوراً
 // ==========================================================================
 
-const CACHE_NAME = 'wada3an-alam-v30.71';
+const CACHE_NAME = 'wada3an-alam-v30.72';
 const STATIC_ASSETS = [
     './',
     './index.html',
@@ -185,6 +185,11 @@ self.addEventListener('fetch', (event) => {
 
     // ✅ عدم اعتراض طلبات الذكاء الاصطناعي وجوجل الخارجية لتفادي أخطاء CORS والكاش في iOS Safari
     if (reqUrl.includes('generativelanguage.googleapis.com') || reqUrl.includes('googletagmanager.com') || reqUrl.includes('google-analytics.com')) {
+        return;
+    }
+
+    // ✅ عدم اعتراض أي قنوات سحابية حية أو تدفقات SSE أو اتصالات MQTT أو استعلامات التوقيت
+    if (reqUrl.includes('ntfy.sh') || reqUrl.includes('restful-api.dev') || reqUrl.includes('broker.emqx.io') || reqUrl.includes('/sse') || reqUrl.includes('poll=1')) {
         return;
     }
 
