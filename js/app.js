@@ -8730,7 +8730,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         let activeDay = progressionDay;
         if (targetDay) {
             activeDay = Math.max(1, Math.min(7, targetDay));
-        } else if (targetedSessionAdmin && targetedSessionAdmin >= 1 && targetedSessionAdmin <= 7) {
+        } else if (targetedSessionAdmin && targetedSessionAdmin >= progressionDay && targetedSessionAdmin <= 7) {
             activeDay = targetedSessionAdmin;
         }
 
@@ -9053,9 +9053,17 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                     </div>
                 </div>
 
-                <p style="color: #cbd5e1; font-size: 0.85em; margin: 0; line-height: 1.6;">
+                <p style="color: #cbd5e1; font-size: 0.85em; margin: 0 0 10px 0; line-height: 1.6;">
                     ⏳ يجري احتساب فترة استشفاء الأنسجة (24 ساعة). التزم بالتمارين المقررة أدناه واسترح حتى اكتمال العداد لتوثيق الجلسة.
                 </p>
+                <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+                    <button type="button" onclick="window.quickInPageUnlockSession()" style="background: rgba(16, 185, 129, 0.2); border: 1.5px dashed #10b981; color: #6ee7b7; padding: 6px 16px; border-radius: 20px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(16,185,129,0.2);">
+                        <span>⚡</span> فتح الجلسة فوراً (تخطي العداد للاختبار)
+                    </button>
+                    <button type="button" onclick="window.quickInPageSet15s()" style="background: rgba(212, 175, 55, 0.2); border: 1.5px dashed #d4af37; color: #fef08a; padding: 6px 16px; border-radius: 20px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(212,175,55,0.2);">
+                        <span>⏱️</span> عداد 15 ثانية (تجربة العداد)
+                    </button>
+                </div>
             </div>
         `;
     } else {
@@ -9438,6 +9446,58 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         window._isRenderingStep5 = false;
     }
 }
+
+// دالات الاختبار السريع المباشرة لفك القفل أو تجربة العداد من نفس الصفحة
+window.quickInPageUnlockSession = function() {
+    try {
+        localStorage.setItem('force_unlock_global', 'true');
+        const pid = (window.activePatient && (window.activePatient.patientId || window.activePatient.id)) || 'pat_mw9hp1n9_mw9hs3ws';
+        localStorage.setItem(`force_unlock_${pid}`, 'true');
+        localStorage.removeItem('custom_target_time_global');
+        localStorage.removeItem(`custom_target_time_${pid}`);
+        localStorage.removeItem('custom_total_duration_global');
+        localStorage.removeItem(`custom_total_duration_${pid}`);
+        if (window.activePatient) {
+            window.activePatient.forceUnlock = true;
+            delete window.activePatient.customTargetTime;
+            delete window.activePatient.customDurationMs;
+        }
+        if (typeof showToast === 'function') showToast('⚡ تم فتح الجلسة فوراً للاختبار!', 'success');
+        if (typeof loadPatientRecoveryDashboard === 'function') {
+            loadPatientRecoveryDashboard(pid);
+        } else if (typeof renderStep5SessionsDashboard === 'function') {
+            renderStep5SessionsDashboard(pid);
+        }
+    } catch(e) {
+        console.error('quickInPageUnlockSession error:', e);
+    }
+};
+
+window.quickInPageSet15s = function() {
+    try {
+        const targetMs = Date.now() + (15 * 1000);
+        const pid = (window.activePatient && (window.activePatient.patientId || window.activePatient.id)) || 'pat_mw9hp1n9_mw9hs3ws';
+        localStorage.removeItem('force_unlock_global');
+        localStorage.removeItem(`force_unlock_${pid}`);
+        localStorage.setItem('custom_target_time_global', String(targetMs));
+        localStorage.setItem(`custom_target_time_${pid}`, String(targetMs));
+        localStorage.setItem('custom_total_duration_global', String(15 * 1000));
+        localStorage.setItem(`custom_total_duration_${pid}`, String(15 * 1000));
+        if (window.activePatient) {
+            window.activePatient.forceUnlock = false;
+            window.activePatient.customTargetTime = targetMs;
+            window.activePatient.customDurationMs = 15000;
+        }
+        if (typeof showToast === 'function') showToast('⏱️ تم ضبط العداد على 15 ثانية للتجربة!', 'info');
+        if (typeof loadPatientRecoveryDashboard === 'function') {
+            loadPatientRecoveryDashboard(pid);
+        } else if (typeof renderStep5SessionsDashboard === 'function') {
+            renderStep5SessionsDashboard(pid);
+        }
+    } catch(e) {
+        console.error('quickInPageSet15s error:', e);
+    }
+};
 
 
 // =========================================================================
@@ -10803,7 +10863,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.75';
+const CURRENT_APP_VERSION = 'v30.76';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -12698,10 +12758,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else if (savedTargetStep === 5) {
             goToStep(5);
             try {
-                await loadPatientRecoveryDashboard(effectivePatientId, 2);
+                await loadPatientRecoveryDashboard(effectivePatientId);
             } catch(err) {
                 console.warn('[DOMContentLoaded] Step 5 dashboard fallback:', err);
-                try { await renderStep5SessionsDashboard(effectivePatientId, 2); } catch(e) {}
+                try { await renderStep5SessionsDashboard(effectivePatientId); } catch(e) {}
             }
             return;
         } else if (savedTargetStep === 4) {
