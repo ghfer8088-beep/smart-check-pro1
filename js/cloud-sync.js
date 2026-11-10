@@ -3033,8 +3033,17 @@
             const elMins = document.getElementById('countdown-mins');
             const elSecs = document.getElementById('countdown-secs');
             const wrapper = document.getElementById('session-completion-control-wrapper');
+            const now = Date.now();
 
-            if (update.forceUnlock || update.forceUnlockAllSessions) {
+            const isForceUnlocked = Boolean(
+                update.forceUnlock || 
+                update.forceUnlockAllSessions || 
+                update.isAllSessions ||
+                (update.targetTime && update.targetTime <= now) ||
+                (update.totalDurationMs !== undefined && update.totalDurationMs <= 0)
+            );
+
+            if (isForceUnlocked) {
                 if (elHours) elHours.textContent = '00';
                 if (elMins) elMins.textContent = '00';
                 if (elSecs) elSecs.textContent = '00';
@@ -3182,6 +3191,17 @@
             return false;
         }
 
+        const now = Date.now();
+        // إذا كان التحديث يحمل targetTime وانقضى وقته، فهو فتح فوري ومؤكد للجلسة
+        if (update.targetTime && update.targetTime <= now) {
+            update.forceUnlock = true;
+            delete update.targetTime;
+            delete update.totalDurationMs;
+        }
+        if (update.totalDurationMs !== undefined && update.totalDurationMs <= 0) {
+            update.forceUnlock = true;
+        }
+
         const targetPid = update.patientId || '';
         const targetPhone = (update.patientPhone || '').replace(/\D/g, '');
         const targetName = (update.patientName || '').trim();
@@ -3291,7 +3311,6 @@
         if (authP && (authP.patientId || authP.id)) keysToUpdate.add(authP.patientId || authP.id);
         keysToUpdate.add('global');
 
-        const now = Date.now();
         const isAllUnlocked = Boolean(update.forceUnlockAllSessions || update.isAllSessions || update.sessionNum === 0 || update.sessionNum === 'all');
         const numSession = (typeof update.sessionNum === 'number' && update.sessionNum >= 1 && update.sessionNum <= 7) ? update.sessionNum : null;
 
@@ -3376,7 +3395,8 @@
             if (update.forceUnlock) {
                 window.activePatient.forceUnlock = true;
                 delete window.activePatient.customTargetTime;
-            } else if (update.targetTime) {
+                delete window.activePatient.customDurationMs;
+            } else if (update.targetTime && update.targetTime > now) {
                 window.activePatient.customTargetTime = update.targetTime;
                 window.activePatient.customDurationMs = update.totalDurationMs;
                 window.activePatient.forceUnlock = false;
@@ -3405,7 +3425,7 @@
                             pt.forceUnlock = true;
                             delete pt.customTargetTime;
                             delete pt.customDurationMs;
-                        } else if (update.targetTime) {
+                        } else if (update.targetTime && update.targetTime > now) {
                             pt.customTargetTime = update.targetTime;
                             pt.customDurationMs = update.totalDurationMs;
                             pt.forceUnlock = false;
@@ -3560,12 +3580,12 @@
             isFetchingTiming = false;
         }
 
-        // فرز كافة التحديثات وتطبيق أحدث تحديث وارد للمريض
+        // فرز كافة التحديثات وتطبيق أحدث تحديث وارد ينطبق على هذا المريض
         if (candidateUpdates.length > 0) {
-            candidateUpdates.sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0));
-            const latest = candidateUpdates[candidateUpdates.length - 1];
-            if (latest) {
-                applyTimingUpdateLocally(latest);
+            candidateUpdates.sort((a, b) => (Number(a.updatedAt || a.timestamp || 0) || 0) - (Number(b.updatedAt || b.timestamp || 0) || 0));
+            for (let i = candidateUpdates.length - 1; i >= 0; i--) {
+                const applied = applyTimingUpdateLocally(candidateUpdates[i]);
+                if (applied) break; // أول تحديث ينطبق بنجاح على هذا المريض نكتفي به
             }
         }
     }

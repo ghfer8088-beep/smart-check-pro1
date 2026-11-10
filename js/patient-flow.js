@@ -572,6 +572,20 @@ const PatientFlow = (function() {
                 if (patientId) localStorage.removeItem(`custom_target_time_${patientId}`);
                 if (cleanPhone) localStorage.removeItem(`custom_target_time_${cleanPhone}`);
                 localStorage.removeItem('custom_target_time_global');
+                if (patient) {
+                    patient.forceUnlock = true;
+                    delete patient.customTargetTime;
+                    delete patient.custom_target_time;
+                    delete patient.customDurationMs;
+                    if (typeof SmartDB !== 'undefined' && typeof SmartDB.savePatient === 'function') {
+                        SmartDB.savePatient(patient, { skipCloudSync: true }).catch(() => {});
+                    }
+                }
+                if (typeof window !== 'undefined' && window.activePatient) {
+                    window.activePatient.forceUnlock = true;
+                    delete window.activePatient.customTargetTime;
+                    delete window.activePatient.customDurationMs;
+                }
                 return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
             }
             let customDuration = parseInt(
@@ -654,6 +668,28 @@ const PatientFlow = (function() {
                     if (curPh) localStorage.setItem(`force_unlock_${String(curPh).replace(/\D/g, '')}`, 'true');
                     localStorage.removeItem('custom_target_time_global');
                     if (curPId) localStorage.removeItem(`custom_target_time_${curPId}`);
+                    if (typeof window !== 'undefined' && window.activePatient) {
+                        window.activePatient.forceUnlock = true;
+                        delete window.activePatient.customTargetTime;
+                    }
+                    const clockCard = document.getElementById('session-24h-clock-card');
+                    if (clockCard) {
+                        clockCard.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%)';
+                        clockCard.style.borderColor = '#10b981';
+                        clockCard.innerHTML = `
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                                <div style="color: #10b981; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                                    <span>✅</span> الجلسة مفتوحة ومتاحة للبدء الآن
+                                </div>
+                                <span style="background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">
+                                    جاهزة للتطبيق والتوثيق
+                                </span>
+                            </div>
+                            <p style="color: #cbd5e1; font-size: 0.9em; margin: 0; line-height: 1.6;">
+                                🎉 اكتملت فترة الاستشفاء الحيوي للأنسجة! يمكنك الآن أداء التمارين الموضحة بالأسفل ثم توثيق التقييم الحركي والانتقال للجلسة التالية.
+                            </p>
+                        `;
+                    }
                 } catch(e) {}
                 if (displayElements && displayElements.hours) displayElements.hours.textContent = '00';
                 if (displayElements && displayElements.minutes) displayElements.minutes.textContent = '00';

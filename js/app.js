@@ -9361,6 +9361,25 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             seconds: document.getElementById('countdown-secs')
         }, () => {
             showToast('🎉 اكتملت فترة الاستشفاء! تهانينا، زر حفظ التقييم متاح الآن 🚀', 'success');
+            // تحديث بطاقة ساعة الـ 24 ساعة العلوية فوراً للون الأخضر والحالة المفتوحة
+            const countdownCard = document.getElementById('session-24h-clock-card') || document.getElementById('countdown-hours')?.closest('div[style*="border: 1.5px solid"]');
+            if (countdownCard) {
+                countdownCard.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                        <div style="color: #10b981; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                            <span>✅</span> الجلسة مفتوحة ومتاحة للبدء الآن
+                        </div>
+                        <span style="background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">
+                            الجلسة ${activeDay} من 7 (جاهزة للتطبيق والتوثيق)
+                        </span>
+                    </div>
+                    <p style="color: #cbd5e1; font-size: 0.9em; margin: 0; line-height: 1.6;">
+                        🎉 اكتملت فترة الاستشفاء الحيوي للأنسجة! يمكنك الآن أداء التمارين الموضحة بالأسفل ثم توثيق التقييم الحركي والانتقال للجلسة التالية.
+                    </p>
+                `;
+                countdownCard.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%)';
+                countdownCard.style.borderColor = '#10b981';
+            }
             const wrapper = document.getElementById('session-completion-control-wrapper');
             if (wrapper) {
                 wrapper.className = '';
@@ -9405,7 +9424,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             }
         }, lockStatus.totalDurationMs);
     }
-    // تفعيل الاستعلام السحابي اللحظي المستمر كل 3 ثوانٍ لتحديث الساعة والزر تلقائياً إذا تم التعديل من الإدارة
+    // تفعيل الاستعلام السحابي اللحظي المستمر كل ثانيتين لتحديث الساعة والزر تلقائياً إذا تم التعديل من الإدارة
     if (window.step5TimingPollInterval) {
         clearInterval(window.step5TimingPollInterval);
         window.step5TimingPollInterval = null;
@@ -9423,7 +9442,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 clearInterval(window.step5TimingPollInterval);
                 window.step5TimingPollInterval = null;
             }
-        }, 5000);
+        }, 2500);
     }
     } finally {
         window._isRenderingStep5 = false;
@@ -10794,7 +10813,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.73';
+const CURRENT_APP_VERSION = 'v30.74';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
