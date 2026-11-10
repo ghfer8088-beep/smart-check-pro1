@@ -563,11 +563,16 @@ const PatientFlow = (function() {
             const now = Date.now();
             const diff = targetMs - now;
             if (diff <= 0) {
+                // انتهاء الوقت المخصص بنجاح: تثبيت فتح الجلسة دائماً ومنع ارتدادها لقفل الـ 24 ساعة
+                localStorage.setItem('force_unlock_global', 'true');
+                if (effectiveId) localStorage.setItem(`force_unlock_${effectiveId}`, 'true');
+                if (patientId) localStorage.setItem(`force_unlock_${patientId}`, 'true');
+                if (cleanPhone) localStorage.setItem(`force_unlock_${cleanPhone}`, 'true');
                 localStorage.removeItem(`custom_target_time_${effectiveId}`);
                 if (patientId) localStorage.removeItem(`custom_target_time_${patientId}`);
                 if (cleanPhone) localStorage.removeItem(`custom_target_time_${cleanPhone}`);
                 localStorage.removeItem('custom_target_time_global');
-                return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0 };
+                return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
             }
             let customDuration = parseInt(
                 localStorage.getItem(`custom_total_duration_${effectiveId}`) || 
@@ -640,6 +645,16 @@ const PatientFlow = (function() {
 
             if (diff <= 0) {
                 clearInterval(activeCountdownInterval);
+                // تثبيت فتح الجلسة فوراً عند اكتمال العداد التنازلي لمنع إعادة قفلها تلقائياً
+                try {
+                    localStorage.setItem('force_unlock_global', 'true');
+                    const curPId = (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null) || localStorage.getItem('smart_current_patient_id');
+                    if (curPId) localStorage.setItem(`force_unlock_${curPId}`, 'true');
+                    const curPh = localStorage.getItem('smart_patient_phone');
+                    if (curPh) localStorage.setItem(`force_unlock_${String(curPh).replace(/\D/g, '')}`, 'true');
+                    localStorage.removeItem('custom_target_time_global');
+                    if (curPId) localStorage.removeItem(`custom_target_time_${curPId}`);
+                } catch(e) {}
                 if (displayElements && displayElements.hours) displayElements.hours.textContent = '00';
                 if (displayElements && displayElements.minutes) displayElements.minutes.textContent = '00';
                 if (displayElements && displayElements.seconds) displayElements.seconds.textContent = '00';

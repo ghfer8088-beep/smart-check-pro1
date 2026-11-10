@@ -8551,6 +8551,16 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                 renderStep4IndependentDay1(patientId, sessionData);
             }, lockStatus.totalDurationMs);
         }
+        if (window.step4TimingPollInterval) clearInterval(window.step4TimingPollInterval);
+        window.step4TimingPollInterval = setInterval(() => {
+            const clockEl = document.getElementById('countdown-hours');
+            if (clockEl && !document.hidden && window.SmartCloudSync && typeof window.SmartCloudSync.fetchRemoteTimingUpdates === 'function') {
+                window.SmartCloudSync.fetchRemoteTimingUpdates();
+            } else if (!clockEl) {
+                clearInterval(window.step4TimingPollInterval);
+                window.step4TimingPollInterval = null;
+            }
+        }, 3000);
     }
     } finally {
         _isRenderingStep4 = false;
@@ -9406,13 +9416,14 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         }
         window.step5TimingPollInterval = setInterval(() => {
             const wrapper = document.getElementById('session-completion-control-wrapper');
-            if (wrapper && !document.hidden && window.SmartCloudSync && typeof window.SmartCloudSync.fetchRemoteTimingUpdates === 'function') {
+            const countdownEl = document.getElementById('countdown-hours');
+            if ((wrapper || countdownEl) && !document.hidden && window.SmartCloudSync && typeof window.SmartCloudSync.fetchRemoteTimingUpdates === 'function') {
                 window.SmartCloudSync.fetchRemoteTimingUpdates();
-            } else if (!wrapper) {
+            } else if (!wrapper && !countdownEl) {
                 clearInterval(window.step5TimingPollInterval);
                 window.step5TimingPollInterval = null;
             }
-        }, 25000);
+        }, 3000);
     }
     } finally {
         _isRenderingStep5 = false;
@@ -10756,7 +10767,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.70';
+const CURRENT_APP_VERSION = 'v30.71';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 

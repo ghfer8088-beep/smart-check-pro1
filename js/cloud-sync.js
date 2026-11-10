@@ -2923,8 +2923,8 @@
             updatedAt: now
         };
 
-        // 1. بث فوري عبر شبكة MQTT لجميع الهواتف واللابتوبات
-        mqttPublish(MQTT_TOPICS.TIMING, payload, { qos: 1 });
+        // 1. بث فوري عبر شبكة MQTT مع خاصية الاحتفاظ retain لضمان استلام أي جهاز ينضم لاحقاً
+        mqttPublish(MQTT_TOPICS.TIMING, payload, { qos: 1, retain: true });
 
         // 2. بث عبر BroadcastChannel لجميع التبويبات المفتوحة محلياً
         try {
@@ -2935,7 +2935,25 @@
 
         const rawJson = JSON.stringify(payload);
 
-        // 3. إرسال مقنن إلى NTFY (قناة التوقيت)
+        // 3. إرسال فوري ومباشر دون انتظار الطابور إلى قناة التوقيت وقناة المزامنة
+        try {
+            fetch(CLOUD_TIMING_ENDPOINT, {
+                method: 'POST',
+                mode: 'cors',
+                credentials: 'omit',
+                headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Title': 'Timing Update', 'Priority': '4' },
+                body: rawJson
+            }).catch(() => {});
+            fetch(CLOUD_SYNC_ENDPOINT, {
+                method: 'POST',
+                mode: 'cors',
+                credentials: 'omit',
+                headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Title': 'Timing Update Sync', 'Priority': '4' },
+                body: rawJson
+            }).catch(() => {});
+        } catch(e) {}
+
+        // 4. إرسال احتياطي عبر طابور ntfy المقنن
         sendToNtfy(CLOUD_TIMING_ENDPOINT, rawJson, 'Timing Update');
 
         // 6. حفظ التحديث اللحظي في السحابة المركزية العالمية (Master Cloud Hub) إن كانت متاحة
@@ -3241,6 +3259,11 @@
                     localStorage.setItem(`custom_total_duration_${key}`, String(update.totalDurationMs));
                 }
                 localStorage.removeItem(`force_unlock_${key}`);
+            } else if (update.targetTime && update.targetTime <= now) {
+                // الوقت المحدد قد انقضى بالفعل: اعتماد فتح الجلسة فوراً وتثبيته
+                localStorage.setItem(`force_unlock_${key}`, 'true');
+                localStorage.removeItem(`custom_target_time_${key}`);
+                localStorage.removeItem(`custom_total_duration_${key}`);
             }
         }
 
@@ -3345,7 +3368,7 @@
     let lastTimingFetchTime = 0;
     async function fetchRemoteTimingUpdates() {
         if (isFetchingTiming) return;
-        if (Date.now() - lastTimingFetchTime < 15000) return; // منع التكرار المتتالي في أقل من 15 ثانية
+        if (Date.now() - lastTimingFetchTime < 2000) return; // مهلة استجابة سريعة (ثانيتان فقط)
         if (Date.now() < ntfyRateLimitedUntil) return [];
         isFetchingTiming = true;
         lastTimingFetchTime = Date.now();
@@ -3353,10 +3376,10 @@
         const candidateUpdates = [];
 
         try {
-            // 1. جلب من قناة التوقيت المخصصة عبر NTFY مع حماية AbortController سريعة (2 ثانية)
+            // 1. جلب من قناة التوقيت المخصصة عبر NTFY مع مهلة آمنة (7 ثوانٍ)
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 2000);
+                const timeoutId = setTimeout(() => controller.abort(), 7000);
                 const resp = await fetch(`${CLOUD_TIMING_ENDPOINT}/json?poll=1&since=all`, {
                     cache: 'no-store',
                     mode: 'cors',
@@ -3443,16 +3466,18 @@
             isFetchingTiming = false;
         }
 
-        // فرز كافة التحديثات وتطبيق الأحدث
+        // فرز كافة التحديثات وتطبيق التحديث المطابق للمريض الحالي أو التحديث العام
         if (candidateUpdates.length > 0) {
             candidateUpdates.sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0));
-            const latest = candidateUpdates[candidateUpdates.length - 1];
-            if (latest) {
-                const updateSig = `${latest.patientId || 'all'}_${latest.sessionNum || 2}_${latest.forceUnlock ? 'unlocked' : (latest.targetTime || 0)}_${latest.totalDurationMs || 0}`;
+            for (let i = candidateUpdates.length - 1; i >= 0; i--) {
+                const item = candidateUpdates[i];
+                if (!item) continue;
+                const updateSig = `${item.patientId || 'all'}_${item.sessionNum || 2}_${item.forceUnlock ? 'unlocked' : (item.targetTime || 0)}_${item.totalDurationMs || 0}`;
                 const lastAppliedSig = localStorage.getItem('smart_last_applied_timing_sig');
-                const updTime = latest.updatedAt || Date.now();
+                const updTime = item.updatedAt || Date.now();
                 if (updateSig !== lastAppliedSig || updTime > lastAppliedTimingTimestamp) {
-                    applyTimingUpdateLocally(latest);
+                    const applied = applyTimingUpdateLocally(item);
+                    if (applied) break;
                 }
             }
         }
@@ -3492,7 +3517,11 @@
                     }
                 } catch(e) {}
             };
-            timingEventSource.onerror = () => {};
+            timingEventSource.onerror = () => {
+                try { if (timingEventSource) timingEventSource.close(); } catch(e) {}
+                timingEventSource = null;
+                setTimeout(initTimingListener, 3500);
+            };
         } catch (e) {}
 
         // الاستماع عبر BroadcastChannel للمتصفحات المفتوحة محلياً
