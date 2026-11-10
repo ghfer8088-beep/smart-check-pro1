@@ -8577,10 +8577,10 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
 // 5. أسئلة التقييم السريري (متاحة دائماً في كل جلسة من 2 إلى 7)
 // 6. تمارين الجلسة المقررة مع المؤقتات ودليل التكنيك
 // =========================================================================
-let _isRenderingStep5 = false;
+window._isRenderingStep5 = false;
 async function renderStep5SessionsDashboard(patientId, targetDay = null, sessionData = null) {
-    if (_isRenderingStep5) return;
-    _isRenderingStep5 = true;
+    if (window._isRenderingStep5) return;
+    window._isRenderingStep5 = true;
     try {
         if (window.liveSessionClockInterval) {
             clearInterval(window.liveSessionClockInterval);
@@ -9028,7 +9028,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         `;
     } else if (lockStatus.isLocked && lockStatus.remainingMs > 0) {
         clock24HTML = `
-            <div style="background: linear-gradient(135deg, #0b101b 0%, #172033 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+            <div id="session-24h-clock-card" style="background: linear-gradient(135deg, #0b101b 0%, #172033 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
                     <div style="color: var(--primary-gold); font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
                         <span>⏱️</span> ساعة التوقيت المعتمدة (فترة استشفاء جارية)
@@ -9423,10 +9423,10 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 clearInterval(window.step5TimingPollInterval);
                 window.step5TimingPollInterval = null;
             }
-        }, 2000);
+        }, 5000);
     }
     } finally {
-        _isRenderingStep5 = false;
+        window._isRenderingStep5 = false;
     }
 }
 
@@ -9969,27 +9969,42 @@ async function completeDay1InitialExercises(patientId) {
 
     // تفعيل وتوثيق بدء فترة استشفاء الأنسجة (24 ساعة) للجلسة الثانية
     const effectiveId = patientId || pInfo?.patientId || pInfo?.id || 'pat_guest';
-    const lockDurationMs = 24 * 60 * 60 * 1000;
-    const targetLockTime = Date.now() + lockDurationMs;
-    const cleanP = (pPhone || pInfo?.phone || '').replace(/\D/g, '');
-    try {
-        localStorage.removeItem(`force_unlock_${effectiveId}`);
-        localStorage.removeItem('force_unlock_global');
-        if (cleanP) localStorage.removeItem(`force_unlock_${cleanP}`);
-        localStorage.setItem('custom_target_time_global', String(targetLockTime));
-        localStorage.setItem('custom_total_duration_global', String(lockDurationMs));
-        localStorage.setItem(`custom_target_time_${effectiveId}`, String(targetLockTime));
-        localStorage.setItem(`custom_total_duration_${effectiveId}`, String(lockDurationMs));
-        if (cleanP) {
-            localStorage.setItem(`custom_target_time_${cleanP}`, String(targetLockTime));
-            localStorage.setItem(`custom_total_duration_${cleanP}`, String(lockDurationMs));
-        }
+    const isAllUnlocked = (localStorage.getItem("force_unlock_all_global") === "true") ||
+                          (localStorage.getItem("force_unlock_all") === "true") ||
+                          (effectiveId && localStorage.getItem(`force_unlock_all_${effectiveId}`) === "true") ||
+                          (pInfo && (pInfo.forceUnlockAllSessions === true || pInfo.allSessionsUnlocked === true));
+
+    if (!isAllUnlocked) {
+        const lockDurationMs = 24 * 60 * 60 * 1000;
+        const targetLockTime = Date.now() + lockDurationMs;
+        const cleanP = (pPhone || pInfo?.phone || '').replace(/\D/g, '');
+        try {
+            localStorage.removeItem(`force_unlock_${effectiveId}`);
+            localStorage.removeItem('force_unlock_global');
+            if (cleanP) localStorage.removeItem(`force_unlock_${cleanP}`);
+            localStorage.setItem('custom_target_time_global', String(targetLockTime));
+            localStorage.setItem('custom_total_duration_global', String(lockDurationMs));
+            localStorage.setItem(`custom_target_time_${effectiveId}`, String(targetLockTime));
+            localStorage.setItem(`custom_total_duration_${effectiveId}`, String(lockDurationMs));
+            if (cleanP) {
+                localStorage.setItem(`custom_target_time_${cleanP}`, String(targetLockTime));
+                localStorage.setItem(`custom_total_duration_${cleanP}`, String(lockDurationMs));
+            }
+            if (pInfo) {
+                pInfo.customTargetTime = targetLockTime;
+                pInfo.customTotalDuration = lockDurationMs;
+                SmartDB.savePatient(pInfo).catch(() => {});
+            }
+        } catch(e) {}
+    } else {
+        localStorage.setItem('force_unlock_global', 'true');
+        if (effectiveId) localStorage.setItem(`force_unlock_${effectiveId}`, 'true');
         if (pInfo) {
-            pInfo.customTargetTime = targetLockTime;
-            pInfo.customTotalDuration = lockDurationMs;
+            pInfo.forceUnlock = true;
+            delete pInfo.customTargetTime;
             SmartDB.savePatient(pInfo).catch(() => {});
         }
-    } catch(e) {}
+    }
 
     SmartDB.addAdminNotification({
         type: 'session_completed',
@@ -10548,24 +10563,36 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
 
         // 3. توثيق فترة استشفاء الأنسجة (24 ساعة)
         const effectiveId = patientId || activePatient.patientId || activePatient.id || 'pat_guest';
-        const lockDurationMs = 24 * 60 * 60 * 1000;
-        const targetLockTime = Date.now() + lockDurationMs;
-        const cleanP = (activePatient.phone || '').replace(/\D/g, '');
-        try {
-            localStorage.removeItem(`force_unlock_${effectiveId}`);
-            localStorage.removeItem('force_unlock_global');
-            if (cleanP) localStorage.removeItem(`force_unlock_${cleanP}`);
-            localStorage.setItem('custom_target_time_global', String(targetLockTime));
-            localStorage.setItem('custom_total_duration_global', String(lockDurationMs));
-            localStorage.setItem(`custom_target_time_${effectiveId}`, String(targetLockTime));
-            localStorage.setItem(`custom_total_duration_${effectiveId}`, String(lockDurationMs));
-            if (cleanP) {
-                localStorage.setItem(`custom_target_time_${cleanP}`, String(targetLockTime));
-                localStorage.setItem(`custom_total_duration_${cleanP}`, String(lockDurationMs));
-            }
-            activePatient.customTargetTime = targetLockTime;
-            activePatient.customTotalDuration = lockDurationMs;
-        } catch(e) {}
+        const isAllUnlocked = (localStorage.getItem("force_unlock_all_global") === "true") ||
+                              (localStorage.getItem("force_unlock_all") === "true") ||
+                              (effectiveId && localStorage.getItem(`force_unlock_all_${effectiveId}`) === "true") ||
+                              (activePatient && (activePatient.forceUnlockAllSessions === true || activePatient.allSessionsUnlocked === true));
+
+        if (!isAllUnlocked) {
+            const lockDurationMs = 24 * 60 * 60 * 1000;
+            const targetLockTime = Date.now() + lockDurationMs;
+            const cleanP = (activePatient.phone || '').replace(/\D/g, '');
+            try {
+                localStorage.removeItem(`force_unlock_${effectiveId}`);
+                localStorage.removeItem('force_unlock_global');
+                if (cleanP) localStorage.removeItem(`force_unlock_${cleanP}`);
+                localStorage.setItem('custom_target_time_global', String(targetLockTime));
+                localStorage.setItem('custom_total_duration_global', String(lockDurationMs));
+                localStorage.setItem(`custom_target_time_${effectiveId}`, String(targetLockTime));
+                localStorage.setItem(`custom_total_duration_${effectiveId}`, String(lockDurationMs));
+                if (cleanP) {
+                    localStorage.setItem(`custom_target_time_${cleanP}`, String(targetLockTime));
+                    localStorage.setItem(`custom_total_duration_${cleanP}`, String(lockDurationMs));
+                }
+                activePatient.customTargetTime = targetLockTime;
+                activePatient.customTotalDuration = lockDurationMs;
+            } catch(e) {}
+        } else {
+            localStorage.setItem('force_unlock_global', 'true');
+            if (effectiveId) localStorage.setItem(`force_unlock_${effectiveId}`, 'true');
+            activePatient.forceUnlock = true;
+            delete activePatient.customTargetTime;
+        }
 
         const allLogs = activePatient.dailyLogs;
         const pName = activePatient?.name || (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || patientId;
@@ -10767,7 +10794,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.72';
+const CURRENT_APP_VERSION = 'v30.73';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 

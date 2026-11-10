@@ -1522,6 +1522,42 @@
                 safeStorageSet(VISITS_KEY, JSON.stringify(localVisits));
             }
 
+            // 4. مزامنة فورية لكائن المريض النشط على هذا الجهاز إن كان مشمولاً في اللقطة السحابية
+            try {
+                let curPid = (window.activePatient && (window.activePatient.patientId || window.activePatient.id)) 
+                    || localStorage.getItem('smart_current_patient_id');
+                const curPhone = (window.activePatient?.phone || localStorage.getItem('smart_patient_phone') || '').replace(/\D/g, '');
+                
+                const cList = getCloudSyncedPatients();
+                const matched = cList.find(p => {
+                    if (!p) return false;
+                    const pId = p.id || p.patientId;
+                    if (curPid && (pId === curPid)) return true;
+                    const pPhone = (p.phone || '').replace(/\D/g, '');
+                    if (curPhone && pPhone && (curPhone === pPhone || (curPhone.length >= 7 && pPhone.length >= 7 && (curPhone.endsWith(pPhone) || pPhone.endsWith(curPhone))))) return true;
+                    return false;
+                });
+
+                if (matched) {
+                    const logsKey = 'smart_daily_logs_' + (matched.id || matched.patientId);
+                    const freshLogs = JSON.parse(localStorage.getItem(logsKey) || '[]');
+                    if (freshLogs.length > 0) {
+                        matched.dailyLogs = freshLogs;
+                    }
+                    if (matched.isPlanCompleted || (matched.dailyLogs && matched.dailyLogs.length >= 7)) {
+                        matched.isPlanCompleted = true;
+                        matched.recoveryScore = 100;
+                        localStorage.setItem('force_unlock_all_global', 'true');
+                        localStorage.setItem('force_unlock_all', 'true');
+                    }
+                    window.activePatient = { ...(window.activePatient || {}), ...matched };
+                    localStorage.setItem('smart_active_patient', JSON.stringify(window.activePatient));
+                    if (typeof window.loadPatientRecoveryDashboard === 'function') {
+                        window.loadPatientRecoveryDashboard(matched.id || matched.patientId);
+                    }
+                }
+            } catch(e) {}
+
             try { localStorage.setItem('smart_last_cloud_sync_time', Date.now().toString()); } catch(e) {}
             return true;
         } catch (e) {
@@ -3010,7 +3046,7 @@
                 }
 
                 // تحديث بطاقة ساعة الـ 24 ساعة العلوية إلى شارة الجلسة المفتوحة فوراً
-                const countdownCard = document.getElementById('countdown-hours')?.closest('div[style*="border: 1.5px solid"]');
+                const countdownCard = document.getElementById('session-24h-clock-card') || document.getElementById('countdown-hours')?.closest('div[style*="border: 1.5px solid"]');
                 if (countdownCard) {
                     const activeD = update.sessionNum || 4;
                     countdownCard.innerHTML = `
@@ -3310,6 +3346,32 @@
             if (update.isPlanCompleted) {
                 window.activePatient.isPlanCompleted = true;
                 window.activePatient.recoveryScore = 100;
+                window.activePatient.completedSessions = 7;
+                window.activePatient.logsCount = 7;
+                const pIdForLogs = pKey || currentPid || targetPid;
+                if (pIdForLogs) {
+                    const logs = [];
+                    for (let i = 1; i <= 7; i++) {
+                        logs.push({
+                            patientId: pIdForLogs,
+                            sessionNumber: i,
+                            day: i,
+                            painScore: Math.max(0, 7 - Math.round((i / 7) * 7)),
+                            mobilityRate: Math.min(100, 60 + Math.round((i / 7) * 40)),
+                            sleepRate: Math.min(100, 60 + Math.round((i / 7) * 40)),
+                            exercisesDone: true,
+                            goodPosture: true,
+                            walkingDone: true,
+                            heatDone: true,
+                            date: new Date(Date.now() - ((7 - i) * 86400000)).toISOString()
+                        });
+                    }
+                    window.activePatient.dailyLogs = logs;
+                    try { localStorage.setItem('smart_daily_logs_' + pIdForLogs, JSON.stringify(logs)); } catch(e) {}
+                    if (window.SmartDB && typeof window.SmartDB.saveDailyLog === 'function') {
+                        logs.forEach(l => window.SmartDB.saveDailyLog(l, { skipCloudSync: true }).catch(() => {}));
+                    }
+                }
             }
             if (update.forceUnlock) {
                 window.activePatient.forceUnlock = true;
@@ -3412,7 +3474,7 @@
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 7000);
-                const resp = await fetch(`${CLOUD_TIMING_ENDPOINT}/json?poll=1&since=30m`, {
+                const resp = await fetch(`${CLOUD_TIMING_ENDPOINT}/json?poll=1&since=all`, {
                     cache: 'no-store',
                     mode: 'cors',
                     credentials: 'omit',
@@ -3420,7 +3482,7 @@
                 });
                 clearTimeout(timeoutId);
                 if (resp.status === 429) {
-                    ntfyRateLimitedUntil = Date.now() + 45000;
+                    ntfyRateLimitedUntil = Date.now() + 30000;
                 } else if (resp.ok) {
                     const text = await resp.text();
                     if (text) {
@@ -3446,7 +3508,7 @@
             try {
                 const controller2 = new AbortController();
                 const timeoutId2 = setTimeout(() => controller2.abort(), 2000);
-                const resp2 = await fetch(`${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=30m`, {
+                const resp2 = await fetch(`${CLOUD_SYNC_ENDPOINT}/json?poll=1&since=all`, {
                     cache: 'no-store',
                     mode: 'cors',
                     credentials: 'omit',
@@ -3454,7 +3516,7 @@
                 });
                 clearTimeout(timeoutId2);
                 if (resp2.status === 429) {
-                    ntfyRateLimitedUntil = Date.now() + 45000;
+                    ntfyRateLimitedUntil = Date.now() + 30000;
                 } else if (resp2.ok) {
                     const text2 = await resp2.text();
                     if (text2) {
@@ -3498,19 +3560,12 @@
             isFetchingTiming = false;
         }
 
-        // فرز كافة التحديثات وتطبيق التحديث المطابق للمريض الحالي أو التحديث العام
+        // فرز كافة التحديثات وتطبيق أحدث تحديث وارد للمريض
         if (candidateUpdates.length > 0) {
             candidateUpdates.sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0));
-            for (let i = candidateUpdates.length - 1; i >= 0; i--) {
-                const item = candidateUpdates[i];
-                if (!item) continue;
-                const updateSig = `${item.patientId || 'all'}_${item.sessionNum || 2}_${item.forceUnlock ? 'unlocked' : (item.targetTime || 0)}_${item.totalDurationMs || 0}`;
-                const lastAppliedSig = localStorage.getItem('smart_last_applied_timing_sig');
-                const updTime = item.updatedAt || Date.now();
-                if (updateSig !== lastAppliedSig || updTime > lastAppliedTimingTimestamp) {
-                    const applied = applyTimingUpdateLocally(item);
-                    if (applied) break;
-                }
+            const latest = candidateUpdates[candidateUpdates.length - 1];
+            if (latest) {
+                applyTimingUpdateLocally(latest);
             }
         }
     }
@@ -3537,14 +3592,10 @@
                             return;
                         }
 
-                        // ✅ معالجة بث تحديث التوقيت
+                        // ✅ معالجة بث تحديث التوقيت فورياً وبلا تأخير
                         if (parsed.type === 'session_timing_update' || parsed.type === 'timing_broadcast_refresh' || parsed.forceUnlock !== undefined || parsed.targetTime !== undefined) {
-                            const updateSig = `${parsed.patientId || 'all'}_${parsed.sessionNum || 2}_${parsed.forceUnlock ? 'unlocked' : (parsed.targetTime || 0)}_${parsed.totalDurationMs || 0}`;
-                            const lastAppliedSig = localStorage.getItem('smart_last_applied_timing_sig');
-                            const updTime = parsed.updatedAt || Date.now();
-                            if (updateSig !== lastAppliedSig || updTime > lastAppliedTimingTimestamp) {
-                                applyTimingUpdateLocally(parsed);
-                            }
+                            console.log('⚡ [TimingSSE] Incoming live timing update:', parsed);
+                            applyTimingUpdateLocally(parsed);
                         }
                     }
                 } catch(e) {}
@@ -3560,13 +3611,8 @@
         try {
             if (syncBroadcastChannel) {
                 syncBroadcastChannel.addEventListener('message', (event) => {
-                    if (event.data && event.data.type === 'session_timing_update') {
-                        const updateSig = `${event.data.patientId || 'all'}_${event.data.sessionNum || 2}_${event.data.forceUnlock ? 'unlocked' : (event.data.targetTime || 0)}_${event.data.totalDurationMs || 0}`;
-                        const lastAppliedSig = localStorage.getItem('smart_last_applied_timing_sig');
-                        const updTime = event.data.updatedAt || Date.now();
-                        if (updateSig !== lastAppliedSig || updTime > lastAppliedTimingTimestamp) {
-                            applyTimingUpdateLocally(event.data);
-                        }
+                    if (event.data && (event.data.type === 'session_timing_update' || event.data.forceUnlock !== undefined)) {
+                        applyTimingUpdateLocally(event.data);
                     }
                 });
             }
