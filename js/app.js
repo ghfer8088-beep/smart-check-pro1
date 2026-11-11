@@ -4761,13 +4761,6 @@ function displayDiagnosticReport(data) {
                 </div>
             </div>
 
-            <!-- شريط التنقل السريع<!-- شريط التنقل السريع التفاعلي في التقرير (مريح وسلس للهواتف) -->
-            <div class="no-print report-quick-nav-bar" style="display: flex; gap: 6px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 6px; -webkit-overflow-scrolling: touch;">
-                <button type="button" onclick="document.getElementById('report-section-diagnosis')?.scrollIntoView({behavior: 'smooth'})" class="btn-header btn-header-gold" style="font-size: 0.8em; padding: 6px 12px; border-radius: 16px; flex-shrink: 0; white-space: nowrap;">🩺 التشخيص</button>
-                <button type="button" onclick="document.getElementById('recovery-plan-master-card')?.scrollIntoView({behavior: 'smooth'})" class="btn-header btn-header-emerald" style="font-size: 0.8em; padding: 6px 12px; border-radius: 16px; flex-shrink: 0; white-space: nowrap;">🎁 تفعيل الخطة المجانية</button>
-                <button type="button" onclick="document.getElementById('permanent-bottom-section')?.scrollIntoView({behavior: 'smooth'})" class="btn-header btn-header-emerald-soft" style="font-size: 0.8em; padding: 6px 12px; border-radius: 16px; flex-shrink: 0; white-space: nowrap;">💬 تواصل للمعالج</button>
-            </div>
-
             <!-- ================= 2. النتيجة التشخيصية الكبرى المباشرة ================= -->
             <div id="report-section-diagnosis" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.9) 100%); border-radius: 14px; padding: 24px; border: 2px solid ${data.isPreliminary ? '#38bdf8' : 'var(--primary-gold)'}; margin-bottom: 22px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
@@ -4797,10 +4790,10 @@ function displayDiagnosticReport(data) {
             <div id="ai-clinical-insight-card" class="ai-clinical-card" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(6, 78, 59, 0.28) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 24px; margin-bottom: 22px; box-shadow: 0 8px 30px rgba(0,0,0,0.55); position: relative;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid rgba(16, 185, 129, 0.25); padding-bottom: 14px;">
                     <div style="display: flex; align-items: center; gap: 12px; flex: 1 1 240px;">
-                        <span style="font-size: 1.8em; filter: drop-shadow(0 2px 6px rgba(16,185,129,0.5));">👨‍⚕️</span>
+                        <span style="font-size: 1.8em; filter: drop-shadow(0 2px 6px rgba(16,185,129,0.5));">👩‍⚕️</span>
                         <div>
-                            <h3 style="color: #6ee7b7; margin: 0; font-size: 1.18em; font-weight: 800;">تقرير وتفسير الطبيب الافتراضي للحالة</h3>
-                            <div style="color: #94a3b8; font-size: 0.8em;">تحليل سريري لأصل الخلل الحركي • <strong style="color: #fef08a;">برنامج الـ 7 أيام المجاني متاح لك فورياً</strong></div>
+                            <h3 style="color: #6ee7b7; margin: 0; font-size: 1.18em; font-weight: 800;">تقرير وتفسير د. سارة للحالة السريرية</h3>
+                            <div style="color: #94a3b8; font-size: 0.8em;">تحليل سريري لأصل الخلل الحركي • <strong style="color: #fef08a;">بروتوكول التأهيل المخصص متاح أدناه</strong></div>
                         </div>
                     </div>
                     <div class="ai-card-header-actions" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 320px; box-sizing: border-box;">
@@ -4847,183 +4840,47 @@ function displayDiagnosticReport(data) {
             <!-- ================= 2.1 التحديد التشريحي للفقرات المصابة المحتملة (Vertebral Mapping) ================= -->
             ${generateVertebralMappingCard(data.painAreaTitle || data.painArea || data.selectedPoint || data.pointTitle || '', data.notes || (data.collectedSymptoms ? data.collectedSymptoms.join(' ') : ''))}
 
-            <!-- ================= 3.1 الفحوصات المخبرية والتكاملية الموصى بها (نقص الفيتامينات والمعادن) ================= -->
-            ${generateIntegrativeLabCard()}
-
-            <!-- ================= 4. شبكة المؤشرات الحيوية والإجهاد الميكانيكي والأدلة ================= -->
-            <div style="background: #0f172a; border-radius: 14px; padding: 22px; border: 1px solid rgba(212, 175, 55, 0.25); margin-bottom: 22px;">
-                <div style="color: var(--primary-gold); font-size: 1.05em; font-weight: bold; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
-                    <span>📊</span> المؤشرات البيوميكانيكية والأدلة السريرية للحالة:
-                </div>
-
-                <!-- شبكة مؤشر كتلة الجسم BMI ومؤشر الإجهاد البيوميكانيكي -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 16px;">
-                    <!-- كرت مؤشر كتلة الجسم (BMI) المتطور -->
-                    ${data.bmiInfo ? `
-                        <div style="background: rgba(17, 24, 39, 0.85); border: 1.5px solid ${data.bmiInfo.color}; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
-                            <div>
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
-                                    <div style="color: #ffffff; font-weight: bold; font-size: 0.95em;">⚖️ مؤشر كتلة الجسم (BMI):</div>
-                                    <span style="background: ${data.bmiInfo.color}22; border: 1px solid ${data.bmiInfo.color}; color: ${data.bmiInfo.color}; font-weight: bold; font-size: 0.9em; padding: 3px 10px; border-radius: 6px;">
-                                        ${data.bmiInfo.value} kg/m² (${data.bmiInfo.status})
-                                    </span>
-                                </div>
-                                <div style="background: rgba(15, 23, 42, 0.9); padding: 8px 12px; border-radius: 6px; border-right: 3px solid ${data.bmiInfo.color}; margin-bottom: 8px; color: ${data.bmiInfo.color}; font-weight: bold; font-size: 0.88em;">
-                                    ${data.bmiInfo.deltaText}
-                                </div>
-                            </div>
-                            <div style="color: #cbd5e1; font-size: 0.84em; line-height: 1.5;">💡 <strong>الأثر السريري:</strong> ${data.bmiInfo.impact}</div>
-                        </div>
-                    ` : `
-                        <div style="background: rgba(17, 24, 39, 0.8); border: 1.5px solid #3b82f6; border-radius: 10px; padding: 15px;">
-                            <div style="color: #ffffff; font-weight: bold; font-size: 0.95em; margin-bottom: 6px;">⚖️ مؤشر كتلة الجسم (BMI) والحمولة:</div>
-                            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-                                <input type="number" id="inline-report-weight" placeholder="الوزن (كجم)" value="${clinicalDialogueState?.patientVitals?.weight || data?.patientVitals?.weight || ''}" style="width: 95px; background: #0f172a; border: 1px solid #334155; padding: 6px 8px; border-radius: 6px; color: #fff; font-size: 0.85em;">
-                                <input type="number" id="inline-report-height" placeholder="الطول (سم)" value="${clinicalDialogueState?.patientVitals?.height || data?.patientVitals?.height || ''}" style="width: 95px; background: #0f172a; border: 1px solid #334155; padding: 6px 8px; border-radius: 6px; color: #fff; font-size: 0.85em;">
-                                <button type="button" onclick="calculateInlineReportBMI()" style="background: #3b82f6; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.84em; font-weight: bold; cursor: pointer;">احسب</button>
-                            </div>
-                            <div id="inline-bmi-result" style="margin-top: 6px;"></div>
-                        </div>
-                    `}
-
-                    <!-- كرت مؤشر الإجهاد البيوميكانيكي -->
-                    ${data.biomechanicalIndex ? `
-                        <div style="background: rgba(17, 24, 39, 0.8); border: 1.5px solid ${data.biomechanicalIndex.color}; border-radius: 10px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                <div style="color: #ffffff; font-weight: bold; font-size: 0.95em;">🧬 مؤشر الإجهاد البيوميكانيكي:</div>
-                                <span style="background: ${data.biomechanicalIndex.color}22; border: 1px solid ${data.biomechanicalIndex.color}; color: ${data.biomechanicalIndex.color}; font-weight: bold; font-size: 0.92em; padding: 3px 10px; border-radius: 6px;">
-                                    ${data.biomechanicalIndex.score}% (${data.biomechanicalIndex.level})
-                                </span>
-                            </div>
-                            <div style="color: #cbd5e1; font-size: 0.84em; line-height: 1.5;">${data.biomechanicalIndex.analysis}</div>
-                        </div>
-                    ` : ''}
-                </div>
-
-                <!-- بوصلة الأهداف الحركية المستهدفة للمريض -->
-                ${data.lifeImpactSelected && data.lifeImpactSelected.length > 0 ? `
-                    <div style="background: rgba(16, 185, 129, 0.08); border: 1.5px solid #10b981; padding: 14px 18px; border-radius: 10px; margin-bottom: 14px;">
-                        <div style="color: #10b981; font-weight: bold; font-size: 0.92em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                            <span>🎯</span> أهداف الراحة وجودة الحياة المستهدفة في خطتك:
-                        </div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                            ${data.lifeImpactSelected.map(target => `
-                                <span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 4px 10px; border-radius: 6px; font-size: 0.84em; font-weight: bold;">
-                                    ✓ ${target}
-                                </span>
-                            `).join('')}
-                        </div>
+            <!-- ================= 4. الخلاصة البيوميكانيكية المباشرة والأدلة السريرية ================= -->
+            <div style="background: rgba(15, 23, 42, 0.95); border-radius: 14px; padding: 18px 20px; border: 1.5px solid rgba(212, 175, 55, 0.25); margin-bottom: 22px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                    <div style="color: var(--primary-gold); font-size: 1.05em; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                        <span>📊</span> المؤشرات البيوميكانيكية والأدلة السريرية للحالة
                     </div>
-                ` : ''}
+                    ${data.bmiInfo ? `
+                    <span style="background: ${data.bmiInfo.color}22; border: 1px solid ${data.bmiInfo.color}; color: ${data.bmiInfo.color}; font-weight: 800; font-size: 0.85em; padding: 3px 10px; border-radius: 8px;">
+                        ⚖️ كتلة الجسم: ${data.bmiInfo.value} kg/m² (${data.bmiInfo.status})
+                    </span>` : ''}
+                </div>
+                
+                ${(data.bmiInfo || data.biomechanicalIndex) ? `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 12px;">
+                    ${data.bmiInfo ? `
+                    <div style="background: rgba(11, 18, 32, 0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; font-size: 0.85em; color: #cbd5e1; line-height: 1.6;">
+                        <div style="color: ${data.bmiInfo.color}; font-weight: bold; margin-bottom: 4px;">${data.bmiInfo.deltaText}</div>
+                        <div>${data.bmiInfo.impact}</div>
+                    </div>` : ''}
+                    
+                    ${data.biomechanicalIndex ? `
+                    <div style="background: rgba(11, 18, 32, 0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; font-size: 0.85em; color: #cbd5e1; line-height: 1.6;">
+                        <div style="color: ${data.biomechanicalIndex.color}; font-weight: bold; margin-bottom: 4px;">🧬 مؤشر الإجهاد: ${data.biomechanicalIndex.score}% (${data.biomechanicalIndex.level})</div>
+                        <div>${data.biomechanicalIndex.analysis}</div>
+                    </div>` : ''}
+                </div>` : ''}
 
-                <!-- الأدلة السريرية -->
-                <div style="background: #111827; padding: 16px; border-radius: 10px; border-right: 4px solid var(--primary-gold); margin-bottom: 14px;">
-                    <div style="color: var(--primary-gold); font-size: 0.9em; font-weight: bold; margin-bottom: 8px;">📋 الأدلة والعلامات السريرية المكتشفة:</div>
-                    <ul style="color: #e2e8f0; margin: 0; padding-right: 20px; line-height: 1.8; font-size: 0.88em;">
+                <!-- الأدلة السريرية المكتشفة -->
+                <div style="background: rgba(11, 18, 32, 0.7); padding: 12px 16px; border-radius: 10px; border-right: 3px solid var(--primary-gold);">
+                    <div style="color: var(--primary-gold); font-size: 0.85em; font-weight: bold; margin-bottom: 6px;">📋 العلامات السريرية المرصودة:</div>
+                    <div style="color: #e2e8f0; font-size: 0.85em; line-height: 1.7;">
                         ${(function() {
                             let evidenceList = Array.isArray(data.clinicalEvidence) ? data.clinicalEvidence.filter(Boolean) : [];
                             if (evidenceList.length === 0) {
-                                if (data.primaryDiagnosis) evidenceList.push(`طبيعة العرض السريري والنمط: ${data.primaryDiagnosis}`);
-                                if (data.painSeverity) evidenceList.push(`شدة الألم المسجلة: ${data.painSeverity}/10`);
-                                if (data.painDuration) evidenceList.push(`المدى الزمني للأعراض: ${data.painDuration}`);
-                                if (data.painArea) evidenceList.push(`الموضع التشريحي المفحوص: نطاق (${data.painArea})`);
-                                if (Array.isArray(data.associatedSymptoms) && data.associatedSymptoms.length > 0) {
-                                    evidenceList.push(`الأعراض المرافقة المرصودة: ${data.associatedSymptoms.join('، ')}`);
-                                }
-                                if (evidenceList.length === 0) {
-                                    evidenceList.push(`رصد إجهاد ميكانيكي وتشنج عضلي موضعي مع تأثر المدى الحركي للمفصل`);
-                                }
+                                if (data.primaryDiagnosis) evidenceList.push(`طبيعة العرض: ${data.primaryDiagnosis}`);
+                                if (data.painSeverity) evidenceList.push(`شدة الألم: ${data.painSeverity}/10`);
+                                if (data.painDuration) evidenceList.push(`المدة: ${data.painDuration}`);
+                                if (evidenceList.length === 0) evidenceList.push(`إجهاد ميكانيكي وتشنج عضلي موضعي`);
                             }
-                            return evidenceList.map(ev => `<li>${ev}</li>`).join('');
+                            return evidenceList.join(' • ');
                         })()}
-                    </ul>
-                </div>
-
-                ${data.chronicPrecautions && data.chronicPrecautions.length > 0 ? `
-                    <div style="background: rgba(234, 179, 8, 0.08); padding: 16px; border-radius: 10px; border: 1.5px solid #eab308;">
-                        <div style="color: #eab308; font-size: 0.92em; font-weight: bold; margin-bottom: 8px;">🩺 توجيهات واحتياطات الأمراض المزمنة الخاصة:</div>
-                        <ul style="color: #fef08a; margin: 0; padding-right: 20px; line-height: 1.8; font-size: 0.88em;">
-                            ${data.chronicPrecautions.map(cp => `<li>${cp}</li>`).join('')}
-                        </ul>
-                    </div>
-                ` : ''}
-            </div>
-
-            <!-- ================= 5. محاكي ضغط الفقرات وتفريغ الأعصاب التفاعلي ================= -->
-            ${(function() {
-                const ptId = (data.pointId || '').toLowerCase();
-                const diagKey = (data.primaryDiagnosisKey || '').toLowerCase();
-                const diagTitle = (data.primaryDiagnosis || '').toLowerCase();
-                const isSpineOrDisc = ptId.includes('lumbar') || 
-                                      ptId.includes('cervical') || 
-                                      ptId.includes('thoracic') || 
-                                      ptId.includes('sacroiliac') || 
-                                      ptId.includes('gluteal') || 
-                                      ptId.includes('back') || 
-                                      ptId.includes('neck') || 
-                                      ptId.includes('spine') || 
-                                      diagKey.includes('disc') || 
-                                      diagKey.includes('lumbar') || 
-                                      diagKey.includes('cervical') || 
-                                      diagKey.includes('sciatica') || 
-                                      diagTitle.includes('ديسك') || 
-                                      diagTitle.includes('فقر') || 
-                                      diagTitle.includes('غضروف') || 
-                                      diagTitle.includes('نسا');
-                if (isSpineOrDisc) {
-                    return getInteractiveSpinalSimulatorHTML(data.painAreaTitle);
-                }
-                return '';
-            })()}
-
-            <!-- ================= 6. مسار الشفاء السريري: التأهيل والعلاج الذاتي والكايروبراكتيك ================= -->
-            <div id="report-healing-path-card" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.85) 100%); border: 2px solid var(--primary-gold); border-radius: 16px; padding: 22px; margin-bottom: 22px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid rgba(212, 175, 55, 0.25); padding-bottom: 12px;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 1.6em;">🎯</span>
-                        <div>
-                            <h4 style="color: var(--primary-gold); margin: 0; font-size: 1.2em; font-weight: 900;">مسار الشفاء السريري المتكامل (خارطة طريق التعافي)</h4>
-                            <div style="color: #94a3b8; font-size: 0.82em; margin-top: 2px;">بروتوكول علمي متدرج يعالج الأعراض الحركية من الجذور</div>
-                        </div>
-                    </div>
-                    <span style="color: #6ee7b7; font-size: 0.82em; font-weight: bold; background: rgba(16, 185, 129, 0.15); border: 1.5px solid #10b981; padding: 5px 14px; border-radius: 20px;">طريقة العلاج المعتمدة: الكايروبراكتيك والتقويم الحيوي</span>
-                </div>
-
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; margin-top: 14px;">
-                    <!-- المرحلة الأولى: التأهيل والعلاج الذاتي -->
-                    <div style="background: rgba(17, 24, 39, 0.85); border: 1.5px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
-                        <div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <div style="color: #10b981; font-weight: 900; font-size: 1em; display: flex; align-items: center; gap: 6px;">
-                                    <span>🏠</span> المرحلة الأولى: التأهيل والعلاج الذاتي (برنامج الـ 7 أيام)
-                                </div>
-                                <span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; font-size: 0.76em; padding: 2px 8px; border-radius: 6px; font-weight: bold;">تسكين منزلي فوري</span>
-                            </div>
-                            <p style="color: #cbd5e1; font-size: 0.88em; line-height: 1.7; margin: 0 0 10px 0;">
-                                تمارين استطالة وحركات تليين بيوميكانيكية مدروسة لتخفيف الضغط العصبي، وتقليل التهاب الأنسجة، واستعادة المدى الحركي ذاتياً عبر المنظومة التفاعلية خطوة بخطوة.
-                            </p>
-                        </div>
-                        <div style="background: rgba(15, 23, 42, 0.9); border-right: 3px solid #10b981; padding: 8px 12px; border-radius: 6px; color: #a7f3d0; font-size: 0.82em;">
-                            ⚡ <strong>الهدف السريري:</strong> تخفيف حدة الألم بنسبة تتجاوز 70% وتفريغ الإجهاد العضلي خلال الأسبوع الأول.
-                        </div>
-                    </div>
-
-                    <!-- المرحلة الثانية: الكايروبراكتيك الجذري -->
-                    <div style="background: rgba(17, 24, 39, 0.85); border: 1.5px solid rgba(212, 175, 55, 0.45); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
-                        <div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <div style="color: var(--primary-gold); font-weight: 900; font-size: 1em; display: flex; align-items: center; gap: 6px;">
-                                    <span>👐</span> المرحلة الثانية: العلاج بالكايروبراكتيك (الحل الجذري المباشر)
-                                </div>
-                                <span style="background: rgba(212, 175, 55, 0.2); color: #fef08a; font-size: 0.76em; padding: 2px 8px; border-radius: 6px; font-weight: bold;">تصحيح ميكانيكي دائم</span>
-                            </div>
-                            <p style="color: #cbd5e1; font-size: 0.88em; line-height: 1.7; margin: 0 0 10px 0;">
-                                علاج المسبب الجذري للألم نهائياً عبر تقنية الكايروبراكتيك والتقويم اليدوي التخصصي لضبط استقامة الفقرات والمفاصل وتحرير الأعصاب من الانضغاط مع المعالج جمال قبها.
-                            </p>
-                        </div>
-                        <div style="background: rgba(15, 23, 42, 0.9); border-right: 3px solid var(--primary-gold); padding: 8px 12px; border-radius: 6px; color: #fef08a; font-size: 0.82em;">
-                            💎 <strong>الخدمة الميدانية:</strong> جلسات مباشرة أو زيارات منزلية داخل الأردن، وتنسيق قراءة الرنين لمرضى الخارج.
-                        </div>
                     </div>
                 </div>
             </div>
@@ -6226,20 +6083,18 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
     const confScore = data?.confidenceScore || data?.probability || 94;
     const inp = 'width: 100%; background: #0b1324; border: 1.5px solid #334155; padding: 12px 14px; border-radius: 12px; color: #ffffff; font-size: 0.96em; box-sizing: border-box; outline: none; transition: border-color 0.2s;';
     
-    // دالة إنشاء كرت الباقة بتفاصيل ومزايا واضحة
-    const pkgCard = (k, title, price, oldPrice, badge, features) => `
-        <div id="pkg-card-${k}" onclick="selectPaywallPackage(${k})" style="flex: 1 1 240px; cursor: pointer; text-align: right; border: 2.5px solid ${k === sel ? '#fef08a' : 'rgba(212,175,55,0.3)'}; background: ${k === sel ? 'rgba(212,175,55,0.18)' : 'rgba(11,18,32,0.88)'}; border-radius: 16px; padding: 16px 14px; transition: all 0.25s ease; position: relative; box-shadow: ${k === sel ? '0 0 25px rgba(254,240,138,0.25)' : 'none'};">
-            ${badge ? `<div style="position: absolute; top: -11px; left: 14px; background: ${k === 5 ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'linear-gradient(135deg, #10b981, #059669)'}; color: #ffffff; font-size: 0.72em; font-weight: 900; padding: 2px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 2px 6px rgba(0,0,0,0.4);">${badge}</div>` : ''}
-            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
-                <div style="color: ${k === sel ? '#fef08a' : '#ffffff'}; font-weight: 900; font-size: 1.05em;">${title}</div>
-                <div style="text-align: left;">
-                    ${oldPrice ? `<span style="color: #94a3b8; font-size: 0.78em; text-decoration: line-through; margin-left: 4px;">${oldPrice} د.أ</span>` : ''}
-                    <span style="color: #fde68a; font-size: 1.4em; font-weight: 900; font-family: monospace;">${price}</span>
-                    <span style="font-size: 0.75em; color: #cbd5e1; font-weight: bold;">د.أ</span>
-                </div>
+    // دالة إنشاء كرت الباقة بتصميم رشيق وأنيق بدون حشو
+    const pkgCard = (k, title, price, oldPrice, badge, subtitle) => `
+        <div id="pkg-card-${k}" onclick="selectPaywallPackage(${k})" style="flex: 1 1 210px; cursor: pointer; text-align: center; border: 2.5px solid ${k === sel ? '#fef08a' : 'rgba(212,175,55,0.3)'}; background: ${k === sel ? 'rgba(212,175,55,0.18)' : 'rgba(11,18,32,0.88)'}; border-radius: 16px; padding: 18px 14px; transition: all 0.25s ease; position: relative; box-shadow: ${k === sel ? '0 0 25px rgba(254,240,138,0.25)' : 'none'};">
+            ${badge ? `<div style="position: absolute; top: -11px; left: 50%; transform: translateX(-50%); background: ${k === 5 ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'linear-gradient(135deg, #10b981, #059669)'}; color: #ffffff; font-size: 0.72em; font-weight: 900; padding: 2px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.4); white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">${badge}</div>` : ''}
+            <div style="color: ${k === sel ? '#fef08a' : '#ffffff'}; font-weight: 900; font-size: 1.05em; margin-bottom: 6px;">${title}</div>
+            <div style="margin-bottom: 6px;">
+                ${oldPrice ? `<span style="color: #94a3b8; font-size: 0.8em; text-decoration: line-through; margin-left: 4px;">${oldPrice} د.أ</span>` : ''}
+                <span style="color: #fde68a; font-size: 1.55em; font-weight: 900; font-family: monospace;">${price}</span>
+                <span style="font-size: 0.8em; color: #cbd5e1; font-weight: bold;">د.أ</span>
             </div>
-            <div style="border-top: 1px solid rgba(212,175,55,0.2); padding-top: 8px; display: flex; flex-direction: column; gap: 5px;">
-                ${features.map(f => `<div style="color: #e2e8f0; font-size: 0.82em; display: flex; align-items: center; gap: 6px;"><span style="color: #10b981; font-weight: bold;">✓</span> <span>${f}</span></div>`).join('')}
+            <div style="color: #94a3b8; font-size: 0.8em; border-top: 1px solid rgba(212,175,55,0.15); padding-top: 8px;">
+                ${subtitle}
             </div>
         </div>
     `;
@@ -6262,22 +6117,6 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
                     <span>موضع الشكوى: <strong style="color: #fef08a;">${painAreaTitle}</strong></span>
                     <span>•</span>
                     <span>دقة التقييم السريري: <strong style="color: #10b981;">${confScore}%</strong></span>
-                </div>
-            </div>
-
-            <!-- ثلاث مزايا أساسية واضحة ومباشرة -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-bottom: 20px;">
-                <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 12px; padding: 12px; text-align: center;">
-                    <div style="color: #fef08a; font-weight: 900; font-size: 0.9em;">📋 التقرير السريري الشامل</div>
-                    <div style="color: #cbd5e1; font-size: 0.78em; margin-top: 3px;">تفسير دقيق للحالة وتوجيهات الكايروبراكتيك</div>
-                </div>
-                <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 12px; padding: 12px; text-align: center;">
-                    <div style="color: #6ee7b7; font-weight: 900; font-size: 0.9em;">🔄 كورس التأهيل اليومي (7 أيام)</div>
-                    <div style="color: #cbd5e1; font-size: 0.78em; margin-top: 3px;">تمارين متدرجة بالفيديو والمؤقت الذكي</div>
-                </div>
-                <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 12px; padding: 12px; text-align: center;">
-                    <div style="color: #7dd3fc; font-weight: 900; font-size: 0.9em;">📊 متابعة مؤشرات التعافي</div>
-                    <div style="color: #cbd5e1; font-size: 0.78em; margin-top: 3px;">رصد يومي لتراجع الألم ومعدل الاستشفاء</div>
                 </div>
             </div>
 
@@ -6308,21 +6147,9 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
                         <strong style="color: #fde68a; font-size: 1.05em;">الخطوة الأولى: اختر الباقة العلاجية التي تناسب احتياجك</strong>
                     </div>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        ${pkgCard(1, 'تشخيص سريري فردي', pr[1], null, 'فحص فوري', [
-                            'تقرير سريري متكامل لحالتك الحالية',
-                            'برنامج تأهيل اليوم الأول مع التمارين',
-                            'توجيهات الكايروبراكتيك المعتمدة'
-                        ])}
-                        ${pkgCard(5, 'باقة 5 فحوصات', pr[5], '15', '⭐ الأكثر طلباً • وفر 33%', [
-                            '5 فحوصات كاملة لك ولجميع أفراد أسرتك',
-                            'رصيد دائم بصلاحية مفتوحة مدى الحياة',
-                            'توفير 33% (دينارين فقط للفحص الواحد)'
-                        ])}
-                        ${pkgCard(10, 'باقة 10 فحوصات الشاملة', pr[10], '30', '👑 التوفير الأكبر • وفر 50%', [
-                            '10 فحوصات شاملة تغطي كافة الحالات',
-                            'توفير 50% نصف السعر تماماً (1.5 د.أ للفحص)',
-                            'متابعة عائلية متكاملة وأولوية استشارية'
-                        ])}
+                        ${pkgCard(1, 'تشخيص سريري فردي', pr[1], null, 'فحص فوري', 'تقرير سريري كامل مع تمارين اليوم الأول')}
+                        ${pkgCard(5, 'باقة 5 فحوصات', pr[5], '15', '⭐ الأكثر طلباً', 'رصيد 5 فحوصات دائمة لك وللعائلة')}
+                        ${pkgCard(10, 'باقة 10 فحوصات الشاملة', pr[10], '30', '👑 التوفير الأكبر • وفر 50%', '10 فحوصات شاملة برصيد دائم مدى الحياة')}
                     </div>
                 </div>
 
@@ -6406,43 +6233,17 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
             </div>
 
             <!-- التبويب 3: مبادرة الرعاية الإنسانية -->
-            <div id="paywall-pane-humanitarian" style="display: none; background: rgba(5, 9, 18, 0.96); border: 2px solid #10b981; border-radius: 16px; padding: 24px 20px;">
-                
-                <!-- عنوان المبادرة -->
-                <div style="text-align: center; margin-bottom: 16px;">
-                    <div style="color: #f87171; font-weight: 900; font-size: 1.3em; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <span style="font-size: 1.2em;">❤️</span>
-                        <span>مبادرة الرعاية الإنسانية</span>
-                    </div>
-                    <div style="color: #fde68a; font-size: 0.95em; font-weight: 700; line-height: 1.5;">
-                        لأن كرامة الإنسان وصحته تستحقان الاهتمام.
-                    </div>
+            <div id="paywall-pane-humanitarian" style="display: none; background: rgba(5, 9, 18, 0.96); border: 2px solid #10b981; border-radius: 16px; padding: 22px 18px; text-align: center;">
+                <div style="color: #f87171; font-weight: 900; font-size: 1.25em; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <span>❤️</span>
+                    <span>مبادرة الرعاية الإنسانية</span>
                 </div>
-
-                <!-- وصف المبادرة -->
-                <div style="color: #cbd5e1; font-size: 0.9em; line-height: 1.85; margin-bottom: 18px; text-align: justify;">
-                    هذه المبادرة مخصصة لمساندة الأشخاص الذين تحول ظروفهم المادية دون تحمل تكاليف الرعاية العلاجية، انطلاقاً من إيماننا بأن الظروف المادية لا ينبغي أن تحرم الإنسان من فرصة الاهتمام بصحته.
-                    <br><br>
-                    وقد أُطلقت هذه المبادرة <strong style="color: #6ee7b7;">ابتغاء مرضاة الله تعالى</strong>، ونسأل الله أن يجعلها باب خير ونفع لكل من يحتاج إليها.
-                </div>
-
-                <!-- صندوق تنويه الأمانة -->
-                <div style="background: rgba(234, 179, 8, 0.08); border: 2px solid #d4af37; border-radius: 14px; padding: 16px 18px; margin-bottom: 20px;">
-                    <div style="color: #fde68a; font-weight: 900; font-size: 1.05em; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 1.3em;">⚖️</span>
-                        <span>تنويه مهم: هذه المبادرة أمانة</span>
-                    </div>
-                    <div style="color: #e2e8f0; font-size: 0.88em; line-height: 1.85; text-align: justify;">
-                        نضع هذه المبادرة بين أيديكم ثقةً بضمائركم، وتذكيراً بأن الأمانة والصدق أساس كل عمل خيري.
-                        <br><br>
-                        نرجو ممن يتقدم للاستفادة من هذه المبادرة أن <strong style="color: #fef08a;">يراعي الله في طلبه</strong>، وألا يتقدم إليها إلا إذا كانت ظروفه المادية تستدعي ذلك فعلاً، فهذه المساعدة وُضعت لتصل إلى من يحتاجها، وهي أمانة نسأل الله أن نؤديها على الوجه الذي يرضيه.
-                        <br><br>
-                        <strong style="color: #fcd34d;">فالله مطّلع على السرائر، والأمانة مسؤولية أمامه قبل أن تكون مسؤولية أمام الناس.</strong>
-                    </div>
-                </div>
+                <p style="color: #cbd5e1; font-size: 0.9em; line-height: 1.7; margin: 0 auto 16px auto; max-width: 580px;">
+                    مخصصة لمساندة الأشخاص الذين تحول ظروفهم المادية دون تحمل تكاليف الرعاية العلاجية، أُطلقت ابتغاء مرضاة الله تعالى. نرجو عدم التقدم إليها إلا لمن يحتاجها فعلياً استشعاراً للأمانة والمسؤولية.
+                </p>
 
                 <!-- حقول المستفيد -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; text-align: right;">
                     <div>
                         <label style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px;">الاسم الكريم للمستفيد *</label>
                         <input type="text" id="hum-subscriber-name" value="${defName}" placeholder="أدخل اسمك الكريم" style="${inp}">
@@ -6453,18 +6254,15 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
                     </div>
                 </div>
 
-                <!-- مربع إقرار المستفيد -->
-                <label id="hum-oath-box-label" for="hum-oath-checkbox" style="display: flex; align-items: flex-start; gap: 12px; background: rgba(16, 185, 129, 0.1); border: 2px solid #10b981; border-radius: 14px; padding: 16px 18px; margin-bottom: 20px; cursor: pointer; transition: all 0.2s;">
-                    <input type="checkbox" id="hum-oath-checkbox" style="width: 24px; height: 24px; accent-color: #10b981; margin-top: 2px; flex-shrink: 0; cursor: pointer;">
-                    <div>
-                        <div style="color: #6ee7b7; font-weight: 900; font-size: 0.92em; margin-bottom: 4px;">☑️ إقرار المستفيد</div>
-                        <span style="color: #e2e8f0; font-weight: 600; font-size: 0.88em; line-height: 1.7; display: block;">
-                            أقرّ بأن ظروفي المادية الحالية تحول دون قدرتي على تحمّل تكاليف الرعاية العلاجية، وأن طلبي للاستفادة من هذه المبادرة نابع من حاجتي الفعلية إليها، وأتعهد بالصدق والأمانة فيما قدمته من معلومات، مستشعراً أن هذه المبادرة أمانة وحق لمن يحتاج إليها.
-                        </span>
-                    </div>
+                <!-- إقرار المستفيد -->
+                <label id="hum-oath-box-label" for="hum-oath-checkbox" style="display: flex; align-items: center; gap: 10px; background: rgba(16, 185, 129, 0.1); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px 16px; margin-bottom: 18px; cursor: pointer; text-align: right;">
+                    <input type="checkbox" id="hum-oath-checkbox" style="width: 20px; height: 20px; accent-color: #10b981; flex-shrink: 0; cursor: pointer;">
+                    <span style="color: #e2e8f0; font-weight: 700; font-size: 0.88em; line-height: 1.5;">
+                        أقرّ بأني بحاجة فعلية لهذه المبادرة لظروفي المادية، وأتعهد بالصدق والأمانة في طلبي.
+                    </span>
                 </label>
 
-                <button type="button" onclick="submitHumanitarianFreeActivation()" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: #ffffff; border: 1.5px solid #6ee7b7; padding: 15px; border-radius: 14px; font-weight: 900; font-size: 1.08em; cursor: pointer; box-shadow: 0 4px 20px rgba(16,185,129,0.35); display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <button type="button" onclick="submitHumanitarianFreeActivation()" style="width: 100%; max-width: 440px; margin: 0 auto; background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: #ffffff; border: 1.5px solid #6ee7b7; padding: 14px; border-radius: 12px; font-weight: 900; font-size: 1.05em; cursor: pointer; box-shadow: 0 4px 20px rgba(16,185,129,0.35); display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
                     <span>إرسال طلب الاستفادة من المبادرة</span> <span>❤️</span>
                 </button>
             </div>
@@ -11277,7 +11075,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.87';
+const CURRENT_APP_VERSION = 'v30.88';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
