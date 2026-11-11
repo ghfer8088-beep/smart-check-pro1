@@ -1,4 +1,4 @@
-/**
+﻿/**
  * =================================================================================
  * ☁️ SMART CHECK PRO - GLOBAL REALTIME CLOUD SYNC & PATIENT DISPATCH BRIDGE
  * محرك الترحيل السحابي الفوري للمرضى والزيارات - مزامنة عالمية لحظية
@@ -1959,7 +1959,7 @@
         tasks.push((async () => {
             if (Date.now() < ntfyRateLimitedUntil) return null;
             try {
-                // ✅ v30.80: جلب آخر 15 دقيقة فقط لمنع إعادة استيراد سجلات الاختبار القديمة التالفة
+                // ✅ v30.81: جلب آخر 15 دقيقة فقط لمنع إعادة استيراد سجلات الاختبار القديمة التالفة
                 const sinceParam = '15m';
                 const controller2 = new AbortController();
                 const timeoutId2 = setTimeout(() => controller2.abort(), 8000);
@@ -3436,17 +3436,38 @@
 
         // حساب رقم الجلسة الفعلية للمريض لمنع الرجوع إلى جلسة مكتملة سابقاً (مثل الجلسة 2) أو القفز للجلسة 7 بالخطأ
         let completedLogsCount = 0;
+        const remainingModifiedMs = update.forceUnlock ? 0 : (update.totalDurationMs || (update.targetTime ? Math.max(0, update.targetTime - now) : 0));
+        const adjustedLastLogIso = new Date(remainingModifiedMs > 0 ? (now - (24 * 3600 * 1000) + remainingModifiedMs) : (now - (25 * 3600 * 1000))).toISOString();
+
         try {
             const actLogs = (window.activePatient && Array.isArray(window.activePatient.dailyLogs)) ? window.activePatient.dailyLogs : [];
             const lsLogs = pKey ? JSON.parse(localStorage.getItem('smart_daily_logs_' + pKey) || '[]') : [];
-            const validAct = actLogs.filter(l => !(l && l.goodPosture === true && l.walkingDone === true && l.heatDone === true && Number(l.sessionNumber) > 3));
-            const validLs = Array.isArray(lsLogs) ? lsLogs.filter(l => !(l && l.goodPosture === true && l.walkingDone === true && l.heatDone === true && Number(l.sessionNumber) > 3)) : [];
-            completedLogsCount = Math.max(validAct.length, validLs.length);
+            if (actLogs.length > 0) {
+                actLogs[actLogs.length - 1].date = adjustedLastLogIso;
+                if (actLogs[actLogs.length - 1].completedAt) actLogs[actLogs.length - 1].completedAt = adjustedLastLogIso;
+            }
+            if (Array.isArray(lsLogs) && lsLogs.length > 0 && pKey) {
+                lsLogs[lsLogs.length - 1].date = adjustedLastLogIso;
+                if (lsLogs[lsLogs.length - 1].completedAt) lsLogs[lsLogs.length - 1].completedAt = adjustedLastLogIso;
+                safeSet('smart_daily_logs_' + pKey, JSON.stringify(lsLogs));
+            }
+            completedLogsCount = Math.max(actLogs.length, Array.isArray(lsLogs) ? lsLogs.length : 0);
         } catch(e) {}
-        const progressionDay = completedLogsCount >= 7 ? 7 : Math.min(7, Math.max(1, completedLogsCount + 1));
+
+        if (typeof window !== 'undefined' && window.PatientFlow && typeof window.PatientFlow.permanentlyExpireSessionCooldown === 'function') {
+            window.PatientFlow.permanentlyExpireSessionCooldown(pKey, remainingModifiedMs);
+        }
+
+        const isPlanAlreadyDone = Boolean(
+            update.isPlanCompleted ||
+            completedLogsCount >= 7 ||
+            (window.activePatient && (window.activePatient.isPlanCompleted || window.activePatient.planCompleted)) ||
+            (pKey && localStorage.getItem('smart_plan_completed_' + pKey) === 'true')
+        );
+        const progressionDay = isPlanAlreadyDone ? 7 : Math.min(7, Math.max(1, completedLogsCount + 1));
 
         const isAllUnlocked = Boolean(update.forceUnlockAllSessions || update.isAllSessions || update.sessionNum === 0 || update.sessionNum === 'all');
-        const numSession = isAllUnlocked ? 7 : progressionDay;
+        const numSession = isPlanAlreadyDone ? 7 : progressionDay;
 
         // ✅ حفظ التعديل فوراً في الذاكرة الحية لضمان عمله حتى لو امتلأت مساحة localStorage
         window._scpLiveTimingOverride = {
@@ -3505,6 +3526,10 @@
 
         const applyTimingToPtObj = (ptObj) => {
             if (!ptObj) return;
+            if (Array.isArray(ptObj.dailyLogs) && ptObj.dailyLogs.length > 0) {
+                ptObj.dailyLogs[ptObj.dailyLogs.length - 1].date = adjustedLastLogIso;
+                ptObj.lastLogDate = adjustedLastLogIso;
+            }
             if (isAllUnlocked) {
                 ptObj.forceUnlockAllSessions = true;
                 ptObj.allSessionsUnlocked = true;
@@ -3517,8 +3542,9 @@
                 ptObj.currentSessionDay = numSession;
                 ptObj.activeSessionDay = numSession;
             }
-            if (update.isPlanCompleted) {
+            if (update.isPlanCompleted || isPlanAlreadyDone) {
                 ptObj.isPlanCompleted = true;
+                ptObj.planCompleted = true;
                 ptObj.recoveryScore = 100;
                 ptObj.completedSessions = 7;
                 ptObj.logsCount = 7;
@@ -3574,6 +3600,14 @@
             try {
                 if (typeof window._isRenderingStep5 !== 'undefined') window._isRenderingStep5 = false;
             } catch(e) {}
+            if (isPlanAlreadyDone) {
+                try {
+                    if (typeof window.renderStep6Completion === 'function') {
+                        window.renderStep6Completion(pKey);
+                        return;
+                    }
+                } catch(e) {}
+            }
             const targetDayToOpen = numSession || progressionDay;
             try {
                 if (typeof window.loadPatientRecoveryDashboard === 'function') {
@@ -3788,7 +3822,7 @@
     function handleAppVersionUpdateMessage(data) {
         if (!data || !data.version) return;
         const newVer = String(data.version).trim();
-        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.80');
+        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.81');
         const numNew = _parseVersionNumber(newVer);
         const numCur = _parseVersionNumber(curVer);
 

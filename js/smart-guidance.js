@@ -643,13 +643,16 @@ const SmartGuidance = (function() {
 
         if (isReviewingCompleted) {
             activeSubState = 'step5_reviewing';
-            if (iconEl) iconEl.textContent = '✓';
+            const isPlanDone = Boolean(window.activePatient && (window.activePatient.isPlanCompleted || window.activePatient.planCompleted));
+            if (iconEl) iconEl.textContent = isPlanDone ? '👑' : '✓';
             if (subEl) subEl.textContent = `المرحلة 5${sessionLabel}: استعراض جلسة منجزة مسبقاً`;
-            if (mainEl) mainEl.textContent = 'يمكنك مراجعة التمارين المعتمدة أو الانتقال لمتابعة جلستك الحالية النشطة';
+            if (mainEl) mainEl.textContent = isPlanDone
+                ? 'أتممت كافة جلسات الـ 7 أيام بنجاح! يمكنك العودة لبوابة الحل الجذري'
+                : 'يمكنك مراجعة التمارين المعتمدة أو الانتقال لمتابعة جلستك الحالية النشطة';
 
             btn.className = 'sticky-guidance-action-btn state-ready';
-            if (btnIcon) btnIcon.textContent = '⬅️';
-            if (btnText) btnText.textContent = 'الانتقال للجلسة الحالية';
+            if (btnIcon) btnIcon.textContent = isPlanDone ? '👑' : '⬅️';
+            if (btnText) btnText.textContent = isPlanDone ? 'العودة لبوابة الحل الجذري' : 'الانتقال للجلسة الحالية';
         } else if (isLocked) {
             // الجلسة في فترة استشفاء الـ 24 ساعة
             activeSubState = 'step5_locked';
@@ -911,12 +914,18 @@ const SmartGuidance = (function() {
                         showToast('⏳ أنسجة مفاصلك في فترة استشفاء وترميم.. العداد جارٍ ومتبقي لحين فتح الجلسة', 'warning', 4000);
                     }
                 } else if (activeSubState === 'step5_reviewing') {
+                    const curP = window.activePatient || {};
+                    const pId = curP.patientId || curP.id || patientId;
+                    if (curP.isPlanCompleted || curP.planCompleted) {
+                        if (typeof window.renderStep6Completion === 'function') {
+                            window.renderStep6Completion(pId);
+                            return;
+                        }
+                    }
                     const returnBtn = document.querySelector('#step5-sessions-container button[onclick*="الانتقال لجلستك الحالية"]');
                     if (returnBtn) {
                         returnBtn.click();
                     } else {
-                        const curP = window.activePatient || {};
-                        const pId = curP.patientId || curP.id || patientId;
                         const curDay = curP.currentSessionDay || 2;
                         if (typeof window.renderStep5SessionsDashboard === 'function') {
                             window.renderStep5SessionsDashboard(pId, curDay);

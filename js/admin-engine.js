@@ -1220,9 +1220,31 @@ const AdminEngine = (function() {
         }
 
         // تحديث متزامن وفوري لكائن المريض في قوائم التخزين المحلية (smart_cloud_synced_patients و smart_all_patients)
+        // مع إنهاء أو تعديل تاريخ آخر جلسة مسجلة جذرياً حتى لا يبقى أي أثر لتوقيت 24 ساعة عالق
         const nowTimingTs = Date.now();
+        const adjustedLastLogIso = new Date(forceUnlock ? (nowTimingTs - 25 * 3600 * 1000) : (nowTimingTs - 24 * 3600 * 1000 + totalDurationMs)).toISOString();
+
+        try {
+            const logKeys = new Set([patientId, cleanPhone, cleanPhone ? 'pat_' + cleanPhone : ''].filter(Boolean));
+            logKeys.forEach(k => {
+                const rawL = localStorage.getItem('smart_daily_logs_' + k);
+                if (rawL) {
+                    const arrL = JSON.parse(rawL);
+                    if (Array.isArray(arrL) && arrL.length > 0) {
+                        arrL[arrL.length - 1].date = adjustedLastLogIso;
+                        if (arrL[arrL.length - 1].completedAt) arrL[arrL.length - 1].completedAt = adjustedLastLogIso;
+                        safeStorageSet('smart_daily_logs_' + k, JSON.stringify(arrL));
+                    }
+                }
+            });
+        } catch(e) {}
+
         const applyTimingPropsToPt = (pt) => {
             if (!pt) return;
+            if (Array.isArray(pt.dailyLogs) && pt.dailyLogs.length > 0) {
+                pt.dailyLogs[pt.dailyLogs.length - 1].date = adjustedLastLogIso;
+                pt.lastLogDate = adjustedLastLogIso;
+            }
             if (forceUnlock) {
                 pt.forceUnlock = true;
                 delete pt.customTargetTime;
@@ -1380,27 +1402,78 @@ const AdminEngine = (function() {
         return await setPatientCompletedSessions(patientId, 7, patientPhone, patientName);
     }
 
-    // تعديل وتثبيت عدد الجلسات المنجزة للمريض يدوياً من لوحة الإدارة
+    // تعديل وتثبيت عدد الجلسات المنجزة للمريض يدوياً من لوحة الإدارة مع الحفاظ على المؤشرات الحقيقية للمريض
     async function setPatientCompletedSessions(patientId, targetCount, patientPhone = '', patientName = '') {
         const count = Math.max(0, Math.min(7, parseInt(targetCount) || 0));
         const cleanPhone = (patientPhone || '').replace(/\D/g, '');
         const targetIds = new Set([patientId, cleanPhone, 'pat_' + cleanPhone].filter(Boolean));
 
-        // 1. توليد أو استكمال سجلات الجلسات اليومية
+        // استرجاع السجلات الحقيقية السابقة للمريض للحفاظ على تقييماته الفعلية وعدم استبدالها بأرقام وهمية
+        const existingMap = new Map();
+        let lastRealPain = 4;
+        let lastRealMob = 70;
+        let lastRealSlp = 70;
+        try {
+            for (const tid of targetIds) {
+                const lsRaw = localStorage.getItem('smart_daily_logs_' + tid);
+                if (lsRaw) {
+                    const arr = JSON.parse(lsRaw);
+                    if (Array.isArray(arr)) {
+                        arr.forEach(l => {
+                            const sN = Number(l?.sessionNumber || l?.day || 0);
+                            if (sN >= 1 && sN <= 7) {
+                                existingMap.set(sN, l);
+                                if (typeof l.painScore === 'number') lastRealPain = l.painScore;
+                                if (typeof l.mobilityRate === 'number') lastRealMob = l.mobilityRate;
+                                if (typeof l.sleepRate === 'number') lastRealSlp = l.sleepRate;
+                            }
+                        });
+                    }
+                }
+            }
+            if (typeof SmartDB !== 'undefined' && typeof SmartDB.getPatientDailyLogs === 'function') {
+                const dbLogs = await SmartDB.getPatientDailyLogs(patientId);
+                if (Array.isArray(dbLogs)) {
+                    dbLogs.forEach(l => {
+                        const sN = Number(l?.sessionNumber || l?.day || 0);
+                        if (sN >= 1 && sN <= 7) {
+                            existingMap.set(sN, { ...(existingMap.get(sN) || {}), ...l });
+                            if (typeof l.painScore === 'number') lastRealPain = l.painScore;
+                            if (typeof l.mobilityRate === 'number') lastRealMob = l.mobilityRate;
+                            if (typeof l.sleepRate === 'number') lastRealSlp = l.sleepRate;
+                        }
+                    });
+                }
+            }
+        } catch(e) {}
+
+        // 1. بناء سجلات الجلسات حتى العدد المحدد مع إنهاء مدة الـ 24 ساعة لكل جلسة مكتملة بالكامل
         const logs = [];
         for (let i = 1; i <= count; i++) {
-            logs.push({
-                patientId: patientId,
-                sessionNumber: i,
-                painScore: Math.max(0, 7 - Math.round((i / 7) * 7)),
-                mobilityRate: Math.min(100, 60 + Math.round((i / 7) * 40)),
-                sleepRate: Math.min(100, 60 + Math.round((i / 7) * 40)),
-                exercisesDone: true,
-                goodPosture: true,
-                walkingDone: true,
-                heatDone: true,
-                date: new Date(Date.now() - ((count - i) * 86400000)).toISOString()
-            });
+            const existing = existingMap.get(i);
+            const expiredDateIso = new Date(Date.now() - ((count - i + 1) * 86400000) - 3600000).toISOString();
+            if (existing) {
+                logs.push({
+                    ...existing,
+                    patientId: patientId,
+                    sessionNumber: i,
+                    day: i,
+                    date: expiredDateIso
+                });
+            } else {
+                logs.push({
+                    patientId: patientId,
+                    sessionNumber: i,
+                    day: i,
+                    painScore: lastRealPain,
+                    mobilityRate: lastRealMob,
+                    sleepRate: lastRealSlp,
+                    exercisesDone: true,
+                    positiveHabitsList: [],
+                    negativeHabitsList: [],
+                    date: expiredDateIso
+                });
+            }
         }
 
         // 2. حفظ سجلات الجلسات لكافة المعرفات

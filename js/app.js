@@ -1,4 +1,4 @@
-// ==========================================================================
+﻿// ==========================================================================
 // Smart Check Pro 2.0 - محرك التطبيق الرئيسي الشامل (Master App Controller)
 // مطورة من قبل "وداعاً للألم" (تقنية الكايروبراكتيك)
 // ==========================================================================
@@ -8866,15 +8866,15 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             if (sNum > highestCompleted5) highestCompleted5 = sNum;
         });
 
-        if (highestCompleted5 >= 7 || sessionData.dailyLogs.length >= 7) {
+        if (highestCompleted5 >= 7 || sessionData.dailyLogs.length >= 7 || localStorage.getItem('smart_plan_completed_' + effectivePid) === 'true') {
             sessionData.isPlanCompleted = true;
         }
 
         const lockStatus = await PatientFlow.getSessionLockStatus(effectivePid);
         if (myRenderSeq !== window._step5RenderSeq) return;
 
-        // إذا كان المريض أنجز كل الـ 7 جلسات ولم يُطلب استعراض جلسة محددة، الانتقال لشاشة الإنهاء
-        if (sessionData.isPlanCompleted && (!targetDay || targetDay > 7)) {
+        // إذا كان المريض أنجز كل الـ 7 جلسات ولم ينقر يدوياً على تبويب جلسة محددة للمراجعة، الانتقال فوراً لبوابة الحل الجذري (المرحلة 6)
+        if (sessionData.isPlanCompleted && !isUserTabClick) {
             renderStep6Completion(patientId, sessionData);
             return;
         }
@@ -8910,11 +8910,8 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             return;
         }
 
-        // تحديد اليوم الحالي لتقدم مسار المريض: يستند للجلسات المنجزة أو فتح الإدارة الشامل
+        // تحديد اليوم الحالي لتقدم مسار المريض: يستند للجلسات المنجزة فعلياً (دون القفز الوهمي للجلسة 7 عند فتح القفل فقط)
         let progressionDay = sessionData.isPlanCompleted ? 7 : Math.min(7, Math.max(1, highestCompleted5 + 1));
-        if (isAllUnlockedNow) {
-            progressionDay = 7;
-        }
 
         // تنظيف أي قيمة مخزنة في targeted_session لا تطابق جلسة التقدم الفعلية للمريض (تمنع الارتداد للجلسة 2 أو القفز للجلسة 7)
         if (targetedSessionAdmin > 0 && targetedSessionAdmin !== progressionDay && !isAllUnlockedNow) {
@@ -8924,14 +8921,14 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             } catch(e) {}
         }
 
-        // تحديد اليوم المعروض حالياً: يفتح دائماً على جلسة التقدم الحالية (مثل الجلسة 4) إلا إذا نقر المريض يدوياً على تبويب جلسة سابقة للمراجعة
+        // تحديد اليوم المعروض حالياً: يفتح دائماً على جلسة التقدم الحالية (مثل الجلسة 4) إلا إذا نقر المريض يدوياً على تبويب جلسة للمراجعة
         let activeDay = progressionDay;
         if (targetDay && isUserTabClick) {
             activeDay = Math.max(1, Math.min(7, targetDay));
-        } else if (targetDay && targetDay >= progressionDay) {
-            activeDay = Math.min(7, targetDay);
-        } else if (targetedSessionAdmin && targetedSessionAdmin >= progressionDay && targetedSessionAdmin <= 7) {
-            activeDay = targetedSessionAdmin;
+        } else if (targetDay && targetDay === progressionDay) {
+            activeDay = progressionDay;
+        } else if (isAllUnlockedNow && targetDay && targetDay >= 2 && targetDay <= 7 && isUserTabClick) {
+            activeDay = targetDay;
         }
 
         if (activePatient) {
@@ -9001,12 +8998,6 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 } else if (typeof lastPrevLog.sleepQuality === 'number') {
                     displaySleep = lastPrevLog.sleepQuality;
                 }
-            } else if (activeDay < progressionDay || sessionData.isPlanCompleted) {
-                const factor = activeDay / 7;
-                const maxPainDrop = (sessionData.indicators && sessionData.indicators.painReduction) ? sessionData.indicators.painReduction : 85;
-                displayPainReduction = Math.min(100, Math.round(maxPainDrop * factor));
-                displayMobility = Math.min(98, Math.round(50 + 48 * factor));
-                displaySleep = Math.min(98, Math.round(55 + 43 * factor));
             }
             if (displayMobility === 0) displayMobility = 70;
             if (displaySleep === 0) displaySleep = 70;
@@ -9088,7 +9079,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                     ${sessionData.isPlanCompleted ? `
                         <button type="button" onclick="renderStep6Completion('${patientId}')" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.3) 0%, rgba(180, 130, 20, 0.3) 100%); border: 1px solid var(--primary-gold); color: #fef08a; padding: 5px 12px; border-radius: 6px; font-size: 0.78em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
-                            <span>🏆</span> وثيقة الإنهاء والشهادة
+                            <span>👑</span> بوابة الحل الجذري
                         </button>
                     ` : ''}
                 </div>
@@ -9288,7 +9279,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
                     ${sessionData.isPlanCompleted ? `
                         <button type="button" onclick="renderStep6Completion('${patientId}')" style="background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; font-weight: bold; border: none; padding: 10px 22px; border-radius: 25px; font-size: 0.92em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);">
-                            🏆 الذهاب إلى وثيقة التخرج والتعافي الشامل
+                            👑 الانتقال لبوابة الحل الجذري (الكايروبراكتيك)
                         </button>
                     ` : (activeDay < progressionDay ? `
                         <button type="button" onclick="renderStep5SessionsDashboard('${patientId}', ${progressionDay})" style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #7dd3fc; font-weight: bold; padding: 8px 18px; border-radius: 20px; font-size: 0.88em; cursor: pointer;">
@@ -9842,7 +9833,11 @@ async function renderStep6Completion(patientId, sessionData = null) {
         // التحقق المانع: عدم السماح بالوصول لبوابة الحل الجذري إلا بعد إتمام كامل الأيام السبعة
         const completedDays = sessionData.dailyLogs ? sessionData.dailyLogs.length : 0;
         const hasSession7 = sessionData.dailyLogs && sessionData.dailyLogs.some(l => Number(l.sessionNumber || l.day) >= 7);
-        const isPlanDone = sessionData.isPlanCompleted || hasSession7 || completedDays >= 7 || (activePatient && (activePatient.isPlanCompleted || activePatient.planCompleted));
+        const wasCompletedInStorage = Boolean(
+            localStorage.getItem('smart_plan_completed_' + patientId) === 'true' ||
+            (localStorage.getItem('smart_current_step') === '6' && localStorage.getItem('smart_max_reached_step') === '6' && completedDays >= 4)
+        );
+        const isPlanDone = sessionData.isPlanCompleted || hasSession7 || completedDays >= 7 || wasCompletedInStorage || (activePatient && (activePatient.isPlanCompleted || activePatient.planCompleted));
         if (!isPlanDone) {
             showToast(`🔒 بوابة الحل الجذري مقفلة: تتفعل تلقائياً فقط بعد إتمام جميع جلسات خطة الـ 7 أيام! أنت حالياً في اليوم (${completedDays + 1} من 7).`, 'warning');
             if (completedDays === 0) {
@@ -9852,6 +9847,13 @@ async function renderStep6Completion(patientId, sessionData = null) {
             }
             return;
         }
+
+        sessionData.isPlanCompleted = true;
+        if (sessionData.patient) {
+            sessionData.patient.isPlanCompleted = true;
+            sessionData.patient.planCompleted = true;
+        }
+        try { localStorage.setItem('smart_plan_completed_' + patientId, 'true'); } catch(e) {}
 
         activePatient = sessionData.patient;
         goToStep(6, { fromRender: true });
@@ -10173,8 +10175,8 @@ async function loadPatientRecoveryDashboard(patientId, targetDay = null) {
     } catch(e) {}
     const lockStatus = await PatientFlow.getSessionLockStatus(patientId);
 
-    // إذا اكتمل البرنامج (7 جلسات) ولم يُطلب استعراض جلسة محددة: بوابة الحل الجذري (الخطوة 6)
-    if (sessionData.isPlanCompleted && !targetDay) {
+    // إذا اكتمل البرنامج (7 جلسات): التوجه المباشر لبوابة الحل الجذري (الخطوة 6) دائماً
+    if (sessionData.isPlanCompleted) {
         await renderStep6Completion(patientId, sessionData);
     } 
     // إذا كان في اليوم الأول ولم يوثق إنجاز اليوم الأول بعد: الجلسة الأولى المستقلة (الخطوة 4) — فقط إذا لم يُطلب الانتقال لجلسة لاحقة
@@ -11055,7 +11057,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.80';
+const CURRENT_APP_VERSION = 'v30.81';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 

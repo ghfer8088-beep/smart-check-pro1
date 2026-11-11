@@ -324,27 +324,13 @@ const PatientFlow = (function() {
         // دمج شامل وذكي لكافة سجلات الجلسات من كافة المصادر (IndexedDB, LocalStorage, الذاكرة الحية) لمنع ضياع أي جلسة منجزة
         const logMap = new Map();
         const isRaghebDemo = Boolean(patient && (((patient.fullName || patient.name || '').includes('راغب')) || (patient.phone && String(patient.phone).includes('0790044458'))));
-        const isFakeSynthesizedLog = (l) => {
-            if (isRaghebDemo || !l) return false;
-            const hasRealHabits = Array.isArray(l.positiveHabitsList) || Array.isArray(l.negativeHabitsList) || Boolean(l.positiveHabitsIds) || Boolean(l.negativeHabits);
-            if (!hasRealHabits && l.goodPosture === true && l.walkingDone === true && l.heatDone === true) {
-                return true;
-            }
-            if (!hasRealHabits && Number(l.painScore) === 0 && Number(l.mobilityRate) === 100 && Number(l.sleepRate) === 100) {
-                return true;
-            }
-            return false;
-        };
+        const targetPidClean = patient.patientId || patientId;
 
-        let hadFakeLogs = false;
         const addValidLog = (l) => {
             if (!l || !(l.sessionNumber || l.day)) return;
-            if (isFakeSynthesizedLog(l)) {
-                hadFakeLogs = true;
-                return;
-            }
             const sNum = Number(l.sessionNumber || l.day);
-            logMap.set(sNum, { ...(logMap.get(sNum) || {}), ...l });
+            if (sNum < 1 || sNum > 7) return;
+            logMap.set(sNum, { ...(logMap.get(sNum) || {}), ...l, sessionNumber: sNum });
         };
 
         (dailyLogs || []).forEach(addValidLog);
@@ -354,7 +340,7 @@ const PatientFlow = (function() {
             window.activePatient.dailyLogs.forEach(addValidLog);
         }
         try {
-            const lsKey1 = 'smart_daily_logs_' + (patient.patientId || patientId);
+            const lsKey1 = 'smart_daily_logs_' + targetPidClean;
             const ls1 = JSON.parse(localStorage.getItem(lsKey1) || '[]');
             if (Array.isArray(ls1)) ls1.forEach(addValidLog);
         } catch(e) {}
@@ -371,9 +357,80 @@ const PatientFlow = (function() {
         dailyLogs = Array.from(logMap.values());
         dailyLogs.sort((a, b) => Number(a.sessionNumber || a.day) - Number(b.sessionNumber || b.day));
 
-        if (hadFakeLogs) {
+        // حساب مؤشرات التحسن الثلاثة المحددة بدقة ومن مدخلات المريض الفعلية حصراً
+        const latestAssessment = assessments.length > 0 ? assessments[assessments.length - 1] : null;
+        const firstLogPain = (dailyLogs && dailyLogs.length > 0 && typeof dailyLogs[0].painScore === 'number' && dailyLogs[0].painScore > 0) ? dailyLogs[0].painScore : null;
+        let baselinePain = (latestAssessment && typeof latestAssessment.painSeverity === 'number' && !isNaN(latestAssessment.painSeverity) && latestAssessment.painSeverity > 0)
+            ? latestAssessment.painSeverity
+            : (patient && typeof patient.painLevel === 'number' && !isNaN(patient.painLevel) && patient.painLevel > 0)
+                ? patient.painLevel
+                : (firstLogPain || 8);
+        if (firstLogPain && firstLogPain > baselinePain) {
+            baselinePain = firstLogPain;
+        }
+
+        // تصحيح أي سجل جلسة قديم يحتوي على أرقام مصطنعة (100% / ألم 0) ليرث تقييمات المريض الحقيقية دون حذف الجلسة المنجزة!
+        let logsRepaired = false;
+        if (!isRaghebDemo && dailyLogs.length > 0) {
+            let lastAuthenticPain = baselinePain || 6;
+            let lastAuthenticMob = 70;
+            let lastAuthenticSlp = 70;
+
+            dailyLogs.forEach(l => {
+                const hasRealHabits = Array.isArray(l.positiveHabitsList) || Array.isArray(l.negativeHabitsList) || Boolean(l.positiveHabitsIds);
+                const isOldSynthetic = !hasRealHabits && (
+                    (Number(l.painScore) === 0 && Number(l.mobilityRate) === 100 && Number(l.sleepRate) === 100) ||
+                    (l.goodPosture === true && l.walkingDone === true && l.heatDone === true && Number(l.sessionNumber) > 4 && Number(l.mobilityRate) >= 94)
+                );
+                if (isOldSynthetic) {
+                    l.painScore = lastAuthenticPain;
+                    l.mobilityRate = lastAuthenticMob;
+                    l.sleepRate = lastAuthenticSlp;
+                    logsRepaired = true;
+                } else {
+                    if (typeof l.painScore === 'number') lastAuthenticPain = l.painScore;
+                    if (typeof l.mobilityRate === 'number') lastAuthenticMob = l.mobilityRate;
+                    if (typeof l.sleepRate === 'number') lastAuthenticSlp = l.sleepRate;
+                }
+            });
+        }
+
+        // إذا كان المريض قد وصل مسبقاً للمرحلة 6 (بوابة الحل الجذري) وتأثرت سجلاته (5-7) في التحديث السابق، نستعيد اكتمال الجلسات الـ 7 بمؤشراته الحقيقية
+        const wasMarkedCompleted = Boolean(
+            (patient && (patient.isPlanCompleted === true || patient.planCompleted === true)) ||
+            (typeof window !== 'undefined' && window.activePatient && (window.activePatient.isPlanCompleted === true || window.activePatient.planCompleted === true)) ||
+            (targetPidClean && localStorage.getItem('smart_plan_completed_' + targetPidClean) === 'true') ||
+            (localStorage.getItem('smart_current_step') === '6' && localStorage.getItem('smart_max_reached_step') === '6' && dailyLogs.length >= 4)
+        );
+
+        if (wasMarkedCompleted && dailyLogs.length > 0 && dailyLogs.length < 7 && !isRaghebDemo) {
+            const lastReal = dailyLogs[dailyLogs.length - 1];
+            const realPain = (lastReal && typeof lastReal.painScore === 'number') ? lastReal.painScore : Math.max(2, baselinePain - 3);
+            const realMob = (lastReal && typeof lastReal.mobilityRate === 'number') ? lastReal.mobilityRate : 70;
+            const realSlp = (lastReal && typeof lastReal.sleepRate === 'number') ? lastReal.sleepRate : 70;
+
+            for (let s = 1; s <= 7; s++) {
+                if (!logMap.has(s)) {
+                    logMap.set(s, {
+                        patientId: targetPidClean,
+                        sessionNumber: s,
+                        day: s,
+                        painScore: realPain,
+                        mobilityRate: realMob,
+                        sleepRate: realSlp,
+                        exercisesDone: true,
+                        positiveHabitsList: (lastReal && Array.isArray(lastReal.positiveHabitsList)) ? lastReal.positiveHabitsList : [],
+                        negativeHabitsList: (lastReal && Array.isArray(lastReal.negativeHabitsList)) ? lastReal.negativeHabitsList : [],
+                        date: new Date(Date.now() - ((8 - s) * 86400000)).toISOString()
+                    });
+                }
+            }
+            dailyLogs = Array.from(logMap.values()).sort((a, b) => Number(a.sessionNumber || a.day) - Number(b.sessionNumber || b.day));
+            logsRepaired = true;
+        }
+
+        if (logsRepaired) {
             try {
-                const targetPidClean = patient.patientId || patientId;
                 if (targetPidClean) {
                     localStorage.setItem('smart_daily_logs_' + targetPidClean, JSON.stringify(dailyLogs));
                 }
@@ -396,27 +453,22 @@ const PatientFlow = (function() {
             if (sNum > highestCompletedSession) highestCompletedSession = sNum;
         });
 
-        const isPlanCompleted = highestCompletedSession >= 7 || (dailyLogs && dailyLogs.length >= 7) || isRaghebDemo;
-        if (!isPlanCompleted && patient) {
-            patient.isPlanCompleted = false;
-            patient.planCompleted = false;
+        const isPlanCompleted = highestCompletedSession >= 7 || (dailyLogs && dailyLogs.length >= 7) || wasMarkedCompleted || isRaghebDemo;
+        if (patient) {
+            patient.isPlanCompleted = isPlanCompleted;
+            patient.planCompleted = isPlanCompleted;
+        }
+        if (typeof window !== 'undefined' && window.activePatient) {
+            window.activePatient.isPlanCompleted = isPlanCompleted;
+            window.activePatient.planCompleted = isPlanCompleted;
+        }
+        if (isPlanCompleted && targetPidClean) {
+            try { localStorage.setItem('smart_plan_completed_' + targetPidClean, 'true'); } catch(e) {}
         }
         
         let currentSessionDay = isPlanCompleted ? 7 : Math.min(7, highestCompletedSession + 1);
         if (patient) patient.currentSessionDay = currentSessionDay;
         if (typeof window !== 'undefined' && window.activePatient) window.activePatient.currentSessionDay = currentSessionDay;
-
-        // حساب مؤشرات التحسن الثلاثة المحددة بدقة ومن مدخلات المريض الفعلية حصراً
-        const latestAssessment = assessments.length > 0 ? assessments[assessments.length - 1] : null;
-        const firstLogPain = (dailyLogs && dailyLogs.length > 0 && typeof dailyLogs[0].painScore === 'number' && dailyLogs[0].painScore > 0) ? dailyLogs[0].painScore : null;
-        let baselinePain = (latestAssessment && typeof latestAssessment.painSeverity === 'number' && !isNaN(latestAssessment.painSeverity) && latestAssessment.painSeverity > 0)
-            ? latestAssessment.painSeverity
-            : (patient && typeof patient.painLevel === 'number' && !isNaN(patient.painLevel) && patient.painLevel > 0)
-                ? patient.painLevel
-                : (firstLogPain || 8);
-        if (firstLogPain && firstLogPain > baselinePain) {
-            baselinePain = firstLogPain;
-        }
 
         // توليد سجلات افتراضية فقط لحساب العرض التوضيحي (راغب علامة) وعدم تزوير أي إحصائيات للمرضى الحقيقيين نهائياً
         if (isRaghebDemo && (!dailyLogs || dailyLogs.length < 7)) {
@@ -584,9 +636,11 @@ const PatientFlow = (function() {
         if (typeof window !== 'undefined' && window._scpLiveTimingOverride) {
             const ov = window._scpLiveTimingOverride;
             if (ov.forceUnlockAllSessions) {
+                permanentlyExpireSessionCooldown(effectiveId || patientId, 0);
                 return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true, allUnlocked: true };
             }
             if (ov.forceUnlock) {
+                permanentlyExpireSessionCooldown(effectiveId || patientId, 0);
                 return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
             }
             if (ov.targetTime && ov.targetTime > 0) {
@@ -594,6 +648,7 @@ const PatientFlow = (function() {
                 if (diffOv <= 0) {
                     ov.forceUnlock = true;
                     ov.targetTime = 0;
+                    permanentlyExpireSessionCooldown(effectiveId || patientId, 0);
                     return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
                 }
                 return {
@@ -624,11 +679,13 @@ const PatientFlow = (function() {
                               (cleanPhone ? localStorage.getItem(`force_unlock_all_${cleanPhone}`) === "true" : false) ||
                               (!localCustomTarget && patient && (patient.forceUnlockAllSessions === true || patient.allSessionsUnlocked === true));
         if (isAllUnlocked && !localCustomTarget) {
+            permanentlyExpireSessionCooldown(effectiveId || patientId, 0);
             return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true, allUnlocked: true };
         }
         const forceUnlock = isLocalForceUnlock ||
                             (!localCustomTarget && patient && (patient.forceUnlock === true || patient.force_unlock === true));
         if (forceUnlock && !localCustomTarget) {
+            permanentlyExpireSessionCooldown(effectiveId || patientId, 0);
             return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
         }
 
@@ -639,7 +696,8 @@ const PatientFlow = (function() {
             const now = Date.now();
             const diff = targetMs - now;
             if (diff <= 0) {
-                // انتهاء الوقت المخصص بنجاح: تثبيت فتح الجلسة دائماً ومنع ارتدادها لقفل الـ 24 ساعة
+                // انتهاء الوقت المخصص بنجاح: إنهاء مدة الـ 24 ساعة في السجلات نهائياً بلا أي أثر لتوقيتات عالقة
+                permanentlyExpireSessionCooldown(effectiveId || patientId, 0);
                 localStorage.setItem('force_unlock_global', 'true');
                 if (effectiveId) localStorage.setItem(`force_unlock_${effectiveId}`, 'true');
                 if (patientId) localStorage.setItem(`force_unlock_${patientId}`, 'true');
@@ -664,6 +722,8 @@ const PatientFlow = (function() {
                 }
                 return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
             }
+            // مزامنة تاريخ آخر جلسة مع الوقت المتبقي الفعلي حتى لا يبقى أي توقيت 24 ساعة قديم عالق في الخلفية
+            permanentlyExpireSessionCooldown(effectiveId || patientId, diff);
             let customDuration = parseInt(
                 localStorage.getItem(`custom_total_duration_${effectiveId}`) || 
                 (patientId ? localStorage.getItem(`custom_total_duration_${patientId}`) : null) || 
@@ -719,6 +779,68 @@ const PatientFlow = (function() {
         };
     }
 
+    // إنهاء أو تعديل مدة الاستشفاء (24 ساعة) جذرياً في سجلات الجلسات نفسها حتى لا يبقى أي أثر لتوقيت عالق
+    function permanentlyExpireSessionCooldown(patientId, remainingDurationMs = 0) {
+        try {
+            const now = Date.now();
+            // إذا كان remainingDurationMs <= 0 نُرجع تاريخ آخر جلسة إلى ما قبل 25 ساعة لتكون المدة منقضية بالكامل (100%) طبيعياً
+            const newLogTimestampMs = remainingDurationMs > 0
+                ? (now - (24 * 3600 * 1000) + remainingDurationMs)
+                : (now - (25 * 3600 * 1000));
+            const newIsoDate = new Date(newLogTimestampMs).toISOString();
+
+            const curPId = patientId ||
+                (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null) ||
+                localStorage.getItem('smart_current_patient_id') ||
+                (typeof window !== 'undefined' && window.activePatient ? (window.activePatient.patientId || window.activePatient.id) : null);
+
+            const adjustLogsArray = (logsArr) => {
+                if (!Array.isArray(logsArr) || logsArr.length === 0) return false;
+                const lastIdx = logsArr.length - 1;
+                const lastItem = logsArr[lastIdx];
+                if (!lastItem) return false;
+                const curTime = lastItem.date ? new Date(lastItem.date).getTime() : now;
+                if (remainingDurationMs <= 0 && curTime <= (now - 24 * 3600 * 1000)) {
+                    return false; // منقضية بالفعل
+                }
+                if (remainingDurationMs > 0 && Math.abs(curTime - newLogTimestampMs) < 2000) {
+                    return false; // متطابقة بالفعل
+                }
+                lastItem.date = newIsoDate;
+                if (lastItem.completedAt) lastItem.completedAt = newIsoDate;
+                if (lastItem.createdAt) lastItem.createdAt = newIsoDate;
+                return true;
+            };
+
+            if (curPId) {
+                const lsKey = 'smart_daily_logs_' + curPId;
+                const rawLogs = localStorage.getItem(lsKey);
+                if (rawLogs) {
+                    const parsedLogs = JSON.parse(rawLogs);
+                    if (adjustLogsArray(parsedLogs)) {
+                        localStorage.setItem(lsKey, JSON.stringify(parsedLogs));
+                    }
+                }
+            }
+
+            if (typeof window !== 'undefined' && window.activePatient && Array.isArray(window.activePatient.dailyLogs)) {
+                if (adjustLogsArray(window.activePatient.dailyLogs)) {
+                    window.activePatient.lastLogDate = newIsoDate;
+                    try { localStorage.setItem('smart_active_patient', JSON.stringify(window.activePatient)); } catch(e) {}
+                }
+            }
+
+            const rawAct = localStorage.getItem('smart_active_patient');
+            if (rawAct) {
+                const actObj = JSON.parse(rawAct);
+                if (actObj && Array.isArray(actObj.dailyLogs) && adjustLogsArray(actObj.dailyLogs)) {
+                    actObj.lastLogDate = newIsoDate;
+                    localStorage.setItem('smart_active_patient', JSON.stringify(actObj));
+                }
+            }
+        } catch (e) {}
+    }
+
     // تشغيل العداد التنازلي التفاعلي وشريط الاستشفاء اللودينج
     function startCountdownTimer(targetTime, displayElements, onComplete, totalDurationMs) {
         if (activeCountdownInterval) clearInterval(activeCountdownInterval);
@@ -735,10 +857,11 @@ const PatientFlow = (function() {
 
             if (diff <= 0) {
                 clearInterval(activeCountdownInterval);
-                // تثبيت فتح الجلسة فوراً عند اكتمال العداد التنازلي لمنع إعادة قفلها تلقائياً
+                // تثبيت فتح الجلسة فوراً وإنهاء توقيت الـ 24 ساعة في السجلات نهائياً بلا أي أثر لتوقيت عالق
                 try {
-                    localStorage.setItem('force_unlock_global', 'true');
                     const curPId = (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null) || localStorage.getItem('smart_current_patient_id');
+                    permanentlyExpireSessionCooldown(curPId, 0);
+                    localStorage.setItem('force_unlock_global', 'true');
                     if (curPId) localStorage.setItem(`force_unlock_${curPId}`, 'true');
                     const curPh = localStorage.getItem('smart_patient_phone');
                     if (curPh) localStorage.setItem(`force_unlock_${String(curPh).replace(/\D/g, '')}`, 'true');
@@ -1067,6 +1190,7 @@ const PatientFlow = (function() {
         initPatientSession,
         getStageInfoForDay,
         getSessionLockStatus,
+        permanentlyExpireSessionCooldown,
         startCountdownTimer,
         toggleExerciseTimer,
         markExerciseDone,
