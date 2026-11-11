@@ -1959,7 +1959,7 @@
         tasks.push((async () => {
             if (Date.now() < ntfyRateLimitedUntil) return null;
             try {
-                // ✅ v30.83: جلب آخر 15 دقيقة فقط لمنع إعادة استيراد سجلات الاختبار القديمة التالفة
+                // ✅ v30.84: جلب آخر 15 دقيقة فقط لمنع إعادة استيراد سجلات الاختبار القديمة التالفة
                 const sinceParam = '15m';
                 const controller2 = new AbortController();
                 const timeoutId2 = setTimeout(() => controller2.abort(), 8000);
@@ -3822,7 +3822,7 @@
     function handleAppVersionUpdateMessage(data) {
         if (!data || !data.version) return;
         const newVer = String(data.version).trim();
-        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.83');
+        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.84');
         const numNew = _parseVersionNumber(newVer);
         const numCur = _parseVersionNumber(curVer);
 
@@ -3970,6 +3970,15 @@
             const resolvedStatusText = unlockType === 'humanitarian'
                 ? 'إعفاء إنساني معتمد (صدقة جارية)'
                 : (unlockType === 'test_free' ? 'تفعيل إداري مجاني' : 'مدفوع أورانج (' + amountPaid + ' د.أ)');
+
+            try {
+                localStorage.setItem('smart_paid_plan_type', unlockType);
+                if (unlockType !== 'humanitarian' && unlockType !== 'humanitarian_waiver') {
+                    if (localStorage.getItem('smart_paid_plan_type') === 'humanitarian') {
+                        localStorage.setItem('smart_paid_plan_type', 'paid_orange_wallet');
+                    }
+                }
+            } catch(e) {}
 
             allIds.forEach(idKey => {
                 localStorage.setItem('smart_paid_unlocked_' + idKey, 'true');

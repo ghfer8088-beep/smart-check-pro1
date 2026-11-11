@@ -4192,18 +4192,52 @@ window.playRoyalDuaaAudio = playRoyalDuaaAudio;
 // تشغيل صوت د. سارة البشري الاستوديو بعد اختفاء نافذة الصدقة وتأكيد بدء الخطة (مرة واحدة فقط دون تكرار)
 let _sarahCharityIntroLastTriggered = 0;
 function playSarahCharityIntroAudio(patientName = '', isUserManualClick = false) {
+    const isPaid = (typeof isCurrentPatientPaidPlan === 'function' && isCurrentPatientPaidPlan());
+    const isHumanitarian = !isPaid && (
+        (typeof activePatient !== 'undefined' && activePatient?.paymentType === 'humanitarian') ||
+        (localStorage.getItem('smart_paid_plan_type') === 'humanitarian')
+    );
+
+    const statusEl = document.getElementById('sarah-charity-voice-status');
+
+    // للمشتركين بالباقات المدفوعة: حظر صارم لملف الصدقة الجارية station_recovery.mp3
+    if (!isHumanitarian) {
+        if (statusEl) statusEl.textContent = '🔊 د. سارة ترشدك للبدء...';
+        const welcomeText = `أهلاً بك يا ${patientName || 'المراجع العزيز'}. تم اعتماد وتفعيل خطتك التأهيلية بنجاح. سنبدأ الآن جلسة اليوم الأول، اتبع التوجيهات والتكرارات بدقة لتحقيق أفضل نتيجة سريرية.`;
+        
+        const onPaidFinish = () => {
+            if (statusEl) statusEl.textContent = '🔁 إعادة الاستماع للتوجيهات';
+        };
+
+        if (typeof Wada3anAiEngine !== 'undefined' && typeof Wada3anAiEngine.speakDoctorResponse === 'function') {
+            Wada3anAiEngine.speakDoctorResponse(welcomeText);
+            setTimeout(onPaidFinish, 5000);
+            return;
+        } else if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+            try {
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(welcomeText);
+                u.lang = 'ar-SA';
+                u.onend = onPaidFinish;
+                u.onerror = onPaidFinish;
+                window.speechSynthesis.speak(u);
+                return;
+            } catch(e) {}
+        }
+        onPaidFinish();
+        return;
+    }
+
+    // للمستفيدين من الإعفاء الإنساني حصراً (لوجه الله تعالى):
     const now = Date.now();
-    // حماية تامة ضد التكرار: منع التشغيل التلقائي المكرر
     if (!isUserManualClick && (now - _sarahCharityIntroLastTriggered < 4000)) {
         return;
     }
     _sarahCharityIntroLastTriggered = now;
 
-    const statusEl = document.getElementById('sarah-charity-voice-status');
     const bannerEl = document.getElementById('sarah-charity-voice-banner');
     if (bannerEl) bannerEl.style.display = 'flex';
 
-    // إذا كان الصوت الاستوديو يعمل بالفعل ونقر المراجع على الزر يدوياً، نتيح الإيقاف المؤقت أو المتابعة
     if (isUserManualClick && currentActiveStationAudio && !currentActiveStationAudio.paused && currentActiveStationAudio.currentTime > 0) {
         try {
             currentActiveStationAudio.pause();
@@ -4219,14 +4253,6 @@ function playSarahCharityIntroAudio(patientName = '', isUserManualClick = false)
     };
 
     try {
-        const isHumanitarian = (localStorage.getItem('smart_paid_plan_type') === 'humanitarian' || (typeof activePatient !== 'undefined' && activePatient?.paymentType === 'humanitarian'));
-        if (!isHumanitarian) {
-            if (typeof Wada3anAiEngine !== 'undefined' && typeof Wada3anAiEngine.speak === 'function') {
-                const welcomeText = `أهلاً بك يا ${patientName || 'المراجع العزيز'}. تم اعتماد وتفعيل خطتك التأهيلية بنجاح. سنبدأ الآن جلسة اليوم الأول، اتبع التوجيهات بدقة لتحقيق أفضل نتيجة سريرية.`;
-                Wada3anAiEngine.speak(welcomeText, onFinish);
-                return;
-            }
-        }
         if (typeof playStationAudio === 'function') {
             playStationAudio('recovery', onFinish);
         } else {
@@ -5506,6 +5532,80 @@ function recordHumanitarianUsage(phoneRaw, patientId) {
     } catch (e) {}
 }
 window.recordHumanitarianUsage = recordHumanitarianUsage;
+
+function isCurrentPatientPaidPlan() {
+    try {
+        const curPt = (typeof activePatient !== 'undefined' && activePatient) || window.activePatient;
+        const curAss = (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) || window.currentAssessmentData;
+        const ptPayType = String(curPt?.paymentType || curAss?.paymentType || '').toLowerCase();
+        const ptPayStatus = String(curPt?.paymentStatus || curAss?.paymentStatus || '').toLowerCase();
+
+        // 1. فحص جميع مؤشرات الدفع المالي الحقيقية
+        const hasPaidType = (
+            ptPayType.includes('orange') ||
+            ptPayType.includes('paid') ||
+            ptPayType.includes('wallet') ||
+            ptPayType.includes('single') ||
+            ptPayType.includes('pkg') ||
+            ptPayType.includes('promo') ||
+            ptPayType.includes('gift') ||
+            ptPayType === 'direct_activation'
+        );
+        const hasPaidStatus = (
+            ptPayStatus.includes('مدفوع') ||
+            ptPayStatus.includes('أورانج') ||
+            ptPayStatus.includes('مفعل بكود') ||
+            ptPayStatus.includes('باقة') ||
+            ptPayStatus.includes('اشتراك معتمد')
+        );
+
+        const hasAmount = (Number(curPt?.amountPaid || curAss?.amountPaid || 0) > 0);
+
+        let hasActivePkgWallet = false;
+        if (typeof getPkgWallet === 'function') {
+            const w = getPkgWallet();
+            if (w && (w.size > 0 || (w.remaining && w.remaining > 0))) {
+                hasActivePkgWallet = true;
+            }
+        }
+
+        const hasPaidSession = (
+            sessionStorage.getItem('scp_current_exam_paid_unlocked') === 'true' ||
+            window._activeExamPaidUnlocked === true
+        );
+        const pId = curPt?.patientId || curPt?.id || (typeof SmartDB !== 'undefined' && SmartDB.getCurrentSessionPatientId ? SmartDB.getCurrentSessionPatientId() : '') || localStorage.getItem('smart_current_patient_id') || '';
+        const hasPatientStorageUnlocked = Boolean(
+            (pId && (localStorage.getItem('smart_paid_unlocked_' + pId) === 'true' || localStorage.getItem('smart_paid_v2_unlocked_' + pId) === 'true')) ||
+            localStorage.getItem('smart_paid_plan_unlocked') === 'true'
+        );
+
+        const curEx = (typeof getCurrentExamGateId === 'function') ? getCurrentExamGateId() : '';
+        const hasExamUnlocked = Boolean(curEx && localStorage.getItem('smart_paid_v2_exam_' + curEx) === 'true');
+
+        if (hasPaidType || hasPaidStatus || hasAmount || hasActivePkgWallet || hasPaidSession || hasPatientStorageUnlocked || hasExamUnlocked) {
+            try {
+                const storedType = localStorage.getItem('smart_paid_plan_type');
+                if (storedType === 'humanitarian' || storedType === 'humanitarian_waiver') {
+                    localStorage.setItem('smart_paid_plan_type', 'paid_orange_wallet');
+                }
+            } catch(e) {}
+            return true;
+        }
+
+        // 2. إذا كان المريض الحالي صراحة إعفاء إنساني مؤكد (دون أي مؤشر دفع أعلاه)
+        if (ptPayType.includes('humanitarian') || ptPayStatus.includes('إنساني') || ptPayStatus.includes('إعفاء')) {
+            return false;
+        }
+
+        // فحص نوع الخطة في localStorage كخيار أخير إذا لم تكن إنساني
+        const lastPlanType = (localStorage.getItem('smart_paid_plan_type') || '').toLowerCase();
+        if (lastPlanType && !lastPlanType.includes('humanitarian') && (lastPlanType.includes('orange') || lastPlanType.includes('paid') || lastPlanType.includes('wallet') || lastPlanType.includes('code') || lastPlanType.includes('promo'))) {
+            return true;
+        }
+    } catch(e) {}
+    return false;
+}
+window.isCurrentPatientPaidPlan = isCurrentPatientPaidPlan;
 
 function isHumanitarianLockedForUser(phoneRaw) {
     try {
@@ -7455,7 +7555,7 @@ function _legacyPaywallCardHTML(data, isRegisteredPatient, resolvedReportName, r
                 </button>
                 ` : `
                 <button type="button" id="paywall-tab-btn-humanitarian" onclick="switchPaywallOptionTab('humanitarian')" style="flex: 1.5 1 200px; background: rgba(11, 18, 32, 0.9); color: #cbd5e1; border: 1.5px solid rgba(212, 175, 55, 0.25); padding: 13px 14px; border-radius: 12px; font-weight: 800; font-size: 0.9em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; transition: all 0.2s;">
-                    <span>🌿</span> <span>طلب إعفاء لغير المقتدرين (صدقة جارية)</span>
+                    <span>❤️</span> <span>مبادرة الرعاية الإنسانية (إعفاء لغير المقتدرين)</span>
                 </button>
                 `) : ''}
                 <button type="button" id="paywall-tab-btn-code" onclick="switchPaywallOptionTab('code')" style="flex: 1 1 160px; background: rgba(11, 18, 32, 0.9); color: #cbd5e1; border: 1.5px solid rgba(212, 175, 55, 0.25); padding: 13px 14px; border-radius: 12px; font-weight: 800; font-size: 0.88em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
@@ -7675,15 +7775,24 @@ async function activateRecoveryPlanInstantly(paymentMeta = null) {
 
         const cfg = typeof getActivePaymentGateConfig === 'function' ? getActivePaymentGateConfig() : { priceJod: 3 };
         const priceVal = Number(cfg.priceJod ?? cfg.priceJOD ?? 3);
-        const rawType = paymentMeta?.unlockType || paymentMeta?.type || curPatient?.paymentType || localStorage.getItem('smart_paid_plan_type') || 'direct_activation';
+        const isPaid = (typeof isCurrentPatientPaidPlan === 'function' && isCurrentPatientPaidPlan());
+        let rawType = paymentMeta?.unlockType || paymentMeta?.type || curPatient?.paymentType;
+        if (isPaid) {
+            if (!rawType || rawType === 'humanitarian' || rawType === 'humanitarian_waiver') {
+                rawType = 'paid_orange_wallet';
+            }
+            try { localStorage.setItem('smart_paid_plan_type', rawType); } catch(e) {}
+        } else if (!rawType) {
+            rawType = localStorage.getItem('smart_paid_plan_type') || 'direct_activation';
+        }
         const isOrangePaid = (rawType === 'paid_orange_wallet' || rawType === 'orange_money');
-        const isHumanitarian = (rawType === 'humanitarian' || rawType === 'humanitarian_waiver');
+        const isHumanitarian = !isPaid && (rawType === 'humanitarian' || rawType === 'humanitarian_waiver');
         const isTestFree = (rawType === 'test_free' || rawType === 'promo_or_test');
 
         const resolvedPayStatus = paymentMeta?.paymentStatus || curPatient?.paymentStatus || (
             isOrangePaid ? `مدفوع محفظة أورانج (${priceVal} د.أ)` :
             (isHumanitarian ? 'إعفاء إنساني مجاني (صدقة جارية)' :
-            (isTestFree ? 'تفعيل مجاني (اختبار / كود)' : 'مفعل'))
+            (isTestFree ? 'تفعيل مجاني (اختبار / كود)' : (isPaid ? `مدفوع معتمد (${priceVal} د.أ)` : 'مفعل')))
         );
         const resolvedAmountPaid = paymentMeta?.amountPaid != null ? paymentMeta.amountPaid : (paymentMeta?.amount != null ? paymentMeta.amount : (curPatient?.amountPaid != null ? curPatient.amountPaid : (isOrangePaid ? priceVal : 0)));
 
@@ -7748,7 +7857,7 @@ async function activateRecoveryPlanInstantly(paymentMeta = null) {
         }
 
         // 2. إظهار نافذة الإهداء والدعاء حصراً لمن اختار الإعفاء الإنساني؛ أما المشترك المدفوع فينتقل فوراً لتمارين اليوم الأول
-        if (isHumanitarian) {
+        if (isHumanitarian && !isPaid) {
             showRoyalDuaaModal(patientId);
         } else {
             if (typeof goToStep === 'function') goToStep(4);
@@ -7808,7 +7917,13 @@ async function activateRecoveryPlanInstantly(paymentMeta = null) {
     } catch (err) {
         console.error('Error activating plan instantly:', err);
         const fallbackId = targetPatientId || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' && SmartDB.getCurrentSessionPatientId()) || activePatient?.patientId || ('P-' + Date.now().toString().slice(-6));
-        showRoyalDuaaModal(fallbackId);
+        const isPaidFallback = (typeof isCurrentPatientPaidPlan === 'function' && isCurrentPatientPaidPlan());
+        if (isPaidFallback) {
+            if (typeof goToStep === 'function') goToStep(4);
+            if (typeof renderStep4IndependentDay1 === 'function') renderStep4IndependentDay1(fallbackId);
+        } else {
+            showRoyalDuaaModal(fallbackId);
+        }
     }
 }
 window.activateRecoveryPlanInstantly = activateRecoveryPlanInstantly;
@@ -7818,8 +7933,9 @@ function revealRegistrationInputs() {
     const auth = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
     if (auth && (auth.isRegistered || auth.phone)) {
         const targetId = auth.patientId || (typeof SmartDB !== 'undefined' && SmartDB.getCurrentSessionPatientId ? SmartDB.getCurrentSessionPatientId() : null) || ('P-' + Date.now().toString().slice(-6));
+        const isPaidAuth = (typeof isCurrentPatientPaidPlan === 'function' && isCurrentPatientPaidPlan());
         const paidType = (auth.paymentType || localStorage.getItem('smart_paid_plan_type') || '');
-        if (paidType === 'humanitarian' || paidType === 'humanitarian_waiver') {
+        if (!isPaidAuth && (paidType === 'humanitarian' || paidType === 'humanitarian_waiver')) {
             showRoyalDuaaModal(targetId);
         } else {
             if (typeof goToStep === 'function') goToStep(4);
@@ -7961,7 +8077,8 @@ async function submitPatientRegistrationAndStart() {
     } catch (e) {}
 
     // إظهار نافذة الإهداء والدعاء حصراً لمن اختار الإعفاء الإنساني (لوجه الله) دون إرباك المشترك المدفوع
-    const isHumanitarian = (patientObj?.paymentType === 'humanitarian' || localStorage.getItem('smart_paid_plan_type') === 'humanitarian');
+    const isPaidReg = (typeof isCurrentPatientPaidPlan === 'function' && isCurrentPatientPaidPlan());
+    const isHumanitarian = !isPaidReg && (patientObj?.paymentType === 'humanitarian' || localStorage.getItem('smart_paid_plan_type') === 'humanitarian');
     if (isHumanitarian) {
         showRoyalDuaaModal(patientId);
     } else {
@@ -7987,32 +8104,31 @@ function showRoyalDuaaModal(patientId = null) {
         || 'pat_guest';
     pendingDuaaPatientId = pId;
 
-    // حظر قطعي: إخفاء نافذة ورسالة الصدقة الجارية تماماً عن أي مراجع قام بشراء باقة أو دفع ثمنها، وقصرها حصراً على الإعفاء الإنساني
+    // حظر قطعي لا يقبل أي استثناء: إخفاء نافذة ورسالة الصدقة الجارية تماماً عن أي مراجع اشترك بباقة مدفوعة
+    const isPaid = (typeof isCurrentPatientPaidPlan === 'function' && isCurrentPatientPaidPlan());
     const currentPt = (typeof activePatient !== 'undefined' && activePatient) || window.activePatient;
     const paidType = (currentPt?.paymentType || localStorage.getItem('smart_paid_plan_type') || '');
-    const isHumanitarian = (paidType === 'humanitarian' || paidType === 'humanitarian_waiver');
+    const isHumanitarian = !isPaid && (paidType === 'humanitarian' || paidType === 'humanitarian_waiver');
 
-    if (!isHumanitarian) {
-        // مشترك باقة مدفوعة أو كود تفعيل: ننتقل به مباشرة للمرحلة 4 دون عرض أي رسالة تخص الصدقة
-        const modal = document.getElementById('royal-duaa-modal');
+    const modal = document.getElementById('royal-duaa-modal');
+
+    if (!isHumanitarian || isPaid) {
+        // مشترك باقة مدفوعة أو كود تفعيل: إغلاق فوري للنافذة والانتقال المباشر للمرحلة 4 دون أي صوت أو نص صدقة
         if (modal) {
             modal.style.display = 'none';
             modal.style.opacity = '0';
             modal.style.visibility = 'hidden';
             modal.style.pointerEvents = 'none';
         }
+        if (currentActiveStationAudio) {
+            try { currentActiveStationAudio.pause(); currentActiveStationAudio.currentTime = 0; } catch(e) {}
+            currentActiveStationAudio = null;
+        }
         if (typeof goToStep === 'function') goToStep(4);
         if (typeof renderStep4IndependentDay1 === 'function') renderStep4IndependentDay1(pId);
-        setTimeout(() => {
-            const pName = (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || activePatient?.name || '';
-            if (typeof playSarahCharityIntroAudio === 'function') {
-                playSarahCharityIntroAudio(pName);
-            }
-        }, 300);
         return;
     }
 
-    const modal = document.getElementById('royal-duaa-modal');
     if (modal) {
         modal.style.display = 'flex';
         modal.style.zIndex = '99999999';
@@ -8550,7 +8666,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
             </div>
 
             <!-- بطاقة الترحيب السريري والتوجيهات الطبية لليوم الأول (مخصصة حسب نوع الاشتراك دون إرباك المراجع المدفوع) -->
-            ${(sessionData.patient?.paymentType === 'humanitarian' || localStorage.getItem('smart_paid_plan_type') === 'humanitarian') ? `
+            ${(!isCurrentPatientPaidPlan() && (sessionData.patient?.paymentType === 'humanitarian' || localStorage.getItem('smart_paid_plan_type') === 'humanitarian')) ? `
             <div id="sarah-charity-voice-banner" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 14px 18px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
                 <div style="display: flex; align-items: center; gap: 12px; flex: 1 1 300px;">
                     <span style="font-size: 2.2em; background: rgba(16, 185, 129, 0.2); border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 1.5px solid #10b981; flex-shrink: 0;">👩‍⚕️</span>
@@ -11161,7 +11277,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.83';
+const CURRENT_APP_VERSION = 'v30.84';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
