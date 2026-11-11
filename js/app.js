@@ -11277,7 +11277,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.84';
+const CURRENT_APP_VERSION = 'v30.85';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -12753,6 +12753,30 @@ function closeWelcomeTourModal() {
 window.closeWelcomeTourModal = closeWelcomeTourModal;
 window.acceptWelcomeTourModal = acceptWelcomeTourModal;
 
+// دوال التحكم بإظهار وإخفاء الأقسام الموسعة بالخطوة الأولى لراحة عين المريض
+function toggleScopeStrip() {
+    const el = document.getElementById('clinical-scope-collapsible');
+    const btn = document.getElementById('btn-toggle-scope');
+    if (!el) return;
+    const isHidden = el.style.display === 'none' || !el.style.display;
+    el.style.display = isHidden ? 'block' : 'none';
+    if (btn) btn.innerHTML = isHidden ? '<span>📋</span> <span>إخفاء الحالات السريرية ▴</span>' : '<span>📋</span> <span>الحالات التي تعالجها المنظومة (ديسك، أعصاب، مفاصل) ▾</span>';
+}
+window.toggleScopeStrip = toggleScopeStrip;
+
+function toggleSpecializedRehabSection() {
+    const el = document.getElementById('specialized-rehab-collapsible');
+    const btn = document.getElementById('btn-toggle-specialized');
+    if (!el) return;
+    const isHidden = el.style.display === 'none' || !el.style.display;
+    el.style.display = isHidden ? 'block' : 'none';
+    if (btn) btn.innerHTML = isHidden ? '<span>🌟</span> <span>إخفاء الحالات الخاصة ▴</span>' : '<span>🌟</span> <span>استشارات الحالات الخاصة (الجلطات، انحراف العمود الفقري، سقوط القدم) ▾</span>';
+    if (isHidden) {
+        setTimeout(() => { try { el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch(e) {} }, 100);
+    }
+}
+window.toggleSpecializedRehabSection = toggleSpecializedRehabSection;
+
 // تشغيل ترحيب د. سارة الصوتي تلقائياً فور الدخول أو أول تفاعل للمستخدم
 function autoPlayWelcomeAudioIfEligible() {
     if (sessionStorage.getItem('scp_welcome_audio_played') !== 'true') {
@@ -12888,9 +12912,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 350);
     }
 
-    if (localStorage.getItem('smart_welcome_tour_accepted') !== 'true' && localStorage.getItem('smart_disclaimer_accepted') !== 'true') {
-        openWelcomeTourModal();
-    }
+    // تجربة مستخدم هادئة: تم إلغاء الانبثاق التلقائي لنافذة الترحيب ليجد المراجع المجسم البشري مباشرة دون حواجز
+    // تظل النافذة متاحة دائماً من قائمة (المزيد -> دليل الأداة) لمن يرغب بالاطلاع
+    // if (localStorage.getItem('smart_welcome_tour_accepted') !== 'true' && localStorage.getItem('smart_disclaimer_accepted') !== 'true') {
+    //     openWelcomeTourModal();
+    // }
 
     switchAnatomyView('front');
     if (typeof initMobileSkeletonObserver === 'function') {

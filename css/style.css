@@ -10,15 +10,15 @@
     --primary-gold: #d4af37;
     --primary-gold-dark: #997819;
     --primary-gold-light: #fef08a;
-    --bg-dark-obsidian: #080c14;
-    --bg-card: #111827;
-    --bg-card-alt: #162032;
+    --bg-dark-obsidian: #0c1424;
+    --bg-card: #121c32;
+    --bg-card-alt: #182642;
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
     --accent-emerald: #10b981;
     --accent-red: #ef4444;
     --accent-blue: #38bdf8;
-    --border-gold-subtle: rgba(212, 175, 55, 0.3);
+    --border-gold-subtle: rgba(212, 175, 55, 0.22);
     --shadow-gold-glow: 0 8px 32px rgba(212, 175, 55, 0.15);
     --font-main: 'Almarai', 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
 }
@@ -1047,13 +1047,9 @@ body {
         font-size: 1.25em !important;
     }
 
+    /* إخفاء أزرار التواصل العائمة على الموبايل والتابلت لمنع حجب المجسم ونقاط الألم */
     #floating-quick-contact {
-        top: 50% !important;
-        bottom: auto !important;
-        transform: translateY(-50%) !important;
-        left: 12px !important;
-        gap: 8px !important;
-        z-index: 100000 !important;
+        display: none !important;
     }
 
     /* شريط المشاكل والتخصصات على الموبايل */

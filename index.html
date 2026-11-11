@@ -28,11 +28,11 @@
     </script>
 
     <!-- منظومة الأمان السيبراني وحماية الملكية الفكرية وقفل النطاق -->
-    <script src="js/security-shield.js?v=30.84"></script>
-    <script src="js/system-watchdog.js?v=30.84"></script>
+    <script src="js/security-shield.js?v=30.85"></script>
+    <script src="js/system-watchdog.js?v=30.85"></script>
 
     <!-- وسوم تطبيق الويب التقدمي PWA والأيقونات الرسمية -->
-    <link rel="manifest" href="manifest.json?v=30.84">
+    <link rel="manifest" href="manifest.json?v=30.85">
     <link rel="icon" type="image/png" href="assets/logo.png">
     <link rel="shortcut icon" href="assets/logo.png">
     <link rel="apple-touch-icon" href="assets/logo.png">
@@ -44,7 +44,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=30.84">
+    <link rel="stylesheet" href="css/style.css?v=30.85">
     <script>
         // التحقق من وصول أحدث إصدار وبث التحديث عالمياً لجميع الأجهزة
         (function() {
@@ -149,7 +149,7 @@
                 <div class="brand-version-badge" onclick="event.stopPropagation(); if(typeof forceAppUpdateAndClearCache==='function') forceAppUpdateAndClearCache();" title="انقر لتحديث وتنشيط التطبيق فوراً" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72em; color: #94a3b8; margin-top: 1px; cursor: pointer; user-select: none;">
                     <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                     <span>الإصدار:</span>
-                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v30.84</strong>
+                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v30.85</strong>
                 </div>
             </div>
         </div>
@@ -372,23 +372,40 @@
                 </button>
             </div>
 
-            <!-- نطاق الحالات السريرية المعالجة (تصميم رشيق وموجز وأنيق بدون حيز رأسي) -->
-            <div class="clinical-scope-strip no-print" style="background: rgba(15, 23, 42, 0.78); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 8px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-                <div style="display: flex; align-items: center; gap: 6px; color: var(--primary-gold); font-size: 0.88em; font-weight: 800;">
-                    <span>🩺</span>
-                    <span>نطاق الحالات التي تعالجها المنظومة:</span>
+            <!-- عنوان ترحيبي هادئ وواضح يركز ذهن المريض على الخطوة الأولى -->
+            <div class="step1-clean-hero" style="text-align: center; margin-bottom: 14px; padding: 4px 10px;">
+                <h2 style="color: #ffffff; font-size: 1.3em; font-weight: 800; margin: 0 0 4px 0; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                    <span>🩺</span> <span>أهلاً بك في الفحص السريري الذكي</span> <span>🌿</span>
+                </h2>
+                <p style="color: #94a3b8; font-size: 0.88em; margin: 0; line-height: 1.5;">
+                    انقر مباشرة على موضع ألمك على المجسم للبدء بالتشخيص واستخراج خطتك العلاجية
+                </p>
+                <div style="margin-top: 8px;">
+                    <button type="button" onclick="toggleScopeStrip()" id="btn-toggle-scope" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(212, 175, 55, 0.25); color: #cbd5e1; padding: 4px 12px; border-radius: 20px; font-size: 0.78em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                        <span>📋</span> <span>الحالات التي تعالجها المنظومة (ديسك، أعصاب، مفاصل) ▾</span>
+                    </button>
                 </div>
-                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 0.82em;">
-                    <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #f1f5f9; padding: 3px 10px; border-radius: 20px;">🦴 الفقرات والديسك</span>
-                    <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #f1f5f9; padding: 3px 10px; border-radius: 20px;">⚡ الأعصاب وعرق النسا</span>
-                    <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #f1f5f9; padding: 3px 10px; border-radius: 20px;">💪 العضلات والأبهر</span>
-                    <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #f1f5f9; padding: 3px 10px; border-radius: 20px;">🛡️ المفاصل والأكتاف</span>
-                    <button type="button" onclick="startSpecializedConsultation('stroke')" style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #7dd3fc; padding: 3px 10px; border-radius: 20px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="استشارة تأهيل ما بعد الجلطات">
-                        <span>🧠</span> تأهيل الجلطات ⬅️
-                    </button>
-                    <button type="button" onclick="startSpecializedConsultation('scoliosis')" style="background: rgba(212, 175, 55, 0.18); border: 1px solid var(--primary-gold); color: #fef08a; padding: 3px 10px; border-radius: 20px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="استشارة تقويم الجنف">
-                        <span>📐</span> الجنف ⬅️
-                    </button>
+            </div>
+
+            <!-- نطاق الحالات السريرية المعالجة (منسدل حسب الرغبة دون إرباك الواجهة) -->
+            <div id="clinical-scope-collapsible" class="no-print" style="display: none; margin-bottom: 14px;">
+                <div class="clinical-scope-strip" style="background: rgba(15, 23, 42, 0.88); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 6px; color: var(--primary-gold); font-size: 0.85em; font-weight: 800;">
+                        <span>🩺</span>
+                        <span>الحالات السريرية المعتمدة:</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 0.8em;">
+                        <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #f1f5f9; padding: 3px 10px; border-radius: 20px;">🦴 الفقرات والديسك</span>
+                        <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #f1f5f9; padding: 3px 10px; border-radius: 20px;">⚡ الأعصاب وعرق النسا</span>
+                        <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #f1f5f9; padding: 3px 10px; border-radius: 20px;">💪 العضلات والأبهر</span>
+                        <span style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #f1f5f9; padding: 3px 10px; border-radius: 20px;">🛡️ المفاصل والأكتاف</span>
+                        <button type="button" onclick="startSpecializedConsultation('stroke')" style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #7dd3fc; padding: 3px 10px; border-radius: 20px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="استشارة تأهيل ما بعد الجلطات">
+                            <span>🧠</span> تأهيل الجلطات ⬅️
+                        </button>
+                        <button type="button" onclick="startSpecializedConsultation('scoliosis')" style="background: rgba(212, 175, 55, 0.18); border: 1px solid var(--primary-gold); color: #fef08a; padding: 3px 10px; border-radius: 20px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="استشارة تقويم الجنف">
+                            <span>📐</span> الجنف ⬅️
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -467,51 +484,60 @@
                 </div>
             </div>
 
-            <!-- ================= مسار الحالات السريرية الخاصة والتأهيل المتقدم ================= -->
-            <div id="specialized-rehab-entry-card" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%); border: 1.5px solid var(--primary-gold); border-radius: 16px; padding: 20px 24px; margin-top: 24px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
-                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid rgba(212, 175, 55, 0.25); padding-bottom: 12px;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 1.8em;">🌟</span>
-                        <div>
-                            <h3 style="color: #ffffff; margin: 0; font-size: 1.15em; font-weight: 800;">مسار الحالات الخاصة والتأهيل الحركي المتقدم</h3>
-                            <div style="color: var(--primary-gold); font-size: 0.84em; margin-top: 2px;">استشارات سريرية نوعية مباشرة بإشراف المعالج جمال قبها لحالات تتطلب تقييماً يدوياً خاصاً</div>
+            <!-- زر أنيق مرن لاستعراض الحالات الخاصة دون إرباك الواجهة الرئيسية -->
+            <div style="text-align: center; margin-top: 24px; margin-bottom: 10px;">
+                <button type="button" onclick="toggleSpecializedRehabSection()" id="btn-toggle-specialized" style="background: rgba(15, 23, 42, 0.7); border: 1.5px solid rgba(56, 189, 248, 0.35); color: #7dd3fc; padding: 10px 22px; border-radius: 25px; font-size: 0.88em; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: all 0.25s ease;">
+                    <span>🌟</span> <span>استشارات الحالات الخاصة (الجلطات، انحراف العمود الفقري، سقوط القدم) ▾</span>
+                </button>
+            </div>
+
+            <!-- مسار الحالات السريرية الخاصة والتأهيل المتقدم (منسدل بكبسة زر عند الحاجة) -->
+            <div id="specialized-rehab-collapsible" style="display: none;">
+                <div id="specialized-rehab-entry-card" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%); border: 1.5px solid var(--primary-gold); border-radius: 16px; padding: 20px 24px; margin-top: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid rgba(212, 175, 55, 0.25); padding-bottom: 12px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.8em;">🌟</span>
+                            <div>
+                                <h3 style="color: #ffffff; margin: 0; font-size: 1.15em; font-weight: 800;">مسار الحالات الخاصة والتأهيل الحركي المتقدم</h3>
+                                <div style="color: var(--primary-gold); font-size: 0.84em; margin-top: 2px;">استشارات سريرية نوعية مباشرة بإشراف المعالج جمال قبها لحالات تتطلب تقييماً يدوياً خاصاً</div>
+                            </div>
                         </div>
+                        <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.78em; font-weight: bold; padding: 4px 12px; border-radius: 20px;">
+                            🩺 مسار استشاري مباشر
+                        </span>
                     </div>
-                    <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.78em; font-weight: bold; padding: 4px 12px; border-radius: 20px;">
-                        🩺 مسار استشاري مباشر
-                    </span>
-                </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px;">
-                    <!-- 1. جلطات وتأهيل حركي -->
-                    <button type="button" onclick="startSpecializedConsultation('stroke')" style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(56, 189, 248, 0.4); border-radius: 12px; padding: 14px 16px; text-align: right; cursor: pointer; transition: all 0.25s ease; display: flex; align-items: flex-start; gap: 12px; color: #fff;" onmouseover="this.style.borderColor='#38bdf8'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(56, 189, 248, 0.4)'; this.style.transform='translateY(0)'">
-                        <span style="font-size: 2em; background: rgba(56, 189, 248, 0.15); padding: 8px; border-radius: 10px; border: 1px solid #38bdf8; flex-shrink: 0;">🧠</span>
-                        <div>
-                            <div style="color: #38bdf8; font-weight: bold; font-size: 0.98em;">تأهيل ما بعد الجلطات والضعف الحركي</div>
-                            <div style="color: #94a3b8; font-size: 0.82em; margin-top: 4px; line-height: 1.4;">استعادة توازن المشي، تليين التصلب العضلي التشنجي، وتنشيط الأطراف الضعيفة.</div>
-                            <div style="color: #6ee7b7; font-size: 0.78em; font-weight: bold; margin-top: 6px;">بدء الاستشارة والتقييم ➔</div>
-                        </div>
-                    </button>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px;">
+                        <!-- 1. جلطات وتأهيل حركي -->
+                        <button type="button" onclick="startSpecializedConsultation('stroke')" style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(56, 189, 248, 0.4); border-radius: 12px; padding: 14px 16px; text-align: right; cursor: pointer; transition: all 0.25s ease; display: flex; align-items: flex-start; gap: 12px; color: #fff;" onmouseover="this.style.borderColor='#38bdf8'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(56, 189, 248, 0.4)'; this.style.transform='translateY(0)'">
+                            <span style="font-size: 2em; background: rgba(56, 189, 248, 0.15); padding: 8px; border-radius: 10px; border: 1px solid #38bdf8; flex-shrink: 0;">🧠</span>
+                            <div>
+                                <div style="color: #38bdf8; font-weight: bold; font-size: 0.98em;">تأهيل ما بعد الجلطات والضعف الحركي</div>
+                                <div style="color: #94a3b8; font-size: 0.82em; margin-top: 4px; line-height: 1.4;">استعادة توازن المشي، تليين التصلب العضلي التشنجي، وتنشيط الأطراف الضعيفة.</div>
+                                <div style="color: #6ee7b7; font-size: 0.78em; font-weight: bold; margin-top: 6px;">بدء الاستشارة والتقييم ➔</div>
+                            </div>
+                        </button>
 
-                    <!-- 2. سقوط القدم -->
-                    <button type="button" onclick="startSpecializedConsultation('foot_drop')" style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(245, 158, 11, 0.4); border-radius: 12px; padding: 14px 16px; text-align: right; cursor: pointer; transition: all 0.25s ease; display: flex; align-items: flex-start; gap: 12px; color: #fff;" onmouseover="this.style.borderColor='#f59e0b'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(245, 158, 11, 0.4)'; this.style.transform='translateY(0)'">
-                        <span style="font-size: 2em; background: rgba(245, 158, 11, 0.15); padding: 8px; border-radius: 10px; border: 1px solid #f59e0b; flex-shrink: 0;">🦶</span>
-                        <div>
-                            <div style="color: #fbbf24; font-weight: bold; font-size: 0.98em;">سقوط القدم (Foot Drop)</div>
-                            <div style="color: #94a3b8; font-size: 0.82em; margin-top: 4px; line-height: 1.4;">عدم القدرة على رفع مشط القدم، التعثر أثناء المشي، وانضغاط العصب L5 أو الشظوي.</div>
-                            <div style="color: #6ee7b7; font-size: 0.78em; font-weight: bold; margin-top: 6px;">بدء الاستشارة والتقييم ➔</div>
-                        </div>
-                    </button>
+                        <!-- 2. سقوط القدم -->
+                        <button type="button" onclick="startSpecializedConsultation('foot_drop')" style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(245, 158, 11, 0.4); border-radius: 12px; padding: 14px 16px; text-align: right; cursor: pointer; transition: all 0.25s ease; display: flex; align-items: flex-start; gap: 12px; color: #fff;" onmouseover="this.style.borderColor='#f59e0b'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(245, 158, 11, 0.4)'; this.style.transform='translateY(0)'">
+                            <span style="font-size: 2em; background: rgba(245, 158, 11, 0.15); padding: 8px; border-radius: 10px; border: 1px solid #f59e0b; flex-shrink: 0;">🦶</span>
+                            <div>
+                                <div style="color: #fbbf24; font-weight: bold; font-size: 0.98em;">سقوط القدم (Foot Drop)</div>
+                                <div style="color: #94a3b8; font-size: 0.82em; margin-top: 4px; line-height: 1.4;">عدم القدرة على رفع مشط القدم، التعثر أثناء المشي، وانضغاط العصب L5 أو الشظوي.</div>
+                                <div style="color: #6ee7b7; font-size: 0.78em; font-weight: bold; margin-top: 6px;">بدء الاستشارة والتقييم ➔</div>
+                            </div>
+                        </button>
 
-                    <!-- 3. الجنف -->
-                    <button type="button" onclick="startSpecializedConsultation('scoliosis')" style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 14px 16px; text-align: right; cursor: pointer; transition: all 0.25s ease; display: flex; align-items: flex-start; gap: 12px; color: #fff;" onmouseover="this.style.borderColor='#10b981'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(16, 185, 129, 0.4)'; this.style.transform='translateY(0)'">
-                        <span style="font-size: 2em; background: rgba(16, 185, 129, 0.15); padding: 8px; border-radius: 10px; border: 1px solid #10b981; flex-shrink: 0;">📐</span>
-                        <div>
-                            <div style="color: #6ee7b7; font-weight: bold; font-size: 0.98em;">انحراف العمود الفقري (الجنف Scoliosis)</div>
-                            <div style="color: #94a3b8; font-size: 0.82em; margin-top: 4px; line-height: 1.4;">تقويم اعوجاج الفقرات، تفاوت ارتفاع الكتفين أو الحوض، وموازنة الأحمال الحركية.</div>
-                            <div style="color: #6ee7b7; font-size: 0.78em; font-weight: bold; margin-top: 6px;">بدء الاستشارة والتقييم ➔</div>
-                        </div>
-                    </button>
+                        <!-- 3. الجنف -->
+                        <button type="button" onclick="startSpecializedConsultation('scoliosis')" style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 14px 16px; text-align: right; cursor: pointer; transition: all 0.25s ease; display: flex; align-items: flex-start; gap: 12px; color: #fff;" onmouseover="this.style.borderColor='#10b981'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(16, 185, 129, 0.4)'; this.style.transform='translateY(0)'">
+                            <span style="font-size: 2em; background: rgba(16, 185, 129, 0.15); padding: 8px; border-radius: 10px; border: 1px solid #10b981; flex-shrink: 0;">📐</span>
+                            <div>
+                                <div style="color: #6ee7b7; font-weight: bold; font-size: 0.98em;">انحراف العمود الفقري (الجنف Scoliosis)</div>
+                                <div style="color: #94a3b8; font-size: 0.82em; margin-top: 4px; line-height: 1.4;">تقويم اعوجاج الفقرات، تفاوت ارتفاع الكتفين أو الحوض، وموازنة الأحمال الحركية.</div>
+                                <div style="color: #6ee7b7; font-size: 0.78em; font-weight: bold; margin-top: 6px;">بدء الاستشارة والتقييم ➔</div>
+                            </div>
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -555,13 +581,13 @@
                         </div>
                         <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                             <button type="button" id="btn-doc-sarah" onclick="selectConsultantDoctor('Aoede')" class="btn-doc-choice" style="padding: 5px 12px; border-radius: 16px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; background: rgba(56, 189, 248, 0.25); border: 1.5px solid #38bdf8; color: #ffffff; transition: all 0.2s ease;">
-                                <span>👩</span> د. سارة (Aoede)
+                                <span>👩</span> د. سارة (استشارية التأهيل)
                             </button>
                             <button type="button" id="btn-doc-jamal" onclick="selectConsultantDoctor('Charon')" class="btn-doc-choice" style="padding: 5px 12px; border-radius: 16px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; background: #1e293b; border: 1.5px solid #475569; color: #94a3b8; transition: all 0.2s ease;">
-                                <span>👨</span> د. جمال (Charon)
+                                <span>👨</span> المعالج جمال (كايروبراكتيك)
                             </button>
                             <button type="button" id="btn-doc-omar" onclick="selectConsultantDoctor('Puck')" class="btn-doc-choice" style="padding: 5px 12px; border-radius: 16px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; background: #1e293b; border: 1.5px solid #475569; color: #94a3b8; transition: all 0.2s ease;">
-                                <span>👨</span> د. عمر (Puck)
+                                <span>👨</span> د. عمر (عظام ومفاصل)
                             </button>
                         </div>
                     </div>
@@ -1778,23 +1804,23 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=30.84"></script>
-    <script src="js/cloud-sync.js?v=30.84"></script>
-    <script src="js/geo-tracker.js?v=30.84"></script>
-    <script src="js/database.js?v=30.84"></script>
-    <script src="js/exercise-image-studio.js?v=30.84"></script>
-    <script src="js/exercises-db.js?v=30.84"></script>
-    <script src="js/diagnostic-engine.js?v=30.84"></script>
-    <script src="js/audio-pacer.js?v=30.84"></script>
-    <script src="js/patient-flow.js?v=30.84"></script>
-    <script src="js/admin-engine.js?v=30.84"></script>
-    <script src="js/ai-config.js?v=30.84"></script>
-    <script src="js/ai-engine.js?v=30.84"></script>
-    <script src="js/app.js?v=30.84"></script>
-    <script src="js/text-editor.js?v=30.84"></script>
-    <script src="js/smart-guidance.js?v=30.84"></script>
-    <script src="js/whatsapp-dispatcher.js?v=30.84"></script>
-    <script src="js/mobile-alerts.js?v=30.84"></script>
+    <script src="js/mqtt.min.js?v=30.85"></script>
+    <script src="js/cloud-sync.js?v=30.85"></script>
+    <script src="js/geo-tracker.js?v=30.85"></script>
+    <script src="js/database.js?v=30.85"></script>
+    <script src="js/exercise-image-studio.js?v=30.85"></script>
+    <script src="js/exercises-db.js?v=30.85"></script>
+    <script src="js/diagnostic-engine.js?v=30.85"></script>
+    <script src="js/audio-pacer.js?v=30.85"></script>
+    <script src="js/patient-flow.js?v=30.85"></script>
+    <script src="js/admin-engine.js?v=30.85"></script>
+    <script src="js/ai-config.js?v=30.85"></script>
+    <script src="js/ai-engine.js?v=30.85"></script>
+    <script src="js/app.js?v=30.85"></script>
+    <script src="js/text-editor.js?v=30.85"></script>
+    <script src="js/smart-guidance.js?v=30.85"></script>
+    <script src="js/whatsapp-dispatcher.js?v=30.85"></script>
+    <script src="js/mobile-alerts.js?v=30.85"></script>
 
     <script>
         // مؤشر المراجعين المتواجدين أونلاين الآن (متزامن بدقة مع السحابة ولوحة الإدارة)
