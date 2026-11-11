@@ -6275,8 +6275,9 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
                             <input type="tel" id="pay-subscriber-phone" value="${defPhone}" placeholder="079xxxxxxx" style="${inp} direction: ltr; text-align: left;">
                         </div>
                         <div>
-                            <label style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px;">رقم الحوالة المرجعي (اختياري)</label>
-                            <input type="text" id="pay-transfer-ref" placeholder="رقم الحركة إن وجد" style="${inp}">
+                            <label style="color: #fde68a; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: 800;">رقم الحوالة (رقم العملية) * إجباري</label>
+                            <input type="text" id="pay-transfer-ref" inputmode="numeric" autocomplete="off" required placeholder="من رسالة أورانج موني بعد التحويل" style="${inp} border-color: rgba(212,175,55,0.7); direction: ltr; text-align: left; letter-spacing: 1px;">
+                            <div style="color: #94a3b8; font-size: 0.72em; margin-top: 4px; line-height: 1.5;">📩 تجده في رسالة SMS أو في سجل العمليات بتطبيق المحفظة بعد إتمام التحويل.</div>
                         </div>
                     </div>
 
@@ -6482,6 +6483,10 @@ function markCurrentExamAndPatientUnlocked(unlockMeta = {}) {
         activePatient.paymentStatus = resolvedPayStatus;
         activePatient.amountPaid = resolvedAmountPaid;
         activePatient.paidUnlockedAt = new Date().toISOString();
+        try {
+            const savedRef = unlockMeta?.transferRef || pendingReq?.transferRef || '';
+            if (savedRef) activePatient.paidTransferRef = savedRef;
+        } catch (e) {}
         try {
             localStorage.setItem('smart_active_patient', JSON.stringify(activePatient));
             if (typeof SmartDB !== 'undefined' && typeof SmartDB.savePatient === 'function') {
@@ -6721,6 +6726,63 @@ async function submitOrangeWalletPaymentNotification() {
         }
     }
 
+    // ✅ التحقق الإجباري الصارم من رقم الحوالة (لا يُرسل أي طلب للإدارة بدون رقم عملية حقيقي)
+    const refError = (html) => {
+        if (msgEl) {
+            msgEl.style.display = 'block';
+            msgEl.style.background = 'rgba(239, 68, 68, 0.18)';
+            msgEl.style.border = '1px solid #ef4444';
+            msgEl.style.color = '#fca5a5';
+            msgEl.innerHTML = html;
+            try { msgEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+        }
+        if (typeof showRoyalPaymentToast === 'function') {
+            showRoyalPaymentToast(html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(), 'warning');
+        }
+        if (refInput) {
+            refInput.style.borderColor = '#ef4444';
+            refInput.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.25)';
+            refInput.focus();
+        }
+    };
+    const normRef = (typeof toEnglishDigits === 'function' ? toEnglishDigits(transferRef) : transferRef).replace(/[\s\-_.#:]/g, '').toUpperCase();
+    const refDigits = normRef.replace(/\D/g, '');
+    const walletDigits = String(cfg.walletPhone || '').replace(/\D/g, '');
+
+    if (!normRef) {
+        refError('⚠️ <strong>رقم الحوالة إجباري.</strong> يرجى إتمام التحويل أولاً ثم إدخال <strong>رقم العملية</strong> الظاهر في رسالة أورانج موني أو في سجل العمليات بالتطبيق.');
+        return;
+    }
+    if (!/^[A-Z0-9]+$/.test(normRef) || normRef.length < 6 || normRef.length > 30 || refDigits.length < 5) {
+        refError('⚠️ رقم الحوالة غير صحيح. يجب أن يتكوّن من <strong>6 خانات على الأقل</strong> (أرقام/حروف إنجليزية) كما يظهر تماماً في رسالة التحويل.');
+        return;
+    }
+    if (/^0?7[789]\d{7}$/.test(refDigits) || /^9627[789]\d{7}$/.test(refDigits) || (walletDigits && refDigits.endsWith(walletDigits.slice(-9))) || (cleanPhoneDigits && refDigits.endsWith(cleanPhoneDigits.slice(-9)))) {
+        refError('⚠️ الرقم المُدخل هو <strong>رقم هاتف/محفظة</strong> وليس رقم حوالة. يرجى إدخال <strong>رقم العملية (Transaction ID)</strong> من رسالة التحويل.');
+        return;
+    }
+    if (/^(\d)\1+$/.test(refDigits) || '0123456789012345678901234567890'.includes(refDigits) || '9876543210987654321098765432109'.includes(refDigits)) {
+        refError('⚠️ رقم الحوالة المُدخل غير منطقي. يرجى نسخه كما هو من رسالة أورانج موني.');
+        return;
+    }
+    try {
+        const usedRefs = JSON.parse(localStorage.getItem('smart_used_transfer_refs') || '[]');
+        if (Array.isArray(usedRefs) && usedRefs.includes(normRef)) {
+            refError('⚠️ <strong>رقم الحوالة هذا مستخدم مسبقاً</strong> في طلب سابق. كل حوالة تُستخدم لطلب واحد فقط.');
+            return;
+        }
+    } catch (e) {}
+    if (refInput) {
+        refInput.style.borderColor = '#10b981';
+        refInput.style.boxShadow = '';
+    }
+    try {
+        const usedRefs2 = JSON.parse(localStorage.getItem('smart_used_transfer_refs') || '[]');
+        const arr = Array.isArray(usedRefs2) ? usedRefs2 : [];
+        arr.push(normRef);
+        localStorage.setItem('smart_used_transfer_refs', JSON.stringify(arr.slice(-50)));
+    } catch (e) {}
+
     try {
         localStorage.setItem('smart_patient_name', subName);
         localStorage.setItem('smart_user_name', subName);
@@ -6753,7 +6815,7 @@ async function submitOrangeWalletPaymentNotification() {
         packageSize: chosenPkg,
         subscriberName: subName,
         subscriberPhone: subPhone,
-        transferRef: transferRef || 'بانتظار التحويل / تأكيد فوري عبر المحفظة',
+        transferRef: normRef,
         amountJod: chosenPrice,
         walletPhone: cfg.walletPhone,
         painArea: painArea
@@ -7433,8 +7495,8 @@ function _legacyPaywallCardHTML(data, isRegisteredPatient, resolvedReportName, r
                         <input type="tel" id="pay-subscriber-phone" value="${defaultPhone}" placeholder="079xxxxxxx" style="width: 100%; background: #0b1324; border: 1.5px solid #475569; padding: 12px; border-radius: 10px; color: #fff; font-size: 0.95em; direction: ltr; text-align: left; box-sizing: border-box;">
                     </div>
                     <div>
-                        <label style="color: #fde68a; font-size: 0.84em; display: block; margin-bottom: 6px; font-weight: 800;">🔢 رقم الحركة المرجعي أو رقم المحفظة المحوّل منها: *</label>
-                        <input type="text" id="pay-transfer-ref" placeholder="أدخل رقم العملية أو رقم محفظتك للتأكيد" style="width: 100%; background: #0b1324; border: 1.5px solid rgba(212, 175, 55, 0.6); padding: 12px; border-radius: 10px; color: #fef08a; font-size: 0.92em; box-sizing: border-box;">
+                        <label style="color: #fde68a; font-size: 0.84em; display: block; margin-bottom: 6px; font-weight: 800;">🔢 رقم الحوالة (رقم العملية من رسالة أورانج موني): * إجباري</label>
+                        <input type="text" id="pay-transfer-ref" inputmode="numeric" autocomplete="off" required placeholder="أدخل رقم العملية الظاهر في رسالة التحويل" style="width: 100%; background: #0b1324; border: 1.5px solid rgba(212, 175, 55, 0.6); padding: 12px; border-radius: 10px; color: #fef08a; font-size: 0.92em; box-sizing: border-box;">
                     </div>
                 </div>
 
@@ -11057,7 +11119,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.81';
+const CURRENT_APP_VERSION = 'v30.82';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
