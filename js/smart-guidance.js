@@ -116,14 +116,25 @@ const SmartGuidance = (function() {
         if (!barEl) barEl = document.getElementById('sticky-patient-guidance-bar');
         if (!barEl) return;
 
-        // 1. فحص نافذة الصدقة الجارية والدعاء (royal-duaa-modal)
+        // 1. فحص نافذة الصدقة الجارية والدعاء (royal-duaa-modal) - تظهر حصراً للمستفيد من الإعفاء الإنساني
         const duaaModal = document.getElementById('royal-duaa-modal');
+        const curPt = (typeof window !== 'undefined' && window.activePatient) ? window.activePatient : null;
+        const paidType = (curPt?.paymentType || localStorage.getItem('smart_paid_plan_type') || '');
+        const isHumanitarian = (paidType === 'humanitarian' || paidType === 'humanitarian_waiver');
+
         if (duaaModal && duaaModal.style.display !== 'none' && window.getComputedStyle(duaaModal).display !== 'none') {
-            barEl.style.transform = '';
-            barEl.style.opacity = '';
-            barEl.style.pointerEvents = '';
-            renderDuaaModalBar();
-            return;
+            if (!isHumanitarian) {
+                // إغلاق فوري إذا كان المراجع دافعاً ثمن الباقة
+                duaaModal.style.display = 'none';
+                duaaModal.style.opacity = '0';
+                duaaModal.style.visibility = 'hidden';
+            } else {
+                barEl.style.transform = '';
+                barEl.style.opacity = '';
+                barEl.style.pointerEvents = '';
+                renderDuaaModalBar();
+                return;
+            }
         }
 
         // 2. فحص نافذة تقييم الجلسة الشامل (session-assessment-modal)
@@ -827,12 +838,16 @@ const SmartGuidance = (function() {
                     }
                     break;
                 }
-                // التقرير الطبي مفتوح ومعتمد: الانتقال لتمارين اليوم الأول وعرض نافذة الدعاء
+                // التقرير الطبي مفتوح ومعتمد: الانتقال لتمارين اليوم الأول
+                const curPt = (typeof window !== 'undefined' && window.activePatient) ? window.activePatient : null;
+                const paidType = (curPt?.paymentType || localStorage.getItem('smart_paid_plan_type') || '');
+                const isHumanitarian = (paidType === 'humanitarian' || paidType === 'humanitarian_waiver');
+
                 if (typeof window.activateRecoveryPlanInstantly === 'function') {
                     window.activateRecoveryPlanInstantly();
                 } else if (typeof activateRecoveryPlanInstantly === 'function') {
                     activateRecoveryPlanInstantly();
-                } else if (typeof showRoyalDuaaModal === 'function') {
+                } else if (isHumanitarian && typeof showRoyalDuaaModal === 'function') {
                     showRoyalDuaaModal();
                 } else {
                     const btnRoyal = document.getElementById('btn-activate-plan-royal') || document.getElementById('btn-activate-plan-royal-spec');

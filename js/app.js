@@ -7747,8 +7747,19 @@ async function activateRecoveryPlanInstantly(paymentMeta = null) {
             SmartDB.setCurrentSessionPatientId(patientId);
         }
 
-        // 2. إظهار نافذة الإهداء والدعاء الملكي لوالد المعالج وتشغيل الصوت
-        showRoyalDuaaModal(patientId);
+        // 2. إظهار نافذة الإهداء والدعاء حصراً لمن اختار الإعفاء الإنساني؛ أما المشترك المدفوع فينتقل فوراً لتمارين اليوم الأول
+        if (isHumanitarian) {
+            showRoyalDuaaModal(patientId);
+        } else {
+            if (typeof goToStep === 'function') goToStep(4);
+            if (typeof renderStep4IndependentDay1 === 'function') renderStep4IndependentDay1(patientId);
+            setTimeout(() => {
+                const pName = existingName || (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || activePatient?.name || '';
+                if (typeof playSarahCharityIntroAudio === 'function') {
+                    playSarahCharityIntroAudio(pName);
+                }
+            }, 300);
+        }
 
         // 7. حفظ البيانات في الخلفية بدون انتظار يوقف الواجهة (Non-blocking Background Persistence)
         setTimeout(() => {
@@ -7807,7 +7818,13 @@ function revealRegistrationInputs() {
     const auth = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
     if (auth && (auth.isRegistered || auth.phone)) {
         const targetId = auth.patientId || (typeof SmartDB !== 'undefined' && SmartDB.getCurrentSessionPatientId ? SmartDB.getCurrentSessionPatientId() : null) || ('P-' + Date.now().toString().slice(-6));
-        showRoyalDuaaModal(targetId);
+        const paidType = (auth.paymentType || localStorage.getItem('smart_paid_plan_type') || '');
+        if (paidType === 'humanitarian' || paidType === 'humanitarian_waiver') {
+            showRoyalDuaaModal(targetId);
+        } else {
+            if (typeof goToStep === 'function') goToStep(4);
+            if (typeof renderStep4IndependentDay1 === 'function') renderStep4IndependentDay1(targetId);
+        }
         return;
     }
     const inputsBox = document.getElementById('plan-registration-inputs');
@@ -7969,6 +7986,32 @@ function showRoyalDuaaModal(patientId = null) {
         || localStorage.getItem('smart_current_patient_id') 
         || 'pat_guest';
     pendingDuaaPatientId = pId;
+
+    // حظر قطعي: إخفاء نافذة ورسالة الصدقة الجارية تماماً عن أي مراجع قام بشراء باقة أو دفع ثمنها، وقصرها حصراً على الإعفاء الإنساني
+    const currentPt = (typeof activePatient !== 'undefined' && activePatient) || window.activePatient;
+    const paidType = (currentPt?.paymentType || localStorage.getItem('smart_paid_plan_type') || '');
+    const isHumanitarian = (paidType === 'humanitarian' || paidType === 'humanitarian_waiver');
+
+    if (!isHumanitarian) {
+        // مشترك باقة مدفوعة أو كود تفعيل: ننتقل به مباشرة للمرحلة 4 دون عرض أي رسالة تخص الصدقة
+        const modal = document.getElementById('royal-duaa-modal');
+        if (modal) {
+            modal.style.display = 'none';
+            modal.style.opacity = '0';
+            modal.style.visibility = 'hidden';
+            modal.style.pointerEvents = 'none';
+        }
+        if (typeof goToStep === 'function') goToStep(4);
+        if (typeof renderStep4IndependentDay1 === 'function') renderStep4IndependentDay1(pId);
+        setTimeout(() => {
+            const pName = (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || activePatient?.name || '';
+            if (typeof playSarahCharityIntroAudio === 'function') {
+                playSarahCharityIntroAudio(pName);
+            }
+        }, 300);
+        return;
+    }
+
     const modal = document.getElementById('royal-duaa-modal');
     if (modal) {
         modal.style.display = 'flex';
@@ -7982,7 +8025,6 @@ function showRoyalDuaaModal(patientId = null) {
         if (window.SmartGuidance && typeof SmartGuidance.guideDuaaModal === 'function') {
             SmartGuidance.guideDuaaModal();
         }
-        // لا يتم تشغيل أي صوت أثناء عرض رسالة الصدقة (الصوت البشري ينطلق حصراً بعد إغلاق أو اختفاء الرسالة)
     } else {
         if (typeof goToStep === 'function') goToStep(4);
         if (typeof renderStep4IndependentDay1 === 'function') renderStep4IndependentDay1(pId);
@@ -11119,7 +11161,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.82';
+const CURRENT_APP_VERSION = 'v30.83';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
