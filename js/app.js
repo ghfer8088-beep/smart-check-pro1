@@ -8337,73 +8337,54 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
 
     let clockSectionHTML = '';
     if (lockStatus.isLocked && lockStatus.remainingMs > 0) {
-        if (lockStatus.isLocked && lockStatus.remainingMs > 0) {
-            clockSectionHTML = `
-                <div style="background: linear-gradient(135deg, #0b101b 0%, #172033 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
-                        <div style="color: var(--primary-gold); font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-                            <span>⏱️</span> ساعة التوقيت المعتمدة (فترة استشفاء جارية بعد الجلسة الأولى)
-                        </div>
-                        <span style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
-                            الجلسة 1 منجزة (متبقي للاستشفاء حتى فتح الجلسة 2)
-                        </span>
-                    </div>
-                    
-                    <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 12px;">
-                        <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
-                            <div id="countdown-hours" style="font-size: 2.2em; font-weight: bold; color: #ffffff; font-family: monospace;">${s4InitialH}</div>
-                            <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">ساعة</div>
-                        </div>
-                        <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
-                            <div id="countdown-mins" style="font-size: 2.2em; font-weight: bold; color: #ffffff; font-family: monospace;">${s4InitialM}</div>
-                            <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">دقيقة</div>
-                        </div>
-                        <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
-                            <div id="countdown-secs" style="font-size: 2.2em; font-weight: bold; color: var(--primary-gold); font-family: monospace;">${s4InitialS}</div>
-                            <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">ثانية</div>
-                        </div>
-                    </div>
-
-                    <p style="color: #cbd5e1; font-size: 0.85em; margin: 0; line-height: 1.6;">
-                        ⏳ يجري احتساب فترة استشفاء الأنسجة (24 ساعة) بعد الجلسة الأولى. يمكنك مراجعة التمارين المقررة أدناه حتى اكتمال العداد لفتح الجلسة الثانية.
-                    </p>
-                </div>
-            `;
-        } else {
-            clockSectionHTML = `
-                <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
-                        <div style="color: #10b981; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-                            <span>✅</span> تمارين الجلسة الأولى مكتملة وموثقة سريرياً
-                        </div>
-                        <span style="background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">
-                            الجلسة الثانية جاهزة للبدء الآن
-                        </span>
-                    </div>
-                    <p style="color: #cbd5e1; font-size: 0.9em; margin: 0 0 14px 0; line-height: 1.6;">
-                        🎉 اكتملت فترة الاستشفاء الحيوي للأنسجة! يمكنك الانتقال للجلسة الثانية مباشرة لمواصلة برنامج التعافي.
-                    </p>
-                    <button type="button" onclick="renderStep5SessionsDashboard('${patientId}', 2)" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; font-weight: 900; border: none; padding: 10px 24px; border-radius: 25px; font-size: 0.95em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);">
-                        <span>🚀</span> الانتقال للجلسة الثانية (اليوم 2) ❯
-                    </button>
-                </div>
-            `;
-        }
-    } else {
         clockSectionHTML = `
-            <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 18px 22px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4em;">
-                        ⚡
+            <div style="background: linear-gradient(135deg, #0b101b 0%, #172033 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                    <div style="color: var(--primary-gold); font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                        <span>⏱️</span> ساعة التوقيت المعتمدة (فترة استشفاء جارية بعد الجلسة الأولى)
                     </div>
-                    <div>
-                        <div style="color: var(--primary-gold); font-size: 0.92em; font-weight: bold;">حالة الجلسة الأولى (اليوم 1):</div>
-                        <div style="color: #cbd5e1; font-size: 0.84em; margin-top: 2px;">مفتوحة وجاهزة للتطبيق الآن - ابدأ بالتمارين المقررة أدناه ثم وثق إنجازك</div>
+                    <span style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
+                        الجلسة 1 منجزة (متبقي للاستشفاء حتى فتح الجلسة 2)
+                    </span>
+                </div>
+                
+                <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 12px;">
+                    <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
+                        <div id="countdown-hours" style="font-size: 2.2em; font-weight: bold; color: #ffffff; font-family: monospace;">${s4InitialH}</div>
+                        <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">ساعة</div>
+                    </div>
+                    <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
+                        <div id="countdown-mins" style="font-size: 2.2em; font-weight: bold; color: #ffffff; font-family: monospace;">${s4InitialM}</div>
+                        <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">دقيقة</div>
+                    </div>
+                    <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
+                        <div id="countdown-secs" style="font-size: 2.2em; font-weight: bold; color: var(--primary-gold); font-family: monospace;">${s4InitialS}</div>
+                        <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">ثانية</div>
                     </div>
                 </div>
-                <span style="background: rgba(16, 185, 129, 0.2); border: 1.5px solid #10b981; color: #6ee7b7; padding: 6px 14px; border-radius: 20px; font-size: 0.82em; font-weight: bold; display: inline-flex; align-items: center; gap: 6px;">
-                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block;"></span> متاحة للبدء
-                </span>
+
+                <p style="color: #cbd5e1; font-size: 0.85em; margin: 0; line-height: 1.6;">
+                    ⏳ يجري احتساب فترة استشفاء الأنسجة (24 ساعة) بعد الجلسة الأولى. يمكنك مراجعة التمارين المقررة أدناه حتى اكتمال العداد لفتح الجلسة الثانية.
+                </p>
+            </div>
+        `;
+    } else if (isDay1Completed) {
+        clockSectionHTML = `
+            <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                    <div style="color: #10b981; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                        <span>✅</span> تمارين الجلسة الأولى مكتملة وموثقة سريرياً
+                    </div>
+                    <span style="background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">
+                        الجلسة الثانية جاهزة للبدء الآن
+                    </span>
+                </div>
+                <p style="color: #cbd5e1; font-size: 0.9em; margin: 0 0 14px 0; line-height: 1.6;">
+                    🎉 اكتملت فترة الاستشفاء الحيوي للأنسجة! يمكنك الانتقال للجلسة الثانية مباشرة لمواصلة برنامج التعافي.
+                </p>
+                <button type="button" onclick="renderStep5SessionsDashboard('${patientId}', 2)" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; font-weight: 900; border: none; padding: 10px 24px; border-radius: 25px; font-size: 0.95em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);">
+                    <span>🚀</span> الانتقال للجلسة الثانية (اليوم 2) ❯
+                </button>
             </div>
         `;
     }
@@ -8427,23 +8408,34 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                 </button>
             </div>` : ''}
 
-            <!-- جدول جلسات برنامج التعافي (الأيام 1 إلى 7) موحد مع كافة الجلسات -->
-            <div style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 12px 16px; margin-bottom: 22px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
-                    <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.95em;">📅 جدول جلسات برنامج التعافي (الأيام 1 إلى 7):</div>
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        ${sessionData.isPlanCompleted ? `
-                            <button type="button" onclick="renderStep6Completion('${patientId}')" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.3) 0%, rgba(180, 130, 20, 0.3) 100%); border: 1px solid var(--primary-gold); color: #fef08a; padding: 5px 12px; border-radius: 6px; font-size: 0.78em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
-                                <span>🏆</span> وثيقة الإنهاء والشهادة
-                            </button>
-                        ` : ''}
+            <!-- 1. الترويسة الطبية الملكية الموحدة للجلسة الأولى -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(212, 175, 55, 0.25); padding-bottom: 16px; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <img src="assets/logo.png" alt="شعار وداعاً للألم" style="height: 52px; width: 52px; border-radius: 50%; border: 1.5px solid var(--primary-gold);">
+                    <div>
+                        <div style="color: #ffffff; font-size: 1.25em; font-weight: 800; margin: 0 0 2px 0;">${formatPatientGreeting(sessionData.patient?.name)}</div>
+                        <div style="color: var(--primary-gold); font-size: 0.88em; font-weight: bold;">
+                            برنامج التأهيل الحركي • <span style="color: #38bdf8;">الجلسة الأولى (1 من 7)</span> • منطقة ${sessionData.latestAssessment?.painAreaTitle || 'الموضع المستهدف'}
+                        </div>
                     </div>
                 </div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" id="btn-replay-sarah-charity" onclick="playSarahCharityIntroAudio('${(sessionData.patient?.name || '').replace(/'/g, "\\'")}', true)" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(16, 185, 129, 0.25) 100%); border: 1.5px solid var(--primary-gold); color: #fef08a; padding: 8px 16px; border-radius: 20px; font-weight: 800; font-size: 0.84em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+                        <span id="sarah-charity-voice-status">🔊 إرشادات د. سارة</span>
+                    </button>
+                    ${(!isCurrentPatientPaidPlan() && (sessionData.patient?.paymentType === 'humanitarian' || localStorage.getItem('smart_paid_plan_type') === 'humanitarian')) ? `
+                    <button type="button" onclick="showRoyalDuaaModal('${patientId}')" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #a7f3d0; padding: 8px 14px; border-radius: 20px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                        <span>🤲</span> <span>نص الدعاء</span>
+                    </button>` : ''}
+                </div>
+            </div>
+
+            <!-- 2. جدول جلسات برنامج التعافي (الأيام 1 إلى 7) مصغر وأنيق -->
+            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 12px; padding: 10px 14px; margin-bottom: 18px;">
                 <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; overflow-x: auto;">
-                    <!-- زر الجلسة الأولى (النشطة حالياً) -->
-                    <button type="button" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.35) 0%, rgba(180, 130, 20, 0.25) 100%); border: 2px solid var(--primary-gold); color: #ffffff; padding: 10px 4px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: default; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-width: 60px;">
+                    <button type="button" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.35) 0%, rgba(180, 130, 20, 0.25) 100%); border: 2px solid var(--primary-gold); color: #ffffff; padding: 8px 4px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: default; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 55px;">
                         <span>الجلسة 1</span>
-                        <span style="font-size: 0.75em; opacity: 0.9;">${isDay1Completed ? '🟢 المعروضة (منجزة)' : '🟢 المعروضة'}</span>
+                        <span style="font-size: 0.72em; color: #6ee7b7;">${isDay1Completed ? '✓ منجزة' : '🟢 الحالية'}</span>
                     </button>
                     ${[2, 3, 4, 5, 6, 7].map(d => {
                         const hasLog = (sessionData.dailyLogs || []).some(l => Number(l.sessionNumber || l.day) === d);
@@ -8454,162 +8446,58 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                         let color = isUnlocked ? (hasLog ? '#6ee7b7' : '#7dd3fc') : '#64748b';
                         let badge = hasLog ? '✓ منجزة' : (isUnlocked ? 'متاحة' : '🔒 مقفلة');
                         return `
-                            <button type="button" onclick="${clickAction}" style="background: ${bg}; border: ${border}; color: ${color}; padding: 10px 4px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: 0.2s; min-width: 60px;">
+                            <button type="button" onclick="${clickAction}" style="background: ${bg}; border: ${border}; color: ${color}; padding: 8px 4px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; transition: 0.2s; min-width: 55px;">
                                 <span>الجلسة ${d}</span>
-                                <span style="font-size: 0.75em; opacity: 0.85;">${badge}</span>
+                                <span style="font-size: 0.72em; opacity: 0.85;">${badge}</span>
                             </button>
                         `;
                     }).join('')}
                 </div>
             </div>
 
-            <!-- بطاقة الترحيب السريري والتوجيهات الطبية لليوم الأول (مخصصة حسب نوع الاشتراك دون إرباك المراجع المدفوع) -->
-            ${(!isCurrentPatientPaidPlan() && (sessionData.patient?.paymentType === 'humanitarian' || localStorage.getItem('smart_paid_plan_type') === 'humanitarian')) ? `
-            <div id="sarah-charity-voice-banner" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 14px 18px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
-                <div style="display: flex; align-items: center; gap: 12px; flex: 1 1 300px;">
-                    <span style="font-size: 2.2em; background: rgba(16, 185, 129, 0.2); border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 1.5px solid #10b981; flex-shrink: 0;">👩‍⚕️</span>
-                    <div>
-                        <div style="color: #6ee7b7; font-weight: 800; font-size: 1em; display: flex; align-items: center; gap: 6px;">
-                            <span>د. سارة (المستشارة الطبية):</span>
-                            <span style="background: rgba(212, 175, 55, 0.2); color: var(--primary-gold); padding: 2px 8px; border-radius: 10px; font-size: 0.78em;">🌿 صدقة جارية</span>
-                        </div>
-                        <div style="color: #f1f5f9; font-size: 0.92em; line-height: 1.6; margin-top: 3px;">
-                            «هذه الخطة مقدمة مجاناً بالكامل كصدقة جارية عن روح المرحوم والد المعالج جمال قبها، نسألكم له خالص الدعاء بالرحمة والمغفرة. والآن سنبدأ معاً أولى خطوات التعافي وجلسة اليوم الأول.»
-                        </div>
+            <!-- 3. شريط إرشادات البدء الآمن (موجز وعملي) -->
+            <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 12px; padding: 12px 16px; margin-bottom: 20px;">
+                <div style="color: var(--primary-gold); font-size: 0.88em; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                    <span>🛡️</span> إرشادات البدء الآمن:
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; font-size: 0.82em; color: #cbd5e1;">
+                    <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); padding: 8px 10px; border-radius: 8px;">
+                        <strong style="color: #6ee7b7;">🫁 تنفس هادئ:</strong> تنفس بعمق ولا تكتم نَفَسَك أثناء التمرين.
                     </div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                    <button type="button" id="btn-replay-sarah-charity" onclick="playSarahCharityIntroAudio('${(sessionData.patient?.name || '').replace(/'/g, "\\'")}', true)" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(16, 185, 129, 0.3) 100%); border: 1.5px solid var(--primary-gold); color: #fef08a; padding: 8px 16px; border-radius: 20px; font-weight: 800; font-size: 0.86em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
-                        <span id="sarah-charity-voice-status">🔊 استمع لكلمة د. سارة</span>
-                    </button>
-                    <button type="button" onclick="showRoyalDuaaModal('${patientId}')" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #a7f3d0; padding: 8px 14px; border-radius: 20px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
-                        <span>🤲</span> <span>نص الدعاء</span>
-                    </button>
-                </div>
-            </div>
-            ` : `
-            <div id="sarah-charity-voice-banner" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 14px 18px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
-                <div style="display: flex; align-items: center; gap: 12px; flex: 1 1 300px;">
-                    <span style="font-size: 2.2em; background: rgba(212, 175, 55, 0.2); border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--primary-gold); flex-shrink: 0;">👩‍⚕️</span>
-                    <div>
-                        <div style="color: #fef08a; font-weight: 800; font-size: 1em; display: flex; align-items: center; gap: 6px;">
-                            <span>د. سارة (المستشارة الطبية):</span>
-                            <span style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; padding: 2px 8px; border-radius: 10px; font-size: 0.78em;">👑 اشتراك معتمد</span>
-                        </div>
-                        <div style="color: #f1f5f9; font-size: 0.92em; line-height: 1.6; margin-top: 3px;">
-                            «أهلاً بك يا ${(sessionData.patient?.name || 'المراجع العزيز')}. تم اعتماد وتفعيل خطتك التأهيلية المخصصة بنجاح. سنبدأ الآن جلسة اليوم الأول، اتبع التوجيهات والتكرارات بدقة لتحقيق أفضل نتيجة سريرية.»
-                        </div>
+                    <div style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); padding: 8px 10px; border-radius: 8px;">
+                        <strong style="color: #7dd3fc;">🎯 تدرج بالحركة:</strong> ابدأ بنصف المدى وزده برفق دون أي إجهاد.
                     </div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                    <button type="button" id="btn-replay-sarah-charity" onclick="playSarahCharityIntroAudio('${(sessionData.patient?.name || '').replace(/'/g, "\\'")}', true)" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(16, 185, 129, 0.3) 100%); border: 1.5px solid var(--primary-gold); color: #fef08a; padding: 8px 16px; border-radius: 20px; font-weight: 800; font-size: 0.86em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
-                        <span id="sarah-charity-voice-status">🔊 استمع للتوجيهات</span>
-                    </button>
-                </div>
-            </div>
-            `}
-
-            <!-- بنر علوي للاستشارة المباشرة مع المعالج -->
-            <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(15, 23, 42, 0.9) 100%); border: 1px solid var(--primary-gold); border-radius: 10px; padding: 12px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <div style="color: #fef08a; font-size: 0.9em; display: flex; align-items: center; gap: 8px;">
-                    <span>👨‍⚕️</span> <strong>استشارة المعالج:</strong> تشعر بألم حاد أو ترغب بتسريع الشفاء عبر جلسة تقويم يدوي مباشرة؟
-                </div>
-                <a href="${CLINIC_WHATSAPP}" target="_blank" style="background: #25d366; color: #fff; text-decoration: none; padding: 6px 14px; border-radius: 6px; font-size: 0.85em; font-weight: bold; display: inline-flex; align-items: center; gap: 6px;">
-                    💬 محادثة المعالج واتساب
-                </a>
-            </div>
-
-            <!-- بنر التذكير اليومي الذكي للجلسات -->
-            ${getNotificationReminderBannerHTML(patientId)}
-
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <img src="assets/logo.png" alt="شعار وداعاً للألم" style="height: 55px; width: 55px; border-radius: 50%; border: 1.5px solid var(--primary-gold);">
-                    <div>
-                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                            <h2 style="color: #ffffff; margin: 0; font-size: 1.35em;">${formatPatientGreeting(sessionData.patient?.name)}</h2>
-                        </div>
-                        <div style="color: var(--primary-gold); font-size: 0.9em; margin-top: 4px;">خطة الراحة الحركية الذاتية - الجلسة الأولى (مستقلة) - منطقة ${sessionData.latestAssessment?.painAreaTitle || 'المفصل المختار'}</div>
+                    <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); padding: 8px 10px; border-radius: 8px;">
+                        <strong style="color: #fca5a5;">🛑 ضابط الأمان:</strong> توقف فوراً إذا شعرت بوخز حاد أو ألم كهربائي.
                     </div>
-                </div>
-                <div class="session-top-badges" style="display: flex; align-items: center; justify-content: flex-end;">
-                    <div style="background: #0f172a; border: 1.5px solid #10b981; padding: 7px 16px; border-radius: 8px; color: #10b981; font-weight: bold; font-size: 0.85em; text-align: center; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(16,185,129,0.2);">
-                        <span>✓ الجلسة الأولى</span>
+                    <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.25); padding: 8px 10px; border-radius: 8px;">
+                        <strong style="color: #fef08a;">💧 بعد الجلسة:</strong> اشرب كوب ماء دافئ واسترح 10 دقائق.
                     </div>
                 </div>
             </div>
 
-            <!-- عبارة تشجيعية ديناميكية مع تحفيز د. سارة -->
-            <div style="background: rgba(16, 185, 129, 0.1); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; color: #6ee7b7; font-weight: 500; font-size: 0.92em; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <div style="flex: 1 1 220px; line-height: 1.6;">${sessionData.motivation || '🌟 أهلاً بك في انطلاقة برنامجك التأهيلي! جلسة اليوم مخصصة لتفريغ الضغط الميكانيكي وتهيئة المفاصل بأمان تام.'}</div>
-                <button type="button" onclick="playDailyMotivationAudio(1, '${(sessionData.patient?.name || '').replace(/'/g, "\\'")}')" class="btn-header btn-header-emerald" style="padding: 7px 14px; font-size: 0.8em; border-radius: 20px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; font-weight: bold; white-space: nowrap;">
-                    <span>🎙️</span> نصيحة د. سارة (اليوم الأول)
-                </button>
-            </div>
-
-            <!-- 1. التعليمات: بطاقة بروتوكول وتوصيات المعالج السريري لجلسة اليوم الأول (إرشادات البدء الآمن) -->
-            <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 22px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-                    <span style="font-size: 1.6em;">🩺</span>
-                    <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.15em; font-weight: bold;">
-                        بروتوكول المعالج السريري لجلسة اليوم الأول (إرشادات البدء الآمن)
-                    </h3>
-                </div>
-                <div style="color: #cbd5e1; font-size: 0.9em; line-height: 1.8; margin-bottom: 15px;">
-                    أهلاً بك في بداية برنامجك التأهيلي! الهدف من جلسة اليوم هو <strong>تفريغ الضغط الميكانيكي الأولي</strong> عن مفصل (${sessionData.latestAssessment?.painAreaTitle || 'المنطقة المحددة'}) والأنسجة المحيطة، وتنشيط تدفق السائل الزلالي بلطف وأمان تام دون أي إجهاد.
-                </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
-                    <div style="background: #0f172a; border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 10px; padding: 12px 14px;">
-                        <div style="color: #10b981; font-weight: bold; font-size: 0.9em; margin-bottom: 4px;">🫁 1. التنفس المنتظم والهدوء:</div>
-                        <div style="color: #94a3b8; font-size: 0.83em; line-height: 1.6;">تنفس بعمق وزفير هادئ مع كل حركة. لا تكتم نَفَسَك أثناء الشد أو الاستطالة.</div>
-                    </div>
-                    <div style="background: #0f172a; border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 10px; padding: 12px 14px;">
-                        <div style="color: #38bdf8; font-weight: bold; font-size: 0.9em; margin-bottom: 4px;">🎯 2. التدرج وتجنب القوة:</div>
-                        <div style="color: #94a3b8; font-size: 0.83em; line-height: 1.6;">ابدأ الحركة بنصف المدى وزده تدريجياً. الهدف هو تليين الأنسجة وتفريغ الحمل وليس التحدي العضلي.</div>
-                    </div>
-                    <div style="background: #0f172a; border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 10px; padding: 12px 14px;">
-                        <div style="color: #ef4444; font-weight: bold; font-size: 0.9em; margin-bottom: 4px;">🛑 3. ضابط الأمان السريري:</div>
-                        <div style="color: #fca5a5; font-size: 0.83em; line-height: 1.6;">الشعور بشد خفيف طبيعي ومطلوب، ولكن توقف فوراً إذا شعرت بوخز حاد أو ألم كهربائي مفاجئ.</div>
-                    </div>
-                    <div style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 10px; padding: 12px 14px;">
-                        <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.9em; margin-bottom: 4px;">💧 4. ما بعد التمارين:</div>
-                        <div style="color: #94a3b8; font-size: 0.83em; line-height: 1.6;">اشرب كوب ماء دافئ، ويمكن وضع كمادة دافئة لمدة 10 دقائق بعد الانتهاء لاسترخاء الأنسجة وتسكين التوتر.</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ساعة التوقيت المعتمدة / حالة استشفاء اليوم الأول -->
+            <!-- ساعة التوقيت المعتمدة (تظهر فقط بعد إنجاز الجلسة الأولى وأثناء سريان الـ 24 ساعة) -->
             ${clockSectionHTML}
 
-            <!-- صندوق الشفافية السريرية لتوضيح مصدر البيانات المعتمدة -->
-            <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.85) 100%); border: 1.5px dashed rgba(212, 175, 55, 0.45); border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; display: flex; align-items: flex-start; gap: 12px;">
-                <span style="font-size: 1.5em; line-height: 1;">🎯</span>
-                <div style="font-size: 0.86em; color: #e2e8f0; line-height: 1.6;">
-                    <strong style="color: var(--primary-gold);">شفافية القياسات السريرية المعتمدة:</strong>
-                    هذه المؤشرات دقيقة وتعتمد بنسبة 100% على إجاباتك وتوثيقك الفعلي؛ يبدأ مؤشر الألم من نقطة الأساس المسجلة في فحصك الأولي (${basePain}/10)، بينما مؤشرا المدى الحركي والنوم يبقيان (قيد التقييم) حتى توثق إجاباتك السريرية بعد أداء تمارين اليوم الأول وتجربتها، ولا نعتمد أبداً على أرقام افتراضية.
+            <!-- 4. مؤشرات التحسن (تظهر حصراً إذا كانت الجلسة الأولى قد أُنجزت ووُثقت، أما قبل الإنجاز فلا تظهر لتجنب الأرقام الفارغة 0%) -->
+            ${(isDay1Completed && day1Log) ? `
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 22px;">
+                <div style="background: #0f172a; padding: 14px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3); text-align: center;">
+                    <div style="font-size: 1.8em; font-weight: bold; color: #ef4444;">${s4PainReduction}%</div>
+                    <div style="color: #cbd5e1; font-size: 0.85em; font-weight: bold; margin-top: 4px;">مؤشر انخفاض الألم</div>
+                    <div style="color: #94a3b8; font-size: 0.74em; margin-top: 2px;">الألم الحالي (${day1Log.painScore}/10) مقارنة بالبداية (${basePain}/10)</div>
                 </div>
-            </div>
-
-            <!-- مؤشرات التحسن الثلاثة المعتمدة للجلسة الأولى (تطابق كامل مع الجلسات 2-7) -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 24px;">
-                <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3); text-align: center;">
-                    <div style="font-size: 2em; font-weight: bold; color: #ef4444;">${day1Log ? s4PainReduction + '%' : '0%'}</div>
-                    <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر انخفاض وتلاشي الألم</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${day1Log ? `مستوى الألم المسجل (${day1Log.painScore}/10) مقارنة بالبداية (${basePain}/10)` : `نقطة الانطلاق (ألم البداية المسجل: ${basePain}/10) - يُقاس بعد التوثيق`}</div>
+                <div style="background: #0f172a; padding: 14px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3); text-align: center;">
+                    <div style="font-size: 1.8em; font-weight: bold; color: #38bdf8;">${s4Mobility !== null ? s4Mobility + '%' : 'موثق ✓'}</div>
+                    <div style="color: #cbd5e1; font-size: 0.85em; font-weight: bold; margin-top: 4px;">مؤشر المدى الحركي</div>
+                    <div style="color: #94a3b8; font-size: 0.74em; margin-top: 2px;">المرونة المقاسة بعد الجلسة الأولى</div>
                 </div>
-
-                <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3); text-align: center;">
-                    <div style="font-size: 2em; font-weight: bold; color: #38bdf8;">${day1Log && s4Mobility !== null ? s4Mobility + '%' : '<span style="font-size: 0.62em; color: #38bdf8; letter-spacing: 0.5px;">قيد القياس ⏱️</span>'}</div>
-                    <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر استعادة المدى الحركي</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${day1Log && s4Mobility !== null ? `المرونة الموثقة للجلسة الأولى: ${s4Mobility}%` : 'سيُحسب من إجابتك على فحص الحركة بعد أداء التمارين'}</div>
+                <div style="background: #0f172a; padding: 14px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); text-align: center;">
+                    <div style="font-size: 1.8em; font-weight: bold; color: #10b981;">${s4Sleep !== null ? s4Sleep + '%' : 'موثق ✓'}</div>
+                    <div style="color: #cbd5e1; font-size: 0.85em; font-weight: bold; margin-top: 4px;">مؤشر جودة النوم والراحة</div>
+                    <div style="color: #94a3b8; font-size: 0.74em; margin-top: 2px;">تقييم الاسترخاء العصبي الموثق</div>
                 </div>
-
-                <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); text-align: center;">
-                    <div style="font-size: 2em; font-weight: bold; color: #10b981;">${day1Log && s4Sleep !== null ? s4Sleep + '%' : '<span style="font-size: 0.62em; color: #10b981; letter-spacing: 0.5px;">قيد التقييم ⏱️</span>'}</div>
-                    <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر جودة وعمق النوم</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${day1Log && s4Sleep !== null ? `جودة النوم الموثقة: ${s4Sleep}%` : 'سيُحسب من تقييمك لجودة نومك في نهاية اليوم'}</div>
-                </div>
-            </div>
+            </div>` : ''}
 
             <!-- 4. التمارين: عرض تمارين اليوم الأول المقررة في الصدارة مباشرة -->
             <div style="margin-bottom: 25px;">
@@ -11075,7 +10963,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.88';
+const CURRENT_APP_VERSION = 'v30.89';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
