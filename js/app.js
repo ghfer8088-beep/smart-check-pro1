@@ -8306,7 +8306,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
     });
 
     // مؤشرات الجلسة الأولى الثلاثة (المقارنة ببيانات الفحص الأولي وتوحيد المنظومة - خالية تماماً من أي أرقام عشوائية)
-    const basePain = Number(sessionData.baselinePain || sessionData.patient?.painLevel || curAssData?.painSeverity || 7);
+    const basePain = Number(sessionData.baselinePain || sessionData.patient?.painLevel || curAssData?.painSeverity || 10);
     const day1Log = (sessionData.dailyLogs || []).find(l => Number(l.sessionNumber || l.day) === 1);
     let s4PainReduction = 0;
     let s4Mobility = null; // لا نضع أي رقم افتراضي: قيد القياس حتى يوثق المريض تمارينه
@@ -9156,21 +9156,8 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             </div>
         `;
     } else {
-        clock24HTML = `
-            <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
-                    <div style="color: #10b981; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-                        <span>✅</span> الجلسة مفتوحة ومتاحة للبدء الآن
-                    </div>
-                    <span style="background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">
-                        الجلسة ${activeDay} من 7 (جاهزة للتطبيق والتوثيق)
-                    </span>
-                </div>
-                <p style="color: #cbd5e1; font-size: 0.9em; margin: 0; line-height: 1.6;">
-                    🎉 اكتملت فترة الاستشفاء الحيوي للأنسجة! يمكنك الآن أداء التمارين الموضحة بالأسفل ثم توثيق التقييم الحركي والانتقال للجلسة التالية.
-                </p>
-            </div>
-        `;
+        // إذا لم يكن هناك قفل استشفاء نشط، لا داعي لعرض بنر نصي زائد يُربك المريض
+        clock24HTML = '';
     }
 
     // الرسم البياني لمسار تراجع الألم: متاح فوراً في كافة الجلسات بما فيها الجلسة 2 لتوثيق مسار الشفاء منذ اليوم الأول
@@ -9314,42 +9301,32 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             </div>
             ` : ''}
 
-            <!-- بنر علوي للاستشارة المباشرة مع المعالج -->
-            <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(15, 23, 42, 0.9) 100%); border: 1px solid var(--primary-gold); border-radius: 10px; padding: 12px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <div style="color: #fef08a; font-size: 0.9em; display: flex; align-items: center; gap: 8px;">
-                    <span>👨‍⚕️</span> <strong>استشارة المعالج:</strong> تشعر بألم حاد أو ترغب بتسريع الشفاء عبر جلسة تقويم يدوي مباشرة؟
-                </div>
-                <a href="${CLINIC_WHATSAPP}" target="_blank" style="background: #25d366; color: #fff; text-decoration: none; padding: 6px 14px; border-radius: 6px; font-size: 0.85em; font-weight: bold; display: inline-flex; align-items: center; gap: 6px;">
-                    💬 محادثة المعالج واتساب
-                </a>
-            </div>
-
-            <!-- بنر التذكير اليومي الذكي للجلسات -->
-            ${getNotificationReminderBannerHTML(patientId)}
-
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <img src="assets/logo.png" alt="شعار وداعاً للألم" style="height: 55px; width: 55px; border-radius: 50%; border: 1.5px solid var(--primary-gold);">
-                    <div>
-                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                            <h2 style="color: #ffffff; margin: 0; font-size: 1.35em;">${formatPatientGreeting(sessionData.patient?.name)}</h2>
+            <!-- ترويسة الجلسة الموحدة مع تحفيز د. سارة -->
+            <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid rgba(212, 175, 55, 0.35); border-radius: 14px; padding: 18px 22px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <img src="assets/logo.png" alt="شعار وداعاً للألم" style="height: 50px; width: 50px; border-radius: 50%; border: 1.5px solid var(--primary-gold);">
+                        <div>
+                            <h2 style="color: #ffffff; margin: 0; font-size: 1.25em;">${formatPatientGreeting(sessionData.patient?.name)}</h2>
+                            <div style="color: var(--primary-gold); font-size: 0.88em; margin-top: 3px;">
+                                متابعة جلسات التأهيل الحركي (الجلسة ${activeDay} من 7) - منطقة ${sessionData.latestAssessment?.painAreaTitle || 'المفصل المختار'}
+                            </div>
                         </div>
-                        <div style="color: var(--primary-gold); font-size: 0.9em; margin-top: 4px;">متابعة جلسات التأهيل الحركي (الجلسة ${activeDay} من 7) - منطقة ${sessionData.latestAssessment?.painAreaTitle || 'المفصل المختار'}</div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <div style="background: #0f172a; border: 1.5px solid #10b981; padding: 6px 14px; border-radius: 8px; color: #10b981; font-weight: bold; font-size: 0.8em;">
+                            ✓ ${currentDisplayStageTitle}
+                        </div>
+                        <button type="button" onclick="playDailyMotivationAudio(${activeDay}, '${(typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : sessionData.patient?.name || '').replace(/'/g, "\\'")}')" class="btn-header btn-header-emerald" style="padding: 7px 14px; font-size: 0.8em; border-radius: 20px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-weight: bold; white-space: nowrap;">
+                            <span>🎙️</span> نصيحة د. سارة (الجلسة #${activeDay})
+                        </button>
                     </div>
                 </div>
-                <div class="session-top-badges" style="display: flex; align-items: center; justify-content: flex-end;">
-                    <div style="background: #0f172a; border: 1.5px solid #10b981; padding: 7px 16px; border-radius: 8px; color: #10b981; font-weight: bold; font-size: 0.82em; text-align: center; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(16,185,129,0.2);" title="✓ ${currentDisplayStageTitle}">
-                        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; max-width: 100%;">✓ ${(currentDisplayStageTitle || '').length > 25 ? currentDisplayStageTitle.substring(0, 23) + '…' : currentDisplayStageTitle}</span>
+                ${currentDisplayMotivation ? `
+                    <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed rgba(212, 175, 55, 0.2); color: #6ee7b7; font-size: 0.88em; line-height: 1.6;">
+                        ⭐ <strong>توجيه الجلسة:</strong> ${currentDisplayMotivation}
                     </div>
-                </div>
-            </div>
-
-            <!-- عبارة تشجيعية ديناميكية مع تحفيز د. سارة -->
-            <div style="background: rgba(16, 185, 129, 0.1); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; color: #6ee7b7; font-weight: 500; font-size: 0.92em; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <div style="flex: 1 1 220px; line-height: 1.6;">${currentDisplayMotivation}</div>
-                <button type="button" onclick="playDailyMotivationAudio(${activeDay}, '${(typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : sessionData.patient?.name || '').replace(/'/g, "\\'")}')" class="btn-header btn-header-emerald" style="padding: 7px 14px; font-size: 0.8em; border-radius: 20px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; font-weight: bold; white-space: nowrap;">
-                    <span>🎙️</span> نصيحة د. سارة (الجلسة #${activeDay})
-                </button>
+                ` : ''}
             </div>
 
             <!-- أزرار اختيار الجلسة (2 إلى 7) -->
@@ -9363,7 +9340,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3); text-align: center;">
                     <div style="font-size: 2em; font-weight: bold; color: #ef4444;">${displayPainReduction}%</div>
                     <div style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-top: 4px;">مؤشر انخفاض وتلاشي الألم</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${(activeDayLog && typeof activeDayLog.painScore === 'number') ? `مستوى الألم المسجل (${activeDayLog.painScore}/10) مقارنة بالبداية (${sessionData.baselinePain || 8}/10)` : (lastPrevLog ? `مقارنة بألم البداية (${sessionData.baselinePain || 8}/10) - مستند لتقييم الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day}` : 'بانتظار تقييمك للجلسة الأولى')}</div>
+                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">${(activeDayLog && typeof activeDayLog.painScore === 'number') ? `مستوى الألم المسجل (${activeDayLog.painScore}/10) مقارنة بالبداية (${sessionData.baselinePain || 10}/10)` : (lastPrevLog ? `مقارنة بألم البداية (${sessionData.baselinePain || 10}/10) - مستند لتقييم الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day}` : 'بانتظار تقييمك للجلسة الأولى')}</div>
                 </div>
 
                 <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3); text-align: center;">
@@ -10422,19 +10399,19 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                    || sessionData.patient?.painArea 
                    || 'الفقرات القطنية وأسفل الظهر';
 
-    // استخراج قيم آخر جلسة موثقة لتبدأ منها السلايدرات بسلاسة بدلاً من قيم افتراضية عشوائية
+    // استخراج قيم آخر جلسة موثقة لتبدأ منها السلايدرات بسلاسة؛ وإن لم توجد نبدأ بأقصى ألم وأدنى حركة ونوم ليحدد المريض واقعه بدقة
     const prevLogsModal = (sessionData.dailyLogs || []).filter(l => Number(l.sessionNumber || l.day) < sessionNumber);
     const lastPrevLogModal = prevLogsModal.length > 0 ? prevLogsModal[prevLogsModal.length - 1] : (sessionData.dailyLogs && sessionData.dailyLogs.length > 0 ? sessionData.dailyLogs[sessionData.dailyLogs.length - 1] : null);
-    const basePainModal = Number(sessionData.baselinePain || sessionData.patient?.painLevel || curAssModal?.painSeverity || 7);
+    const basePainModal = Number(sessionData.baselinePain || sessionData.patient?.painLevel || curAssModal?.painSeverity || 10);
     const initialPainVal = (lastPrevLogModal && typeof lastPrevLogModal.painScore === 'number') 
                          ? Math.max(1, lastPrevLogModal.painScore) 
-                         : (sessionNumber === 1 ? Math.max(1, basePainModal) : Math.max(1, basePainModal - 1));
+                         : 10;
     const initialMobilityVal = (lastPrevLogModal && typeof lastPrevLogModal.mobilityRate === 'number') 
                              ? lastPrevLogModal.mobilityRate 
-                             : 70;
+                             : 20;
     const initialSleepVal = (lastPrevLogModal && typeof lastPrevLogModal.sleepRate === 'number') 
                           ? lastPrevLogModal.sleepRate 
-                          : 70;
+                          : 20;
 
     content.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(16, 185, 129, 0.3); padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
@@ -10635,9 +10612,9 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
         const cleanId = (typeof getCleanPatientId === 'function') ? getCleanPatientId(patientId) : (patientId && patientId !== 'undefined' ? patientId : 'pat_guest');
         patientId = cleanId;
 
-        const painScore = parseInt(document.getElementById('modal-pain-input')?.value || document.getElementById('daily-pain-input')?.value || 3);
-        const mobilityRate = parseInt(document.getElementById('modal-mobility-slider')?.value || document.querySelector('input[name="modal_mobility_check"]:checked')?.value || document.getElementById('daily-mobility-slider')?.value || 70);
-        const sleepRate = parseInt(document.getElementById('modal-sleep-slider')?.value || document.querySelector('input[name="modal_sleep_check"]:checked')?.value || document.getElementById('daily-sleep-slider')?.value || 70);
+        const painScore = parseInt(document.getElementById('modal-pain-input')?.value || document.getElementById('daily-pain-input')?.value || 10);
+        const mobilityRate = parseInt(document.getElementById('modal-mobility-slider')?.value || document.querySelector('input[name="modal_mobility_check"]:checked')?.value || document.getElementById('daily-mobility-slider')?.value || 20);
+        const sleepRate = parseInt(document.getElementById('modal-sleep-slider')?.value || document.querySelector('input[name="modal_sleep_check"]:checked')?.value || document.getElementById('daily-sleep-slider')?.value || 20);
 
         // استخراج السلوكيات الإيجابية المحددة من النافذة
         const positiveHabitsList = [];
@@ -10963,7 +10940,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.89';
+const CURRENT_APP_VERSION = 'v30.90';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 

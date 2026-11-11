@@ -1959,7 +1959,7 @@
         tasks.push((async () => {
             if (Date.now() < ntfyRateLimitedUntil) return null;
             try {
-                // ✅ v30.89: جلب آخر 15 دقيقة فقط لمنع إعادة استيراد سجلات الاختبار القديمة التالفة
+                // ✅ v30.90: جلب آخر 15 دقيقة فقط لمنع إعادة استيراد سجلات الاختبار القديمة التالفة
                 const sinceParam = '15m';
                 const controller2 = new AbortController();
                 const timeoutId2 = setTimeout(() => controller2.abort(), 8000);
@@ -3822,7 +3822,7 @@
     function handleAppVersionUpdateMessage(data) {
         if (!data || !data.version) return;
         const newVer = String(data.version).trim();
-        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.89');
+        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.90');
         const numNew = _parseVersionNumber(newVer);
         const numCur = _parseVersionNumber(curVer);
 

@@ -296,15 +296,17 @@ body {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    background: rgba(56, 189, 248, 0.12);
-    border: 1px solid rgba(56, 189, 248, 0.35);
-    padding: 5px 14px;
-    border-radius: 20px;
-    color: #38bdf8;
-    font-size: 0.82em;
-    font-weight: bold;
-    margin-bottom: 8px;
-    animation: slideHintPulse 2s ease-in-out infinite;
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(212, 175, 55, 0.12) 100%);
+    border: 1.5px solid rgba(234, 179, 8, 0.7);
+    padding: 6px 16px;
+    border-radius: 22px;
+    color: #fef08a;
+    font-size: 0.86em;
+    font-weight: 800;
+    margin-bottom: 10px;
+    box-shadow: 0 0 14px rgba(234, 179, 8, 0.35);
+    animation: slideHintPulse 1.8s ease-in-out infinite;
+    cursor: pointer;
 }
 
 .pulse-arrow-hand-left {

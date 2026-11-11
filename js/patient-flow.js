@@ -364,7 +364,7 @@ const PatientFlow = (function() {
             ? latestAssessment.painSeverity
             : (patient && typeof patient.painLevel === 'number' && !isNaN(patient.painLevel) && patient.painLevel > 0)
                 ? patient.painLevel
-                : (firstLogPain || 8);
+                : (firstLogPain || 10);
         if (firstLogPain && firstLogPain > baselinePain) {
             baselinePain = firstLogPain;
         }
@@ -473,7 +473,7 @@ const PatientFlow = (function() {
         // توليد سجلات افتراضية فقط لحساب العرض التوضيحي (راغب علامة) وعدم تزوير أي إحصائيات للمرضى الحقيقيين نهائياً
         if (isRaghebDemo && (!dailyLogs || dailyLogs.length < 7)) {
             const synthesizedLogs = [];
-            const pBase = (typeof baselinePain === 'number' && baselinePain > 0) ? baselinePain : 8;
+            const pBase = (typeof baselinePain === 'number' && baselinePain > 0) ? baselinePain : 10;
             for (let i = 1; i <= 7; i++) {
                 const existing = (dailyLogs || []).find(l => Number(l.sessionNumber || l.day) === i);
                 if (existing) {
