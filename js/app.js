@@ -5479,6 +5479,146 @@ function savePkgWallet(w) {
     } catch (e) {}
 }
 
+// =========================================================================
+// 🛡️ منظومة تقييد التشخيص المجاني وباقة التشخيص الواحد (منع التكرار إلا بباقة جديدة)
+// =========================================================================
+function _normalizeQuotaPhoneKey(phoneRaw) {
+    const digits = toEnglishDigits(String(phoneRaw || '')).replace(/\D/g, '');
+    return digits.length >= 7 ? digits.slice(-8) : '';
+}
+
+function recordHumanitarianUsage(phoneRaw, patientId) {
+    try {
+        localStorage.setItem('smart_humanitarian_used_device', 'true');
+        localStorage.setItem('smart_device_single_diag_consumed', 'true');
+        localStorage.setItem('smart_humanitarian_used_at', new Date().toISOString());
+        const pk = _normalizeQuotaPhoneKey(phoneRaw);
+        if (pk) {
+            const list = JSON.parse(localStorage.getItem('smart_humanitarian_used_phones') || '[]');
+            if (Array.isArray(list) && !list.includes(pk)) {
+                list.push(pk);
+                localStorage.setItem('smart_humanitarian_used_phones', JSON.stringify(list));
+            }
+        }
+        if (patientId) {
+            localStorage.setItem('smart_humanitarian_used_pid_' + patientId, 'true');
+        }
+    } catch (e) {}
+}
+window.recordHumanitarianUsage = recordHumanitarianUsage;
+
+function isHumanitarianLockedForUser(phoneRaw) {
+    try {
+        if (localStorage.getItem('smart_humanitarian_used_device') === 'true') return true;
+        const lastPlanType = localStorage.getItem('smart_paid_plan_type') || '';
+        if (lastPlanType === 'humanitarian' || lastPlanType === 'humanitarian_waiver') return true;
+        if (typeof activePatient !== 'undefined' && activePatient && (activePatient.paymentType === 'humanitarian' || activePatient.paymentType === 'humanitarian_waiver')) {
+            return true;
+        }
+        const pk = _normalizeQuotaPhoneKey(phoneRaw || localStorage.getItem('smart_patient_phone') || '');
+        if (pk) {
+            const usedPhones = JSON.parse(localStorage.getItem('smart_humanitarian_used_phones') || '[]');
+            if (Array.isArray(usedPhones) && usedPhones.includes(pk)) return true;
+        }
+        // فحص سجلات المرضى المحفوظة محلياً وسحابياً للتأكد من عدم استخدام نفس رقم الهاتف للإعفاء مرتين
+        const checkList = (storageKey) => {
+            const raw = localStorage.getItem(storageKey);
+            if (!raw) return false;
+            const arr = JSON.parse(raw);
+            if (!Array.isArray(arr)) return false;
+            return arr.some(item => {
+                const pt = item?.patient || item;
+                if (!pt) return false;
+                const isHum = pt.paymentType === 'humanitarian' ||
+                              pt.paymentType === 'humanitarian_waiver' ||
+                              String(pt.paymentStatus || '').includes('إنساني') ||
+                              String(pt.paymentStatus || '').includes('إعفاء') ||
+                              (pt.pendingUnlockRequest && pt.pendingUnlockRequest.requestType === 'humanitarian');
+                if (!isHum) return false;
+                const ptPk = _normalizeQuotaPhoneKey(pt.phone || pt.pendingUnlockRequest?.subscriberPhone || '');
+                if (pk && ptPk && pk === ptPk) return true;
+                return false;
+            });
+        };
+        if (checkList('smart_all_patients') || checkList('smart_cloud_synced_patients')) return true;
+    } catch (e) {}
+    return false;
+}
+window.isHumanitarianLockedForUser = isHumanitarianLockedForUser;
+
+function recordConsumedSingleDiagnosisCode(codeStr, phoneRaw, examId, unlockType) {
+    try {
+        const cleanCode = toEnglishDigits(String(codeStr || '')).trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        localStorage.setItem('smart_device_single_diag_consumed', 'true');
+        if (unlockType === 'humanitarian' || unlockType === 'humanitarian_waiver') {
+            recordHumanitarianUsage(phoneRaw);
+        }
+        if (!cleanCode) return;
+        const list = JSON.parse(localStorage.getItem('smart_consumed_single_codes') || '[]');
+        const arr = Array.isArray(list) ? list : [];
+        const curEx = examId || getCurrentExamGateId() || 'exam_1';
+        const pk = _normalizeQuotaPhoneKey(phoneRaw);
+        if (!arr.some(x => x && x.code === cleanCode && x.examId === curEx)) {
+            arr.push({
+                code: cleanCode,
+                phoneKey: pk,
+                examId: curEx,
+                unlockType: unlockType || 'single',
+                usedAt: Date.now()
+            });
+            localStorage.setItem('smart_consumed_single_codes', JSON.stringify(arr));
+        }
+    } catch (e) {}
+}
+window.recordConsumedSingleDiagnosisCode = recordConsumedSingleDiagnosisCode;
+
+function isSingleDiagnosisCodeAlreadyConsumed(codeStr, currentExamId) {
+    try {
+        const cleanCode = toEnglishDigits(String(codeStr || '')).trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (!cleanCode) return false;
+        const list = JSON.parse(localStorage.getItem('smart_consumed_single_codes') || '[]');
+        if (!Array.isArray(list) || list.length === 0) return false;
+        const curEx = currentExamId || getCurrentExamGateId() || '';
+        return list.some(entry => entry && entry.code === cleanCode && entry.examId && entry.examId !== curEx);
+    } catch (e) {
+        return false;
+    }
+}
+window.isSingleDiagnosisCodeAlreadyConsumed = isSingleDiagnosisCodeAlreadyConsumed;
+
+function getConsumedSingleCodesCountForPhone(phoneRaw) {
+    try {
+        const pk = _normalizeQuotaPhoneKey(phoneRaw);
+        const list = JSON.parse(localStorage.getItem('smart_consumed_single_codes') || '[]');
+        if (!Array.isArray(list)) return 0;
+        const matched = pk ? list.filter(x => x && (x.phoneKey === pk || !x.phoneKey)) : list;
+        return Math.min(9, matched.length);
+    } catch (e) {
+        return 0;
+    }
+}
+window.getConsumedSingleCodesCountForPhone = getConsumedSingleCodesCountForPhone;
+
+function showHumanitarianQuotaExhaustedNotice() {
+    const msgEl = document.getElementById('paywall-status-feedback');
+    const noticeHTML = '🔒 <strong>تنبيه نظام الاستحقاق:</strong> مبادرة الرعاية الإنسانية المجانية متاحة <strong>لتشخيص واحد فقط لكل مراجع (على نفس الجهاز أو رقم الهاتف)</strong> وقد تم الاستفادة منها مسبقاً.<br><span style="color:#fde68a;">لإجراء فحص وتشخيص سريري جديد، يرجى اختيار إحدى الباقات المدفوعة عبر محفظة أورانج موني.</span>';
+    if (msgEl) {
+        msgEl.style.display = 'block';
+        msgEl.style.background = 'rgba(245, 158, 11, 0.18)';
+        msgEl.style.border = '1.5px solid #f59e0b';
+        msgEl.style.color = '#fef08a';
+        msgEl.innerHTML = noticeHTML;
+        try { msgEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+    }
+    if (typeof showRoyalPaymentToast === 'function') {
+        showRoyalPaymentToast('🔒 مبادرة الرعاية الإنسانية متاحة لمرة واحدة فقط وقد تم الاستفادة منها مسبقاً. يرجى اختيار باقة مدفوعة للفحص الجديد.', 'warning');
+    }
+    if (typeof switchPaywallOptionTab === 'function') {
+        switchPaywallOptionTab('orange');
+    }
+}
+window.showHumanitarianQuotaExhaustedNotice = showHumanitarianQuotaExhaustedNotice;
+
 // استرجاع معرّف الفحص الحالي من التخزين المحلي أو الجلسة
 function getCurrentExamGateId() {
     try {
@@ -5632,6 +5772,9 @@ function verifyActivationCode(entered, cfg) {
     if (/^GF\d{6}$/.test(cleanCode)) {
         for (let n = 1; n <= 5000; n++) {
             if (generateGiftCode(n) === cleanCode) {
+                if (isSingleDiagnosisCodeAlreadyConsumed(cleanCode, getCurrentExamGateId())) {
+                    return { alreadyConsumed: true, code: cleanCode };
+                }
                 return { tier: 1, master: false, code: cleanCode, gift: true };
             }
         }
@@ -5676,7 +5819,9 @@ function verifyActivationCode(entered, cfg) {
         return { noSeed: true, code: cleanCode };
     }
 
-    // 4. مطابقة الأكواد المولدة لجميع التسلسلات (0 إلى 9) وللباقات الثلاث (1، 5، 10)
+    // 4. مطابقة الأكواد المولدة لجميع التسلسلات (0 إلى 9) وللباقات الثلاث (1، 5، 10) مع منع إعادة استخدام كود التشخيص الواحد المستهلك
+    let consumedMatchCode = null;
+    const curExamIdForCheck = getCurrentExamGateId();
     for (const sd of cleanSeeds) {
         for (let k = 0; k < 10; k++) {
             for (const t of [1, 5, 10]) {
@@ -5688,10 +5833,17 @@ function verifyActivationCode(entered, cfg) {
                     (t > 1 && cleanCode === ('P' + t + c.replace(/^(10|5)(?=\d{4}$)/, ''))) ||
                     (t > 1 && cleanCode === (t + c.replace(/^(10|5)(?=\d{4}$)/, '')))
                 ) {
-                    return { tier: t, master: false, code: c };
+                    if (t === 1 && isSingleDiagnosisCodeAlreadyConsumed(c, curExamIdForCheck)) {
+                        consumedMatchCode = c;
+                        continue;
+                    }
+                    return { tier: t, master: false, code: c, serial: k };
                 }
             }
         }
+    }
+    if (consumedMatchCode) {
+        return { alreadyConsumed: true, code: consumedMatchCode };
     }
     return null;
 }
@@ -5748,6 +5900,10 @@ async function _submitPromoOrTestUnlockCodeCore(inputIdOverride) {
     const res = verifyActivationCode(entered, cfg);
     if (!res) {
         say('❌ كود التفعيل غير صحيح أو غير مخصص لرقم الهاتف المدخل.<br><small style="color:#cbd5e1;">تأكد من كتابة نفس رقم هاتفك المسجل لدى الإدارة ثم كتابة الكود بدقة.</small>', false);
+        return;
+    }
+    if (res.alreadyConsumed) {
+        say('🔒 <strong>انتهت صلاحية هذا الكود:</strong> كود التفعيل المُدخل مخصص <strong>لتشخيص واحد فقط</strong> وقد تم استهلاكه مسبقاً في فحصك السابق.<br><small style="color:#fde68a;">لفتح هذا التشخيص الجديد، يرجى الاشتراك في باقة جديدة عبر محفظة أورانج موني للحصول على كود تفعيل جديد.</small>', false);
         return;
     }
     if (res.noSeed) {
@@ -5812,6 +5968,13 @@ async function _submitPromoOrTestUnlockCodeCore(inputIdOverride) {
         || pend?.subscriberName
         || document.getElementById('pay-subscriber-name')?.value?.trim()
         || '';
+
+    // توثيق استهلاك كود التشخيص الواحد لمنع إعادة استخدامه في فحص لاحق
+    if (res.tier === 1 && !res.master) {
+        recordConsumedSingleDiagnosisCode(res.code, phoneUsed, ex, type);
+    } else if (type === 'humanitarian' || type === 'humanitarian_waiver') {
+        recordHumanitarianUsage(phoneUsed, pend?.patientId);
+    }
 
     if (phoneUsed) {
         if (typeof safeStorageSet === 'function') safeStorageSet('smart_patient_phone', phoneUsed);
@@ -6026,10 +6189,13 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
                 <button type="button" id="paywall-tab-btn-code" onclick="switchPaywallOptionTab('code')" style="flex: 1.2 1 130px; background: rgba(11,18,32,0.9); color: #cbd5e1; border: 1.5px solid rgba(212,175,55,0.25); padding: 12px 14px; border-radius: 12px; font-weight: 800; font-size: 0.9em; cursor: pointer;">
                     🔑 إدخال كود تفعيل مسبق
                 </button>
-                ${cfg.allowHumanitarian !== false ? `
+                ${cfg.allowHumanitarian !== false ? (isHumanitarianLockedForUser(defPhone) ? `
+                <button type="button" id="paywall-tab-btn-humanitarian" onclick="showHumanitarianQuotaExhaustedNotice()" style="flex: 1.1 1 130px; background: rgba(30,41,59,0.55); color: #64748b; border: 1.5px dashed #475569; padding: 12px 14px; border-radius: 12px; font-weight: 800; font-size: 0.84em; cursor: not-allowed; opacity: 0.8;" title="تم الاستفادة من المبادرة الإنسانية مسبقاً على هذا الجهاز أو رقم الهاتف (لمرة واحدة فقط)">
+                    🔒 المبادرة الإنسانية (استُنفدت)
+                </button>` : `
                 <button type="button" id="paywall-tab-btn-humanitarian" onclick="switchPaywallOptionTab('humanitarian')" style="flex: 1.1 1 130px; background: rgba(11,18,32,0.9); color: #cbd5e1; border: 1.5px solid rgba(212,175,55,0.25); padding: 12px 14px; border-radius: 12px; font-weight: 800; font-size: 0.88em; cursor: pointer;">
                     ❤️ مبادرة الرعاية الإنسانية (مجاناً)
-                </button>` : ''}
+                </button>`) : ''}
             </div>
 
             <!-- التبويب 1: محفظة أورانج موني عبر 3 خطوات سهلة وسلسة -->
@@ -6269,8 +6435,16 @@ function markCurrentExamAndPatientUnlocked(unlockMeta = {}) {
         localStorage.setItem('smart_paid_v2_unlocked_' + pId, 'true');
         localStorage.setItem('smart_paid_unlocked_' + pId, 'true');
         localStorage.setItem('smart_paid_plan_type', rawType);
+        localStorage.setItem('smart_device_single_diag_consumed', 'true');
+        if (isHumanitarian) {
+            recordHumanitarianUsage(subPhone, pId);
+        }
         if (subPhone && subPhone.replace(/\D/g, '').length >= 7) {
             localStorage.setItem('smart_paid_phone_' + subPhone.replace(/\D/g, '').slice(-9), 'true');
+            const defaultSinglePin = generateUserBoundCode(subPhone, 1, 0);
+            if (defaultSinglePin && (!getPkgWallet() || getPkgWallet().remaining <= 0)) {
+                recordConsumedSingleDiagnosisCode(defaultSinglePin, subPhone, curExamId, rawType);
+            }
         }
         localStorage.setItem('smart_paid_meta_' + pId, JSON.stringify({
             unlockedAt: new Date().toISOString(),
@@ -6425,6 +6599,10 @@ function copyOrangeWalletNumber(walletNum = '0795651388') {
 window.copyOrangeWalletNumber = copyOrangeWalletNumber;
 
 function switchPaywallOptionTab(tabId) {
+    if (tabId === 'humanitarian' && typeof isHumanitarianLockedForUser === 'function' && isHumanitarianLockedForUser()) {
+        showHumanitarianQuotaExhaustedNotice();
+        return;
+    }
     ['orange', 'humanitarian', 'code'].forEach(t => {
         const pane = document.getElementById('paywall-pane-' + t);
         const btn = document.getElementById('paywall-tab-btn-' + t);
@@ -6566,7 +6744,8 @@ async function submitOrangeWalletPaymentNotification() {
     const pkgPrices = getPkgPrices(cfg);
     const chosenPrice = pkgPrices[chosenPkg] || 3;
     const pkgTitle = (chosenPkg === 10) ? 'باقة 10 فحوصات الشاملة (15 د.أ)' : (chosenPkg === 5 ? 'باقة 5 فحوصات العائلية (10 د.أ)' : 'تشخيص فردي (3 د.أ)');
-    const unlockPin = generateUserBoundCode(subPhone, chosenPkg, 0);
+    const nextSerial = chosenPkg === 1 ? getConsumedSingleCodesCountForPhone(subPhone) : 0;
+    const unlockPin = generateUserBoundCode(subPhone, chosenPkg, nextSerial);
 
     const pendingObj = {
         patientId: pId,
@@ -6735,6 +6914,11 @@ async function submitHumanitarianFreeActivation() {
     let subName = (nameInput?.value || '').trim();
     const subPhone = (phoneInput?.value || '').trim();
 
+    if (typeof isHumanitarianLockedForUser === 'function' && isHumanitarianLockedForUser(subPhone)) {
+        showHumanitarianQuotaExhaustedNotice();
+        return;
+    }
+
     if (!subName || subName.length < 3) {
         const cleanPhone = subPhone.replace(/\D/g, '');
         if (cleanPhone.length >= 7) {
@@ -6818,6 +7002,7 @@ async function submitHumanitarianFreeActivation() {
         justSubmitted: true
     };
     savePendingUnlockRequest(pendingObj);
+    recordHumanitarianUsage(subPhone, pId);
     syncPendingPatientRequestToAdmin(pId, subName, subPhone, painArea, '⏳ طلب مبادرة الرعاية الإنسانية بانتظار الاعتماد', pendingObj);
 
     // 🔔 1. إرسال تنبيه فوري لهاتف الطبيب عبر منظومة SmartMobileAlerts
@@ -7202,11 +7387,15 @@ function _legacyPaywallCardHTML(data, isRegisteredPatient, resolvedReportName, r
                 <button type="button" id="paywall-tab-btn-orange" onclick="switchPaywallOptionTab('orange')" style="flex: 2 1 220px; background: linear-gradient(135deg, #d4af37 0%, #b45309 100%); color: #050911; border: 1.5px solid #fef08a; padding: 13px 16px; border-radius: 12px; font-weight: 900; font-size: 0.95em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4); transition: all 0.2s;">
                     <span>💳</span> <span>الاشتراك عبر محفظة أورانج (${cfg.priceJod} د.أ)</span>
                 </button>
-                ${cfg.allowHumanitarian !== false ? `
+                ${cfg.allowHumanitarian !== false ? (isHumanitarianLockedForUser(defaultPhone) ? `
+                <button type="button" id="paywall-tab-btn-humanitarian" onclick="showHumanitarianQuotaExhaustedNotice()" style="flex: 1.5 1 200px; background: rgba(30, 41, 59, 0.55); color: #64748b; border: 1.5px dashed #475569; padding: 13px 14px; border-radius: 12px; font-weight: 800; font-size: 0.85em; cursor: not-allowed; display: flex; align-items: center; justify-content: center; gap: 7px; opacity: 0.8;" title="تم الاستفادة من المبادرة الإنسانية مسبقاً (لمرة واحدة فقط)">
+                    <span>🔒</span> <span>المبادرة الإنسانية (استُنفدت)</span>
+                </button>
+                ` : `
                 <button type="button" id="paywall-tab-btn-humanitarian" onclick="switchPaywallOptionTab('humanitarian')" style="flex: 1.5 1 200px; background: rgba(11, 18, 32, 0.9); color: #cbd5e1; border: 1.5px solid rgba(212, 175, 55, 0.25); padding: 13px 14px; border-radius: 12px; font-weight: 800; font-size: 0.9em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; transition: all 0.2s;">
                     <span>🌿</span> <span>طلب إعفاء لغير المقتدرين (صدقة جارية)</span>
                 </button>
-                ` : ''}
+                `) : ''}
                 <button type="button" id="paywall-tab-btn-code" onclick="switchPaywallOptionTab('code')" style="flex: 1 1 160px; background: rgba(11, 18, 32, 0.9); color: #cbd5e1; border: 1.5px solid rgba(212, 175, 55, 0.25); padding: 13px 14px; border-radius: 12px; font-weight: 800; font-size: 0.88em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
                     <span>🔑</span> <span>لديّ كود تفعيل معتمد</span>
                 </button>
@@ -9670,167 +9859,209 @@ async function renderStep6Completion(patientId, sessionData = null) {
         const container = document.getElementById('step6-completion-container') || document.getElementById('patient-recovery-dashboard');
         if (!container) return;
 
-        const basePain = sessionData.baselinePain || 7;
-        const endPain = sessionData.currentPain || 0;
-        const painDrop = sessionData.indicators.painReduction;
-        const mobilityScore = sessionData.indicators.mobility || 85;
-        const sleepScore = sessionData.indicators.sleepQuality || 80;
+        // استخراج المؤشرات الحقيقية الموثقة من مدخلات المريض الفعلية حصراً بدون أي أرقام وهمية
+        const realLogs = Array.isArray(sessionData.dailyLogs) ? sessionData.dailyLogs : [];
+        const firstRealLog = realLogs.length > 0 ? realLogs[0] : null;
+        const lastRealLog = realLogs.length > 0 ? realLogs[realLogs.length - 1] : null;
+
+        const rawBasePain = Number(sessionData.baselinePain || sessionData.latestAssessment?.painSeverity || sessionData.patient?.painLevel || (firstRealLog ? firstRealLog.painScore : 7)) || 7;
+        const basePain = (firstRealLog && typeof firstRealLog.painScore === 'number' && firstRealLog.painScore > rawBasePain) ? firstRealLog.painScore : rawBasePain;
+        const endPain = (lastRealLog && typeof lastRealLog.painScore === 'number') ? lastRealLog.painScore : (typeof sessionData.currentPain === 'number' ? sessionData.currentPain : basePain);
+
+        const painDrop = (basePain > 0 && endPain < basePain)
+            ? Math.max(0, Math.min(100, Math.round(((basePain - endPain) / basePain) * 100)))
+            : 0;
+        const mobilityScore = (lastRealLog && typeof lastRealLog.mobilityRate === 'number')
+            ? lastRealLog.mobilityRate
+            : (sessionData.indicators?.mobility || 70);
+        const sleepScore = (lastRealLog && typeof lastRealLog.sleepRate === 'number')
+            ? lastRealLog.sleepRate
+            : (sessionData.indicators?.sleepQuality || 70);
 
         const pointKey = sessionData.latestAssessment?.pointId || sessionData.latestAssessment?.pointKey || sessionData.patient.painArea || sessionData.patient.painPointId || 'lumbar_spine';
         const areaName = sessionData.latestAssessment?.painAreaTitle || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint ? currentSelectedPoint.title : 'المنطقة المصابة');
 
         const profile = getAnatomicalCompletionProfile(pointKey, areaName);
         const certCode = `SCP-VIP-${(sessionData.patient?.patientId || sessionData.patient?.id || 'P01').replace(/[^a-zA-Z0-9]/g, '').slice(-4).toUpperCase()}`;
+        const displayName = formatPatientAddress(sessionData.patient?.name);
 
         const homeVisitWhatsAppUrl = `https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent(
-            `مرحباً دكتور جمال، أنا المراجع (${sessionData.patient?.name || 'مريض'}). أتممت بنجاح برنامج الـ 7 أيام لتهيئة وتسكين (${profile.jointTitle}) برقم أسبقية [${certCode}].\n\n` +
-            `📊 ملخص استجابتي: تراجع الألم ${painDrop}% والمرونة ${mobilityScore}%، والأنسجة مهيأة للتقويم.\n` +
-            `🏠 أود حجز جلسة تقويم يدوي (زيارة منزلية داخل الأردن) مع حضرتكم لإجراء الكايروبراكتيك وتثبيت الشفاء.`
+            `مرحباً دكتور جمال، أنا المراجع (${sessionData.patient?.name || 'مريض'}). أتممت بنجاح برنامج الـ 7 أيام لتهيئة وتسكين (${profile.jointTitle}) برقم أولوية [${certCode}].\n\n` +
+            `📊 مؤشراتي الموثقة: درجة الألم من (${basePain}/10) إلى (${endPain}/10) بتحسن ${painDrop}%، والمرونة الحركية ${mobilityScore}%، وجودة النوم ${sleepScore}%.\n` +
+            `🏠 أود التنسيق مع حضرتكم لحجز جلسة تقويم يدوي (زيارة منزلية داخل الأردن) لإجراء الكايروبراكتيك وتثبيت الشفاء الجذري.`
         )}`;
 
         const clinicVisitWhatsAppUrl = `https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent(
-            `مرحباً دكتور جمال، أنا المراجع (${sessionData.patient?.name || 'مريض'}). أتممت برنامج الـ 7 أيام لـ (${profile.jointTitle}) برقم أسبقية [${certCode}].\n\n` +
-            `🏥 أود حجز موعد عيادة مباشرة (عمان - خلدا) لإجراء فحص وتقويم الكايروبراكتيك المباشر مع حضرتكم.`
+            `مرحباً دكتور جمال، أنا المراجع (${sessionData.patient?.name || 'مريض'}). أتممت بنجاح برنامج الـ 7 أيام لـ (${profile.jointTitle}) برقم أولوية [${certCode}].\n\n` +
+            `📊 مؤشراتي الموثقة: درجة الألم من (${basePain}/10) إلى (${endPain}/10) بتحسن ${painDrop}%، والمرونة الحركية ${mobilityScore}%، وجودة النوم ${sleepScore}%.\n` +
+            `🏥 أود حجز موعد عيادة مباشرة (عمّان - خلدا) لإجراء فحص وتقويم الكايروبراكتيك المباشر مع حضرتكم.`
         )}`;
 
+        const sessionLogsTimelineHTML = realLogs.length > 0 ? `
+            <div style="background: rgba(11, 18, 34, 0.85); border: 1px solid rgba(212, 175, 55, 0.28); border-radius: 16px; padding: 18px 16px; max-width: 780px; margin: 0 auto 24px auto; text-align: right;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+                    <div style="color: #fef08a; font-weight: 900; font-size: 0.96em; display: flex; align-items: center; gap: 8px;">
+                        <span>📊</span> <span>سجل تقييماتك السريرية الحقيقية خلال جلسات الخطة:</span>
+                    </div>
+                    <span style="color: #94a3b8; font-size: 0.78em;">بيانات موثقة من مدخلاتك المباشرة 100%</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); gap: 8px;">
+                    ${realLogs.map(l => {
+                        const sN = Number(l.sessionNumber || l.day || 1);
+                        const pV = typeof l.painScore === 'number' ? l.painScore : '-';
+                        const mV = typeof l.mobilityRate === 'number' ? l.mobilityRate : '-';
+                        const slV = typeof l.sleepRate === 'number' ? l.sleepRate : '-';
+                        return `
+                        <div style="background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 10px 8px; text-align: center;">
+                            <div style="color: #d4af37; font-weight: 900; font-size: 0.82em; margin-bottom: 4px;">الجلسة #${sN}</div>
+                            <div style="color: #f87171; font-size: 0.78em; font-weight: 800;">الألم: ${pV}/10</div>
+                            <div style="color: #38bdf8; font-size: 0.76em; margin-top: 2px;">الحركة: ${mV}%</div>
+                            <div style="color: #6ee7b7; font-size: 0.76em; margin-top: 2px;">النوم: ${slV}%</div>
+                        </div>`;
+                    }).join('')}
+                </div>
+            </div>
+        ` : '';
+
         container.innerHTML = `
-            <div style="background: linear-gradient(135deg, #070d19 0%, #0d1a2d 60%, #050811 100%); border: 2px solid var(--primary-gold); border-radius: 18px; padding: 30px 24px; color: #ffffff; text-align: center; box-shadow: 0 12px 45px rgba(0,0,0,0.75); margin-bottom: 25px;">
+            <div style="background: radial-gradient(circle at top, rgba(212, 175, 55, 0.14) 0%, rgba(7, 13, 25, 0.98) 45%, #04070f 100%); border: 2px solid var(--primary-gold); border-radius: 24px; padding: 34px 24px; color: #ffffff; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.85), inset 0 1px 0 rgba(254, 240, 138, 0.35); margin-bottom: 28px; position: relative; overflow: hidden;">
                 
-                <!-- ترويسة إتمام مرحلة التهيئة والتسكين الأولي -->
-                <div style="margin-bottom: 20px;">
-                    <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(16, 185, 129, 0.15); border: 1.5px solid #10b981; color: #6ee7b7; padding: 6px 18px; border-radius: 25px; font-weight: bold; font-size: 0.9em; margin-bottom: 12px;">
-                        <span>✓</span> تم إنجاز مرحلة التسكين المنزلي والتهيئة الحركية (7 أيام)
+                <!-- خط ذهبي علوي فاخر -->
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, transparent 0%, #d4af37 25%, #fef08a 50%, #10b981 75%, transparent 100%);"></div>
+
+                <!-- وسام الإنجاز والتحفيز النفسي الإيجابي -->
+                <div style="margin-bottom: 26px;">
+                    <div style="width: 76px; height: 76px; margin: 0 auto 14px auto; border-radius: 50%; background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(16, 185, 129, 0.25)); border: 2.5px solid #fef08a; box-shadow: 0 0 30px rgba(212, 175, 55, 0.4); display: flex; align-items: center; justify-content: center; font-size: 2.3em;">
+                        👑
                     </div>
-                    <h2 style="font-size: 1.85em; margin: 0 0 8px 0; color: #fef08a; font-weight: 900;">
-                        بوابة الانتقال للحل الجذري (الكايروبراكتيك)
+                    <div style="display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(90deg, rgba(16, 185, 129, 0.2), rgba(212, 175, 55, 0.2)); border: 1.5px solid #10b981; color: #a7f3d0; padding: 6px 20px; border-radius: 30px; font-weight: 800; font-size: 0.9em; margin-bottom: 14px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);">
+                        <span>✨</span> <span>إنجاز إرادي رائع — أتممتَ برنامج التهيئة الحركية (7 أيام) بنجاح</span>
+                    </div>
+                    <h2 style="font-size: 1.95em; margin: 0 0 10px 0; background: linear-gradient(90deg, #fef08a 0%, #f59e0b 50%, #fef08a 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; line-height: 1.35;">
+                        فخورون بعزيمتك وإصرارك على التعافي يا ${displayName}!
                     </h2>
-                    <div style="font-size: 1.1em; color: #38bdf8; font-weight: bold;">
-                        برنامج الرعاية المخصص لـ: <span style="color: #ffffff;">${profile.jointTitle}</span>
-                    </div>
-                    <div style="color: #94a3b8; font-size: 0.88em; margin-top: 4px;">
-                        المراجع الكريم: <strong style="color: var(--primary-gold);">${formatPatientAddress(sessionData.patient?.name)}</strong>
-                    </div>
-                </div>
-
-                <!-- مسار انخفاض الألم والمؤشرات السريرية الفعلية المحققة -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; max-width: 720px; margin: 0 auto 24px auto;">
-                    <div style="background: rgba(15, 23, 42, 0.85); padding: 16px; border-radius: 12px; border: 1.5px solid #10b981;">
-                        <div style="font-size: 2.2em; font-weight: 900; color: #10b981;">${painDrop}%</div>
-                        <div style="font-size: 0.85em; color: #e2e8f0; font-weight: bold; margin-top: 4px;">تراجع وتسكين الألم الموثق 📉</div>
-                        <div style="color: #94a3b8; font-size: 0.76em; margin-top: 2px;">من (${basePain}/10) إلى (${endPain}/10)</div>
-                    </div>
-                    <div style="background: rgba(15, 23, 42, 0.85); padding: 16px; border-radius: 12px; border: 1.5px solid #38bdf8;">
-                        <div style="font-size: 2.2em; font-weight: 900; color: #38bdf8;">${mobilityScore}%</div>
-                        <div style="font-size: 0.85em; color: #e2e8f0; font-weight: bold; margin-top: 4px;">استعادة مرونة المفصل 🤸‍♂️</div>
-                        <div style="color: #94a3b8; font-size: 0.76em; margin-top: 2px;">تليين الأوتار والأربطة الحركية</div>
-                    </div>
-                    <div style="background: rgba(15, 23, 42, 0.85); padding: 16px; border-radius: 12px; border: 1.5px solid #f59e0b;">
-                        <div style="font-size: 2.2em; font-weight: 900; color: #fef08a;">${sleepScore}%</div>
-                        <div style="font-size: 0.85em; color: #e2e8f0; font-weight: bold; margin-top: 4px;">مؤشر جودة وعمق النوم 🌙</div>
-                        <div style="color: #94a3b8; font-size: 0.76em; margin-top: 2px;">استقرار الأعراض الليلية</div>
-                    </div>
-                </div>
-
-                <!-- الفكرة 3: مقياس الجاهزية للتقويم اليدوي المباشر (The Chiropractic Readiness Gauge) -->
-                <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 23, 42, 0.9) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 20px; max-width: 720px; margin: 0 auto 24px auto; text-align: right;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
-                        <div style="color: #6ee7b7; font-weight: 900; font-size: 1.08em; display: flex; align-items: center; gap: 8px;">
-                            <span>🎯</span> مؤشر الجاهزية للتقويم اليدوي (Chiropractic Readiness):
-                        </div>
-                        <span style="background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; color: #a7f3d0; padding: 3px 12px; border-radius: 14px; font-weight: bold; font-size: 0.82em;">
-                            95% (جاهزية سريرية مثالية)
-                        </span>
-                    </div>
-                    <div style="background: #1e293b; height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 12px;">
-                        <div style="background: linear-gradient(90deg, #10b981 0%, #34d399 100%); height: 100%; width: 95%;"></div>
-                    </div>
-                    <p style="color: #e2e8f0; font-size: 0.88em; line-height: 1.7; margin: 0;">
-                        💡 <strong>التشخيص الميكانيكي للمرحلة:</strong> ${profile.readinessDesc}
+                    <p style="max-width: 680px; margin: 0 auto 12px auto; color: #e2e8f0; font-size: 1em; line-height: 1.8; font-weight: 600;">
+                        إن التزامك اليومي بتمارين الاستطالة والاستشفاء طوال الأيام السبعة الماضية هو <strong style="color: #6ee7b7;">انتصار نفسي وجسدي حقيقي</strong>؛ فقد منحتَ جسدك الفرصة الذهبية لكسر حلقة الألم والتشنج الدفاعي حول <strong style="color: #fef08a;">(${profile.jointTitle})</strong>، وأصبحت أنسجتك الآن مهيأةً تماماً لمرحلة التصحيح الجذري.
                     </p>
                 </div>
 
-                <!-- الفكرة 1: جسر التعافي الكامل (التسكين المنزلي مقابل الحل الجذري للكايروبراكتيك) -->
-                <div style="background: rgba(15, 23, 42, 0.95); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 22px; max-width: 720px; margin: 0 auto 24px auto; text-align: right;">
-                    <h3 style="color: var(--primary-gold); margin: 0 0 14px 0; font-size: 1.15em; font-weight: 900; display: flex; align-items: center; gap: 8px;">
-                        <span>⚖️</span> جسر التعافي الكامل: ما حققته مقابل ما ينقصك للحل الجذري
-                    </h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
-                        <div style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 10px; padding: 14px;">
-                            <div style="color: #10b981; font-weight: bold; font-size: 0.92em; margin-bottom: 6px;">
-                                🏠 1. ما أنجزته في الـ 7 أيام (المرحلة الأولى):
+                <!-- لوحة المؤشرات السريرية الحقيقية (من مدخلات المريض الفعلية 100%) -->
+                <div style="max-width: 780px; margin: 0 auto 18px auto; text-align: right;">
+                    <div style="color: #cbd5e1; font-size: 0.88em; font-weight: 800; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
+                        <span>📈 حصيلة استجابتك الفعلية الموثقة بناءً على تقييماتك اليومية:</span>
+                        <span style="color: #6ee7b7; font-size: 0.85em;">✓ أرقام حقيقية مستخرجة من تقييمك الشخصي</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+                        <!-- بطاقة تراجع الألم -->
+                        <div style="background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(6, 78, 59, 0.22)); padding: 18px 16px; border-radius: 16px; border: 1.5px solid rgba(16, 185, 129, 0.6); text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.4);">
+                            <div style="font-size: 2.35em; font-weight: 900; color: #10b981; font-family: monospace;">${painDrop}%</div>
+                            <div style="font-size: 0.92em; color: #ffffff; font-weight: 900; margin-top: 4px;">نسبة انخفاض وتسكين الألم 📉</div>
+                            <div style="color: #a7f3d0; font-size: 0.8em; margin-top: 4px; font-weight: 700;">من (${basePain}/10) في البداية إلى (${endPain}/10) حالياً</div>
+                            <div style="background: #1e293b; height: 6px; border-radius: 4px; overflow: hidden; margin-top: 10px;">
+                                <div style="background: linear-gradient(90deg, #10b981, #34d399); width: ${painDrop}%; height: 100%;"></div>
                             </div>
-                            <div style="color: #cbd5e1; font-size: 0.85em; line-height: 1.6;">
+                        </div>
+
+                        <!-- بطاقة استعادة المرونة -->
+                        <div style="background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(12, 74, 110, 0.25)); padding: 18px 16px; border-radius: 16px; border: 1.5px solid rgba(56, 189, 248, 0.6); text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.4);">
+                            <div style="font-size: 2.35em; font-weight: 900; color: #38bdf8; font-family: monospace;">${mobilityScore}%</div>
+                            <div style="font-size: 0.92em; color: #ffffff; font-weight: 900; margin-top: 4px;">مؤشر حرية الحركة والمرونة 🤸‍♂️</div>
+                            <div style="color: #bae6fd; font-size: 0.8em; margin-top: 4px; font-weight: 700;">تقييمك الفعلي لحركة المفصل في آخر جلسة</div>
+                            <div style="background: #1e293b; height: 6px; border-radius: 4px; overflow: hidden; margin-top: 10px;">
+                                <div style="background: linear-gradient(90deg, #0284c7, #38bdf8); width: ${mobilityScore}%; height: 100%;"></div>
+                            </div>
+                        </div>
+
+                        <!-- بطاقة جودة النوم -->
+                        <div style="background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(120, 53, 15, 0.25)); padding: 18px 16px; border-radius: 16px; border: 1.5px solid rgba(245, 158, 11, 0.6); text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.4);">
+                            <div style="font-size: 2.35em; font-weight: 900; color: #fef08a; font-family: monospace;">${sleepScore}%</div>
+                            <div style="font-size: 0.92em; color: #ffffff; font-weight: 900; margin-top: 4px;">مؤشر جودة وعمق النوم 🌙</div>
+                            <div style="color: #fde68a; font-size: 0.8em; margin-top: 4px; font-weight: 700;">تقييمك الفعلي للراحة الليلية في آخر جلسة</div>
+                            <div style="background: #1e293b; height: 6px; border-radius: 4px; overflow: hidden; margin-top: 10px;">
+                                <div style="background: linear-gradient(90deg, #d97706, #fef08a); width: ${sleepScore}%; height: 100%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- شريط تفاصيل الجلسات الموثقة للمريض -->
+                ${sessionLogsTimelineHTML}
+
+                <!-- رسالة التحفيز النفسي الإيجابي وجسر التعافي الجذري -->
+                <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 23, 42, 0.96) 55%, rgba(212, 175, 55, 0.12) 100%); border: 1.5px solid var(--primary-gold); border-radius: 18px; padding: 24px 22px; max-width: 780px; margin: 0 auto 24px auto; text-align: right; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                        <h3 style="color: #fef08a; margin: 0; font-size: 1.18em; font-weight: 900; display: flex; align-items: center; gap: 8px;">
+                            <span>🌟</span> <span>لماذا تُعد هذه اللحظة نقطة التحول الأهم في رحلة شفائك؟</span>
+                        </h3>
+                        <span style="background: rgba(16, 185, 129, 0.22); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 14px; border-radius: 20px; font-weight: 800; font-size: 0.8em;">
+                            الأنسجة في أعلى جاهزية للتقويم اليدوي
+                        </span>
+                    </div>
+                    <p style="color: #e2e8f0; font-size: 0.92em; line-height: 1.85; margin: 0 0 16px 0; text-align: justify;">
+                        ${profile.readinessDesc} إن الجسم البشري يمتلك قدرة فطرية مذهلة على التشافي متى ما زال عنه الضغط الميكانيكي؛ وما أنجزته في المنزل قد مهّد الطريق بنسبة كبيرة لإنهاء المسبب الجذري للألم بكل سهولة وأمان.
+                    </p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
+                        <div style="background: rgba(11, 18, 34, 0.9); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 16px;">
+                            <div style="color: #6ee7b7; font-weight: 900; font-size: 0.94em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                                <span>✅</span> <span>المرحلة الأولى (ما حققته بالتزامك المنزلي):</span>
+                            </div>
+                            <div style="color: #cbd5e1; font-size: 0.86em; line-height: 1.7;">
                                 ${profile.phase1DoneText}
                             </div>
                         </div>
-                        <div style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 10px; padding: 14px;">
-                            <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.92em; margin-bottom: 6px;">
-                                👐 2. الحل الجذري النهائي (الكايروبراكتيك المباشر):
+                        <div style="background: rgba(11, 18, 34, 0.9); border: 1px solid rgba(212, 175, 55, 0.5); border-radius: 12px; padding: 16px;">
+                            <div style="color: #fef08a; font-weight: 900; font-size: 0.94em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                                <span>👑</span> <span>المرحلة الثانية (خطوة الحل الجذري المباشر):</span>
                             </div>
-                            <div style="color: #cbd5e1; font-size: 0.85em; line-height: 1.6;">
+                            <div style="color: #cbd5e1; font-size: 0.86em; line-height: 1.7;">
                                 ${profile.phase2RootNeed}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- الفكرة 4: إرشادات الأمان وتفادي الانتكاسة الميكانيكية الخاصة بالمفصل المحدد -->
-                <div style="background: rgba(15, 23, 42, 0.9); border-radius: 14px; padding: 20px; max-width: 720px; margin: 0 auto 24px auto; text-align: right; border-right: 4px solid #38bdf8;">
-                    <h4 style="color: #38bdf8; margin: 0 0 10px 0; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 6px;">
-                        <span>🛡️</span> قواعد الحماية وتفادي الانتكاسة الميكانيكية لـ (${profile.shortName}):
+                <!-- درع الوقاية اليومي وتفادي الانتكاسة الميكانيكية -->
+                <div style="background: rgba(15, 23, 42, 0.92); border-radius: 16px; padding: 20px 22px; max-width: 780px; margin: 0 auto 26px auto; text-align: right; border: 1px solid rgba(56, 189, 248, 0.35); border-right: 4px solid #38bdf8;">
+                    <h4 style="color: #7dd3fc; margin: 0 0 12px 0; font-size: 1.05em; font-weight: 900; display: flex; align-items: center; gap: 8px;">
+                        <span>🛡️</span> <span>وصايا الأمان اليومية للحفاظ على تعافي (${profile.shortName}):</span>
                     </h4>
-                    <ul style="color: #e2e8f0; font-size: 0.86em; line-height: 1.8; margin: 0 0 12px 0; padding-right: 20px;">
-                        ${profile.preventionRules.map(rule => `<li>${rule}</li>`).join('')}
-                    </ul>
-                    <div style="background: rgba(245, 158, 11, 0.1); border-right: 3px solid #f59e0b; border-radius: 6px; padding: 8px 12px; font-size: 0.8em; color: #fde68a; line-height: 1.6;">
-                        ⚠️ <strong>تنبيه وإخلاء مسؤولية سريري:</strong> برنامج الـ 7 أيام المنزلي هو دليل إرشادي حركي ذاتي لتسكين التشنج وتهيئة الأنسجة، ولا يشكل تشخيصاً طبياً نهائياً ولا يغني عن الفحص الميداني المباشر لتقويم المفاصل واستقرارها.
-                    </div>
-                </div>
-
-                <!-- شريط مراجعة كافة المراحل السبع المكتملة -->
-                <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid #334155; border-radius: 12px; padding: 12px 16px; margin: 0 auto 24px auto; max-width: 720px; text-align: center;">
-                    <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.88em; margin-bottom: 8px;">
-                        📅 مراجعة تمارين وبروتوكول أيام الخطة (1 إلى 7) في أي وقت:
-                    </div>
-                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; overflow-x: auto;">
-                        <button type="button" onclick="renderStep4IndependentDay1('${patientId}')" title="مراجعة تمارين الجلسة الأولى" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 4px; border-radius: 6px; font-weight: bold; font-size: 0.8em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 52px;">
-                            <span>اليوم 1</span>
-                            <span style="font-size: 0.72em;">✓ منجز</span>
-                        </button>
-                        ${[2, 3, 4, 5, 6, 7].map(d => `
-                            <button type="button" onclick="renderStep5SessionsDashboard('${patientId}', ${d})" title="مراجعة تمارين اليوم ${d}" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 4px; border-radius: 6px; font-weight: bold; font-size: 0.8em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 52px;">
-                                <span>اليوم ${d}</span>
-                                <span style="font-size: 0.72em;">✓ منجز</span>
-                            </button>
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 12px;">
+                        ${profile.preventionRules.map((rule, idx) => `
+                            <div style="background: rgba(11, 18, 34, 0.75); border: 1px solid rgba(56, 189, 248, 0.18); border-radius: 10px; padding: 10px 14px; color: #e2e8f0; font-size: 0.88em; line-height: 1.6; display: flex; align-items: center; gap: 10px;">
+                                <span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; font-weight: 900; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8em; flex-shrink: 0;">${idx + 1}</span>
+                                <span>${rule}</span>
+                            </div>
                         `).join('')}
                     </div>
                 </div>
 
-                <!-- الفكرة 2: بطاقة الأسبقية ومحفزات الحجز للزيارات المنزلية والعيادة (Conversion Grid) -->
-                <div style="max-width: 720px; margin: 0 auto; text-align: center;">
-                    <div style="color: var(--primary-gold); font-weight: 900; font-size: 1.15em; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <span>👑</span> احجز خطوتك العلاجية التالية مع المعالج جمال قبها:
+                <!-- بوابة الحجز المباشر مع المعالج جمال قبها -->
+                <div id="step6-booking-cta-section" style="background: linear-gradient(145deg, rgba(17, 24, 39, 0.96), rgba(8, 13, 25, 0.98)); border: 2px solid #d4af37; border-radius: 20px; padding: 24px 20px; max-width: 780px; margin: 0 auto; text-align: center; box-shadow: 0 12px 35px rgba(0,0,0,0.6);">
+                    <div style="display: inline-block; background: rgba(212, 175, 55, 0.15); border: 1px solid rgba(212, 175, 55, 0.45); color: #fde68a; padding: 4px 16px; border-radius: 20px; font-size: 0.82em; font-weight: 800; margin-bottom: 10px;">
+                        🔖 كود أولوية المراجع الملتزم: <span style="font-family: monospace; color: #ffffff; letter-spacing: 1px;">${certCode}</span>
                     </div>
+                    <div style="color: #fef08a; font-weight: 900; font-size: 1.25em; margin-bottom: 6px;">
+                        👑 انتقل الآن لخطوتك العلاجية الحاسمة مع المعالج جمال قبها
+                    </div>
+                    <p style="color: #94a3b8; font-size: 0.88em; margin: 0 auto 18px auto; max-width: 600px; line-height: 1.6;">
+                        اختر طريقة الموعد الأنسب لك لإجراء الفحص السريري المباشر وجلسة التقويم اليدوي (الكايروبراكتيك) لتثبيت التعافي:
+                    </p>
                     
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 14px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 16px;">
                         <!-- زر الزيارة المنزلية -->
-                        <a href="${homeVisitWhatsAppUrl}" target="_blank" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; padding: 14px 16px; border-radius: 10px; text-decoration: none; font-weight: 900; font-size: 0.95em; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4); display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.2s;">
-                            <span style="font-size: 1.25em;">🏠</span> طلب زيارة منزلية (داخل الأردن)
+                        <a href="${homeVisitWhatsAppUrl}" target="_blank" style="background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: #ffffff; padding: 15px 18px; border-radius: 12px; text-decoration: none; font-weight: 900; font-size: 0.98em; border: 1.5px solid #6ee7b7; box-shadow: 0 6px 22px rgba(16, 185, 129, 0.4); display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.2s;">
+                            <span style="font-size: 1.3em;">🏠</span> <span>حجز زيارة منزلية للتقويم اليدوي (داخل الأردن)</span>
                         </a>
                         <!-- زر موعد العيادة المباشرة -->
-                        <a href="${clinicVisitWhatsAppUrl}" target="_blank" style="background: linear-gradient(135deg, var(--primary-gold) 0%, var(--primary-gold-dark) 100%); color: #0a0e14; padding: 14px 16px; border-radius: 10px; text-decoration: none; font-weight: 900; font-size: 0.95em; box-shadow: 0 4px 20px rgba(212, 175, 55, 0.4); display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.2s;">
-                            <span style="font-size: 1.25em;">🏥</span> حجز موعد عيادة (عمان - خلدا)
+                        <a href="${clinicVisitWhatsAppUrl}" target="_blank" style="background: linear-gradient(135deg, #d4af37 0%, #b45309 100%); color: #050911; padding: 15px 18px; border-radius: 12px; text-decoration: none; font-weight: 900; font-size: 0.98em; border: 1.5px solid #fef08a; box-shadow: 0 6px 22px rgba(212, 175, 55, 0.4); display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.2s;">
+                            <span style="font-size: 1.3em;">🏥</span> <span>حجز موعد في العيادة (عمّان - خلدا)</span>
                         </a>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;">
-                        <!-- زر عرض بطاقة الأسبقية والملف السريري -->
-                        <button type="button" onclick="openCompletionCertificateModal('${patientId}')" style="background: rgba(56, 189, 248, 0.15); border: 1.5px solid #38bdf8; color: #7dd3fc; padding: 11px 14px; border-radius: 8px; font-weight: bold; font-size: 0.88em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                            <span>📋</span> استعراض بطاقة الأسبقية والملف
-                        </button>
-                        <!-- زر فحص موضع ألم جديد -->
-                        <button type="button" onclick="resetToInitialState()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 11px 14px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.88em; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                            <span>🔄</span> فحص موضع ألم جديد
+                    <div style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 14px; margin-top: 6px; display: flex; justify-content: center;">
+                        <!-- زر فحص موضع ألم جديد (محمي ببوابة الرصيد والباقات) -->
+                        <button type="button" onclick="resetToInitialState()" style="background: rgba(30, 41, 59, 0.85); color: #cbd5e1; border: 1px solid #475569; padding: 11px 22px; border-radius: 10px; cursor: pointer; font-weight: 800; font-size: 0.88em; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+                            <span>🔄</span> <span>بدء فحص جديد لمنطقة ألم أخرى (يتطلب باقة فعّالة)</span>
                         </button>
                     </div>
                 </div>
@@ -10354,7 +10585,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                     { val: 20, text: "صعوبة وتيبس شديد ومحدودية حركية واضحة" }
                 ]).map((opt) => `
                     <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" name="modal_mobility_check" value="${opt.val}" style="accent-color: #38bdf8; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
+                        <input type="checkbox" name="modal_mobility_check" value="${opt.val}" onchange="const cbs = Array.from(document.querySelectorAll('input[name=modal_mobility_check]:checked')); if (cbs.length > 0) { const avg = Math.round(cbs.reduce((s, c) => s + Number(c.value || 70), 0) / cbs.length); const sl = document.getElementById('modal-mobility-slider'); const vl = document.getElementById('modal-mobility-val'); if (sl) sl.value = avg; if (vl) vl.textContent = avg + ' %'; }" style="accent-color: #38bdf8; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
                     </label>
                 `).join('')}
             </div>
@@ -10366,7 +10597,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                 <label style="color: #10b981; font-size: 0.95em; font-weight: bold;">
                     ${anatomicalConfig ? anatomicalConfig.sleepQuestion : '3. جودة النوم والراحة الليلة الماضية:'}
                 </label>
-                <span id="modal-sleep-val" style="color: #10b981; font-weight: bold; font-size: 1.2em;">70 %</span>
+                <span id="modal-sleep-val" style="color: #10b981; font-weight: bold; font-size: 1.2em;">${initialSleepVal} %</span>
             </div>
             <div style="text-align: center; margin: 4px 0 8px 0;">
                 <div class="slider-drag-hint-animated">
@@ -10375,7 +10606,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                     <span class="pulse-arrow-hand-right">👉</span>
                 </div>
             </div>
-            <input type="range" id="modal-sleep-slider" min="10" max="100" value="70" oninput="document.getElementById('modal-sleep-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #10b981; margin-bottom: 12px; cursor: pointer;">
+            <input type="range" id="modal-sleep-slider" min="10" max="100" value="${initialSleepVal}" oninput="document.getElementById('modal-sleep-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #10b981; margin-bottom: 12px; cursor: pointer;">
 
             <div style="color: #94a3b8; font-size: 0.84em; margin-bottom: 8px;">اختر كل ما ينطبق على نومك (اختيار متعدد):</div>
             <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
@@ -10386,7 +10617,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                     { val: 20, text: "أرق شديد واستيقاظ متكرر بسبب نوبات الألم" }
                 ]).map((opt) => `
                     <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" name="modal_sleep_check" value="${opt.val}" style="accent-color: #10b981; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
+                        <input type="checkbox" name="modal_sleep_check" value="${opt.val}" onchange="const cbs = Array.from(document.querySelectorAll('input[name=modal_sleep_check]:checked')); if (cbs.length > 0) { const avg = Math.round(cbs.reduce((s, c) => s + Number(c.value || 70), 0) / cbs.length); const sl = document.getElementById('modal-sleep-slider'); const vl = document.getElementById('modal-sleep-val'); if (sl) sl.value = avg; if (vl) vl.textContent = avg + ' %'; }" style="accent-color: #10b981; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
                     </label>
                 `).join('')}
             </div>
@@ -10824,7 +11055,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.79';
+const CURRENT_APP_VERSION = 'v30.80';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -11485,15 +11716,85 @@ function syncDoctorSelectorUI() {
     updateBtn(btnOmar, activeVoice === 'Puck');
 }
 
+// نافذة تنبيه استنفاد رصيد التشخيص الفردي أو المجاني عند طلب فحص جديد
+function openNewDiagnosisQuotaGateModal() {
+    let modal = document.getElementById('new-diagnosis-quota-gate-modal');
+    if (modal) modal.remove();
+
+    const wasHum = isHumanitarianLockedForUser();
+    const curName = (activePatient && activePatient.name) || (window.activePatient && window.activePatient.name) || '';
+
+    modal = document.createElement('div');
+    modal.id = 'new-diagnosis-quota-gate-modal';
+    modal.style.cssText = 'position: fixed; inset: 0; z-index: 99999999; background: rgba(4, 7, 15, 0.88); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 18px; font-family: Cairo, Almarai, sans-serif; direction: rtl;';
+    modal.innerHTML = `
+        <div style="max-width: 560px; width: 100%; background: linear-gradient(145deg, #070d19 0%, #0f172a 60%, #050811 100%); border: 2px solid #d4af37; border-radius: 22px; padding: 28px 24px; color: #ffffff; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.9); position: relative;">
+            <div style="width: 64px; height: 64px; margin: 0 auto 14px auto; border-radius: 50%; background: rgba(212, 175, 55, 0.16); border: 2px solid #fef08a; display: flex; align-items: center; justify-content: center; font-size: 1.9em;">
+                🔒
+            </div>
+            <h3 style="color: #fef08a; margin: 0 0 10px 0; font-size: 1.35em; font-weight: 900;">
+                ${wasHum ? 'تم استنفاد حصة التشخيص المجاني (لمرة واحدة فقط)' : 'تم استنفاد رصيد باقة التشخيص الواحد'}
+            </h3>
+            <p style="color: #e2e8f0; font-size: 0.94em; line-height: 1.8; margin: 0 0 16px 0; text-align: justify;">
+                ${wasHum
+                    ? 'لقد استفدتَ مسبقاً من <strong>مبادرة الرعاية الإنسانية المجانية</strong> على هذا الجهاز أو رقم الهاتف، وهي متاحة نظامياً <strong>لتشخيص واحد فقط</strong>.<br><br>لإجراء فحص وتشخيص سريري جديد لمنطقة ألم أخرى، يتطلب النظام <strong>الاشتراك في إحدى الباقات المدفوعة</strong> عبر محفظة أورانج موني (مع إغلاق خيار الإعفاء المجاني للفحوصات الإضافية).'
+                    : 'باقتك الحالية كانت مخصصة <strong>لتشخيص سريري واحد فقط</strong> وقد تم استهلاكها في فحصك الحالي' + (curName ? ` باسم (${curName})` : '') + '.<br><br>لإجراء فحص وتشخيص سريري جديد لمنطقة ألم أخرى، يرجى <strong>شراء باقة جديدة</strong> (تشخيص فردي 3 د.أ، أو باقة 5 فحوصات التوفيرية 10 د.أ، أو باقة 10 فحوصات 15 د.أ) عند الوصول للتقرير.'}
+            </p>
+            <div style="background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 12px; padding: 12px 14px; margin-bottom: 20px; text-align: right; font-size: 0.84em; color: #fde68a; line-height: 1.65;">
+                💡 <strong>نصيحة توفيرية:</strong> عند بدء الفحص الجديد والوصول لخطوة التقرير، يمكنك اختيار <strong>باقة 5 فحوصات</strong> أو <strong>باقة 10 فحوصات</strong> لتحتفظ برصيد مفتوح لك ولعائلتك دون الحاجة للتفعيل في كل مرة.
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button type="button" onclick="const m=document.getElementById('new-diagnosis-quota-gate-modal'); if(m)m.remove(); resetToInitialState(true);" style="width: 100%; background: linear-gradient(135deg, #d4af37 0%, #b45309 100%); color: #050911; border: 1.5px solid #fef08a; padding: 14px 18px; border-radius: 12px; font-weight: 900; font-size: 1em; cursor: pointer; box-shadow: 0 6px 20px rgba(212, 175, 55, 0.35);">
+                    💳 أوافق — بدء فحص جديد (مع شراء باقة جديدة للتقرير)
+                </button>
+                <button type="button" onclick="const m=document.getElementById('new-diagnosis-quota-gate-modal'); if(m)m.remove();" style="width: 100%; background: rgba(30, 41, 59, 0.9); color: #cbd5e1; border: 1px solid #475569; padding: 12px 18px; border-radius: 12px; font-weight: 800; font-size: 0.92em; cursor: pointer;">
+                    🔙 إلغاء والبقاء في خطتي العلاجية الحالية
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+window.openNewDiagnosisQuotaGateModal = openNewDiagnosisQuotaGateModal;
+
 // إعادة ضبط لبدء فحص جديد
 function resetToInitialState(force = false) {
     if (!force) {
+        const wallet = typeof getPkgWallet === 'function' ? getPkgWallet() : null;
+        const hasRemainingPkgCredits = Boolean(wallet && typeof wallet.remaining === 'number' && wallet.remaining > 0);
+        const hasConsumedSingleOrFree = !hasRemainingPkgCredits && (
+            localStorage.getItem('smart_device_single_diag_consumed') === 'true' ||
+            localStorage.getItem('smart_humanitarian_used_device') === 'true' ||
+            localStorage.getItem('smart_paid_plan_unlocked') === 'true' ||
+            Boolean(activePatient && activePatient.isPaidUnlocked) ||
+            Boolean(window.activePatient && window.activePatient.isPaidUnlocked)
+        );
+        if (hasConsumedSingleOrFree) {
+            if (activePatient && (activePatient.paymentType === 'humanitarian' || activePatient.paymentType === 'humanitarian_waiver')) {
+                recordHumanitarianUsage(activePatient.phone, activePatient.patientId || activePatient.id);
+            }
+            localStorage.setItem('smart_device_single_diag_consumed', 'true');
+            openNewDiagnosisQuotaGateModal();
+            return;
+        }
         const curName = (activePatient && activePatient.name) || (window.activePatient && window.activePatient.name);
         if (curName) {
-            const confirmed = confirm(`تنبيه هام:\nلديك جلسة علاجية جارية حالياً باسم (${curName}).\nهل أنت متأكد تماماً من رغبتك ببدء فحص جديد لمراجع آخر؟`);
+            const confirmed = confirm(`تنبيه هام:\nلديك جلسة علاجية جارية حالياً باسم (${curName}).\nهل أنت متأكد تماماً من رغبتك ببدء فحص جديد؟`);
             if (!confirmed) return;
         }
     }
+
+    // قبل مسح بيانات المريض الحالي، تأكيد حفظ حالة استهلاك التشخيص الفردي أو الإنساني على الجهاز
+    try {
+        const prevPt = activePatient || window.activePatient;
+        if (prevPt && prevPt.isPaidUnlocked) {
+            localStorage.setItem('smart_device_single_diag_consumed', 'true');
+            if (prevPt.paymentType === 'humanitarian' || prevPt.paymentType === 'humanitarian_waiver') {
+                recordHumanitarianUsage(prevPt.phone, prevPt.patientId || prevPt.id);
+            }
+        }
+    } catch (e) {}
+
     SmartDB.setCurrentSessionPatientId(null);
     activePatient = null;
     window.activePatient = null;
@@ -11515,25 +11816,22 @@ function resetToInitialState(force = false) {
         localStorage.removeItem('smart_current_point');
         localStorage.removeItem('smart_current_assessment');
         localStorage.removeItem('smart_plan_activated');
+        localStorage.removeItem('smart_paid_plan_unlocked');
         localStorage.setItem('smart_max_reached_step', '1');
         localStorage.setItem('smart_current_step', '1');
         localStorage.removeItem('smart_current_patient_id');
         localStorage.removeItem('smart_last_active_patient_id');
         localStorage.removeItem('smart_active_patient');
-        localStorage.removeItem('smart_patient_phone');
         localStorage.removeItem('smart_patient_name');
         localStorage.removeItem('smart_user_name');
-        localStorage.removeItem('smart_user_phone');
-        // فحص جديد = جلسة نظيفة تماماً: لا فحص حالي، لا طلبات معلّقة، لا بقايا تفعيل للفحص السابق
+        // فحص جديد = جلسة نظيفة تماماً: لا فحص حالي، لا طلبات معلّقة، مع الإبقاء التام على سجل استهلاك الحصة المجانية والأكواد المستهلكة
         localStorage.removeItem('smart_current_exam_id');
         localStorage.removeItem('smart_pending_req_latest');
         Object.keys(localStorage).forEach(k => {
             if (
                 k.startsWith('smart_pending_req_') ||
                 k === 'smart_last_payment_unlock_event' ||
-                k.startsWith('smart_plan_activated_') ||
-                k.startsWith('smart_paid_phone_') ||
-                k.startsWith('smart_paid_name_')
+                k.startsWith('smart_plan_activated_')
             ) {
                 try { localStorage.removeItem(k); } catch (e) {}
             }

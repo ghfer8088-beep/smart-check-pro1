@@ -1959,7 +1959,7 @@
         tasks.push((async () => {
             if (Date.now() < ntfyRateLimitedUntil) return null;
             try {
-                // ✅ v30.79: جلب آخر 15 دقيقة فقط لمنع إعادة استيراد سجلات الاختبار القديمة التالفة
+                // ✅ v30.80: جلب آخر 15 دقيقة فقط لمنع إعادة استيراد سجلات الاختبار القديمة التالفة
                 const sinceParam = '15m';
                 const controller2 = new AbortController();
                 const timeoutId2 = setTimeout(() => controller2.abort(), 8000);
@@ -3536,36 +3536,10 @@
             ptObj.lastTimingUpdated = effectiveUpdTs;
         };
 
-        // تحديث كائن المريض النشط وقاعدة البيانات محلياً
+        // تحديث كائن المريض النشط وقاعدة البيانات محلياً (مع الحفاظ التام على سجلات ومؤشرات الجلسات الحقيقية للمريض وعدم استبدالها ببيانات وهمية)
         if (window.activePatient) {
             applyTimingToPtObj(window.activePatient);
-            if (update.isPlanCompleted) {
-                const pIdForLogs = pKey || currentPid || targetPid;
-                if (pIdForLogs) {
-                    const logs = [];
-                    for (let i = 1; i <= 7; i++) {
-                        logs.push({
-                            patientId: pIdForLogs,
-                            sessionNumber: i,
-                            day: i,
-                            painScore: Math.max(0, 7 - Math.round((i / 7) * 7)),
-                            mobilityRate: Math.min(100, 60 + Math.round((i / 7) * 40)),
-                            sleepRate: Math.min(100, 60 + Math.round((i / 7) * 40)),
-                            exercisesDone: true,
-                            goodPosture: true,
-                            walkingDone: true,
-                            heatDone: true,
-                            date: new Date(Date.now() - ((7 - i) * 86400000)).toISOString()
-                        });
-                    }
-                    window.activePatient.dailyLogs = logs;
-                    try { localStorage.setItem('smart_daily_logs_' + pIdForLogs, JSON.stringify(logs)); } catch(e) {}
-                    if (window.SmartDB && typeof window.SmartDB.saveDailyLog === 'function') {
-                        logs.forEach(l => window.SmartDB.saveDailyLog(l, { skipCloudSync: true }).catch(() => {}));
-                    }
-                }
-            }
-            try { localStorage.setItem('smart_active_patient', JSON.stringify(window.activePatient)); } catch(e) {}
+            try { safeSet('smart_active_patient', JSON.stringify(window.activePatient)); } catch(e) {}
         }
 
         // تحديث قوائم المرضى المحلية بالتزامن
@@ -3814,7 +3788,7 @@
     function handleAppVersionUpdateMessage(data) {
         if (!data || !data.version) return;
         const newVer = String(data.version).trim();
-        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.79');
+        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.80');
         const numNew = _parseVersionNumber(newVer);
         const numCur = _parseVersionNumber(curVer);
 

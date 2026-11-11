@@ -323,48 +323,71 @@ const PatientFlow = (function() {
 
         // دمج شامل وذكي لكافة سجلات الجلسات من كافة المصادر (IndexedDB, LocalStorage, الذاكرة الحية) لمنع ضياع أي جلسة منجزة
         const logMap = new Map();
-        (dailyLogs || []).forEach(l => {
-            if (l && (l.sessionNumber || l.day)) logMap.set(Number(l.sessionNumber || l.day), l);
-        });
+        const isRaghebDemo = Boolean(patient && (((patient.fullName || patient.name || '').includes('راغب')) || (patient.phone && String(patient.phone).includes('0790044458'))));
+        const isFakeSynthesizedLog = (l) => {
+            if (isRaghebDemo || !l) return false;
+            const hasRealHabits = Array.isArray(l.positiveHabitsList) || Array.isArray(l.negativeHabitsList) || Boolean(l.positiveHabitsIds) || Boolean(l.negativeHabits);
+            if (!hasRealHabits && l.goodPosture === true && l.walkingDone === true && l.heatDone === true) {
+                return true;
+            }
+            if (!hasRealHabits && Number(l.painScore) === 0 && Number(l.mobilityRate) === 100 && Number(l.sleepRate) === 100) {
+                return true;
+            }
+            return false;
+        };
 
-        if (Array.isArray(patient.dailyLogs)) {
-            patient.dailyLogs.forEach(l => {
-                if (l && (l.sessionNumber || l.day)) logMap.set(Number(l.sessionNumber || l.day), { ...(logMap.get(Number(l.sessionNumber || l.day)) || {}), ...l });
-            });
-        }
-        if (Array.isArray(patient.logs)) {
-            patient.logs.forEach(l => {
-                if (l && (l.sessionNumber || l.day)) logMap.set(Number(l.sessionNumber || l.day), { ...(logMap.get(Number(l.sessionNumber || l.day)) || {}), ...l });
-            });
-        }
+        let hadFakeLogs = false;
+        const addValidLog = (l) => {
+            if (!l || !(l.sessionNumber || l.day)) return;
+            if (isFakeSynthesizedLog(l)) {
+                hadFakeLogs = true;
+                return;
+            }
+            const sNum = Number(l.sessionNumber || l.day);
+            logMap.set(sNum, { ...(logMap.get(sNum) || {}), ...l });
+        };
+
+        (dailyLogs || []).forEach(addValidLog);
+        if (Array.isArray(patient.dailyLogs)) patient.dailyLogs.forEach(addValidLog);
+        if (Array.isArray(patient.logs)) patient.logs.forEach(addValidLog);
         if (typeof window !== 'undefined' && window.activePatient && Array.isArray(window.activePatient.dailyLogs)) {
-            window.activePatient.dailyLogs.forEach(l => {
-                if (l && (l.sessionNumber || l.day)) logMap.set(Number(l.sessionNumber || l.day), { ...(logMap.get(Number(l.sessionNumber || l.day)) || {}), ...l });
-            });
+            window.activePatient.dailyLogs.forEach(addValidLog);
         }
         try {
             const lsKey1 = 'smart_daily_logs_' + (patient.patientId || patientId);
             const ls1 = JSON.parse(localStorage.getItem(lsKey1) || '[]');
-            if (Array.isArray(ls1)) {
-                ls1.forEach(l => {
-                    if (l && (l.sessionNumber || l.day)) logMap.set(Number(l.sessionNumber || l.day), { ...(logMap.get(Number(l.sessionNumber || l.day)) || {}), ...l });
-                });
-            }
+            if (Array.isArray(ls1)) ls1.forEach(addValidLog);
         } catch(e) {}
         try {
             const rawAct = localStorage.getItem('smart_active_patient');
             if (rawAct) {
                 const parsedAct = JSON.parse(rawAct);
                 if (parsedAct && Array.isArray(parsedAct.dailyLogs)) {
-                    parsedAct.dailyLogs.forEach(l => {
-                        if (l && (l.sessionNumber || l.day)) logMap.set(Number(l.sessionNumber || l.day), { ...(logMap.get(Number(l.sessionNumber || l.day)) || {}), ...l });
-                    });
+                    parsedAct.dailyLogs.forEach(addValidLog);
                 }
             }
         } catch(e) {}
 
         dailyLogs = Array.from(logMap.values());
         dailyLogs.sort((a, b) => Number(a.sessionNumber || a.day) - Number(b.sessionNumber || b.day));
+
+        if (hadFakeLogs) {
+            try {
+                const targetPidClean = patient.patientId || patientId;
+                if (targetPidClean) {
+                    localStorage.setItem('smart_daily_logs_' + targetPidClean, JSON.stringify(dailyLogs));
+                }
+                if (patient) {
+                    patient.dailyLogs = dailyLogs;
+                    patient.logs = dailyLogs;
+                }
+                if (typeof window !== 'undefined' && window.activePatient) {
+                    window.activePatient.dailyLogs = dailyLogs;
+                    window.activePatient.logs = dailyLogs;
+                    localStorage.setItem('smart_active_patient', JSON.stringify(window.activePatient));
+                }
+            } catch (e) {}
+        }
 
         // حساب أعلى رقم جلسة تم إنجازها وتوثيقها بالفعل
         let highestCompletedSession = 0;
@@ -373,7 +396,11 @@ const PatientFlow = (function() {
             if (sNum > highestCompletedSession) highestCompletedSession = sNum;
         });
 
-        const isPlanCompleted = highestCompletedSession >= 7 || (dailyLogs && dailyLogs.length >= 7) || !!(patient.isPlanCompleted || patient.planCompleted || ((patient.fullName || patient.name || '').includes('راغب') || (patient.phone && String(patient.phone).includes('0790044458'))));
+        const isPlanCompleted = highestCompletedSession >= 7 || (dailyLogs && dailyLogs.length >= 7) || isRaghebDemo;
+        if (!isPlanCompleted && patient) {
+            patient.isPlanCompleted = false;
+            patient.planCompleted = false;
+        }
         
         let currentSessionDay = isPlanCompleted ? 7 : Math.min(7, highestCompletedSession + 1);
         if (patient) patient.currentSessionDay = currentSessionDay;
@@ -381,14 +408,18 @@ const PatientFlow = (function() {
 
         // حساب مؤشرات التحسن الثلاثة المحددة بدقة ومن مدخلات المريض الفعلية حصراً
         const latestAssessment = assessments.length > 0 ? assessments[assessments.length - 1] : null;
-        const baselinePain = (latestAssessment && typeof latestAssessment.painSeverity === 'number' && !isNaN(latestAssessment.painSeverity) && latestAssessment.painSeverity > 0)
+        const firstLogPain = (dailyLogs && dailyLogs.length > 0 && typeof dailyLogs[0].painScore === 'number' && dailyLogs[0].painScore > 0) ? dailyLogs[0].painScore : null;
+        let baselinePain = (latestAssessment && typeof latestAssessment.painSeverity === 'number' && !isNaN(latestAssessment.painSeverity) && latestAssessment.painSeverity > 0)
             ? latestAssessment.painSeverity
             : (patient && typeof patient.painLevel === 'number' && !isNaN(patient.painLevel) && patient.painLevel > 0)
                 ? patient.painLevel
-                : 10;
+                : (firstLogPain || 8);
+        if (firstLogPain && firstLogPain > baselinePain) {
+            baselinePain = firstLogPain;
+        }
 
-        // في حال اكتمال الخطة بالكامل (مثل حالة راغب علامة)، التأكد من وجود سجلات الأيام السبعة كاملة
-        if (isPlanCompleted && (!dailyLogs || dailyLogs.length < 7)) {
+        // توليد سجلات افتراضية فقط لحساب العرض التوضيحي (راغب علامة) وعدم تزوير أي إحصائيات للمرضى الحقيقيين نهائياً
+        if (isRaghebDemo && (!dailyLogs || dailyLogs.length < 7)) {
             const synthesizedLogs = [];
             const pBase = (typeof baselinePain === 'number' && baselinePain > 0) ? baselinePain : 8;
             for (let i = 1; i <= 7; i++) {
@@ -397,17 +428,14 @@ const PatientFlow = (function() {
                     synthesizedLogs.push(existing);
                 } else {
                     const factor = (i - 1) / 6;
-                    const pScore = Math.max(0, Math.round(pBase * (1 - factor)));
+                    const pScore = Math.max(1, Math.round(pBase * (1 - factor * 0.85)));
                     synthesizedLogs.push({
                         sessionNumber: i,
                         day: i,
                         painScore: pScore,
-                        mobilityRate: Math.min(100, Math.round(45 + 55 * factor)),
-                        sleepRate: Math.min(100, Math.round(55 + 45 * factor)),
+                        mobilityRate: Math.min(95, Math.round(45 + 45 * factor)),
+                        sleepRate: Math.min(95, Math.round(55 + 35 * factor)),
                         exercisesDone: true,
-                        goodPosture: true,
-                        walkingDone: true,
-                        heatDone: true,
                         date: new Date(Date.now() - (7 - i) * 86400000).toISOString()
                     });
                 }
@@ -416,19 +444,18 @@ const PatientFlow = (function() {
         }
 
         const latestLog = (dailyLogs && dailyLogs.length > 0) ? dailyLogs[dailyLogs.length - 1] : null;
-        const currentPain = latestLog && typeof latestLog.painScore === 'number' ? latestLog.painScore : (isPlanCompleted ? 0 : (baselinePain || 0));
+        const currentPain = (latestLog && typeof latestLog.painScore === 'number') ? latestLog.painScore : (baselinePain || 7);
 
-        // 1. مؤشر انخفاض وتلاشي الألم (محسوب مباشرة من مقارنة ألم البداية بألم آخر جلسة مسجلة)
+        // 1. مؤشر انخفاض وتلاشي الألم (محسوب بصدق 100% من مقارنة ألم البداية بألم آخر جلسة مسجلة للمريض)
         let painReductionRate = 0;
         if (dailyLogs.length > 0 && baselinePain !== null && baselinePain > 0) {
-            painReductionRate = Math.max(0, Math.min(100, Math.round(((baselinePain - currentPain) / baselinePain) * 100)));
-            if (currentPain < baselinePain && painReductionRate === 0) {
-                painReductionRate = Math.max(10, Math.round(((baselinePain - currentPain) / baselinePain) * 100));
+            if (currentPain < baselinePain) {
+                painReductionRate = Math.max(0, Math.min(100, Math.round(((baselinePain - currentPain) / baselinePain) * 100)));
+            } else {
+                painReductionRate = 0;
             }
-        } else if (dailyLogs.length > 0 && currentPain === 0) {
-            painReductionRate = 100;
         } else {
-            painReductionRate = 0; // قبل تسجيل أي جلسة
+            painReductionRate = 0;
         }
         
         // 2. مؤشر استعادة المدى الحركي (محسوب مباشرة من مدخلات تقييم المريض في الجلسات)

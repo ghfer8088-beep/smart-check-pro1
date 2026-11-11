@@ -683,7 +683,7 @@ const SmartGuidance = (function() {
     }
 
     // -------------------------------------------------------------------------
-    // المرحلة 6: وثيقة التعافي والإنهاء
+    // المرحلة 6: بوابة الحل الجذري والانتقال للتقويم اليدوي
     // -------------------------------------------------------------------------
     function renderStep6Bar() {
         activeSubState = 'step6_ready';
@@ -696,13 +696,13 @@ const SmartGuidance = (function() {
 
         if (!btn) return;
 
-        if (iconEl) iconEl.textContent = '🏆';
-        if (subEl) subEl.textContent = 'المرحلة 6 من 6: إتمام برنامج التعافي بنجاح';
-        if (mainEl) mainEl.textContent = 'ألف مبارك إتمامك البرنامج بالكامل! حمّل وثيقتك الرسمية المعتمدة';
+        if (iconEl) iconEl.textContent = '👑';
+        if (subEl) subEl.textContent = 'المرحلة 6 من 6: إتمام برنامج التهيئة الحركية بنجاح';
+        if (mainEl) mainEl.textContent = 'أحسنت الالتزام! أنسجتك الآن مهيأة تماماً لجلسة التقويم اليدوي الجذري';
 
-        btn.className = 'sticky-guidance-action-btn state-gold';
-        if (btnIcon) btnIcon.textContent = '📜';
-        if (btnText) btnText.textContent = 'تحميل وثيقة التعافي الرسمية (PDF) ❯';
+        btn.className = 'sticky-guidance-action-btn state-emerald';
+        if (btnIcon) btnIcon.textContent = '💬';
+        if (btnText) btnText.textContent = 'تواصل مع المعالج لحجز جلستك ❯';
     }
 
     // -------------------------------------------------------------------------
@@ -948,11 +948,12 @@ const SmartGuidance = (function() {
             }
 
             case 6: {
-                const certBtn = document.querySelector('.btn-download-cert, .btn-whatsapp-consult-cert, #btn-download-certificate');
-                if (certBtn) {
-                    certBtn.click();
+                const bookingSec = document.getElementById('step6-booking-cta-section');
+                if (bookingSec) {
+                    bookingSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 } else {
-                    window.print();
+                    const waBtn = document.querySelector('#step6-completion-container a[href*="wa.me"]');
+                    if (waBtn) waBtn.click();
                 }
                 break;
             }
