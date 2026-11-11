@@ -28,11 +28,11 @@
     </script>
 
     <!-- منظومة الأمان السيبراني وحماية الملكية الفكرية وقفل النطاق -->
-    <script src="js/security-shield.js?v=30.85"></script>
-    <script src="js/system-watchdog.js?v=30.85"></script>
+    <script src="js/security-shield.js?v=30.86"></script>
+    <script src="js/system-watchdog.js?v=30.86"></script>
 
     <!-- وسوم تطبيق الويب التقدمي PWA والأيقونات الرسمية -->
-    <link rel="manifest" href="manifest.json?v=30.85">
+    <link rel="manifest" href="manifest.json?v=30.86">
     <link rel="icon" type="image/png" href="assets/logo.png">
     <link rel="shortcut icon" href="assets/logo.png">
     <link rel="apple-touch-icon" href="assets/logo.png">
@@ -44,11 +44,18 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=30.85">
+    <link rel="stylesheet" href="css/style.css?v=30.86">
     <script>
-        // التحقق من وصول أحدث إصدار وبث التحديث عالمياً لجميع الأجهزة
+        // التحقق من وصول أحدث إصدار وتطبيق المظهر المفضل فوراً لمنع وميض الشاشة
         (function() {
-            const APP_TARGET_VER = '30.70';
+            try {
+                var savedTheme = localStorage.getItem('smart_app_theme');
+                if (savedTheme === 'light') {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    document.documentElement.classList.add('theme-light');
+                }
+            } catch(e) {}
+            var APP_TARGET_VER = '30.86';
             window.APP_TARGET_VER = APP_TARGET_VER;
         })();
     </script>
@@ -149,7 +156,7 @@
                 <div class="brand-version-badge" onclick="event.stopPropagation(); if(typeof forceAppUpdateAndClearCache==='function') forceAppUpdateAndClearCache();" title="انقر لتحديث وتنشيط التطبيق فوراً" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72em; color: #94a3b8; margin-top: 1px; cursor: pointer; user-select: none;">
                     <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                     <span>الإصدار:</span>
-                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v30.85</strong>
+                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v30.86</strong>
                 </div>
             </div>
         </div>
@@ -160,6 +167,11 @@
             </button>
 
             <div class="header-actions" id="main-header-actions">
+                <!-- 0. تبديل المظهر النهاري/الليلي الطبي المريح -->
+                <button type="button" id="btn-theme-toggle" class="btn-header btn-header-unified" onclick="toggleAppTheme()" title="تبديل المظهر (نهاري طبي / ليلي هادئ)" style="border: 1px solid rgba(212, 175, 55, 0.4); color: #fef08a; background: rgba(15, 23, 42, 0.6); display: inline-flex; align-items: center; gap: 5px;">
+                    <span id="theme-toggle-icon">☀️</span> <span id="theme-toggle-text">نهاري</span>
+                </button>
+
                 <!-- 1. ملفي الطبي (أساسي مباشر) -->
                 <button type="button" id="btn-patient-portal" class="btn-header btn-header-unified" onclick="openPatientPortalModal(); closeAllHeaderMenus();" title="حسابي وسجل تقاريري الطبية" style="border: 1.5px solid var(--primary-gold); color: #fef08a; background: linear-gradient(135deg, rgba(212,175,55,0.18), rgba(15,23,42,0.85)); font-weight: bold;">
                     <span id="portal-btn-icon">📁</span> <span id="portal-btn-label">ملفي الطبي</span>
@@ -597,8 +609,8 @@
                         <!-- الرسائل ستولد هنا تلقائياً -->
                     </div>
 
-                    <!-- أزرار الإجابات السريعة المقترحة (تم إخفاؤها نهائياً لتجربة حوار طبي حر) -->
-                    <div id="ai-chat-quick-replies" style="display: none !important;"></div>
+                    <!-- أزرار الإجابات السريعة المقترحة لتسهيل الرد السريري بلمسة واحدة دون عناء الكتابة -->
+                    <div id="ai-chat-quick-replies" style="display: none; padding: 6px 4px; margin-bottom: 10px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; gap: 8px;"></div>
 
                     <!-- شريط إدخال الرسائل العادي -->
                     <div id="ai-chat-input-bar" style="background: #0f172a; border: 1.5px solid rgba(212, 175, 55, 0.35); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
@@ -1804,23 +1816,23 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=30.85"></script>
-    <script src="js/cloud-sync.js?v=30.85"></script>
-    <script src="js/geo-tracker.js?v=30.85"></script>
-    <script src="js/database.js?v=30.85"></script>
-    <script src="js/exercise-image-studio.js?v=30.85"></script>
-    <script src="js/exercises-db.js?v=30.85"></script>
-    <script src="js/diagnostic-engine.js?v=30.85"></script>
-    <script src="js/audio-pacer.js?v=30.85"></script>
-    <script src="js/patient-flow.js?v=30.85"></script>
-    <script src="js/admin-engine.js?v=30.85"></script>
-    <script src="js/ai-config.js?v=30.85"></script>
-    <script src="js/ai-engine.js?v=30.85"></script>
-    <script src="js/app.js?v=30.85"></script>
-    <script src="js/text-editor.js?v=30.85"></script>
-    <script src="js/smart-guidance.js?v=30.85"></script>
-    <script src="js/whatsapp-dispatcher.js?v=30.85"></script>
-    <script src="js/mobile-alerts.js?v=30.85"></script>
+    <script src="js/mqtt.min.js?v=30.86"></script>
+    <script src="js/cloud-sync.js?v=30.86"></script>
+    <script src="js/geo-tracker.js?v=30.86"></script>
+    <script src="js/database.js?v=30.86"></script>
+    <script src="js/exercise-image-studio.js?v=30.86"></script>
+    <script src="js/exercises-db.js?v=30.86"></script>
+    <script src="js/diagnostic-engine.js?v=30.86"></script>
+    <script src="js/audio-pacer.js?v=30.86"></script>
+    <script src="js/patient-flow.js?v=30.86"></script>
+    <script src="js/admin-engine.js?v=30.86"></script>
+    <script src="js/ai-config.js?v=30.86"></script>
+    <script src="js/ai-engine.js?v=30.86"></script>
+    <script src="js/app.js?v=30.86"></script>
+    <script src="js/text-editor.js?v=30.86"></script>
+    <script src="js/smart-guidance.js?v=30.86"></script>
+    <script src="js/whatsapp-dispatcher.js?v=30.86"></script>
+    <script src="js/mobile-alerts.js?v=30.86"></script>
 
     <script>
         // مؤشر المراجعين المتواجدين أونلاين الآن (متزامن بدقة مع السحابة ولوحة الإدارة)

@@ -11277,7 +11277,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.85';
+const CURRENT_APP_VERSION = 'v30.86';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -12902,6 +12902,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (typeof SmartCloudSync.fetchRemoteTimingUpdates === 'function') SmartCloudSync.fetchRemoteTimingUpdates();
     }
 
+
+    // تهيئة الوضع النهاري/الليلي المحفوظ
+    if (typeof initAppTheme === 'function') {
+        initAppTheme();
+    }
 
     setupPwaInstallListener();
 
@@ -14568,6 +14573,7 @@ window.submitChatRoyalVitals = function() {
             doctorReply = `أهلاً بك يا **${nameVal}**، تم توثيق مؤشراتك الحيوية بنجاح${deltaTextSnippet}.\n\nوالآن لنبدأ الاستقصاء السريري الدقيق لموضع الألم في **${ptTitle}**:\n\nما الذي تعاني منه تحديداً في **${ptTitle}**؟ وهل تشعر بألم حاد مستمر، أم تشنج وثقل يشتد مع حركات معينة أو الجلوس؟`;
         }
         appendChatMessage('bot', doctorReply);
+        renderChatQuickReplies([]);
 
         // تمكين حقل الإدخال وزر الإرسال وضبط المؤشر
         const chatInput = document.getElementById('ai-chat-input');
@@ -14628,6 +14634,7 @@ function appendChatMessage(sender, text, options = {}) {
     const senderName = isBot ? `${docIcon} ${persona.name} (${docTitle})` : userSenderLabel;
 
     const msgEl = document.createElement('div');
+    msgEl.className = isBot ? 'ai-chat-bubble ai-bubble-bot' : 'ai-chat-bubble ai-bubble-user';
     msgEl.style.cssText = `
         display: flex;
         flex-direction: column;
@@ -14692,14 +14699,120 @@ function appendChatMessage(sender, text, options = {}) {
     clinicalDialogueState.history.push({ sender, text });
 }
 
-// عرض أزرار الرد السريع (تم تعطيل الشرائح الجاهزة للحفاظ على حوار حر وطبيعي 100%)
+// عرض أزرار الرد السريع السريرية لتسهيل الإجابة بلمسة واحدة دون عناء الكتابة
 function renderChatQuickReplies(replies) {
     const container = document.getElementById('ai-chat-quick-replies');
-    if (container) {
+    if (!container) return;
+
+    let items = (Array.isArray(replies) && replies.length > 0) ? replies : [];
+
+    // إذا لم تكن هناك ردود واردة مسبقاً، نولد خيارات سريرية ذكية حسب مرحلة الحوار وموضع الألم
+    if (items.length === 0 && typeof clinicalDialogueState !== 'undefined') {
+        const step = clinicalDialogueState.step || 'initial';
+        const historyLen = (clinicalDialogueState.history || []).length;
+        const currentPt = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint : null;
+        const spec = currentPt?.specialtyType || window._specializedConsultationType;
+
+        if (spec === 'stroke') {
+            if (historyLen <= 3) {
+                items = ['الجانب الأيمن (يد وقدم)', 'الجانب الأيسر بالكامل', 'ضعف في اليد فقط', 'ضعف في الساق فقط'];
+            } else {
+                items = ['أحتاج مساعدة للمشي والوقوف', 'أمشي بمفردي ولكن بصعوبة', 'أستخدم عكاز / مشاية', 'طريح الفراش حالياً'];
+            }
+        } else if (spec === 'foot_drop') {
+            if (historyLen <= 3) {
+                items = ['في القدم اليمنى', 'في القدم اليسرى', 'في القدمين معاً'];
+            } else {
+                items = ['بدأ بعد ديسك وألم بأسفل الظهر', 'بعد عملية جراحية بالعمود الفقري', 'بعد إصابة أو التواء في الركبة', 'أتعثر كثيراً عند المشي'];
+            }
+        } else if (spec === 'scoliosis') {
+            if (historyLen <= 3) {
+                items = ['نعم، تم تشخيصي بأشعة سينية سابقة', 'لم أقم بأشعة حتى الآن', 'تفاوت واضح في ارتفاع الكتفين', 'ميلان واضح بالحوض'];
+            } else {
+                items = ['يرافقه ألم وتيبس مستمر بالظهر', 'لا يوجد ألم لكن المظهر منحرف', 'صعوبة في أخذ نفس عميق'];
+            }
+        } else {
+            // المسار السريري العام للمفاصل والغضاريف
+            if (historyLen <= 2 || step === 'clinical_questions' || step === 'initial') {
+                items = [
+                    'ألم حاد ومفاجئ يشتد بالحركة',
+                    'ألم مزمن ومستمر منذ أشهر',
+                    'تشنج وثقل وتصلب صباحي',
+                    'يزداد مع الجلوس الطويل',
+                    'ألم خفيف محتمل لكنه مزعج'
+                ];
+            } else if (historyLen <= 4) {
+                items = [
+                    'موضعي فقط ولا ينتقل لأي مكان',
+                    'يمتد وينزل إلى الفخذ أو الساق',
+                    'يمتد إلى الكتف وأطراف الأصابع',
+                    'يرافقه خدران وتنميل خفيف',
+                    'لا يوجد خدر أو تنميل نهائياً'
+                ];
+            } else if (historyLen <= 6) {
+                items = [
+                    'يزداد عند المشي أو الوقوف',
+                    'يزداد عند الانحناء وحمل الأشياء',
+                    'يخف عند الاستلقاء والراحة',
+                    'مستمر طوال اليوم حتى أثناء النوم'
+                ];
+            }
+        }
+    }
+
+    if (!items || items.length === 0) {
         container.innerHTML = '';
         container.style.display = 'none';
+        return;
+    }
+
+    container.innerHTML = items.map(text => {
+        const cleanEscaped = text.replace(/"/g, '&quot;').replace(/'/g, "\\'");
+        return `<button type="button" class="chat-quick-reply-pill" onclick="handleQuickReplyClick('${cleanEscaped}')" style="background: rgba(56, 189, 248, 0.12); border: 1.5px solid rgba(56, 189, 248, 0.4); color: #e2e8f0; padding: 7px 14px; border-radius: 20px; font-size: 0.82em; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;" onmouseover="this.style.background='rgba(56,189,248,0.25)'; this.style.borderColor='#38bdf8';" onmouseout="this.style.background='rgba(56,189,248,0.12)'; this.style.borderColor='rgba(56,189,248,0.4)';"><span>💬</span> <span>${text}</span></button>`;
+    }).join('');
+
+    container.style.display = 'flex';
+}
+
+// =========================================================================
+// إدارة وتبديل المظهر النهاري/الليلي (Medical Light / Dark Theme)
+// =========================================================================
+function initAppTheme() {
+    try {
+        const savedTheme = localStorage.getItem('smart_app_theme') || 'dark';
+        applyAppTheme(savedTheme, false);
+    } catch(e) {}
+}
+
+function toggleAppTheme() {
+    const isCurrentlyLight = document.body.classList.contains('theme-light') || document.documentElement.getAttribute('data-theme') === 'light';
+    const nextTheme = isCurrentlyLight ? 'dark' : 'light';
+    applyAppTheme(nextTheme, true);
+}
+
+function applyAppTheme(theme, showNotice = false) {
+    const iconEl = document.getElementById('theme-toggle-icon');
+    const textEl = document.getElementById('theme-toggle-text');
+
+    if (theme === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+        document.body.classList.add('theme-light');
+        try { localStorage.setItem('smart_app_theme', 'light'); } catch(e) {}
+        if (iconEl) iconEl.textContent = '🌙';
+        if (textEl) textEl.textContent = 'ليلي';
+        if (showNotice) showToast('☀️ تم تفعيل الوضع النهاري الطبي المريح', 'info');
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+        document.body.classList.remove('theme-light');
+        try { localStorage.setItem('smart_app_theme', 'dark'); } catch(e) {}
+        if (iconEl) iconEl.textContent = '☀️';
+        if (textEl) textEl.textContent = 'نهاري';
+        if (showNotice) showToast('🌙 تم تفعيل الوضع الليلي الهادئ', 'info');
     }
 }
+window.initAppTheme = initAppTheme;
+window.toggleAppTheme = toggleAppTheme;
+window.applyAppTheme = applyAppTheme;
 
 function handleQuickReplyClick(text) {
     const input = document.getElementById('ai-chat-input');

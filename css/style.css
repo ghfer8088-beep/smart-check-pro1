@@ -3393,3 +3393,182 @@ body {
   animation: adminActiveSessionPulse 1.8s infinite ease-in-out !important;
   box-shadow: 0 0 15px rgba(212, 175, 55, 0.6) !important;
 }
+
+/* =========================================================================
+   الوضع النهاري الطبي الهادئ (Medical Light Theme)
+   مصمم خصيصاً للمراجعين الذين يفضلون الإضاءة الطبية المريحة بدلاً من الوضع الليلي
+   ========================================================================= */
+html[data-theme="light"],
+body.theme-light {
+    --bg-dark-obsidian: #f4f7fb;
+    --bg-card: #ffffff;
+    --bg-card-alt: #f1f5f9;
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    --border-gold-subtle: rgba(180, 130, 20, 0.35);
+    --shadow-gold-glow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light {
+    background-color: #f4f7fb !important;
+    background-image: 
+        radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.05) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(212, 175, 55, 0.06) 0%, transparent 45%) !important;
+    color: #0f172a !important;
+}
+
+body.theme-light .app-header {
+    background: rgba(255, 255, 255, 0.96) !important;
+    border-bottom: 1.5px solid #e2e8f0 !important;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06) !important;
+}
+
+body.theme-light .brand-title {
+    color: #0f172a !important;
+}
+
+body.theme-light .brand-subtitle {
+    color: #64748b !important;
+}
+
+body.theme-light .stepper-container {
+    background: #ffffff !important;
+    border-bottom: 1.5px solid #e2e8f0 !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+}
+
+body.theme-light .stepper-node .node-label {
+    color: #64748b !important;
+}
+
+body.theme-light .stepper-node.active .node-label {
+    color: #0f172a !important;
+    font-weight: 800 !important;
+}
+
+body.theme-light .stepper-node .node-circle {
+    background: #e2e8f0 !important;
+    color: #475569 !important;
+    border-color: #cbd5e1 !important;
+}
+
+body.theme-light .stepper-node.active .node-circle {
+    background: var(--primary-gold) !important;
+    color: #0b111e !important;
+    border-color: var(--primary-gold-dark) !important;
+}
+
+body.theme-light .anatomy-form-col {
+    background: #ffffff !important;
+    border: 1.5px solid #e2e8f0 !important;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05) !important;
+}
+
+body.theme-light .step1-clean-hero h2 {
+    color: #0f172a !important;
+}
+
+body.theme-light .step1-clean-hero p {
+    color: #475569 !important;
+}
+
+body.theme-light #step-2-title {
+    color: #0f172a !important;
+}
+
+body.theme-light #ai-chat-messages-box {
+    background: #f8fafc !important;
+    border: 1.5px solid #cbd5e1 !important;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.03) !important;
+}
+
+body.theme-light #ai-chat-input-bar {
+    background: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    box-shadow: 0 4px 15px rgba(15, 23, 42, 0.06) !important;
+}
+
+body.theme-light #ai-chat-input {
+    color: #0f172a !important;
+}
+
+body.theme-light #ai-chat-input::placeholder {
+    color: #94a3b8 !important;
+}
+
+body.theme-light .ai-bubble-bot {
+    background: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    box-shadow: 0 3px 12px rgba(15, 23, 42, 0.05) !important;
+}
+
+body.theme-light .ai-bubble-bot .bot-sender-label {
+    color: #0284c7 !important;
+}
+
+body.theme-light .ai-bubble-bot div {
+    color: #1e293b !important;
+}
+
+body.theme-light .ai-bubble-bot strong {
+    color: #92400e !important;
+}
+
+body.theme-light .ai-bubble-user {
+    background: #f0fdf4 !important;
+    border: 1.5px solid #86efac !important;
+    box-shadow: 0 3px 12px rgba(16, 185, 129, 0.08) !important;
+}
+
+body.theme-light .ai-bubble-user .user-sender-label {
+    color: #15803d !important;
+}
+
+body.theme-light .ai-bubble-user div {
+    color: #064e3b !important;
+}
+
+body.theme-light .chat-quick-reply-pill {
+    background: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    color: #1e293b !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04) !important;
+}
+
+body.theme-light .chat-quick-reply-pill:hover {
+    background: #f0fdf4 !important;
+    border-color: #10b981 !important;
+    color: #065f46 !important;
+}
+
+body.theme-light #doctor-persona-selector-bar {
+    background: #ffffff !important;
+    border: 1.5px solid #e2e8f0 !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+}
+
+body.theme-light .header-more-dropdown-menu {
+    background: #ffffff !important;
+    border: 1.5px solid #e2e8f0 !important;
+    box-shadow: 0 8px 30px rgba(15, 23, 42, 0.12) !important;
+}
+
+body.theme-light .header-dropdown-item {
+    color: #1e293b !important;
+}
+
+body.theme-light .header-dropdown-item:hover {
+    background: #f8fafc !important;
+}
+
+body.theme-light .header-dropdown-item small {
+    color: #64748b !important;
+}
+
+body.theme-light .modal-content-clean,
+body.theme-light .smart-modal-box {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 1.5px solid #e2e8f0 !important;
+}
+
