@@ -525,8 +525,8 @@ ${greetingInstruction}
         const hasValidPhoneNow = (resolvedKnownPhone && String(resolvedKnownPhone).replace(/\D/g, '').length >= 7);
 
         const systemPrompt = `
-أنت الاستشاري الذكي في «وداعاً للألم».
-أنت وكيل ذكاء اصطناعي تفاعلي سريري فائق الذكاء وحيوي 100% (Clinical AI Agent)، لست آلة ولا تكرر قوالب مسبقة!
+أنتِ الدكتورة سارة (استشارية التأهيل والتقويم السريري) في «وداعاً للألم».
+أنتِ طبيبة استشارية سريرية ذكية ومتفاعلة 100%، دافئة ومطمئنة ولستِ آلة جامدة.
 ${specializedPromptSection}
 
 المراجع اختار موضع الشكوى على المجسم: [${painPointTitle || 'العمود الفقري والمفاصل'}].
@@ -1271,51 +1271,26 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
     _audioCache: {},
     _currentSessionStudioVoice: null,
 
-    // شخصيات الأطباء المعتمدة لكل نبرة صوت استوديو (الاسم الأول فقط مع صفة الاستشاري الذكي)
+    // شخصية الطبيب الاستشاري السريري المعتمدة الحصرية: د. سارة فقط
     DOCTOR_PERSONAS: {
-        'Aoede': { name: 'د. سارة', title: 'استشارية «وداعاً للألم» الذكية', gender: 'female' },
-        'Kore': { name: 'د. مريم', title: 'استشارية «وداعاً للألم» الذكية', gender: 'female' },
-        'Puck': { name: 'د. عمر', title: 'استشاري «وداعاً للألم» الذكي', gender: 'male' },
-        'Fenrir': { name: 'د. خالد', title: 'استشاري «وداعاً للألم» الذكي', gender: 'male' },
-        'Charon': { name: 'د. جمال', title: 'استشاري «وداعاً للألم» الذكي', gender: 'male' }
+        'Aoede': { name: 'د. سارة', title: 'استشارية التأهيل والتقويم السريري', gender: 'female' }
     },
 
-    // اختيار شخصية الطبيب يدوياً وبشكل فوري للجلسة
+    // د. سارة هي الطبيب الاستشاري الحصري للعيادة الذكية
     selectDoctorPersona(voiceKey) {
-        if (!this.DOCTOR_PERSONAS[voiceKey]) return this.getSessionDoctorPersona();
-        this._currentSessionStudioVoice = voiceKey;
-        try {
-            localStorage.setItem('wada3an_gemini_voice_name', voiceKey);
-            localStorage.setItem('wada3an_voice_rotation_mode', 'fixed');
-            sessionStorage.setItem('wada3an_session_doctor_voice', voiceKey);
-        } catch (e) {}
-        return this.DOCTOR_PERSONAS[voiceKey];
-    },
-
-    // الحصول على شخصية الطبيب الحالية للجلسة (الافتراضي هو د. سارة العبادي)
-    getSessionDoctorPersona() {
-        const voice = this.getStudioVoiceForSession();
-        return this.DOCTOR_PERSONAS[voice] || this.DOCTOR_PERSONAS['Aoede'];
-    },
-
-    // الحصول على صوت الاستوديو البشري وتثبيت الطبيب طوال زيارة المراجع (Session Persistence)
-    getStudioVoiceForSession() {
-        if (this._currentSessionStudioVoice && this.DOCTOR_PERSONAS[this._currentSessionStudioVoice]) {
-            return this._currentSessionStudioVoice;
-        }
-        try {
-            const savedVoice = localStorage.getItem('wada3an_gemini_voice_name') || sessionStorage.getItem('wada3an_session_doctor_voice');
-            if (savedVoice && this.DOCTOR_PERSONAS[savedVoice]) {
-                this._currentSessionStudioVoice = savedVoice;
-                return savedVoice;
-            }
-        } catch (e) {}
-        // الافتراضي الدائم والمفضل هو د. سارة (Aoede)
         this._currentSessionStudioVoice = 'Aoede';
-        try {
-            sessionStorage.setItem('wada3an_session_doctor_voice', 'Aoede');
-        } catch (e) {}
-        return this._currentSessionStudioVoice;
+        return this.DOCTOR_PERSONAS['Aoede'];
+    },
+
+    // الحصول على شخصية الطبيب الحالية للجلسة (د. سارة حصراً)
+    getSessionDoctorPersona() {
+        return this.DOCTOR_PERSONAS['Aoede'];
+    },
+
+    // نبرة الصوت المعتمدة الحصرية هي د. سارة (Aoede)
+    getStudioVoiceForSession() {
+        this._currentSessionStudioVoice = 'Aoede';
+        return 'Aoede';
     },
 
     // إظهار بطاقة التحكم الصوتي العائمة للمراجع مع اسم الطبيب وزر الإيقاف الفوري

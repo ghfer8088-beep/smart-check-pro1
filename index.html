@@ -28,11 +28,11 @@
     </script>
 
     <!-- منظومة الأمان السيبراني وحماية الملكية الفكرية وقفل النطاق -->
-    <script src="js/security-shield.js?v=30.86"></script>
-    <script src="js/system-watchdog.js?v=30.86"></script>
+    <script src="js/security-shield.js?v=30.87"></script>
+    <script src="js/system-watchdog.js?v=30.87"></script>
 
     <!-- وسوم تطبيق الويب التقدمي PWA والأيقونات الرسمية -->
-    <link rel="manifest" href="manifest.json?v=30.86">
+    <link rel="manifest" href="manifest.json?v=30.87">
     <link rel="icon" type="image/png" href="assets/logo.png">
     <link rel="shortcut icon" href="assets/logo.png">
     <link rel="apple-touch-icon" href="assets/logo.png">
@@ -44,18 +44,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=30.86">
+    <link rel="stylesheet" href="css/style.css?v=30.87">
     <script>
-        // التحقق من وصول أحدث إصدار وتطبيق المظهر المفضل فوراً لمنع وميض الشاشة
+        // التحقق من وصول أحدث إصدار وبث التحديث عالمياً لجميع الأجهزة
         (function() {
             try {
-                var savedTheme = localStorage.getItem('smart_app_theme');
-                if (savedTheme === 'light') {
-                    document.documentElement.setAttribute('data-theme', 'light');
-                    document.documentElement.classList.add('theme-light');
-                }
+                localStorage.removeItem('smart_app_theme');
             } catch(e) {}
-            var APP_TARGET_VER = '30.86';
+            var APP_TARGET_VER = '30.87';
             window.APP_TARGET_VER = APP_TARGET_VER;
         })();
     </script>
@@ -156,7 +152,7 @@
                 <div class="brand-version-badge" onclick="event.stopPropagation(); if(typeof forceAppUpdateAndClearCache==='function') forceAppUpdateAndClearCache();" title="انقر لتحديث وتنشيط التطبيق فوراً" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72em; color: #94a3b8; margin-top: 1px; cursor: pointer; user-select: none;">
                     <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                     <span>الإصدار:</span>
-                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v30.86</strong>
+                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v30.87</strong>
                 </div>
             </div>
         </div>
@@ -167,11 +163,6 @@
             </button>
 
             <div class="header-actions" id="main-header-actions">
-                <!-- 0. تبديل المظهر النهاري/الليلي الطبي المريح -->
-                <button type="button" id="btn-theme-toggle" class="btn-header btn-header-unified" onclick="toggleAppTheme()" title="تبديل المظهر (نهاري طبي / ليلي هادئ)" style="border: 1px solid rgba(212, 175, 55, 0.4); color: #fef08a; background: rgba(15, 23, 42, 0.6); display: inline-flex; align-items: center; gap: 5px;">
-                    <span id="theme-toggle-icon">☀️</span> <span id="theme-toggle-text">نهاري</span>
-                </button>
-
                 <!-- 1. ملفي الطبي (أساسي مباشر) -->
                 <button type="button" id="btn-patient-portal" class="btn-header btn-header-unified" onclick="openPatientPortalModal(); closeAllHeaderMenus();" title="حسابي وسجل تقاريري الطبية" style="border: 1.5px solid var(--primary-gold); color: #fef08a; background: linear-gradient(135deg, rgba(212,175,55,0.18), rgba(15,23,42,0.85)); font-weight: bold;">
                     <span id="portal-btn-icon">📁</span> <span id="portal-btn-label">ملفي الطبي</span>
@@ -561,47 +552,28 @@
 
 
             <div style="background: var(--bg-card); border: 1px solid var(--border-gold-subtle); border-radius: 16px; padding: 25px; box-shadow: var(--shadow-gold-glow);">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                    <div>
-                        <h2 style="color: #ffffff; margin: 0 0 4px 0; font-size: 1.35em; display: flex; align-items: center; gap: 8px;">
-                            <span>🩺</span> الاستشارة السريرية الذكية
-                        </h2>
-                        <div id="step-2-subtitle" style="color: var(--primary-gold); font-size: 0.85em;">حوار واستجواب سريري حي بالذكاء الاصطناعي لتشخيص منطقة الألم بدقة</div>
-                    </div>
-                    
-                    <!-- أزرار التبديل والرجوع للمجسم -->
-                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        <div style="background: #0b111e; padding: 3px; border-radius: 8px; border: 1px solid #334155; display: inline-flex;">
-                            <button type="button" id="btn-mode-chat" onclick="switchIntakeMode('chat')" style="background: var(--primary-gold); color: #0a0e14; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 0.82em; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                                <span>🤖</span> الطبيب الافتراضي (موصى به)
-                            </button>
-                            <button type="button" id="btn-mode-form" onclick="switchIntakeMode('form')" style="background: transparent; color: #94a3b8; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 0.82em; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                                <span>⚡</span> فحص سريع بالخيارات
-                            </button>
-                        </div>
-                        <button type="button" onclick="goToStep(1)" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.82em;">رجوع للمجسم</button>
-                    </div>
+                <div style="border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 14px; margin-bottom: 18px; text-align: center;">
+                    <h2 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.4em; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span>🩺</span> <span>الاستشارة السريرية المباشرة مع د. سارة</span>
+                    </h2>
+                    <div id="step-2-subtitle" style="color: var(--primary-gold); font-size: 0.9em; font-weight: 600;">حوار واستجواب سريري حي لتشخيص منطقة الألم بدقة ومعرفة تفاصيل حالتك</div>
                 </div>
 
                 <!-- ================= 1. واجهة الحوار السريري مع الطبيب الافتراضي (Interactive AI Chat) ================= -->
                 <div id="ai-chat-intake-container" style="display: block;">
-                    <!-- شريط اختيار الطبيب الاستشاري للجلسة (د. سارة / د. جمال / د. عمر) -->
-                    <div id="doctor-persona-selector-bar" style="display: flex; align-items: center; justify-content: space-between; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 12px; padding: 8px 14px; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <span style="font-size: 1.15em;">🩺</span>
-                            <span style="color: #94a3b8; font-size: 0.84em; font-weight: bold;">طبيبك الاستشاري للحوار:</span>
+                    <!-- هوية الطبيب الاستشاري للجلسة (د. سارة فقط) -->
+                    <div id="doctor-persona-selector-bar" style="display: flex; align-items: center; justify-content: space-between; background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(56, 189, 248, 0.4); border-radius: 12px; padding: 10px 16px; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.35em;">👩‍⚕️</span>
+                            <div>
+                                <strong style="color: #ffffff; font-size: 0.98em; display: block;">د. سارة (استشارية التأهيل والتقويم السريري)</strong>
+                                <small style="color: #38bdf8; font-size: 0.82em;">العيادة السريرية الذكية • «وداعاً للألم»</small>
+                            </div>
                         </div>
-                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                            <button type="button" id="btn-doc-sarah" onclick="selectConsultantDoctor('Aoede')" class="btn-doc-choice" style="padding: 5px 12px; border-radius: 16px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; background: rgba(56, 189, 248, 0.25); border: 1.5px solid #38bdf8; color: #ffffff; transition: all 0.2s ease;">
-                                <span>👩</span> د. سارة (استشارية التأهيل)
-                            </button>
-                            <button type="button" id="btn-doc-jamal" onclick="selectConsultantDoctor('Charon')" class="btn-doc-choice" style="padding: 5px 12px; border-radius: 16px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; background: #1e293b; border: 1.5px solid #475569; color: #94a3b8; transition: all 0.2s ease;">
-                                <span>👨</span> المعالج جمال (كايروبراكتيك)
-                            </button>
-                            <button type="button" id="btn-doc-omar" onclick="selectConsultantDoctor('Puck')" class="btn-doc-choice" style="padding: 5px 12px; border-radius: 16px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; background: #1e293b; border: 1.5px solid #475569; color: #94a3b8; transition: all 0.2s ease;">
-                                <span>👨</span> د. عمر (عظام ومفاصل)
-                            </button>
-                        </div>
+                        <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.8em; padding: 4px 12px; border-radius: 20px; font-weight: bold; display: inline-flex; align-items: center; gap: 6px;">
+                            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
+                            <span>متصلة الآن لمتابعة استشارتك</span>
+                        </span>
                     </div>
 
                     <!-- نافذة المحادثة الطبية الفاخرة -->
@@ -609,38 +581,16 @@
                         <!-- الرسائل ستولد هنا تلقائياً -->
                     </div>
 
-                    <!-- أزرار الإجابات السريعة المقترحة لتسهيل الرد السريري بلمسة واحدة دون عناء الكتابة -->
-                    <div id="ai-chat-quick-replies" style="display: none; padding: 6px 4px; margin-bottom: 10px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; gap: 8px;"></div>
-
-                    <!-- شريط إدخال الرسائل العادي -->
-                    <div id="ai-chat-input-bar" style="background: #0f172a; border: 1.5px solid rgba(212, 175, 55, 0.35); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
-                        <button type="button" id="btn-chat-mic" onclick="startVoiceNoteRecording()" title="انقر للتحدث وتسجيل رسالة صوتية للطبيب" style="background: rgba(239, 68, 68, 0.15); border: 1.5px solid #ef4444; color: #fca5a5; width: 44px; height: 44px; border-radius: 50%; font-size: 1.25em; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s ease; flex-shrink: 0;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
-                            🎙️
-                        </button>
-                        <input type="text" id="ai-chat-input" placeholder="اكتب ردك هنا، أو انقر على 🎙️ لتسجيل رسالة صوتية للطبيب..." oninput="if(typeof Wada3anAiEngine!=='undefined'&&Wada3anAiEngine.isSpeaking) Wada3anAiEngine.stopSpeaking();" onkeypress="if(event.key==='Enter') sendChatMessage()" style="flex: 1; background: transparent; border: none; color: #ffffff; font-size: 0.95em; outline: none; font-family: inherit;">
-                        <button type="button" onclick="sendChatMessage()" style="background: var(--primary-gold); color: #0a0e14; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; font-size: 0.9em; cursor: pointer; display: flex; align-items: center; gap: 6px; flex-shrink: 0; box-shadow: 0 2px 10px rgba(212, 175, 55, 0.3);">
-                            <span>إرسال</span> <span>⬅️</span>
+                    <!-- شريط إدخال الرسائل النصية الواضح والبارز والمخصص لرد المراجع بالتفصيل -->
+                    <div id="ai-chat-input-bar" style="background: #0b1324; border: 2px solid var(--primary-gold); border-radius: 14px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 6px 25px rgba(0,0,0,0.6); margin-top: 6px;">
+                        <input type="text" id="ai-chat-input" placeholder="اكتب هنا شرح حالتك وأعراضك بالتفصيل للدكتورة سارة، ثم اضغط إرسال..." onkeypress="if(event.key==='Enter') sendChatMessage()" style="flex: 1; background: transparent; border: none; color: #ffffff; font-size: 1.05em; font-weight: 500; outline: none; font-family: inherit; padding: 6px 4px;">
+                        <button type="button" id="ai-chat-send-btn" onclick="sendChatMessage()" style="background: linear-gradient(135deg, var(--primary-gold) 0%, #b8860b 100%); color: #0a0e14; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 900; font-size: 1em; cursor: pointer; display: flex; align-items: center; gap: 8px; flex-shrink: 0; box-shadow: 0 3px 15px rgba(212, 175, 55, 0.4); transition: transform 0.15s ease;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                            <span>إرسال للدكتورة سارة</span> <span>⬅️</span>
                         </button>
                     </div>
 
-                    <!-- شريط تسجيل الرسالة الصوتية الحية (Voice Note Recording Active Bar) -->
-                    <div id="ai-chat-recording-bar" style="display: none; background: rgba(239, 68, 68, 0.16); border: 2px solid #ef4444; border-radius: 12px; padding: 12px 16px; align-items: center; justify-content: space-between; gap: 10px; box-shadow: 0 0 20px rgba(239, 68, 68, 0.35);">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="width: 14px; height: 14px; border-radius: 50%; background: #ef4444; display: inline-block; box-shadow: 0 0 10px #ef4444;"></span>
-                            <span id="recording-timer-text" style="color: #ffffff; font-weight: bold; font-size: 0.92em;">0:00 - جاري الاستماع، تحدث بحرية...</span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <button type="button" onclick="cancelVoiceNoteRecording()" style="background: rgba(148, 163, 184, 0.25); border: 1px solid #64748b; color: #cbd5e1; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 0.85em; font-weight: bold;">
-                                إلغاء ✖️
-                            </button>
-                            <button type="button" onclick="stopAndSendVoiceNote()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; color: #ffffff; padding: 7px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.88em; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(16, 185, 129, 0.4);">
-                                <span>إرسال للطبيب</span> <span>✔️</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div style="font-size: 0.82em; color: #94a3b8; text-align: center; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <span>💡 للتحدث بصوتك: انقر على 🎙️ لتسجيل رسالة صوتية مباشرة يستمع إليها الطبيب</span>
+                    <div style="font-size: 0.84em; color: #94a3b8; text-align: center; margin-top: 10px; line-height: 1.6;">
+                        <span>✍️ تفضل بشرح ما تشعر به بالتفصيل (طبيعة الألم، حركته، متى بدأ، ما يزيد الألم أو يخففه) لمساعدة الدكتورة سارة في تقييمك بدقة</span>
                     </div>
                 </div>
 
@@ -1816,23 +1766,23 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=30.86"></script>
-    <script src="js/cloud-sync.js?v=30.86"></script>
-    <script src="js/geo-tracker.js?v=30.86"></script>
-    <script src="js/database.js?v=30.86"></script>
-    <script src="js/exercise-image-studio.js?v=30.86"></script>
-    <script src="js/exercises-db.js?v=30.86"></script>
-    <script src="js/diagnostic-engine.js?v=30.86"></script>
-    <script src="js/audio-pacer.js?v=30.86"></script>
-    <script src="js/patient-flow.js?v=30.86"></script>
-    <script src="js/admin-engine.js?v=30.86"></script>
-    <script src="js/ai-config.js?v=30.86"></script>
-    <script src="js/ai-engine.js?v=30.86"></script>
-    <script src="js/app.js?v=30.86"></script>
-    <script src="js/text-editor.js?v=30.86"></script>
-    <script src="js/smart-guidance.js?v=30.86"></script>
-    <script src="js/whatsapp-dispatcher.js?v=30.86"></script>
-    <script src="js/mobile-alerts.js?v=30.86"></script>
+    <script src="js/mqtt.min.js?v=30.87"></script>
+    <script src="js/cloud-sync.js?v=30.87"></script>
+    <script src="js/geo-tracker.js?v=30.87"></script>
+    <script src="js/database.js?v=30.87"></script>
+    <script src="js/exercise-image-studio.js?v=30.87"></script>
+    <script src="js/exercises-db.js?v=30.87"></script>
+    <script src="js/diagnostic-engine.js?v=30.87"></script>
+    <script src="js/audio-pacer.js?v=30.87"></script>
+    <script src="js/patient-flow.js?v=30.87"></script>
+    <script src="js/admin-engine.js?v=30.87"></script>
+    <script src="js/ai-config.js?v=30.87"></script>
+    <script src="js/ai-engine.js?v=30.87"></script>
+    <script src="js/app.js?v=30.87"></script>
+    <script src="js/text-editor.js?v=30.87"></script>
+    <script src="js/smart-guidance.js?v=30.87"></script>
+    <script src="js/whatsapp-dispatcher.js?v=30.87"></script>
+    <script src="js/mobile-alerts.js?v=30.87"></script>
 
     <script>
         // مؤشر المراجعين المتواجدين أونلاين الآن (متزامن بدقة مع السحابة ولوحة الإدارة)

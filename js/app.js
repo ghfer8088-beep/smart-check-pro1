@@ -11277,7 +11277,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.86';
+const CURRENT_APP_VERSION = 'v30.87';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -11896,47 +11896,13 @@ function skipWelcomeAudioAndUnlockPoints() {
 }
 window.skipWelcomeAudioAndUnlockPoints = skipWelcomeAudioAndUnlockPoints;
 
-// اختيار الطبيب الاستشاري المفضل للحوار (د. سارة / د. جمال / د. عمر)
+// د. سارة هي الطبيب الاستشاري الحصري للحوار السريري
 function selectConsultantDoctor(voiceKey) {
     if (typeof Wada3anAiEngine === 'undefined') return;
-    const persona = Wada3anAiEngine.selectDoctorPersona(voiceKey);
-    syncDoctorSelectorUI();
-
-    showToast(`تم اختيار ${persona.name} (${persona.title}) كطبيبك الاستشاري الحركي`, 'success');
-
-    // إيقاف أي صوت نشط فوراً وتحديث الترويسة في حال كان الحوار مفتوحاً
-    Wada3anAiEngine.stopSpeaking();
-    const docHeaderBadge = document.querySelector('.doctor-welcome-presentation-card');
-    if (docHeaderBadge) {
-        initAiClinicalChat();
-    }
+    Wada3anAiEngine.selectDoctorPersona('Aoede');
 }
 
-// مزامنة حالة أزرار اختيار الطبيب في الواجهة
-function syncDoctorSelectorUI() {
-    if (typeof Wada3anAiEngine === 'undefined') return;
-    const activeVoice = Wada3anAiEngine.getStudioVoiceForSession();
-    const btnSarah = document.getElementById('btn-doc-sarah');
-    const btnJamal = document.getElementById('btn-doc-jamal');
-    const btnOmar = document.getElementById('btn-doc-omar');
-
-    const updateBtn = (btn, isAct) => {
-        if (!btn) return;
-        if (isAct) {
-            btn.style.background = 'rgba(56, 189, 248, 0.25)';
-            btn.style.borderColor = '#38bdf8';
-            btn.style.color = '#ffffff';
-        } else {
-            btn.style.background = '#1e293b';
-            btn.style.borderColor = '#475569';
-            btn.style.color = '#94a3b8';
-        }
-    };
-
-    updateBtn(btnSarah, activeVoice === 'Aoede');
-    updateBtn(btnJamal, activeVoice === 'Charon');
-    updateBtn(btnOmar, activeVoice === 'Puck');
-}
+function syncDoctorSelectorUI() {}
 
 // نافذة تنبيه استنفاد رصيد التشخيص الفردي أو المجاني عند طلب فحص جديد
 function openNewDiagnosisQuotaGateModal() {
@@ -12903,10 +12869,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
 
-    // تهيئة الوضع النهاري/الليلي المحفوظ
-    if (typeof initAppTheme === 'function') {
-        initAppTheme();
-    }
+    // تهيئة إعدادات المراجع
+    try { localStorage.removeItem('smart_app_theme'); } catch(e) {}
 
     setupPwaInstallListener();
 
@@ -14071,7 +14035,8 @@ async function initAiClinicalChat() {
         Wada3anAiEngine.stopSpeaking();
     }
 
-    const persona = (typeof Wada3anAiEngine !== 'undefined') ? Wada3anAiEngine.getSessionDoctorPersona() : { name: 'د. سارة العبادي', title: 'استشارية التقويم السريري' };
+    // د. سارة هي الطبيب الاستشاري السريري الحصري للجلسة
+    const persona = { name: 'د. سارة', title: 'استشارية التأهيل والتقويم السريري', gender: 'female' };
     const ptTitle = currentSelectedPoint.title || 'العمود الفقري والمفاصل';
     const specType = (currentSelectedPoint && currentSelectedPoint.specialtyType) ? currentSelectedPoint.specialtyType : null;
     window._specializedConsultationType = specType;
@@ -14223,17 +14188,17 @@ async function initAiClinicalChat() {
                     </div>
                     <div>
                         <div style="color: #ffffff; font-weight: 800; font-size: 1em; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                            <span>الاستشاري السريري الذكي</span>
-                            <span style="color: #10b981; font-size: 0.82em; background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; padding: 2px 10px; border-radius: 10px; font-weight: bold;">🟢 متصل الآن .. ${persona.name}</span>
+                            <span>الاستشارية السريرية</span>
+                            <span style="color: #10b981; font-size: 0.82em; background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; padding: 2px 10px; border-radius: 10px; font-weight: bold;">🟢 متصلة الآن .. د. سارة</span>
                         </div>
-                        <div style="color: var(--primary-gold); font-size: 0.83em; margin-top: 2px;">${persona.title} • «وداعاً للألم» للكايروبراكتيك</div>
+                        <div style="color: var(--primary-gold); font-size: 0.83em; margin-top: 2px;">استشارية التأهيل والتقويم السريري • «وداعاً للألم»</div>
                     </div>
                 </div>
                 <div style="color: #cbd5e1; font-size: 0.8em; background: rgba(15, 23, 42, 0.8); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(212, 175, 55, 0.3); display: flex; align-items: center; gap: 6px;">
                     <span>🔒</span> استشارة سريرية خاصة وآمنة 100%
                 </div>
                 <div style="background: rgba(234, 179, 8, 0.12); border: 1px solid rgba(234, 179, 8, 0.4); border-radius: 8px; padding: 8px 12px; margin-top: 10px; color: #fef08a; font-size: 0.82em; line-height: 1.5; width: 100%; box-sizing: border-box; text-align: right;">
-                    ⚠️ <strong>تنبيه دقة التشخيص:</strong> يرجى الإجابة بدقة وأمانة على أسئلة الطبيب لتشخيص ميكانيكية ألمك بدقة متناهية وتحديد الخطة العلاجية والتمارين الآمنة لحالتك تماماً.
+                    ⚠️ <strong>تنبيه دقة التشخيص:</strong> يرجى الإجابة بدقة وأمانة على أسئلة الدكتورة سارة لتشخيص ميكانيكية ألمك بدقة متناهية وتحديد الخطة العلاجية والتمارين الآمنة لحالتك تماماً.
                 </div>
             </div>
         `;
@@ -14247,10 +14212,9 @@ async function initAiClinicalChat() {
         }
         renderChatQuickReplies([]);
 
-        // تشغيل التسجيل البشري الاستوديو الفوري للترحيب (د. سارة / د. جمال)
+        // تشغيل التسجيل البشري الاستوديو الفوري للترحيب بصوت د. سارة دائماً
         if (typeof Wada3anAiEngine !== 'undefined') {
-            const personaName = (persona && persona.gender === 'male') ? 'jamal' : 'sarah';
-            const welcomeAudioFile = `assets/audio/station_chat_welcome_${personaName}.mp3`;
+            const welcomeAudioFile = `assets/audio/station_chat_welcome_sarah.mp3`;
             Wada3anAiEngine.playHumanAudio(welcomeAudioFile);
         }
 
@@ -14623,15 +14587,14 @@ function appendChatMessage(sender, text, options = {}) {
         SmartGuidance.hideAiTyping();
     }
 
-    const persona = (typeof Wada3anAiEngine !== 'undefined') ? Wada3anAiEngine.getSessionDoctorPersona() : { name: 'د. عمر', gender: 'male' };
-    const docIcon = persona.gender === 'female' ? '👩‍⚕️' : '👨‍⚕️';
-    const docTitle = persona.gender === 'female' ? 'استشارية «وداعاً للألم» الذكية' : 'استشاري «وداعاً للألم» الذكي';
+    const docIcon = '👩‍⚕️';
+    const docTitle = 'استشارية التأهيل والتقويم السريري';
 
     // إظهار اسم المستخدم الحقيقي عند التعرف عليه بدلاً من "أنت (المراجع)"
     const patientName = (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState.patientName) ? clinicalDialogueState.patientName : null;
     const userSenderLabel = patientName ? `👤 ${patientName}` : '👤 أنت (المراجع)';
 
-    const senderName = isBot ? `${docIcon} ${persona.name} (${docTitle})` : userSenderLabel;
+    const senderName = isBot ? `${docIcon} د. سارة (${docTitle})` : userSenderLabel;
 
     const msgEl = document.createElement('div');
     msgEl.className = isBot ? 'ai-chat-bubble ai-bubble-bot' : 'ai-chat-bubble ai-bubble-user';
@@ -14699,120 +14662,14 @@ function appendChatMessage(sender, text, options = {}) {
     clinicalDialogueState.history.push({ sender, text });
 }
 
-// عرض أزرار الرد السريع السريرية لتسهيل الإجابة بلمسة واحدة دون عناء الكتابة
+// إلغاء الردود الافتراضية لمنح المريض كامل الحرية في شرح حالته بالتفصيل دون قيود
 function renderChatQuickReplies(replies) {
     const container = document.getElementById('ai-chat-quick-replies');
-    if (!container) return;
-
-    let items = (Array.isArray(replies) && replies.length > 0) ? replies : [];
-
-    // إذا لم تكن هناك ردود واردة مسبقاً، نولد خيارات سريرية ذكية حسب مرحلة الحوار وموضع الألم
-    if (items.length === 0 && typeof clinicalDialogueState !== 'undefined') {
-        const step = clinicalDialogueState.step || 'initial';
-        const historyLen = (clinicalDialogueState.history || []).length;
-        const currentPt = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint : null;
-        const spec = currentPt?.specialtyType || window._specializedConsultationType;
-
-        if (spec === 'stroke') {
-            if (historyLen <= 3) {
-                items = ['الجانب الأيمن (يد وقدم)', 'الجانب الأيسر بالكامل', 'ضعف في اليد فقط', 'ضعف في الساق فقط'];
-            } else {
-                items = ['أحتاج مساعدة للمشي والوقوف', 'أمشي بمفردي ولكن بصعوبة', 'أستخدم عكاز / مشاية', 'طريح الفراش حالياً'];
-            }
-        } else if (spec === 'foot_drop') {
-            if (historyLen <= 3) {
-                items = ['في القدم اليمنى', 'في القدم اليسرى', 'في القدمين معاً'];
-            } else {
-                items = ['بدأ بعد ديسك وألم بأسفل الظهر', 'بعد عملية جراحية بالعمود الفقري', 'بعد إصابة أو التواء في الركبة', 'أتعثر كثيراً عند المشي'];
-            }
-        } else if (spec === 'scoliosis') {
-            if (historyLen <= 3) {
-                items = ['نعم، تم تشخيصي بأشعة سينية سابقة', 'لم أقم بأشعة حتى الآن', 'تفاوت واضح في ارتفاع الكتفين', 'ميلان واضح بالحوض'];
-            } else {
-                items = ['يرافقه ألم وتيبس مستمر بالظهر', 'لا يوجد ألم لكن المظهر منحرف', 'صعوبة في أخذ نفس عميق'];
-            }
-        } else {
-            // المسار السريري العام للمفاصل والغضاريف
-            if (historyLen <= 2 || step === 'clinical_questions' || step === 'initial') {
-                items = [
-                    'ألم حاد ومفاجئ يشتد بالحركة',
-                    'ألم مزمن ومستمر منذ أشهر',
-                    'تشنج وثقل وتصلب صباحي',
-                    'يزداد مع الجلوس الطويل',
-                    'ألم خفيف محتمل لكنه مزعج'
-                ];
-            } else if (historyLen <= 4) {
-                items = [
-                    'موضعي فقط ولا ينتقل لأي مكان',
-                    'يمتد وينزل إلى الفخذ أو الساق',
-                    'يمتد إلى الكتف وأطراف الأصابع',
-                    'يرافقه خدران وتنميل خفيف',
-                    'لا يوجد خدر أو تنميل نهائياً'
-                ];
-            } else if (historyLen <= 6) {
-                items = [
-                    'يزداد عند المشي أو الوقوف',
-                    'يزداد عند الانحناء وحمل الأشياء',
-                    'يخف عند الاستلقاء والراحة',
-                    'مستمر طوال اليوم حتى أثناء النوم'
-                ];
-            }
-        }
-    }
-
-    if (!items || items.length === 0) {
+    if (container) {
         container.innerHTML = '';
         container.style.display = 'none';
-        return;
-    }
-
-    container.innerHTML = items.map(text => {
-        const cleanEscaped = text.replace(/"/g, '&quot;').replace(/'/g, "\\'");
-        return `<button type="button" class="chat-quick-reply-pill" onclick="handleQuickReplyClick('${cleanEscaped}')" style="background: rgba(56, 189, 248, 0.12); border: 1.5px solid rgba(56, 189, 248, 0.4); color: #e2e8f0; padding: 7px 14px; border-radius: 20px; font-size: 0.82em; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;" onmouseover="this.style.background='rgba(56,189,248,0.25)'; this.style.borderColor='#38bdf8';" onmouseout="this.style.background='rgba(56,189,248,0.12)'; this.style.borderColor='rgba(56,189,248,0.4)';"><span>💬</span> <span>${text}</span></button>`;
-    }).join('');
-
-    container.style.display = 'flex';
-}
-
-// =========================================================================
-// إدارة وتبديل المظهر النهاري/الليلي (Medical Light / Dark Theme)
-// =========================================================================
-function initAppTheme() {
-    try {
-        const savedTheme = localStorage.getItem('smart_app_theme') || 'dark';
-        applyAppTheme(savedTheme, false);
-    } catch(e) {}
-}
-
-function toggleAppTheme() {
-    const isCurrentlyLight = document.body.classList.contains('theme-light') || document.documentElement.getAttribute('data-theme') === 'light';
-    const nextTheme = isCurrentlyLight ? 'dark' : 'light';
-    applyAppTheme(nextTheme, true);
-}
-
-function applyAppTheme(theme, showNotice = false) {
-    const iconEl = document.getElementById('theme-toggle-icon');
-    const textEl = document.getElementById('theme-toggle-text');
-
-    if (theme === 'light') {
-        document.documentElement.setAttribute('data-theme', 'light');
-        document.body.classList.add('theme-light');
-        try { localStorage.setItem('smart_app_theme', 'light'); } catch(e) {}
-        if (iconEl) iconEl.textContent = '🌙';
-        if (textEl) textEl.textContent = 'ليلي';
-        if (showNotice) showToast('☀️ تم تفعيل الوضع النهاري الطبي المريح', 'info');
-    } else {
-        document.documentElement.removeAttribute('data-theme');
-        document.body.classList.remove('theme-light');
-        try { localStorage.setItem('smart_app_theme', 'dark'); } catch(e) {}
-        if (iconEl) iconEl.textContent = '☀️';
-        if (textEl) textEl.textContent = 'نهاري';
-        if (showNotice) showToast('🌙 تم تفعيل الوضع الليلي الهادئ', 'info');
     }
 }
-window.initAppTheme = initAppTheme;
-window.toggleAppTheme = toggleAppTheme;
-window.applyAppTheme = applyAppTheme;
 
 function handleQuickReplyClick(text) {
     const input = document.getElementById('ai-chat-input');
