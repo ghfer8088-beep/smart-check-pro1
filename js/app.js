@@ -2106,6 +2106,14 @@ async function runDiagnosticAnalysis() {
             deviceLabel: currentDevInfo.label || currentDevInfo.type,
             isRegistered: !!(authPatientData && authPatientData.isRegistered),
             accountPin: (authPatientData && authPatientData.accountPin) || '',
+            dailyLogs: [],
+            logs: [],
+            completedSessions: 0,
+            logsCount: 0,
+            isPlanCompleted: false,
+            planCompleted: false,
+            currentSessionDay: 1,
+            examId: newExamId,
             createdAt: new Date().toISOString(),
             lastUpdated: new Date().toISOString()
         };
@@ -6172,7 +6180,7 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
 }
 
 // =========================================================================
-// دوال إدارة النوافذ المنبثقة الاحترافية لباقات الاشتراك وتأكيد الدفع (v30.94)
+// دوال إدارة النوافذ المنبثقة الاحترافية لباقات الاشتراك وتأكيد الدفع (v30.95)
 // =========================================================================
 function openSubscriptionTiersModal() {
     const modal = document.getElementById('subscription-tiers-modal');
@@ -11077,7 +11085,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.94';
+const CURRENT_APP_VERSION = 'v30.95';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -11831,6 +11839,42 @@ function resetToInitialState(force = false) {
             if (prevPt.paymentType === 'humanitarian' || prevPt.paymentType === 'humanitarian_waiver') {
                 recordHumanitarianUsage(prevPt.phone, prevPt.patientId || prevPt.id);
             }
+        }
+    } catch (e) {}
+
+    // أرشفة الخطة السابقة وتنظيف مسار الجلسات لضمان بداية نظيفة تماماً في الفحص الجديد
+    try {
+        const targetResetPid = activePatient?.patientId || activePatient?.id || localStorage.getItem('smart_current_patient_id') || '';
+        if (targetResetPid) {
+            const prevLogs = JSON.parse(localStorage.getItem('smart_daily_logs_' + targetResetPid) || '[]');
+            if (prevLogs.length > 0) {
+                const archiveKey = 'smart_archived_plan_' + targetResetPid + '_' + Date.now();
+                localStorage.setItem(archiveKey, JSON.stringify({
+                    patientId: targetResetPid,
+                    patientName: activePatient?.name || '',
+                    archivedAt: new Date().toISOString(),
+                    dailyLogs: prevLogs
+                }));
+            }
+            localStorage.removeItem('smart_daily_logs_' + targetResetPid);
+            localStorage.removeItem('smart_plan_completed_' + targetResetPid);
+            localStorage.removeItem('smart_plan_activated_' + targetResetPid);
+            localStorage.removeItem('force_unlock_' + targetResetPid);
+            localStorage.removeItem('custom_target_time_' + targetResetPid);
+            localStorage.removeItem('targeted_session_' + targetResetPid);
+            for (let s = 1; s <= 7; s++) {
+                localStorage.removeItem(`custom_target_time_${targetResetPid}_${s}`);
+                localStorage.removeItem(`custom_total_duration_${targetResetPid}_${s}`);
+                localStorage.removeItem(`force_unlock_${targetResetPid}_${s}`);
+            }
+        }
+        localStorage.removeItem('force_unlock_global');
+        localStorage.removeItem('custom_target_time_global');
+        localStorage.removeItem('targeted_session_global');
+        for (let s = 1; s <= 7; s++) {
+            localStorage.removeItem(`custom_target_time_global_${s}`);
+            localStorage.removeItem(`custom_total_duration_global_${s}`);
+            localStorage.removeItem(`force_unlock_global_${s}`);
         }
     } catch (e) {}
 

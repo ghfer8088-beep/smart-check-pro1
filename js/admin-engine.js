@@ -140,12 +140,15 @@ const AdminEngine = (function() {
                         } catch(e) {}
                     }
                 }
-                // فحص المريض النشط الحالي إن وجد
+                // فحص المريض النشط الحالي إن وجد مع تفضيل حالته الحية النشطة
                 try {
                     const activeP = JSON.parse(localStorage.getItem('smart_active_patient') || 'null');
                     if (activeP) {
                         const actId = activeP.patientId || activeP.id;
-                        if (actId && !rawPatients.some(rp => (rp.patientId === actId || rp.id === actId))) {
+                        const existingIdx = rawPatients.findIndex(rp => (rp.patientId === actId || rp.id === actId));
+                        if (existingIdx >= 0) {
+                            rawPatients[existingIdx] = { ...rawPatients[existingIdx], ...activeP };
+                        } else {
                             rawPatients.unshift(activeP);
                         }
                     }
@@ -480,20 +483,93 @@ const AdminEngine = (function() {
                 }
             }
 
-            // 4. دمج كل مجموعة إلى سجل استشارة موحد وخالي من التكرار مع إعطاء الأولوية للسجل الأكثر تفاعلاً وإنجازاً
+            // 4. دمج كل مجموعة إلى سجل استشارة موحد وخالي من التكرار مع دعم دقيق لدورات الفحص الجديد
             const unifiedPatients = [];
             for (const [key, records] of groups.entries()) {
-                // ترتيب السجلات في المجموعة: السجل الأكثر إنجازاً وتفاعلاً يظهر أولاً
-                records.sort((a, b) => {
+                const _getRecordTime = (r) => {
+                    const candidate = r.lastActiveAt || r.lastUpdated || r.createdAt || r.timestamp || r.date;
+                    const ms = candidate ? new Date(candidate).getTime() : 0;
+                    return !isNaN(ms) ? ms : 0;
+                };
+
+                // التحقق الذكي: هل لدى المراجع دورة فحص جديد بعد إتمام خطة سابقة؟
+                let completedRecord = null;
+                let latestSessionNotif = null;
+
+                for (const r of records) {
+                    const isDonePlan = Boolean(
+                        r.isPlanCompleted || 
+                        r.planCompleted || 
+                        (Array.isArray(r.dailyLogs) && r.dailyLogs.length >= 7) ||
+                        r.completedSessions >= 7
+                    );
+                    if (isDonePlan && !completedRecord) {
+                        completedRecord = r;
+                    }
+                    if (r._fromNotif && (r.type === 'session_done' || r.type === 'session_completed' || (r.title && r.title.includes('الجلسة')))) {
+                        if (!latestSessionNotif || _getRecordTime(r) > _getRecordTime(latestSessionNotif)) {
+                            latestSessionNotif = r;
+                        }
+                    }
+                }
+
+                const tComp = completedRecord ? _getRecordTime(completedRecord) : 0;
+                const hasRecentSessionNotifAfterComp = latestSessionNotif && (!completedRecord || _getRecordTime(latestSessionNotif) >= (tComp - 3600000));
+
+                let liveActivePatientForGroup = null;
+                try {
+                    const actPt = JSON.parse(localStorage.getItem('smart_active_patient') || 'null');
+                    if (actPt) {
+                        const actName = normalizePatientName(actPt.fullName || actPt.name || '');
+                        const actPhone = (actPt.phone || '').replace(/\D/g, '');
+                        if ((actName && key === 'pt_nm_' + actName) || (actPhone && key.includes(actPhone.slice(-7)))) {
+                            liveActivePatientForGroup = actPt;
+                        }
+                    }
+                } catch(e) {}
+
+                // المراجع لديه دورة فحص جديد نشطة إن كان هناك إتمام سابق ولكن النشاط الحالي يمثل تقدماً جديداً
+                const hasNewExamCycle = Boolean(
+                    completedRecord && (
+                        (liveActivePatientForGroup && (liveActivePatientForGroup.completedSessions < 7 || (Array.isArray(liveActivePatientForGroup.dailyLogs) && liveActivePatientForGroup.dailyLogs.length < 7))) ||
+                        (hasRecentSessionNotifAfterComp && (latestSessionNotif.completedSessions || 0) < 7) ||
+                        records.some(r => r !== completedRecord && _getRecordTime(r) > tComp && (r.logsCount < 7 || (Array.isArray(r.dailyLogs) && r.dailyLogs.length < 7)))
+                    )
+                );
+
+                let currentCycleRecords = records;
+                if (hasNewExamCycle && completedRecord) {
+                    currentCycleRecords = records.filter(r => r !== completedRecord && _getRecordTime(r) >= (tComp - 60000));
+                    if (currentCycleRecords.length === 0) {
+                        currentCycleRecords = records.filter(r => r !== completedRecord);
+                    }
+                    if (currentCycleRecords.length === 0) {
+                        currentCycleRecords = [liveActivePatientForGroup || records[0]];
+                    }
+                }
+
+                // ترتيب سجلات الدورة: الأكثر إنجازاً وتفصيلاً يظهر أولاً
+                currentCycleRecords.sort((a, b) => {
                     const scoreDiff = getInteractionScore(b) - getInteractionScore(a);
                     if (scoreDiff !== 0) return scoreDiff;
-                    const tA = new Date(a.lastActiveAt || a.lastUpdated || a.createdAt || a.timestamp || 0).getTime();
-                    const tB = new Date(b.lastActiveAt || b.lastUpdated || b.createdAt || b.timestamp || 0).getTime();
-                    return tB - tA;
+                    return _getRecordTime(b) - _getRecordTime(a);
                 });
-                const nonNotif = records.filter(r => !r._fromNotif);
-                const listToMerge = nonNotif.length > 0 ? nonNotif : records;
+
+                const nonNotif = currentCycleRecords.filter(r => !r._fromNotif);
+                const listToMerge = nonNotif.length > 0 ? nonNotif : currentCycleRecords;
                 const unified = { ...listToMerge[0] };
+
+                if (hasNewExamCycle) {
+                    unified.hasNewExamCycle = true;
+                    unified.hasPreviousCompletedPlan = true;
+                    unified.isPlanCompleted = false;
+                    unified.planCompleted = false;
+                    const latestNewTs = Math.max(...currentCycleRecords.map(r => _getRecordTime(r)).filter(t => t > 0));
+                    if (latestNewTs > 0) {
+                        unified.createdAt = new Date(latestNewTs).toISOString();
+                        unified.lastActiveAt = unified.createdAt;
+                    }
+                }
 
                 // تنظيف معرف المريض وتوثيق جميع المعرفات المدمجة للحذف الشامل
                 unified.patientId = (unified.patientId || unified.id || '').replace(/(_notif_.*|_test\d*|_cloud_test.*)$/, '');
@@ -502,7 +578,16 @@ const AdminEngine = (function() {
 
                 let earliestDate = unified.createdAt || unified.timestamp || null;
                 let latestActiveDate = unified.createdAt || unified.timestamp || null;
-                let allDailyLogs = Array.isArray(unified.dailyLogs) ? [...unified.dailyLogs] : (Array.isArray(unified.logs) ? [...unified.logs] : []);
+                let allDailyLogs = [];
+
+                if (hasNewExamCycle && liveActivePatientForGroup && Array.isArray(liveActivePatientForGroup.dailyLogs) && liveActivePatientForGroup.dailyLogs.length > 0) {
+                    allDailyLogs = [...liveActivePatientForGroup.dailyLogs];
+                } else if (hasNewExamCycle) {
+                    const recWithLogs = currentCycleRecords.find(r => Array.isArray(r.dailyLogs) && r.dailyLogs.length > 0 && r.dailyLogs.length < 7);
+                    if (recWithLogs) allDailyLogs = [...recWithLogs.dailyLogs];
+                } else {
+                    allDailyLogs = Array.isArray(unified.dailyLogs) ? [...unified.dailyLogs] : (Array.isArray(unified.logs) ? [...unified.logs] : []);
+                }
 
                 for (const r of records) {
                     // الاسم
@@ -569,14 +654,17 @@ const AdminEngine = (function() {
                     // التواريخ
                     const rDate = r.createdAt || r.timestamp;
                     const rActive = r.lastActiveAt || r.lastUpdated || r.createdAt || r.timestamp;
-                    if (rDate) {
+                    if (rDate && !hasNewExamCycle) {
                         if (!earliestDate || new Date(rDate) < new Date(earliestDate)) earliestDate = rDate;
                     }
                     if (rActive) {
                         if (!latestActiveDate || new Date(rActive) > new Date(latestActiveDate)) latestActiveDate = rActive;
                     }
 
-                    // الجلسات اليومية المنفذة
+                    // الجلسات اليومية المنفذة: إذا كان في دورة فحص جديد، نستبعد جلسات الخطة القديمة المكتملة
+                    if (hasNewExamCycle && r === completedRecord) {
+                        continue;
+                    }
                     const rLogs = Array.isArray(r.dailyLogs) ? r.dailyLogs : (Array.isArray(r.logs) ? r.logs : []);
                     for (const l of rLogs) {
                         if (!l) continue;
@@ -612,21 +700,45 @@ const AdminEngine = (function() {
                 }
 
                 allDailyLogs.sort((a, b) => (a.sessionNumber || a.day || 0) - (b.sessionNumber || b.day || 0));
-                unified.dailyLogs = allDailyLogs;
-                unified.logs = allDailyLogs;
-                if (allDailyLogs.length > 0) {
-                    unified.logsCount = allDailyLogs.length;
-                    unified.completedSessions = allDailyLogs.length;
+
+                if (hasNewExamCycle) {
+                    // في دورة الفحص الجديد: ضبط عدد الجلسات على الدورة الحالية بدقة متناهية
+                    let activeCount = allDailyLogs.length;
+                    if (activeCount === 0 && latestSessionNotif && latestSessionNotif.completedSessions > 0) {
+                        activeCount = latestSessionNotif.completedSessions;
+                    }
+                    if (liveActivePatientForGroup && liveActivePatientForGroup.completedSessions > 0) {
+                        activeCount = Math.max(activeCount, liveActivePatientForGroup.completedSessions);
+                    }
+                    activeCount = Math.min(6, Math.max(1, activeCount));
+                    if (allDailyLogs.length > activeCount) {
+                        allDailyLogs = allDailyLogs.filter(l => Number(l.sessionNumber || l.day || 0) <= activeCount);
+                    }
+                    unified.dailyLogs = allDailyLogs;
+                    unified.logs = allDailyLogs;
+                    unified.logsCount = activeCount;
+                    unified.completedSessions = activeCount;
+                    unified.currentSessionDay = Math.min(7, activeCount + 1);
+                    unified.isPlanCompleted = false;
+                    unified.planCompleted = false;
+                    unified.hasPreviousCompletedPlan = true;
                 } else {
-                    unified.logsCount = Math.min(7, Math.max(0, unified.logsCount || 0));
-                    unified.completedSessions = unified.logsCount;
+                    unified.dailyLogs = allDailyLogs;
+                    unified.logs = allDailyLogs;
+                    if (allDailyLogs.length > 0) {
+                        unified.logsCount = allDailyLogs.length;
+                        unified.completedSessions = allDailyLogs.length;
+                    } else {
+                        unified.logsCount = Math.min(7, Math.max(0, unified.logsCount || 0));
+                        unified.completedSessions = unified.logsCount;
+                    }
                 }
 
                 if (!unified.bmi && unified.weight && unified.height) {
                     unified.bmi = parseFloat((unified.weight / Math.pow(unified.height / 100, 2)).toFixed(1));
                 }
 
-                unified.createdAt = earliestDate || new Date().toISOString();
+                unified.createdAt = hasNewExamCycle ? (unified.createdAt || latestActiveDate || new Date().toISOString()) : (earliestDate || new Date().toISOString());
                 unified.lastActiveAt = latestActiveDate || unified.createdAt;
 
                 // التحقق من صحة الاسم وتنسيقه بدقة لمنع تكرار أسماء مجهولة
@@ -733,6 +845,9 @@ const AdminEngine = (function() {
                             if (Array.isArray(parsed)) {
                                 for (const l of parsed) {
                                     if (l && (l.sessionNumber != null || l.day != null)) {
+                                        if (p.hasNewExamCycle && Number(l.sessionNumber || l.day) > (p.logsCount || 0)) {
+                                            continue;
+                                        }
                                         sessionLogsMap.set(Number(l.sessionNumber || l.day), l);
                                     }
                                 }
@@ -746,6 +861,9 @@ const AdminEngine = (function() {
                             if (Array.isArray(dbLogs)) {
                                 for (const l of dbLogs) {
                                     if (l && (l.sessionNumber != null || l.day != null)) {
+                                        if (p.hasNewExamCycle && Number(l.sessionNumber || l.day) > (p.logsCount || 0)) {
+                                            continue;
+                                        }
                                         sessionLogsMap.set(Number(l.sessionNumber || l.day), l);
                                     }
                                 }
@@ -759,6 +877,9 @@ const AdminEngine = (function() {
                             if (Array.isArray(cLogs)) {
                                 for (const l of cLogs) {
                                     if (l && (l.sessionNumber != null || l.day != null)) {
+                                        if (p.hasNewExamCycle && Number(l.sessionNumber || l.day) > (p.logsCount || 0)) {
+                                            continue;
+                                        }
                                         sessionLogsMap.set(Number(l.sessionNumber || l.day), l);
                                     }
                                 }
@@ -797,13 +918,29 @@ const AdminEngine = (function() {
 
                 // احتساب عدد الجلسات المنفذة الحقيقية بدقة تامة ومطابقتها للسجلات
                 const isRagheb = ((p.fullName || p.name || '').includes('راغب') || (p.phone && String(p.phone).includes('0790044458')));
+                const isPlanDone = isRagheb || (Boolean(p.isPlanCompleted || p.planCompleted) && !p.hasNewExamCycle);
                 const realLogsCount = sessionLogsMap.size;
-                const recordedMaxCount = Math.max(
-                    p.logsCount || 0,
-                    p.completedSessions || 0,
-                    (p.isPlanCompleted || p.planCompleted || isRagheb) ? 7 : 0
-                );
-                const effectiveLogsCount = Math.min(7, Math.max(realLogsCount, recordedMaxCount));
+                const recordedMaxCount = isPlanDone ? 7 : (p.logsCount || p.completedSessions || 0);
+                const effectiveLogsCount = isPlanDone ? 7 : Math.min(7, Math.max(realLogsCount, p.logsCount || 0));
+
+                if (p.hasNewExamCycle && effectiveLogsCount < 7) {
+                    p.isPlanCompleted = false;
+                    p.planCompleted = false;
+                    p.currentSessionDay = Math.min(7, effectiveLogsCount + 1);
+                    try {
+                        candidateIds.forEach(cid => {
+                            const lsRaw = localStorage.getItem('smart_daily_logs_' + cid);
+                            if (lsRaw) {
+                                const arr = JSON.parse(lsRaw);
+                                if (Array.isArray(arr) && arr.length > effectiveLogsCount) {
+                                    const pruned = arr.filter(l => Number(l.sessionNumber || l.day || 0) <= effectiveLogsCount);
+                                    localStorage.setItem('smart_daily_logs_' + cid, JSON.stringify(pruned));
+                                }
+                            }
+                            localStorage.removeItem('smart_plan_completed_' + cid);
+                        });
+                    } catch(e) {}
+                }
 
                 // نسبة التعافي
                 let recoveryScore = null;
@@ -987,24 +1124,30 @@ const AdminEngine = (function() {
                         }
                     }
 
-                    // مقارنة مستوى التفاعل والإنجاز
-                    const scoreExisting = getInteractionScore(existing.patient);
-                    const scoreItem = getInteractionScore(p);
+                    // مقارنة مستوى التفاعل والإنجاز مع احترام دورات الفحص الجديد
+                    const existingIsNewCycle = Boolean(existing.patient.hasNewExamCycle || (!existing.patient.isPlanCompleted && (existing.logsCount || 0) < 7 && existing.patient.hasPreviousCompletedPlan));
+                    const itemIsNewCycle = Boolean(p.hasNewExamCycle || (!p.isPlanCompleted && (item.logsCount || 0) < 7 && p.hasPreviousCompletedPlan));
 
-                    // إذا كان السجل الجديد أكثر إنجازاً أو فيه جلسات أكثر، نتبنى بياناته السريرية كبيانات رئيسية
-                    if (scoreItem > scoreExisting || (item.logsCount || 0) > (existing.logsCount || 0)) {
-                        existing.logsCount = Math.max(existing.logsCount || 0, item.logsCount || 0);
-                        existing.patient.logsCount = existing.logsCount;
-                        existing.patient.completedSessions = existing.logsCount;
-                        existing.recoveryScore = Math.max(existing.recoveryScore || 0, item.recoveryScore || 0);
-                        existing.patient.recoveryScore = existing.recoveryScore;
-
-                        if (item.painArea && !isGenericPain(item.painArea)) {
+                    if (itemIsNewCycle && !existingIsNewCycle) {
+                        // السجل الجديد النشط يحل محل السجل القديم المكتمل مع الحفاظ على وسام الإتمام السابق
+                        existing.logsCount = item.logsCount;
+                        existing.patient.logsCount = item.logsCount;
+                        existing.patient.completedSessions = item.logsCount;
+                        existing.patient.currentSessionDay = Math.min(7, (item.logsCount || 0) + 1);
+                        existing.patient.dailyLogs = p.dailyLogs || [];
+                        existing.patient.logs = p.dailyLogs || [];
+                        existing.patient.isPlanCompleted = false;
+                        existing.patient.planCompleted = false;
+                        existing.patient.hasPreviousCompletedPlan = true;
+                        existing.patient.hasNewExamCycle = true;
+                        existing.recoveryScore = item.recoveryScore;
+                        existing.patient.recoveryScore = item.recoveryScore;
+                        if (item.painArea) {
                             existing.painArea = item.painArea;
                             existing.patient.painArea = item.painArea;
                             existing.patient.painAreaTitle = item.painArea;
                         }
-                        if (item.latestDiagnosis && !isGenericDiag(item.latestDiagnosis)) {
+                        if (item.latestDiagnosis) {
                             existing.latestDiagnosis = item.latestDiagnosis;
                             existing.patient.chiefDiagnosis = item.latestDiagnosis;
                             existing.patient.diagnosisTitle = item.latestDiagnosis;
@@ -1014,24 +1157,59 @@ const AdminEngine = (function() {
                             existing.patient.assessment = item.latestAssessment;
                             existing.patient.latestAssessment = item.latestAssessment;
                         }
+                        existing.lastActiveAt = item.lastActiveAt || existing.lastActiveAt;
+                        existing.patient.lastActiveAt = existing.lastActiveAt;
+                        existing.createdAt = item.createdAt || existing.createdAt;
+                        existing.patient.createdAt = existing.createdAt;
+                    } else if (existingIsNewCycle && !itemIsNewCycle) {
+                        existing.patient.hasPreviousCompletedPlan = true;
+                        existing.patient.isPlanCompleted = false;
+                        existing.patient.planCompleted = false;
                     } else {
-                        existing.logsCount = Math.max(existing.logsCount || 0, item.logsCount || 0);
-                        existing.patient.logsCount = existing.logsCount;
-                        existing.patient.completedSessions = existing.logsCount;
-                        existing.recoveryScore = Math.max(existing.recoveryScore || 0, item.recoveryScore || 0);
-                        existing.patient.recoveryScore = existing.recoveryScore;
-                    }
+                        const scoreExisting = getInteractionScore(existing.patient);
+                        const scoreItem = getInteractionScore(p);
 
-                    // دمج الجلسات اليومية
-                    const exLogs = Array.isArray(existing.patient.dailyLogs) ? existing.patient.dailyLogs : [];
-                    const itLogs = Array.isArray(p.dailyLogs) ? p.dailyLogs : [];
-                    for (const il of itLogs) {
-                        if (!il || !il.sessionNumber) continue;
-                        if (!exLogs.some(el => el.sessionNumber === il.sessionNumber)) {
-                            exLogs.push(il);
+                        if (scoreItem > scoreExisting || (item.logsCount || 0) > (existing.logsCount || 0)) {
+                            existing.logsCount = Math.max(existing.logsCount || 0, item.logsCount || 0);
+                            existing.patient.logsCount = existing.logsCount;
+                            existing.patient.completedSessions = existing.logsCount;
+                            existing.recoveryScore = Math.max(existing.recoveryScore || 0, item.recoveryScore || 0);
+                            existing.patient.recoveryScore = existing.recoveryScore;
+
+                            if (item.painArea && !isGenericPain(item.painArea)) {
+                                existing.painArea = item.painArea;
+                                existing.patient.painArea = item.painArea;
+                                existing.patient.painAreaTitle = item.painArea;
+                            }
+                            if (item.latestDiagnosis && !isGenericDiag(item.latestDiagnosis)) {
+                                existing.latestDiagnosis = item.latestDiagnosis;
+                                existing.patient.chiefDiagnosis = item.latestDiagnosis;
+                                existing.patient.diagnosisTitle = item.latestDiagnosis;
+                            }
+                            if (item.latestAssessment) {
+                                existing.latestAssessment = item.latestAssessment;
+                                existing.patient.assessment = item.latestAssessment;
+                                existing.patient.latestAssessment = item.latestAssessment;
+                            }
+                        } else {
+                            existing.logsCount = Math.max(existing.logsCount || 0, item.logsCount || 0);
+                            existing.patient.logsCount = existing.logsCount;
+                            existing.patient.completedSessions = existing.logsCount;
+                            existing.recoveryScore = Math.max(existing.recoveryScore || 0, item.recoveryScore || 0);
+                            existing.patient.recoveryScore = existing.recoveryScore;
                         }
+
+                        // دمج الجلسات اليومية فقط إذا لم نكن في دورة فحص جديد
+                        const exLogs = Array.isArray(existing.patient.dailyLogs) ? existing.patient.dailyLogs : [];
+                        const itLogs = Array.isArray(p.dailyLogs) ? p.dailyLogs : [];
+                        for (const il of itLogs) {
+                            if (!il || !il.sessionNumber) continue;
+                            if (!exLogs.some(el => el.sessionNumber === il.sessionNumber)) {
+                                exLogs.push(il);
+                            }
+                        }
+                        existing.patient.dailyLogs = exLogs;
                     }
-                    existing.patient.dailyLogs = exLogs;
 
                     const tExist = new Date(existing.lastActiveAt || existing.createdAt || 0).getTime();
                     const tItem = new Date(item.lastActiveAt || item.createdAt || 0).getTime();
