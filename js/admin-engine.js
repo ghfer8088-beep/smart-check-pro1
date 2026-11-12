@@ -1173,30 +1173,34 @@ const AdminEngine = (function() {
             }
 
             if (forceUnlock) {
-                // فتح فوري وتصفير العداد لكافة الجلسات المحتملة لمنع أي تعارض في رقم الجلسة
-                safeStorageSet(`force_unlock_${patientId}`, 'true');
-                safeStorageSet(`force_unlock_${patientId}_${numSession}`, 'true');
+                // فتح فوري وتصفير العداد للجلسة المحددة حصراً (أو لكافة الجلسات إذا اختار الأدمن ذلك)
+                if (isAllSessions) {
+                    safeStorageSet(`force_unlock_${patientId}`, 'true');
+                    safeStorageSet('force_unlock_global', 'true');
+                    if (cleanPhone) safeStorageSet(`force_unlock_${cleanPhone}`, 'true');
+                } else {
+                    safeStorageSet(`force_unlock_${patientId}_${numSession}`, 'true');
+                    safeStorageSet(`force_unlock_global_${numSession}`, 'true');
+                    safeStorageRemove(`force_unlock_${patientId}`);
+                    safeStorageRemove('force_unlock_global');
+                    if (cleanPhone) {
+                        safeStorageSet(`force_unlock_${cleanPhone}_${numSession}`, 'true');
+                        safeStorageRemove(`force_unlock_${cleanPhone}`);
+                    }
+                }
                 safeStorageRemove(`custom_target_time_${patientId}`);
                 safeStorageRemove(`custom_total_duration_${patientId}`);
                 safeStorageRemove(`custom_target_time_${patientId}_${numSession}`);
                 safeStorageRemove(`custom_total_duration_${patientId}_${numSession}`);
-                for (let i = 1; i <= 7; i++) {
-                    safeStorageRemove(`sessionStartTime_${patientId}_${i}`);
-                }
+                safeStorageRemove(`sessionStartTime_${patientId}_${numSession}`);
                 if (cleanPhone) {
-                    safeStorageSet(`force_unlock_${cleanPhone}`, 'true');
-                    safeStorageSet(`force_unlock_${cleanPhone}_${numSession}`, 'true');
                     safeStorageRemove(`custom_target_time_${cleanPhone}`);
                     safeStorageRemove(`custom_total_duration_${cleanPhone}`);
                     safeStorageRemove(`custom_target_time_${cleanPhone}_${numSession}`);
                     safeStorageRemove(`custom_total_duration_${cleanPhone}_${numSession}`);
-                    for (let i = 1; i <= 7; i++) {
-                        safeStorageRemove(`sessionStartTime_${cleanPhone}_${i}`);
-                    }
+                    safeStorageRemove(`sessionStartTime_${cleanPhone}_${numSession}`);
                 }
                 if (broadcastToAll) {
-                    safeStorageSet('force_unlock_global', 'true');
-                    safeStorageSet(`force_unlock_global_${numSession}`, 'true');
                     safeStorageRemove('custom_target_time_global');
                     safeStorageRemove('custom_total_duration_global');
                     safeStorageRemove(`custom_target_time_global_${numSession}`);
@@ -1237,38 +1241,26 @@ const AdminEngine = (function() {
             console.warn('LocalStorage save warning in setPatientSessionTiming:', storageErr);
         }
 
-        // تحديث متزامن وفوري لكائن المريض في قوائم التخزين المحلية (smart_cloud_synced_patients و smart_all_patients)
-        // مع إنهاء أو تعديل تاريخ آخر جلسة مسجلة جذرياً حتى لا يبقى أي أثر لتوقيت 24 ساعة عالق
         const nowTimingTs = Date.now();
-        const adjustedLastLogIso = new Date(forceUnlock ? (nowTimingTs - 25 * 3600 * 1000) : (nowTimingTs - 24 * 3600 * 1000 + totalDurationMs)).toISOString();
-
-        try {
-            const logKeys = new Set([patientId, cleanPhone, cleanPhone ? 'pat_' + cleanPhone : ''].filter(Boolean));
-            logKeys.forEach(k => {
-                const rawL = localStorage.getItem('smart_daily_logs_' + k);
-                if (rawL) {
-                    const arrL = JSON.parse(rawL);
-                    if (Array.isArray(arrL) && arrL.length > 0) {
-                        arrL[arrL.length - 1].date = adjustedLastLogIso;
-                        if (arrL[arrL.length - 1].completedAt) arrL[arrL.length - 1].completedAt = adjustedLastLogIso;
-                        safeStorageSet('smart_daily_logs_' + k, JSON.stringify(arrL));
-                    }
-                }
-            });
-        } catch(e) {}
 
         const applyTimingPropsToPt = (pt) => {
             if (!pt) return;
-            if (Array.isArray(pt.dailyLogs) && pt.dailyLogs.length > 0) {
-                pt.dailyLogs[pt.dailyLogs.length - 1].date = adjustedLastLogIso;
-                pt.lastLogDate = adjustedLastLogIso;
-            }
+            pt.targetedSessionNum = numSession;
             if (forceUnlock) {
-                pt.forceUnlock = true;
+                if (isAllSessions) {
+                    pt.forceUnlock = true;
+                    pt.forceUnlockAllSessions = true;
+                    pt.allSessionsUnlocked = true;
+                } else {
+                    pt[`forceUnlockSession_${numSession}`] = true;
+                    pt.forceUnlock = false;
+                }
                 delete pt.customTargetTime;
                 delete pt.custom_target_time;
                 delete pt.customDurationMs;
             } else {
+                pt[`customTargetTime_${numSession}`] = targetTime;
+                pt[`customDurationMs_${numSession}`] = totalDurationMs;
                 pt.customTargetTime = targetTime;
                 pt.customDurationMs = totalDurationMs;
                 pt.forceUnlock = false;

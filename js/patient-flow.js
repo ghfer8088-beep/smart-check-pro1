@@ -634,19 +634,16 @@ const PatientFlow = (function() {
 
         const sTarget = sessionNum ? Number(sessionNum) : null;
 
-        // ✅ أولوية قصوى للتعديل اللحظي المحفوظ في الذاكرة الحية من لوحة الأدمن
+        // ✅ أولوية قصوى للتعديل اللحظي المحفوظ في الذاكرة الحية من لوحة الأدمن (مطبقة على الجلسة المستهدفة حصراً)
         if (typeof window !== 'undefined' && window._scpLiveTimingOverride) {
             const ov = window._scpLiveTimingOverride;
-            // إذا كان التعديل اللحظي يخص جلسة معينة، نطبقه فقط على تلك الجلسة أو إذا كانت هي الجلسة المعروضة
             const ovSession = Number(ov.sessionNum || 0);
-            const isMatchSession = !sTarget || !ovSession || (sTarget === ovSession);
+            const isMatchSession = Boolean(ov.forceUnlockAllSessions || (sTarget && ovSession === sTarget) || (!sTarget && ovSession));
             if (isMatchSession) {
                 if (ov.forceUnlockAllSessions) {
-                    permanentlyExpireSessionCooldown(effectiveId || patientId, 0);
                     return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true, allUnlocked: true };
                 }
                 if (ov.forceUnlock) {
-                    permanentlyExpireSessionCooldown(effectiveId || patientId, 0);
                     return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
                 }
                 if (ov.targetTime && ov.targetTime > 0) {
@@ -654,7 +651,6 @@ const PatientFlow = (function() {
                     if (diffOv <= 0) {
                         ov.forceUnlock = true;
                         ov.targetTime = 0;
-                        permanentlyExpireSessionCooldown(effectiveId || patientId, 0);
                         return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
                     }
                     return {
@@ -682,7 +678,8 @@ const PatientFlow = (function() {
             (effectiveId && localStorage.getItem(`force_unlock_${effectiveId}_${sTarget}`) === 'true') ||
             (patientId && localStorage.getItem(`force_unlock_${patientId}_${sTarget}`) === 'true') ||
             (cleanPhone ? localStorage.getItem(`force_unlock_${cleanPhone}_${sTarget}`) === 'true' : false) ||
-            (localStorage.getItem(`force_unlock_global_${sTarget}`) === 'true')
+            (localStorage.getItem(`force_unlock_global_${sTarget}`) === 'true') ||
+            Boolean(patient && patient[`forceUnlockSession_${sTarget}`])
         ) : false;
 
         const targetedAdminSession = parseInt(
@@ -692,7 +689,7 @@ const PatientFlow = (function() {
         );
 
         // لا نطبق التوقيت المخصص العام إلا إذا كانت الجلسة هي الجلسة المستهدفة المحددة
-        const isTargetedSessionNow = !sTarget || !targetedAdminSession || (sTarget === targetedAdminSession);
+        const isTargetedSessionNow = !sTarget || (targetedAdminSession > 0 && sTarget === targetedAdminSession);
 
         const localCustomTarget = sessSpecificTarget || (isTargetedSessionNow ? (
                                   (effectiveId ? localStorage.getItem(`custom_target_time_${effectiveId}`) : null) ||
@@ -705,7 +702,8 @@ const PatientFlow = (function() {
                                    (localStorage.getItem('force_unlock_global') === 'true') ||
                                    (effectiveId && localStorage.getItem(`force_unlock_${effectiveId}`) === 'true') ||
                                    (patientId && localStorage.getItem(`force_unlock_${patientId}`) === 'true') ||
-                                   (cleanPhone ? localStorage.getItem(`force_unlock_${cleanPhone}`) === 'true' : false)
+                                   (cleanPhone ? localStorage.getItem(`force_unlock_${cleanPhone}`) === 'true' : false) ||
+                                   Boolean(patient && (patient.forceUnlock === true || patient.force_unlock === true))
                                    ));
 
         // التحقق من فتح جميع الجلسات بالكامل من الإدارة
@@ -716,52 +714,33 @@ const PatientFlow = (function() {
                               (cleanPhone ? localStorage.getItem(`force_unlock_all_${cleanPhone}`) === "true" : false) ||
                               (!localCustomTarget && patient && (patient.forceUnlockAllSessions === true || patient.allSessionsUnlocked === true));
         if (isAllUnlocked && !localCustomTarget) {
-            permanentlyExpireSessionCooldown(effectiveId || patientId, 0);
             return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true, allUnlocked: true };
         }
-        const forceUnlock = isLocalForceUnlock ||
-                            (!localCustomTarget && patient && (patient.forceUnlock === true || patient.force_unlock === true));
-        if (forceUnlock && !localCustomTarget) {
-            permanentlyExpireSessionCooldown(effectiveId || patientId, 0);
+        if (isLocalForceUnlock && !localCustomTarget) {
             return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
         }
 
         const customTarget = localCustomTarget ||
-                             (!isLocalForceUnlock && patient && (patient.customTargetTime || patient.custom_target_time));
+                             (isTargetedSessionNow && !isLocalForceUnlock && patient && (patient.customTargetTime || patient.custom_target_time));
         if (customTarget) {
             const targetMs = parseInt(customTarget);
             const now = Date.now();
             const diff = targetMs - now;
             if (diff <= 0) {
-                // انتهاء الوقت المخصص بنجاح: إنهاء مدة الـ 24 ساعة في السجلات نهائياً بلا أي أثر لتوقيتات عالقة
-                permanentlyExpireSessionCooldown(effectiveId || patientId, 0);
-                localStorage.setItem('force_unlock_global', 'true');
-                if (effectiveId) localStorage.setItem(`force_unlock_${effectiveId}`, 'true');
-                if (patientId) localStorage.setItem(`force_unlock_${patientId}`, 'true');
-                if (cleanPhone) localStorage.setItem(`force_unlock_${cleanPhone}`, 'true');
-                localStorage.removeItem(`custom_target_time_${effectiveId}`);
-                if (patientId) localStorage.removeItem(`custom_target_time_${patientId}`);
-                if (cleanPhone) localStorage.removeItem(`custom_target_time_${cleanPhone}`);
-                localStorage.removeItem('custom_target_time_global');
-                if (patient) {
-                    patient.forceUnlock = true;
-                    delete patient.customTargetTime;
-                    delete patient.custom_target_time;
-                    delete patient.customDurationMs;
-                    if (typeof SmartDB !== 'undefined' && typeof SmartDB.savePatient === 'function') {
-                        SmartDB.savePatient(patient, { skipCloudSync: true }).catch(() => {});
-                    }
-                }
-                if (typeof window !== 'undefined' && window.activePatient) {
-                    window.activePatient.forceUnlock = true;
-                    delete window.activePatient.customTargetTime;
-                    delete window.activePatient.customDurationMs;
+                // انتهاء الوقت المخصص للجلسة المستهدفة حصراً دون تسريب الفتح للجلسات التالية
+                if (sTarget) {
+                    if (effectiveId) localStorage.setItem(`force_unlock_${effectiveId}_${sTarget}`, 'true');
+                    if (patientId) localStorage.setItem(`force_unlock_${patientId}_${sTarget}`, 'true');
+                    localStorage.setItem(`force_unlock_global_${sTarget}`, 'true');
+                    if (effectiveId) localStorage.removeItem(`custom_target_time_${effectiveId}_${sTarget}`);
+                    if (patientId) localStorage.removeItem(`custom_target_time_${patientId}_${sTarget}`);
+                    localStorage.removeItem(`custom_target_time_global_${sTarget}`);
                 }
                 return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
             }
-            // مزامنة تاريخ آخر جلسة مع الوقت المتبقي الفعلي حتى لا يبقى أي توقيت 24 ساعة قديم عالق في الخلفية
-            permanentlyExpireSessionCooldown(effectiveId || patientId, diff);
             let customDuration = parseInt(
+                (sTarget ? localStorage.getItem(`custom_total_duration_${effectiveId}_${sTarget}`) : null) ||
+                (sTarget ? localStorage.getItem(`custom_total_duration_global_${sTarget}`) : null) ||
                 localStorage.getItem(`custom_total_duration_${effectiveId}`) || 
                 (patientId ? localStorage.getItem(`custom_total_duration_${patientId}`) : null) || 
                 (cleanPhone ? localStorage.getItem(`custom_total_duration_${cleanPhone}`) : null) || 
@@ -793,8 +772,16 @@ const PatientFlow = (function() {
             return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, isDay1Pending: true };
         }
 
-        const lastLog = dailyLogs[dailyLogs.length - 1];
-        const logDateStr = lastLog.date || lastLog.completedAt || lastLog.createdAt;
+        // إيجاد سجل الجلسة السابقة للجلسة المستهدفة لحساب القفل الزمني التناسبي (24 ساعة استشفاء حيوي)
+        let refLog = null;
+        if (sTarget && sTarget > 1) {
+            refLog = dailyLogs.find(l => Number(l.sessionNumber || l.day) === (sTarget - 1));
+        }
+        if (!refLog) {
+            refLog = dailyLogs[dailyLogs.length - 1];
+        }
+
+        const logDateStr = refLog.date || refLog.completedAt || refLog.createdAt;
         const referenceTime = logDateStr ? new Date(logDateStr).getTime() : Date.now();
         const validRefTime = (!isNaN(referenceTime) && referenceTime > 0) ? referenceTime : Date.now();
 
@@ -816,70 +803,13 @@ const PatientFlow = (function() {
         };
     }
 
-    // إنهاء أو تعديل مدة الاستشفاء (24 ساعة) جذرياً في سجلات الجلسات نفسها حتى لا يبقى أي أثر لتوقيت عالق
+    // إيقاف التعديل الرجعي للتواريخ لحماية الحساب الزمني الدقيق للـ 24 ساعة للجلسات التالية
     function permanentlyExpireSessionCooldown(patientId, remainingDurationMs = 0) {
-        try {
-            const now = Date.now();
-            // إذا كان remainingDurationMs <= 0 نُرجع تاريخ آخر جلسة إلى ما قبل 25 ساعة لتكون المدة منقضية بالكامل (100%) طبيعياً
-            const newLogTimestampMs = remainingDurationMs > 0
-                ? (now - (24 * 3600 * 1000) + remainingDurationMs)
-                : (now - (25 * 3600 * 1000));
-            const newIsoDate = new Date(newLogTimestampMs).toISOString();
-
-            const curPId = patientId ||
-                (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null) ||
-                localStorage.getItem('smart_current_patient_id') ||
-                (typeof window !== 'undefined' && window.activePatient ? (window.activePatient.patientId || window.activePatient.id) : null);
-
-            const adjustLogsArray = (logsArr) => {
-                if (!Array.isArray(logsArr) || logsArr.length === 0) return false;
-                const lastIdx = logsArr.length - 1;
-                const lastItem = logsArr[lastIdx];
-                if (!lastItem) return false;
-                const curTime = lastItem.date ? new Date(lastItem.date).getTime() : now;
-                if (remainingDurationMs <= 0 && curTime <= (now - 24 * 3600 * 1000)) {
-                    return false; // منقضية بالفعل
-                }
-                if (remainingDurationMs > 0 && Math.abs(curTime - newLogTimestampMs) < 2000) {
-                    return false; // متطابقة بالفعل
-                }
-                lastItem.date = newIsoDate;
-                if (lastItem.completedAt) lastItem.completedAt = newIsoDate;
-                if (lastItem.createdAt) lastItem.createdAt = newIsoDate;
-                return true;
-            };
-
-            if (curPId) {
-                const lsKey = 'smart_daily_logs_' + curPId;
-                const rawLogs = localStorage.getItem(lsKey);
-                if (rawLogs) {
-                    const parsedLogs = JSON.parse(rawLogs);
-                    if (adjustLogsArray(parsedLogs)) {
-                        localStorage.setItem(lsKey, JSON.stringify(parsedLogs));
-                    }
-                }
-            }
-
-            if (typeof window !== 'undefined' && window.activePatient && Array.isArray(window.activePatient.dailyLogs)) {
-                if (adjustLogsArray(window.activePatient.dailyLogs)) {
-                    window.activePatient.lastLogDate = newIsoDate;
-                    try { localStorage.setItem('smart_active_patient', JSON.stringify(window.activePatient)); } catch(e) {}
-                }
-            }
-
-            const rawAct = localStorage.getItem('smart_active_patient');
-            if (rawAct) {
-                const actObj = JSON.parse(rawAct);
-                if (actObj && Array.isArray(actObj.dailyLogs) && adjustLogsArray(actObj.dailyLogs)) {
-                    actObj.lastLogDate = newIsoDate;
-                    localStorage.setItem('smart_active_patient', JSON.stringify(actObj));
-                }
-            }
-        } catch (e) {}
+        return;
     }
 
-    // تشغيل العداد التنازلي التفاعلي وشريط الاستشفاء اللودينج
-    function startCountdownTimer(targetTime, displayElements, onComplete, totalDurationMs) {
+    // تشغيل العداد التنازلي التفاعلي وشريط الاستشفاء اللودينج للجلسة المستهدفة حصراً
+    function startCountdownTimer(targetTime, displayElements, onComplete, totalDurationMs, sessionNum = null) {
         if (activeCountdownInterval) clearInterval(activeCountdownInterval);
 
         function update() {
@@ -894,20 +824,19 @@ const PatientFlow = (function() {
 
             if (diff <= 0) {
                 clearInterval(activeCountdownInterval);
-                // تثبيت فتح الجلسة فوراً وإنهاء توقيت الـ 24 ساعة في السجلات نهائياً بلا أي أثر لتوقيت عالق
                 try {
                     const curPId = (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null) || localStorage.getItem('smart_current_patient_id');
-                    permanentlyExpireSessionCooldown(curPId, 0);
-                    localStorage.setItem('force_unlock_global', 'true');
-                    if (curPId) localStorage.setItem(`force_unlock_${curPId}`, 'true');
-                    const curPh = localStorage.getItem('smart_patient_phone');
-                    if (curPh) localStorage.setItem(`force_unlock_${String(curPh).replace(/\D/g, '')}`, 'true');
+                    const targetSess = sessionNum || (window.activePatient && (window.activePatient.activeSessionDay || window.activePatient.currentSessionDay)) || 2;
+                    if (targetSess) {
+                        localStorage.setItem(`force_unlock_global_${targetSess}`, 'true');
+                        if (curPId) localStorage.setItem(`force_unlock_${curPId}_${targetSess}`, 'true');
+                        const curPh = localStorage.getItem('smart_patient_phone');
+                        if (curPh) localStorage.setItem(`force_unlock_${String(curPh).replace(/\D/g, '')}_${targetSess}`, 'true');
+                        localStorage.removeItem(`custom_target_time_global_${targetSess}`);
+                        if (curPId) localStorage.removeItem(`custom_target_time_${curPId}_${targetSess}`);
+                    }
                     localStorage.removeItem('custom_target_time_global');
                     if (curPId) localStorage.removeItem(`custom_target_time_${curPId}`);
-                    if (typeof window !== 'undefined' && window.activePatient) {
-                        window.activePatient.forceUnlock = true;
-                        delete window.activePatient.customTargetTime;
-                    }
                     const clockCard = document.getElementById('session-24h-clock-card');
                     if (clockCard) {
                         clockCard.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%)';

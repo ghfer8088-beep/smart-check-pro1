@@ -3434,29 +3434,13 @@
         if (authP && (authP.patientId || authP.id)) keysToUpdate.add(authP.patientId || authP.id);
         keysToUpdate.add('global');
 
-        // حساب رقم الجلسة الفعلية للمريض لمنع الرجوع إلى جلسة مكتملة سابقاً (مثل الجلسة 2) أو القفز للجلسة 7 بالخطأ
+        // حساب رقم الجلسة الفعلية للمريض بدقة
         let completedLogsCount = 0;
-        const remainingModifiedMs = update.forceUnlock ? 0 : (update.totalDurationMs || (update.targetTime ? Math.max(0, update.targetTime - now) : 0));
-        const adjustedLastLogIso = new Date(remainingModifiedMs > 0 ? (now - (24 * 3600 * 1000) + remainingModifiedMs) : (now - (25 * 3600 * 1000))).toISOString();
-
         try {
             const actLogs = (window.activePatient && Array.isArray(window.activePatient.dailyLogs)) ? window.activePatient.dailyLogs : [];
             const lsLogs = pKey ? JSON.parse(localStorage.getItem('smart_daily_logs_' + pKey) || '[]') : [];
-            if (actLogs.length > 0) {
-                actLogs[actLogs.length - 1].date = adjustedLastLogIso;
-                if (actLogs[actLogs.length - 1].completedAt) actLogs[actLogs.length - 1].completedAt = adjustedLastLogIso;
-            }
-            if (Array.isArray(lsLogs) && lsLogs.length > 0 && pKey) {
-                lsLogs[lsLogs.length - 1].date = adjustedLastLogIso;
-                if (lsLogs[lsLogs.length - 1].completedAt) lsLogs[lsLogs.length - 1].completedAt = adjustedLastLogIso;
-                safeSet('smart_daily_logs_' + pKey, JSON.stringify(lsLogs));
-            }
             completedLogsCount = Math.max(actLogs.length, Array.isArray(lsLogs) ? lsLogs.length : 0);
         } catch(e) {}
-
-        if (typeof window !== 'undefined' && window.PatientFlow && typeof window.PatientFlow.permanentlyExpireSessionCooldown === 'function') {
-            window.PatientFlow.permanentlyExpireSessionCooldown(pKey, remainingModifiedMs);
-        }
 
         const isPlanAlreadyDone = Boolean(
             update.isPlanCompleted ||
@@ -3465,11 +3449,18 @@
             (pKey && localStorage.getItem('smart_plan_completed_' + pKey) === 'true')
         );
         const progressionDay = isPlanAlreadyDone ? 7 : Math.min(7, Math.max(1, completedLogsCount + 1));
-
         const isAllUnlocked = Boolean(update.forceUnlockAllSessions || update.isAllSessions || update.sessionNum === 0 || update.sessionNum === 'all');
-        const numSession = isPlanAlreadyDone ? 7 : progressionDay;
+        const updateSessionNum = (update.sessionNum && update.sessionNum !== 'all') ? Number(update.sessionNum) : 0;
 
-        // ✅ حفظ التعديل فوراً في الذاكرة الحية لضمان عمله حتى لو امتلأت مساحة localStorage
+        // إذا كان التحديث يخص جلسة سابقة مكتملة بالفعل، نتجاهله حتى لا يؤثر على الجلسة الحالية
+        if (!isAllUnlocked && updateSessionNum > 0 && updateSessionNum < progressionDay) {
+            console.log(`[CloudSync] Ignoring timing update for past completed session #${updateSessionNum} (Current: #${progressionDay})`);
+            return;
+        }
+
+        const numSession = isAllUnlocked ? 0 : (updateSessionNum > 0 ? updateSessionNum : (isPlanAlreadyDone ? 7 : progressionDay));
+
+        // ✅ حفظ التعديل اللحظي في الذاكرة الحية مرتبطاً برقم الجلسة المستهدفة حصراً
         window._scpLiveTimingOverride = {
             patientId: pKey || targetPid || 'global',
             forceUnlock: Boolean(update.forceUnlock),
@@ -3487,10 +3478,6 @@
             safeRem('force_unlock_all');
             safeRem('force_unlock_all_global');
             safeRem('force_unlock_global');
-        } else if (update.forceUnlock) {
-            safeSet('force_unlock_global', 'true');
-            safeRem('custom_target_time_global');
-            safeRem('custom_total_duration_global');
         }
 
         if (numSession) {
@@ -3500,27 +3487,31 @@
         for (const key of keysToUpdate) {
             if (isAllUnlocked) {
                 safeSet(`force_unlock_all_${key}`, 'true');
-            }
-            if (numSession) {
-                safeSet(`targeted_session_${key}`, String(numSession));
-            }
-            if (update.forceUnlock) {
                 safeSet(`force_unlock_${key}`, 'true');
-                safeRem(`custom_target_time_${key}`);
-                safeRem(`custom_total_duration_${key}`);
-                for (let i = 1; i <= 7; i++) {
-                    safeRem(`sessionStartTime_${key}_${i}`);
+            } else if (update.forceUnlock || (update.targetTime && update.targetTime <= now)) {
+                // فتح الجلسة المستهدفة المحددة حصراً دون تعميم على الجلسات المستقبلية
+                if (numSession) {
+                    safeSet(`force_unlock_${key}_${numSession}`, 'true');
+                    safeRem(`custom_target_time_${key}_${numSession}`);
+                    safeRem(`custom_total_duration_${key}_${numSession}`);
+                    safeRem(`sessionStartTime_${key}_${numSession}`);
                 }
-            } else if (update.targetTime && update.targetTime > now) {
-                safeSet(`custom_target_time_${key}`, String(update.targetTime));
-                safeSet(`custom_total_duration_${key}`, String(update.totalDurationMs || (update.targetTime - now)));
                 safeRem(`force_unlock_${key}`);
-                safeRem(`force_unlock_all_${key}`);
-            } else if (update.targetTime && update.targetTime <= now) {
-                // الوقت المحدد قد انقضى بالفعل: اعتماد فتح الجلسة فوراً وتثبيته
-                safeSet(`force_unlock_${key}`, 'true');
                 safeRem(`custom_target_time_${key}`);
                 safeRem(`custom_total_duration_${key}`);
+            } else if (update.targetTime && update.targetTime > now) {
+                const totalDur = String(update.totalDurationMs || (update.targetTime - now));
+                if (numSession) {
+                    safeSet(`custom_target_time_${key}_${numSession}`, String(update.targetTime));
+                    safeSet(`custom_total_duration_${key}_${numSession}`, totalDur);
+                    safeRem(`force_unlock_${key}_${numSession}`);
+                }
+                if (!numSession || numSession === progressionDay) {
+                    safeSet(`custom_target_time_${key}`, String(update.targetTime));
+                    safeSet(`custom_total_duration_${key}`, totalDur);
+                    safeRem(`force_unlock_${key}`);
+                }
+                safeRem(`force_unlock_all_${key}`);
             }
         }
 
@@ -3822,7 +3813,7 @@
     function handleAppVersionUpdateMessage(data) {
         if (!data || !data.version) return;
         const newVer = String(data.version).trim();
-        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.91');
+        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.92');
         const numNew = _parseVersionNumber(newVer);
         const numCur = _parseVersionNumber(curVer);
 
