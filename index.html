@@ -28,11 +28,11 @@
     </script>
 
     <!-- منظومة الأمان السيبراني وحماية الملكية الفكرية وقفل النطاق -->
-    <script src="js/security-shield.js?v=30.95"></script>
-    <script src="js/system-watchdog.js?v=30.95"></script>
+    <script src="js/security-shield.js?v=30.96"></script>
+    <script src="js/system-watchdog.js?v=30.96"></script>
 
     <!-- وسوم تطبيق الويب التقدمي PWA والأيقونات الرسمية -->
-    <link rel="manifest" href="manifest.json?v=30.95">
+    <link rel="manifest" href="manifest.json?v=30.96">
     <link rel="icon" type="image/png" href="assets/logo.png">
     <link rel="shortcut icon" href="assets/logo.png">
     <link rel="apple-touch-icon" href="assets/logo.png">
@@ -44,14 +44,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=30.95">
+    <link rel="stylesheet" href="css/style.css?v=30.96">
     <script>
         // التحقق من وصول أحدث إصدار وبث التحديث عالمياً لجميع الأجهزة
         (function() {
             try {
                 localStorage.removeItem('smart_app_theme');
             } catch(e) {}
-            var APP_TARGET_VER = '30.95';
+            var APP_TARGET_VER = '30.96';
             window.APP_TARGET_VER = APP_TARGET_VER;
         })();
     </script>
@@ -152,7 +152,7 @@
                 <div class="brand-version-badge" onclick="event.stopPropagation(); if(typeof forceAppUpdateAndClearCache==='function') forceAppUpdateAndClearCache();" title="انقر لتحديث وتنشيط التطبيق فوراً" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72em; color: #94a3b8; margin-top: 1px; cursor: pointer; user-select: none;">
                     <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                     <span>الإصدار:</span>
-                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v30.95</strong>
+                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v30.96</strong>
                 </div>
             </div>
         </div>
@@ -1634,26 +1634,26 @@
                     </button>
                 </div>
 
-                <!-- باقة 4: مبادرة الرعاية الإنسانية -->
+                <!-- باقة 4: مبادرة الدعم الإنساني -->
                 <div style="background: rgba(239, 68, 68, 0.06); border: 1.5px solid rgba(239, 68, 68, 0.4); border-radius: 16px; padding: 20px 16px; display: flex; flex-direction: column; justify-content: space-between; position: relative;">
                     <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ef4444, #b91c1c); color: #ffffff; font-size: 0.72em; font-weight: 900; padding: 3px 12px; border-radius: 12px; border: 1px solid #fca5a5; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.5);">
                         ❤️ صدقة جارية
                     </div>
                     <div>
-                        <div style="color: #fca5a5; font-size: 0.8em; font-weight: bold; margin-bottom: 4px;">رعاية إنسانية كريمة</div>
-                        <h3 style="color: #ffffff; margin: 0 0 8px 0; font-size: 1.15em; font-weight: 900;">المبادرة الإنسانية</h3>
+                        <div style="color: #fca5a5; font-size: 0.8em; font-weight: bold; margin-bottom: 4px;">مخصصة لغير المقتدرين مادياً</div>
+                        <h3 style="color: #ffffff; margin: 0 0 8px 0; font-size: 1.15em; font-weight: 900;">مبادرة الدعم الإنساني</h3>
                         <div style="margin-bottom: 14px;">
                             <span style="color: #34d399; font-size: 1.5em; font-weight: 900;">مجاناً 100%</span>
                         </div>
                         <div style="border-top: 1px solid rgba(239,68,68,0.2); padding-top: 12px; margin-bottom: 16px; font-size: 0.82em; color: #cbd5e1; line-height: 1.7;">
-                            <div style="margin-bottom: 6px;">✓ متاحة محبةً ولوجه الله تعالى</div>
+                            <div style="margin-bottom: 6px;">✓ تُقدَّم مجاناً لوجه الله تعالى</div>
+                            <div style="margin-bottom: 6px;">✓ صدقة جارية عن روح والد المعالج</div>
                             <div style="margin-bottom: 6px;">✓ فحص سريري كامل + خطة تمارين</div>
-                            <div style="margin-bottom: 6px;">✓ حفظ تام للكرامة والخصوصية</div>
-                            <div style="margin-bottom: 6px;">✓ صدقة جارية عن روح والدنا</div>
+                            <div style="margin-bottom: 6px;">✓ مخصصة لغير المقتدرين مادياً</div>
                         </div>
                     </div>
                     <button type="button" onclick="openHumanitarianSubscriptionModal()" style="width: 100%; background: linear-gradient(135deg, #475569, #334155); color: #ffffff; border: 1px solid #64748b; padding: 11px; border-radius: 10px; font-weight: 800; font-size: 0.9em; cursor: pointer;">
-                        طلب المبادرة الإنسانية ←
+                        طلب مبادرة الدعم الإنساني ←
                     </button>
                 </div>
             </div>
@@ -1750,16 +1750,16 @@
                 <button type="button" onclick="backToSubscriptionTiersModal()" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(16,185,129,0.3); color: #cbd5e1; padding: 6px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px;">
                     <span>←</span> <span>العودة للباقات</span>
                 </button>
-                <div style="color: #6ee7b7; font-weight: 900; font-size: 1.05em;">مبادرة الرعاية الإنسانية ❤️</div>
+                <div style="color: #6ee7b7; font-weight: 900; font-size: 1.05em;">مبادرة الدعم الإنساني ❤️</div>
                 <button type="button" onclick="closeHumanitarianSubscriptionModal()" aria-label="إغلاق" style="background: none; border: none; color: #94a3b8; font-size: 1.6em; cursor: pointer; line-height: 1;">&times;</button>
             </div>
 
             <!-- النص الإنساني الكريم والمحترم -->
-            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 14px; padding: 16px; margin-bottom: 18px; text-align: center;">
+            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 14px; padding: 18px; margin-bottom: 18px; text-align: center;">
                 <div style="font-size: 1.8em; margin-bottom: 6px;">🌿 ❤️</div>
-                <div style="color: #ffffff; font-weight: 900; font-size: 1.1em; margin-bottom: 6px;">صدقة جارية لوجه الله تعالى</div>
-                <p style="color: #cbd5e1; font-size: 0.88em; line-height: 1.7; margin: 0;">
-                    مبادرة الرعاية الإنسانية من منصة «وداعاً للألم» متاحة محبةً ولوجه الله تعالى، صدقةً جارية لكل من يحتاجها. نرجو استخدامها استشعاراً للأمانة والمسؤولية بينك وبين الله عز وجل.
+                <div style="color: #ffffff; font-weight: 900; font-size: 1.15em; margin-bottom: 10px;">مبادرة الدعم الإنساني (مخصصة لغير المقتدرين مادياً)</div>
+                <p style="color: #cbd5e1; font-size: 0.9em; line-height: 1.8; margin: 0; text-align: justify;">
+                    تُقدَّم هذه الباقة مجاناً لوجه الله تعالى كصدقة جارية عن روح المرحوم والد المعالج جمال قبها من منصة «وداعاً للألم» كدعمٍ خاص للأشخاص غير المقتدرين مادياً على تحمل تكاليف الفحص. نرجو الاستفادة منها بصدقٍ وأمانة استشعاراً للمسؤولية أمام الله عز وجل، وإفساحاً للمجال لمن هم في أمسّ الحاجة إليها.
                 </p>
             </div>
 
@@ -1778,8 +1778,8 @@
             <!-- إقرار الأمانة الكريم الخالي من أي مساس بالكرامة -->
             <label for="hum-modal-pledge" style="display: flex; align-items: center; gap: 10px; background: rgba(16, 185, 129, 0.1); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px 14px; margin-bottom: 20px; cursor: pointer;">
                 <input type="checkbox" id="hum-modal-pledge" style="width: 20px; height: 20px; accent-color: #10b981; flex-shrink: 0; cursor: pointer;">
-                <span style="color: #e2e8f0; font-weight: 700; font-size: 0.88em; line-height: 1.5;">
-                    أقرّ بأمانتي ومسؤوليتي في طلب الاستفادة من مبادرة الرعاية الإنسانية.
+                <span style="color: #e2e8f0; font-weight: 700; font-size: 0.88em; line-height: 1.6;">
+                    أُقرّ أمام الله بأمانتي واستحقاقي لهذه المبادرة، وبأنني غير قادر مادياً على سداد قيمة الفحص في الأداة والبالغة 3 دنانير.
                 </span>
             </label>
 
@@ -2047,23 +2047,23 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=30.95"></script>
-    <script src="js/cloud-sync.js?v=30.95"></script>
-    <script src="js/geo-tracker.js?v=30.95"></script>
-    <script src="js/database.js?v=30.95"></script>
-    <script src="js/exercise-image-studio.js?v=30.95"></script>
-    <script src="js/exercises-db.js?v=30.95"></script>
-    <script src="js/diagnostic-engine.js?v=30.95"></script>
-    <script src="js/audio-pacer.js?v=30.95"></script>
-    <script src="js/patient-flow.js?v=30.95"></script>
-    <script src="js/admin-engine.js?v=30.95"></script>
-    <script src="js/ai-config.js?v=30.95"></script>
-    <script src="js/ai-engine.js?v=30.95"></script>
-    <script src="js/app.js?v=30.95"></script>
-    <script src="js/text-editor.js?v=30.95"></script>
-    <script src="js/smart-guidance.js?v=30.95"></script>
-    <script src="js/whatsapp-dispatcher.js?v=30.95"></script>
-    <script src="js/mobile-alerts.js?v=30.95"></script>
+    <script src="js/mqtt.min.js?v=30.96"></script>
+    <script src="js/cloud-sync.js?v=30.96"></script>
+    <script src="js/geo-tracker.js?v=30.96"></script>
+    <script src="js/database.js?v=30.96"></script>
+    <script src="js/exercise-image-studio.js?v=30.96"></script>
+    <script src="js/exercises-db.js?v=30.96"></script>
+    <script src="js/diagnostic-engine.js?v=30.96"></script>
+    <script src="js/audio-pacer.js?v=30.96"></script>
+    <script src="js/patient-flow.js?v=30.96"></script>
+    <script src="js/admin-engine.js?v=30.96"></script>
+    <script src="js/ai-config.js?v=30.96"></script>
+    <script src="js/ai-engine.js?v=30.96"></script>
+    <script src="js/app.js?v=30.96"></script>
+    <script src="js/text-editor.js?v=30.96"></script>
+    <script src="js/smart-guidance.js?v=30.96"></script>
+    <script src="js/whatsapp-dispatcher.js?v=30.96"></script>
+    <script src="js/mobile-alerts.js?v=30.96"></script>
 
     <script>
         // مؤشر المراجعين المتواجدين أونلاين الآن (متزامن بدقة مع السحابة ولوحة الإدارة)

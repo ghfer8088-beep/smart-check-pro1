@@ -6180,7 +6180,7 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
 }
 
 // =========================================================================
-// دوال إدارة النوافذ المنبثقة الاحترافية لباقات الاشتراك وتأكيد الدفع (v30.95)
+// دوال إدارة النوافذ المنبثقة الاحترافية لباقات الاشتراك وتأكيد الدفع (v30.96)
 // =========================================================================
 function openSubscriptionTiersModal() {
     const modal = document.getElementById('subscription-tiers-modal');
@@ -7004,7 +7004,7 @@ async function submitHumanitarianFreeActivation() {
         return;
     }
 
-    const waiverReason = 'أقرّ بأمانتي ومسؤوليتي في طلب الاستفادة من مبادرة الرعاية الإنسانية';
+    const waiverReason = 'أُقرّ أمام الله بأمانتي واستحقاقي لهذه المبادرة، وبأنني غير قادر مادياً على سداد قيمة الفحص في الأداة والبالغة 3 دنانير.';
 
     try {
         localStorage.setItem('smart_patient_name', subName);
@@ -7039,7 +7039,7 @@ async function submitHumanitarianFreeActivation() {
     };
     savePendingUnlockRequest(pendingObj);
     recordHumanitarianUsage(subPhone, pId);
-    syncPendingPatientRequestToAdmin(pId, subName, subPhone, painArea, '⏳ طلب مبادرة الرعاية الإنسانية بانتظار الاعتماد', pendingObj);
+    syncPendingPatientRequestToAdmin(pId, subName, subPhone, painArea, '⏳ طلب مبادرة الدعم الإنساني بانتظار الاعتماد', pendingObj);
 
     // 🔔 1. إرسال تنبيه فوري لهاتف الطبيب عبر منظومة SmartMobileAlerts
     try {
@@ -7057,12 +7057,12 @@ async function submitHumanitarianFreeActivation() {
     // 🔔 2. بث مباشر ومضمون إلى هاتف الطبيب عبر NTFY للقناتين المعتمدتين مع زر واتساب
     try {
         const cleanDigits = subPhone.replace(/\D/g, '').replace(/^0/, '962');
-        const waDirectMsg = `مرحباً بك أخي/أختي ${subName} 🌸\nعيادة «وداعاً للألم» للكايروبراكتيك ترحب بك.\nتم اعتماد طلبك في «مبادرة الرعاية الإنسانية» بنجاح.\n🔑 كود التفعيل المعتمد لفتح تقريرك هو:\n👉 *${unlockPin}* 👈\nنسأل الله لك دوام الصحة والعافية 🤲`;
+        const waDirectMsg = `مرحباً بك أخي/أختي ${subName} 🌸\nعيادة «وداعاً للألم» للكايروبراكتيك ترحب بك.\nتم اعتماد طلبك في «مبادرة الدعم الإنساني» بنجاح.\n🔑 كود التفعيل المعتمد لفتح تقريرك هو:\n👉 *${unlockPin}* 👈\nنسأل الله لك دوام الصحة والعافية 🤲`;
         const waDirectUrl = `https://api.whatsapp.com/send?phone=${cleanDigits}&text=${encodeURIComponent(waDirectMsg)}`;
 
         const pushPayload = {
-            title: `❤️ طلب مبادرة الرعاية الإنسانية: ${subName}`,
-            message: `👤 المستفيد: ${subName}\n📱 الهاتف: ${subPhone}\n🩺 موضع الألم: ${painArea}\n❤️ نوع الطلب: مبادرة الرعاية الإنسانية\n🔑 كود التفعيل: ${unlockPin}\n👉 اضغط الزر بالأسفل لمراسلة المستفيد بالواتساب فوراً!`,
+            title: `❤️ طلب مبادرة الدعم الإنساني: ${subName}`,
+            message: `👤 المستفيد: ${subName}\n📱 الهاتف: ${subPhone}\n🩺 موضع الألم: ${painArea}\n❤️ نوع الطلب: مبادرة الدعم الإنساني (غير مقتدر مادياً)\n🔑 كود التفعيل: ${unlockPin}\n👉 اضغط الزر بالأسفل لمراسلة المستفيد بالواتساب فوراً!`,
             priority: 5,
             tags: ['heart', 'hands', 'key', 'seedling'],
             click: 'https://smartchecktools.com/admin.html',
@@ -7481,41 +7481,35 @@ function _legacyPaywallCardHTML(data, isRegisteredPatient, resolvedReportName, r
                 </div>
             </div>
 
-            <!-- التبويب 2: طلب الإعفاء الإنساني للفقراء وغير المقتدرين فقط (بموافقة الإدارة وإقرار الذمة) -->
+            <!-- التبويب 2: مبادرة الدعم الإنساني (مخصصة لغير المقتدرين مادياً) -->
             <div id="paywall-pane-humanitarian" style="display: none; background: rgba(5, 9, 18, 0.95); border: 1.5px solid #10b981; border-radius: 16px; padding: 20px;">
-                <!-- بيان أدبي وشرعي بارز يوضح أن الإعفاء للفقراء فقط وأنه أمانة في الذمة ليوم الدين -->
+                <!-- بيان أدبي وشرعي بارز يوضح أن المبادرة لغير المقتدرين مادياً -->
                 <div style="background: linear-gradient(135deg, rgba(120, 53, 15, 0.32) 0%, rgba(6, 78, 59, 0.35) 55%, rgba(9, 14, 26, 0.98) 100%); border: 2px solid #d4af37; border-radius: 14px; padding: 18px 18px; margin-bottom: 18px; box-shadow: 0 8px 25px rgba(0,0,0,0.5);">
                     <div style="color: #fef08a; font-weight: 900; font-size: 1.05em; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
-                        <span>⚖️</span> <span>أمانةٌ أمام الله: التفعيل المجاني مخصّصٌ للفقراء وغير المقتدرين فقط</span>
+                        <span>🌿</span> <span>مبادرة الدعم الإنساني (مخصصة لغير المقتدرين مادياً)</span>
                     </div>
                     <div style="color: #f8fafc; font-size: 0.93em; line-height: 1.85; text-align: justify;">
-                        جُعل هذا الإعفاءُ المجاني <strong>صدقةً جاريةً خالصةً لوجه الله تعالى عن روح المرحوم والد المعالج جمال قبها</strong>، رحمةً وعوناً لكل مريضٍ متألمٍ ضاقت به السُّبل وعجز حقاً عن توفير رسوم الاشتراك الرمزية (${cfg.priceJod} دنانير).
-                        <span style="color: #fde68a; font-weight: 800; display: block; margin-top: 6px;">
-                            ⚠️ تذكيرٌ بالذمّة والأمانة: إن كنتَ مقتدراً مادياً على دفع الرسوم ولم تدفعها واستخدمتَ هذا الإعفاء المخصص للفقراء، فإنّ حقّها باقٍ في ذمّتك وعنقك أمام الله إلى يوم الدين.
-                        </span>
+                        تُقدَّم هذه الباقة مجاناً لوجه الله تعالى كصدقة جارية عن روح المرحوم والد المعالج جمال قبها من منصة «وداعاً للألم» كدعمٍ خاص للأشخاص غير المقتدرين مادياً على تحمل تكاليف الفحص. نرجو الاستفادة منها بصدقٍ وأمانة استشعاراً للمسؤولية أمام الله عز وجل، وإفساحاً للمجال لمن هم في أمسّ الحاجة إليها.
                     </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 16px;">
                     <div>
-                        <label style="color: #e2e8f0; font-size: 0.86em; display: block; margin-bottom: 6px; font-weight: 800;">👤 الاسم الثلاثي الكريم: *</label>
-                        <input type="text" id="hum-subscriber-name" value="${defaultName}" placeholder="أدخل اسمك الثلاثي الكريم" style="width: 100%; background: #0b1324; border: 1.5px solid #475569; padding: 12px; border-radius: 10px; color: #fff; font-size: 0.95em; box-sizing: border-box;">
+                        <label style="color: #e2e8f0; font-size: 0.86em; display: block; margin-bottom: 6px; font-weight: 800;">👤 الاسم الكريم: *</label>
+                        <input type="text" id="hum-subscriber-name" value="${defaultName}" placeholder="أدخل اسمك الكريم" style="width: 100%; background: #0b1324; border: 1.5px solid #475569; padding: 12px; border-radius: 10px; color: #fff; font-size: 0.95em; box-sizing: border-box;">
                     </div>
                     <div>
-                        <label style="color: #e2e8f0; font-size: 0.86em; display: block; margin-bottom: 6px; font-weight: 800;">📱 رقم الهاتف (الواتساب لإشعارك بالموافقة): *</label>
+                        <label style="color: #e2e8f0; font-size: 0.86em; display: block; margin-bottom: 6px; font-weight: 800;">📱 رقم هاتف الواتساب (لاستلام كود التفعيل): *</label>
                         <input type="tel" id="hum-subscriber-phone" value="${defaultPhone}" placeholder="079xxxxxxx" style="width: 100%; background: #0b1324; border: 1.5px solid #475569; padding: 12px; border-radius: 10px; color: #fff; font-size: 0.95em; direction: ltr; text-align: left; box-sizing: border-box;">
                     </div>
                 </div>
 
-                <!-- مربع الاختيار الفارغ للإقرار الشرعي الإلزامي (بدون خانة ذكر الأسباب) -->
+                <!-- مربع الاختيار الفارغ لإقرار الأمانة والاستحقاق -->
                 <label id="hum-oath-box-label" for="hum-oath-checkbox" style="display: flex; align-items: flex-start; gap: 14px; background: rgba(16, 185, 129, 0.12); border: 2px solid #10b981; border-radius: 14px; padding: 16px 18px; margin-bottom: 18px; cursor: pointer; transition: all 0.25s; box-shadow: inset 0 0 18px rgba(16, 185, 129, 0.1);">
                     <input type="checkbox" id="hum-oath-checkbox" onchange="const lbl=document.getElementById('hum-oath-box-label'); if(lbl){lbl.style.borderColor=this.checked?'#fef08a':'#10b981'; lbl.style.background=this.checked?'rgba(16,185,129,0.24)':'rgba(16,185,129,0.12)';}" style="width: 24px; height: 24px; margin-top: 3px; accent-color: #10b981; cursor: pointer; flex-shrink: 0;">
                     <div style="flex: 1;">
                         <div style="color: #fef08a; font-weight: 900; font-size: 1.02em; line-height: 1.7;">
-                            «أنا غير مقتدر مادياً والله على ما أقول شهيد، وإذا كنتُ مقتدراً فهي في ذمتي ليوم الدين.»
-                        </div>
-                        <div style="color: #a7f3d0; font-size: 0.82em; margin-top: 4px; font-weight: 700;">
-                            ☑️ بوضعك علامة (صح) في هذا المربع، فإنك تُقرّ أمام الله بأنك فقير وغير قادر على دفع رسوم الاشتراك (${cfg.priceJod} دنانير).
+                            «أُقرّ أمام الله بأمانتي واستحقاقي لهذه المبادرة، وبأنني غير قادر مادياً على سداد قيمة الفحص في الأداة والبالغة 3 دنانير.»
                         </div>
                     </div>
                 </label>
@@ -11085,7 +11079,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.95';
+const CURRENT_APP_VERSION = 'v30.96';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
