@@ -42,9 +42,9 @@
       gtag('config', 'G-BJ8G4605P0');
     </script>
 
-    <script src="js/system-watchdog.js?v=30.92"></script>
-    <script src="js/security-shield.js?v=30.92"></script>
-    <link rel="stylesheet" href="css/style.css?v=30.92">
+    <script src="js/system-watchdog.js?v=30.93"></script>
+    <script src="js/security-shield.js?v=30.93"></script>
+    <link rel="stylesheet" href="css/style.css?v=30.93">
     <style>
         body {
             background-color: #080c14;
@@ -406,7 +406,7 @@
                     <div style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.78em; color: #94a3b8; margin-top: 2px;">
                         <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                         <span>الإصدار المعتمد:</span>
-                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.92</strong>
+                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v30.93</strong>
                     </div>
                 </div>
             </div>
@@ -437,14 +437,17 @@
                     <button type="button" onclick="openPaymentSettingsModal()" class="btn-header" style="background: linear-gradient(135deg, rgba(249, 115, 22, 0.28) 0%, rgba(212, 175, 55, 0.22) 100%); border: 1.5px solid #f97316; color: #fed7aa; font-weight: 900; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="إدارة سعر الاشتراك (3 د.أ)، محفظة أورانج، الإعفاء الإنساني، ووضع الاختبار المجاني">
                         <span>💳</span> الدفع والاشتراك (<span id="header-price-badge">3</span> د.أ)
                     </button>
+                    <button type="button" onclick="openFinancialLedgerModal()" class="btn-header" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.3) 0%, rgba(180, 83, 9, 0.25) 100%); border: 1.5px solid var(--primary-gold); color: #fef08a; font-weight: 900; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(212, 175, 55, 0.3);" title="عرض السجل المحاسبي، إجمالي المبيعات، تفاصيل الباقات المشتراة والمبادرات الإنسانية">
+                        <span>💰</span> النظام المحاسبي (<span id="header-accounting-rev">0 د.أ</span>)
+                    </button>
                     <button type="button" onclick="openSystemSettingsModal()" class="btn-header admin-btn-settings" style="background: rgba(212, 175, 55, 0.18); border-color: var(--primary-gold); color: var(--primary-gold); font-weight: bold; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
                         <span>⚙️</span> إعدادات
                     </button>
                     <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header admin-btn-cache" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 9px 12px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
-                        ⚡ تحديث الكاش (v30.92)
+                        ⚡ تحديث الكاش (v30.93)
                     </button>
-                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.92) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
-                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.92)
+                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v30.93) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
+                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v30.93)
                     </button>
                     <button type="button" id="btn-force-sync" onclick="handleForceFullSync()" style="background: linear-gradient(135deg,rgba(59,130,246,0.25),rgba(99,102,241,0.2)); border: 1px solid #6366f1; color: #a5b4fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="جلب كافة السجلات من السحابة قسرياً وبثها لجميع الأجهزة">
                         🔄 مزامنة كاملة
@@ -1140,6 +1143,123 @@
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <!-- ========================================================================== -->
+    <!-- 💰 نافذة النظام المحاسبي وسجل المبيعات والاشتراكات (Financial Ledger Modal) -->
+    <!-- ========================================================================== -->
+    <div id="financial-ledger-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 9999; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;">
+        <div class="modal-inner" style="background: linear-gradient(155deg, #070d19 0%, #0d182c 50%, #060a12 100%); border: 2px solid var(--primary-gold); border-radius: 20px; max-width: 1100px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; padding: 24px; box-shadow: 0 15px 50px rgba(0,0,0,0.95); box-sizing: border-box; overflow: hidden; position: relative;">
+            
+            <!-- الهيدر -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(212, 175, 55, 0.3); padding-bottom: 14px; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="font-size: 2.2em; filter: drop-shadow(0 0 10px rgba(212,175,55,0.4));">💰</div>
+                    <div>
+                        <h2 style="color: var(--primary-gold); margin: 0; font-size: 1.35em; font-weight: 900;">النظام المحاسبي وسجل المبيعات والاشتراكات</h2>
+                        <div style="color: #94a3b8; font-size: 0.86em; margin-top: 3px;">
+                            رصد مالي دقيق وشامل لجميع الباقات المشتراة والمبالغ المحصّلة والمبادرات الإنسانية منذ إطلاق المنصة
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button type="button" onclick="copyFinancialLedgerSummary()" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; padding: 7px 14px; border-radius: 8px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                        <span>📋</span> <span>نسخ التقرير المحاسبي</span>
+                    </button>
+                    <button type="button" onclick="closeFinancialLedgerModal()" aria-label="إغلاق" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); color: #cbd5e1; font-size: 1.4em; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+                </div>
+            </div>
+
+            <!-- بطاقات ملخص المؤشرات المحاسبية الخمسة (5 KPI Cards) -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 18px;">
+                
+                <!-- 1. إجمالي الإيرادات -->
+                <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.18) 0%, rgba(180, 83, 9, 0.15) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 14px; text-align: center; box-shadow: 0 4px 14px rgba(212,175,55,0.15);">
+                    <div style="color: #94a3b8; font-size: 0.78em; font-weight: bold; margin-bottom: 2px;">إجمالي المبالغ المحصلة 💰</div>
+                    <div id="acct-total-rev" style="color: #fef08a; font-size: 1.85em; font-weight: 900; font-family: monospace;">0 د.أ</div>
+                    <div id="acct-total-orders" style="color: #cbd5e1; font-size: 0.75em; margin-top: 2px;">0 عملية مدفوعة</div>
+                </div>
+
+                <!-- 2. تشخيص فردي (3 د.أ) -->
+                <div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid #64748b; border-radius: 14px; padding: 14px; text-align: center;">
+                    <div style="color: #94a3b8; font-size: 0.78em; font-weight: bold; margin-bottom: 2px;">فحص فردي (3 د.أ) 🔑</div>
+                    <div id="acct-single-count" style="color: #38bdf8; font-size: 1.6em; font-weight: 900; font-family: monospace;">0</div>
+                    <div id="acct-single-sum" style="color: #94a3b8; font-size: 0.75em; margin-top: 2px;">0 د.أ</div>
+                </div>
+
+                <!-- 3. باقة التعافي العائلي (10 د.أ) -->
+                <div style="background: rgba(245, 158, 11, 0.08); border: 1.5px solid #f59e0b; border-radius: 14px; padding: 14px; text-align: center;">
+                    <div style="color: #fed7aa; font-size: 0.78em; font-weight: bold; margin-bottom: 2px;">باقة عائلية 5 (10 د.أ) ⭐</div>
+                    <div id="acct-pack5-count" style="color: #fbbf24; font-size: 1.6em; font-weight: 900; font-family: monospace;">0</div>
+                    <div id="acct-pack5-sum" style="color: #fde68a; font-size: 0.75em; margin-top: 2px;">0 د.أ</div>
+                </div>
+
+                <!-- 4. باقة الحل الجذري الشاملة (15 د.أ) -->
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1.5px solid #10b981; border-radius: 14px; padding: 14px; text-align: center;">
+                    <div style="color: #a7f3d0; font-size: 0.78em; font-weight: bold; margin-bottom: 2px;">باقة شاملة 10 (15 د.أ) 👑</div>
+                    <div id="acct-pack10-count" style="color: #34d399; font-size: 1.6em; font-weight: 900; font-family: monospace;">0</div>
+                    <div id="acct-pack10-sum" style="color: #6ee7b7; font-size: 0.75em; margin-top: 2px;">0 د.أ</div>
+                </div>
+
+                <!-- 5. مبادرة الرعاية الإنسانية (0 د.أ) -->
+                <div style="background: rgba(239, 68, 68, 0.08); border: 1.5px solid #ef4444; border-radius: 14px; padding: 14px; text-align: center;">
+                    <div style="color: #fca5a5; font-size: 0.78em; font-weight: bold; margin-bottom: 2px;">رعاية إنسانية (مجاناً) ❤️</div>
+                    <div id="acct-hum-count" style="color: #f87171; font-size: 1.6em; font-weight: 900; font-family: monospace;">0</div>
+                    <div style="color: #cbd5e1; font-size: 0.75em; margin-top: 2px;">صدقة جارية</div>
+                </div>
+            </div>
+
+            <!-- شريط التصفية والبحث -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" class="acct-filter-btn active" onclick="filterFinancialLedger('all', this)" style="background: var(--primary-gold); color: #0a0e14; border: 1px solid var(--primary-gold); padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 0.82em; cursor: pointer;">
+                        الكل (<span id="acct-count-all">0</span>)
+                    </button>
+                    <button type="button" class="acct-filter-btn" onclick="filterFinancialLedger('single', this)" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 6px 14px; border-radius: 20px; font-size: 0.82em; cursor: pointer;">
+                        تشخيص فردي (<span id="acct-count-single">0</span>)
+                    </button>
+                    <button type="button" class="acct-filter-btn" onclick="filterFinancialLedger('pack5', this)" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 6px 14px; border-radius: 20px; font-size: 0.82em; cursor: pointer;">
+                        باقة 5 (<span id="acct-count-pack5">0</span>)
+                    </button>
+                    <button type="button" class="acct-filter-btn" onclick="filterFinancialLedger('pack10', this)" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 6px 14px; border-radius: 20px; font-size: 0.82em; cursor: pointer;">
+                        باقة 10 (<span id="acct-count-pack10">0</span>)
+                    </button>
+                    <button type="button" class="acct-filter-btn" onclick="filterFinancialLedger('humanitarian', this)" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 6px 14px; border-radius: 20px; font-size: 0.82em; cursor: pointer;">
+                        مبادرة إنسانية (<span id="acct-count-hum">0</span>)
+                    </button>
+                </div>
+                <div style="flex: 1; max-width: 280px; min-width: 200px;">
+                    <input type="text" id="acct-search-input" placeholder="🔍 بحث باسم المشترك، الهاتف، أو الحوالة..." oninput="searchFinancialLedger(this.value)" style="width: 100%; background: #080c14; border: 1.5px solid #334155; padding: 7px 12px; border-radius: 8px; color: #fff; font-size: 0.82em; box-sizing: border-box; outline: none;">
+                </div>
+            </div>
+
+            <!-- جدول العمليات المحاسبية التفصيلي (Scrollable Table) -->
+            <div style="flex: 1; overflow-y: auto; overflow-x: auto; border: 1px solid #1e293b; border-radius: 12px; background: rgba(8, 12, 20, 0.7);">
+                <table style="width: 100%; border-collapse: collapse; text-align: right; font-size: 0.85em;">
+                    <thead>
+                        <tr style="background: rgba(15, 23, 42, 0.95); border-bottom: 1.5px solid #334155; color: #94a3b8; font-weight: bold; position: sticky; top: 0; z-index: 2;">
+                            <th style="padding: 11px 12px;">#</th>
+                            <th style="padding: 11px 12px;">التاريخ والوقت</th>
+                            <th style="padding: 11px 12px;">المشترك</th>
+                            <th style="padding: 11px 12px;">الهاتف</th>
+                            <th style="padding: 11px 12px;">الباقة</th>
+                            <th style="padding: 11px 12px;">المبلغ</th>
+                            <th style="padding: 11px 12px;">رقم الحوالة</th>
+                            <th style="padding: 11px 12px;">الحالة</th>
+                            <th style="padding: 11px 12px;">الكود المعتمد</th>
+                            <th style="padding: 11px 12px; text-align: center;">إجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="acct-ledger-tbody">
+                        <tr>
+                            <td colspan="10" style="text-align: center; padding: 30px; color: #94a3b8;">
+                                جاري تحميل السجل المحاسبي...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -2024,17 +2144,17 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/clinic-patients-data.js?v=30.92"></script>
-    <script src="js/mqtt.min.js?v=30.92"></script>
-    <script src="js/cloud-sync.js?v=30.92"></script>
-    <script src="js/geo-tracker.js?v=30.92"></script>
-    <script src="js/database.js?v=30.92"></script>
-    <script src="js/exercise-image-studio.js?v=30.92"></script>
-    <script src="js/admin-engine.js?v=30.92"></script>
-    <script src="js/ai-config.js?v=30.92"></script>
-    <script src="js/ai-engine.js?v=30.92"></script>
-    <script src="js/whatsapp-dispatcher.js?v=30.92"></script>
-    <script src="js/mobile-alerts.js?v=30.92"></script>
+    <script src="js/clinic-patients-data.js?v=30.93"></script>
+    <script src="js/mqtt.min.js?v=30.93"></script>
+    <script src="js/cloud-sync.js?v=30.93"></script>
+    <script src="js/geo-tracker.js?v=30.93"></script>
+    <script src="js/database.js?v=30.93"></script>
+    <script src="js/exercise-image-studio.js?v=30.93"></script>
+    <script src="js/admin-engine.js?v=30.93"></script>
+    <script src="js/ai-config.js?v=30.93"></script>
+    <script src="js/ai-engine.js?v=30.93"></script>
+    <script src="js/whatsapp-dispatcher.js?v=30.93"></script>
+    <script src="js/mobile-alerts.js?v=30.93"></script>
 
     <script>
         // محرك صيانة وتطهير التخزين التلقائي لمنع تجاوز السعة (QuotaExceededError)
@@ -6096,7 +6216,7 @@
         // ⚙️ دوال نافذة إعدادات وتخصيص المنظومة (System Settings Modal)
         // ==========================================================================
         
-        // دوال منظومة إشعارات الموبايل الفورية (v30.92)
+        // دوال منظومة إشعارات الموبايل الفورية (v30.93)
         function openMobileAlertsModal() {
             openSystemSettingsModal();
             const btn = document.getElementById('btn-settings-tab-mobile-alerts');
@@ -6478,8 +6598,340 @@ function copyAdminCode(code) {
                 if (paidEl) paidEl.textContent = paidCount;
                 if (revEl) revEl.textContent = `${totalRev} د.أ`;
                 if (humEl) humEl.textContent = humCount;
+
+                const headAcctRev = document.getElementById('header-accounting-rev');
+                if (headAcctRev) headAcctRev.textContent = `${totalRev} د.أ`;
             } catch (e) {}
         }
+
+        // =========================================================================
+        // 💰 دوال النظام المحاسبي وسجل المبيعات والاشتراكات (v30.93)
+        // =========================================================================
+        let currentAcctFilter = 'all';
+        let currentAcctSearch = '';
+        let cachedAccountingRecords = [];
+
+        function openFinancialLedgerModal() {
+            const modal = document.getElementById('financial-ledger-modal');
+            if (modal) modal.style.display = 'flex';
+            refreshAndRenderAccountingLedger();
+        }
+        window.openFinancialLedgerModal = openFinancialLedgerModal;
+
+        function closeFinancialLedgerModal() {
+            const modal = document.getElementById('financial-ledger-modal');
+            if (modal) modal.style.display = 'none';
+        }
+        window.closeFinancialLedgerModal = closeFinancialLedgerModal;
+
+        function extractAllAccountingRecords() {
+            const records = [];
+            const seenKeys = new Set();
+            const cfg = getAdminPaymentGateConfig();
+
+            // 1. استخراج العمليات من قائمة المراجعين الحقيقيين (allPatientsList)
+            if (Array.isArray(allPatientsList)) {
+                allPatientsList.forEach(item => {
+                    const p = item.patient || {};
+                    const pId = p.patientId || p.id || '';
+                    const pPhone = p.phone || p.patientPhone || '';
+                    const pName = p.name || p.patientName || p.fullName || 'مشترك';
+                    const pStatus = String(p.paymentStatus || '');
+                    const pType = String(p.paymentType || '');
+                    const amtPaid = Number(p.amountPaid || 0);
+
+                    const isPaid = pType.includes('orange') || pType.includes('paid') || pStatus.includes('أورانج') || pStatus.includes('مدفوع') || amtPaid > 0;
+                    const isHum = pType.includes('humanitarian') || pStatus.includes('إنساني') || pStatus.includes('إعفاء');
+
+                    if (isPaid || isHum) {
+                        const key = `${pPhone || pName}_${isHum ? 'hum' : 'paid'}_${p.transferRef || ''}`;
+                        if (!seenKeys.has(key)) {
+                            seenKeys.add(key);
+                            
+                            let tier = 'single';
+                            let tierName = 'تشخيص فردي';
+                            let price = isHum ? 0 : 3;
+
+                            if (isHum) {
+                                tier = 'humanitarian';
+                                tierName = 'مبادرة إنسانية';
+                                price = 0;
+                            } else if (p.packageSize === 10 || amtPaid === 15 || (p.unlockPin && String(p.unlockPin).startsWith('10'))) {
+                                tier = 'pack10';
+                                tierName = 'باقة 10 فحوصات';
+                                price = 15;
+                            } else if (p.packageSize === 5 || amtPaid === 10 || (p.unlockPin && String(p.unlockPin).startsWith('5'))) {
+                                tier = 'pack5';
+                                tierName = 'باقة 5 فحوصات';
+                                price = 10;
+                            } else {
+                                price = amtPaid > 0 ? amtPaid : 3;
+                            }
+
+                            records.push({
+                                id: 'TX-P-' + (pId || Math.random().toString(36).slice(2, 7)),
+                                date: p.unlockedAt || p.registeredAt || p.lastUpdated || p.date || new Date().toISOString(),
+                                patientId: pId,
+                                patientName: pName,
+                                patientPhone: pPhone,
+                                tier: tier,
+                                tierName: tierName,
+                                amount: price,
+                                transferRef: p.transferRef || p.receiptNo || (isHum ? 'إعفاء إنساني' : 'حوالة محفظة'),
+                                status: p.isPaidUnlocked ? 'مفعّل ومعتمد' : (pStatus.includes('بانتظار') ? 'بانتظار التأكيد' : 'معتمد'),
+                                isUnlocked: Boolean(p.isPaidUnlocked),
+                                pin: p.unlockPin || generateAdminUnlockPin(pPhone || pName, tier === 'pack10' ? 10 : (tier === 'pack5' ? 5 : 1))
+                            });
+                        }
+                    }
+                });
+            }
+
+            // 2. استخراج العمليات من سجل الإشعارات (allNotificationsList)
+            if (Array.isArray(allNotificationsList)) {
+                allNotificationsList.forEach(n => {
+                    const isPayNotif = n.type === 'payment_received';
+                    const isHumNotif = n.type === 'humanitarian_request' || n.meta?.paymentType === 'humanitarian';
+
+                    if (isPayNotif || isHumNotif) {
+                        const pPhone = n.patientPhone || n.meta?.subscriberPhone || '';
+                        const pName = n.patientName || n.meta?.subscriberName || 'مشترك';
+                        const ref = n.meta?.transferRef || '';
+                        const key = `${pPhone || pName}_${isHumNotif ? 'hum' : 'paid'}_${ref}`;
+
+                        if (!seenKeys.has(key)) {
+                            seenKeys.add(key);
+
+                            let tier = 'single';
+                            let tierName = 'تشخيص فردي';
+                            let price = isHumNotif ? 0 : 3;
+                            const pkgSize = n.meta?.packageSize || 1;
+                            const metaAmt = Number(n.meta?.amountJod || 0);
+
+                            if (isHumNotif) {
+                                tier = 'humanitarian';
+                                tierName = 'مبادرة إنسانية';
+                                price = 0;
+                            } else if (pkgSize === 10 || metaAmt === 15) {
+                                tier = 'pack10';
+                                tierName = 'باقة 10 فحوصات';
+                                price = 15;
+                            } else if (pkgSize === 5 || metaAmt === 10) {
+                                tier = 'pack5';
+                                tierName = 'باقة 5 فحوصات';
+                                price = 10;
+                            } else {
+                                price = metaAmt > 0 ? metaAmt : 3;
+                            }
+
+                            records.push({
+                                id: n.id || ('TX-N-' + Math.random().toString(36).slice(2, 7)),
+                                date: n.timestamp || n.date || new Date().toISOString(),
+                                patientId: n.patientId || '',
+                                patientName: pName,
+                                patientPhone: pPhone,
+                                tier: tier,
+                                tierName: tierName,
+                                amount: price,
+                                transferRef: ref || (isHumNotif ? 'إعفاء إنساني' : 'حوالة محفظة'),
+                                status: n.read ? 'معتمد' : 'بانتظار التأكيد',
+                                isUnlocked: Boolean(n.read),
+                                pin: n.meta?.unlockPin || n.meta?.unlockCode || generateAdminUnlockPin(pPhone || pName, tier === 'pack10' ? 10 : (tier === 'pack5' ? 5 : 1))
+                            });
+                        }
+                    }
+                });
+            }
+
+            // ترتيب السجلات تنازلياً حسب التاريخ
+            records.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+            return records;
+        }
+
+        function refreshAndRenderAccountingLedger() {
+            cachedAccountingRecords = extractAllAccountingRecords();
+
+            // حساب المجاميع
+            let totalRevenue = 0;
+            let singleCount = 0;
+            let singleSum = 0;
+            let pack5Count = 0;
+            let pack5Sum = 0;
+            let pack10Count = 0;
+            let pack10Sum = 0;
+            let humCount = 0;
+
+            cachedAccountingRecords.forEach(r => {
+                if (r.tier === 'single') {
+                    singleCount++;
+                    singleSum += r.amount;
+                    totalRevenue += r.amount;
+                } else if (r.tier === 'pack5') {
+                    pack5Count++;
+                    pack5Sum += r.amount;
+                    totalRevenue += r.amount;
+                } else if (r.tier === 'pack10') {
+                    pack10Count++;
+                    pack10Sum += r.amount;
+                    totalRevenue += r.amount;
+                } else if (r.tier === 'humanitarian') {
+                    humCount++;
+                }
+            });
+
+            // تحديث أرقام الـ KPI
+            const elTotRev = document.getElementById('acct-total-rev'); if (elTotRev) elTotRev.textContent = `${totalRevenue} د.أ`;
+            const elTotOrders = document.getElementById('acct-total-orders'); if (elTotOrders) elTotOrders.textContent = `${singleCount + pack5Count + pack10Count} طلب مدفوع`;
+            const elHeadRev = document.getElementById('header-accounting-rev'); if (elHeadRev) elHeadRev.textContent = `${totalRevenue} د.أ`;
+
+            const elSCount = document.getElementById('acct-single-count'); if (elSCount) elSCount.textContent = singleCount;
+            const elSSum = document.getElementById('acct-single-sum'); if (elSSum) elSSum.textContent = `${singleSum} د.أ`;
+
+            const elP5Count = document.getElementById('acct-pack5-count'); if (elP5Count) elP5Count.textContent = pack5Count;
+            const elP5Sum = document.getElementById('acct-pack5-sum'); if (elP5Sum) elP5Sum.textContent = `${pack5Sum} د.أ`;
+
+            const elP10Count = document.getElementById('acct-pack10-count'); if (elP10Count) elP10Count.textContent = pack10Count;
+            const elP10Sum = document.getElementById('acct-pack10-sum'); if (elP10Sum) elP10Sum.textContent = `${pack10Sum} د.أ`;
+
+            const elHumCount = document.getElementById('acct-hum-count'); if (elHumCount) elHumCount.textContent = humCount;
+
+            // تحديث عدادات التبويبات
+            const elAll = document.getElementById('acct-count-all'); if (elAll) elAll.textContent = cachedAccountingRecords.length;
+            const elCS = document.getElementById('acct-count-single'); if (elCS) elCS.textContent = singleCount;
+            const elCP5 = document.getElementById('acct-count-pack5'); if (elCP5) elCP5.textContent = pack5Count;
+            const elCP10 = document.getElementById('acct-count-pack10'); if (elCP10) elCP10.textContent = pack10Count;
+            const elCHum = document.getElementById('acct-count-hum'); if (elCHum) elCHum.textContent = humCount;
+
+            renderAccountingTableRows();
+        }
+
+        function renderAccountingTableRows() {
+            const tbody = document.getElementById('acct-ledger-tbody');
+            if (!tbody) return;
+
+            let filtered = cachedAccountingRecords;
+            if (currentAcctFilter !== 'all') {
+                filtered = filtered.filter(r => r.tier === currentAcctFilter);
+            }
+            if (currentAcctSearch) {
+                const q = currentAcctSearch.toLowerCase();
+                filtered = filtered.filter(r => 
+                    (r.patientName || '').toLowerCase().includes(q) ||
+                    (r.patientPhone || '').includes(q) ||
+                    (r.transferRef || '').toLowerCase().includes(q) ||
+                    (r.pin || '').includes(q)
+                );
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" style="text-align: center; padding: 35px; color: #94a3b8;">
+                            لا توجد عمليات مسجلة مطابقة للفلاتر الحالية.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((r, idx) => {
+                const dStr = r.date ? new Date(r.date).toLocaleString('ar-JO', { dateStyle: 'short', timeStyle: 'short' }) : '--';
+                
+                let tierBadge = `<span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid #38bdf8; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.82em;">فحص فردي</span>`;
+                if (r.tier === 'pack5') {
+                    tierBadge = `<span style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid #f59e0b; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.82em;">باقة 5 فحوصات</span>`;
+                } else if (r.tier === 'pack10') {
+                    tierBadge = `<span style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid #10b981; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.82em;">باقة 10 فحوصات</span>`;
+                } else if (r.tier === 'humanitarian') {
+                    tierBadge = `<span style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid #ef4444; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.82em;">مبادرة إنسانية</span>`;
+                }
+
+                const isPending = r.status.includes('بانتظار');
+                const statusBadge = isPending 
+                    ? `<span style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; padding: 2px 8px; border-radius: 6px; font-size: 0.8em; font-weight: bold;">⏳ بانتظار التأكيد</span>`
+                    : `<span style="background: rgba(16, 185, 129, 0.15); color: #6ee7b7; padding: 2px 8px; border-radius: 6px; font-size: 0.8em; font-weight: bold;">✓ مفعّل ومعتمد</span>`;
+
+                // زر الواتساب السريع
+                const cleanDigits = (r.patientPhone || '').replace(/\D/g, '').replace(/^0/, '962');
+                const waMsg = `مرحباً بك أخي/أختي ${r.patientName} 🌸\nمنصة «وداعاً للألم» للكايروبراكتيك.\nكود تفعيل اشتراكك في [${r.tierName}] هو:\n👉 *${r.pin}* 👈\nنتمنى لك دوام الصحة والعافية.`;
+                const waUrl = cleanDigits ? `https://api.whatsapp.com/send?phone=${cleanDigits}&text=${encodeURIComponent(waMsg)}` : '';
+
+                return `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); transition: background 0.15s;" onmouseover="this.style.background='rgba(212,175,55,0.04)'" onmouseout="this.style.background='transparent'">
+                        <td style="padding: 10px 12px; color: #64748b; font-family: monospace;">${idx + 1}</td>
+                        <td style="padding: 10px 12px; color: #cbd5e1; white-space: nowrap;">${dStr}</td>
+                        <td style="padding: 10px 12px; font-weight: bold; color: #ffffff;">${r.patientName}</td>
+                        <td style="padding: 10px 12px; color: #94a3b8; font-family: monospace; direction: ltr; text-align: right;">${r.patientPhone || '--'}</td>
+                        <td style="padding: 10px 12px;">${tierBadge}</td>
+                        <td style="padding: 10px 12px; font-weight: 900; color: ${r.amount > 0 ? '#fef08a' : '#94a3b8'}; font-family: monospace;">${r.amount > 0 ? r.amount + ' د.أ' : 'مجاناً'}</td>
+                        <td style="padding: 10px 12px; color: #fed7aa; font-family: monospace; letter-spacing: 0.5px;">${r.transferRef}</td>
+                        <td style="padding: 10px 12px;">${statusBadge}</td>
+                        <td style="padding: 10px 12px;">
+                            <span style="font-family: monospace; font-size: 1.1em; font-weight: 900; color: #38bdf8; letter-spacing: 1.5px; background: rgba(56, 189, 248, 0.1); padding: 2px 8px; border-radius: 6px;">${r.pin}</span>
+                        </td>
+                        <td style="padding: 10px 12px; text-align: center; white-space: nowrap;">
+                            ${waUrl ? `
+                            <a href="${waUrl}" target="_blank" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 10px; border-radius: 6px; font-size: 0.8em; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 4px;" title="إرسال الكود للعميل عبر الواتساب فوراً">
+                                <span>💬</span> <span>واتساب</span>
+                            </a>` : ''}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterFinancialLedger(filterType, btnEl) {
+            currentAcctFilter = filterType || 'all';
+            document.querySelectorAll('.acct-filter-btn').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = '#1e293b';
+                b.style.color = '#cbd5e1';
+                b.style.borderColor = '#334155';
+            });
+            if (btnEl) {
+                btnEl.classList.add('active');
+                btnEl.style.background = 'var(--primary-gold)';
+                btnEl.style.color = '#0a0e14';
+                btnEl.style.borderColor = 'var(--primary-gold)';
+            }
+            renderAccountingTableRows();
+        }
+        window.filterFinancialLedger = filterFinancialLedger;
+
+        function searchFinancialLedger(val) {
+            currentAcctSearch = (val || '').trim();
+            renderAccountingTableRows();
+        }
+        window.searchFinancialLedger = searchFinancialLedger;
+
+        function copyFinancialLedgerSummary() {
+            const totRev = document.getElementById('acct-total-rev')?.textContent || '0 د.أ';
+            const sCount = document.getElementById('acct-single-count')?.textContent || '0';
+            const sSum = document.getElementById('acct-single-sum')?.textContent || '0 د.أ';
+            const p5Count = document.getElementById('acct-pack5-count')?.textContent || '0';
+            const p5Sum = document.getElementById('acct-pack5-sum')?.textContent || '0 د.أ';
+            const p10Count = document.getElementById('acct-pack10-count')?.textContent || '0';
+            const p10Sum = document.getElementById('acct-pack10-sum')?.textContent || '0 د.أ';
+            const hCount = document.getElementById('acct-hum-count')?.textContent || '0';
+
+            const text = `📊 ملخص التقرير المحاسبي - منصة وداعاً للألم (Smart Check Pro 2.0)\n` +
+                `📅 تاريخ التقرير: ${new Date().toLocaleDateString('ar-JO')}\n` +
+                `💰 إجمالي الإيرادات الكلية: ${totRev}\n` +
+                `----------------------------------------\n` +
+                `🔑 تشخيص فردي (3 د.أ): ${sCount} باقة (${sSum})\n` +
+                `⭐ باقة التعافي العائلي (10 د.أ): ${p5Count} باقة (${p5Sum})\n` +
+                `👑 باقة الحل الجذري (15 د.أ): ${p10Count} باقة (${p10Sum})\n` +
+                `❤️ مبادرات الرعاية الإنسانية: ${hCount} مستفيد (صدقة جارية)\n` +
+                `----------------------------------------\n` +
+                `Smart Check Pro 2.0 | وداعاً للألم`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ تم نسخ ملخص التقرير المحاسبي إلى الحافظة بنجاح.');
+            }).catch(() => {
+                prompt('انسخ التقرير المحاسبي من هنا:', text);
+            });
+        }
+        window.copyFinancialLedgerSummary = copyFinancialLedgerSummary;
 
         function loadPaymentGateConfigIntoAdminUI() {
             const cfg = getAdminPaymentGateConfig();
@@ -6906,17 +7358,17 @@ function copyAdminCode(code) {
             }, 250);
         }
 
-        // بث رسالة التحديث الجديد الشامل (v30.92) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
+        // بث رسالة التحديث الجديد الشامل (v30.93) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
         function handleBroadcastGlobalVersion() {
-            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.92) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
+            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v30.93) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
                 if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                     SmartCloudSync.broadcastAppVersionUpdate({
-                        version: 'v30.92',
-                        title: 'تحديث المنظومة (v30.92)',
+                        version: 'v30.93',
+                        title: 'تحديث المنظومة (v30.93)',
                         timestamp: Date.now()
                     });
                 }
-                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.92) عبر شبكة البث اللحظي MQTT و NTFY لكافة الأجهزة!');
+                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v30.93) عبر شبكة البث اللحظي MQTT و NTFY لكافة الأجهزة!');
             }
         }
         window.handleBroadcastGlobalVersion = handleBroadcastGlobalVersion;
@@ -7385,7 +7837,7 @@ function copyAdminCode(code) {
 <script>
 // ===== تحديث تلقائي للوحة الإدارة: تقارن إصدارها بإصدار الأداة المنشور (sw.js) وتحدّث نفسها =====
 (function () {
-    const ADMIN_VER = 'v30.92';
+    const ADMIN_VER = 'v30.93';
     window.ADMIN_VER = ADMIN_VER;
     let busy = false;
     async function check(force) {

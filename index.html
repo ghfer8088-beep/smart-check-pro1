@@ -28,11 +28,11 @@
     </script>
 
     <!-- منظومة الأمان السيبراني وحماية الملكية الفكرية وقفل النطاق -->
-    <script src="js/security-shield.js?v=30.92"></script>
-    <script src="js/system-watchdog.js?v=30.92"></script>
+    <script src="js/security-shield.js?v=30.93"></script>
+    <script src="js/system-watchdog.js?v=30.93"></script>
 
     <!-- وسوم تطبيق الويب التقدمي PWA والأيقونات الرسمية -->
-    <link rel="manifest" href="manifest.json?v=30.92">
+    <link rel="manifest" href="manifest.json?v=30.93">
     <link rel="icon" type="image/png" href="assets/logo.png">
     <link rel="shortcut icon" href="assets/logo.png">
     <link rel="apple-touch-icon" href="assets/logo.png">
@@ -44,14 +44,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=30.92">
+    <link rel="stylesheet" href="css/style.css?v=30.93">
     <script>
         // التحقق من وصول أحدث إصدار وبث التحديث عالمياً لجميع الأجهزة
         (function() {
             try {
                 localStorage.removeItem('smart_app_theme');
             } catch(e) {}
-            var APP_TARGET_VER = '30.92';
+            var APP_TARGET_VER = '30.93';
             window.APP_TARGET_VER = APP_TARGET_VER;
         })();
     </script>
@@ -152,7 +152,7 @@
                 <div class="brand-version-badge" onclick="event.stopPropagation(); if(typeof forceAppUpdateAndClearCache==='function') forceAppUpdateAndClearCache();" title="انقر لتحديث وتنشيط التطبيق فوراً" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72em; color: #94a3b8; margin-top: 1px; cursor: pointer; user-select: none;">
                     <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                     <span>الإصدار:</span>
-                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v30.92</strong>
+                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v30.93</strong>
                 </div>
             </div>
         </div>
@@ -1538,6 +1538,287 @@
         </div>
     </div>
 
+    <!-- ========================================================================= -->
+    <!-- 🌟 النوافذ المنبثقة الاحترافية لباقات الاشتراك وتأكيد الدفع (Two-Step Subscription Modals) -->
+    <!-- ========================================================================= -->
+
+    <!-- نافذة 1: اختيار الباقة العلاجية (Subscription Tiers Modal) -->
+    <div id="subscription-tiers-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(5, 8, 15, 0.92); backdrop-filter: blur(10px); z-index: 999999; align-items: center; justify-content: center; padding: 16px; overflow-y: auto;">
+        <div class="modal-inner" style="background: linear-gradient(155deg, #070d19 0%, #0d182c 50%, #060a12 100%); border: 2.5px solid var(--primary-gold); border-radius: 22px; max-width: 960px; width: 100%; padding: 26px 22px; box-shadow: 0 25px 60px rgba(0,0,0,0.9); box-sizing: border-box; text-align: right; position: relative;">
+            
+            <button type="button" onclick="closeSubscriptionTiersModal()" aria-label="إغلاق" style="position: absolute; left: 16px; top: 16px; background: rgba(255,255,255,0.08); border: 1px solid rgba(212,175,55,0.4); color: #94a3b8; font-size: 1.4em; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; z-index: 10;">&times;</button>
+
+            <!-- مقدمة راقية ومختصرة -->
+            <div style="text-align: center; margin-bottom: 22px;">
+                <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(212, 175, 55, 0.12); border: 1px solid rgba(212, 175, 55, 0.35); padding: 5px 18px; border-radius: 20px; color: #fef08a; font-size: 0.85em; font-weight: 800; margin-bottom: 10px;">
+                    <span>✨</span> منصة وداعاً للألم | Smart Check Pro 2.0
+                </div>
+                <h2 style="color: #ffffff; margin: 0 0 8px 0; font-size: 1.5em; font-weight: 900; line-height: 1.35;">
+                    اختر الباقة العلاجية لتفعيل تقريرك وخطة الـ 7 أيام 🌿
+                </h2>
+                <p style="color: #94a3b8; font-size: 0.9em; max-width: 680px; margin: 0 auto; line-height: 1.6;">
+                    تشخيص سريري تفاعلي بالذكاء الاصطناعي لكشف المسبب الجذري للألم، مع تقرير استشاري شامل وخطة تعافي حركية وتأهيلية موجهة لحالتك خطوة بخطوة.
+                </p>
+            </div>
+
+            <!-- شبكة الباقات الأربع -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 20px;">
+                
+                <!-- باقة 1: تشخيص فردي -->
+                <div style="background: rgba(11, 18, 32, 0.9); border: 1.5px solid rgba(212, 175, 55, 0.35); border-radius: 16px; padding: 20px 16px; display: flex; flex-direction: column; justify-content: space-between; position: relative; transition: transform 0.2s, border-color 0.2s;">
+                    <div>
+                        <div style="color: #94a3b8; font-size: 0.8em; font-weight: bold; margin-bottom: 4px;">فحص سريري واحد</div>
+                        <h3 style="color: #ffffff; margin: 0 0 8px 0; font-size: 1.15em; font-weight: 900;">تشخيص فردي</h3>
+                        <div style="margin-bottom: 14px;">
+                            <span style="color: #fef08a; font-size: 1.8em; font-weight: 900; font-family: monospace;">3</span>
+                            <span style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-right: 4px;">د.أ</span>
+                        </div>
+                        <div style="border-top: 1px solid rgba(212,175,55,0.15); padding-top: 12px; margin-bottom: 16px; font-size: 0.82em; color: #cbd5e1; line-height: 1.7;">
+                            <div style="margin-bottom: 6px;">✓ تقرير سريري تفصيلي كامل</div>
+                            <div style="margin-bottom: 6px;">✓ كشف جذور الألم ومؤشرات الأمان</div>
+                            <div style="margin-bottom: 6px;">✓ تمارين اليوم الأول التأهيلية</div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="selectTierForCheckout(1)" style="width: 100%; background: linear-gradient(135deg, #334155, #1e293b); color: #f8fafc; border: 1px solid #475569; padding: 11px; border-radius: 10px; font-weight: 800; font-size: 0.92em; cursor: pointer; transition: all 0.2s;">
+                        اختيار الباقة (3 د.أ) ←
+                    </button>
+                </div>
+
+                <!-- باقة 2: باقة التعافي العائلي (5 فحوصات) -->
+                <div style="background: rgba(212, 175, 55, 0.08); border: 2px solid #f59e0b; border-radius: 16px; padding: 20px 16px; display: flex; flex-direction: column; justify-content: space-between; position: relative; box-shadow: 0 8px 24px rgba(245,158,11,0.15); transform: translateY(-4px);">
+                    <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; font-size: 0.72em; font-weight: 900; padding: 3px 12px; border-radius: 12px; border: 1px solid #fef08a; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.5);">
+                        ⭐ الأكثر طلباً • وفر 33%
+                    </div>
+                    <div>
+                        <div style="color: #fde68a; font-size: 0.8em; font-weight: bold; margin-bottom: 4px;">5 فحوصات كاملة</div>
+                        <h3 style="color: #ffffff; margin: 0 0 8px 0; font-size: 1.15em; font-weight: 900;">باقة التعافي العائلي</h3>
+                        <div style="margin-bottom: 14px;">
+                            <span style="color: #94a3b8; font-size: 0.85em; text-decoration: line-through; margin-left: 6px;">15 د.أ</span>
+                            <span style="color: #fef08a; font-size: 1.8em; font-weight: 900; font-family: monospace;">10</span>
+                            <span style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-right: 4px;">د.أ</span>
+                        </div>
+                        <div style="border-top: 1px solid rgba(212,175,55,0.25); padding-top: 12px; margin-bottom: 16px; font-size: 0.82em; color: #cbd5e1; line-height: 1.7;">
+                            <div style="margin-bottom: 6px;">✓ رصيد 5 فحوصات سريرية شاملة</div>
+                            <div style="margin-bottom: 6px;">✓ رصيد دائم ومستمر لك وللعائلة</div>
+                            <div style="margin-bottom: 6px;">✓ خطة تمارين وتأهيل كاملة لكل فحص</div>
+                            <div style="margin-bottom: 6px;">✓ حفظ دائم ومستمر في ملفك الطبي</div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="selectTierForCheckout(5)" style="width: 100%; background: linear-gradient(135deg, #d4af37, #b45309); color: #050911; border: 1px solid #fef08a; padding: 11px; border-radius: 10px; font-weight: 900; font-size: 0.95em; cursor: pointer; box-shadow: 0 4px 14px rgba(212,175,55,0.35);">
+                        اختيار الباقة العائلية (10 د.أ) ←
+                    </button>
+                </div>
+
+                <!-- باقة 3: باقة الحل الجذري الشاملة (10 فحوصات) -->
+                <div style="background: rgba(16, 185, 129, 0.08); border: 2px solid #10b981; border-radius: 16px; padding: 20px 16px; display: flex; flex-direction: column; justify-content: space-between; position: relative; box-shadow: 0 8px 24px rgba(16,185,129,0.15);">
+                    <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; font-size: 0.72em; font-weight: 900; padding: 3px 12px; border-radius: 12px; border: 1px solid #6ee7b7; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.5);">
+                        👑 القيمة القصوى • وفر 50%
+                    </div>
+                    <div>
+                        <div style="color: #6ee7b7; font-size: 0.8em; font-weight: bold; margin-bottom: 4px;">10 فحوصات شاملة</div>
+                        <h3 style="color: #ffffff; margin: 0 0 8px 0; font-size: 1.15em; font-weight: 900;">باقة الحل الجذري</h3>
+                        <div style="margin-bottom: 14px;">
+                            <span style="color: #94a3b8; font-size: 0.85em; text-decoration: line-through; margin-left: 6px;">30 د.أ</span>
+                            <span style="color: #fef08a; font-size: 1.8em; font-weight: 900; font-family: monospace;">15</span>
+                            <span style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-right: 4px;">د.أ</span>
+                        </div>
+                        <div style="border-top: 1px solid rgba(16,185,129,0.25); padding-top: 12px; margin-bottom: 16px; font-size: 0.82em; color: #cbd5e1; line-height: 1.7;">
+                            <div style="margin-bottom: 6px;">✓ 10 فحوصات سريرية شاملة مدى الحياة</div>
+                            <div style="margin-bottom: 6px;">✓ متابعة دورية ومقارنة مؤشرات الشفاء</div>
+                            <div style="margin-bottom: 6px;">✓ أعلى قيمة توفيرية لك ولأحبائك</div>
+                            <div style="margin-bottom: 6px;">✓ أولوية الدعم والاستشارات الحركية</div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="selectTierForCheckout(10)" style="width: 100%; background: linear-gradient(135deg, #10b981, #047857); color: #ffffff; border: 1px solid #6ee7b7; padding: 11px; border-radius: 10px; font-weight: 900; font-size: 0.95em; cursor: pointer; box-shadow: 0 4px 14px rgba(16,185,129,0.35);">
+                        اختيار الباقة الشاملة (15 د.أ) ←
+                    </button>
+                </div>
+
+                <!-- باقة 4: مبادرة الرعاية الإنسانية -->
+                <div style="background: rgba(239, 68, 68, 0.06); border: 1.5px solid rgba(239, 68, 68, 0.4); border-radius: 16px; padding: 20px 16px; display: flex; flex-direction: column; justify-content: space-between; position: relative;">
+                    <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ef4444, #b91c1c); color: #ffffff; font-size: 0.72em; font-weight: 900; padding: 3px 12px; border-radius: 12px; border: 1px solid #fca5a5; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.5);">
+                        ❤️ صدقة جارية
+                    </div>
+                    <div>
+                        <div style="color: #fca5a5; font-size: 0.8em; font-weight: bold; margin-bottom: 4px;">رعاية إنسانية كريمة</div>
+                        <h3 style="color: #ffffff; margin: 0 0 8px 0; font-size: 1.15em; font-weight: 900;">المبادرة الإنسانية</h3>
+                        <div style="margin-bottom: 14px;">
+                            <span style="color: #34d399; font-size: 1.5em; font-weight: 900;">مجاناً 100%</span>
+                        </div>
+                        <div style="border-top: 1px solid rgba(239,68,68,0.2); padding-top: 12px; margin-bottom: 16px; font-size: 0.82em; color: #cbd5e1; line-height: 1.7;">
+                            <div style="margin-bottom: 6px;">✓ متاحة محبةً ولوجه الله تعالى</div>
+                            <div style="margin-bottom: 6px;">✓ فحص سريري كامل + خطة تمارين</div>
+                            <div style="margin-bottom: 6px;">✓ حفظ تام للكرامة والخصوصية</div>
+                            <div style="margin-bottom: 6px;">✓ صدقة جارية عن روح والدنا</div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="openHumanitarianSubscriptionModal()" style="width: 100%; background: linear-gradient(135deg, #475569, #334155); color: #ffffff; border: 1px solid #64748b; padding: 11px; border-radius: 10px; font-weight: 800; font-size: 0.9em; cursor: pointer;">
+                        طلب المبادرة الإنسانية ←
+                    </button>
+                </div>
+            </div>
+
+            <!-- أسفل النافذة: رابط إدخال الكود المسبق -->
+            <div style="text-align: center; border-top: 1px dashed rgba(212,175,55,0.25); padding-top: 16px; display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span style="color: #94a3b8; font-size: 0.88em;">لديك كود تفعيل معتمد مسبقاً؟</span>
+                <button type="button" onclick="openDirectPromoCodeModal()" style="background: none; border: none; color: #7dd3fc; font-weight: 900; font-size: 0.92em; cursor: pointer; text-decoration: underline; padding: 4px 8px;">
+                    🔑 أدخل كود التفعيل هنا للتفعيل الفوري
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة 2: ملخص الطلب والدفع وتأكيد الحوالة (Checkout Modal) -->
+    <div id="subscription-checkout-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(5, 8, 15, 0.94); backdrop-filter: blur(10px); z-index: 999999; align-items: center; justify-content: center; padding: 16px; overflow-y: auto;">
+        <div class="modal-inner" style="background: linear-gradient(155deg, #070d19 0%, #0d182c 50%, #060a12 100%); border: 2.5px solid var(--primary-gold); border-radius: 22px; max-width: 640px; width: 100%; padding: 24px 20px; box-shadow: 0 25px 60px rgba(0,0,0,0.9); box-sizing: border-box; text-align: right; position: relative;">
+            
+            <!-- أزرار الرجوع والإغلاق -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(212,175,55,0.2); padding-bottom: 12px;">
+                <button type="button" onclick="backToSubscriptionTiersModal()" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(212,175,55,0.3); color: #cbd5e1; padding: 6px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <span>←</span> <span>العودة للباقات</span>
+                </button>
+                <div style="color: #fef08a; font-weight: 900; font-size: 1em;">ملخص الطلب وتأكيد الدفع 💳</div>
+                <button type="button" onclick="closeSubscriptionCheckoutModal()" aria-label="إغلاق" style="background: none; border: none; color: #94a3b8; font-size: 1.6em; cursor: pointer; line-height: 1;">&times;</button>
+            </div>
+
+            <!-- ملخص الباقة المختارة -->
+            <div style="background: rgba(212, 175, 55, 0.08); border: 1.5px solid #d4af37; border-radius: 14px; padding: 14px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <div style="color: #94a3b8; font-size: 0.8em; margin-bottom: 2px;">الباقة المختارة:</div>
+                    <div id="chk-pkg-title" style="color: #ffffff; font-size: 1.15em; font-weight: 900;">باقة التعافي العائلي (5 فحوصات)</div>
+                    <div id="chk-pkg-desc" style="color: #cbd5e1; font-size: 0.8em; margin-top: 2px;">5 فحوصات سريرية كاملة مع خطط التأهيل</div>
+                </div>
+                <div style="text-align: left;">
+                    <div style="color: #94a3b8; font-size: 0.8em; margin-bottom: 2px;">المبلغ المطلوب:</div>
+                    <div style="color: #fef08a; font-size: 1.8em; font-weight: 900; font-family: monospace;">
+                        <span id="chk-pkg-price">10</span> <span style="font-size: 0.55em; color: #cbd5e1;">د.أ</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تفاصيل محفظة أورانج موني / كليك -->
+            <div style="background: #080c14; border: 1.5px solid rgba(249, 115, 22, 0.5); border-radius: 14px; padding: 14px 16px; margin-bottom: 18px;">
+                <div style="color: #fed7aa; font-weight: 800; font-size: 0.9em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                    <span>📲</span> <span>طريقة الدفع المعتمدة: محفظة أورانج موني / CliQ</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: rgba(249, 115, 22, 0.08); padding: 10px 14px; border-radius: 10px; border: 1px dashed rgba(249, 115, 22, 0.35);">
+                    <div>
+                        <div style="color: #94a3b8; font-size: 0.78em;">رقم المحفظة المعتمد للتحويل:</div>
+                        <div id="chk-wallet-number" style="color: #ffffff; font-size: 1.45em; font-weight: 900; font-family: monospace; letter-spacing: 2px; direction: ltr; text-align: right;">0795651388</div>
+                    </div>
+                    <button type="button" onclick="copyOrangeWalletNumber('0795651388')" style="background: linear-gradient(135deg, #f97316, #ea580c); color: #fff; border: none; padding: 9px 16px; border-radius: 8px; font-weight: 900; font-size: 0.88em; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(249,115,22,0.3);">
+                        <span>📋</span> <span>نسخ الرقم</span>
+                    </button>
+                </div>
+                <div style="color: #94a3b8; font-size: 0.78em; margin-top: 8px; line-height: 1.5;">
+                    💡 التحويل متاح وسهل من أي تطبيق محفظة (أورانج موني، زين كاش، أمنية) أو عبر خدمة CliQ من أي تطبيق بنكي في الأردن.
+                </div>
+            </div>
+
+            <!-- نموذج بيانات المشترك ورقم العملية -->
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                <div>
+                    <label for="chk-subscriber-name" style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: bold;">اسم المراجع / المشترك *</label>
+                    <input type="text" id="chk-subscriber-name" placeholder="أدخل اسمك الكريم" style="width: 100%; background: #080c14; border: 1.5px solid #334155; padding: 11px 14px; border-radius: 10px; color: #ffffff; font-size: 0.95em; box-sizing: border-box; outline: none;">
+                </div>
+                <div>
+                    <label for="chk-subscriber-phone" style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: bold;">رقم هاتف الواتساب (لاستلام الكود) *</label>
+                    <input type="tel" id="chk-subscriber-phone" placeholder="079xxxxxxx" style="width: 100%; background: #080c14; border: 1.5px solid #334155; padding: 11px 14px; border-radius: 10px; color: #ffffff; font-size: 0.95em; box-sizing: border-box; outline: none; direction: ltr; text-align: left;">
+                </div>
+                <div>
+                    <label for="chk-transfer-ref" style="color: #fde68a; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: 800;">رقم الحوالة (رقم العملية) * إجباري</label>
+                    <input type="text" id="chk-transfer-ref" inputmode="numeric" placeholder="من رسالة أورانج موني أو إشعار التحويل" style="width: 100%; background: #080c14; border: 1.5px solid #d4af37; padding: 11px 14px; border-radius: 10px; color: #fef08a; font-size: 1.05em; font-weight: 900; box-sizing: border-box; outline: none; direction: ltr; text-align: left; font-family: monospace; letter-spacing: 1px;">
+                    <div style="color: #94a3b8; font-size: 0.74em; margin-top: 4px;">📩 تجده في رسالة SMS أو إشعار التحويل في تطبيق المحفظة/البنك بعد إتمام التحويل.</div>
+                </div>
+            </div>
+
+            <!-- زر التأكيد النهائي -->
+            <button type="button" onclick="submitSubscriptionCheckout()" style="width: 100%; background: linear-gradient(135deg, #d4af37 0%, #b45309 100%); color: #050911; border: 1.5px solid #fef08a; padding: 14px; border-radius: 12px; font-size: 1.05em; font-weight: 900; cursor: pointer; box-shadow: 0 6px 20px rgba(212,175,55,0.4); display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <span>🚀</span> <span>تأكيد التحويل واستلام كود التفعيل</span>
+            </button>
+            <div style="text-align: center; color: #94a3b8; font-size: 0.76em; margin-top: 10px;">
+                🔒 فور الضغط، يتم إشعار المعالج لمطابقة الحوالة وإرسال الكود لك عبر الواتساب فوراً.
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة 3: مبادرة الرعاية الإنسانية (Humanitarian Modal) -->
+    <div id="subscription-humanitarian-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(5, 8, 15, 0.94); backdrop-filter: blur(10px); z-index: 999999; align-items: center; justify-content: center; padding: 16px; overflow-y: auto;">
+        <div class="modal-inner" style="background: linear-gradient(155deg, #070d19 0%, #0d182c 50%, #060a12 100%); border: 2.5px solid #10b981; border-radius: 22px; max-width: 580px; width: 100%; padding: 26px 20px; box-shadow: 0 25px 60px rgba(0,0,0,0.9); box-sizing: border-box; text-align: right; position: relative;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(16,185,129,0.25); padding-bottom: 12px;">
+                <button type="button" onclick="backToSubscriptionTiersModal()" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(16,185,129,0.3); color: #cbd5e1; padding: 6px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <span>←</span> <span>العودة للباقات</span>
+                </button>
+                <div style="color: #6ee7b7; font-weight: 900; font-size: 1.05em;">مبادرة الرعاية الإنسانية ❤️</div>
+                <button type="button" onclick="closeHumanitarianSubscriptionModal()" aria-label="إغلاق" style="background: none; border: none; color: #94a3b8; font-size: 1.6em; cursor: pointer; line-height: 1;">&times;</button>
+            </div>
+
+            <!-- النص الإنساني الكريم والمحترم -->
+            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 14px; padding: 16px; margin-bottom: 18px; text-align: center;">
+                <div style="font-size: 1.8em; margin-bottom: 6px;">🌿 ❤️</div>
+                <div style="color: #ffffff; font-weight: 900; font-size: 1.1em; margin-bottom: 6px;">صدقة جارية لوجه الله تعالى</div>
+                <p style="color: #cbd5e1; font-size: 0.88em; line-height: 1.7; margin: 0;">
+                    مبادرة الرعاية الإنسانية من منصة «وداعاً للألم» متاحة محبةً ولوجه الله تعالى، صدقةً جارية لكل من يحتاجها. نرجو استخدامها استشعاراً للأمانة والمسؤولية بينك وبين الله عز وجل.
+                </p>
+            </div>
+
+            <!-- حقول المستفيد -->
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px;">
+                <div>
+                    <label for="hum-modal-name" style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: bold;">الاسم الكريم للمستفيد *</label>
+                    <input type="text" id="hum-modal-name" placeholder="أدخل اسمك الكريم" style="width: 100%; background: #080c14; border: 1.5px solid #334155; padding: 11px 14px; border-radius: 10px; color: #ffffff; font-size: 0.95em; box-sizing: border-box; outline: none;">
+                </div>
+                <div>
+                    <label for="hum-modal-phone" style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: bold;">رقم هاتف الواتساب (لاستلام كود التفعيل) *</label>
+                    <input type="tel" id="hum-modal-phone" placeholder="079xxxxxxx" style="width: 100%; background: #080c14; border: 1.5px solid #334155; padding: 11px 14px; border-radius: 10px; color: #ffffff; font-size: 0.95em; box-sizing: border-box; outline: none; direction: ltr; text-align: left;">
+                </div>
+            </div>
+
+            <!-- إقرار الأمانة الكريم الخالي من أي مساس بالكرامة -->
+            <label for="hum-modal-pledge" style="display: flex; align-items: center; gap: 10px; background: rgba(16, 185, 129, 0.1); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px 14px; margin-bottom: 20px; cursor: pointer;">
+                <input type="checkbox" id="hum-modal-pledge" style="width: 20px; height: 20px; accent-color: #10b981; flex-shrink: 0; cursor: pointer;">
+                <span style="color: #e2e8f0; font-weight: 700; font-size: 0.88em; line-height: 1.5;">
+                    أقرّ بأمانتي ومسؤوليتي في طلب الاستفادة من مبادرة الرعاية الإنسانية.
+                </span>
+            </label>
+
+            <!-- زر الإرسال -->
+            <button type="button" onclick="submitHumanitarianSubscriptionModal()" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: #ffffff; border: 1.5px solid #6ee7b7; padding: 14px; border-radius: 12px; font-weight: 900; font-size: 1.05em; cursor: pointer; box-shadow: 0 4px 20px rgba(16,185,129,0.35); display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <span>إرسال طلب الاستفادة واستلام الكود</span> <span>❤️</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- نافذة 4: إدخال كود التفعيل المسبق (Direct Promo Code Modal) -->
+    <div id="subscription-promocode-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(5, 8, 15, 0.94); backdrop-filter: blur(10px); z-index: 999999; align-items: center; justify-content: center; padding: 16px; overflow-y: auto;">
+        <div class="modal-inner" style="background: linear-gradient(155deg, #070d19 0%, #0d182c 50%, #060a12 100%); border: 2.5px solid #0284c7; border-radius: 22px; max-width: 520px; width: 100%; padding: 26px 20px; box-shadow: 0 25px 60px rgba(0,0,0,0.9); box-sizing: border-box; text-align: right; position: relative;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(2,132,199,0.3); padding-bottom: 12px;">
+                <button type="button" onclick="backToSubscriptionTiersModal()" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(2,132,199,0.3); color: #cbd5e1; padding: 6px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <span>←</span> <span>العودة للباقات</span>
+                </button>
+                <div style="color: #7dd3fc; font-weight: 900; font-size: 1.05em;">تفعيل التقرير بكود معتمد 🔑</div>
+                <button type="button" onclick="closeDirectPromoCodeModal()" aria-label="إغلاق" style="background: none; border: none; color: #94a3b8; font-size: 1.6em; cursor: pointer; line-height: 1;">&times;</button>
+            </div>
+
+            <p style="color: #cbd5e1; font-size: 0.9em; line-height: 1.6; margin: 0 0 16px 0; text-align: center;">
+                إذا وصلك كود التفعيل من المعالج عبر الواتساب، أدخله هنا لتفعيل تقريرك السريري وخطة الـ 7 أيام فوراً:
+            </p>
+
+            <div style="margin-bottom: 18px;">
+                <input type="text" id="promocode-modal-input" maxlength="12" placeholder="أدخل الكود (مثال: 4621 أو 54621)" onkeydown="if(event.key==='Enter'){submitPromoCodeFromModal();}" style="width: 100%; background: #080c14; border: 2px solid #0284c7; padding: 14px; border-radius: 12px; color: #fef08a; font-size: 1.35em; font-weight: 900; text-align: center; letter-spacing: 3px; font-family: monospace; box-sizing: border-box; outline: none;">
+            </div>
+
+            <button type="button" onclick="submitPromoCodeFromModal()" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: 1.5px solid #7dd3fc; padding: 13px; border-radius: 12px; font-weight: 900; font-size: 1.05em; cursor: pointer; box-shadow: 0 4px 15px rgba(2,132,199,0.35);">
+                تفعيل التقرير فوراً 🚀
+            </button>
+            <div style="color: #94a3b8; font-size: 0.78em; text-align: center; margin-top: 10px;">
+                💡 يتم التعرّف تلقائياً على نوع باقتك (تشخيص فردي أو باقة عائلية) فور إدخال الكود.
+            </div>
+        </div>
+    </div>
+
     <!-- دوال تسجيل الدخول والباب الخلفي السري -->
     <script>
         function openAiKeySettingsModal() {
@@ -1766,23 +2047,23 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=30.92"></script>
-    <script src="js/cloud-sync.js?v=30.92"></script>
-    <script src="js/geo-tracker.js?v=30.92"></script>
-    <script src="js/database.js?v=30.92"></script>
-    <script src="js/exercise-image-studio.js?v=30.92"></script>
-    <script src="js/exercises-db.js?v=30.92"></script>
-    <script src="js/diagnostic-engine.js?v=30.92"></script>
-    <script src="js/audio-pacer.js?v=30.92"></script>
-    <script src="js/patient-flow.js?v=30.92"></script>
-    <script src="js/admin-engine.js?v=30.92"></script>
-    <script src="js/ai-config.js?v=30.92"></script>
-    <script src="js/ai-engine.js?v=30.92"></script>
-    <script src="js/app.js?v=30.92"></script>
-    <script src="js/text-editor.js?v=30.92"></script>
-    <script src="js/smart-guidance.js?v=30.92"></script>
-    <script src="js/whatsapp-dispatcher.js?v=30.92"></script>
-    <script src="js/mobile-alerts.js?v=30.92"></script>
+    <script src="js/mqtt.min.js?v=30.93"></script>
+    <script src="js/cloud-sync.js?v=30.93"></script>
+    <script src="js/geo-tracker.js?v=30.93"></script>
+    <script src="js/database.js?v=30.93"></script>
+    <script src="js/exercise-image-studio.js?v=30.93"></script>
+    <script src="js/exercises-db.js?v=30.93"></script>
+    <script src="js/diagnostic-engine.js?v=30.93"></script>
+    <script src="js/audio-pacer.js?v=30.93"></script>
+    <script src="js/patient-flow.js?v=30.93"></script>
+    <script src="js/admin-engine.js?v=30.93"></script>
+    <script src="js/ai-config.js?v=30.93"></script>
+    <script src="js/ai-engine.js?v=30.93"></script>
+    <script src="js/app.js?v=30.93"></script>
+    <script src="js/text-editor.js?v=30.93"></script>
+    <script src="js/smart-guidance.js?v=30.93"></script>
+    <script src="js/whatsapp-dispatcher.js?v=30.93"></script>
+    <script src="js/mobile-alerts.js?v=30.93"></script>
 
     <script>
         // مؤشر المراجعين المتواجدين أونلاين الآن (متزامن بدقة مع السحابة ولوحة الإدارة)

@@ -6114,201 +6114,251 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
         return renderRoyalPendingApprovalCardHTML(pendingReq, cfg);
     }
 
-    // 3. بطاقة الاشتراك المباشرة والأنيقة بخطوات واضحة ومزايا مفصلة
-    const pr = getPkgPrices(cfg);
-    const sel = window._selPkg || 1;
+    // 3. البطاقة الملكية الأنيقة للإعلان عن اكتمال الفحص وزر فتح باقات الاشتراك
     const painAreaTitle = data?.painAreaTitle || currentSelectedPoint?.title || 'العمود الفقري والمفاصل';
     const confScore = data?.confidenceScore || data?.probability || 94;
-    const inp = 'width: 100%; background: #0b1324; border: 1.5px solid #334155; padding: 12px 14px; border-radius: 12px; color: #ffffff; font-size: 0.96em; box-sizing: border-box; outline: none; transition: border-color 0.2s;';
-    
-    // دالة إنشاء كرت الباقة بتصميم رشيق وأنيق بدون حشو
-    const pkgCard = (k, title, price, oldPrice, badge, subtitle) => `
-        <div id="pkg-card-${k}" onclick="selectPaywallPackage(${k})" style="flex: 1 1 210px; cursor: pointer; text-align: center; border: 2.5px solid ${k === sel ? '#fef08a' : 'rgba(212,175,55,0.3)'}; background: ${k === sel ? 'rgba(212,175,55,0.18)' : 'rgba(11,18,32,0.88)'}; border-radius: 16px; padding: 18px 14px; transition: all 0.25s ease; position: relative; box-shadow: ${k === sel ? '0 0 25px rgba(254,240,138,0.25)' : 'none'};">
-            ${badge ? `<div style="position: absolute; top: -11px; left: 50%; transform: translateX(-50%); background: ${k === 5 ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'linear-gradient(135deg, #10b981, #059669)'}; color: #ffffff; font-size: 0.72em; font-weight: 900; padding: 2px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.4); white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">${badge}</div>` : ''}
-            <div style="color: ${k === sel ? '#fef08a' : '#ffffff'}; font-weight: 900; font-size: 1.05em; margin-bottom: 6px;">${title}</div>
-            <div style="margin-bottom: 6px;">
-                ${oldPrice ? `<span style="color: #94a3b8; font-size: 0.8em; text-decoration: line-through; margin-left: 4px;">${oldPrice} د.أ</span>` : ''}
-                <span style="color: #fde68a; font-size: 1.55em; font-weight: 900; font-family: monospace;">${price}</span>
-                <span style="font-size: 0.8em; color: #cbd5e1; font-weight: bold;">د.أ</span>
-            </div>
-            <div style="color: #94a3b8; font-size: 0.8em; border-top: 1px solid rgba(212,175,55,0.15); padding-top: 8px;">
-                ${subtitle}
-            </div>
-        </div>
-    `;
 
     return `
-        <div id="recovery-plan-master-card" class="recovery-plan-distinct-card no-print" style="max-width: 920px; margin: 0 auto 30px auto; padding: 28px 22px; background: linear-gradient(145deg, #070d19 0%, #0d182c 55%, #060a12 100%); border: 2.5px solid #d4af37; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.85); font-family: 'Cairo', 'Almarai', sans-serif; position: relative; overflow: hidden;">
+        <div id="recovery-plan-master-card" class="recovery-plan-distinct-card no-print" style="max-width: 920px; margin: 0 auto 30px auto; padding: 32px 24px; background: linear-gradient(145deg, #070d19 0%, #0d182c 55%, #060a12 100%); border: 2.5px solid #d4af37; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.85); font-family: 'Cairo', 'Almarai', sans-serif; position: relative; overflow: hidden; text-align: center;">
             
-            <!-- شريط ذهبي علوي -->
+            <!-- شريط ذهبي علوي متدرج -->
             <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, transparent 0%, #d4af37 25%, #fef08a 50%, #d4af37 75%, transparent 100%);"></div>
 
-            <!-- رأس البطاقة المباشر والواضح -->
-            <div style="text-align: center; margin-bottom: 20px;">
-                <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(212, 175, 55, 0.12); border: 1px solid rgba(212, 175, 55, 0.35); padding: 5px 16px; border-radius: 20px; color: #fef08a; font-size: 0.85em; font-weight: 800; margin-bottom: 8px;">
-                    <span>✨</span> اكتمل التشخيص السريري بنجاح 100%
-                </div>
-                <h2 style="color: #ffffff; margin: 0 0 8px 0; font-size: 1.45em; font-weight: 900; line-height: 1.35;">
-                    تفعيل التقرير الطبي الكامل وخطة التأهيل (7 أيام)
-                </h2>
-                <div style="color: #94a3b8; font-size: 0.9em; display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;">
-                    <span>موضع الشكوى: <strong style="color: #fef08a;">${painAreaTitle}</strong></span>
-                    <span>•</span>
-                    <span>دقة التقييم السريري: <strong style="color: #10b981;">${confScore}%</strong></span>
-                </div>
+            <!-- شارة الإنجاز -->
+            <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(212, 175, 55, 0.12); border: 1px solid rgba(212, 175, 55, 0.35); padding: 6px 20px; border-radius: 25px; color: #fef08a; font-size: 0.9em; font-weight: 800; margin-bottom: 14px;">
+                <span>✨</span> اكتمل الفحص السريري بنجاح 100%
             </div>
 
-            <!-- أزرار التبديل الثلاثة -->
-            <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
-                <button type="button" id="paywall-tab-btn-orange" onclick="switchPaywallOptionTab('orange')" style="flex: 1.5 1 150px; background: linear-gradient(135deg, #d4af37, #b45309); color: #050911; border: 1.5px solid #fef08a; padding: 12px 14px; border-radius: 12px; font-weight: 900; font-size: 0.92em; cursor: pointer; box-shadow: 0 4px 15px rgba(212,175,55,0.35);">
-                    💳 الدفع عبر أورانج موني
-                </button>
-                <button type="button" id="paywall-tab-btn-code" onclick="switchPaywallOptionTab('code')" style="flex: 1.2 1 130px; background: rgba(11,18,32,0.9); color: #cbd5e1; border: 1.5px solid rgba(212,175,55,0.25); padding: 12px 14px; border-radius: 12px; font-weight: 800; font-size: 0.9em; cursor: pointer;">
-                    🔑 إدخال كود تفعيل مسبق
-                </button>
-                ${cfg.allowHumanitarian !== false ? (isHumanitarianLockedForUser(defPhone) ? `
-                <button type="button" id="paywall-tab-btn-humanitarian" onclick="showHumanitarianQuotaExhaustedNotice()" style="flex: 1.1 1 130px; background: rgba(30,41,59,0.55); color: #64748b; border: 1.5px dashed #475569; padding: 12px 14px; border-radius: 12px; font-weight: 800; font-size: 0.84em; cursor: not-allowed; opacity: 0.8;" title="تم الاستفادة من المبادرة الإنسانية مسبقاً على هذا الجهاز أو رقم الهاتف (لمرة واحدة فقط)">
-                    🔒 المبادرة الإنسانية (استُنفدت)
-                </button>` : `
-                <button type="button" id="paywall-tab-btn-humanitarian" onclick="switchPaywallOptionTab('humanitarian')" style="flex: 1.1 1 130px; background: rgba(11,18,32,0.9); color: #cbd5e1; border: 1.5px solid rgba(212,175,55,0.25); padding: 12px 14px; border-radius: 12px; font-weight: 800; font-size: 0.88em; cursor: pointer;">
-                    ❤️ مبادرة الرعاية الإنسانية (مجاناً)
-                </button>`) : ''}
+            <!-- العنوان الرئيسي -->
+            <h2 style="color: #ffffff; margin: 0 0 10px 0; font-size: 1.55em; font-weight: 900; line-height: 1.35;">
+                تفعيل التقرير الطبي الكامل وخطة التأهيل (7 أيام) 🌿
+            </h2>
+
+            <!-- مؤشرات الحالة السريرية -->
+            <div style="color: #94a3b8; font-size: 0.92em; display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px;">
+                <span>موضع الشكوى: <strong style="color: #fef08a;">${painAreaTitle}</strong></span>
+                <span>•</span>
+                <span>دقة التقييم السريري: <strong style="color: #10b981;">${confScore}%</strong></span>
+                <span>•</span>
+                <span>البروتوكول: <strong style="color: #7dd3fc;">كايروبراكتيك + تأهيل حركي</strong></span>
             </div>
 
-            <!-- التبويب 1: محفظة أورانج موني عبر 3 خطوات سهلة وسلسة -->
-            <div id="paywall-pane-orange" style="background: rgba(5, 9, 18, 0.96); border: 1.5px solid rgba(212, 175, 55, 0.4); border-radius: 16px; padding: 20px 18px;">
-                
-                <!-- الخطوة 1: اختيار الباقة -->
-                <div style="margin-bottom: 20px;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                        <span style="background: linear-gradient(135deg, #d4af37, #b45309); color: #050911; font-weight: 900; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9em; flex-shrink: 0;">1</span>
-                        <strong style="color: #fde68a; font-size: 1.05em;">الخطوة الأولى: اختر الباقة العلاجية التي تناسب احتياجك</strong>
-                    </div>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        ${pkgCard(1, 'تشخيص سريري فردي', pr[1], null, 'فحص فوري', 'تقرير سريري كامل مع تمارين اليوم الأول')}
-                        ${pkgCard(5, 'باقة 5 فحوصات', pr[5], '15', '⭐ الأكثر طلباً', 'رصيد 5 فحوصات دائمة لك وللعائلة')}
-                        ${pkgCard(10, 'باقة 10 فحوصات الشاملة', pr[10], '30', '👑 التوفير الأكبر • وفر 50%', '10 فحوصات شاملة برصيد دائم مدى الحياة')}
-                    </div>
-                </div>
+            <p style="color: #cbd5e1; font-size: 0.95em; max-width: 660px; margin: 0 auto 24px auto; line-height: 1.7;">
+                تم تجهيز تقريرك السريري الشامل وتحديد جذور الألم بدقة. اختر الباقة العلاجية المناسبة لفتح ملفك الطبي والبدء بتمارين اليوم الأول فوراً.
+            </p>
 
-                <!-- الخطوة 2: تحويل قيمة الباقة بسلاسة -->
-                <div style="margin-bottom: 20px;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                        <span style="background: linear-gradient(135deg, #d4af37, #b45309); color: #050911; font-weight: 900; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9em; flex-shrink: 0;">2</span>
-                        <strong style="color: #fde68a; font-size: 1.05em;">الخطوة الثانية: قم بتحويل قيمة الباقة عبر محفظة أورانج موني بكل سهولة</strong>
-                    </div>
-                    <div style="background: rgba(212, 175, 55, 0.08); border: 1.5px solid #d4af37; border-radius: 14px; padding: 14px 18px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                            <div>
-                                <div style="color: #94a3b8; font-size: 0.82em; margin-bottom: 3px;">
-                                    قيمة الباقة المختارة للتحويل:
-                                </div>
-                                <div style="color: #fef08a; font-size: 1.25em; font-weight: 900;">
-                                    <span id="pay-amount-label">${pr[sel]} د.أ</span> 
-                                    <span id="pay-pkg-title-label" style="font-size: 0.75em; color: #cbd5e1; font-weight: normal; margin-right: 6px;">(${sel === 10 ? 'باقة 10 فحوصات الشاملة' : (sel === 5 ? 'باقة 5 فحوصات العائلية' : 'تشخيص فردي')})</span>
-                                </div>
-                                <div style="color: #e2e8f0; font-size: 0.88em; margin-top: 6px;">
-                                    رقم محفظة أورانج موني المعتمد:
-                                </div>
-                                <div style="color: #ffffff; font-size: 1.55em; font-weight: 900; font-family: monospace; direction: ltr; text-align: right; letter-spacing: 2px;">
-                                    ${cfg.walletPhone}
-                                </div>
-                            </div>
-                            <button type="button" id="btn-copy-orange-wallet" onclick="copyOrangeWalletNumber('${cfg.walletPhone}')" style="background: linear-gradient(135deg, #d4af37, #b45309); color: #050911; border: 1px solid #fef08a; padding: 11px 20px; border-radius: 12px; font-weight: 900; font-size: 0.95em; cursor: pointer; box-shadow: 0 4px 12px rgba(212,175,55,0.3); display: flex; align-items: center; gap: 6px;">
-                                <span>📋</span> <span>نسخ رقم المحفظة</span>
-                            </button>
-                        </div>
-                        <div style="color: #94a3b8; font-size: 0.8em; margin-top: 10px; border-top: 1px dashed rgba(212,175,55,0.25); padding-top: 8px;">
-                            💡 التحويل متاح وسهل من أي تطبيق محفظة إلكترونية (أورانج موني، زين كاش، أمنية) أو تطبيق أي بنك في الأردن (CliQ / محفظة).
-                        </div>
-                    </div>
-                </div>
-
-                <!-- الخطوة 3: إدخال البيانات والتأكيد -->
-                <div style="margin-bottom: 8px;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                        <span style="background: linear-gradient(135deg, #d4af37, #b45309); color: #050911; font-weight: 900; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9em; flex-shrink: 0;">3</span>
-                        <strong style="color: #fde68a; font-size: 1.05em;">الخطوة الثالثة: أدخل بياناتك واضغط تأكيد لاستلام كود فتح التقرير</strong>
-                    </div>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 14px;">
-                        <div>
-                            <label style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px;">اسم المراجع / المشترك *</label>
-                            <input type="text" id="pay-subscriber-name" value="${defName}" placeholder="أدخل اسمك الكريم" style="${inp}">
-                        </div>
-                        <div>
-                            <label style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px;">رقم هاتف الواتساب (لاستلام الكود) *</label>
-                            <input type="tel" id="pay-subscriber-phone" value="${defPhone}" placeholder="079xxxxxxx" style="${inp} direction: ltr; text-align: left;">
-                        </div>
-                        <div>
-                            <label style="color: #fde68a; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: 800;">رقم الحوالة (رقم العملية) * إجباري</label>
-                            <input type="text" id="pay-transfer-ref" inputmode="numeric" autocomplete="off" required placeholder="من رسالة أورانج موني بعد التحويل" style="${inp} border-color: rgba(212,175,55,0.7); direction: ltr; text-align: left; letter-spacing: 1px;">
-                            <div style="color: #94a3b8; font-size: 0.72em; margin-top: 4px; line-height: 1.5;">📩 تجده في رسالة SMS أو في سجل العمليات بتطبيق المحفظة بعد إتمام التحويل.</div>
-                        </div>
-                    </div>
-
-                    <!-- أزرار الإجراء -->
-                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                        <button type="button" onclick="submitOrangeWalletPaymentNotification()" style="flex: 2 1 240px; background: linear-gradient(135deg, #d4af37 0%, #b45309 100%); color: #050911; border: 1.5px solid #fef08a; padding: 14px 18px; border-radius: 12px; font-size: 1.05em; font-weight: 900; cursor: pointer; box-shadow: 0 6px 20px rgba(212,175,55,0.4); display: flex; align-items: center; justify-content: center; gap: 8px;">
-                            <span>🚀</span> <span id="pay-submit-label">تأكيد تحويل قيمة الباقة (${pr[sel]} د.أ) وطلب الكود</span>
-                        </button>
-                        <button type="button" onclick="switchPaywallOptionTab('code')" style="flex: 1 1 160px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: 1.5px solid #7dd3fc; padding: 14px 16px; border-radius: 12px; font-size: 0.95em; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                            <span>🔑</span> <span>لدي كود تفعيل مسبق</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- التبويب 2: إدخال كود التفعيل -->
-            <div id="paywall-pane-code" style="display: none; background: rgba(5, 9, 18, 0.96); border: 1.5px solid #0284c7; border-radius: 16px; padding: 20px 18px;">
-                <div style="color: #7dd3fc; font-weight: 900; font-size: 1.05em; margin-bottom: 8px;">🔑 تفعيل فوري باستخدام الكود الخاص بك</div>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px;">
-                    <input type="text" id="pay-promo-code-input" maxlength="12" placeholder="أدخل الكود هنا (مثلاً: 4621)" onkeydown="if(event.key==='Enter'){submitPromoOrTestUnlockCode('pay-promo-code-input');}" style="flex: 2 1 180px; background: #0b1324; border: 1.5px solid #0284c7; padding: 13px; border-radius: 12px; color: #fef08a; font-size: 1.25em; font-weight: 900; text-align: center; letter-spacing: 3px; font-family: monospace; box-sizing: border-box;">
-                    <button type="button" onclick="submitPromoOrTestUnlockCode('pay-promo-code-input')" style="flex: 1 1 140px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: 1.5px solid #7dd3fc; padding: 13px; border-radius: 12px; font-weight: 900; font-size: 1em; cursor: pointer;">
-                        تفعيل التقرير فوراً
-                    </button>
-                </div>
-                <div style="color: #94a3b8; font-size: 0.82em;">💡 يتم التعرف تلقائياً على نوع اشتراكك (تشخيص واحد أو باقة) فور إدخال الكود.</div>
-            </div>
-
-            <!-- التبويب 3: مبادرة الرعاية الإنسانية -->
-            <div id="paywall-pane-humanitarian" style="display: none; background: rgba(5, 9, 18, 0.96); border: 2px solid #10b981; border-radius: 16px; padding: 22px 18px; text-align: center;">
-                <div style="color: #f87171; font-weight: 900; font-size: 1.25em; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <span>❤️</span>
-                    <span>مبادرة الرعاية الإنسانية</span>
-                </div>
-                <p style="color: #cbd5e1; font-size: 0.9em; line-height: 1.7; margin: 0 auto 16px auto; max-width: 580px;">
-                    مخصصة لمساندة الأشخاص الذين تحول ظروفهم المادية دون تحمل تكاليف الرعاية العلاجية، أُطلقت ابتغاء مرضاة الله تعالى. نرجو عدم التقدم إليها إلا لمن يحتاجها فعلياً استشعاراً للأمانة والمسؤولية.
-                </p>
-
-                <!-- حقول المستفيد -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; text-align: right;">
-                    <div>
-                        <label style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px;">الاسم الكريم للمستفيد *</label>
-                        <input type="text" id="hum-subscriber-name" value="${defName}" placeholder="أدخل اسمك الكريم" style="${inp}">
-                    </div>
-                    <div>
-                        <label style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px;">رقم هاتف الواتساب (لاستلام الكود) *</label>
-                        <input type="tel" id="hum-subscriber-phone" value="${defPhone}" placeholder="079xxxxxxx" style="${inp} direction: ltr; text-align: left;">
-                    </div>
-                </div>
-
-                <!-- إقرار المستفيد -->
-                <label id="hum-oath-box-label" for="hum-oath-checkbox" style="display: flex; align-items: center; gap: 10px; background: rgba(16, 185, 129, 0.1); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px 16px; margin-bottom: 18px; cursor: pointer; text-align: right;">
-                    <input type="checkbox" id="hum-oath-checkbox" style="width: 20px; height: 20px; accent-color: #10b981; flex-shrink: 0; cursor: pointer;">
-                    <span style="color: #e2e8f0; font-weight: 700; font-size: 0.88em; line-height: 1.5;">
-                        أقرّ بأني بحاجة فعلية لهذه المبادرة لظروفي المادية، وأتعهد بالصدق والأمانة في طلبي.
-                    </span>
-                </label>
-
-                <button type="button" onclick="submitHumanitarianFreeActivation()" style="width: 100%; max-width: 440px; margin: 0 auto; background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: #ffffff; border: 1.5px solid #6ee7b7; padding: 14px; border-radius: 12px; font-weight: 900; font-size: 1.05em; cursor: pointer; box-shadow: 0 4px 20px rgba(16,185,129,0.35); display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
-                    <span>إرسال طلب الاستفادة من المبادرة</span> <span>❤️</span>
+            <!-- زر فتح بوب الباقات الرئيسي (Magnetic Luxury CTA) -->
+            <div style="max-width: 540px; margin: 0 auto 20px auto;">
+                <button type="button" onclick="openSubscriptionTiersModal()" class="royal-magnetic-pulse-btn" style="width: 100%; background: linear-gradient(135deg, #d4af37 0%, #b45309 100%); color: #050911; border: 2px solid #fef08a; padding: 18px 24px; border-radius: 16px; font-size: 1.22em; font-weight: 900; cursor: pointer; box-shadow: 0 10px 30px rgba(212,175,55,0.45); display: flex; align-items: center; justify-content: center; gap: 12px; transition: transform 0.2s, box-shadow 0.2s;">
+                    <span style="font-size: 1.3em;">🌟</span>
+                    <span>عرض باقات الاشتراك وتفعيل التقرير</span>
+                    <span style="font-size: 1.1em;">←</span>
                 </button>
             </div>
 
-<div id="paywall-status-feedback" style="display: none; margin-top: 14px; padding: 12px 16px; border-radius: 12px; font-size: 0.92em; line-height: 1.5;"></div>
+            <!-- أزرار و روابط سريعة إضافية -->
+            <div style="display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; border-top: 1px dashed rgba(212,175,55,0.25); padding-top: 16px;">
+                <button type="button" onclick="openDirectPromoCodeModal()" style="background: rgba(2, 132, 199, 0.15); border: 1px solid #0284c7; color: #7dd3fc; padding: 8px 16px; border-radius: 10px; font-weight: 800; font-size: 0.88em; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <span>🔑</span> <span>لدي كود تفعيل مسبق</span>
+                </button>
+                <button type="button" onclick="openHumanitarianSubscriptionModal()" style="background: rgba(16, 185, 129, 0.12); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 16px; border-radius: 10px; font-weight: 800; font-size: 0.88em; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <span>❤️</span> <span>مبادرة الرعاية الإنسانية (مجاناً)</span>
+                </button>
+            </div>
+
+            <div id="paywall-status-feedback" style="display: none; margin-top: 14px; padding: 12px 16px; border-radius: 12px; font-size: 0.92em; line-height: 1.5;"></div>
         </div>
     `;
 }
+
+// =========================================================================
+// دوال إدارة النوافذ المنبثقة الاحترافية لباقات الاشتراك وتأكيد الدفع (v30.93)
+// =========================================================================
+function openSubscriptionTiersModal() {
+    const modal = document.getElementById('subscription-tiers-modal');
+    if (modal) modal.style.display = 'flex';
+}
+window.openSubscriptionTiersModal = openSubscriptionTiersModal;
+
+function closeSubscriptionTiersModal() {
+    const modal = document.getElementById('subscription-tiers-modal');
+    if (modal) modal.style.display = 'none';
+}
+window.closeSubscriptionTiersModal = closeSubscriptionTiersModal;
+
+function selectTierForCheckout(pkgTier) {
+    window._selPkg = pkgTier || 1;
+    closeSubscriptionTiersModal();
+
+    const cfg = getActivePaymentGateConfig();
+    const pr = getPkgPrices(cfg);
+    const chosenPrice = pr[window._selPkg] || (window._selPkg === 10 ? 15 : (window._selPkg === 5 ? 10 : 3));
+
+    const titleEl = document.getElementById('chk-pkg-title');
+    const descEl = document.getElementById('chk-pkg-desc');
+    const priceEl = document.getElementById('chk-pkg-price');
+    const walletEl = document.getElementById('chk-wallet-number');
+
+    if (window._selPkg === 10) {
+        if (titleEl) titleEl.textContent = 'باقة الحل الجذري الشاملة (10 فحوصات)';
+        if (descEl) descEl.textContent = '10 فحوصات سريرية شاملة مدى الحياة برصيد دائم ومستمر';
+    } else if (window._selPkg === 5) {
+        if (titleEl) titleEl.textContent = 'باقة التعافي العائلي (5 فحوصات)';
+        if (descEl) descEl.textContent = '5 فحوصات سريرية كاملة برصيد دائم ومستمر لك وللعائلة';
+    } else {
+        if (titleEl) titleEl.textContent = 'تشخيص سريري فردي';
+        if (descEl) descEl.textContent = 'تقرير سريري تفصيلي كامل + خطة تمارين اليوم الأول';
+    }
+
+    if (priceEl) priceEl.textContent = chosenPrice;
+    if (walletEl) walletEl.textContent = cfg.walletPhone || '0795651388';
+
+    const auth = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+    const defName = (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || auth?.fullName || auth?.name || '';
+    const defPhone = (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') || auth?.originalPhone || auth?.phone || '';
+
+    const nameIn = document.getElementById('chk-subscriber-name');
+    const phoneIn = document.getElementById('chk-subscriber-phone');
+    if (nameIn && !nameIn.value) nameIn.value = defName;
+    if (phoneIn && !phoneIn.value) phoneIn.value = defPhone;
+
+    const modal = document.getElementById('subscription-checkout-modal');
+    if (modal) modal.style.display = 'flex';
+}
+window.selectTierForCheckout = selectTierForCheckout;
+
+function backToSubscriptionTiersModal() {
+    closeSubscriptionCheckoutModal();
+    closeHumanitarianSubscriptionModal();
+    closeDirectPromoCodeModal();
+    openSubscriptionTiersModal();
+}
+window.backToSubscriptionTiersModal = backToSubscriptionTiersModal;
+
+function closeSubscriptionCheckoutModal() {
+    const modal = document.getElementById('subscription-checkout-modal');
+    if (modal) modal.style.display = 'none';
+}
+window.closeSubscriptionCheckoutModal = closeSubscriptionCheckoutModal;
+
+async function submitSubscriptionCheckout() {
+    const nameIn = document.getElementById('chk-subscriber-name');
+    const phoneIn = document.getElementById('chk-subscriber-phone');
+    const refIn = document.getElementById('chk-transfer-ref');
+
+    const subName = (nameIn?.value || '').trim();
+    const subPhone = (phoneIn?.value || '').trim();
+    const transferRef = (refIn?.value || '').trim();
+
+    if (!subName || subName.length < 2) {
+        showRoyalPaymentToast('⚠️ يرجى إدخال اسم المشترك الكريم.', 'warning');
+        nameIn?.focus();
+        return;
+    }
+    const cleanDigits = subPhone.replace(/\D/g, '');
+    if (!subPhone || cleanDigits.length < 8) {
+        showRoyalPaymentToast('⚠️ يرجى إدخال رقم هاتف واتساب صحيح لاستلام الكود عليه.', 'warning');
+        phoneIn?.focus();
+        return;
+    }
+    if (!transferRef) {
+        showRoyalPaymentToast('⚠️ يرجى إدخال رقم الحوالة / العملية بعد إتمام التحويل.', 'warning');
+        refIn?.focus();
+        return;
+    }
+
+    // مزامنة الحقول
+    const pName = document.getElementById('pay-subscriber-name'); if (pName) pName.value = subName;
+    const pPhone = document.getElementById('pay-subscriber-phone'); if (pPhone) pPhone.value = subPhone;
+    const pRef = document.getElementById('pay-transfer-ref'); if (pRef) pRef.value = transferRef;
+
+    closeSubscriptionCheckoutModal();
+    await submitOrangeWalletPaymentNotification();
+}
+window.submitSubscriptionCheckout = submitSubscriptionCheckout;
+
+function openHumanitarianSubscriptionModal() {
+    closeSubscriptionTiersModal();
+    const auth = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
+    const defName = (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || auth?.fullName || auth?.name || '';
+    const defPhone = (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') || auth?.originalPhone || auth?.phone || '';
+
+    const nameIn = document.getElementById('hum-modal-name');
+    const phoneIn = document.getElementById('hum-modal-phone');
+    if (nameIn && !nameIn.value) nameIn.value = defName;
+    if (phoneIn && !phoneIn.value) phoneIn.value = defPhone;
+
+    const modal = document.getElementById('subscription-humanitarian-modal');
+    if (modal) modal.style.display = 'flex';
+}
+window.openHumanitarianSubscriptionModal = openHumanitarianSubscriptionModal;
+
+function closeHumanitarianSubscriptionModal() {
+    const modal = document.getElementById('subscription-humanitarian-modal');
+    if (modal) modal.style.display = 'none';
+}
+window.closeHumanitarianSubscriptionModal = closeHumanitarianSubscriptionModal;
+
+async function submitHumanitarianSubscriptionModal() {
+    const nameIn = document.getElementById('hum-modal-name');
+    const phoneIn = document.getElementById('hum-modal-phone');
+    const pledgeIn = document.getElementById('hum-modal-pledge');
+
+    const subName = (nameIn?.value || '').trim();
+    const subPhone = (phoneIn?.value || '').trim();
+    const isPledged = Boolean(pledgeIn?.checked);
+
+    if (!subName || subName.length < 2) {
+        showRoyalPaymentToast('⚠️ يرجى إدخال اسم المستفيد الكريم.', 'warning');
+        nameIn?.focus();
+        return;
+    }
+    const cleanDigits = subPhone.replace(/\D/g, '');
+    if (!subPhone || cleanDigits.length < 8) {
+        showRoyalPaymentToast('⚠️ يرجى إدخال رقم هاتف واتساب صحيح لاستلام الكود عليه.', 'warning');
+        phoneIn?.focus();
+        return;
+    }
+    if (!isPledged) {
+        showRoyalPaymentToast('⚠️ يرجى تأكيد إقرار الأمانة والمسؤولية للمتابعة.', 'warning');
+        return;
+    }
+
+    const hName = document.getElementById('hum-subscriber-name'); if (hName) hName.value = subName;
+    const hPhone = document.getElementById('hum-subscriber-phone'); if (hPhone) hPhone.value = subPhone;
+    const hOath = document.getElementById('hum-oath-checkbox'); if (hOath) hOath.checked = true;
+
+    closeHumanitarianSubscriptionModal();
+    await submitHumanitarianFreeActivation();
+}
+window.submitHumanitarianSubscriptionModal = submitHumanitarianSubscriptionModal;
+
+function openDirectPromoCodeModal() {
+    closeSubscriptionTiersModal();
+    const modal = document.getElementById('subscription-promocode-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        setTimeout(() => { document.getElementById('promocode-modal-input')?.focus(); }, 150);
+    }
+}
+window.openDirectPromoCodeModal = openDirectPromoCodeModal;
+
+function closeDirectPromoCodeModal() {
+    const modal = document.getElementById('subscription-promocode-modal');
+    if (modal) modal.style.display = 'none';
+}
+window.closeDirectPromoCodeModal = closeDirectPromoCodeModal;
+
+function submitPromoCodeFromModal() {
+    const val = (document.getElementById('promocode-modal-input')?.value || '').trim();
+    if (!val) {
+        showRoyalPaymentToast('⚠️ يرجى إدخال كود التفعيل أولاً.', 'warning');
+        return;
+    }
+    submitPromoOrTestUnlockCode('promocode-modal-input');
+    closeDirectPromoCodeModal();
+}
+window.submitPromoCodeFromModal = submitPromoCodeFromModal;
 
 // رسم بوابة الاشتراك المباشرة في المرحلة 3 قبل ظهور التقرير السريري والتمارين
 function renderPreReportPaywallGate(data, reportContainer) {
@@ -6611,12 +6661,12 @@ function syncPendingPatientRequestToAdmin(pId, subName, subPhone, painArea, pend
     } catch (e) {}
 }
 
-// 1. إرسال إشعار تحويل محفظة أورانج (3 دنانير) للمراجعة والاعتماد من قِبل الإدارة (لا يفتح تلقائياً بدون تدقيق!)
+// 1. إرسال إشعار تحويل محفظة أورانج للمراجعة والاعتماد من قِبل الإدارة (لا يفتح تلقائياً بدون تدقيق!)
 async function submitOrangeWalletPaymentNotification() {
     const cfg = getActivePaymentGateConfig();
-    const nameInput = document.getElementById('pay-subscriber-name');
-    const phoneInput = document.getElementById('pay-subscriber-phone');
-    const refInput = document.getElementById('pay-transfer-ref');
+    const nameInput = document.getElementById('chk-subscriber-name') || document.getElementById('pay-subscriber-name');
+    const phoneInput = document.getElementById('chk-subscriber-phone') || document.getElementById('pay-subscriber-phone');
+    const refInput = document.getElementById('chk-transfer-ref') || document.getElementById('pay-transfer-ref');
     const msgEl = document.getElementById('paywall-status-feedback');
 
     let subName = (nameInput?.value || '').trim();
@@ -6801,26 +6851,6 @@ async function submitOrangeWalletPaymentNotification() {
             }).catch(() => {});
         });
     } catch (directPushErr) {}
-
-    // إرسال آلي فوري لكود التفعيل للعميل إذا تم تفعيل الإرسال الذاتي 24/7
-    try {
-        if (typeof SmartWhatsApp !== 'undefined') {
-            const waCfg = SmartWhatsApp.getConfig();
-            if (waCfg && waCfg.enabled && waCfg.autoSendOnInstantRequest && subPhone) {
-                const autoPin = generateUserBoundCode(subPhone, window._selPkg || 1, 0);
-                SmartWhatsApp.sendAutomatedWhatsApp({
-                    phone: subPhone,
-                    name: subName,
-                    code: autoPin,
-                    plan: `باقة ${window._selPkg || 1} تشخيصات`
-                }).then(res => {
-                    if (res && res.success) {
-                        console.log('✅ تم إرسال كود التفعيل الذاتي لموبايل العميل:', subPhone, autoPin);
-                    }
-                }).catch(() => {});
-            }
-        }
-    } catch (waErr) {}
     
 
     if (typeof SmartDB !== 'undefined' && typeof SmartDB.addAdminNotification === 'function') {
@@ -6901,11 +6931,11 @@ function sendWhatsAppHumanitarianRequest() {
 }
 window.sendWhatsAppHumanitarianRequest = sendWhatsAppHumanitarianRequest;
 
-// 2. رفع طلب إعفاء للفقراء وغير المقتدرين مالياً (صدقة جارية) — يشترط الإقرار الشرعي وموافقة الأدمن في لوحة التحكم!
+// 2. رفع طلب الاستفادة من مبادرة الرعاية الإنسانية (صدقة جارية) — مع الحفاظ الكامل على كرامة المستفيد
 async function submitHumanitarianFreeActivation() {
-    const nameInput = document.getElementById('hum-subscriber-name');
-    const phoneInput = document.getElementById('hum-subscriber-phone');
-    const oathCheckbox = document.getElementById('hum-oath-checkbox');
+    const nameInput = document.getElementById('hum-modal-name') || document.getElementById('hum-subscriber-name');
+    const phoneInput = document.getElementById('hum-modal-phone') || document.getElementById('hum-subscriber-phone');
+    const oathCheckbox = document.getElementById('hum-modal-pledge') || document.getElementById('hum-oath-checkbox');
     const oathLabelBox = document.getElementById('hum-oath-box-label');
     const msgEl = document.getElementById('paywall-status-feedback');
 
@@ -6927,7 +6957,7 @@ async function submitHumanitarianFreeActivation() {
                 msgEl.style.background = 'rgba(239, 68, 68, 0.18)';
                 msgEl.style.border = '1px solid #ef4444';
                 msgEl.style.color = '#fca5a5';
-                msgEl.innerHTML = '⚠️ يرجى كتابة <strong>اسمك الكريم</strong> أو <strong>رقم هاتفك</strong> لرفع طلب الإعفاء.';
+                msgEl.innerHTML = '⚠️ يرجى كتابة <strong>اسمك الكريم</strong> أو <strong>رقم هاتفك</strong> لرفع طلب المبادرة.';
             }
             showRoyalPaymentToast('⚠️ يرجى كتابة اسمك الكريم أولاً.', 'warning');
             nameInput?.focus();
@@ -6955,18 +6985,18 @@ async function submitHumanitarianFreeActivation() {
             msgEl.style.background = 'rgba(239, 68, 68, 0.22)';
             msgEl.style.border = '1.5px solid #ef4444';
             msgEl.style.color = '#fecaca';
-            msgEl.innerHTML = '⚠️ <strong>تنبيه:</strong> يرجى وضع علامة (✓) في مربع إقرار المستفيد قبل إرسال الطلب.';
+            msgEl.innerHTML = '⚠️ <strong>تنبيه:</strong> يرجى وضع علامة (✓) في مربع إقرار الأمانة والمسؤولية قبل إرسال الطلب.';
         }
         if (oathLabelBox) {
             oathLabelBox.style.borderColor = '#ef4444';
             oathLabelBox.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.45)';
             oathLabelBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-        showRoyalPaymentToast('⚠️ يجب وضع علامة (✓) في مربع الإقرار الشرعي بأنك غير مقتدر مادياً لإرسال الطلب.', 'warning');
+        showRoyalPaymentToast('⚠️ يجب تأكيد إقرار الأمانة والمسؤولية لإرسال الطلب.', 'warning');
         return;
     }
 
-    const waiverReason = 'أقرّ بأن ظروفي المادية تحول دون قدرتي على تحمّل تكاليف الرعاية العلاجية، وأن طلبي نابع من حاجتي الفعلية، وأتعهد بالصدق والأمانة';
+    const waiverReason = 'أقرّ بأمانتي ومسؤوليتي في طلب الاستفادة من مبادرة الرعاية الإنسانية';
 
     try {
         localStorage.setItem('smart_patient_name', subName);
@@ -11047,7 +11077,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.92';
+const CURRENT_APP_VERSION = 'v30.93';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -11440,19 +11470,44 @@ function copyAppShareLink() {
 
 // مشاركة التطبيق عبر واتساب
 function shareViaWhatsApp() {
-    const url = getAppShareUrl();
-    const shareText = `🌿 أنصحك بتجربة نظام الفحص السريري الذكي وخطة الراحة الحركية في (وداعاً للألم - تقنية الكايروبراكتيك اليدوية 30 دقيقة):\n${url}\n\n📞 للاستفسار والتواصل المباشر مع المعالج: 0790360440`;
+    const shareText = `🌿 هل جرّبت تفهم سبب الألم اللي بتحس فيه؟
+
+حبيت أشاركك أداة تفاعلية بالذكاء الإصطناعي مميزة من منصة «وداعاً للألم»، بتساعدك على تشخيص مشكلتك ، وتفهم الأعراض والمؤشرات المرتبطة فيها، وتحصل على تقرير إرشادي  عن حالتك وتمارين حركية مناسبة كبداية.
+
+🩺 جرّب الفحص بنفسك، واكتشف معلومات أكثر عن جسمك وحركتك.
+
+👇 ابدأ من هنا:
+https://smartchecktools.com/
+
+✨ صحتك وحركتك بتستاهل تهتم فيهم.
+
+Smart Check Pro 2.0 | وداعاً للألم
+للإستفسار والتواصل المباشر مع المعالج"أخصائي كايروبراكتيك"
+0790360440`;
     const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
     window.open(waUrl, '_blank');
 }
 
 // مشاركة التطبيق عبر ميزة النظام الأصلية Web Share
 function shareViaNative() {
-    const url = getAppShareUrl();
+    const shareText = `🌿 هل جرّبت تفهم سبب الألم اللي بتحس فيه؟
+
+حبيت أشاركك أداة تفاعلية بالذكاء الإصطناعي مميزة من منصة «وداعاً للألم»، بتساعدك على تشخيص مشكلتك ، وتفهم الأعراض والمؤشرات المرتبطة فيها، وتحصل على تقرير إرشادي  عن حالتك وتمارين حركية مناسبة كبداية.
+
+🩺 جرّب الفحص بنفسك، واكتشف معلومات أكثر عن جسمك وحركتك.
+
+👇 ابدأ من هنا:
+https://smartchecktools.com/
+
+✨ صحتك وحركتك بتستاهل تهتم فيهم.
+
+Smart Check Pro 2.0 | وداعاً للألم
+للإستفسار والتواصل المباشر مع المعالج"أخصائي كايروبراكتيك"
+0790360440`;
     const shareData = {
         title: 'وداعاً للألم | Smart Check Pro 2.0',
-        text: 'افحص موضع ألمك وتعرف على خطتك العلاجية والتمارين المخصصة مع وداعاً للألم (تقنية الكايروبراكتيك 30 دقيقة):',
-        url: url
+        text: shareText,
+        url: 'https://smartchecktools.com/'
     };
 
     if (navigator.share && !window.location.protocol.startsWith('file')) {
