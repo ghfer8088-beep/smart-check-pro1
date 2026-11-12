@@ -6172,7 +6172,7 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
 }
 
 // =========================================================================
-// دوال إدارة النوافذ المنبثقة الاحترافية لباقات الاشتراك وتأكيد الدفع (v30.93)
+// دوال إدارة النوافذ المنبثقة الاحترافية لباقات الاشتراك وتأكيد الدفع (v30.94)
 // =========================================================================
 function openSubscriptionTiersModal() {
     const modal = document.getElementById('subscription-tiers-modal');
@@ -11077,7 +11077,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.93';
+const CURRENT_APP_VERSION = 'v30.94';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -11773,26 +11773,52 @@ window.openNewDiagnosisQuotaGateModal = openNewDiagnosisQuotaGateModal;
 // إعادة ضبط لبدء فحص جديد
 function resetToInitialState(force = false) {
     if (!force) {
+        const pt = activePatient || window.activePatient;
+        const pId = pt?.patientId || pt?.id || localStorage.getItem('smart_current_patient_id') || '';
+        const curName = pt?.name || (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '');
+
+        // فحص دقيق هل الخطة العلاجية مكتملة بالكامل (أتم جميع الجلسات الـ 7 ووصل للمرحلة 6)
+        const isCompletedPlan = Boolean(
+            pt?.isPlanCompleted || 
+            pt?.planCompleted || 
+            (pId && localStorage.getItem('smart_plan_completed_' + pId) === 'true') ||
+            localStorage.getItem('smart_current_step') === '6' ||
+            localStorage.getItem('smart_max_reached_step') === '6'
+        );
+
         const wallet = typeof getPkgWallet === 'function' ? getPkgWallet() : null;
         const hasRemainingPkgCredits = Boolean(wallet && typeof wallet.remaining === 'number' && wallet.remaining > 0);
         const hasConsumedSingleOrFree = !hasRemainingPkgCredits && (
             localStorage.getItem('smart_device_single_diag_consumed') === 'true' ||
             localStorage.getItem('smart_humanitarian_used_device') === 'true' ||
             localStorage.getItem('smart_paid_plan_unlocked') === 'true' ||
-            Boolean(activePatient && activePatient.isPaidUnlocked) ||
-            Boolean(window.activePatient && window.activePatient.isPaidUnlocked)
+            Boolean(pt && pt.isPaidUnlocked)
         );
-        if (hasConsumedSingleOrFree) {
-            if (activePatient && (activePatient.paymentType === 'humanitarian' || activePatient.paymentType === 'humanitarian_waiver')) {
-                recordHumanitarianUsage(activePatient.phone, activePatient.patientId || activePatient.id);
+
+        // إذا كان المريض في منتصف خطة غير مكتملة واستهلك رصيده
+        if (hasConsumedSingleOrFree && !isCompletedPlan) {
+            if (pt && (pt.paymentType === 'humanitarian' || pt.paymentType === 'humanitarian_waiver')) {
+                recordHumanitarianUsage(pt.phone, pt.patientId || pt.id);
             }
             localStorage.setItem('smart_device_single_diag_consumed', 'true');
             openNewDiagnosisQuotaGateModal();
             return;
         }
-        const curName = (activePatient && activePatient.name) || (window.activePatient && window.activePatient.name);
-        if (curName) {
-            const confirmed = confirm(`تنبيه هام:\nلديك جلسة علاجية جارية حالياً باسم (${curName}).\nهل أنت متأكد تماماً من رغبتك ببدء فحص جديد؟`);
+
+        // 1. إذا كان المريض قد أتم جميع الجلسات الـ 7 بالكامل بنجاح
+        if (isCompletedPlan) {
+            // لا نذكر أبداً أن هناك جلسة غير منجزة أو جارية، لأن الخطة اكتملت 100%!
+            if (curName) {
+                const confirmed = confirm(`🎉 تهانينا على إتمامك برنامج الـ 7 أيام بنجاح يا ${curName}!\n\nكافة مؤشراتك ونتائجك موثقة ومحفوظة في ملفك الطبي.\nهل تود بدء فحص سريري جديد لمنطقة ألم أخرى؟`);
+                if (!confirmed) return;
+            }
+        } else if (curName) {
+            // 2. إذا كانت هناك جلسات فعلية غير منجزة بعد في منتصف الأيام (مثلاً الجلسة 3 من 7)
+            const completedDays = (typeof SmartDB !== 'undefined' && typeof SmartDB.getSessionData === 'function' && pId) ? (SmartDB.getSessionData(pId)?.dailyLogs?.length || 0) : 0;
+            const msg = completedDays > 0 
+                ? `تنبيه:\nلديك خطة علاجية قيد المتابعة حالياً (أنجزت ${completedDays} من 7 جلسات) باسم (${curName}).\nهل أنت متأكد من رغبتك ببدء فحص جديد لموضع آخر؟`
+                : `تنبيه:\nلديك فحص سريري قيد الإجراء حالياً باسم (${curName}).\nهل أنت متأكد من رغبتك بالبدء من جديد؟`;
+            const confirmed = confirm(msg);
             if (!confirmed) return;
         }
     }
