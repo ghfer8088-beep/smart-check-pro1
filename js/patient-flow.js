@@ -602,7 +602,7 @@ const PatientFlow = (function() {
     }
 
     // حساب حالة القفل الزمني للجلسة
-    async function getSessionLockStatus(patientId) {
+    async function getSessionLockStatus(patientId, sessionNum = null) {
         let effectiveId = patientId;
         let patient = null;
 
@@ -632,44 +632,81 @@ const PatientFlow = (function() {
             return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, isDev: true };
         }
 
-        // ✅ أولوية قصوى للتعديل اللحظي المحفوظ في الذاكرة الحية من لوحة الأدمن (يعمل حتى لو امتلأت مساحة localStorage)
+        const sTarget = sessionNum ? Number(sessionNum) : null;
+
+        // ✅ أولوية قصوى للتعديل اللحظي المحفوظ في الذاكرة الحية من لوحة الأدمن
         if (typeof window !== 'undefined' && window._scpLiveTimingOverride) {
             const ov = window._scpLiveTimingOverride;
-            if (ov.forceUnlockAllSessions) {
-                permanentlyExpireSessionCooldown(effectiveId || patientId, 0);
-                return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true, allUnlocked: true };
-            }
-            if (ov.forceUnlock) {
-                permanentlyExpireSessionCooldown(effectiveId || patientId, 0);
-                return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
-            }
-            if (ov.targetTime && ov.targetTime > 0) {
-                const diffOv = ov.targetTime - Date.now();
-                if (diffOv <= 0) {
-                    ov.forceUnlock = true;
-                    ov.targetTime = 0;
+            // إذا كان التعديل اللحظي يخص جلسة معينة، نطبقه فقط على تلك الجلسة أو إذا كانت هي الجلسة المعروضة
+            const ovSession = Number(ov.sessionNum || 0);
+            const isMatchSession = !sTarget || !ovSession || (sTarget === ovSession);
+            if (isMatchSession) {
+                if (ov.forceUnlockAllSessions) {
+                    permanentlyExpireSessionCooldown(effectiveId || patientId, 0);
+                    return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true, allUnlocked: true };
+                }
+                if (ov.forceUnlock) {
                     permanentlyExpireSessionCooldown(effectiveId || patientId, 0);
                     return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
                 }
-                return {
-                    isLocked: true,
-                    remainingHours: diffOv / (1000 * 60 * 60),
-                    remainingMs: diffOv,
-                    totalDurationMs: ov.totalDurationMs || diffOv,
-                    targetTime: ov.targetTime
-                };
+                if (ov.targetTime && ov.targetTime > 0) {
+                    const diffOv = ov.targetTime - Date.now();
+                    if (diffOv <= 0) {
+                        ov.forceUnlock = true;
+                        ov.targetTime = 0;
+                        permanentlyExpireSessionCooldown(effectiveId || patientId, 0);
+                        return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
+                    }
+                    return {
+                        isLocked: true,
+                        remainingHours: diffOv / (1000 * 60 * 60),
+                        remainingMs: diffOv,
+                        totalDurationMs: ov.totalDurationMs || diffOv,
+                        targetTime: ov.targetTime
+                    };
+                }
             }
         }
 
         const cleanPhone = (patient && patient.phone) ? String(patient.phone).replace(/\D/g, '') : '';
-        const localCustomTarget = (effectiveId ? localStorage.getItem(`custom_target_time_${effectiveId}`) : null) ||
+        
+        // التحقق أولاً من التوقيت الخاص برقم الجلسة المحددة إن وُجد
+        const sessSpecificTarget = sTarget ? (
+            (effectiveId ? localStorage.getItem(`custom_target_time_${effectiveId}_${sTarget}`) : null) ||
+            (patientId ? localStorage.getItem(`custom_target_time_${patientId}_${sTarget}`) : null) ||
+            (cleanPhone ? localStorage.getItem(`custom_target_time_${cleanPhone}_${sTarget}`) : null) ||
+            localStorage.getItem(`custom_target_time_global_${sTarget}`)
+        ) : null;
+
+        const sessSpecificForce = sTarget ? (
+            (effectiveId && localStorage.getItem(`force_unlock_${effectiveId}_${sTarget}`) === 'true') ||
+            (patientId && localStorage.getItem(`force_unlock_${patientId}_${sTarget}`) === 'true') ||
+            (cleanPhone ? localStorage.getItem(`force_unlock_${cleanPhone}_${sTarget}`) === 'true' : false) ||
+            (localStorage.getItem(`force_unlock_global_${sTarget}`) === 'true')
+        ) : false;
+
+        const targetedAdminSession = parseInt(
+            (patient && (patient.targetedSessionNum || patient.currentSessionDay)) ||
+            (effectiveId ? localStorage.getItem(`targeted_session_${effectiveId}`) : null) ||
+            localStorage.getItem('targeted_session_global') || 0
+        );
+
+        // لا نطبق التوقيت المخصص العام إلا إذا كانت الجلسة هي الجلسة المستهدفة المحددة
+        const isTargetedSessionNow = !sTarget || !targetedAdminSession || (sTarget === targetedAdminSession);
+
+        const localCustomTarget = sessSpecificTarget || (isTargetedSessionNow ? (
+                                  (effectiveId ? localStorage.getItem(`custom_target_time_${effectiveId}`) : null) ||
                                   (patientId ? localStorage.getItem(`custom_target_time_${patientId}`) : null) ||
                                   (cleanPhone ? localStorage.getItem(`custom_target_time_${cleanPhone}`) : null) ||
-                                  localStorage.getItem('custom_target_time_global');
-        const isLocalForceUnlock = (localStorage.getItem('force_unlock_global') === 'true') ||
+                                  localStorage.getItem('custom_target_time_global')
+                                  ) : null);
+
+        const isLocalForceUnlock = sessSpecificForce || (isTargetedSessionNow && (
+                                   (localStorage.getItem('force_unlock_global') === 'true') ||
                                    (effectiveId && localStorage.getItem(`force_unlock_${effectiveId}`) === 'true') ||
                                    (patientId && localStorage.getItem(`force_unlock_${patientId}`) === 'true') ||
-                                   (cleanPhone ? localStorage.getItem(`force_unlock_${cleanPhone}`) === 'true' : false);
+                                   (cleanPhone ? localStorage.getItem(`force_unlock_${cleanPhone}`) === 'true' : false)
+                                   ));
 
         // التحقق من فتح جميع الجلسات بالكامل من الإدارة
         const isAllUnlocked = (localStorage.getItem("force_unlock_all_global") === "true") ||

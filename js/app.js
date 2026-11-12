@@ -8776,7 +8776,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             sessionData.isPlanCompleted = true;
         }
 
-        const lockStatus = await PatientFlow.getSessionLockStatus(effectivePid);
+        // التحقق من حالة القفل المبدئية
         if (myRenderSeq !== window._step5RenderSeq) return;
 
         // إذا كان المريض أنجز كل الـ 7 جلسات ولم ينقر يدوياً على تبويب جلسة محددة للمراجعة، الانتقال فوراً لبوابة الحل الجذري (المرحلة 6)
@@ -8827,7 +8827,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             } catch(e) {}
         }
 
-        // تحديد اليوم المعروض حالياً: يفتح دائماً على جلسة التقدم الحالية (مثل الجلسة 4) إلا إذا نقر المريض يدوياً على تبويب جلسة للمراجعة
+        // تحديد اليوم المعروض حالياً: يفتح دائماً على جلسة التقدم الحالية (مثل الجلسة 5) إلا إذا نقر المريض يدوياً على تبويب جلسة للمراجعة
         let activeDay = progressionDay;
         if (targetDay && isUserTabClick) {
             activeDay = Math.max(1, Math.min(7, targetDay));
@@ -8836,6 +8836,10 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         } else if (isAllUnlockedNow && targetDay && targetDay >= 2 && targetDay <= 7 && isUserTabClick) {
             activeDay = targetDay;
         }
+
+        // جلب حالة القفل والتوقيت الدقيق الخاص بالجلسة المعروضة activeDay حصراً
+        const lockStatus = await PatientFlow.getSessionLockStatus(effectivePid, activeDay);
+        if (myRenderSeq !== window._step5RenderSeq) return;
 
         if (activePatient) {
             activePatient.currentSessionDay = progressionDay;
@@ -10556,6 +10560,18 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
     modal.style.setProperty('opacity', '1', 'important');
     modal.style.setProperty('pointer-events', 'auto', 'important');
 
+    // تصفير سكرول النافذة لتفتح دائماً من البداية عند قمة المحتوى
+    try {
+        modal.scrollTop = 0;
+        const innerModal = modal.querySelector('.modal-inner');
+        if (innerModal) innerModal.scrollTop = 0;
+        if (content) content.scrollTop = 0;
+        const modalHeader = modal.querySelector('h3');
+        if (modalHeader && typeof modalHeader.scrollIntoView === 'function') {
+            modalHeader.scrollIntoView({ behavior: 'auto', block: 'start' });
+        }
+    } catch(scErr) {}
+
     // إخفاء الشريط السفلي أثناء فتح نافذة التقييم لضمان عدم حجب زر الاعتماد والتقييم نهائياً
     const stickyBar = document.getElementById('sticky-patient-guidance-bar');
     if (stickyBar) {
@@ -10940,7 +10956,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.90';
+const CURRENT_APP_VERSION = 'v30.91';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 

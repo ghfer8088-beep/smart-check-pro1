@@ -1175,43 +1175,61 @@ const AdminEngine = (function() {
             if (forceUnlock) {
                 // فتح فوري وتصفير العداد لكافة الجلسات المحتملة لمنع أي تعارض في رقم الجلسة
                 safeStorageSet(`force_unlock_${patientId}`, 'true');
+                safeStorageSet(`force_unlock_${patientId}_${numSession}`, 'true');
                 safeStorageRemove(`custom_target_time_${patientId}`);
                 safeStorageRemove(`custom_total_duration_${patientId}`);
+                safeStorageRemove(`custom_target_time_${patientId}_${numSession}`);
+                safeStorageRemove(`custom_total_duration_${patientId}_${numSession}`);
                 for (let i = 1; i <= 7; i++) {
                     safeStorageRemove(`sessionStartTime_${patientId}_${i}`);
                 }
                 if (cleanPhone) {
                     safeStorageSet(`force_unlock_${cleanPhone}`, 'true');
+                    safeStorageSet(`force_unlock_${cleanPhone}_${numSession}`, 'true');
                     safeStorageRemove(`custom_target_time_${cleanPhone}`);
                     safeStorageRemove(`custom_total_duration_${cleanPhone}`);
+                    safeStorageRemove(`custom_target_time_${cleanPhone}_${numSession}`);
+                    safeStorageRemove(`custom_total_duration_${cleanPhone}_${numSession}`);
                     for (let i = 1; i <= 7; i++) {
                         safeStorageRemove(`sessionStartTime_${cleanPhone}_${i}`);
                     }
                 }
                 if (broadcastToAll) {
                     safeStorageSet('force_unlock_global', 'true');
+                    safeStorageSet(`force_unlock_global_${numSession}`, 'true');
                     safeStorageRemove('custom_target_time_global');
                     safeStorageRemove('custom_total_duration_global');
+                    safeStorageRemove(`custom_target_time_global_${numSession}`);
+                    safeStorageRemove(`custom_total_duration_global_${numSession}`);
                 }
             } else {
-                // تحديد وقت انتهاء دقيق
+                // تحديد وقت انتهاء دقيق للجلسة المستهدفة المحددة
                 targetTime = Date.now() + totalDurationMs;
                 safeStorageSet(`custom_target_time_${patientId}`, String(targetTime));
                 safeStorageSet(`custom_total_duration_${patientId}`, String(totalDurationMs));
+                safeStorageSet(`custom_target_time_${patientId}_${numSession}`, String(targetTime));
+                safeStorageSet(`custom_total_duration_${patientId}_${numSession}`, String(totalDurationMs));
                 safeStorageRemove(`force_unlock_${patientId}`);
+                safeStorageRemove(`force_unlock_${patientId}_${numSession}`);
                 safeStorageRemove(`force_unlock_all_${patientId}`);
                 safeStorageRemove('force_unlock_all');
                 safeStorageRemove('force_unlock_all_global');
                 if (cleanPhone) {
                     safeStorageSet(`custom_target_time_${cleanPhone}`, String(targetTime));
                     safeStorageSet(`custom_total_duration_${cleanPhone}`, String(totalDurationMs));
+                    safeStorageSet(`custom_target_time_${cleanPhone}_${numSession}`, String(targetTime));
+                    safeStorageSet(`custom_total_duration_${cleanPhone}_${numSession}`, String(totalDurationMs));
                     safeStorageRemove(`force_unlock_${cleanPhone}`);
+                    safeStorageRemove(`force_unlock_${cleanPhone}_${numSession}`);
                     safeStorageRemove(`force_unlock_all_${cleanPhone}`);
                 }
                 if (broadcastToAll) {
                     safeStorageSet('custom_target_time_global', String(targetTime));
                     safeStorageSet('custom_total_duration_global', String(totalDurationMs));
+                    safeStorageSet(`custom_target_time_global_${numSession}`, String(targetTime));
+                    safeStorageSet(`custom_total_duration_global_${numSession}`, String(totalDurationMs));
                     safeStorageRemove('force_unlock_global');
+                    safeStorageRemove(`force_unlock_global_${numSession}`);
                 }
             }
             safeStorageSet('countdownUpdated', Date.now().toString());
