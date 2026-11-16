@@ -6180,7 +6180,7 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
 }
 
 // =========================================================================
-// دوال إدارة النوافذ المنبثقة الاحترافية لباقات الاشتراك وتأكيد الدفع (v30.97)
+// دوال إدارة النوافذ المنبثقة الاحترافية لباقات الاشتراك وتأكيد الدفع (v30.98)
 // =========================================================================
 function openSubscriptionTiersModal() {
     const modal = document.getElementById('subscription-tiers-modal');
@@ -8865,13 +8865,14 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         const container = document.getElementById('step5-sessions-container');
         if (!container) return;
 
-        // التحقق من فتح الإدارة لكافة الجلسات أو تحديد جلسة مستهدفة
-        const isAllUnlockedNow = (localStorage.getItem('force_unlock_all_global') === 'true') ||
-                                 (localStorage.getItem('force_unlock_all') === 'true') ||
-                                 (localStorage.getItem(`force_unlock_all_${effectivePid}`) === 'true') ||
-                                 (sessionData.patient?.forceUnlockAllSessions === true) ||
-                                 (sessionData.patient?.allSessionsUnlocked === true) ||
-                                 sessionData.isPlanCompleted;
+        // التحقق من فتح الإدارة لكافة الجلسات صراحة لهذا المريض
+        const isAllUnlockedNow = Boolean(
+            (effectivePid && localStorage.getItem(`force_unlock_all_${effectivePid}`) === 'true') ||
+            (sessionData.patient?.forceUnlockAllSessions === true) ||
+            (sessionData.patient?.allSessionsUnlocked === true) ||
+            sessionData.isPlanCompleted ||
+            (typeof window !== 'undefined' && window._scpLiveTimingOverride && window._scpLiveTimingOverride.forceUnlockAllSessions)
+        );
 
         const targetedSessionAdmin = parseInt(
             sessionData.patient?.targetedSessionNum ||
@@ -9189,22 +9190,23 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 ` : ''}
             </div>
         `;
-    } else if (isDay1NotDone) {
+    } else if (lockStatus.prevSessionNotDone || isDay1NotDone) {
+        const reqNum = lockStatus.requiredSession || (activeDay - 1);
         clock24HTML = `
             <div style="background: linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #eab308; border-radius: 14px; padding: 22px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
                     <div style="color: #fef08a; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-                        <span>⚠️</span> تتطلب الجلسة الثانية إتمام تمارين اليوم الأول أولاً
+                        <span>🔒</span> تتطلب الجلسة (${activeDay}) إتمام وتوثيق الجلسة (${reqNum}) أولاً
                     </div>
                     <span style="background: rgba(234, 179, 8, 0.2); border: 1px solid #eab308; color: #fef08a; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
-                        بانتظار توثيق اليوم الأول
+                        بانتظار إنجاز الجلسة ${reqNum}
                     </span>
                 </div>
                 <p style="color: #cbd5e1; font-size: 0.9em; margin: 0 0 16px 0; line-height: 1.6;">
-                    لتحقيق الفائدة السريرية المتدرجة وحماية المفاصل، تبدأ فترة الاستشفاء الحيوي (24 ساعة) تلقائياً بمجرد إتمامك لتمارين الجلسة الأولى وتوثيقها.
+                    لحماية مفاصلك وأنسجتك وتحقيق التعافي السريري المتدرج، لا يمكن تخطي الجلسات أو فتح الجلسة (${activeDay}) إلا بعد إتمام تمارين الجلسة السابقة (${reqNum}) وتوثيقها واستكمال فترة الاستشفاء الحيوي المقررة (24 ساعة).
                 </p>
-                <button type="button" onclick="handleStepperClick(4)" style="background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; font-weight: 900; border: none; padding: 10px 24px; border-radius: 25px; font-size: 0.95em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);">
-                    <span>🏋️</span> الانتقال لتمارين الجلسة الأولى (اليوم 1) ❯
+                <button type="button" onclick="${reqNum === 1 ? `renderStep4IndependentDay1('${patientId}')` : `renderStep5SessionsDashboard('${patientId}', ${reqNum})`}" style="background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; font-weight: 900; border: none; padding: 10px 24px; border-radius: 25px; font-size: 0.95em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);">
+                    <span>🏋️</span> الانتقال للجلسة المطلوبة (#${reqNum}) ❯
                 </button>
             </div>
         `;
@@ -9241,8 +9243,22 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             </div>
         `;
     } else {
-        // إذا لم يكن هناك قفل استشفاء نشط، لا داعي لعرض بنر نصي زائد يُربك المريض
-        clock24HTML = '';
+        // إذا اكتمل العداد، نعرض شارة إنجاز فترة الاستشفاء واستعداد الجلسة للتوثيق
+        clock24HTML = `
+            <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 16px 20px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 18px rgba(16, 185, 129, 0.2);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <div style="color: #6ee7b7; font-size: 1.02em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                        <span>🎉</span> اكتملت فترة استشفاء الأنسجة (24 ساعة) بنجاح
+                    </div>
+                    <span style="background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; color: #6ee7b7; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
+                        الجلسة ${activeDay} من 7 (مفتوحة وجاهزة)
+                    </span>
+                </div>
+                <div style="color: #cbd5e1; font-size: 0.86em; margin-top: 6px; text-align: right;">
+                    أهلاً بك! لقد أتم جسدك فترة الاستشفاء الحيوية اللازمة؛ طبّق تمارين الجلسة المقررة أدناه ثم اضغط زر حفظ التقييم لاعتماد تقدمك العلاجي.
+                </div>
+            </div>
+        `;
     }
 
     // الرسم البياني لمسار تراجع الألم: متاح فوراً في كافة الجلسات بما فيها الجلسة 2 لتوثيق مسار الشفاء منذ اليوم الأول
@@ -9347,11 +9363,6 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                         <!-- Right Arrow Chevron -->
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));"><polyline points="15 18 9 12 15 6"/></svg>
                     </button>
-                    <div style="margin-top: 10px; text-align: center;">
-                        <button type="button" onclick="handleStep5CompletionClick('${patientId}', ${activeDay}, true)" style="background: none; border: none; color: #94a3b8; font-size: 0.82em; text-decoration: underline; cursor: pointer; padding: 4px 10px; transition: 0.2s;">
-                            أديت التمارين مسبقاً خارج الأداة؟ انقر هنا للمتابعة والتوثيق المباشر ❯
-                        </button>
-                    </div>
                 </div>
             `;
         }
@@ -10370,11 +10381,34 @@ function handleStep4CompletionClick(patientId, forceSkip = false) {
 }
 window.handleStep4CompletionClick = handleStep4CompletionClick;
 
-// فحص إتمام كافة تمارين الجلسة (2 إلى 7) قبل فتح نافذة التقييم السريري
-function handleStep5CompletionClick(patientId, sessionNumber, forceSkip = false) {
-    if (!forceSkip) {
+// فحص إتمام كافة تمارين الجلسة (2 إلى 7) ومنع التجاوز الزمني قبل فتح نافذة التقييم السريري
+async function handleStep5CompletionClick(patientId, sessionNumber, forceSkip = false) {
+    const cleanId = (typeof getCleanPatientId === 'function') ? getCleanPatientId(patientId) : (patientId && patientId !== 'undefined' ? patientId : 'pat_guest');
+
+    // 🔒 فحص الأمان الزمني الصارم: منع أي تجاوز إذا كان العداد الزمني سارياً أو الجلسة السابقة غير منجزة
+    if (typeof PatientFlow !== 'undefined' && PatientFlow.getSessionLockStatus) {
+        const lockCheck = await PatientFlow.getSessionLockStatus(cleanId, sessionNumber);
+        if (lockCheck.isLocked && !isAdminSession()) {
+            if (lockCheck.prevSessionNotDone) {
+                if (typeof showToast === 'function') {
+                    showToast(`⚠️ تتطلب الجلسة (#${sessionNumber}) إتمام وتوثيق الجلسة (#${lockCheck.requiredSession}) أولاً! 🔒`, 'warning', 4500);
+                }
+                return;
+            }
+            const remH = Math.floor(lockCheck.remainingMs / 3600000);
+            const remM = Math.floor((lockCheck.remainingMs % 3600000) / 60000);
+            const remS = Math.floor((lockCheck.remainingMs % 60000) / 1000);
+            const timeStr = `${remH > 0 ? remH + ' س و ' : ''}${remM} د و ${remS} ث`;
+            if (typeof showToast === 'function') {
+                showToast(`⏳ فترة استشفاء الأنسجة ما زالت جارية (متبقي: ${timeStr})! لا يمكن اعتماد الجلسة (#${sessionNumber}) حتى انتهاء العداد ⏱️`, 'warning', 4500);
+            }
+            return;
+        }
+    }
+
+    if (!isAdminSession() && !forceSkip) {
         const step5Box = document.getElementById('step5-sessions-container') || document.getElementById('step-section-5');
-        const timerBtns = Array.from((step5Box || document).querySelectorAll('button.btn-exercise-timer'));
+        const timerBtns = Array.from((step5Box || document).querySelectorAll('button.btn-exercise-timer, .clinical-exercise-card button'));
         if (timerBtns.length > 0) {
             const uncompleted = timerBtns.filter(btn => {
                 const isFinished = btn.dataset.completed === 'true' ||
@@ -10817,11 +10851,16 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
             window._scpLiveTimingOverride = null;
             const purgeKeys = [
                 'force_unlock_global',
+                'force_unlock_all',
+                'force_unlock_all_global',
                 `force_unlock_global_${sessionNumber}`,
+                `force_unlock_global_${nextSession}`,
                 `force_unlock_${effectiveId}`,
                 `force_unlock_${effectiveId}_${sessionNumber}`,
+                `force_unlock_${effectiveId}_${nextSession}`,
                 `force_unlock_${patientId}`,
                 `force_unlock_${patientId}_${sessionNumber}`,
+                `force_unlock_${patientId}_${nextSession}`,
                 'custom_target_time_global',
                 `custom_target_time_global_${sessionNumber}`,
                 `custom_target_time_${effectiveId}`,
@@ -10837,7 +10876,7 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
                 `targeted_session_${patientId}`
             ];
             if (cleanP) {
-                purgeKeys.push(`force_unlock_${cleanP}`, `force_unlock_${cleanP}_${sessionNumber}`, `custom_target_time_${cleanP}`, `custom_target_time_${cleanP}_${sessionNumber}`, `targeted_session_${cleanP}`);
+                purgeKeys.push(`force_unlock_${cleanP}`, `force_unlock_${cleanP}_${sessionNumber}`, `force_unlock_${cleanP}_${nextSession}`, `custom_target_time_${cleanP}`, `custom_target_time_${cleanP}_${sessionNumber}`, `targeted_session_${cleanP}`);
             }
             purgeKeys.forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
         } catch(e) {}
@@ -10865,9 +10904,13 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
                 activePatient.customTargetTime = targetLockTime;
                 activePatient.customTotalDuration = lockDurationMs;
                 activePatient.forceUnlock = false;
+                activePatient.forceUnlockAllSessions = false;
+                activePatient.allSessionsUnlocked = false;
                 activePatient.targetedSessionNum = nextSession;
                 delete activePatient[`forceUnlockSession_${sessionNumber}`];
                 delete activePatient[`forceUnlockSession_${nextSession}`];
+                activePatient[`customTargetTime_${nextSession}`] = targetLockTime;
+                activePatient[`customDurationMs_${nextSession}`] = lockDurationMs;
                 if (typeof SmartDB !== 'undefined' && typeof SmartDB.savePatient === 'function') {
                     SmartDB.savePatient(activePatient, { skipCloudSync: true }).catch(() => {});
                 }
@@ -11079,7 +11122,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.97';
+const CURRENT_APP_VERSION = 'v30.98';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -11863,8 +11906,11 @@ function resetToInitialState(force = false) {
             }
         }
         localStorage.removeItem('force_unlock_global');
+        localStorage.removeItem('force_unlock_all');
+        localStorage.removeItem('force_unlock_all_global');
         localStorage.removeItem('custom_target_time_global');
         localStorage.removeItem('targeted_session_global');
+        window._scpLiveTimingOverride = null;
         for (let s = 1; s <= 7; s++) {
             localStorage.removeItem(`custom_target_time_global_${s}`);
             localStorage.removeItem(`custom_total_duration_global_${s}`);

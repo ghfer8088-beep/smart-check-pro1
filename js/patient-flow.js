@@ -601,7 +601,7 @@ const PatientFlow = (function() {
         };
     }
 
-    // حساب حالة القفل الزمني للجلسة
+    // حساب حالة القفل الزمني للجلسة بدقة سريرية تمنع أي تجاوز غير مسموح
     async function getSessionLockStatus(patientId, sessionNum = null) {
         let effectiveId = patientId;
         let patient = null;
@@ -632,26 +632,65 @@ const PatientFlow = (function() {
             return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, isDev: true };
         }
 
-        const sTarget = sessionNum ? Number(sessionNum) : null;
+        const sTarget = sessionNum ? Number(sessionNum) : 1;
 
-        // ✅ أولوية قصوى للتعديل اللحظي المحفوظ في الذاكرة الحية من لوحة الأدمن (مطبقة على الجلسة المستهدفة حصراً)
+        // 1. الجلسة الأولى (اليوم 1) تكون متاحة ومفتوحة دائماً عند الفحص المبدئي ولا تُقفل أبداً
+        if (sTarget === 1) {
+            return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, isDay1Pending: false };
+        }
+
+        // جلب سجلات المريض اليومية لجميع الجلسات السابقة
+        let dailyLogs = await SmartDB.getPatientDailyLogs(effectiveId);
+        if ((!dailyLogs || dailyLogs.length === 0) && patientId && patientId !== effectiveId) {
+            dailyLogs = await SmartDB.getPatientDailyLogs(patientId);
+        }
+        if ((!dailyLogs || dailyLogs.length === 0) && typeof activePatient !== 'undefined' && activePatient?.dailyLogs) {
+            dailyLogs = activePatient.dailyLogs;
+        }
+        if (!Array.isArray(dailyLogs)) dailyLogs = [];
+
+        // 2. التحقق الجوهري: هل أتم المريض الجلسة السابقة (sTarget - 1)؟
+        const reqSession = sTarget - 1;
+        const prevLog = dailyLogs.find(l => Number(l.sessionNumber || l.day) === reqSession);
+        const isPrevSessionDone = Boolean(prevLog || (patient && (patient.isPlanCompleted || patient.planCompleted)));
+
+        // إذا لم تكتمل الجلسة السابقة، فالجلسة الحالية مقفلة قطعياً ولا يمكن فتحها ولا تجاوزها أبداً
+        if (!isPrevSessionDone) {
+            return {
+                isLocked: true,
+                prevSessionNotDone: true,
+                requiredSession: reqSession,
+                remainingHours: 24,
+                remainingMs: 24 * 3600 * 1000,
+                totalDurationMs: 24 * 3600 * 1000
+            };
+        }
+
+        // 3. التحقق من أمر الفتح الشامل لجميع الجلسات من الإدارة (فقط إذا كان مخصصاً لهذا المريض صراحة)
+        const isAllUnlocked = Boolean(
+            (effectiveId && localStorage.getItem(`force_unlock_all_${effectiveId}`) === 'true') ||
+            (patient && (patient.forceUnlockAllSessions === true || patient.allSessionsUnlocked === true)) ||
+            (typeof window !== 'undefined' && window._scpLiveTimingOverride && window._scpLiveTimingOverride.forceUnlockAllSessions)
+        );
+        if (isAllUnlocked) {
+            return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true, allUnlocked: true };
+        }
+
+        const cleanPhone = (patient && patient.phone) ? String(patient.phone).replace(/\D/g, '') : '';
+        const now = Date.now();
+
+        // 4. أولوية التعديل اللحظي المباشر من لوحة الأدمن (مطبق حصراً على هذه الجلسة sTarget)
         if (typeof window !== 'undefined' && window._scpLiveTimingOverride) {
             const ov = window._scpLiveTimingOverride;
             const ovSession = Number(ov.sessionNum || 0);
-            const isMatchSession = Boolean(ov.forceUnlockAllSessions || (sTarget && ovSession === sTarget) || (!sTarget && ovSession));
-            if (isMatchSession) {
-                if (ov.forceUnlockAllSessions) {
-                    return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true, allUnlocked: true };
-                }
+            if (ovSession === sTarget) {
                 if (ov.forceUnlock) {
                     return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
                 }
                 if (ov.targetTime && ov.targetTime > 0) {
-                    const diffOv = ov.targetTime - Date.now();
+                    const diffOv = ov.targetTime - now;
                     if (diffOv <= 0) {
-                        ov.forceUnlock = true;
-                        ov.targetTime = 0;
-                        return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
+                        return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true, timeCompleted: true };
                     }
                     return {
                         isLocked: true,
@@ -664,90 +703,32 @@ const PatientFlow = (function() {
             }
         }
 
-        const cleanPhone = (patient && patient.phone) ? String(patient.phone).replace(/\D/g, '') : '';
-        
-        // التحقق أولاً من التوقيت الخاص برقم الجلسة المحددة إن وُجد
-        const sessSpecificTarget = sTarget ? (
-            (effectiveId ? localStorage.getItem(`custom_target_time_${effectiveId}_${sTarget}`) : null) ||
-            (patientId ? localStorage.getItem(`custom_target_time_${patientId}_${sTarget}`) : null) ||
-            (cleanPhone ? localStorage.getItem(`custom_target_time_${cleanPhone}_${sTarget}`) : null) ||
-            localStorage.getItem(`custom_target_time_global_${sTarget}`)
-        ) : null;
+        // 5. التحقق من التوقيت المخصص المخزن لهذه الجلسة المحددة (sTarget)
+        const sessTargetRaw = (effectiveId ? localStorage.getItem(`custom_target_time_${effectiveId}_${sTarget}`) : null) ||
+                              (patientId ? localStorage.getItem(`custom_target_time_${patientId}_${sTarget}`) : null) ||
+                              (cleanPhone ? localStorage.getItem(`custom_target_time_${cleanPhone}_${sTarget}`) : null) ||
+                              (patient ? patient[`customTargetTime_${sTarget}`] : null);
 
-        const sessSpecificForce = sTarget ? (
-            (effectiveId && localStorage.getItem(`force_unlock_${effectiveId}_${sTarget}`) === 'true') ||
-            (patientId && localStorage.getItem(`force_unlock_${patientId}_${sTarget}`) === 'true') ||
-            (cleanPhone ? localStorage.getItem(`force_unlock_${cleanPhone}_${sTarget}`) === 'true' : false) ||
-            (localStorage.getItem(`force_unlock_global_${sTarget}`) === 'true') ||
-            Boolean(patient && patient[`forceUnlockSession_${sTarget}`])
-        ) : false;
+        const sessDurationRaw = (effectiveId ? localStorage.getItem(`custom_total_duration_${effectiveId}_${sTarget}`) : null) ||
+                                (patientId ? localStorage.getItem(`custom_total_duration_${patientId}_${sTarget}`) : null) ||
+                                (cleanPhone ? localStorage.getItem(`custom_total_duration_${cleanPhone}_${sTarget}`) : null) ||
+                                (patient ? patient[`customDurationMs_${sTarget}`] : null);
 
-        const targetedAdminSession = parseInt(
-            (patient && (patient.targetedSessionNum || patient.currentSessionDay)) ||
-            (effectiveId ? localStorage.getItem(`targeted_session_${effectiveId}`) : null) ||
-            localStorage.getItem('targeted_session_global') || 0
-        );
+        const sessForceUnlock = (effectiveId && localStorage.getItem(`force_unlock_${effectiveId}_${sTarget}`) === 'true') ||
+                                (patientId && localStorage.getItem(`force_unlock_${patientId}_${sTarget}`) === 'true') ||
+                                (cleanPhone ? localStorage.getItem(`force_unlock_${cleanPhone}_${sTarget}`) === 'true' : false) ||
+                                Boolean(patient && patient[`forceUnlockSession_${sTarget}`]);
 
-        // لا نطبق التوقيت المخصص العام إلا إذا كانت الجلسة هي الجلسة المستهدفة المحددة
-        const isTargetedSessionNow = !sTarget || (targetedAdminSession > 0 && sTarget === targetedAdminSession);
-
-        const localCustomTarget = sessSpecificTarget || (isTargetedSessionNow ? (
-                                  (effectiveId ? localStorage.getItem(`custom_target_time_${effectiveId}`) : null) ||
-                                  (patientId ? localStorage.getItem(`custom_target_time_${patientId}`) : null) ||
-                                  (cleanPhone ? localStorage.getItem(`custom_target_time_${cleanPhone}`) : null) ||
-                                  localStorage.getItem('custom_target_time_global')
-                                  ) : null);
-
-        const isLocalForceUnlock = sessSpecificForce || (isTargetedSessionNow && (
-                                   (localStorage.getItem('force_unlock_global') === 'true') ||
-                                   (effectiveId && localStorage.getItem(`force_unlock_${effectiveId}`) === 'true') ||
-                                   (patientId && localStorage.getItem(`force_unlock_${patientId}`) === 'true') ||
-                                   (cleanPhone ? localStorage.getItem(`force_unlock_${cleanPhone}`) === 'true' : false) ||
-                                   Boolean(patient && (patient.forceUnlock === true || patient.force_unlock === true))
-                                   ));
-
-        // التحقق من فتح جميع الجلسات بالكامل من الإدارة
-        const isAllUnlocked = (localStorage.getItem("force_unlock_all_global") === "true") ||
-                              (localStorage.getItem("force_unlock_all") === "true") ||
-                              (effectiveId && localStorage.getItem(`force_unlock_all_${effectiveId}`) === "true") ||
-                              (patientId && localStorage.getItem(`force_unlock_all_${patientId}`) === "true") ||
-                              (cleanPhone ? localStorage.getItem(`force_unlock_all_${cleanPhone}`) === "true" : false) ||
-                              (!localCustomTarget && patient && (patient.forceUnlockAllSessions === true || patient.allSessionsUnlocked === true));
-        if (isAllUnlocked && !localCustomTarget) {
-            return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true, allUnlocked: true };
-        }
-        if (isLocalForceUnlock && !localCustomTarget) {
+        if (sessForceUnlock) {
             return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
         }
 
-        const customTarget = localCustomTarget ||
-                             (isTargetedSessionNow && !isLocalForceUnlock && patient && (patient.customTargetTime || patient.custom_target_time));
-        if (customTarget) {
-            const targetMs = parseInt(customTarget);
-            const now = Date.now();
+        if (sessTargetRaw) {
+            const targetMs = parseInt(sessTargetRaw);
             const diff = targetMs - now;
+            let customDuration = parseInt(sessDurationRaw) || Math.max(diff, 24 * 3600 * 1000);
             if (diff <= 0) {
-                // انتهاء الوقت المخصص للجلسة المستهدفة حصراً دون تسريب الفتح للجلسات التالية
-                if (sTarget) {
-                    if (effectiveId) localStorage.setItem(`force_unlock_${effectiveId}_${sTarget}`, 'true');
-                    if (patientId) localStorage.setItem(`force_unlock_${patientId}_${sTarget}`, 'true');
-                    localStorage.setItem(`force_unlock_global_${sTarget}`, 'true');
-                    if (effectiveId) localStorage.removeItem(`custom_target_time_${effectiveId}_${sTarget}`);
-                    if (patientId) localStorage.removeItem(`custom_target_time_${patientId}_${sTarget}`);
-                    localStorage.removeItem(`custom_target_time_global_${sTarget}`);
-                }
-                return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, forced: true };
-            }
-            let customDuration = parseInt(
-                (sTarget ? localStorage.getItem(`custom_total_duration_${effectiveId}_${sTarget}`) : null) ||
-                (sTarget ? localStorage.getItem(`custom_total_duration_global_${sTarget}`) : null) ||
-                localStorage.getItem(`custom_total_duration_${effectiveId}`) || 
-                (patientId ? localStorage.getItem(`custom_total_duration_${patientId}`) : null) || 
-                (cleanPhone ? localStorage.getItem(`custom_total_duration_${cleanPhone}`) : null) || 
-                localStorage.getItem('custom_total_duration_global') || 0
-            );
-            if (!customDuration || customDuration <= 0) {
-                customDuration = Math.max(diff, 24 * 3600 * 1000);
+                return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: customDuration, forced: true, timeCompleted: true };
             }
             return {
                 isLocked: true,
@@ -758,48 +739,35 @@ const PatientFlow = (function() {
             };
         }
 
+        // 6. الحساب الطبي السريري القياسي: فترة استشفاء 24 ساعة تبدأ لحظة إتمام الجلسة السابقة (sTarget - 1)
         const sessionIntervalHours = parseInt(await SmartDB.getSetting('sessionIntervalHours', 24)) || 24;
-        let dailyLogs = await SmartDB.getPatientDailyLogs(effectiveId);
-        if ((!dailyLogs || dailyLogs.length === 0) && patientId && patientId !== effectiveId) {
-            dailyLogs = await SmartDB.getPatientDailyLogs(patientId);
-        }
-        if ((!dailyLogs || dailyLogs.length === 0) && typeof activePatient !== 'undefined' && activePatient?.dailyLogs) {
-            dailyLogs = activePatient.dailyLogs;
-        }
-        
-        // الجلسة الأولى (اليوم 1) تكون متاحة ومفتوحة فوراً عند التسجيل ولا تُقفل أبداً
-        if (!dailyLogs || dailyLogs.length === 0) {
-            return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: 0, isDay1Pending: true };
-        }
-
-        // إيجاد سجل الجلسة السابقة للجلسة المستهدفة لحساب القفل الزمني التناسبي (24 ساعة استشفاء حيوي)
-        let refLog = null;
-        if (sTarget && sTarget > 1) {
-            refLog = dailyLogs.find(l => Number(l.sessionNumber || l.day) === (sTarget - 1));
-        }
-        if (!refLog) {
-            refLog = dailyLogs[dailyLogs.length - 1];
-        }
-
-        const logDateStr = refLog.date || refLog.completedAt || refLog.createdAt;
-        const referenceTime = logDateStr ? new Date(logDateStr).getTime() : Date.now();
-        const validRefTime = (!isNaN(referenceTime) && referenceTime > 0) ? referenceTime : Date.now();
-
-        const now = Date.now();
         const intervalMs = sessionIntervalHours * 60 * 60 * 1000;
-        const elapsedMs = now - validRefTime;
-        const remainingMs = intervalMs - elapsedMs;
+
+        const logDateStr = prevLog ? (prevLog.completedAt || prevLog.date || prevLog.createdAt) : null;
+        let prevTime = logDateStr ? new Date(logDateStr).getTime() : 0;
+        if (isNaN(prevTime) || prevTime <= 0) {
+            prevTime = now;
+        }
+
+        const targetUnlockTime = prevTime + intervalMs;
+        const remainingMs = targetUnlockTime - now;
 
         if (remainingMs <= 0) {
-            return { isLocked: false, remainingHours: 0, remainingMs: 0, totalDurationMs: intervalMs };
+            return {
+                isLocked: false,
+                remainingHours: 0,
+                remainingMs: 0,
+                totalDurationMs: intervalMs,
+                timeCompleted: true
+            };
         }
 
         return {
             isLocked: true,
             remainingHours: remainingMs / (1000 * 60 * 60),
-            remainingMs,
+            remainingMs: remainingMs,
             totalDurationMs: intervalMs,
-            targetTime: validRefTime + intervalMs
+            targetTime: targetUnlockTime
         };
     }
 

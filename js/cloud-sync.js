@@ -3474,7 +3474,7 @@
         if (isAllUnlocked) {
             safeSet('force_unlock_all', 'true');
             safeSet('force_unlock_all_global', 'true');
-        } else if (!update.forceUnlock && update.targetTime && update.targetTime > now) {
+        } else {
             safeRem('force_unlock_all');
             safeRem('force_unlock_all_global');
             safeRem('force_unlock_global');
@@ -3813,7 +3813,7 @@
     function handleAppVersionUpdateMessage(data) {
         if (!data || !data.version) return;
         const newVer = String(data.version).trim();
-        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.97');
+        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v30.98');
         const numNew = _parseVersionNumber(newVer);
         const numCur = _parseVersionNumber(curVer);
 
