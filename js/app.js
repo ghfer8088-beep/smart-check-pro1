@@ -6180,7 +6180,7 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
 }
 
 // =========================================================================
-// دوال إدارة النوافذ المنبثقة الاحترافية لباقات الاشتراك وتأكيد الدفع (v30.99)
+// دوال إدارة النوافذ المنبثقة الاحترافية لباقات الاشتراك وتأكيد الدفع (v31.00)
 // =========================================================================
 function openSubscriptionTiersModal() {
     const modal = document.getElementById('subscription-tiers-modal');
@@ -6393,6 +6393,12 @@ function renderPreReportPaywallGate(data, reportContainer) {
     // تشغيل المراقب الحي دائماً طالما شاشة الدفع معروضة ليتم الفتح الفوري بمجرد نقر الأدمن على القفل في لوحة التحكم
     if (!isCurrentPatientPlanUnlocked()) {
         startPendingUnlockLiveWatcher();
+        // فتح نافذة باقات الاشتراك المنبثقة (Pop-up) تلقائياً أمام المراجع فور وصوله للمرحلة 3
+        setTimeout(() => {
+            if (typeof openSubscriptionTiersModal === 'function' && !isCurrentPatientPlanUnlocked()) {
+                openSubscriptionTiersModal();
+            }
+        }, 700);
     }
 
     if (typeof SmartGuidance !== 'undefined' && typeof SmartGuidance.guideStep3 === 'function') {
@@ -11119,7 +11125,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.99';
+const CURRENT_APP_VERSION = 'v31.00';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
