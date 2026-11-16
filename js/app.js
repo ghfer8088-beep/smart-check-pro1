@@ -6180,7 +6180,7 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
 }
 
 // =========================================================================
-// دوال إدارة النوافذ المنبثقة الاحترافية لباقات الاشتراك وتأكيد الدفع (v30.98)
+// دوال إدارة النوافذ المنبثقة الاحترافية لباقات الاشتراك وتأكيد الدفع (v30.99)
 // =========================================================================
 function openSubscriptionTiersModal() {
     const modal = document.getElementById('subscription-tiers-modal');
@@ -8842,8 +8842,14 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             if (sNum > highestCompleted5) highestCompleted5 = sNum;
         });
 
-        if (highestCompleted5 >= 7 || sessionData.dailyLogs.length >= 7 || localStorage.getItem('smart_plan_completed_' + effectivePid) === 'true') {
+        // الخطة تكتمل فقط إذا أنجز المراجع الجلسة السابعة (#7) فعلياً
+        if (highestCompleted5 >= 7 && (sessionData.dailyLogs || []).filter(l => Number(l.sessionNumber || l.day) >= 1).length >= 7) {
             sessionData.isPlanCompleted = true;
+        } else {
+            sessionData.isPlanCompleted = false;
+            if (effectivePid) {
+                try { localStorage.removeItem('smart_plan_completed_' + effectivePid); } catch(e) {}
+            }
         }
 
         // التحقق من حالة القفل المبدئية
@@ -9079,7 +9085,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; overflow-x: auto;">
                 <!-- زر الجلسة الأولى المستقلة -->
                 ${(() => {
-                    const isDay1Done = (sessionData.dailyLogs || []).some(l => Number(l.sessionNumber || l.day) === 1) || sessionData.isPlanCompleted;
+                    const isDay1Done = (sessionData.dailyLogs || []).some(l => Number(l.sessionNumber || l.day) === 1);
                     return `
                     <button type="button" onclick="renderStep4IndependentDay1('${patientId}')" title="مراجعة تمارين الجلسة الأولى" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 10px 4px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: 0.2s; min-width: 60px;">
                         <span>الجلسة 1</span>
@@ -9089,10 +9095,10 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 })()}
                 ${[2, 3, 4, 5, 6, 7].map(d => {
                     const hasCompletedLog = (sessionData.dailyLogs || []).some(l => Number(l.sessionNumber || l.day) === d);
-                    const isCompleted = (hasCompletedLog || sessionData.isPlanCompleted);
+                    const isCompleted = hasCompletedLog;
                     const isCurrentActive = (d === activeDay);
                     const isCurrentProgression = (!sessionData.isPlanCompleted && d === progressionDay && !hasCompletedLog);
-                    const isFutureLocked = (!isAllUnlockedNow && !sessionData.isPlanCompleted && !hasCompletedLog && d > progressionDay);
+                    const isFutureLocked = (!isAllUnlockedNow && !hasCompletedLog && d > progressionDay);
 
                     let bg = '#1e293b';
                     let border = '1px solid #334155';
@@ -10072,16 +10078,7 @@ async function loadPatientRecoveryDashboard(patientId, targetDay = null) {
             new Promise(resolve => setTimeout(() => resolve(null), 1200))
         ]);
     } catch(e) {}
-    if (!sessionData || !sessionData.patient) {
-        // خط إنقاذ إضافي: استرجاع أحدث مريض مسجل في قاعدة البيانات
-        try {
-            const allPts = await SmartDB.getAllPatients();
-            if (Array.isArray(allPts) && allPts.length > 0) {
-                const latestP = allPts[allPts.length - 1]; // آخر مريض مسجل حقيقي فقط
-                sessionData = await PatientFlow.initPatientSession(latestP.patientId || latestP.id);
-            }
-        } catch(e) {}
-    }
+
     if (!sessionData || !sessionData.patient) {
         console.warn('[loadPatientRecoveryDashboard] Building robust instant fallback session for Day 1.');
         const curAss = currentAssessmentData || (function() {
@@ -10589,7 +10586,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                     { val: 20, text: "صعوبة وتيبس شديد ومحدودية حركية واضحة" }
                 ]).map((opt) => `
                     <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" name="modal_mobility_check" value="${opt.val}" onchange="const cbs = Array.from(document.querySelectorAll('input[name=modal_mobility_check]:checked')); if (cbs.length > 0) { const avg = Math.round(cbs.reduce((s, c) => s + Number(c.value || 70), 0) / cbs.length); const sl = document.getElementById('modal-mobility-slider'); const vl = document.getElementById('modal-mobility-val'); if (sl) sl.value = avg; if (vl) vl.textContent = avg + ' %'; }" style="accent-color: #38bdf8; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
+                        <input type="checkbox" name="modal_mobility_check" value="${opt.val}" data-text="${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}" style="accent-color: #38bdf8; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
                     </label>
                 `).join('')}
             </div>
@@ -10621,7 +10618,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                     { val: 20, text: "أرق شديد واستيقاظ متكرر بسبب نوبات الألم" }
                 ]).map((opt) => `
                     <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" name="modal_sleep_check" value="${opt.val}" onchange="const cbs = Array.from(document.querySelectorAll('input[name=modal_sleep_check]:checked')); if (cbs.length > 0) { const avg = Math.round(cbs.reduce((s, c) => s + Number(c.value || 70), 0) / cbs.length); const sl = document.getElementById('modal-sleep-slider'); const vl = document.getElementById('modal-sleep-val'); if (sl) sl.value = avg; if (vl) vl.textContent = avg + ' %'; }" style="accent-color: #10b981; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
+                        <input type="checkbox" name="modal_sleep_check" value="${opt.val}" data-text="${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}" style="accent-color: #10b981; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
                     </label>
                 `).join('')}
             </div>
@@ -10743,9 +10740,9 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
         const cleanId = (typeof getCleanPatientId === 'function') ? getCleanPatientId(patientId) : (patientId && patientId !== 'undefined' ? patientId : 'pat_guest');
         patientId = cleanId;
 
-        const painScore = parseInt(document.getElementById('modal-pain-input')?.value || document.getElementById('daily-pain-input')?.value || 10);
-        const mobilityRate = parseInt(document.getElementById('modal-mobility-slider')?.value || document.querySelector('input[name="modal_mobility_check"]:checked')?.value || document.getElementById('daily-mobility-slider')?.value || 20);
-        const sleepRate = parseInt(document.getElementById('modal-sleep-slider')?.value || document.querySelector('input[name="modal_sleep_check"]:checked')?.value || document.getElementById('daily-sleep-slider')?.value || 20);
+        const painScore = parseInt(document.getElementById('modal-pain-input')?.value || document.getElementById('daily-pain-input')?.value || 10, 10);
+        const mobilityRate = parseInt(document.getElementById('modal-mobility-slider')?.value || document.getElementById('daily-mobility-slider')?.value || 20, 10);
+        const sleepRate = parseInt(document.getElementById('modal-sleep-slider')?.value || document.getElementById('daily-sleep-slider')?.value || 20, 10);
 
         // استخراج السلوكيات الإيجابية المحددة من النافذة
         const positiveHabitsList = [];
@@ -10926,8 +10923,8 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
         const pName = activePatient?.name || (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || patientId;
         const pPhone = activePatient?.phone || '';
 
-        // 4. الانتقال الفوري بالواجهة دون تأخير
-        if (sessionNumber >= 7 || (allLogs && allLogs.length >= 7)) {
+        // 4. الانتقال الفوري بالواجهة دون تأخير: الخطة تكتمل فقط عند إنجاز الجلسة السابعة (#7) حصراً
+        if (sessionNumber >= 7) {
             activePatient.isPlanCompleted = true;
             activePatient.planCompleted = true;
             try {
@@ -11122,7 +11119,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v30.98';
+const CURRENT_APP_VERSION = 'v30.99';
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
 
@@ -11939,6 +11936,9 @@ function resetToInitialState(force = false) {
         localStorage.removeItem('smart_current_point');
         localStorage.removeItem('smart_current_assessment');
         localStorage.removeItem('smart_plan_activated');
+        localStorage.removeItem('smart_plan_completed');
+        localStorage.removeItem('smart_plan_completed_pat_guest');
+        localStorage.removeItem('smart_daily_logs_pat_guest');
         localStorage.removeItem('smart_paid_plan_unlocked');
         localStorage.setItem('smart_max_reached_step', '1');
         localStorage.setItem('smart_current_step', '1');
@@ -11954,7 +11954,8 @@ function resetToInitialState(force = false) {
             if (
                 k.startsWith('smart_pending_req_') ||
                 k === 'smart_last_payment_unlock_event' ||
-                k.startsWith('smart_plan_activated_')
+                k.startsWith('smart_plan_activated_') ||
+                k.startsWith('smart_plan_completed_')
             ) {
                 try { localStorage.removeItem(k); } catch (e) {}
             }

@@ -395,40 +395,6 @@ const PatientFlow = (function() {
             });
         }
 
-        // إذا كان المريض قد وصل مسبقاً للمرحلة 6 (بوابة الحل الجذري) وتأثرت سجلاته (5-7) في التحديث السابق، نستعيد اكتمال الجلسات الـ 7 بمؤشراته الحقيقية
-        const wasMarkedCompleted = Boolean(
-            (patient && (patient.isPlanCompleted === true || patient.planCompleted === true)) ||
-            (typeof window !== 'undefined' && window.activePatient && (window.activePatient.isPlanCompleted === true || window.activePatient.planCompleted === true)) ||
-            (targetPidClean && localStorage.getItem('smart_plan_completed_' + targetPidClean) === 'true') ||
-            (localStorage.getItem('smart_current_step') === '6' && localStorage.getItem('smart_max_reached_step') === '6' && dailyLogs.length >= 4)
-        );
-
-        if (wasMarkedCompleted && dailyLogs.length > 0 && dailyLogs.length < 7 && !isRaghebDemo) {
-            const lastReal = dailyLogs[dailyLogs.length - 1];
-            const realPain = (lastReal && typeof lastReal.painScore === 'number') ? lastReal.painScore : Math.max(2, baselinePain - 3);
-            const realMob = (lastReal && typeof lastReal.mobilityRate === 'number') ? lastReal.mobilityRate : 70;
-            const realSlp = (lastReal && typeof lastReal.sleepRate === 'number') ? lastReal.sleepRate : 70;
-
-            for (let s = 1; s <= 7; s++) {
-                if (!logMap.has(s)) {
-                    logMap.set(s, {
-                        patientId: targetPidClean,
-                        sessionNumber: s,
-                        day: s,
-                        painScore: realPain,
-                        mobilityRate: realMob,
-                        sleepRate: realSlp,
-                        exercisesDone: true,
-                        positiveHabitsList: (lastReal && Array.isArray(lastReal.positiveHabitsList)) ? lastReal.positiveHabitsList : [],
-                        negativeHabitsList: (lastReal && Array.isArray(lastReal.negativeHabitsList)) ? lastReal.negativeHabitsList : [],
-                        date: new Date(Date.now() - ((8 - s) * 86400000)).toISOString()
-                    });
-                }
-            }
-            dailyLogs = Array.from(logMap.values()).sort((a, b) => Number(a.sessionNumber || a.day) - Number(b.sessionNumber || b.day));
-            logsRepaired = true;
-        }
-
         if (logsRepaired) {
             try {
                 if (targetPidClean) {
@@ -652,7 +618,7 @@ const PatientFlow = (function() {
         // 2. التحقق الجوهري: هل أتم المريض الجلسة السابقة (sTarget - 1)؟
         const reqSession = sTarget - 1;
         const prevLog = dailyLogs.find(l => Number(l.sessionNumber || l.day) === reqSession);
-        const isPrevSessionDone = Boolean(prevLog || (patient && (patient.isPlanCompleted || patient.planCompleted)));
+        const isPrevSessionDone = Boolean(prevLog);
 
         // إذا لم تكتمل الجلسة السابقة، فالجلسة الحالية مقفلة قطعياً ولا يمكن فتحها ولا تجاوزها أبداً
         if (!isPrevSessionDone) {
