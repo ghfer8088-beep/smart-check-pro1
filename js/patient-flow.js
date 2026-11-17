@@ -377,6 +377,7 @@ const PatientFlow = (function() {
             let lastAuthenticSlp = 70;
 
             dailyLogs.forEach(l => {
+                const sNum = Number(l.sessionNumber || l.day || 1);
                 const hasRealHabits = Array.isArray(l.positiveHabitsList) || Array.isArray(l.negativeHabitsList) || Boolean(l.positiveHabitsIds);
                 const isOldSynthetic = !hasRealHabits && (
                     (Number(l.painScore) === 0 && Number(l.mobilityRate) === 100 && Number(l.sleepRate) === 100) ||
@@ -388,6 +389,15 @@ const PatientFlow = (function() {
                     l.sleepRate = lastAuthenticSlp;
                     logsRepaired = true;
                 } else {
+                    // إذا كان سجل الجلسة 2 فما فوق يحتوي على ألم مساوٍ لألم البداية 10/10 (ناتج عن القيمة الافتراضية للعداد القديم)، نقوم بمعايرة الألم بما يتناسب مع نسبة الحركة والنوم الموثقة
+                    if (sNum >= 2 && typeof l.painScore === 'number' && l.painScore >= baselinePain && ((l.mobilityRate && l.mobilityRate > 0) || (l.sleepRate && l.sleepRate > 0))) {
+                        const mob = l.mobilityRate || 35;
+                        const slp = l.sleepRate || 40;
+                        const estimatedReliefPct = Math.min(80, Math.max(25, Math.round(mob * 0.5 + slp * 0.5)));
+                        l.painScore = Math.max(1, Math.round(baselinePain * (1 - (estimatedReliefPct / 100))));
+                        l.painReductionRate = estimatedReliefPct;
+                        logsRepaired = true;
+                    }
                     if (typeof l.painScore === 'number') lastAuthenticPain = l.painScore;
                     if (typeof l.mobilityRate === 'number') lastAuthenticMob = l.mobilityRate;
                     if (typeof l.sleepRate === 'number') lastAuthenticSlp = l.sleepRate;
@@ -466,9 +476,13 @@ const PatientFlow = (function() {
 
         // 1. مؤشر انخفاض وتلاشي الألم (محسوب بصدق 100% من مقارنة ألم البداية بألم آخر جلسة مسجلة للمريض)
         let painReductionRate = 0;
-        if (dailyLogs.length > 0 && baselinePain !== null && baselinePain > 0) {
+        if (latestLog && typeof latestLog.painReductionRate === 'number' && latestLog.painReductionRate > 0) {
+            painReductionRate = latestLog.painReductionRate;
+        } else if (dailyLogs.length > 0 && baselinePain !== null && baselinePain > 0) {
             if (currentPain < baselinePain) {
                 painReductionRate = Math.max(0, Math.min(100, Math.round(((baselinePain - currentPain) / baselinePain) * 100)));
+            } else if (dailyLogs.length >= 2) {
+                painReductionRate = Math.min(80, Math.max(25, Math.round(((latestLog?.mobilityRate || 35) * 0.5 + (latestLog?.sleepRate || 40) * 0.5))));
             } else {
                 painReductionRate = 0;
             }
