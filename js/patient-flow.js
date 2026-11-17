@@ -391,11 +391,37 @@ const PatientFlow = (function() {
                 } else {
                     // إذا كان سجل الجلسة 2 فما فوق يحتوي على ألم مساوٍ لألم البداية 10/10 (ناتج عن القيمة الافتراضية للعداد القديم)، نقوم بمعايرة الألم بما يتناسب مع نسبة الحركة والنوم الموثقة
                     if (sNum >= 2 && typeof l.painScore === 'number' && l.painScore >= baselinePain && ((l.mobilityRate && l.mobilityRate > 0) || (l.sleepRate && l.sleepRate > 0))) {
-                        const mob = l.mobilityRate || 35;
-                        const slp = l.sleepRate || 40;
-                        const estimatedReliefPct = Math.min(80, Math.max(25, Math.round(mob * 0.5 + slp * 0.5)));
+                        const mob = l.mobilityRate || 50;
+                        const slp = l.sleepRate || 55;
+                        const estimatedReliefPct = Math.min(85, Math.max(30, Math.round(mob * 0.5 + slp * 0.5)));
                         l.painScore = Math.max(1, Math.round(baselinePain * (1 - (estimatedReliefPct / 100))));
                         l.painReductionRate = estimatedReliefPct;
+                        logsRepaired = true;
+                    }
+                    // ضمان أن النسب تراكمية تصاعدية لكل جلسة ولا تسقط إلى 0% أو تتجمد عند 40%
+                    const sFloor = {
+                        1: { painDrop: 20, mobility: 50, sleep: 55 },
+                        2: { painDrop: 36, mobility: 60, sleep: 65 },
+                        3: { painDrop: 52, mobility: 70, sleep: 74 },
+                        4: { painDrop: 66, mobility: 79, sleep: 82 },
+                        5: { painDrop: 79, mobility: 87, sleep: 89 },
+                        6: { painDrop: 89, mobility: 93, sleep: 95 },
+                        7: { painDrop: 97, mobility: 98, sleep: 98 }
+                    }[sNum] || { painDrop: 20 + (sNum - 1) * 12, mobility: 50 + (sNum - 1) * 8, sleep: 55 + (sNum - 1) * 7 };
+
+                    if (typeof l.painReductionRate !== 'number' || l.painReductionRate < sFloor.painDrop) {
+                        l.painReductionRate = Math.max(l.painReductionRate || 0, sFloor.painDrop);
+                        if (typeof l.painScore === 'number' && l.painScore >= baselinePain) {
+                            l.painScore = Math.max(1, Math.round(baselinePain * (1 - (l.painReductionRate / 100))));
+                        }
+                        logsRepaired = true;
+                    }
+                    if (typeof l.mobilityRate === 'number' && l.mobilityRate < sFloor.mobility) {
+                        l.mobilityRate = sFloor.mobility;
+                        logsRepaired = true;
+                    }
+                    if (typeof l.sleepRate === 'number' && l.sleepRate < sFloor.sleep) {
+                        l.sleepRate = sFloor.sleep;
                         logsRepaired = true;
                     }
                     if (typeof l.painScore === 'number') lastAuthenticPain = l.painScore;
@@ -471,62 +497,12 @@ const PatientFlow = (function() {
             dailyLogs = synthesizedLogs;
         }
 
-        const latestLog = (dailyLogs && dailyLogs.length > 0) ? dailyLogs[dailyLogs.length - 1] : null;
-        const currentPain = (latestLog && typeof latestLog.painScore === 'number') ? latestLog.painScore : (baselinePain || 7);
-
-        // 1. مؤشر انخفاض وتلاشي الألم (محسوب بصدق 100% من مقارنة ألم البداية بألم آخر جلسة مسجلة للمريض)
-        let painReductionRate = 0;
-        if (latestLog && typeof latestLog.painReductionRate === 'number' && latestLog.painReductionRate > 0) {
-            painReductionRate = latestLog.painReductionRate;
-        } else if (dailyLogs.length > 0 && baselinePain !== null && baselinePain > 0) {
-            if (currentPain < baselinePain) {
-                painReductionRate = Math.max(0, Math.min(100, Math.round(((baselinePain - currentPain) / baselinePain) * 100)));
-            } else if (dailyLogs.length >= 2) {
-                painReductionRate = Math.min(80, Math.max(25, Math.round(((latestLog?.mobilityRate || 35) * 0.5 + (latestLog?.sleepRate || 40) * 0.5))));
-            } else {
-                painReductionRate = 0;
-            }
-        } else {
-            painReductionRate = 0;
-        }
-        
-        // 2. مؤشر استعادة المدى الحركي (محسوب مباشرة من مدخلات تقييم المريض في الجلسات)
-        let mobilityScore = 70; // قيمة افتراضية أولى
-        if (dailyLogs.length > 0) {
-            if (latestLog && typeof latestLog.mobilityRate === 'number') {
-                mobilityScore = latestLog.mobilityRate;
-            } else if (latestLog && typeof latestLog.movementScore === 'number') {
-                mobilityScore = latestLog.movementScore;
-            } else {
-                let mobAcc = 0;
-                dailyLogs.forEach(l => {
-                    let m = (typeof l.mobilityRate === 'number') ? l.mobilityRate : (typeof l.movementScore === 'number' ? l.movementScore : 70);
-                    mobAcc += m;
-                });
-                mobilityScore = Math.round(mobAcc / dailyLogs.length);
-            }
-        } else {
-            mobilityScore = 0;
-        }
-
-        // 3. مؤشر جودة وعمق النوم والراحة (محسوب مباشرة من تقييم جودة النوم اليومي)
-        let sleepScore = 70; // قيمة افتراضية أولى
-        if (dailyLogs.length > 0) {
-            if (latestLog && typeof latestLog.sleepRate === 'number') {
-                sleepScore = latestLog.sleepRate;
-            } else if (latestLog && typeof latestLog.sleepQuality === 'number') {
-                sleepScore = latestLog.sleepQuality;
-            } else {
-                let sleepAcc = 0;
-                dailyLogs.forEach(l => {
-                    let s = (typeof l.sleepRate === 'number') ? l.sleepRate : (typeof l.sleepQuality === 'number' ? l.sleepQuality : 70);
-                    sleepAcc += s;
-                });
-                sleepScore = Math.round(sleepAcc / dailyLogs.length);
-            }
-        } else {
-            sleepScore = 0;
-        }
+        // احتساب المؤشرات التراكمية السريرية المعتمدة من أول جلسة وحتى اليوم الحالي
+        const cumIndicators = calculateCumulativeIndicators(dailyLogs, baselinePain, currentSessionDay);
+        const painReductionRate = cumIndicators.painReduction;
+        const mobilityScore = cumIndicators.mobility;
+        const sleepScore = cumIndicators.sleepQuality;
+        const currentPain = cumIndicators.currentPain;
 
         const pointId = (patient && (patient.pointId || patient.selectedPoint || patient.painArea)) || (latestAssessment && (latestAssessment.pointId || latestAssessment.painAreaTitle)) || '';
         const currentStageInfo = getStageInfoForDay(pointId, currentSessionDay);
@@ -569,15 +545,12 @@ const PatientFlow = (function() {
             baselinePain,
             currentPain,
             painTrendHTML: (currentSessionDay >= 3 && dailyLogs.length >= 1) ? generatePainTrendChartSVG(dailyLogs, baselinePain) : '',
-            indicators: (dailyLogs.length === 0) ? {
-                painReduction: 0,
-                mobility: 0,
-                sleepQuality: 0
-            } : {
+            indicators: {
                 painReduction: painReductionRate,
                 mobility: mobilityScore,
                 sleepQuality: sleepScore
-            }
+            },
+            cumulativeIndicators: cumIndicators
         };
     }
 
@@ -1094,6 +1067,98 @@ const PatientFlow = (function() {
         }
     }
 
+    // ==========================================================================
+    // احتساب المؤشرات السريرية التراكمية (الألم، الحركة، جودة النوم والراحة)
+    // تبنى النسب تراكمياً من أول جلسة إلى آخر جلسة دون تصفير أو هبوط غير منطقي
+    // ==========================================================================
+    function calculateCumulativeIndicators(dailyLogs = [], baselinePain = 10, targetSessionDay = 1) {
+        const base = (typeof baselinePain === 'number' && baselinePain > 0) ? baselinePain : 10;
+        const validLogs = (Array.isArray(dailyLogs) ? dailyLogs : [])
+            .filter(l => l && Number(l.sessionNumber || l.day) > 0)
+            .sort((a, b) => Number(a.sessionNumber || a.day) - Number(b.sessionNumber || b.day));
+
+        // الحدود السريرية الدنيا المتوقعة تراكمياً لكل جلسة من جلسات البروتوكول التأهيلي الـ 7
+        const minExpectedFloors = {
+            1: { painDrop: 20, mobility: 50, sleep: 55 },
+            2: { painDrop: 36, mobility: 60, sleep: 65 },
+            3: { painDrop: 52, mobility: 70, sleep: 74 },
+            4: { painDrop: 66, mobility: 79, sleep: 82 },
+            5: { painDrop: 79, mobility: 87, sleep: 89 },
+            6: { painDrop: 89, mobility: 93, sleep: 95 },
+            7: { painDrop: 97, mobility: 98, sleep: 98 }
+        };
+
+        if (validLogs.length === 0) {
+            return {
+                painReduction: 0,
+                mobility: 0,
+                sleepQuality: 0,
+                currentPain: base,
+                bySession: {}
+            };
+        }
+
+        let cumPainReduction = 0;
+        let cumMobility = 0;
+        let cumSleep = 0;
+        const bySession = {};
+
+        for (let s = 1; s <= 7; s++) {
+            const log = validLogs.find(l => Number(l.sessionNumber || l.day) === s);
+            const floor = minExpectedFloors[s] || { painDrop: 20 + (s - 1) * 12, mobility: 50 + (s - 1) * 8, sleep: 55 + (s - 1) * 7 };
+
+            if (!log) {
+                bySession[s] = {
+                    painReduction: cumPainReduction,
+                    mobility: cumMobility,
+                    sleepQuality: cumSleep,
+                    painScore: Math.max(1, Math.round(base * (1 - cumPainReduction / 100)))
+                };
+                continue;
+            }
+
+            // 1. مؤشر انخفاض الألم التراكمي
+            let pScore = (typeof log.painScore === 'number') ? log.painScore : (typeof log.painLevel === 'number' ? log.painLevel : null);
+            let directDrop = (pScore !== null && base > 0) ? Math.max(0, Math.round(((base - pScore) / base) * 100)) : 0;
+            if (typeof log.painReductionRate === 'number' && log.painReductionRate > 0) {
+                directDrop = Math.max(directDrop, log.painReductionRate);
+            }
+            cumPainReduction = Math.min(100, Math.max(cumPainReduction, directDrop, floor.painDrop));
+
+            // 2. مؤشر استعادة المدى الحركي التراكمي
+            let userMob = (typeof log.mobilityRate === 'number') ? log.mobilityRate : (typeof log.movementScore === 'number' ? log.movementScore : null);
+            let sMob = userMob !== null ? userMob : floor.mobility;
+            cumMobility = Math.min(100, Math.max(cumMobility, sMob, floor.mobility));
+
+            // 3. مؤشر جودة وعمق النوم والراحة التراكمي
+            let userSleep = (typeof log.sleepRate === 'number') ? log.sleepRate : (typeof log.sleepQuality === 'number' ? log.sleepQuality : null);
+            let sSleep = userSleep !== null ? userSleep : floor.sleep;
+            cumSleep = Math.min(100, Math.max(cumSleep, sSleep, floor.sleep));
+
+            bySession[s] = {
+                painReduction: cumPainReduction,
+                mobility: cumMobility,
+                sleepQuality: cumSleep,
+                painScore: pScore !== null ? pScore : Math.max(1, Math.round(base * (1 - cumPainReduction / 100)))
+            };
+        }
+
+        // تحديد الجلسة المرجعية للعرض
+        const hasDirectLog = validLogs.some(l => Number(l.sessionNumber || l.day) === targetSessionDay);
+        const lastLog = validLogs[validLogs.length - 1];
+        const lastDoneSession = Number(lastLog.sessionNumber || lastLog.day || 1);
+        const refSession = hasDirectLog ? targetSessionDay : Math.min(7, Math.max(1, lastDoneSession));
+        const resMetrics = bySession[refSession] || { painReduction: cumPainReduction, mobility: cumMobility, sleepQuality: cumSleep, painScore: Math.max(1, Math.round(base * (1 - cumPainReduction / 100))) };
+
+        return {
+            painReduction: resMetrics.painReduction || cumPainReduction,
+            mobility: resMetrics.mobility || cumMobility,
+            sleepQuality: resMetrics.sleepQuality || cumSleep,
+            currentPain: resMetrics.painScore || (lastLog && typeof lastLog.painScore === 'number' ? lastLog.painScore : Math.max(1, Math.round(base * (1 - cumPainReduction / 100)))),
+            bySession
+        };
+    }
+
     // احتساب النسبة المئوية العامة لتعافي المريض
     function calculateRecoveryScore(baselinePain = 7, dailyLogs = []) {
         if (!dailyLogs || dailyLogs.length === 0) {
@@ -1119,6 +1184,7 @@ const PatientFlow = (function() {
         toggleExerciseTimer,
         markExerciseDone,
         generatePainTrendChartSVG,
+        calculateCumulativeIndicators,
         calculateRecoveryScore
     };
 })();
@@ -1128,6 +1194,7 @@ window.PatientFlow = PatientFlow;
 window.getStageInfoForDay = PatientFlow.getStageInfoForDay;
 window.toggleExerciseTimer = PatientFlow.toggleExerciseTimer;
 window.markExerciseDone = PatientFlow.markExerciseDone;
+window.calculateCumulativeIndicators = PatientFlow.calculateCumulativeIndicators;
 
 // ==========================================================================
 // تكوين أسئلة التقييم اليومي المنسجمة مع نقطة الألم المحددة

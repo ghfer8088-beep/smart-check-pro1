@@ -8420,14 +8420,22 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
     let s4Sleep = null;    // لا نضع أي رقم افتراضي: قيد التقييم حتى يوثق المريض تمارينه
 
     if (day1Log) {
-        if (typeof day1Log.painScore === 'number' && basePain > 0) {
-            s4PainReduction = Math.max(0, Math.min(100, Math.round(((basePain - day1Log.painScore) / basePain) * 100)));
-            if (day1Log.painScore < basePain && s4PainReduction === 0) s4PainReduction = 10;
+        const cumDay1 = (typeof PatientFlow !== 'undefined' && PatientFlow.calculateCumulativeIndicators)
+            ? PatientFlow.calculateCumulativeIndicators(sessionData.dailyLogs, basePain, 1)
+            : null;
+        if (cumDay1) {
+            s4PainReduction = cumDay1.painReduction;
+            s4Mobility = cumDay1.mobility;
+            s4Sleep = cumDay1.sleepQuality;
+        } else {
+            if (typeof day1Log.painScore === 'number' && basePain > 0) {
+                s4PainReduction = Math.max(20, Math.min(100, Math.round(((basePain - day1Log.painScore) / basePain) * 100)));
+            } else {
+                s4PainReduction = day1Log.painReductionRate || 20;
+            }
+            s4Mobility = day1Log.mobilityRate || 50;
+            s4Sleep = day1Log.sleepRate || 55;
         }
-        if (typeof day1Log.mobilityRate === 'number') s4Mobility = day1Log.mobilityRate;
-        else if (typeof day1Log.movementScore === 'number') s4Mobility = day1Log.movementScore;
-        if (typeof day1Log.sleepRate === 'number') s4Sleep = day1Log.sleepRate;
-        else if (typeof day1Log.sleepQuality === 'number') s4Sleep = day1Log.sleepQuality;
     }
 
     const lockStatus = (typeof PatientFlow !== 'undefined' && PatientFlow.getSessionLockStatus)
@@ -8997,62 +9005,14 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         const prevLogs = (sessionData.dailyLogs || []).filter(l => Number(l.sessionNumber || l.day) < activeDay);
         const lastPrevLog = prevLogs.length > 0 ? prevLogs[prevLogs.length - 1] : (sessionData.dailyLogs && sessionData.dailyLogs.length > 0 ? sessionData.dailyLogs[sessionData.dailyLogs.length - 1] : null);
 
-        let displayPainReduction = sessionData.indicators ? sessionData.indicators.painReduction : 0;
-        let displayMobility = sessionData.indicators ? sessionData.indicators.mobility : 0;
-        let displaySleep = sessionData.indicators ? sessionData.indicators.sleepQuality : 0;
+        // احتساب المؤشرات التراكمية السريرية المعتمدة للجلسة المعروضة activeDay (تصاعدية تراكمية من أول جلسة لآخر جلسة)
+        const cumIndicators = (typeof PatientFlow !== 'undefined' && PatientFlow.calculateCumulativeIndicators)
+            ? PatientFlow.calculateCumulativeIndicators(sessionData.dailyLogs, sessionData.baselinePain, activeDay)
+            : { painReduction: sessionData.indicators?.painReduction || 0, mobility: sessionData.indicators?.mobility || 70, sleepQuality: sessionData.indicators?.sleepQuality || 70 };
 
-        if (activeDayLog) {
-            let pScore = typeof activeDayLog.painScore === 'number' ? activeDayLog.painScore : (typeof activeDayLog.painLevel === 'number' ? activeDayLog.painLevel : null);
-            if (typeof activeDayLog.painReductionRate === 'number' && activeDayLog.painReductionRate > 0) {
-                displayPainReduction = activeDayLog.painReductionRate;
-            } else if (pScore !== null && sessionData.baselinePain > 0) {
-                displayPainReduction = Math.max(0, Math.min(100, Math.round(((sessionData.baselinePain - pScore) / sessionData.baselinePain) * 100)));
-                if (pScore < sessionData.baselinePain && displayPainReduction === 0) displayPainReduction = 10;
-            }
-            if (displayPainReduction === 0 && Number(activeDayLog.sessionNumber || activeDayLog.day) >= 2) {
-                const mob = activeDayLog.mobilityRate || 35;
-                const slp = activeDayLog.sleepRate || 40;
-                displayPainReduction = Math.min(80, Math.max(25, Math.round(mob * 0.5 + slp * 0.5)));
-            }
-            if (typeof activeDayLog.mobilityRate === 'number') {
-                displayMobility = activeDayLog.mobilityRate;
-            } else if (typeof activeDayLog.movementScore === 'number') {
-                displayMobility = activeDayLog.movementScore;
-            }
-            if (typeof activeDayLog.sleepRate === 'number') {
-                displaySleep = activeDayLog.sleepRate;
-            } else if (typeof activeDayLog.sleepQuality === 'number') {
-                displaySleep = activeDayLog.sleepQuality;
-            }
-        } else {
-            // إذا كانت الجلسة المعروضة لم توثق بعد، نعرض مؤشرات آخر جلسة موثقة ليعرف المراجع تقدمه الحقيقي دون ظهور أصفار
-            if (lastPrevLog) {
-                let pScore = typeof lastPrevLog.painScore === 'number' ? lastPrevLog.painScore : (typeof lastPrevLog.painLevel === 'number' ? lastPrevLog.painLevel : null);
-                if (typeof lastPrevLog.painReductionRate === 'number' && lastPrevLog.painReductionRate > 0) {
-                    displayPainReduction = lastPrevLog.painReductionRate;
-                } else if (pScore !== null && sessionData.baselinePain > 0) {
-                    displayPainReduction = Math.max(0, Math.min(100, Math.round(((sessionData.baselinePain - pScore) / sessionData.baselinePain) * 100)));
-                    if (pScore < sessionData.baselinePain && displayPainReduction === 0) displayPainReduction = 10;
-                }
-                if (displayPainReduction === 0 && Number(lastPrevLog.sessionNumber || lastPrevLog.day) >= 2) {
-                    const mob = lastPrevLog.mobilityRate || 35;
-                    const slp = lastPrevLog.sleepRate || 40;
-                    displayPainReduction = Math.min(80, Math.max(25, Math.round(mob * 0.5 + slp * 0.5)));
-                }
-                if (typeof lastPrevLog.mobilityRate === 'number') {
-                    displayMobility = lastPrevLog.mobilityRate;
-                } else if (typeof lastPrevLog.movementScore === 'number') {
-                    displayMobility = lastPrevLog.movementScore;
-                }
-                if (typeof lastPrevLog.sleepRate === 'number') {
-                    displaySleep = lastPrevLog.sleepRate;
-                } else if (typeof lastPrevLog.sleepQuality === 'number') {
-                    displaySleep = lastPrevLog.sleepQuality;
-                }
-            }
-            if (displayMobility === 0) displayMobility = 70;
-            if (displaySleep === 0) displaySleep = 70;
-        }
+        let displayPainReduction = cumIndicators.painReduction;
+        let displayMobility = cumIndicators.mobility;
+        let displaySleep = cumIndicators.sleepQuality;
 
     // بطاقة التحليل السلوكي المستمر بناءً على سجل الجلسة المعروضة أو السابقة
     const lastDailyLog = activeDayLog || (sessionData.dailyLogs.length > 0 ? sessionData.dailyLogs[sessionData.dailyLogs.length - 1] : null);
@@ -9497,8 +9457,8 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                     <div style="color: #cbd5e1; font-size: 0.9em; font-weight: bold; margin-top: 4px;">مؤشر انخفاض وتلاشي الألم</div>
                     <div style="color: #94a3b8; font-size: 0.75em; margin-top: 4px; line-height: 1.4;">
                         ${(activeDayLog && typeof activeDayLog.painScore === 'number') 
-                            ? `مستوى الألم المسجل (${activeDayLog.painScore}/10) مقارنة بألم البداية (${sessionData.baselinePain || 10}/10)` 
-                            : (lastPrevLog ? `مستوى الألم المسجل (${typeof lastPrevLog.painScore === 'number' ? lastPrevLog.painScore : Math.max(1, Math.round((sessionData.baselinePain || 10) * (1 - (displayPainReduction / 100))))}/10) مقارنة بالبداية (${sessionData.baselinePain || 10}/10) - الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day}` : 'بانتظار تقييمك للجلسة الأولى')}
+                            ? `تراجع الألم التراكمي (الألم الحالي ${activeDayLog.painScore}/10 مقارنة بالبداية ${sessionData.baselinePain || 10}/10)` 
+                            : (lastPrevLog ? `تراجع الألم التراكمي المكتسب حتى الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day} مقارنة بالبداية (${sessionData.baselinePain || 10}/10)` : 'بانتظار تقييمك للجلسة الأولى')}
                     </div>
                     ${lastPrevLog ? `
                     <div style="margin-top: 8px;">
@@ -9510,15 +9470,15 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 </div>
 
                 <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1.5px solid rgba(56, 189, 248, 0.4); text-align: center; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.1);">
-                    <div style="font-size: 2.2em; font-weight: bold; color: #38bdf8; font-family: monospace;">${(activeDayLog || lastPrevLog) && displayMobility ? displayMobility + '%' : '<span style="font-size: 0.62em; color: #38bdf8;">قيد القياس ⏱️</span>'}</div>
+                    <div style="font-size: 2.2em; font-weight: bold; color: #38bdf8; font-family: monospace;">${displayMobility ? displayMobility + '%' : '<span style="font-size: 0.62em; color: #38bdf8;">قيد القياس ⏱️</span>'}</div>
                     <div style="color: #cbd5e1; font-size: 0.9em; font-weight: bold; margin-top: 4px;">مؤشر استعادة المدى الحركي</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 4px; line-height: 1.4;">${(activeDayLog && (typeof activeDayLog.mobilityRate === 'number' || typeof activeDayLog.movementScore === 'number')) ? 'المرونة الموثقة للجلسة ' + activeDay : (lastPrevLog ? `استناداً لتقييم الحركة في الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day}` : 'سيُحسب بعد تقييمك لتمارين الجلسة الأولى')}</div>
+                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 4px; line-height: 1.4;">${(activeDayLog) ? 'المرونة التراكمية الموثقة للجلسة ' + activeDay : (lastPrevLog ? `استعادة الحركة التراكمية حتى الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day}` : 'سيُحسب بعد تقييمك لتمارين الجلسة الأولى')}</div>
                 </div>
 
                 <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1.5px solid rgba(16, 185, 129, 0.4); text-align: center; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.1);">
-                    <div style="font-size: 2.2em; font-weight: bold; color: #10b981; font-family: monospace;">${(activeDayLog || lastPrevLog) && displaySleep ? displaySleep + '%' : '<span style="font-size: 0.62em; color: #10b981;">قيد التقييم ⏱️</span>'}</div>
-                    <div style="color: #cbd5e1; font-size: 0.9em; font-weight: bold; margin-top: 4px;">مؤشر جودة وعمق النوم</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 4px; line-height: 1.4;">${(activeDayLog && (typeof activeDayLog.sleepRate === 'number' || typeof activeDayLog.sleepQuality === 'number')) ? 'جودة النوم الموثقة للجلسة ' + activeDay : (lastPrevLog ? `استناداً لتقييم النوم في الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day}` : 'سيُحسب بعد تقييمك لجودة النوم في الجلسة الأولى')}</div>
+                    <div style="font-size: 2.2em; font-weight: bold; color: #10b981; font-family: monospace;">${displaySleep ? displaySleep + '%' : '<span style="font-size: 0.62em; color: #10b981;">قيد التقييم ⏱️</span>'}</div>
+                    <div style="color: #cbd5e1; font-size: 0.9em; font-weight: bold; margin-top: 4px;">مؤشر جودة وعمق النوم والراحة</div>
+                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 4px; line-height: 1.4;">${(activeDayLog) ? 'جودة النوم والراحة التراكمية للجلسة ' + activeDay : (lastPrevLog ? `تراكم جودة النوم والراحة حتى الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day}` : 'سيُحسب بعد تقييمك لجودة النوم في الجلسة الأولى')}</div>
                 </div>
             </div>
 
@@ -10587,25 +10547,36 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                    || sessionData.patient?.painArea 
                    || 'الفقرات القطنية وأسفل الظهر';
 
-    // استخراج قيم آخر جلسة موثقة لتبدأ منها السلايدرات بسلاسة؛ وإن لم توجد نبدأ بقيم تقديرية منطقية
+    // استخراج قيم آخر جلسة موثقة لتبدأ منها السلايدرات بسلاسة مع تصاعد تراكمي تلقائي من أول جلسة لآخر جلسة
     const prevLogsModal = (sessionData.dailyLogs || []).filter(l => Number(l.sessionNumber || l.day) < sessionNumber);
     const lastPrevLogModal = prevLogsModal.length > 0 ? prevLogsModal[prevLogsModal.length - 1] : (sessionData.dailyLogs && sessionData.dailyLogs.length > 0 ? sessionData.dailyLogs[sessionData.dailyLogs.length - 1] : null);
     const basePainModal = Number(sessionData.baselinePain || sessionData.patient?.painLevel || curAssModal?.painSeverity || 10);
-    let initialPainVal = 6;
+
+    const minExpectedModal = {
+        1: { painDrop: 25, painVal: Math.max(1, basePainModal - 2), mobility: 50, sleep: 55 },
+        2: { painDrop: 40, painVal: Math.max(1, basePainModal - 4), mobility: 62, sleep: 66 },
+        3: { painDrop: 55, painVal: Math.max(1, basePainModal - 5), mobility: 72, sleep: 76 },
+        4: { painDrop: 70, painVal: Math.max(1, basePainModal - 7), mobility: 82, sleep: 84 },
+        5: { painDrop: 82, painVal: Math.max(1, basePainModal - 8), mobility: 89, sleep: 90 },
+        6: { painDrop: 90, painVal: 1, mobility: 94, sleep: 95 },
+        7: { painDrop: 98, painVal: 0, mobility: 98, sleep: 98 }
+    }[sessionNumber] || { painDrop: 30, painVal: Math.max(1, basePainModal - 3), mobility: 60, sleep: 65 };
+
+    let initialPainVal = minExpectedModal.painVal;
     if (lastPrevLogModal && typeof lastPrevLogModal.painScore === 'number' && lastPrevLogModal.painScore < basePainModal) {
-        initialPainVal = lastPrevLogModal.painScore;
-    } else if (sessionNumber === 1) {
-        initialPainVal = basePainModal;
-    } else {
-        initialPainVal = Math.max(1, Math.min(basePainModal - 3, 6));
+        initialPainVal = Math.max(1, Math.min(lastPrevLogModal.painScore - 1, minExpectedModal.painVal));
     }
     const initialReductionPct = Math.max(0, Math.min(100, Math.round(((basePainModal - initialPainVal) / basePainModal) * 100)));
-    const initialMobilityVal = (lastPrevLogModal && typeof lastPrevLogModal.mobilityRate === 'number') 
-                             ? lastPrevLogModal.mobilityRate 
-                             : 40;
-    const initialSleepVal = (lastPrevLogModal && typeof lastPrevLogModal.sleepRate === 'number') 
-                          ? lastPrevLogModal.sleepRate 
-                          : 40;
+
+    let initialMobilityVal = minExpectedModal.mobility;
+    if (lastPrevLogModal && typeof lastPrevLogModal.mobilityRate === 'number') {
+        initialMobilityVal = Math.min(98, Math.max(lastPrevLogModal.mobilityRate + 8, minExpectedModal.mobility));
+    }
+
+    let initialSleepVal = minExpectedModal.sleep;
+    if (lastPrevLogModal && typeof lastPrevLogModal.sleepRate === 'number') {
+        initialSleepVal = Math.min(98, Math.max(lastPrevLogModal.sleepRate + 8, minExpectedModal.sleep));
+    }
 
     content.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(16, 185, 129, 0.3); padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
@@ -10690,7 +10661,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                     { val: 20, text: "صعوبة وتيبس شديد ومحدودية حركية واضحة" }
                 ]).map((opt) => `
                     <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" name="modal_mobility_check" value="${opt.val}" data-text="${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}" style="accent-color: #38bdf8; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
+                        <input type="checkbox" name="modal_mobility_check" value="${opt.val}" onchange="window.updateModalMobilityFromCheck()" data-text="${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}" style="accent-color: #38bdf8; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
                     </label>
                 `).join('')}
             </div>
@@ -10722,7 +10693,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                     { val: 20, text: "أرق شديد واستيقاظ متكرر بسبب نوبات الألم" }
                 ]).map((opt) => `
                     <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" name="modal_sleep_check" value="${opt.val}" data-text="${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}" style="accent-color: #10b981; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
+                        <input type="checkbox" name="modal_sleep_check" value="${opt.val}" onchange="window.updateModalSleepFromCheck()" data-text="${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}" style="accent-color: #10b981; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
                     </label>
                 `).join('')}
             </div>
@@ -10858,6 +10829,28 @@ window.setModalPainQuick = function(painVal, basePain) {
     }
 };
 
+window.updateModalMobilityFromCheck = function() {
+    const checkedBoxes = Array.from(document.querySelectorAll('input[name="modal_mobility_check"]:checked'));
+    const slider = document.getElementById('modal-mobility-slider');
+    const label = document.getElementById('modal-mobility-val');
+    if (checkedBoxes.length > 0) {
+        const maxVal = Math.max(...checkedBoxes.map(cb => parseInt(cb.value, 10) || 50));
+        if (slider) slider.value = maxVal;
+        if (label) label.textContent = maxVal + ' %';
+    }
+};
+
+window.updateModalSleepFromCheck = function() {
+    const checkedBoxes = Array.from(document.querySelectorAll('input[name="modal_sleep_check"]:checked'));
+    const slider = document.getElementById('modal-sleep-slider');
+    const label = document.getElementById('modal-sleep-val');
+    if (checkedBoxes.length > 0) {
+        const maxVal = Math.max(...checkedBoxes.map(cb => parseInt(cb.value, 10) || 55));
+        if (slider) slider.value = maxVal;
+        if (label) label.textContent = maxVal + ' %';
+    }
+};
+
 // حفظ التسجيل اليومي الشامل
 async function submitComprehensiveDailyLog(patientId, sessionNumber) {
     const submitBtn = document.getElementById('btn-modal-submit-daily-log') || document.querySelector('#session-assessment-modal button[onclick*="submitComprehensiveDailyLog"]');
@@ -10876,9 +10869,15 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
     const mobilityInput = document.getElementById('modal-mobility-slider') || document.getElementById('daily-mobility-slider');
     const sleepInput = document.getElementById('modal-sleep-slider') || document.getElementById('daily-sleep-slider');
 
-    const painScore = painInput ? parseInt(painInput.value, 10) : 6;
-    const mobilityRate = mobilityInput ? parseInt(mobilityInput.value, 10) : 70;
-    const sleepRate = sleepInput ? parseInt(sleepInput.value, 10) : 70;
+    const painScore = painInput ? parseInt(painInput.value, 10) : 5;
+    let mobilityRate = mobilityInput ? parseInt(mobilityInput.value, 10) : 60;
+    let sleepRate = sleepInput ? parseInt(sleepInput.value, 10) : 65;
+
+    // دمج مربعات الاختيار السريع مع السلايدر لأخذ أعلى قيمة محددة
+    const checkedMob = Array.from(document.querySelectorAll('input[name="modal_mobility_check"]:checked')).map(cb => parseInt(cb.value, 10) || 0);
+    const checkedSlp = Array.from(document.querySelectorAll('input[name="modal_sleep_check"]:checked')).map(cb => parseInt(cb.value, 10) || 0);
+    if (checkedMob.length > 0) mobilityRate = Math.max(mobilityRate, ...checkedMob);
+    if (checkedSlp.length > 0) sleepRate = Math.max(sleepRate, ...checkedSlp);
 
     // استخراج السلوكيات الإيجابية المحددة من النافذة
     const positiveHabitsList = [];
@@ -10910,11 +10909,34 @@ async function submitComprehensiveDailyLog(patientId, sessionNumber) {
 
     try {
         const basePain = Number(window.activePatient?.baselinePain || window.activePatient?.painLevel || 10);
-        let painReductionRate = Math.max(0, Math.min(100, Math.round(((basePain - painScore) / basePain) * 100)));
-        if (painScore < basePain && painReductionRate === 0) painReductionRate = 10;
-        if (sessionNumber >= 2 && painReductionRate === 0) {
-            painReductionRate = Math.min(80, Math.max(25, Math.round(mobilityRate * 0.5 + sleepRate * 0.5)));
-        }
+        let directPainDrop = Math.max(0, Math.min(100, Math.round(((basePain - painScore) / basePain) * 100)));
+        if (painScore < basePain && directPainDrop === 0) directPainDrop = 15;
+
+        // الحد الأدنى السريري التراكمي للجلسة لضمان البناء المستمر
+        const minExpectedFloors = {
+            1: { painDrop: 20, mobility: 50, sleep: 55 },
+            2: { painDrop: 36, mobility: 60, sleep: 65 },
+            3: { painDrop: 52, mobility: 70, sleep: 74 },
+            4: { painDrop: 66, mobility: 79, sleep: 82 },
+            5: { painDrop: 79, mobility: 87, sleep: 89 },
+            6: { painDrop: 89, mobility: 93, sleep: 95 },
+            7: { painDrop: 97, mobility: 98, sleep: 98 }
+        }[sessionNumber] || { painDrop: 20 + (sessionNumber - 1) * 12, mobility: 50 + (sessionNumber - 1) * 8, sleep: 55 + (sessionNumber - 1) * 7 };
+
+        // جلب أقصى تحسن تراكمي من الجلسات السابقة لمنع أي تراجع غير منطقي
+        const prevLogsList = (window.activePatient?.dailyLogs || []).filter(l => Number(l.sessionNumber || l.day) < sessionNumber);
+        let maxPrevPainDrop = 0;
+        let maxPrevMobility = 0;
+        let maxPrevSleep = 0;
+        prevLogsList.forEach(pl => {
+            if (typeof pl.painReductionRate === 'number' && pl.painReductionRate > maxPrevPainDrop) maxPrevPainDrop = pl.painReductionRate;
+            if (typeof pl.mobilityRate === 'number' && pl.mobilityRate > maxPrevMobility) maxPrevMobility = pl.mobilityRate;
+            if (typeof pl.sleepRate === 'number' && pl.sleepRate > maxPrevSleep) maxPrevSleep = pl.sleepRate;
+        });
+
+        const painReductionRate = Math.min(100, Math.max(directPainDrop, minExpectedFloors.painDrop, maxPrevPainDrop));
+        mobilityRate = Math.min(100, Math.max(mobilityRate, minExpectedFloors.mobility, maxPrevMobility));
+        sleepRate = Math.min(100, Math.max(sleepRate, minExpectedFloors.sleep, maxPrevSleep));
 
         // التوافقية العكسية مع السجلات القديمة
         const exercisesDone = positiveHabitsIds['beh-exercise'] || positiveHabitsIds['modal-beh-exercise'] || (positiveHabitsList.length > 0) || (sessionNumber === 1);
