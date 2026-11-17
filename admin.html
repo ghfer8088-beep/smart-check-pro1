@@ -60,9 +60,9 @@
     /></noscript>
     <!-- End Meta Pixel Code -->
 
-    <script src="js/system-watchdog.js?v=31.00"></script>
-    <script src="js/security-shield.js?v=31.00"></script>
-    <link rel="stylesheet" href="css/style.css?v=31.00">
+    <script src="js/system-watchdog.js?v=31.10"></script>
+    <script src="js/security-shield.js?v=31.10"></script>
+    <link rel="stylesheet" href="css/style.css?v=31.10">
     <style>
         body {
             background-color: #080c14;
@@ -424,7 +424,7 @@
                     <div style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.78em; color: #94a3b8; margin-top: 2px;">
                         <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                         <span>الإصدار المعتمد:</span>
-                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v31.00</strong>
+                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v31.10</strong>
                     </div>
                 </div>
             </div>
@@ -462,10 +462,10 @@
                         <span>⚙️</span> إعدادات
                     </button>
                     <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header admin-btn-cache" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 9px 12px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
-                        ⚡ تحديث الكاش (v31.00)
+                        ⚡ تحديث الكاش (v31.10)
                     </button>
-                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v31.00) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
-                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v31.00)
+                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v31.10) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
+                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v31.10)
                     </button>
                     <button type="button" id="btn-force-sync" onclick="handleForceFullSync()" style="background: linear-gradient(135deg,rgba(59,130,246,0.25),rgba(99,102,241,0.2)); border: 1px solid #6366f1; color: #a5b4fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="جلب كافة السجلات من السحابة قسرياً وبثها لجميع الأجهزة">
                         🔄 مزامنة كاملة
@@ -706,6 +706,101 @@
                     <div id="stat-registered-count" style="font-size: 2.4em; font-weight: bold; color: #f59e0b;">0</div>
                     <div style="color: #94a3b8; font-size: 0.92em;">إجمالي الحسابات المسجلة 🔑</div>
                     <div style="color: #f59e0b; font-size: 0.78em; margin-top: 3px;">(ملفات محفوظة برمز PIN)</div>
+                </div>
+            </div>
+
+            <!-- ========================================================================== -->
+            <!-- 💰 لوحة المحاسبة والمبيعات الشاملة (Financial & Sales Accounting Dashboard) -->
+            <!-- ========================================================================== -->
+            <div style="background: linear-gradient(145deg, #070d19 0%, #0d182c 55%, #050811 100%); border: 2px solid var(--primary-gold); border-radius: 16px; padding: 22px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.65); position: relative; overflow: hidden;">
+                <!-- رأس القسم -->
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(212, 175, 55, 0.25); padding-bottom: 14px; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 2.2em; filter: drop-shadow(0 0 10px rgba(212,175,55,0.4));">💰</span>
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.3em; font-weight: 900;">النظام المحاسبي وإدارة مبيعات الباقات</h3>
+                                <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.72em; padding: 2px 8px; border-radius: 12px; font-weight: 900;">محاسبة متكاملة</span>
+                            </div>
+                            <div style="color: #94a3b8; font-size: 0.84em; margin-top: 3px;">
+                                رصد دقيق لمجموع المبيعات التراكمية، الإيراد اليومي والأسبوعي، وتوزيع الباقات المدفوعة والمبادرات الإنسانية
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- أزرار الإجراءات السريعة -->
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <button type="button" onclick="openFinancialLedgerModal()" class="btn-header" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.3) 0%, rgba(180, 83, 9, 0.25) 100%); border: 1.5px solid var(--primary-gold); color: #fef08a; font-weight: 900; padding: 8px 14px; font-size: 0.84em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                            <span>📊</span> <span>فتح السجل المحاسبي وكشف الحساب</span>
+                        </button>
+                        <button type="button" onclick="exportAccountingLedgerCSV()" class="btn-header" style="background: rgba(16, 185, 129, 0.18); border: 1px solid #10b981; color: #6ee7b7; font-weight: bold; padding: 8px 12px; font-size: 0.84em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;" title="تصدير كشف حساب العمليات كملف إكسل / CSV">
+                            <span>📥</span> <span>تصدير Excel/CSV</span>
+                        </button>
+                        <button type="button" onclick="printAccountingLedgerReport()" class="btn-header" style="background: rgba(56, 189, 248, 0.18); border: 1px solid #38bdf8; color: #7dd3fc; font-weight: bold; padding: 8px 12px; font-size: 0.84em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;" title="طباعة كشف الحساب المالي">
+                            <span>🖨️</span> <span>طباعة كشف</span>
+                        </button>
+                        <button type="button" onclick="openManualTransactionModal()" class="btn-header" style="background: rgba(249, 115, 22, 0.2); border: 1px solid #f97316; color: #fed7aa; font-weight: bold; padding: 8px 12px; font-size: 0.84em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;" title="تسجيل قيد بيع يدوي (دفع كاش أو حوالة عيادة مباشرة)">
+                            <span>➕</span> <span>قيد مبيعات يدوي</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4 بطاقات مالية ومحاسبية أساسية -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 18px;">
+                    <!-- كرت 1: المجموع التراكمي الشامل منذ الإطلاق -->
+                    <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(180, 83, 9, 0.15) 100%); border: 1.5px solid var(--primary-gold); border-radius: 12px; padding: 16px; text-align: center; box-shadow: 0 4px 14px rgba(212,175,55,0.15);">
+                        <div style="color: #cbd5e1; font-size: 0.82em; font-weight: bold; margin-bottom: 4px;">مجموع المبيعات الكلي (منذ الإطلاق) 💰</div>
+                        <div id="dash-acct-total-rev" style="font-size: 2.2em; font-weight: 900; color: #fef08a; font-family: monospace;">0 د.أ</div>
+                        <div id="dash-acct-total-orders" style="color: #94a3b8; font-size: 0.78em; margin-top: 4px;">0 عملية بيع معتمدة</div>
+                    </div>
+
+                    <!-- كرت 2: مبيعات اليوم اللحظية -->
+                    <div style="background: rgba(16, 185, 129, 0.08); border: 1.5px solid #10b981; border-radius: 12px; padding: 16px; text-align: center;">
+                        <div style="color: #cbd5e1; font-size: 0.82em; font-weight: bold; margin-bottom: 4px;">مبيعات اليوم اللحظية 🟢</div>
+                        <div id="dash-acct-today-rev" style="font-size: 2.2em; font-weight: 900; color: #34d399; font-family: monospace;">0 د.أ</div>
+                        <div id="dash-acct-today-orders" style="color: #6ee7b7; font-size: 0.78em; margin-top: 4px;">0 مبيعات اليوم</div>
+                    </div>
+
+                    <!-- كرت 3: مبيعات آخر 7 أيام وهذا الشهر -->
+                    <div style="background: rgba(56, 189, 248, 0.08); border: 1.5px solid #38bdf8; border-radius: 12px; padding: 16px; text-align: center;">
+                        <div style="color: #cbd5e1; font-size: 0.82em; font-weight: bold; margin-bottom: 4px;">مبيعات هذا الشهر 🗓️</div>
+                        <div id="dash-acct-month-rev" style="font-size: 2.2em; font-weight: 900; color: #38bdf8; font-family: monospace;">0 د.أ</div>
+                        <div style="display: flex; justify-content: center; gap: 8px; margin-top: 4px; font-size: 0.76em; color: #94a3b8;">
+                            <span>الأسبوع: <strong id="dash-acct-week-rev" style="color: #7dd3fc;">0 د.أ</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- كرت 4: مبادرات الرعاية الإنسانية (صدقة جارية) -->
+                    <div style="background: rgba(239, 68, 68, 0.08); border: 1.5px solid #ef4444; border-radius: 12px; padding: 16px; text-align: center;">
+                        <div style="color: #fca5a5; font-size: 0.82em; font-weight: bold; margin-bottom: 4px;">مبادرات الرعاية الإنسانية ❤️</div>
+                        <div id="dash-acct-hum-count" style="font-size: 2.2em; font-weight: 900; color: #f87171; font-family: monospace;">0</div>
+                        <div style="color: #fca5a5; font-size: 0.76em; margin-top: 4px;">
+                            قيمة إعفاءات: <strong id="dash-acct-hum-val" style="color: #fecaca;">0 د.أ</strong> (صدقة جارية)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- شريط تفصيل مبيعات الباقات الأربعة + مؤشر التحويل المالي -->
+                <div style="background: rgba(8, 12, 20, 0.85); border: 1px solid rgba(51, 65, 85, 0.8); border-radius: 12px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                    <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 0.86em;">
+                        <span style="color: #cbd5e1; font-weight: bold;">توزيع مبيعات الباقات:</span>
+                        <span style="background: rgba(56, 189, 248, 0.12); border: 1px solid #38bdf8; color: #7dd3fc; padding: 4px 10px; border-radius: 8px;">
+                            🔑 فحص فردي (3 د.أ): <strong id="dash-pkg-single-count" style="color: #fff;">0</strong> (<span id="dash-pkg-single-sum">0 د.أ</span>)
+                        </span>
+                        <span style="background: rgba(245, 158, 11, 0.12); border: 1px solid #f59e0b; color: #fde68a; padding: 4px 10px; border-radius: 8px;">
+                            ⭐ باقة 5 (10 د.أ): <strong id="dash-pkg-pack5-count" style="color: #fff;">0</strong> (<span id="dash-pkg-pack5-sum">0 د.أ</span>)
+                        </span>
+                        <span style="background: rgba(16, 185, 129, 0.12); border: 1px solid #10b981; color: #a7f3d0; padding: 4px 10px; border-radius: 8px;">
+                            👑 باقة 10 (15 د.أ): <strong id="dash-pkg-pack10-count" style="color: #fff;">0</strong> (<span id="dash-pkg-pack10-sum">0 د.أ</span>)
+                        </span>
+                        <span style="background: rgba(239, 68, 68, 0.12); border: 1px solid #ef4444; color: #fca5a5; padding: 4px 10px; border-radius: 8px;">
+                            ❤️ إعفاء إنساني: <strong id="dash-pkg-hum-count" style="color: #fff;">0</strong>
+                        </span>
+                    </div>
+                    <div style="font-size: 0.84em; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
+                        <span>نسبة التحويل للاشتراك:</span>
+                        <strong id="dash-acct-conv-rate" style="color: var(--primary-gold); font-size: 1.15em; font-family: monospace;">0%</strong>
+                    </div>
                 </div>
             </div>
 
@@ -1181,9 +1276,18 @@
                         </div>
                     </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <button type="button" onclick="copyFinancialLedgerSummary()" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; padding: 7px 14px; border-radius: 8px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                        <span>📋</span> <span>نسخ التقرير المحاسبي</span>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" onclick="copyFinancialLedgerSummary()" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; padding: 7px 12px; border-radius: 8px; font-size: 0.8em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;" title="نسخ ملخص الحسابات">
+                        <span>📋</span> <span>نسخ الملخص</span>
+                    </button>
+                    <button type="button" onclick="exportAccountingLedgerCSV()" style="background: rgba(16, 185, 129, 0.18); border: 1px solid #10b981; color: #6ee7b7; padding: 7px 12px; border-radius: 8px; font-size: 0.8em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;" title="تصدير كشف الحساب كملف Excel / CSV">
+                        <span>📥</span> <span>تصدير CSV</span>
+                    </button>
+                    <button type="button" onclick="printAccountingLedgerReport()" style="background: rgba(56, 189, 248, 0.18); border: 1px solid #38bdf8; color: #7dd3fc; padding: 7px 12px; border-radius: 8px; font-size: 0.8em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;" title="طباعة كشف الحساب المالي الرسمي">
+                        <span>🖨️</span> <span>طباعة كشف</span>
+                    </button>
+                    <button type="button" onclick="openManualTransactionModal()" style="background: rgba(249, 115, 22, 0.2); border: 1px solid #f97316; color: #fed7aa; padding: 7px 12px; border-radius: 8px; font-size: 0.8em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;" title="إضافة قيد بيع يدوي (دفع كاش أو حوالة عيادة)">
+                        <span>➕</span> <span>قيد بيع يدوي</span>
                     </button>
                     <button type="button" onclick="closeFinancialLedgerModal()" aria-label="إغلاق" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); color: #cbd5e1; font-size: 1.4em; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
                 </div>
@@ -1224,11 +1328,37 @@
                 <div style="background: rgba(239, 68, 68, 0.08); border: 1.5px solid #ef4444; border-radius: 14px; padding: 14px; text-align: center;">
                     <div style="color: #fca5a5; font-size: 0.78em; font-weight: bold; margin-bottom: 2px;">رعاية إنسانية (مجاناً) ❤️</div>
                     <div id="acct-hum-count" style="color: #f87171; font-size: 1.6em; font-weight: 900; font-family: monospace;">0</div>
-                    <div style="color: #cbd5e1; font-size: 0.75em; margin-top: 2px;">صدقة جارية</div>
+                    <div id="acct-hum-val" style="color: #cbd5e1; font-size: 0.75em; margin-top: 2px;">صدقة جارية (0 د.أ)</div>
                 </div>
             </div>
 
-            <!-- شريط التصفية والبحث -->
+            <!-- شريط الفلاتر الزمنية السريعة (Time Period Filters) -->
+            <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid #334155; border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span style="color: #cbd5e1; font-size: 0.82em; font-weight: bold;">📅 الفترة الزمنية:</span>
+                    <button type="button" class="acct-time-btn active" onclick="filterFinancialByTime('all', this)" style="background: var(--primary-gold); color: #0a0e14; border: 1px solid var(--primary-gold); padding: 5px 12px; border-radius: 16px; font-weight: bold; font-size: 0.8em; cursor: pointer;">
+                        🌟 الإجمالي الكلي (منذ الإطلاق)
+                    </button>
+                    <button type="button" class="acct-time-btn" onclick="filterFinancialByTime('today', this)" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 5px 12px; border-radius: 16px; font-size: 0.8em; cursor: pointer;">
+                        🟢 مبيعات اليوم
+                    </button>
+                    <button type="button" class="acct-time-btn" onclick="filterFinancialByTime('week', this)" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 5px 12px; border-radius: 16px; font-size: 0.8em; cursor: pointer;">
+                        📅 آخر 7 أيام
+                    </button>
+                    <button type="button" class="acct-time-btn" onclick="filterFinancialByTime('month', this)" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 5px 12px; border-radius: 16px; font-size: 0.8em; cursor: pointer;">
+                        🗓️ هذا الشهر
+                    </button>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8em; color: #94a3b8;">
+                    <span>من:</span>
+                    <input type="date" id="acct-date-from" onchange="handleCustomDateFilter()" style="background: #080c14; border: 1px solid #334155; color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 0.82em; outline: none;">
+                    <span>إلى:</span>
+                    <input type="date" id="acct-date-to" onchange="handleCustomDateFilter()" style="background: #080c14; border: 1px solid #334155; color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 0.82em; outline: none;">
+                    <button type="button" onclick="clearCustomDateFilter()" style="background: rgba(255,255,255,0.06); border: 1px solid #475569; color: #cbd5e1; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.78em;">إلغاء</button>
+                </div>
+            </div>
+
+            <!-- شريط التصفية والبحث (Package Types & Search) -->
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                     <button type="button" class="acct-filter-btn active" onclick="filterFinancialLedger('all', this)" style="background: var(--primary-gold); color: #0a0e14; border: 1px solid var(--primary-gold); padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 0.82em; cursor: pointer;">
@@ -1263,7 +1393,7 @@
                             <th style="padding: 11px 12px;">الهاتف</th>
                             <th style="padding: 11px 12px;">الباقة</th>
                             <th style="padding: 11px 12px;">المبلغ</th>
-                            <th style="padding: 11px 12px;">رقم الحوالة</th>
+                            <th style="padding: 11px 12px;">طريقة الدفع / المرجع</th>
                             <th style="padding: 11px 12px;">الحالة</th>
                             <th style="padding: 11px 12px;">الكود المعتمد</th>
                             <th style="padding: 11px 12px; text-align: center;">إجراء</th>
@@ -1278,6 +1408,85 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================== -->
+    <!-- ➕ نافذة تسجيل قيد بيع يدوي (Manual Transaction Entry Modal) -->
+    <!-- ========================================================================== -->
+    <div id="manual-transaction-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;">
+        <div class="modal-inner" style="background: linear-gradient(155deg, #070d19 0%, #0f172a 60%, #060a12 100%); border: 2px solid var(--primary-gold); border-radius: 18px; max-width: 540px; width: 100%; padding: 24px; box-shadow: 0 15px 50px rgba(0,0,0,0.95); box-sizing: border-box;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(212, 175, 55, 0.3); padding-bottom: 12px; margin-bottom: 18px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8em;">➕</span>
+                    <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.2em; font-weight: 900;">تسجيل قيد بيع / اشتراك يدوي</h3>
+                </div>
+                <button type="button" onclick="closeManualTransactionModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.5em; cursor: pointer;">&times;</button>
+            </div>
+            
+            <form id="manual-tx-form" onsubmit="handleSaveManualTransaction(event)">
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div>
+                        <label style="display: block; color: #cbd5e1; font-size: 0.85em; font-weight: bold; margin-bottom: 5px;">اسم المراجع / المشترك: *</label>
+                        <input type="text" id="manual-tx-name" required placeholder="مثال: راغب علامة" style="width: 100%; background: #080c14; border: 1.5px solid #334155; color: #fff; padding: 9px 12px; border-radius: 8px; font-size: 0.9em; box-sizing: border-box; outline: none;">
+                    </div>
+                    <div>
+                        <label style="display: block; color: #cbd5e1; font-size: 0.85em; font-weight: bold; margin-bottom: 5px;">رقم الهاتف: *</label>
+                        <input type="tel" id="manual-tx-phone" required placeholder="079XXXXXXXX" style="width: 100%; background: #080c14; border: 1.5px solid #334155; color: #fff; padding: 9px 12px; border-radius: 8px; font-size: 0.9em; box-sizing: border-box; outline: none; direction: ltr; text-align: right;">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <label style="display: block; color: #cbd5e1; font-size: 0.85em; font-weight: bold; margin-bottom: 5px;">نوع الباقة: *</label>
+                            <select id="manual-tx-tier" onchange="handleManualTierChange(this.value)" style="width: 100%; background: #080c14; border: 1.5px solid #334155; color: #fff; padding: 9px 10px; border-radius: 8px; font-size: 0.88em; outline: none;">
+                                <option value="single">تشخيص فردي (3 د.أ)</option>
+                                <option value="pack5">باقة 5 فحوصات (10 د.أ)</option>
+                                <option value="pack10">باقة 10 فحوصات (15 د.أ)</option>
+                                <option value="humanitarian">مبادرة إنسانية (0 د.أ)</option>
+                                <option value="custom">مبلغ مخصص</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; color: #cbd5e1; font-size: 0.85em; font-weight: bold; margin-bottom: 5px;">المبلغ (بالدينار الأردني): *</label>
+                            <input type="number" id="manual-tx-amount" min="0" step="0.5" value="3" required style="width: 100%; background: #080c14; border: 1.5px solid #f97316; color: #fef08a; padding: 9px 12px; border-radius: 8px; font-size: 1.05em; font-weight: 900; box-sizing: border-box; text-align: center; outline: none;">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <label style="display: block; color: #cbd5e1; font-size: 0.85em; font-weight: bold; margin-bottom: 5px;">طريقة التحصيل / الدفع: *</label>
+                            <select id="manual-tx-method" style="width: 100%; background: #080c14; border: 1.5px solid #334155; color: #fff; padding: 9px 10px; border-radius: 8px; font-size: 0.88em; outline: none;">
+                                <option value="نقداً بالعيادة (Cash)">نقداً بالعيادة (Cash)</option>
+                                <option value="محفظة أورانج موني">محفظة أورانج موني</option>
+                                <option value="كليك (CliQ)">كليك (CliQ)</option>
+                                <option value="تحويل بنكي مباشر">تحويل بنكي مباشر</option>
+                                <option value="إعفاء إنساني (صدقة جارية)">إعفاء إنساني (صدقة جارية)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; color: #cbd5e1; font-size: 0.85em; font-weight: bold; margin-bottom: 5px;">رقم السند / مرجع الإيصال:</label>
+                            <input type="text" id="manual-tx-ref" placeholder="مثال: REC-1024" style="width: 100%; background: #080c14; border: 1.5px solid #334155; color: #fff; padding: 9px 12px; border-radius: 8px; font-size: 0.88em; box-sizing: border-box; outline: none;">
+                        </div>
+                    </div>
+                    <div>
+                        <label style="display: block; color: #cbd5e1; font-size: 0.85em; font-weight: bold; margin-bottom: 5px;">تاريخ القيد:</label>
+                        <input type="datetime-local" id="manual-tx-date" style="width: 100%; background: #080c14; border: 1.5px solid #334155; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 0.88em; box-sizing: border-box; outline: none;">
+                    </div>
+                    <div>
+                        <label style="display: block; color: #cbd5e1; font-size: 0.85em; font-weight: bold; margin-bottom: 5px;">ملاحظات محاسبية:</label>
+                        <input type="text" id="manual-tx-notes" placeholder="ملاحظات اختيارية..." style="width: 100%; background: #080c14; border: 1.5px solid #334155; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 0.85em; box-sizing: border-box; outline: none;">
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button type="submit" style="flex: 1; background: linear-gradient(135deg, #d4af37 0%, #b45309 100%); color: #050911; border: 1px solid #fef08a; padding: 12px; border-radius: 10px; font-weight: 900; font-size: 0.95em; cursor: pointer;">
+                            💾 اعتماد وحفظ القيد المحاسبي
+                        </button>
+                        <button type="button" onclick="closeManualTransactionModal()" style="background: rgba(255,255,255,0.08); color: #cbd5e1; border: 1px solid #475569; padding: 12px 20px; border-radius: 10px; cursor: pointer;">
+                            إلغاء
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
         </div>
     </div>
 
@@ -2162,17 +2371,17 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/clinic-patients-data.js?v=31.00"></script>
-    <script src="js/mqtt.min.js?v=31.00"></script>
-    <script src="js/cloud-sync.js?v=31.00"></script>
-    <script src="js/geo-tracker.js?v=31.00"></script>
-    <script src="js/database.js?v=31.00"></script>
-    <script src="js/exercise-image-studio.js?v=31.00"></script>
-    <script src="js/admin-engine.js?v=31.00"></script>
-    <script src="js/ai-config.js?v=31.00"></script>
-    <script src="js/ai-engine.js?v=31.00"></script>
-    <script src="js/whatsapp-dispatcher.js?v=31.00"></script>
-    <script src="js/mobile-alerts.js?v=31.00"></script>
+    <script src="js/clinic-patients-data.js?v=31.10"></script>
+    <script src="js/mqtt.min.js?v=31.10"></script>
+    <script src="js/cloud-sync.js?v=31.10"></script>
+    <script src="js/geo-tracker.js?v=31.10"></script>
+    <script src="js/database.js?v=31.10"></script>
+    <script src="js/exercise-image-studio.js?v=31.10"></script>
+    <script src="js/admin-engine.js?v=31.10"></script>
+    <script src="js/ai-config.js?v=31.10"></script>
+    <script src="js/ai-engine.js?v=31.10"></script>
+    <script src="js/whatsapp-dispatcher.js?v=31.10"></script>
+    <script src="js/mobile-alerts.js?v=31.10"></script>
 
     <script>
         // محرك صيانة وتطهير التخزين التلقائي لمنع تجاوز السعة (QuotaExceededError)
@@ -3311,6 +3520,7 @@
             try { renderGeoAnalytics(); } catch(e) { console.warn(e); }
             try { renderRadarLiveMetrics(); } catch(e) { console.warn(e); }
             try { renderRealtimePresence(); } catch(e) { console.warn(e); }
+            try { if (typeof refreshAndRenderAccountingLedger === 'function') refreshAndRenderAccountingLedger(); } catch(e) { console.warn('Accounting render warning:', e); }
         }
         window.loadAdminData = loadAdminData;
 
@@ -6240,7 +6450,7 @@
         // ⚙️ دوال نافذة إعدادات وتخصيص المنظومة (System Settings Modal)
         // ==========================================================================
         
-        // دوال منظومة إشعارات الموبايل الفورية (v31.00)
+        // دوال منظومة إشعارات الموبايل الفورية (v31.10)
         function openMobileAlertsModal() {
             openSystemSettingsModal();
             const btn = document.getElementById('btn-settings-tab-mobile-alerts');
@@ -6629,11 +6839,74 @@ function copyAdminCode(code) {
         }
 
         // =========================================================================
-        // 💰 دوال النظام المحاسبي وسجل المبيعات والاشتراكات (v31.00)
+        // 💰 دوال النظام المحاسبي المتكامل وسجل المبيعات والاشتراكات (v31.10)
         // =========================================================================
-        let currentAcctFilter = 'all';
+        let currentAcctFilter = 'all';        // 'all', 'single', 'pack5', 'pack10', 'humanitarian'
+        let currentAcctTimeFilter = 'all';    // 'all', 'today', 'week', 'month', 'custom'
         let currentAcctSearch = '';
+        let currentAcctDateFrom = '';
+        let currentAcctDateTo = '';
         let cachedAccountingRecords = [];
+
+        function isDateInPeriod(dateStr, period, fromDateStr, toDateStr) {
+            if (!dateStr || period === 'all') return true;
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return true;
+            const now = new Date();
+
+            if (period === 'today') {
+                return d.getFullYear() === now.getFullYear() &&
+                       d.getMonth() === now.getMonth() &&
+                       d.getDate() === now.getDate();
+            }
+            if (period === 'week') {
+                const diffMs = now.getTime() - d.getTime();
+                return diffMs >= 0 && diffMs <= 7 * 24 * 60 * 60 * 1000;
+            }
+            if (period === 'month') {
+                return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+            }
+            if (period === 'custom') {
+                if (fromDateStr) {
+                    const start = new Date(fromDateStr + 'T00:00:00');
+                    if (d < start) return false;
+                }
+                if (toDateStr) {
+                    const end = new Date(toDateStr + 'T23:59:59');
+                    if (d > end) return false;
+                }
+                return true;
+            }
+            return true;
+        }
+
+        function recordAccountingTransaction(tx) {
+            try {
+                if (!tx) return;
+                const list = JSON.parse(localStorage.getItem('smart_accounting_ledger') || '[]');
+                const arr = Array.isArray(list) ? list : [];
+                const txId = tx.id || ('TX-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6));
+                tx.id = txId;
+                tx.date = tx.date || new Date().toISOString();
+
+                const cleanPhone = String(tx.patientPhone || '').replace(/\D/g, '').slice(-8);
+                const cleanRef = String(tx.transferRef || '').trim();
+
+                const idx = arr.findIndex(x => x && (x.id === txId || (cleanRef && x.transferRef === cleanRef) || (cleanPhone && String(x.patientPhone || '').replace(/\D/g, '').slice(-8) === cleanPhone && x.tier === tx.tier && Math.abs(new Date(x.date || 0) - new Date(tx.date)) < 3600000)));
+                if (idx >= 0) {
+                    arr[idx] = { ...arr[idx], ...tx };
+                } else {
+                    arr.unshift(tx);
+                }
+                localStorage.setItem('smart_accounting_ledger', JSON.stringify(arr.slice(0, 500)));
+                if (typeof refreshAndRenderAccountingLedger === 'function') {
+                    refreshAndRenderAccountingLedger();
+                }
+            } catch(e) {
+                console.warn('recordAccountingTransaction error:', e);
+            }
+        }
+        window.recordAccountingTransaction = recordAccountingTransaction;
 
         function openFinancialLedgerModal() {
             const modal = document.getElementById('financial-ledger-modal');
@@ -6653,7 +6926,25 @@ function copyAdminCode(code) {
             const seenKeys = new Set();
             const cfg = getAdminPaymentGateConfig();
 
-            // 1. استخراج العمليات من قائمة المراجعين الحقيقيين (allPatientsList)
+            // 1. استرجاع القيود المسجلة مسبقاً في المخزن المحاسبي الدائم (smart_accounting_ledger)
+            try {
+                const storedLedger = JSON.parse(localStorage.getItem('smart_accounting_ledger') || '[]');
+                if (Array.isArray(storedLedger)) {
+                    storedLedger.forEach(st => {
+                        if (!st) return;
+                        const pPhone = String(st.patientPhone || '').replace(/\D/g, '').slice(-8);
+                        const pName = String(st.patientName || '').trim();
+                        const ref = String(st.transferRef || '').trim();
+                        const key = `${pPhone || pName}_${st.tier}_${ref || st.id}`;
+                        if (!seenKeys.has(key)) {
+                            seenKeys.add(key);
+                            records.push(st);
+                        }
+                    });
+                }
+            } catch (e) {}
+
+            // 2. استخراج العمليات من قائمة المراجعين الحقيقيين (allPatientsList)
             if (Array.isArray(allPatientsList)) {
                 allPatientsList.forEach(item => {
                     const p = item.patient || {};
@@ -6668,7 +6959,9 @@ function copyAdminCode(code) {
                     const isHum = pType.includes('humanitarian') || pStatus.includes('إنساني') || pStatus.includes('إعفاء');
 
                     if (isPaid || isHum) {
-                        const key = `${pPhone || pName}_${isHum ? 'hum' : 'paid'}_${p.transferRef || ''}`;
+                        const cleanPhone = String(pPhone).replace(/\D/g, '').slice(-8);
+                        const cleanRef = String(p.transferRef || p.receiptNo || '').trim();
+                        const key = `${cleanPhone || pName}_${isHum ? 'hum' : 'paid'}_${cleanRef}`;
                         if (!seenKeys.has(key)) {
                             seenKeys.add(key);
                             
@@ -6689,19 +6982,20 @@ function copyAdminCode(code) {
                                 tierName = 'باقة 5 فحوصات';
                                 price = 10;
                             } else {
-                                price = amtPaid > 0 ? amtPaid : 3;
+                                price = amtPaid > 0 ? amtPaid : (cfg.priceJod || 3);
                             }
 
                             records.push({
                                 id: 'TX-P-' + (pId || Math.random().toString(36).slice(2, 7)),
-                                date: p.unlockedAt || p.registeredAt || p.lastUpdated || p.date || new Date().toISOString(),
+                                date: p.unlockedAt || p.paidAt || p.createdAt || p.registeredAt || p.lastUpdated || p.date || p.timestamp || new Date().toISOString(),
                                 patientId: pId,
                                 patientName: pName,
                                 patientPhone: pPhone,
                                 tier: tier,
                                 tierName: tierName,
                                 amount: price,
-                                transferRef: p.transferRef || p.receiptNo || (isHum ? 'إعفاء إنساني' : 'حوالة محفظة'),
+                                transferRef: p.transferRef || p.receiptNo || (isHum ? 'إعفاء إنساني معتمد' : 'حوالة محفظة أورانج'),
+                                paymentMethod: isHum ? 'إعفاء إنساني (صدقة جارية)' : 'محفظة أورانج موني',
                                 status: p.isPaidUnlocked ? 'مفعّل ومعتمد' : (pStatus.includes('بانتظار') ? 'بانتظار التأكيد' : 'معتمد'),
                                 isUnlocked: Boolean(p.isPaidUnlocked),
                                 pin: p.unlockPin || generateAdminUnlockPin(pPhone || pName, tier === 'pack10' ? 10 : (tier === 'pack5' ? 5 : 1))
@@ -6711,7 +7005,7 @@ function copyAdminCode(code) {
                 });
             }
 
-            // 2. استخراج العمليات من سجل الإشعارات (allNotificationsList)
+            // 3. استخراج العمليات من سجل الإشعارات (allNotificationsList)
             if (Array.isArray(allNotificationsList)) {
                 allNotificationsList.forEach(n => {
                     const isPayNotif = n.type === 'payment_received';
@@ -6720,8 +7014,9 @@ function copyAdminCode(code) {
                     if (isPayNotif || isHumNotif) {
                         const pPhone = n.patientPhone || n.meta?.subscriberPhone || '';
                         const pName = n.patientName || n.meta?.subscriberName || 'مشترك';
-                        const ref = n.meta?.transferRef || '';
-                        const key = `${pPhone || pName}_${isHumNotif ? 'hum' : 'paid'}_${ref}`;
+                        const ref = String(n.meta?.transferRef || '').trim();
+                        const cleanPhone = String(pPhone).replace(/\D/g, '').slice(-8);
+                        const key = `${cleanPhone || pName}_${isHumNotif ? 'hum' : 'paid'}_${ref}`;
 
                         if (!seenKeys.has(key)) {
                             seenKeys.add(key);
@@ -6745,21 +7040,22 @@ function copyAdminCode(code) {
                                 tierName = 'باقة 5 فحوصات';
                                 price = 10;
                             } else {
-                                price = metaAmt > 0 ? metaAmt : 3;
+                                price = metaAmt > 0 ? metaAmt : (cfg.priceJod || 3);
                             }
 
                             records.push({
                                 id: n.id || ('TX-N-' + Math.random().toString(36).slice(2, 7)),
-                                date: n.timestamp || n.date || new Date().toISOString(),
+                                date: n.time || n.timestamp || n.date || n.meta?.approvedAt || n.meta?.requestedAt || new Date().toISOString(),
                                 patientId: n.patientId || '',
                                 patientName: pName,
                                 patientPhone: pPhone,
                                 tier: tier,
                                 tierName: tierName,
                                 amount: price,
-                                transferRef: ref || (isHumNotif ? 'إعفاء إنساني' : 'حوالة محفظة'),
-                                status: n.read ? 'معتمد' : 'بانتظار التأكيد',
-                                isUnlocked: Boolean(n.read),
+                                transferRef: ref || (isHumNotif ? 'إعفاء إنساني معتمد' : 'حوالة محفظة أورانج'),
+                                paymentMethod: isHumNotif ? 'إعفاء إنساني (صدقة جارية)' : 'محفظة أورانج موني',
+                                status: n.read || n.meta?.approved ? 'مفعّل ومعتمد' : 'بانتظار التأكيد',
+                                isUnlocked: Boolean(n.read || n.meta?.approved),
                                 pin: n.meta?.unlockPin || n.meta?.unlockCode || generateAdminUnlockPin(pPhone || pName, tier === 'pack10' ? 10 : (tier === 'pack5' ? 5 : 1))
                             });
                         }
@@ -6767,16 +7063,48 @@ function copyAdminCode(code) {
                 });
             }
 
+            // 4. استخراج أرقام الإعفاءات الإنسانية المسجلة في smart_humanitarian_used_phones
+            try {
+                const usedHumPhones = JSON.parse(localStorage.getItem('smart_humanitarian_used_phones') || '[]');
+                if (Array.isArray(usedHumPhones)) {
+                    usedHumPhones.forEach((hPhone, idx) => {
+                        const cleanPhone = String(hPhone).replace(/\D/g, '').slice(-8);
+                        const key = `${cleanPhone}_hum_permanent`;
+                        if (cleanPhone && !seenKeys.has(key)) {
+                            seenKeys.add(key);
+                            records.push({
+                                id: 'TX-HUM-' + cleanPhone,
+                                date: localStorage.getItem('smart_humanitarian_used_at') || new Date().toISOString(),
+                                patientId: 'pat_hum_' + cleanPhone,
+                                patientName: 'مستفيد رعاية إنسانية (' + cleanPhone + ')',
+                                patientPhone: hPhone,
+                                tier: 'humanitarian',
+                                tierName: 'مبادرة إنسانية',
+                                amount: 0,
+                                transferRef: 'إعفاء إنساني مسجل',
+                                paymentMethod: 'إعفاء إنساني (صدقة جارية)',
+                                status: 'مفعّل ومعتمد',
+                                isUnlocked: true,
+                                pin: generateAdminUnlockPin(hPhone, 1)
+                            });
+                        }
+                    });
+                }
+            } catch(e) {}
+
+            // حفظ النسخة الموحدة في التخزين المحاسبي الدائم
+            try {
+                localStorage.setItem('smart_accounting_ledger', JSON.stringify(records.slice(0, 500)));
+            } catch(e) {}
+
             // ترتيب السجلات تنازلياً حسب التاريخ
             records.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
             return records;
         }
 
-        function refreshAndRenderAccountingLedger() {
-            cachedAccountingRecords = extractAllAccountingRecords();
-
-            // حساب المجاميع
+        function calculateAccountingTotals(recordsList) {
             let totalRevenue = 0;
+            let totalOrders = 0;
             let singleCount = 0;
             let singleSum = 0;
             let pack5Count = 0;
@@ -6785,46 +7113,118 @@ function copyAdminCode(code) {
             let pack10Sum = 0;
             let humCount = 0;
 
-            cachedAccountingRecords.forEach(r => {
+            (recordsList || []).forEach(r => {
                 if (r.tier === 'single') {
                     singleCount++;
-                    singleSum += r.amount;
-                    totalRevenue += r.amount;
+                    singleSum += (r.amount || 0);
+                    totalRevenue += (r.amount || 0);
+                    totalOrders++;
                 } else if (r.tier === 'pack5') {
                     pack5Count++;
-                    pack5Sum += r.amount;
-                    totalRevenue += r.amount;
+                    pack5Sum += (r.amount || 0);
+                    totalRevenue += (r.amount || 0);
+                    totalOrders++;
                 } else if (r.tier === 'pack10') {
                     pack10Count++;
-                    pack10Sum += r.amount;
-                    totalRevenue += r.amount;
+                    pack10Sum += (r.amount || 0);
+                    totalRevenue += (r.amount || 0);
+                    totalOrders++;
                 } else if (r.tier === 'humanitarian') {
                     humCount++;
                 }
             });
 
-            // تحديث أرقام الـ KPI
-            const elTotRev = document.getElementById('acct-total-rev'); if (elTotRev) elTotRev.textContent = `${totalRevenue} د.أ`;
-            const elTotOrders = document.getElementById('acct-total-orders'); if (elTotOrders) elTotOrders.textContent = `${singleCount + pack5Count + pack10Count} طلب مدفوع`;
-            const elHeadRev = document.getElementById('header-accounting-rev'); if (elHeadRev) elHeadRev.textContent = `${totalRevenue} د.أ`;
+            return {
+                totalRevenue,
+                totalOrders,
+                singleCount,
+                singleSum,
+                pack5Count,
+                pack5Sum,
+                pack10Count,
+                pack10Sum,
+                humCount,
+                humVal: humCount * 3
+            };
+        }
 
-            const elSCount = document.getElementById('acct-single-count'); if (elSCount) elSCount.textContent = singleCount;
-            const elSSum = document.getElementById('acct-single-sum'); if (elSSum) elSSum.textContent = `${singleSum} د.أ`;
+        function refreshAndRenderAccountingLedger() {
+            cachedAccountingRecords = extractAllAccountingRecords();
 
-            const elP5Count = document.getElementById('acct-pack5-count'); if (elP5Count) elP5Count.textContent = pack5Count;
-            const elP5Sum = document.getElementById('acct-pack5-sum'); if (elP5Sum) elP5Sum.textContent = `${pack5Sum} د.أ`;
+            // 1. حساب الإجمالي الكلي الشامل (منذ الإطلاق حتى اللحظة)
+            const allTimeTotals = calculateAccountingTotals(cachedAccountingRecords);
 
-            const elP10Count = document.getElementById('acct-pack10-count'); if (elP10Count) elP10Count.textContent = pack10Count;
-            const elP10Sum = document.getElementById('acct-pack10-sum'); if (elP10Sum) elP10Sum.textContent = `${pack10Sum} د.أ`;
+            // 2. حساب مبيعات اليوم
+            const todayRecords = cachedAccountingRecords.filter(r => isDateInPeriod(r.date, 'today'));
+            const todayTotals = calculateAccountingTotals(todayRecords);
 
-            const elHumCount = document.getElementById('acct-hum-count'); if (elHumCount) elHumCount.textContent = humCount;
+            // 3. حساب مبيعات آخر 7 أيام
+            const weekRecords = cachedAccountingRecords.filter(r => isDateInPeriod(r.date, 'week'));
+            const weekTotals = calculateAccountingTotals(weekRecords);
 
-            // تحديث عدادات التبويبات
-            const elAll = document.getElementById('acct-count-all'); if (elAll) elAll.textContent = cachedAccountingRecords.length;
-            const elCS = document.getElementById('acct-count-single'); if (elCS) elCS.textContent = singleCount;
-            const elCP5 = document.getElementById('acct-count-pack5'); if (elCP5) elCP5.textContent = pack5Count;
-            const elCP10 = document.getElementById('acct-count-pack10'); if (elCP10) elCP10.textContent = pack10Count;
-            const elCHum = document.getElementById('acct-count-hum'); if (elCHum) elCHum.textContent = humCount;
+            // 4. حساب مبيعات هذا الشهر
+            const monthRecords = cachedAccountingRecords.filter(r => isDateInPeriod(r.date, 'month'));
+            const monthTotals = calculateAccountingTotals(monthRecords);
+
+            // 5. حساب إحصائيات الفترة المحددة حالياً في النافذة المنبثقة
+            const activePeriodRecords = cachedAccountingRecords.filter(r => isDateInPeriod(r.date, currentAcctTimeFilter, currentAcctDateFrom, currentAcctDateTo));
+            const activePeriodTotals = calculateAccountingTotals(activePeriodRecords);
+
+            // 6. حساب معدل التحويل المالي (Financial Conversion Rate)
+            const totalDiagnosed = (Array.isArray(allPatientsList) ? allPatientsList.length : 0) || 1;
+            const convRate = Math.min(100, Math.round(((allTimeTotals.totalOrders + allTimeTotals.humCount) / totalDiagnosed) * 100));
+
+            // ==========================================
+            // تحديث بطاقات لوحة التحكم الرئيسية (Dashboard)
+            // ==========================================
+            const dTotRev = document.getElementById('dash-acct-total-rev'); if (dTotRev) dTotRev.textContent = `${allTimeTotals.totalRevenue} د.أ`;
+            const dTotOrd = document.getElementById('dash-acct-total-orders'); if (dTotOrd) dTotOrd.textContent = `${allTimeTotals.totalOrders} عملية بيع معتمدة`;
+            const dTodayRev = document.getElementById('dash-acct-today-rev'); if (dTodayRev) dTodayRev.textContent = `${todayTotals.totalRevenue} د.أ`;
+            const dTodayOrd = document.getElementById('dash-acct-today-orders'); if (dTodayOrd) dTodayOrd.textContent = `${todayTotals.totalOrders} مبيعات اليوم`;
+            const dMonthRev = document.getElementById('dash-acct-month-rev'); if (dMonthRev) dMonthRev.textContent = `${monthTotals.totalRevenue} د.أ`;
+            const dWeekRev = document.getElementById('dash-acct-week-rev'); if (dWeekRev) dWeekRev.textContent = `${weekTotals.totalRevenue} د.أ`;
+            const dHumCount = document.getElementById('dash-acct-hum-count'); if (dHumCount) dHumCount.textContent = allTimeTotals.humCount;
+            const dHumVal = document.getElementById('dash-acct-hum-val'); if (dHumVal) dHumVal.textContent = `${allTimeTotals.humVal} د.أ`;
+
+            const dSingleCount = document.getElementById('dash-pkg-single-count'); if (dSingleCount) dSingleCount.textContent = allTimeTotals.singleCount;
+            const dSingleSum = document.getElementById('dash-pkg-single-sum'); if (dSingleSum) dSingleSum.textContent = `${allTimeTotals.singleSum} د.أ`;
+            const dPack5Count = document.getElementById('dash-pkg-pack5-count'); if (dPack5Count) dPack5Count.textContent = allTimeTotals.pack5Count;
+            const dPack5Sum = document.getElementById('dash-pkg-pack5-sum'); if (dPack5Sum) dPack5Sum.textContent = `${allTimeTotals.pack5Sum} د.أ`;
+            const dPack10Count = document.getElementById('dash-pkg-pack10-count'); if (dPack10Count) dPack10Count.textContent = allTimeTotals.pack10Count;
+            const dPack10Sum = document.getElementById('dash-pkg-pack10-sum'); if (dPack10Sum) dPack10Sum.textContent = `${allTimeTotals.pack10Sum} د.أ`;
+            const dHumCountPkg = document.getElementById('dash-pkg-hum-count'); if (dHumCountPkg) dHumCountPkg.textContent = allTimeTotals.humCount;
+            const dConvRate = document.getElementById('dash-acct-conv-rate'); if (dConvRate) dConvRate.textContent = `${convRate}%`;
+
+            // ==========================================
+            // تحديث بطاقات نافذة السجل المحاسبي (Modal KPIs)
+            // ==========================================
+            const elTotRev = document.getElementById('acct-total-rev'); if (elTotRev) elTotRev.textContent = `${activePeriodTotals.totalRevenue} د.أ`;
+            const elTotOrders = document.getElementById('acct-total-orders'); if (elTotOrders) elTotOrders.textContent = `${activePeriodTotals.totalOrders} عملية مدفوعة`;
+            const elHeadRev = document.getElementById('header-accounting-rev'); if (elHeadRev) elHeadRev.textContent = `${allTimeTotals.totalRevenue} د.أ`;
+
+            const elSCount = document.getElementById('acct-single-count'); if (elSCount) elSCount.textContent = activePeriodTotals.singleCount;
+            const elSSum = document.getElementById('acct-single-sum'); if (elSSum) elSSum.textContent = `${activePeriodTotals.singleSum} د.أ`;
+
+            const elP5Count = document.getElementById('acct-pack5-count'); if (elP5Count) elP5Count.textContent = activePeriodTotals.pack5Count;
+            const elP5Sum = document.getElementById('acct-pack5-sum'); if (elP5Sum) elP5Sum.textContent = `${activePeriodTotals.pack5Sum} د.أ`;
+
+            const elP10Count = document.getElementById('acct-pack10-count'); if (elP10Count) elP10Count.textContent = activePeriodTotals.pack10Count;
+            const elP10Sum = document.getElementById('acct-pack10-sum'); if (elP10Sum) elP10Sum.textContent = `${activePeriodTotals.pack10Sum} د.أ`;
+
+            const elHumCount = document.getElementById('acct-hum-count'); if (elHumCount) elHumCount.textContent = activePeriodTotals.humCount;
+            const elHumVal = document.getElementById('acct-hum-val'); if (elHumVal) elHumVal.textContent = `صدقة جارية (${activePeriodTotals.humVal} د.أ)`;
+
+            // عدادات تبويبات الباقات في النافذة
+            const elAll = document.getElementById('acct-count-all'); if (elAll) elAll.textContent = activePeriodRecords.length;
+            const elCS = document.getElementById('acct-count-single'); if (elCS) elCS.textContent = activePeriodTotals.singleCount;
+            const elCP5 = document.getElementById('acct-count-pack5'); if (elCP5) elCP5.textContent = activePeriodTotals.pack5Count;
+            const elCP10 = document.getElementById('acct-count-pack10'); if (elCP10) elCP10.textContent = activePeriodTotals.pack10Count;
+            const elCHum = document.getElementById('acct-count-hum'); if (elCHum) elCHum.textContent = activePeriodTotals.humCount;
+
+            // تحديث بطاقات إعدادات الدفع (Payment Settings Tab)
+            const paidEl = document.getElementById('stat-paid-orange-count'); if (paidEl) paidEl.textContent = allTimeTotals.totalOrders;
+            const revEl = document.getElementById('stat-total-revenue-jod'); if (revEl) revEl.textContent = `${allTimeTotals.totalRevenue} د.أ`;
+            const humEl = document.getElementById('stat-humanitarian-count'); if (humEl) humEl.textContent = allTimeTotals.humCount;
 
             renderAccountingTableRows();
         }
@@ -6834,15 +7234,23 @@ function copyAdminCode(code) {
             if (!tbody) return;
 
             let filtered = cachedAccountingRecords;
+
+            // 1. فلتر الفترة الزمنية
+            filtered = filtered.filter(r => isDateInPeriod(r.date, currentAcctTimeFilter, currentAcctDateFrom, currentAcctDateTo));
+
+            // 2. فلتر نوع الباقة
             if (currentAcctFilter !== 'all') {
                 filtered = filtered.filter(r => r.tier === currentAcctFilter);
             }
+
+            // 3. فلتر البحث النصي
             if (currentAcctSearch) {
                 const q = currentAcctSearch.toLowerCase();
                 filtered = filtered.filter(r => 
                     (r.patientName || '').toLowerCase().includes(q) ||
                     (r.patientPhone || '').includes(q) ||
                     (r.transferRef || '').toLowerCase().includes(q) ||
+                    (r.paymentMethod || '').toLowerCase().includes(q) ||
                     (r.pin || '').includes(q)
                 );
             }
@@ -6850,8 +7258,8 @@ function copyAdminCode(code) {
             if (filtered.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="10" style="text-align: center; padding: 35px; color: #94a3b8;">
-                            لا توجد عمليات مسجلة مطابقة للفلاتر الحالية.
+                        <td colspan="10" style="text-align: center; padding: 40px; color: #94a3b8; font-size: 0.95em;">
+                            لا توجد عمليات مسجلة مطابقة للفلاتر الزمنية ونوع الباقة المحدد.
                         </td>
                     </tr>
                 `;
@@ -6870,7 +7278,7 @@ function copyAdminCode(code) {
                     tierBadge = `<span style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid #ef4444; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.82em;">مبادرة إنسانية</span>`;
                 }
 
-                const isPending = r.status.includes('بانتظار');
+                const isPending = String(r.status || '').includes('بانتظار');
                 const statusBadge = isPending 
                     ? `<span style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; padding: 2px 8px; border-radius: 6px; font-size: 0.8em; font-weight: bold;">⏳ بانتظار التأكيد</span>`
                     : `<span style="background: rgba(16, 185, 129, 0.15); color: #6ee7b7; padding: 2px 8px; border-radius: 6px; font-size: 0.8em; font-weight: bold;">✓ مفعّل ومعتمد</span>`;
@@ -6888,7 +7296,7 @@ function copyAdminCode(code) {
                         <td style="padding: 10px 12px; color: #94a3b8; font-family: monospace; direction: ltr; text-align: right;">${r.patientPhone || '--'}</td>
                         <td style="padding: 10px 12px;">${tierBadge}</td>
                         <td style="padding: 10px 12px; font-weight: 900; color: ${r.amount > 0 ? '#fef08a' : '#94a3b8'}; font-family: monospace;">${r.amount > 0 ? r.amount + ' د.أ' : 'مجاناً'}</td>
-                        <td style="padding: 10px 12px; color: #fed7aa; font-family: monospace; letter-spacing: 0.5px;">${r.transferRef}</td>
+                        <td style="padding: 10px 12px; color: #fed7aa; font-family: monospace; letter-spacing: 0.5px;">${r.paymentMethod ? r.paymentMethod + ' - ' : ''}${r.transferRef}</td>
                         <td style="padding: 10px 12px;">${statusBadge}</td>
                         <td style="padding: 10px 12px;">
                             <span style="font-family: monospace; font-size: 1.1em; font-weight: 900; color: #38bdf8; letter-spacing: 1.5px; background: rgba(56, 189, 248, 0.1); padding: 2px 8px; border-radius: 6px;">${r.pin}</span>
@@ -6903,6 +7311,58 @@ function copyAdminCode(code) {
                 `;
             }).join('');
         }
+
+        function filterFinancialByTime(period, btnEl) {
+            currentAcctTimeFilter = period || 'all';
+            currentAcctDateFrom = '';
+            currentAcctDateTo = '';
+
+            const dFrom = document.getElementById('acct-date-from'); if (dFrom) dFrom.value = '';
+            const dTo = document.getElementById('acct-date-to'); if (dTo) dTo.value = '';
+
+            document.querySelectorAll('.acct-time-btn').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = '#1e293b';
+                b.style.color = '#cbd5e1';
+                b.style.borderColor = '#334155';
+            });
+            if (btnEl) {
+                btnEl.classList.add('active');
+                btnEl.style.background = 'var(--primary-gold)';
+                btnEl.style.color = '#0a0e14';
+                btnEl.style.borderColor = 'var(--primary-gold)';
+            }
+            refreshAndRenderAccountingLedger();
+        }
+        window.filterFinancialByTime = filterFinancialByTime;
+
+        function handleCustomDateFilter() {
+            const fromVal = document.getElementById('acct-date-from')?.value;
+            const toVal = document.getElementById('acct-date-to')?.value;
+            if (fromVal || toVal) {
+                currentAcctTimeFilter = 'custom';
+                currentAcctDateFrom = fromVal || '';
+                currentAcctDateTo = toVal || '';
+                document.querySelectorAll('.acct-time-btn').forEach(b => {
+                    b.classList.remove('active');
+                    b.style.background = '#1e293b';
+                    b.style.color = '#cbd5e1';
+                    b.style.borderColor = '#334155';
+                });
+                refreshAndRenderAccountingLedger();
+            }
+        }
+        window.handleCustomDateFilter = handleCustomDateFilter;
+
+        function clearCustomDateFilter() {
+            currentAcctDateFrom = '';
+            currentAcctDateTo = '';
+            const dFrom = document.getElementById('acct-date-from'); if (dFrom) dFrom.value = '';
+            const dTo = document.getElementById('acct-date-to'); if (dTo) dTo.value = '';
+            const allBtn = document.querySelector('.acct-time-btn');
+            filterFinancialByTime('all', allBtn);
+        }
+        window.clearCustomDateFilter = clearCustomDateFilter;
 
         function filterFinancialLedger(filterType, btnEl) {
             currentAcctFilter = filterType || 'all';
@@ -6928,6 +7388,204 @@ function copyAdminCode(code) {
         }
         window.searchFinancialLedger = searchFinancialLedger;
 
+        function exportAccountingLedgerCSV() {
+            const records = extractAllAccountingRecords();
+            if (!records || records.length === 0) {
+                alert('لا توجد عمليات مسجلة لتصديرها.');
+                return;
+            }
+            let csv = '\uFEFF';
+            csv += 'رقم القيد,التاريخ والوقت,المشترك,الهاتف,نوع الباقة,المبلغ (د.أ),طريقة الدفع / المرجع,الحالة,كود التفعيل\n';
+            records.forEach((r, i) => {
+                const dStr = r.date ? new Date(r.date).toLocaleString('ar-JO') : '--';
+                const cleanName = String(r.patientName || '').replace(/,/g, ' ');
+                const cleanRef = String((r.paymentMethod ? r.paymentMethod + ' - ' : '') + (r.transferRef || '')).replace(/,/g, ' ');
+                csv += `${i + 1},"${dStr}","${cleanName}","${r.patientPhone || ''}","${r.tierName}",${r.amount},"${cleanRef}","${r.status}","${r.pin || ''}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `smart_check_accounting_ledger_${new Date().toISOString().slice(0, 10)}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+        window.exportAccountingLedgerCSV = exportAccountingLedgerCSV;
+
+        function printAccountingLedgerReport() {
+            const records = extractAllAccountingRecords();
+            const totals = calculateAccountingTotals(records);
+            const timeLabel = currentAcctTimeFilter === 'today' ? 'اليوم' : (currentAcctTimeFilter === 'week' ? 'آخر 7 أيام' : (currentAcctTimeFilter === 'month' ? 'هذا الشهر' : 'الإجمالي الكلي منذ الإطلاق'));
+
+            const printWindow = window.open('', '_blank', 'width=950,height=750');
+            if (!printWindow) {
+                alert('يرجى السماح بالنوافذ المنبثقة لطباعة كشف الحساب.');
+                return;
+            }
+
+            const rowsHtml = records.map((r, i) => {
+                const dStr = r.date ? new Date(r.date).toLocaleString('ar-JO', { dateStyle: 'short', timeStyle: 'short' }) : '--';
+                return `
+                    <tr>
+                        <td style="border: 1px solid #cbd5e1; padding: 7px; text-align: center;">${i + 1}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 7px; text-align: center; white-space: nowrap;">${dStr}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 7px; font-weight: bold;">${r.patientName}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 7px; text-align: center; direction: ltr;">${r.patientPhone || '--'}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 7px; text-align: center;">${r.tierName}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 7px; text-align: center; font-weight: bold;">${r.amount > 0 ? r.amount + ' د.أ' : 'مجاني (إعفاء)'}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 7px; text-align: center;">${r.paymentMethod ? r.paymentMethod + ' - ' : ''}${r.transferRef || '--'}</td>
+                        <td style="border: 1px solid #cbd5e1; padding: 7px; text-align: center;">${r.status}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html dir="rtl" lang="ar">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>كشف الحساب المالي وسجل المبيعات - منصة وداعاً للألم</title>
+                    <style>
+                        body { font-family: 'Cairo', Tahoma, sans-serif; margin: 25px; color: #0f172a; direction: rtl; }
+                        .header { text-align: center; border-bottom: 2px solid #b45309; padding-bottom: 12px; margin-bottom: 18px; }
+                        .header h1 { margin: 0; color: #b45309; font-size: 1.45em; }
+                        .header p { margin: 4px 0 0 0; color: #64748b; font-size: 0.88em; }
+                        .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+                        .kpi-card { border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; text-align: center; background: #f8fafc; }
+                        .kpi-card strong { display: block; font-size: 1.35em; color: #0f172a; margin-top: 4px; }
+                        table { width: 100%; border-collapse: collapse; font-size: 0.82em; margin-bottom: 25px; }
+                        th { background: #0f172a; color: #fff; padding: 8px; border: 1px solid #334155; }
+                        .footer { border-top: 1px solid #cbd5e1; padding-top: 12px; display: flex; justify-content: space-between; font-size: 0.82em; color: #64748b; }
+                        @media print { button { display: none; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>عيادة «وداعاً للألم» للكايروبراكتيك والطب البديل</h1>
+                        <p>كشف الحساب المالي وسجل مبيعات الباقات والاشتراكات السريرية | إشراف المعالج جمال قبها</p>
+                        <p>تاريخ إصدار التقرير: ${new Date().toLocaleString('ar-JO')} | نطاق الرصد: ${timeLabel}</p>
+                    </div>
+                    <div class="kpi-row">
+                        <div class="kpi-card"><span>إجمالي المبالغ المحصلة</span><strong>${totals.totalRevenue} د.أ</strong></div>
+                        <div class="kpi-card"><span>إجمالي العمليات المدفوعة</span><strong>${totals.totalOrders} عملية</strong></div>
+                        <div class="kpi-card"><span>فحص فردي (3 د.أ)</span><strong>${totals.singleCount} (${totals.singleSum} د.أ)</strong></div>
+                        <div class="kpi-card"><span>باقة 5 (10 د.أ)</span><strong>${totals.pack5Count} (${totals.pack5Sum} د.أ)</strong></div>
+                        <div class="kpi-card"><span>باقة 10 (15 د.أ)</span><strong>${totals.pack10Count} (${totals.pack10Sum} د.أ)</strong></div>
+                        <div class="kpi-card"><span>إعفاءات إنسانية (صدقة جارية)</span><strong>${totals.humCount} مستفيد (${totals.humVal} د.أ)</strong></div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>التاريخ والوقت</th>
+                                <th>اسم المشترك</th>
+                                <th>الهاتف</th>
+                                <th>نوع الباقة</th>
+                                <th>المبلغ</th>
+                                <th>طريقة الدفع / المرجع</th>
+                                <th>الحالة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                    <div class="footer">
+                        <span>توقيع الإدارة / المحاسبة: _______________________</span>
+                        <span>النظام المحاسبي الذكي - منصة وداعاً للألم (Smart Check Pro 2.0)</span>
+                    </div>
+                    <script>window.onload = function() { window.print(); };<\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+        window.printAccountingLedgerReport = printAccountingLedgerReport;
+
+        function openManualTransactionModal() {
+            const modal = document.getElementById('manual-transaction-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                const dInput = document.getElementById('manual-tx-date');
+                if (dInput) {
+                    const now = new Date();
+                    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                    dInput.value = now.toISOString().slice(0, 16);
+                }
+            }
+        }
+        window.openManualTransactionModal = openManualTransactionModal;
+
+        function closeManualTransactionModal() {
+            const modal = document.getElementById('manual-transaction-modal');
+            if (modal) modal.style.display = 'none';
+        }
+        window.closeManualTransactionModal = closeManualTransactionModal;
+
+        function handleManualTierChange(val) {
+            const amtIn = document.getElementById('manual-tx-amount');
+            if (!amtIn) return;
+            if (val === 'single') amtIn.value = 3;
+            else if (val === 'pack5') amtIn.value = 10;
+            else if (val === 'pack10') amtIn.value = 15;
+            else if (val === 'humanitarian') amtIn.value = 0;
+            else amtIn.value = 3;
+        }
+        window.handleManualTierChange = handleManualTierChange;
+
+        function handleSaveManualTransaction(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            const name = (document.getElementById('manual-tx-name')?.value || '').trim();
+            const phone = (document.getElementById('manual-tx-phone')?.value || '').trim();
+            const tier = document.getElementById('manual-tx-tier')?.value || 'single';
+            const amt = Number(document.getElementById('manual-tx-amount')?.value || 0);
+            const method = document.getElementById('manual-tx-method')?.value || 'نقداً بالعيادة (Cash)';
+            const ref = (document.getElementById('manual-tx-ref')?.value || '').trim() || 'قيد يدوي بالعيادة';
+            const dateVal = document.getElementById('manual-tx-date')?.value;
+            const notes = (document.getElementById('manual-tx-notes')?.value || '').trim();
+
+            if (!name || !phone) {
+                alert('يرجى إدخال اسم المراجع ورقم الهاتف.');
+                return;
+            }
+
+            let tierName = 'تشخيص فردي';
+            if (tier === 'pack5') tierName = 'باقة 5 فحوصات';
+            else if (tier === 'pack10') tierName = 'باقة 10 فحوصات';
+            else if (tier === 'humanitarian') tierName = 'مبادرة إنسانية';
+            else if (tier === 'custom') tierName = 'باقة مخصصة';
+
+            const pin = generateAdminUnlockPin(phone || name, tier === 'pack10' ? 10 : (tier === 'pack5' ? 5 : 1));
+
+            const tx = {
+                id: 'TX-MAN-' + Date.now().toString(36),
+                date: dateVal ? new Date(dateVal).toISOString() : new Date().toISOString(),
+                patientId: 'pat_man_' + Date.now().toString(36),
+                patientName: name,
+                patientPhone: phone,
+                tier: tier === 'custom' ? (amt >= 15 ? 'pack10' : (amt >= 10 ? 'pack5' : 'single')) : tier,
+                tierName: tierName,
+                amount: amt,
+                transferRef: ref,
+                paymentMethod: method,
+                status: 'مفعّل ومعتمد',
+                isUnlocked: true,
+                pin: pin,
+                notes: notes
+            };
+
+            recordAccountingTransaction(tx);
+            closeManualTransactionModal();
+
+            // إعادة ضبط النموذج
+            document.getElementById('manual-tx-form')?.reset();
+
+            alert(`✅ تم حفظ واعتماد القيد المحاسبي بنجاح!\nالمشترك: ${name}\nالمبلغ: ${amt} د.أ\nكود التفعيل: ${pin}`);
+        }
+        window.handleSaveManualTransaction = handleSaveManualTransaction;
+
         function copyFinancialLedgerSummary() {
             const totRev = document.getElementById('acct-total-rev')?.textContent || '0 د.أ';
             const sCount = document.getElementById('acct-single-count')?.textContent || '0';
@@ -6937,6 +7595,25 @@ function copyAdminCode(code) {
             const p10Count = document.getElementById('acct-pack10-count')?.textContent || '0';
             const p10Sum = document.getElementById('acct-pack10-sum')?.textContent || '0 د.أ';
             const hCount = document.getElementById('acct-hum-count')?.textContent || '0';
+
+            const text = `📊 ملخص التقرير المحاسبي - منصة وداعاً للألم (Smart Check Pro 2.0)\n` +
+                `📅 تاريخ التقرير: ${new Date().toLocaleDateString('ar-JO')}\n` +
+                `💰 إجمالي الإيرادات الكلية: ${totRev}\n` +
+                `----------------------------------------\n` +
+                `🔑 تشخيص فردي (3 د.أ): ${sCount} باقة (${sSum})\n` +
+                `⭐ باقة التعافي العائلي (10 د.أ): ${p5Count} باقة (${p5Sum})\n` +
+                `👑 باقة الحل الجذري (15 د.أ): ${p10Count} باقة (${p10Sum})\n` +
+                `❤️ مبادرات الرعاية الإنسانية: ${hCount} مستفيد (صدقة جارية)\n` +
+                `----------------------------------------\n` +
+                `Smart Check Pro 2.0 | وداعاً للألم`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ تم نسخ ملخص التقرير المحاسبي إلى الحافظة بنجاح.');
+            }).catch(() => {
+                prompt('انسخ التقرير المحاسبي من هنا:', text);
+            });
+        }
+        window.copyFinancialLedgerSummary = copyFinancialLedgerSummary;
 
             const text = `📊 ملخص التقرير المحاسبي - منصة وداعاً للألم (Smart Check Pro 2.0)\n` +
                 `📅 تاريخ التقرير: ${new Date().toLocaleDateString('ar-JO')}\n` +
@@ -7112,6 +7789,29 @@ function copyAdminCode(code) {
             } catch (e) {}
 
             const pin = generateAdminUnlockPin(patientPhone || patientName || '');
+
+            // توثيق العملية محاسبياً بشكل دائم وتحديث الشاشات فوراً
+            try {
+                if (typeof recordAccountingTransaction === 'function') {
+                    const pkgTier = resolvedType === 'humanitarian' ? 'humanitarian' : (resolvedAmt === 15 ? 'pack10' : (resolvedAmt === 10 ? 'pack5' : 'single'));
+                    const pkgName = resolvedType === 'humanitarian' ? 'مبادرة إنسانية' : (resolvedAmt === 15 ? 'باقة 10 فحوصات' : (resolvedAmt === 10 ? 'باقة 5 فحوصات' : 'تشخيص فردي'));
+                    recordAccountingTransaction({
+                        id: 'TX-NOTIF-' + (notifId || patientId || Date.now()),
+                        date: new Date().toISOString(),
+                        patientId: patientId || '',
+                        patientName: resolvedName || 'مشترك معتمد',
+                        patientPhone: resolvedPhone || '',
+                        tier: pkgTier,
+                        tierName: pkgName,
+                        amount: resolvedAmt,
+                        transferRef: resolvedType === 'humanitarian' ? 'إعفاء إنساني معتمد' : 'حوالة محفظة أورانج',
+                        paymentMethod: resolvedType === 'humanitarian' ? 'إعفاء إنساني (صدقة جارية)' : 'محفظة أورانج موني',
+                        status: 'مفعّل ومعتمد',
+                        isUnlocked: true,
+                        pin: pin
+                    });
+                }
+            } catch (e) {}
             // إرسال آلي صامت عبر واتساب إذا كانت البوابة مفعلة
             try {
                 if (typeof SmartWhatsApp !== 'undefined') {
@@ -7382,17 +8082,17 @@ function copyAdminCode(code) {
             }, 250);
         }
 
-        // بث رسالة التحديث الجديد الشامل (v31.00) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
+        // بث رسالة التحديث الجديد الشامل (v31.10) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
         function handleBroadcastGlobalVersion() {
-            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v31.00) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
+            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v31.10) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
                 if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                     SmartCloudSync.broadcastAppVersionUpdate({
-                        version: 'v31.00',
-                        title: 'تحديث المنظومة (v31.00)',
+                        version: 'v31.10',
+                        title: 'تحديث المنظومة (v31.10)',
                         timestamp: Date.now()
                     });
                 }
-                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v31.00) عبر شبكة البث اللحظي MQTT و NTFY لكافة الأجهزة!');
+                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v31.10) عبر شبكة البث اللحظي MQTT و NTFY لكافة الأجهزة!');
             }
         }
         window.handleBroadcastGlobalVersion = handleBroadcastGlobalVersion;
@@ -7861,7 +8561,7 @@ function copyAdminCode(code) {
 <script>
 // ===== تحديث تلقائي للوحة الإدارة: تقارن إصدارها بإصدار الأداة المنشور (sw.js) وتحدّث نفسها =====
 (function () {
-    const ADMIN_VER = 'v31.00';
+    const ADMIN_VER = 'v31.10';
     window.ADMIN_VER = ADMIN_VER;
     let busy = false;
     async function check(force) {
