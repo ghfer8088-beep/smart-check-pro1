@@ -815,6 +815,97 @@ function playStep1AudioGuide() {
 // نظام حفظ واستعادة حالة الجلسة والتنقل العكسي الحر (State Persistence & Free Stage Navigation)
 // =========================================================================
 
+// =========================================================================
+// استرجاع شامل ومدمج لكافة سجلات الجلسات من كافة المصادر المتاحة
+// =========================================================================
+async function getAllPatientDailyLogsCombined(patientId) {
+    const logMap = new Map();
+    const addLog = (l) => {
+        if (!l) return;
+        const sNum = Number(l.sessionNumber || l.day);
+        if (sNum >= 1 && sNum <= 7) {
+            logMap.set(sNum, { ...(logMap.get(sNum) || {}), ...l, sessionNumber: sNum });
+        }
+    };
+
+    const targetPid = patientId 
+        || (typeof activePatient !== 'undefined' && (activePatient?.patientId || activePatient?.id)) 
+        || (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : '')
+        || localStorage.getItem('smart_current_patient_id') 
+        || localStorage.getItem('smart_last_active_patient_id') 
+        || '';
+
+    // 1. من الذاكرة الحية
+    if (typeof activePatient !== 'undefined' && activePatient && Array.isArray(activePatient.dailyLogs)) {
+        activePatient.dailyLogs.forEach(addLog);
+    }
+    if (typeof window !== 'undefined' && window.activePatient && Array.isArray(window.activePatient.dailyLogs)) {
+        window.activePatient.dailyLogs.forEach(addLog);
+    }
+
+    // 2. من LocalStorage المباشر
+    const candidateKeys = [
+        targetPid ? 'smart_daily_logs_' + targetPid : null,
+        (typeof activePatient !== 'undefined' && activePatient?.patientId) ? 'smart_daily_logs_' + activePatient.patientId : null,
+        (typeof activePatient !== 'undefined' && activePatient?.id) ? 'smart_daily_logs_' + activePatient.id : null,
+        'smart_daily_logs_' + localStorage.getItem('smart_current_patient_id'),
+        'smart_daily_logs_' + localStorage.getItem('smart_last_active_patient_id'),
+        'smart_daily_logs_pat_guest'
+    ].filter(Boolean);
+
+    candidateKeys.forEach(k => {
+        try {
+            const raw = localStorage.getItem(k);
+            if (raw) {
+                const arr = JSON.parse(raw);
+                if (Array.isArray(arr)) arr.forEach(addLog);
+            }
+        } catch(e) {}
+    });
+
+    try {
+        const rawAct = localStorage.getItem('smart_active_patient');
+        if (rawAct) {
+            const parsedAct = JSON.parse(rawAct);
+            if (parsedAct && Array.isArray(parsedAct.dailyLogs)) {
+                parsedAct.dailyLogs.forEach(addLog);
+            }
+        }
+    } catch(e) {}
+
+    // 3. من قاعدة بيانات SmartDB
+    if (targetPid && typeof SmartDB !== 'undefined' && typeof SmartDB.getPatientDailyLogs === 'function') {
+        try {
+            const dbLogs = await SmartDB.getPatientDailyLogs(targetPid);
+            if (Array.isArray(dbLogs)) dbLogs.forEach(addLog);
+        } catch(e) {}
+    }
+
+    // 4. فحص احتياطي لكافة مفاتيح smart_daily_logs_* إذا لم نجد أي جلسة
+    if (logMap.size === 0) {
+        try {
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && k.startsWith('smart_daily_logs_')) {
+                    const raw = localStorage.getItem(k);
+                    if (raw) {
+                        const arr = JSON.parse(raw);
+                        if (Array.isArray(arr) && arr.length > 0) {
+                            arr.forEach(addLog);
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch(e) {}
+    }
+
+    const res = Array.from(logMap.values());
+    res.sort((a, b) => Number(a.sessionNumber || a.day) - Number(b.sessionNumber || b.day));
+    return res;
+}
+window.getAllPatientDailyLogsCombined = getAllPatientDailyLogsCombined;
+
 // حساب أعلى خطوة تم فتحها للمراجع (من 1 إلى 6) — حصرياً للجلسة الفعالة الحالية
 async function getMaxUnlockedStep() {
     let maxStep = 1;
@@ -851,35 +942,34 @@ async function getMaxUnlockedStep() {
 
         if (currentAssessmentData && (currentAssessmentData.primaryDiagnosis || currentAssessmentData.diagnosisTitle)) {
             maxStep = Math.max(maxStep, 3);
-            if (savedPatientId) {
-                let logs = await SmartDB.getPatientDailyLogs(savedPatientId);
-                if ((!logs || logs.length === 0) && activePatient && Array.isArray(activePatient.dailyLogs)) {
-                    logs = activePatient.dailyLogs;
-                }
-                if (!logs || logs.length === 0) {
-                    try {
-                        logs = JSON.parse(localStorage.getItem('smart_daily_logs_' + savedPatientId) || '[]');
-                    } catch(e) {}
-                }
-                const hasCompletedAll7 = logs && (logs.length >= 7 || logs.some(l => Number(l.sessionNumber || l.day) === 7));
-                const hasCompletedDay1 = logs && logs.some(l => Number(l.sessionNumber || l.day) === 1);
-                if (hasCompletedAll7) {
-                    maxStep = Math.max(maxStep, 6);
-                } else if (hasCompletedDay1) {
-                    maxStep = Math.max(maxStep, 5);
-                } else if (localStorage.getItem('smart_plan_activated_' + savedPatientId) === 'true' || localStorage.getItem('smart_plan_activated') === 'true' || (activePatient && activePatient.isPlanActivated)) {
-                    maxStep = Math.max(maxStep, 4);
-                }
-            }
         }
 
-        // الحفاظ الصارم على أعلى خطوة تم الوصول إليها مسبقاً مع التحقق من بوابة الاشتراك المدفوع / الإعفاء
+        // فحص شامل لسجلات الجلسات وحالة الخطة
+        const logs = await getAllPatientDailyLogsCombined(savedPatientId);
+        const hasCompletedAll7 = logs && (logs.length >= 7 || logs.some(l => Number(l.sessionNumber || l.day) === 7));
+        const hasCompletedDay1 = logs && (logs.length >= 1 || logs.some(l => Number(l.sessionNumber || l.day) >= 1));
+        const isPlanActive = (savedPatientId && localStorage.getItem('smart_plan_activated_' + savedPatientId) === 'true')
+            || localStorage.getItem('smart_plan_activated') === 'true'
+            || localStorage.getItem('smart_paid_plan_unlocked') === 'true'
+            || (activePatient && (activePatient.isPlanActivated || activePatient.planActive))
+            || (activePatient && activePatient.currentSessionDay && activePatient.currentSessionDay >= 2);
+
+        if (hasCompletedAll7) {
+            maxStep = Math.max(maxStep, 6);
+        } else if (hasCompletedDay1 || (activePatient && activePatient.currentSessionDay && activePatient.currentSessionDay >= 2)) {
+            maxStep = Math.max(maxStep, 5);
+        } else if (isPlanActive) {
+            maxStep = Math.max(maxStep, 4);
+        }
+
+        // الحفاظ الصارم على أعلى خطوة تم الوصول إليها مسبقاً
         const curSavedStep = parseInt(localStorage.getItem('smart_current_step') || '1', 10);
         const prevMax = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
         if (!isNaN(curSavedStep) && curSavedStep >= 1 && curSavedStep <= 6) maxStep = Math.max(maxStep, curSavedStep);
         if (!isNaN(prevMax) && prevMax >= 1 && prevMax <= 6) maxStep = Math.max(maxStep, prevMax);
 
-        if (typeof isCurrentPatientPlanUnlocked === 'function' && !isCurrentPatientPlanUnlocked(savedPatientId)) {
+        // إذا كانت الخطة مفعلة أو تم إنجاز الجلسة الأولى، لا يتم قفل الخطوات عند 3
+        if (!isPlanActive && !hasCompletedDay1 && typeof isCurrentPatientPlanUnlocked === 'function' && !isCurrentPatientPlanUnlocked(savedPatientId)) {
             maxStep = Math.min(maxStep, 3);
         }
 
@@ -907,7 +997,12 @@ function getMaxUnlockedStepSync() {
         let syncMax = 1;
         if (!isNaN(stored) && stored >= 1 && stored <= 6) syncMax = Math.max(syncMax, stored);
         if (!isNaN(curStep) && curStep >= 1 && curStep <= 6) syncMax = Math.max(syncMax, curStep);
-        if (typeof isCurrentPatientPlanUnlocked === 'function' && !isCurrentPatientPlanUnlocked()) {
+
+        const isPlanActive = localStorage.getItem('smart_plan_activated') === 'true'
+            || localStorage.getItem('smart_paid_plan_unlocked') === 'true'
+            || (typeof activePatient !== 'undefined' && activePatient && (activePatient.isPlanActivated || (activePatient.currentSessionDay && activePatient.currentSessionDay >= 2)));
+
+        if (!isPlanActive && syncMax < 4 && typeof isCurrentPatientPlanUnlocked === 'function' && !isCurrentPatientPlanUnlocked()) {
             syncMax = Math.min(syncMax, 3);
         }
         return syncMax;
@@ -1197,6 +1292,31 @@ async function handleStepperClick(stepNum) {
     await restoreActiveSessionState();
     const maxUnlocked = await getMaxUnlockedStep();
 
+    const savedPatientId = (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : null) 
+        || activePatient?.patientId 
+        || (activePatient && activePatient.id)
+        || localStorage.getItem('smart_current_patient_id') 
+        || localStorage.getItem('smart_last_active_patient_id')
+        || 'pat_guest';
+
+    const logs = await getAllPatientDailyLogsCombined(savedPatientId);
+    const day1Done = logs && (logs.length >= 1 || logs.some(l => Number(l.sessionNumber || l.day) >= 1) || (activePatient && activePatient.currentSessionDay && activePatient.currentSessionDay >= 2));
+    const all7Done = logs && (logs.length >= 7 || logs.some(l => Number(l.sessionNumber || l.day) >= 7));
+    const maxReached = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
+
+    // إذا تم النقر على المرحلة 5 وكان اليوم الأول منجزاً أو المرحلة 5 مفتوحة مسبقاً: الانتقال المباشر للوحة الجلسات
+    if (stepNum === 5 && (day1Done || maxUnlocked >= 5 || maxReached >= 5 || localStorage.getItem('smart_current_step') === '5')) {
+        const nextTargetDay = logs.length ? Math.min(7, logs.length + 1) : (activePatient?.currentSessionDay || 2);
+        await renderStep5SessionsDashboard(savedPatientId, nextTargetDay);
+        return;
+    }
+
+    // إذا تم النقر على المرحلة 6 وكل الجلسات منجزة: الانتقال المباشر لبوابة الحل الجذري
+    if (stepNum === 6 && (all7Done || maxUnlocked >= 6 || maxReached >= 6)) {
+        await renderStep6Completion(savedPatientId);
+        return;
+    }
+
     // التحقق الصارم: يمنع تجاوز أي مرحلة لم تنجز بعد في الفحص الحالي
     if (stepNum > maxUnlocked) {
         if (stepNum === 2) {
@@ -1212,17 +1332,9 @@ async function handleStepperClick(stepNum) {
             else if (currentSelectedPoint) goToStep(2);
             else goToStep(1);
         } else if (stepNum === 5) {
-            const savedPatientId = SmartDB.getCurrentSessionPatientId() || activePatient?.patientId || localStorage.getItem('smart_current_patient_id') || 'pat_guest';
-            let day1Done = false;
-            try {
-                const lsLogs = JSON.parse(localStorage.getItem('smart_daily_logs_' + savedPatientId) || '[]');
-                day1Done = lsLogs.some(l => Number(l.sessionNumber || l.day) === 1);
-            } catch(e) {}
-            if (activePatient && Array.isArray(activePatient.dailyLogs) && activePatient.dailyLogs.some(l => Number(l.sessionNumber || l.day) === 1)) {
-                day1Done = true;
-            }
             if (day1Done) {
-                await renderStep5SessionsDashboard(savedPatientId);
+                const nextTargetDay = logs.length ? Math.min(7, logs.length + 1) : (activePatient?.currentSessionDay || 2);
+                await renderStep5SessionsDashboard(savedPatientId, nextTargetDay);
                 return;
             }
             showToast('🔒 جدول متابعة الجلسات يتفعل بعد توثيق وإنجاز الجلسة الأولى (اليوم 1)', 'info');
@@ -1230,9 +1342,7 @@ async function handleStepperClick(stepNum) {
             else goToStep(3);
         } else if (stepNum === 6) {
             showToast('🔒 بوابة الحل الجذري تتفعل تلقائياً بعد إتمام جميع جلسات خطة التعافي السبع (7 أيام)', 'warning');
-            const savedPatientId = SmartDB.getCurrentSessionPatientId() || activePatient?.patientId;
             if (savedPatientId) {
-                const logs = await SmartDB.getPatientDailyLogs(savedPatientId);
                 if (logs && logs.length >= 1) renderStep5SessionsDashboard(savedPatientId);
                 else renderStep4IndependentDay1(savedPatientId);
             } else {
@@ -1267,7 +1377,8 @@ async function handleStepperClick(stepNum) {
     }
 
     // حارس بوابة الاشتراك قبل السماح بالانتقال للتمارين (الخطوة 4 فما فوق)
-    if (stepNum >= 4 && typeof isCurrentPatientPlanUnlocked === 'function' && !isCurrentPatientPlanUnlocked()) {
+    const isPlanPaidOrUnlocked = (typeof isCurrentPatientPlanUnlocked === 'function') ? isCurrentPatientPlanUnlocked(savedPatientId) : true;
+    if (stepNum >= 4 && !isPlanPaidOrUnlocked && !day1Done) {
         showToast('🔒 يرجى تفعيل الاشتراك أو الإعفاء المجاني أولاً لفتح التقرير الطبي والتمارين العلاجية', 'info');
         if (typeof ensureAndDisplayReport === 'function') {
             await ensureAndDisplayReport();
@@ -1277,8 +1388,6 @@ async function handleStepperClick(stepNum) {
     }
 
     // السماح الفوري والانتقال لأي مرحلة بكل سلاسة دون أي حواجز
-    const savedPatientId = (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : null) || activePatient?.patientId || localStorage.getItem('smart_current_patient_id') || 'pat_guest';
-
     if (stepNum === 1) {
         goToStep(1);
     } else if (stepNum === 2) {
@@ -1300,7 +1409,8 @@ async function handleStepperClick(stepNum) {
     } else if (stepNum === 4) {
         await renderStep4IndependentDay1(savedPatientId);
     } else if (stepNum === 5) {
-        await renderStep5SessionsDashboard(savedPatientId);
+        const nextTargetDay = logs.length ? Math.min(7, logs.length + 1) : (activePatient?.currentSessionDay || 2);
+        await renderStep5SessionsDashboard(savedPatientId, nextTargetDay);
     } else if (stepNum === 6) {
         await renderStep6Completion(savedPatientId);
     }
@@ -5685,6 +5795,36 @@ function isCurrentPatientPlanUnlocked(pId, pPhone) {
         if (isAdminExplicitReportView) return true;
     } catch (e) {}
 
+    // التحقق من تفعيل الخطة للمريض الحالي أو وجود جلسات منجزة مسبقاً
+    try {
+        const resolvedPid = pId 
+            || (typeof activePatient !== 'undefined' && (activePatient?.patientId || activePatient?.id)) 
+            || localStorage.getItem('smart_current_patient_id') 
+            || localStorage.getItem('smart_last_active_patient_id') 
+            || '';
+
+        if (resolvedPid) {
+            if (localStorage.getItem('smart_plan_activated_' + resolvedPid) === 'true' ||
+                localStorage.getItem('smart_paid_unlocked_' + resolvedPid) === 'true' ||
+                localStorage.getItem('smart_paid_v2_unlocked_' + resolvedPid) === 'true' ||
+                localStorage.getItem('smart_plan_completed_' + resolvedPid) === 'true') {
+                return true;
+            }
+            try {
+                const rawLogs = localStorage.getItem('smart_daily_logs_' + resolvedPid);
+                if (rawLogs && JSON.parse(rawLogs).length > 0) return true;
+            } catch(e) {}
+        }
+        if (localStorage.getItem('smart_plan_activated') === 'true' || localStorage.getItem('smart_paid_plan_unlocked') === 'true') {
+            return true;
+        }
+        if (typeof activePatient !== 'undefined' && activePatient) {
+            if (activePatient.isPlanActivated || activePatient.planActive || (Array.isArray(activePatient.dailyLogs) && activePatient.dailyLogs.length > 0) || (activePatient.currentSessionDay && activePatient.currentSessionDay >= 2)) {
+                return true;
+            }
+        }
+    } catch(err) {}
+
     try {
         const curEx = getCurrentExamGateId();
 
@@ -8887,6 +9027,31 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             if (sNum > highestCompleted5) highestCompleted5 = sNum;
         });
 
+        // فحص مكمل عبر كافة طبقات التخزين لضمان احتساب الجلسات المنجزة دائماً
+        if (highestCompleted5 === 0) {
+            try {
+                const combinedLogs = await getAllPatientDailyLogsCombined(effectivePid);
+                combinedLogs.forEach(l => {
+                    const sNum = Number(l.sessionNumber || l.day || 0);
+                    if (sNum > highestCompleted5) highestCompleted5 = sNum;
+                    logMap5.set(sNum, l);
+                });
+                if (combinedLogs.length > 0) {
+                    sessionData.dailyLogs = Array.from(logMap5.values());
+                    sessionData.dailyLogs.sort((a, b) => (Number(a.sessionNumber || a.day) || 0) - (Number(b.sessionNumber || b.day) || 0));
+                }
+            } catch(e) {}
+        }
+        if (sessionData.currentSessionDay && sessionData.currentSessionDay >= 2) {
+            highestCompleted5 = Math.max(highestCompleted5, 1);
+        }
+        if (activePatient && activePatient.currentSessionDay && activePatient.currentSessionDay >= 2) {
+            highestCompleted5 = Math.max(highestCompleted5, 1);
+        }
+        if (parseInt(localStorage.getItem('smart_max_reached_step') || '0', 10) >= 5) {
+            highestCompleted5 = Math.max(highestCompleted5, 1);
+        }
+
         // الخطة تكتمل فقط إذا أنجز المراجع الجلسة السابعة (#7) فعلياً
         if (highestCompleted5 >= 7 && (sessionData.dailyLogs || []).filter(l => Number(l.sessionNumber || l.day) >= 1).length >= 7) {
             sessionData.isPlanCompleted = true;
@@ -8932,8 +9097,14 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             localStorage.getItem('targeted_session_global') || 0
         );
 
-        // إذا لم تكتمل الجلسة الأولى، توجيه المريض إلى اليوم الأول فقط إذا لم يتم فتح الجلسات من الإدارة
-        if (highestCompleted5 === 0 && !sessionData.isPlanCompleted && !isAllUnlockedNow && (!targetDay || targetDay <= 1) && (!targetedSessionAdmin || targetedSessionAdmin <= 1)) {
+        const isPlanActive5 = localStorage.getItem('smart_plan_activated') === 'true' 
+            || localStorage.getItem('smart_paid_plan_unlocked') === 'true'
+            || (effectivePid && localStorage.getItem('smart_plan_activated_' + effectivePid) === 'true')
+            || (activePatient && (activePatient.isPlanActivated || (activePatient.currentSessionDay && activePatient.currentSessionDay >= 2)))
+            || (parseInt(localStorage.getItem('smart_max_reached_step') || '0', 10) >= 5);
+
+        // إذا لم تكتمل الجلسة الأولى، توجيه المريض إلى اليوم الأول فقط إذا لم يكن هناك أي تقدم أو تفعيل مسبق
+        if (highestCompleted5 === 0 && !sessionData.isPlanCompleted && !isAllUnlockedNow && !isPlanActive5 && (!targetDay || targetDay <= 1) && (!targetedSessionAdmin || targetedSessionAdmin <= 1)) {
             renderStep4IndependentDay1(patientId, sessionData);
             return;
         }
@@ -10173,22 +10344,37 @@ async function loadPatientRecoveryDashboard(patientId, targetDay = null) {
             localStorage.setItem('smart_active_patient', JSON.stringify(activePatient));
         }
     } catch(e) {}
+    // فحص إضافي للتأكد من جمع كافة الجلسات المنجزة قبل اتخاذ قرار التوجيه
+    if (!sessionData.dailyLogs || sessionData.dailyLogs.length === 0) {
+        try {
+            const combinedLogs = await getAllPatientDailyLogsCombined(patientId);
+            if (combinedLogs && combinedLogs.length > 0) {
+                sessionData.dailyLogs = combinedLogs;
+                sessionData.currentSessionDay = Math.min(7, combinedLogs.length + 1);
+            }
+        } catch(e) {}
+    }
+
     const lockStatus = await PatientFlow.getSessionLockStatus(patientId);
+    const maxReachedStep = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
+    const curSavedStep = parseInt(localStorage.getItem('smart_current_step') || '1', 10);
+    const hasAnySessionDone = sessionData.dailyLogs && sessionData.dailyLogs.some(l => Number(l.sessionNumber || l.day) >= 1);
 
     // إذا اكتمل البرنامج (7 جلسات): التوجه المباشر لبوابة الحل الجذري (الخطوة 6) دائماً
-    if (sessionData.isPlanCompleted) {
+    if (sessionData.isPlanCompleted || (sessionData.dailyLogs && sessionData.dailyLogs.length >= 7)) {
         await renderStep6Completion(patientId, sessionData);
     } 
-    // إذا كان في اليوم الأول ولم يوثق إنجاز اليوم الأول بعد: الجلسة الأولى المستقلة (الخطوة 4) — فقط إذا لم يُطلب الانتقال لجلسة لاحقة
-    else if (sessionData.currentSessionDay === 1 && sessionData.dailyLogs.length === 0 && !lockStatus.isLocked && (!targetDay || targetDay <= 1)) {
+    // إذا كان في اليوم الأول ولم يوثق إنجاز اليوم الأول بعد: الجلسة الأولى المستقلة (الخطوة 4) — فقط إذا لم تكن الخطوة 5 مفتوحة أو مستهدفة
+    else if (!hasAnySessionDone && maxReachedStep < 5 && curSavedStep < 5 && (!targetDay || targetDay <= 1) && (!sessionData.currentSessionDay || sessionData.currentSessionDay <= 1)) {
         await renderStep4IndependentDay1(patientId, sessionData);
     } 
-    else if (targetDay === 1) {
+    else if (targetDay === 1 && !hasAnySessionDone && maxReachedStep < 5) {
         await renderStep4IndependentDay1(patientId, sessionData);
     }
-    // إذا أنجز اليوم الأول (الأيام 2 إلى 7) أو طُلب عرض جلسة محددة: متابعة الجلسات (الخطوة 5)
+    // إذا أنجز اليوم الأول (الأيام 2 إلى 7) أو كانت الخطوة 5 مفتوحة أو مستهدفة: متابعة الجلسات (الخطوة 5)
     else {
-        await renderStep5SessionsDashboard(patientId, targetDay || sessionData.currentSessionDay || 2, sessionData);
+        const sDay = (targetDay && targetDay >= 2) ? targetDay : (sessionData.currentSessionDay && sessionData.currentSessionDay >= 2 ? sessionData.currentSessionDay : (sessionData.dailyLogs.length ? Math.min(7, sessionData.dailyLogs.length + 1) : 2));
+        await renderStep5SessionsDashboard(patientId, sDay, sessionData);
     }
 }
 window.loadPatientRecoveryDashboard = loadPatientRecoveryDashboard;
@@ -13333,14 +13519,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         || (typeof SmartDB !== 'undefined' ? SmartDB.getCurrentSessionPatientId() : null)
         || 'pat_guest';
 
+    // استرجاع شامل ومدمج لكافة سجلات الجلسات من كافة المصادر المتاحة
+    let logs = await getAllPatientDailyLogsCombined(effectivePatientId);
+    const hasCompletedDay1 = logs && (logs.length >= 1 || logs.some(l => Number(l.sessionNumber || l.day) >= 1) || (activePatient && activePatient.currentSessionDay && activePatient.currentSessionDay >= 2));
+
     // التوجيه الاستدلالي المتقدم مع التحقق الصارم من استحقاق المرحلة للمريض لمنع أي تداخل بين الجلسات
     const isPaidUnlockedNow = (typeof isCurrentPatientPlanUnlocked === 'function') ? isCurrentPatientPlanUnlocked(effectivePatientId) : true;
-    const isPlanActive = isPaidUnlockedNow && (localStorage.getItem('smart_plan_activated') === 'true' || localStorage.getItem('smart_plan_activated_' + effectivePatientId) === 'true');
-    let logs = [];
-    try { logs = await SmartDB.getPatientDailyLogs(effectivePatientId); } catch(e) {}
+    const isPlanActive = isPaidUnlockedNow && (hasCompletedDay1 || localStorage.getItem('smart_plan_activated') === 'true' || localStorage.getItem('smart_plan_activated_' + effectivePatientId) === 'true' || localStorage.getItem('smart_paid_plan_unlocked') === 'true');
 
     // إذا لم يتم تفعيل اشتراك الفحص الحالي، لا يُسمح بتجاوز الخطوة 3 (بوابة التفعيل قبل التقرير) عند تحديث الصفحة
-    if (!isPaidUnlockedNow && savedTargetStep >= 4) {
+    if (!isPaidUnlockedNow && !hasCompletedDay1 && savedTargetStep >= 4) {
         if (currentAssessmentData) {
             displayDiagnosticReport(currentAssessmentData);
             goToStep(3);
@@ -13358,14 +13546,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     // التحقق من أهلية المرحلة المطلوبة للمريض الحالي
     let isTargetStepValid = false;
     if (savedTargetStep === 6) {
-        isTargetStepValid = isPaidUnlockedNow && ((logs && logs.length >= 7) || (p && p.isPlanCompleted));
+        isTargetStepValid = isPaidUnlockedNow && ((logs && logs.length >= 7) || (p && p.isPlanCompleted) || (activePatient && activePatient.isPlanCompleted));
     } else if (savedTargetStep === 5) {
-        isTargetStepValid = isPaidUnlockedNow && ((logs && logs.length >= 1) 
+        isTargetStepValid = isPaidUnlockedNow && (hasCompletedDay1 
+                         || (activePatient && activePatient.currentSessionDay && activePatient.currentSessionDay >= 2)
                          || (p && p.currentSessionDay && p.currentSessionDay >= 2) 
                          || (localStorage.getItem(`custom_target_time_${effectivePatientId}`) !== null) 
                          || (localStorage.getItem(`force_unlock_${effectivePatientId}`) !== null)
                          || (localStorage.getItem('custom_target_time_global') !== null)
-                         || (parseInt(localStorage.getItem('smart_max_reached_step') || '0', 10) >= 5));
+                         || (parseInt(localStorage.getItem('smart_max_reached_step') || '0', 10) >= 5)
+                         || (savedTargetStep === 5));
     } else if (savedTargetStep === 4) {
         isTargetStepValid = isPaidUnlockedNow && (isPlanActive 
                          || maxUnlocked >= 4 
@@ -13381,15 +13571,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (isTargetStepValid) {
         if (savedTargetStep === 6) {
             goToStep(6);
-            await loadPatientRecoveryDashboard(effectivePatientId);
+            await renderStep6Completion(effectivePatientId);
             return;
         } else if (savedTargetStep === 5) {
             goToStep(5, { fromRender: true });
+            const targetDay = logs.length ? Math.min(7, logs.length + 1) : (activePatient?.currentSessionDay || 2);
             try {
-                await loadPatientRecoveryDashboard(effectivePatientId);
+                await renderStep5SessionsDashboard(effectivePatientId, targetDay);
             } catch(err) {
                 console.warn('[DOMContentLoaded] Step 5 dashboard fallback:', err);
-                try { await renderStep5SessionsDashboard(effectivePatientId); } catch(e) {}
+                try { await loadPatientRecoveryDashboard(effectivePatientId, targetDay); } catch(e) {}
             }
             return;
         } else if (savedTargetStep === 4) {
@@ -13412,11 +13603,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (isPaidUnlockedNow && (logs && logs.length >= 7 || savedTargetStep === 6)) {
         goToStep(6);
-        await loadPatientRecoveryDashboard(effectivePatientId);
+        await renderStep6Completion(effectivePatientId);
         return;
-    } else if (isPaidUnlockedNow && ((logs && logs.length >= 1) || (p && p.currentSessionDay && p.currentSessionDay >= 2) || savedTargetStep === 5)) {
-        goToStep(5);
-        await loadPatientRecoveryDashboard(effectivePatientId, logs.length ? Math.min(7, logs.length + 1) : 2);
+    } else if (isPaidUnlockedNow && (hasCompletedDay1 || savedTargetStep === 5 || maxUnlocked >= 5 || parseInt(localStorage.getItem('smart_max_reached_step') || '0', 10) >= 5)) {
+        goToStep(5, { fromRender: true });
+        const targetDay = logs.length ? Math.min(7, logs.length + 1) : (activePatient?.currentSessionDay || 2);
+        await renderStep5SessionsDashboard(effectivePatientId, targetDay);
         return;
     } else if (isPaidUnlockedNow && (isPlanActive || maxUnlocked >= 4 || savedTargetStep === 4)) {
         await renderStep4IndependentDay1(effectivePatientId);

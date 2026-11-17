@@ -354,6 +354,25 @@ const PatientFlow = (function() {
             }
         } catch(e) {}
 
+        // خط دفاع إضافي: فحص أي مفاتيح لسجلات الجلسات المخزنة محلياً إذا لم نجد أي سجل للمريض
+        if (logMap.size === 0) {
+            try {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (k && k.startsWith('smart_daily_logs_')) {
+                        const raw = localStorage.getItem(k);
+                        if (raw) {
+                            const arr = JSON.parse(raw);
+                            if (Array.isArray(arr) && arr.length > 0) {
+                                arr.forEach(addValidLog);
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch(e) {}
+        }
+
         dailyLogs = Array.from(logMap.values());
         dailyLogs.sort((a, b) => Number(a.sessionNumber || a.day) - Number(b.sessionNumber || b.day));
 
