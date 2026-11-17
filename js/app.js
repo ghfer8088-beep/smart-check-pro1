@@ -5371,6 +5371,7 @@ function generateUserBoundCode(seedRaw, tier = 1, serial = 0) {
         hash = ((hash * 33) ^ str.charCodeAt(i)) & 0x7fffffff;
     }
     const pin = String(1000 + (hash % 9000));
+    if (tier === 'humanitarian' || tier === 'hum' || tier === 'H') return 'H' + pin;
     return tier === 10 ? '10' + pin : (tier === 5 ? '5' + pin : pin);
 }
 window.generateUserBoundCode = generateUserBoundCode;
@@ -5822,11 +5823,31 @@ function verifyActivationCode(entered, cfg) {
         return { noSeed: true, code: cleanCode };
     }
 
-    // 4. مطابقة الأكواد المولدة لجميع التسلسلات (0 إلى 9) وللباقات الثلاث (1، 5، 10) مع منع إعادة استخدام كود التشخيص الواحد المستهلك
+    // 4. مطابقة الأكواد المولدة لجميع التسلسلات (0 إلى 9) وللباقات (الإنساني H، 1، 5، 10) مع منع إعادة استخدام كود التشخيص الواحد المستهلك
     let consumedMatchCode = null;
+    let humanitarianAlreadyUsedMatch = false;
     const curExamIdForCheck = getCurrentExamGateId();
     for (const sd of cleanSeeds) {
         for (let k = 0; k < 10; k++) {
+            // مطابقة كود الدعم الإنساني (H + 4 أرقام)
+            const cHum = generateUserBoundCode(sd, 'humanitarian', k);
+            if (cHum) {
+                if (
+                    cleanCode === cHum ||
+                    cleanCode === ('HUM' + cHum.substring(1)) ||
+                    cleanCode === ('HUM-' + cHum.substring(1)) ||
+                    cleanCode === ('H-' + cHum.substring(1))
+                ) {
+                    if (isHumanitarianLockedForUser(sd)) {
+                        humanitarianAlreadyUsedMatch = true;
+                    } else if (isSingleDiagnosisCodeAlreadyConsumed(cHum, curExamIdForCheck)) {
+                        consumedMatchCode = cHum;
+                    } else {
+                        return { tier: 1, humanitarian: true, master: false, code: cHum, serial: k };
+                    }
+                }
+            }
+
             for (const t of [1, 5, 10]) {
                 const c = generateUserBoundCode(sd, t, k);
                 if (!c) continue;
@@ -5844,6 +5865,9 @@ function verifyActivationCode(entered, cfg) {
                 }
             }
         }
+    }
+    if (humanitarianAlreadyUsedMatch) {
+        return { humanitarianAlreadyUsed: true, code: cleanCode };
     }
     if (consumedMatchCode) {
         return { alreadyConsumed: true, code: consumedMatchCode };
@@ -5905,6 +5929,10 @@ async function _submitPromoOrTestUnlockCodeCore(inputIdOverride) {
         say('❌ كود التفعيل غير صحيح أو غير مخصص لرقم الهاتف المدخل.<br><small style="color:#cbd5e1;">تأكد من كتابة نفس رقم هاتفك المسجل لدى الإدارة ثم كتابة الكود بدقة.</small>', false);
         return;
     }
+    if (res.humanitarianAlreadyUsed) {
+        say('🔒 <strong>سبق الاستفادة من مبادرة الرعاية الإنسانية:</strong> هذا الكود أو رقم الهاتف/الجهاز مسجل لديه استفادة سابقة من مبادرة الإعفاء الإنساني (المتاحة لمرة واحدة فقط لكل مستفيد).<br><small style="color:#fde68a;">لفتح فحص جديد، يرجى الاشتراك في إحدى الباقات الرمزية المتاحة لدعم استمرار الخدمة.</small>', false);
+        return;
+    }
     if (res.alreadyConsumed) {
         say('🔒 <strong>انتهت صلاحية هذا الكود:</strong> كود التفعيل المُدخل مخصص <strong>لتشخيص واحد فقط</strong> وقد تم استهلاكه مسبقاً في فحصك السابق.<br><small style="color:#fde68a;">لفتح هذا التشخيص الجديد، يرجى الاشتراك في باقة جديدة عبر محفظة أورانج موني للحصول على كود تفعيل جديد.</small>', false);
         return;
@@ -5960,7 +5988,7 @@ async function _submitPromoOrTestUnlockCodeCore(inputIdOverride) {
     }
 
     const pend = getPendingUnlockRequest();
-    const type = res.master ? 'promo_or_test' : (res.gift ? 'gift_code' : (pend?.requestType || 'paid_orange_wallet'));
+    const type = res.humanitarian ? 'humanitarian' : (res.master ? 'promo_or_test' : (res.gift ? 'gift_code' : (pend?.requestType || 'paid_orange_wallet')));
     const phoneUsed = toEnglishDigits(
         document.getElementById('code-alt-phone')?.value?.trim()
         || pend?.subscriberPhone
@@ -5975,8 +6003,9 @@ async function _submitPromoOrTestUnlockCodeCore(inputIdOverride) {
     // توثيق استهلاك كود التشخيص الواحد لمنع إعادة استخدامه في فحص لاحق
     if (res.tier === 1 && !res.master) {
         recordConsumedSingleDiagnosisCode(res.code, phoneUsed, ex, type);
-    } else if (type === 'humanitarian' || type === 'humanitarian_waiver') {
-        recordHumanitarianUsage(phoneUsed, pend?.patientId);
+    }
+    if (type === 'humanitarian' || type === 'humanitarian_waiver' || res.humanitarian) {
+        recordHumanitarianUsage(phoneUsed, pend?.patientId || activePatient?.patientId);
     }
 
     if (phoneUsed) {
@@ -5988,11 +6017,13 @@ async function _submitPromoOrTestUnlockCodeCore(inputIdOverride) {
         else try { localStorage.setItem('smart_patient_name', nameUsed); } catch (e) {}
     }
 
-    const tierMsg = res.tier === 10
-        ? '👑 تم تفعيل باقة 10 تشخيصات بنجاح! جاري فتح التقرير الطبي الكامل وخطة التأهيل... ⏱️'
-        : (res.tier === 5
-            ? '📦 تم تفعيل باقة 5 تشخيصات بنجاح! جاري فتح التقرير الطبي الكامل وخطة التأهيل... ⏱️'
-            : '✅ تم تفعيل الكود بنجاح! جاري فتح التقرير الطبي الكامل وخطة التأهيل... ⏱️');
+    const tierMsg = res.humanitarian
+        ? '❤️ تم تفعيل كود مبادرة الرعاية الإنسانية بنجاح! جاري فتح التقرير الطبي الكامل وخطة التأهيل... ⏱️'
+        : (res.tier === 10
+            ? '👑 تم تفعيل باقة 10 تشخيصات بنجاح! جاري فتح التقرير الطبي الكامل وخطة التأهيل... ⏱️'
+            : (res.tier === 5
+                ? '📦 تم تفعيل باقة 5 تشخيصات بنجاح! جاري فتح التقرير الطبي الكامل وخطة التأهيل... ⏱️'
+                : '✅ تم تفعيل الكود بنجاح! جاري فتح التقرير الطبي الكامل وخطة التأهيل... ⏱️'));
     say(tierMsg, true);
 
     setTimeout(() => {
@@ -10411,32 +10442,40 @@ async function handleStep5CompletionClick(patientId, sessionNumber, forceSkip = 
 
     if (!isAdminSession() && !forceSkip) {
         const step5Box = document.getElementById('step5-sessions-container') || document.getElementById('step-section-5');
-        const timerBtns = Array.from((step5Box || document).querySelectorAll('button.btn-exercise-timer, .clinical-exercise-card button'));
-        if (timerBtns.length > 0) {
-            const uncompleted = timerBtns.filter(btn => {
-                const isFinished = btn.dataset.completed === 'true' ||
-                                   btn.style.background.includes('10b981') ||
-                                   btn.innerHTML.includes('تم إنجاز') ||
-                                   btn.innerHTML.includes('إنجاز') ||
-                                   btn.innerHTML.includes('تمت') ||
-                                   btn.innerHTML.includes('مكتمل');
-                return !isFinished;
+        const exerciseCards = Array.from((step5Box || document).querySelectorAll('.clinical-exercise-card, .exercise-visual-card'));
+        if (exerciseCards.length > 0) {
+            const uncompletedCards = exerciseCards.filter(cardEl => {
+                const timerBtn = cardEl.querySelector('button.btn-exercise-timer');
+                const markBtn = cardEl.querySelector('button.btn-mark-exercise-done');
+                const isTimerDone = Boolean(timerBtn && (
+                    timerBtn.dataset.completed === 'true' ||
+                    (timerBtn.style && timerBtn.style.background && timerBtn.style.background.includes('10b981')) ||
+                    timerBtn.innerHTML.includes('تم إنجاز') ||
+                    timerBtn.innerHTML.includes('أحسنت') ||
+                    timerBtn.innerHTML.includes('منجز') ||
+                    timerBtn.innerHTML.includes('مكتمل')
+                ));
+                const isMarkDone = Boolean(markBtn && (
+                    markBtn.dataset.completed === 'true' ||
+                    (markBtn.style && markBtn.style.background && markBtn.style.background.includes('10b981')) ||
+                    markBtn.innerHTML.includes('تم') ||
+                    markBtn.innerHTML.includes('منجز') ||
+                    markBtn.innerHTML.includes('مكتمل')
+                ));
+                return !(isTimerDone || isMarkDone);
             });
 
-            if (uncompleted.length > 0) {
-                const firstUnfinished = uncompleted[0];
-                const cardEl = firstUnfinished.closest('.clinical-exercise-card, .exercise-visual-card');
-                if (cardEl) {
-                    cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    cardEl.style.outline = '2px solid #eab308';
-                    cardEl.style.boxShadow = '0 0 25px rgba(234, 179, 8, 0.6)';
-                    setTimeout(() => {
-                        cardEl.style.outline = '';
-                        cardEl.style.boxShadow = '';
-                    }, 2500);
-                }
+            if (uncompletedCards.length > 0) {
+                const firstUnfinished = uncompletedCards[0];
+                firstUnfinished.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstUnfinished.style.outline = '2px solid #eab308';
+                firstUnfinished.style.boxShadow = '0 0 25px rgba(234, 179, 8, 0.6)';
+                setTimeout(() => {
+                    firstUnfinished.style.outline = '';
+                    firstUnfinished.style.boxShadow = '';
+                }, 2500);
                 if (typeof showToast === 'function') {
-                    showToast(`⚠️ لا يمكنك توثيق الجلسة (#${sessionNumber}) إلا بعد إتمامك لكافة التمارين المقترحة أدناه (متبقي ${uncompleted.length} تمرين) 🏋️`, 'warning', 4500);
+                    showToast(`⚠️ لا يمكنك توثيق الجلسة (#${sessionNumber}) إلا بعد إتمامك لكافة التمارين المقترحة أدناه (متبقي ${uncompletedCards.length} تمرين) 🏋️`, 'warning', 4500);
                 }
                 return;
             }
@@ -12852,10 +12891,34 @@ document.addEventListener('DOMContentLoaded', async () => {
                 || (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function' && SmartDB.getAuthPatient()?.patientId)
                 || 'pat_guest';
             if (savedPatientId) {
+                try { _isRenderingStep5 = false; window._isRenderingStep5 = false; } catch(err) {}
                 loadPatientRecoveryDashboard(savedPatientId);
             }
         }
     });
+
+    // ⏱️ مراقب التوقيت اللحظي الذكي: فحص دوري سريع كل 750ms لضمان التقاط أي تعديل توقيت أو فتح فوري من الإدارة (يعمل حتى في وضع file://)
+    let _lastSeenCountdownUpdated = localStorage.getItem('countdownUpdated');
+    let _lastSeenTimingSig = localStorage.getItem('smart_last_applied_timing_sig');
+    setInterval(() => {
+        const curCountdown = localStorage.getItem('countdownUpdated');
+        const curSig = localStorage.getItem('smart_last_applied_timing_sig');
+        if (curCountdown !== _lastSeenCountdownUpdated || curSig !== _lastSeenTimingSig) {
+            _lastSeenCountdownUpdated = curCountdown;
+            _lastSeenTimingSig = curSig;
+            const savedPatientId = (typeof SmartDB !== 'undefined' && typeof SmartDB.getCurrentSessionPatientId === 'function' ? SmartDB.getCurrentSessionPatientId() : null)
+                || (window.activePatient && (window.activePatient.patientId || window.activePatient.id))
+                || localStorage.getItem('smart_current_patient_id')
+                || (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function' && SmartDB.getAuthPatient()?.patientId)
+                || 'pat_guest';
+            if (savedPatientId) {
+                try { _isRenderingStep5 = false; window._isRenderingStep5 = false; } catch(err) {}
+                if (typeof loadPatientRecoveryDashboard === 'function') {
+                    loadPatientRecoveryDashboard(savedPatientId);
+                }
+            }
+        }
+    }, 750);
 
     // الاستماع الفوري لحدث تحديث التوقيت الداخلي الموجه للمريض
     window.addEventListener('smart_countdown_updated', (e) => {

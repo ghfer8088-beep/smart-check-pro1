@@ -1736,6 +1736,7 @@
                             <input type="text" id="admin-unlock-subscriber-phone" placeholder="رقم هاتف المشترك (مثال: 079xxxxxxx)" oninput="updateGeneratedSubscriberPinPreview()" style="flex: 1; min-width: 200px; background: #111827; border: 1px solid #475569; color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 0.92em;">
                             <input type="text" id="admin-unlock-subscriber-name" placeholder="اسم المشترك (اختياري)" style="flex: 1; min-width: 180px; background: #111827; border: 1px solid #475569; color: #fff; padding: 10px 14px; border-radius: 8px; font-size: 0.92em;">
                             <div style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); padding: 8px 14px; border-radius: 8px; color: #fef08a; font-weight: bold; font-size: 0.9em; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                                <span style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 2px 8px; border-radius: 6px;">❤️ إنساني: <strong id="admin-generated-pinhum-display" style="font-family: monospace; color: #fff;">----</strong></span>
                                 <span>1: <strong id="admin-generated-pin-display" style="font-family: monospace; color: #fff;">----</strong></span>
                                 <span>5: <strong id="admin-generated-pin5-display" style="font-family: monospace; color: #fff;">----</strong></span>
                                 <span>10: <strong id="admin-generated-pin10-display" style="font-family: monospace; color: #fff;">----</strong></span>
@@ -2399,6 +2400,20 @@
                     renderAdminVideosGrid();
                 }
             });
+
+            // 🔔 مراقب التحديثات اللحظية المباشر: فحص دوري كل 1200ms للتحقق من وصول إشعارات أو مراجعين جدد (يعمل حتى في نمط file:// بدون الحاجة للتحديث)
+            let _lastLocalNotifCheck = localStorage.getItem('smart_last_notif_time');
+            let _lastLocalPatientsLen = (localStorage.getItem('smart_all_patients') || '').length;
+            setInterval(() => {
+                const curNotifTime = localStorage.getItem('smart_last_notif_time');
+                const curPtsLen = (localStorage.getItem('smart_all_patients') || '').length;
+                if (curNotifTime !== _lastLocalNotifCheck || curPtsLen !== _lastLocalPatientsLen) {
+                    _lastLocalNotifCheck = curNotifTime;
+                    _lastLocalPatientsLen = curPtsLen;
+                    loadNotificationsData(true);
+                    loadAdminData(false);
+                }
+            }, 1200);
 
             // الاستماع اللحظي عبر قناة البث السريع المباشر (BroadcastChannel)
             try {
@@ -3621,7 +3636,7 @@
                 if (isPendingHum) {
                     const hasHumNotif = notifs.some(n => (n.patientId === pId || (pPhone && n.patientPhone === pPhone) || (n.patientName && n.patientName === displayName)) && n.type === 'humanitarian_request');
                     if (!hasHumNotif) {
-                        const unlockPin = generateAdminUnlockPin(pPhone || displayName);
+                        const unlockPin = generateAdminUnlockPin(pPhone || displayName, 'humanitarian');
                         notifs.unshift({
                             id: 'N-HUM-' + (pId || Date.now()),
                             type: 'humanitarian_request',
@@ -3648,7 +3663,7 @@
                 } else if (isPendingOrange) {
                     const hasPayNotif = notifs.some(n => (n.patientId === pId || (pPhone && n.patientPhone === pPhone) || (n.patientName && n.patientName === displayName)) && n.type === 'payment_received');
                     if (!hasPayNotif) {
-                        const unlockPin = generateAdminUnlockPin(pPhone || displayName);
+                        const unlockPin = generateAdminUnlockPin(pPhone || displayName, 1);
                         const amt = pReq?.amountJod || 3;
                         notifs.unshift({
                             id: 'N-PAY-' + (pId || Date.now()),
@@ -4094,10 +4109,10 @@
                             paymentBadgeHTML = `<span style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(212, 175, 55, 0.25)); border: 1.5px solid #10b981; color: #fef08a; padding: 3px 10px; border-radius: 6px; font-size: 0.75em; font-weight: 900; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);">🤲 طلب إعفاء إنساني (أقرّ بالقسم الشرعي) — بانتظار موافقتك</span>`;
                         } else if (isPendingUnlock && !p.isPaidUnlocked) {
                             paymentBadgeHTML = `<span style="background: rgba(245, 158, 11, 0.22); border: 1.5px solid #f59e0b; color: #fde047; padding: 2px 8px; border-radius: 4px; font-size: 0.72em; font-weight: 900; display: inline-flex; align-items: center; gap: 3px;">${pPayStatus}</span>`;
+                        } else if (pPayType === 'humanitarian' || pPayType === 'humanitarian_waiver' || pPayStatus.includes('إنساني') || pPayStatus.includes('إعفاء')) {
+                            paymentBadgeHTML = `<span style="background: rgba(239, 68, 68, 0.18); border: 1.5px solid #ef4444; color: #fca5a5; padding: 2px 8px; border-radius: 4px; font-size: 0.72em; font-weight: 900; display: inline-flex; align-items: center; gap: 3px;">❤️ إعفاء إنساني (صدقة جارية)</span>`;
                         } else if (pPayType === 'paid_orange_wallet' || pPayType === 'orange_money' || pPayStatus.includes('أورانج') || p.amountPaid > 0) {
                             paymentBadgeHTML = `<span style="background: linear-gradient(135deg, rgba(249, 115, 22, 0.35), rgba(212, 175, 55, 0.25)); border: 1px solid #f97316; color: #fed7aa; padding: 2px 8px; border-radius: 4px; font-size: 0.7em; font-weight: 900; display: inline-flex; align-items: center; gap: 3px;">💳 مدفوع (${p.amountPaid || 3} د.أ)</span>`;
-                        } else if (pPayType === 'humanitarian' || pPayType === 'humanitarian_waiver' || pPayStatus.includes('إنساني')) {
-                            paymentBadgeHTML = `<span style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; padding: 2px 8px; border-radius: 4px; font-size: 0.7em; font-weight: bold; display: inline-flex; align-items: center; gap: 3px;">🌿 إعفاء إنساني معتمد</span>`;
                         } else if (pPayType === 'test_free' || pPayType === 'promo_or_test' || pPayStatus.includes('اختبار')) {
                             paymentBadgeHTML = `<span style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #7dd3fc; padding: 2px 8px; border-radius: 4px; font-size: 0.7em; font-weight: bold; display: inline-flex; align-items: center; gap: 3px;">🔑 مفعل بكود</span>`;
                         }
@@ -6542,6 +6557,7 @@
                 hash = ((hash * 33) ^ str.charCodeAt(i)) & 0x7fffffff;
             }
             const pin = String(1000 + (hash % 9000));
+            if (tier === 'humanitarian' || tier === 'hum' || tier === 'H') return 'H' + pin;
             return tier === 10 ? '10' + pin : (tier === 5 ? '5' + pin : pin);
         }
         function getAdminNotifCode(n) {
@@ -6579,8 +6595,14 @@ function copyAdminCode(code) {
         function sendAdminCodeWA(phone, name, tier) {
             const seed = phone || name;
             const code = generateAdminUnlockPin(seed, tier);
-            const pkgTitle = tier === 10 ? '👑 باقة 10 تشخيصات (15 د.أ)' : (tier === 5 ? '💼 باقة 5 تشخيصات (10 د.أ)' : '⭐ باقة تشخيص واحد (3 د.أ)');
-            const text = `مرحباً بك أخي/أختي ${name || 'المراجع الكريم'} 🌸\nعيادة «وداعاً للألم» للكايروبراكتيك ترحب بك.\n\nتم اعتماد طلبك وتفعيل اشتراكك بنجاح ✅\n📦 نوع الاشتراك: ${pkgTitle}\n\n🔑 كود التفعيل المعتمد الخاص بك هو:\n👉 *${code}* 👈\n\nطريقة الاستخدام:\n1. افتح صفحة التقرير الطبي.\n2. اختر تبويب (لدي كود تفعيل معتمد).\n3. أدخل رقم هاتفك والكود أعلاه واضغط (تفعيل وفتح التقرير).\n\nنسأل الله لك الشفاء العاجل ودوام العافية 🤲\n— د. جمال (عيادة وداعاً للألم)`;
+            const isHum = (tier === 'humanitarian' || tier === 'hum' || tier === 'H');
+            const pkgTitle = isHum 
+                ? '❤️ مبادرة الرعاية والدعم الإنساني (إعفاء كامل لوجه الله تعالى)'
+                : (tier === 10 ? '👑 باقة 10 تشخيصات (15 د.أ)' : (tier === 5 ? '💼 باقة 5 تشخيصات (10 د.أ)' : '⭐ باقة تشخيص واحد (3 د.أ)'));
+            
+            const text = isHum
+                ? `مرحباً بك أخي/أختي ${name || 'المراجع الكريم'} 🌸\nعيادة «وداعاً للألم» للكايروبراكتيك ترحب بك.\n\nبناءً على طلبك، تم اعتماد إعفائك بالكامل ضمن:\n🤲 *${pkgTitle}* (صدقة جارية)\n\n🔑 كود التفعيل الإنساني الخاص بك هو:\n👉 *${code}* 👈\n\nطريقة الاستخدام:\n1. افتح صفحة التقرير الطبي.\n2. اختر تبويب (لدي كود تفعيل معتمد).\n3. أدخل رقم هاتفك والكود أعلاه واضغط (تفعيل وفتح التقرير).\n\nنسأل الله لك الشفاء التام والأجر والعافية 🤲\n— د. جمال (عيادة وداعاً للألم)`
+                : `مرحباً بك أخي/أختي ${name || 'المراجع الكريم'} 🌸\nعيادة «وداعاً للألم» للكايروبراكتيك ترحب بك.\n\nتم اعتماد طلبك وتفعيل اشتراكك بنجاح ✅\n📦 نوع الاشتراك: ${pkgTitle}\n\n🔑 كود التفعيل المعتمد الخاص بك هو:\n👉 *${code}* 👈\n\nطريقة الاستخدام:\n1. افتح صفحة التقرير الطبي.\n2. اختر تبويب (لدي كود تفعيل معتمد).\n3. أدخل رقم هاتفك والكود أعلاه واضغط (تفعيل وفتح التقرير).\n\nنسأل الله لك الشفاء العاجل ودوام العافية 🤲\n— د. جمال (عيادة وداعاً للألم)`;
             
             let cp = String(phone || '').replace(/\D/g, '');
             if (cp.startsWith('07') && cp.length >= 10) cp = '962' + cp.substring(1);
@@ -6602,18 +6624,24 @@ function copyAdminCode(code) {
             const sp = String(seed).replace(/['"\\]/g, '');
             const sn = String(name || '').replace(/['"\\]/g, '');
             const ph = String(phone || '').replace(/['"\\]/g, '');
-            const row = (tier, label) => {
+            const row = (tier, label, isHum = false) => {
                 const c = generateAdminUnlockPin(seed, tier);
                 const hl = (highlightTier === tier);
-                return `<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; background:${hl ? 'rgba(212,175,55,0.2)' : 'rgba(8,12,20,0.7)'}; border:1px solid ${hl ? '#d4af37' : '#334155'}; border-radius:8px; padding:5px 8px;">
+                const bg = isHum ? 'rgba(239, 68, 68, 0.14)' : (hl ? 'rgba(212,175,55,0.2)' : 'rgba(8,12,20,0.7)');
+                const border = isHum ? '#ef4444' : (hl ? '#d4af37' : '#334155');
+                const txtColor = isHum ? '#fca5a5' : '#fef08a';
+                return `<div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; background:${bg}; border:1px solid ${border}; border-radius:8px; padding:5px 8px;">
                     <span style="color:#cbd5e1; font-size:0.8em; min-width:96px;">${label}</span>
-                    <strong style="font-family:monospace; color:#fef08a; font-size:1.1em; letter-spacing:2px;">${c}</strong>
-                    <button type="button" onclick="copyAdminCode('${c}')" style="background:#1e293b; color:#fef08a; border:1px solid #d4af37; border-radius:6px; padding:2px 8px; cursor:pointer; font-size:0.78em;">📋 نسخ</button>
-                    <button type="button" onclick="sendAdminCodeWA('${ph}','${sn}',${tier})" style="background:#25d366; color:#fff; border:none; border-radius:6px; padding:3px 8px; cursor:pointer; font-size:0.78em;">💬</button>
+                    <strong style="font-family:monospace; color:${txtColor}; font-size:1.1em; letter-spacing:2px;">${c}</strong>
+                    <button type="button" onclick="copyAdminCode('${c}')" style="background:#1e293b; color:${txtColor}; border:1px solid ${border}; border-radius:6px; padding:2px 8px; cursor:pointer; font-size:0.78em;">📋 نسخ</button>
+                    <button type="button" onclick="sendAdminCodeWA('${ph}','${sn}','${tier}')" style="background:#25d366; color:#fff; border:none; border-radius:6px; padding:3px 8px; cursor:pointer; font-size:0.78em;">💬</button>
                 </div>`;
             };
             return `<div style="display:flex; flex-direction:column; gap:5px; margin:8px 0;">
-                ${row(1, '🔑 تشخيص واحد')}${row(5, '📦 باقة 5')}${row(10, '👑 باقة 10')}
+                ${row('humanitarian', '❤️ كود دعم إنساني', true)}
+                ${row(1, '🔑 تشخيص واحد')}
+                ${row(5, '📦 باقة 5')}
+                ${row(10, '👑 باقة 10')}
                 <button type="button" onclick="adminBumpSerialAndRefresh('${sp}')" style="align-self:flex-start; background:none; border:1px dashed #64748b; color:#94a3b8; border-radius:6px; padding:3px 10px; cursor:pointer; font-size:0.75em;">🔄 كود جديد (لتشخيص جديد لنفس المستخدم)</button>
             </div>`;
         }
@@ -6625,9 +6653,14 @@ function copyAdminCode(code) {
             if (!disp) return;
             if (!ph && !nm) {
                 disp.textContent = '----';
+                const dH = document.getElementById('admin-generated-pinhum-display'); if (dH) dH.textContent = '----';
+                const d5 = document.getElementById('admin-generated-pin5-display'); if (d5) d5.textContent = '----';
+                const d10 = document.getElementById('admin-generated-pin10-display'); if (d10) d10.textContent = '----';
                 return;
             }
             disp.textContent = generateAdminUnlockPin(ph || nm, 1);
+            const dHum = document.getElementById('admin-generated-pinhum-display');
+            if (dHum) dHum.textContent = generateAdminUnlockPin(ph || nm, 'humanitarian');
             const d5 = document.getElementById('admin-generated-pin5-display');
             const d10 = document.getElementById('admin-generated-pin10-display');
             if (d5) d5.textContent = generateAdminUnlockPin(ph || nm, 5);
@@ -6937,7 +6970,7 @@ function copyAdminCode(code) {
                                 paymentMethod: isHumNotif ? 'إعفاء إنساني (صدقة جارية)' : 'محفظة أورانج موني',
                                 status: n.read || n.meta?.approved ? 'مفعّل ومعتمد' : 'بانتظار التأكيد',
                                 isUnlocked: Boolean(n.read || n.meta?.approved),
-                                pin: n.meta?.unlockPin || n.meta?.unlockCode || generateAdminUnlockPin(pPhone || pName, tier === 'pack10' ? 10 : (tier === 'pack5' ? 5 : 1))
+                                pin: n.meta?.unlockPin || n.meta?.unlockCode || generateAdminUnlockPin(pPhone || pName, isHumNotif ? 'humanitarian' : (tier === 'pack10' ? 10 : (tier === 'pack5' ? 5 : 1)))
                             });
                         }
                     }
@@ -6966,7 +6999,7 @@ function copyAdminCode(code) {
                                 paymentMethod: 'إعفاء إنساني (صدقة جارية)',
                                 status: 'مفعّل ومعتمد',
                                 isUnlocked: true,
-                                pin: generateAdminUnlockPin(hPhone, 1)
+                                pin: generateAdminUnlockPin(hPhone, 'humanitarian')
                             });
                         }
                     });
@@ -7711,11 +7744,12 @@ function copyAdminCode(code) {
         function sendSubscriberUnlockCodeViaWhatsApp() {
             const ph = document.getElementById('admin-unlock-subscriber-phone')?.value?.trim() || '';
             const nm = document.getElementById('admin-unlock-subscriber-name')?.value?.trim() || 'عزيزي المشترك';
+            const pinHum = generateAdminUnlockPin(ph || nm, 'humanitarian');
             const pin = generateAdminUnlockPin(ph || nm, 1);
             const pin5 = generateAdminUnlockPin(ph || nm, 5);
             const pin10 = generateAdminUnlockPin(ph || nm, 10);
             const cleanPh = ph.replace(/[^0-9]/g, '');
-            const text = `مرحباً ${nm}، تم اعتماد اشتراكك في «وداعاً للألم» ✅\n🔑 كود تشخيص واحد: *${pin}*\n(باقة 5: ${pin5} — باقة 10: ${pin10})\nأدخل الكود الخاص بما اشتركت به في خانة الكود في الأداة.`;
+            const text = `مرحباً ${nm}، تم اعتماد اشتراكك في «وداعاً للألم» ✅\n❤️ كود الدعم الإنساني (إعفاء كامل): *${pinHum}*\n🔑 كود تشخيص واحد: *${pin}*\n(باقة 5: ${pin5} — باقة 10: ${pin10})\nأدخل الكود الخاص بما اشتركت به في خانة الكود في الأداة.`;
             const url = cleanPh ? `https://wa.me/${cleanPh}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
             window.open(url, '_blank');
         }

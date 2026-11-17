@@ -1527,6 +1527,24 @@ const AdminEngine = (function() {
             console.error('Error in cloud timing dispatch:', cloudErr);
         }
 
+        // بث فوري إضافي عبر BroadcastChannel وأحداث النافذة لضمان الاستجابة في 0ms
+        try {
+            window.dispatchEvent(new CustomEvent('smart_countdown_updated', { detail: { sessionNum: numSession } }));
+            if ('BroadcastChannel' in window) {
+                const bc = new BroadcastChannel('smart_check_pro_global_sync_channel');
+                bc.postMessage({
+                    type: 'session_timing_update',
+                    patientId: patientId,
+                    sessionNum: numSession,
+                    forceUnlock: forceUnlock,
+                    targetTime: targetTime,
+                    totalDurationMs: totalDurationMs,
+                    updatedAt: nowTimingTs
+                });
+                bc.close();
+            }
+        } catch(bcE) {}
+
         return true;
     }
 

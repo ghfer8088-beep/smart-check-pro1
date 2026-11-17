@@ -894,6 +894,15 @@ const PatientFlow = (function() {
                 buttonEl.style.color = '#ffffff';
                 if (progressBar) progressBar.style.width = '100%';
 
+                const markBtn = cardEl ? cardEl.querySelector('.btn-mark-exercise-done') : null;
+                if (markBtn) {
+                    markBtn.dataset.completed = 'true';
+                    markBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                    markBtn.style.borderColor = '#10b981';
+                    markBtn.style.color = '#ffffff';
+                    markBtn.innerHTML = '✅ تم';
+                }
+
                 if (typeof playStationAudio === 'function') {
                     playStationAudio('exercise_finish');
                 } else if (typeof ClinicalAudioPacer !== 'undefined') {
@@ -928,6 +937,7 @@ const PatientFlow = (function() {
         }
         if (progressBar) progressBar.style.width = '100%';
 
+        actionBtn.dataset.completed = 'true';
         actionBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
         actionBtn.style.borderColor = '#10b981';
         actionBtn.style.color = '#ffffff';

@@ -1051,11 +1051,24 @@ const SmartDB = (function() {
     function addAdminNotification(notif, options = {}) {
         try {
             if (!notif) return null;
-            const notifPName = (notif.patientName || '').trim();
-            const notifPPh = (notif.patientPhone || '').replace(/\D/g, '');
+            let notifPName = (notif.patientName || '').trim();
+            let notifPPh = (notif.patientPhone || '').replace(/\D/g, '');
+            if (notifPPh.length < 7 && notif.message) {
+                const phMatch = notif.message.match(/(?:هاتف|رقم|محفظة|phone)[:\s]*([0-9+]{7,15})/i);
+                if (phMatch && phMatch[1]) notifPPh = phMatch[1].replace(/\D/g, '');
+            }
+            const isCriticalType = [
+                'humanitarian_request',
+                'payment_received',
+                'plan_completed',
+                'session_completed',
+                'session_done',
+                'red_flag',
+                'new_registration'
+            ].includes(notif.type);
             const isAnon = !notifPName || /^(?:مراجع كريم|المراجع الكريم|مراجع محترم|المراجع المحترم|مراجع جديد|المراجع الجديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|undefined|null)$/i.test(notifPName);
-            // استبعاد قاطع لأي إشعار مجهول ليس له اسم حقيقي ولا هاتف موثق
-            if (isAnon && notifPPh.length < 7) {
+            // لا نسقط الإشعار إذا كان نوعاً حرجاً كطلب إعفاء إنساني أو حوالة أو إتمام جلسة
+            if (!isCriticalType && isAnon && notifPPh.length < 7) {
                 return null;
             }
 
@@ -1066,8 +1079,8 @@ const SmartDB = (function() {
                 title: notif.title || 'إشعار جديد',
                 message: notif.message || '',
                 patientId: notif.patientId || null,
-                patientName: notif.patientName || (notifPPh ? `مراجع (${notifPPh.slice(-4)})` : ''),
-                patientPhone: notif.patientPhone || '',
+                patientName: notif.patientName || (notifPPh ? `مراجع (${notifPPh.slice(-4)})` : (isCriticalType ? 'مراجع' : '')),
+                patientPhone: notif.patientPhone || notifPPh || '',
                 meta: notif.meta || {},
                 time: notif.time || new Date().toISOString(),
                 read: notif.read || false

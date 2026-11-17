@@ -75,6 +75,8 @@
                     applyPaymentConfigLocally(event.data.config);
                 } else if (event.data && event.data.type === 'PAYMENT_PATIENT_UNLOCK') {
                     applyPatientPaymentUnlockLocally(event.data);
+                } else if (event.data && (event.data.type === 'session_timing_update' || event.data.forceUnlock !== undefined)) {
+                    applyTimingUpdateLocally(event.data);
                 }
             });
             const pChan = new BroadcastChannel('smart_presence_broadcast_channel');
@@ -2375,6 +2377,8 @@
                     callback(event.data.notification);
                 } else if (event.data && event.data.type === 'PAYMENT_PATIENT_UNLOCK') {
                     applyPatientPaymentUnlockLocally(event.data);
+                } else if (event.data && (event.data.type === 'session_timing_update' || event.data.forceUnlock !== undefined)) {
+                    applyTimingUpdateLocally(event.data);
                 }
             });
         }
