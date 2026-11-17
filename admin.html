@@ -7615,25 +7615,6 @@ function copyAdminCode(code) {
         }
         window.copyFinancialLedgerSummary = copyFinancialLedgerSummary;
 
-            const text = `📊 ملخص التقرير المحاسبي - منصة وداعاً للألم (Smart Check Pro 2.0)\n` +
-                `📅 تاريخ التقرير: ${new Date().toLocaleDateString('ar-JO')}\n` +
-                `💰 إجمالي الإيرادات الكلية: ${totRev}\n` +
-                `----------------------------------------\n` +
-                `🔑 تشخيص فردي (3 د.أ): ${sCount} باقة (${sSum})\n` +
-                `⭐ باقة التعافي العائلي (10 د.أ): ${p5Count} باقة (${p5Sum})\n` +
-                `👑 باقة الحل الجذري (15 د.أ): ${p10Count} باقة (${p10Sum})\n` +
-                `❤️ مبادرات الرعاية الإنسانية: ${hCount} مستفيد (صدقة جارية)\n` +
-                `----------------------------------------\n` +
-                `Smart Check Pro 2.0 | وداعاً للألم`;
-
-            navigator.clipboard.writeText(text).then(() => {
-                alert('✅ تم نسخ ملخص التقرير المحاسبي إلى الحافظة بنجاح.');
-            }).catch(() => {
-                prompt('انسخ التقرير المحاسبي من هنا:', text);
-            });
-        }
-        window.copyFinancialLedgerSummary = copyFinancialLedgerSummary;
-
         function loadPaymentGateConfigIntoAdminUI() {
             const cfg = getAdminPaymentGateConfig();
             const priceIn = document.getElementById('paycfg-price-jod');
