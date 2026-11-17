@@ -2919,11 +2919,18 @@
                 clinicPatients = getCloudSyncedPatients();
             }
 
-            if (!Array.isArray(clinicPatients) || clinicPatients.length === 0) {
-                if (typeof window !== 'undefined' && window.CLINIC_BACKUP_SNAPSHOT) {
-                    const snap = window.CLINIC_BACKUP_SNAPSHOT.snapshot || window.CLINIC_BACKUP_SNAPSHOT;
-                    const bPts = snap.patients || snap.allPatients || [];
-                    if (Array.isArray(bPts)) clinicPatients = bPts;
+            if (typeof window !== 'undefined' && window.CLINIC_BACKUP_SNAPSHOT) {
+                const snap = window.CLINIC_BACKUP_SNAPSHOT.snapshot || window.CLINIC_BACKUP_SNAPSHOT;
+                const bPts = snap.patients || snap.allPatients || [];
+                if (Array.isArray(bPts)) {
+                    if (!Array.isArray(clinicPatients)) clinicPatients = [];
+                    for (const bp of bPts) {
+                        const bpId = bp.patientId || bp.id;
+                        const bpPhone = bp.phone ? String(bp.phone).replace(/\D/g, '') : '';
+                        if (bpId && !clinicPatients.some(rp => (rp.patientId === bpId || rp.id === bpId || (bpPhone && rp.phone && String(rp.phone).replace(/\D/g, '') === bpPhone)))) {
+                            clinicPatients.push(bp);
+                        }
+                    }
                 }
             }
 

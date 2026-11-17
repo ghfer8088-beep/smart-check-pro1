@@ -2301,15 +2301,26 @@
         function bootstrapClinicStaticPatients() {
             try {
                 cleanRedundantStorageQuota();
-                const lsRaw = localStorage.getItem('smart_all_patients');
-                const lsList = JSON.parse(lsRaw || '[]');
+                let lsList = [];
+                try {
+                    lsList = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
+                } catch(e) { lsList = []; }
 
                 if (typeof window !== 'undefined' && window.CLINIC_BACKUP_SNAPSHOT) {
                     const snap = window.CLINIC_BACKUP_SNAPSHOT.snapshot || window.CLINIC_BACKUP_SNAPSHOT;
                     const pts = snap.patients || snap.allPatients || [];
                     if (pts && pts.length > 0) {
-                        if (!lsRaw || lsList.length === 0) {
-                            localStorage.setItem('smart_all_patients', JSON.stringify(pts));
+                        let merged = false;
+                        for (const bp of pts) {
+                            const bpId = bp.patientId || bp.id;
+                            const bpPhone = bp.phone ? String(bp.phone).replace(/\D/g, '') : '';
+                            if (bpId && !lsList.some(rp => (rp.patientId === bpId || rp.id === bpId || (bpPhone && rp.phone && String(rp.phone).replace(/\D/g, '') === bpPhone)))) {
+                                lsList.push(bp);
+                                merged = true;
+                            }
+                        }
+                        if (merged || !localStorage.getItem('smart_all_patients')) {
+                            localStorage.setItem('smart_all_patients', JSON.stringify(lsList));
                         }
                     }
                 }
@@ -3274,6 +3285,43 @@
                     }
                 } catch(fbErr) {
                     console.warn('Fallback patient loading warning:', fbErr);
+                }
+            }
+
+            // ضمان دمج وتواجد كافة مراجعي العيادة من النسخة السريرية المعتمدة حتى لا يختفي أي ملف إطلاقاً
+            if (typeof window !== 'undefined' && window.CLINIC_BACKUP_SNAPSHOT) {
+                try {
+                    const snap = window.CLINIC_BACKUP_SNAPSHOT.snapshot || window.CLINIC_BACKUP_SNAPSHOT;
+                    const snapPts = snap.patients || snap.allPatients || [];
+                    if (Array.isArray(snapPts) && snapPts.length > 0) {
+                        for (const sp of snapPts) {
+                            const spId = sp.patientId || sp.id;
+                            const spPhone = sp.phone ? String(sp.phone).replace(/\D/g, '') : '';
+                            const exists = (allPatientsList || []).some(item => {
+                                const pt = item.patient || item;
+                                const ptId = pt.patientId || pt.id;
+                                const ptPhone = pt.phone ? String(pt.phone).replace(/\D/g, '') : '';
+                                return (ptId && ptId === spId) || (spPhone && ptPhone && ptPhone === spPhone);
+                            });
+                            if (!exists) {
+                                const pTrueTs = getPatientTrueDate(sp);
+                                const pTrueIso = new Date(pTrueTs).toISOString();
+                                allPatientsList.push({
+                                    patient: sp,
+                                    isRegistered: !!(sp.isRegistered || sp.accountPin),
+                                    logsCount: (Array.isArray(sp.dailyLogs) ? sp.dailyLogs.length : (Array.isArray(sp.logs) ? sp.logs.length : (sp.logsCount || 0))),
+                                    recoveryScore: sp.recoveryScore || null,
+                                    baselinePain: sp.painLevel || null,
+                                    latestDiagnosis: sp.chiefDiagnosis || sp.diagnosisTitle || 'تشخيص سريري متكامل',
+                                    painArea: sp.painArea || sp.painAreaTitle || 'فحص واستشارة سريرية',
+                                    createdAt: (sp.createdAt || sp.date || sp.timestamp) ? (sp.createdAt || sp.date || sp.timestamp) : pTrueIso,
+                                    lastActiveAt: sp.lastActiveAt || sp.createdAt || pTrueIso
+                                });
+                            }
+                        }
+                    }
+                } catch(e) {
+                    console.error('Error merging snapshot patients in loadAdminData:', e);
                 }
             }
 

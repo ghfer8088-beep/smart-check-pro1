@@ -114,13 +114,14 @@ const AdminEngine = (function() {
                         rawPatients.unshift(cs);
                     }
                 }
-                // ⚡ استرجاع فوري من النسخة المتزامنة في الذاكرة لضمان تحميل الـ 51 مريضاً بدون أي تأخير
-                if (rawPatients.length === 0 && typeof window !== 'undefined' && window.CLINIC_BACKUP_SNAPSHOT) {
+                // ⚡ دمج فوري وتلقائي لكافة مراجعي العيادة من النسخة السريرية المعتمدة لضمان عدم اختفاء أي مريض
+                if (typeof window !== 'undefined' && window.CLINIC_BACKUP_SNAPSHOT) {
                     const snap = window.CLINIC_BACKUP_SNAPSHOT.snapshot || window.CLINIC_BACKUP_SNAPSHOT;
                     const bPts = snap.patients || snap.allPatients || [];
                     for (const bp of bPts) {
                         const bpId = bp.patientId || bp.id;
-                        if (bpId && !rawPatients.some(rp => (rp.patientId === bpId || rp.id === bpId))) {
+                        const bpPhone = bp.phone ? String(bp.phone).replace(/\D/g, '') : '';
+                        if (bpId && !rawPatients.some(rp => (rp.patientId === bpId || rp.id === bpId || (bpPhone && rp.phone && String(rp.phone).replace(/\D/g, '') === bpPhone)))) {
                             rawPatients.push(bp);
                         }
                     }
