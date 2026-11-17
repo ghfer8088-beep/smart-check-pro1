@@ -439,41 +439,23 @@
                 </span>
                 
                 <div class="admin-header-actions">
-                    <button type="button" id="btn-system-health-badge" onclick="openSystemHealthModal()" class="btn-header admin-btn-health" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                    <button type="button" id="btn-system-health-badge" onclick="openSystemHealthModal()" class="btn-header admin-btn-health" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 9px 13px; font-size: 0.85em; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
                         <span id="health-badge-icon">🛡️</span>
                         <span id="health-badge-text">درع المراقبة</span>
                     </button>
-                    <button type="button" onclick="openVisitorAnalyticsModal()" class="btn-header admin-btn-analytics" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(14, 165, 233, 0.15) 100%); border-color: #38bdf8; color: #7dd3fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-                        <span>📊</span> احصائيات الزوار
-                    </button>
-                    <button type="button" onclick="openMobileAlertsModal()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.28) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="إعدادات وصول إشعارات المشتركين الجدد وطلبات الأكواد مباشرة لهاتفك مع رنة واهتزاز">
+                    <button type="button" onclick="openMobileAlertsModal()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.28) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 13px; font-size: 0.85em; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="إعدادات وصول إشعارات المشتركين الجدد وطلبات الأكواد لهاتفك">
                         <span style="font-size: 1.1em;">🔔</span> إشعارات الموبايل
                     </button>
-                    <button type="button" onclick="openWhatsAppSettingsModal()" class="btn-header" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.28) 0%, rgba(5, 150, 105, 0.2) 100%); border: 1.5px solid #10b981; color: #6ee7b7; font-weight: 900; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);" title="إعدادات بوابة إرسال كود التفعيل ورسائل الواتساب تلقائياً لموبايل العميل مباشرة">
-                        <span>💬</span> الواتساب التلقائي
-                    </button>
-                    <button type="button" onclick="openPaymentSettingsModal()" class="btn-header" style="background: linear-gradient(135deg, rgba(249, 115, 22, 0.28) 0%, rgba(212, 175, 55, 0.22) 100%); border: 1.5px solid #f97316; color: #fed7aa; font-weight: 900; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="إدارة سعر الاشتراك (3 د.أ)، محفظة أورانج، الإعفاء الإنساني، ووضع الاختبار المجاني">
-                        <span>💳</span> الدفع والاشتراك (<span id="header-price-badge">3</span> د.أ)
-                    </button>
-                    <button type="button" onclick="openFinancialLedgerModal()" class="btn-header" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.3) 0%, rgba(180, 83, 9, 0.25) 100%); border: 1.5px solid var(--primary-gold); color: #fef08a; font-weight: 900; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(212, 175, 55, 0.3);" title="عرض السجل المحاسبي، إجمالي المبيعات، تفاصيل الباقات المشتراة والمبادرات الإنسانية">
+                    <button type="button" onclick="openFinancialLedgerModal()" class="btn-header" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.3) 0%, rgba(180, 83, 9, 0.25) 100%); border: 1.5px solid var(--primary-gold); color: #fef08a; font-weight: 900; padding: 9px 13px; font-size: 0.85em; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(212, 175, 55, 0.3);" title="عرض السجل المحاسبي، إجمالي المبيعات، وتفاصيل الباقات">
                         <span>💰</span> النظام المحاسبي (<span id="header-accounting-rev">0 د.أ</span>)
                     </button>
-                    <button type="button" onclick="openSystemSettingsModal()" class="btn-header admin-btn-settings" style="background: rgba(212, 175, 55, 0.18); border-color: var(--primary-gold); color: var(--primary-gold); font-weight: bold; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-                        <span>⚙️</span> إعدادات
+                    <button type="button" onclick="openSystemSettingsModal()" class="btn-header admin-btn-settings" style="background: rgba(212, 175, 55, 0.18); border-color: var(--primary-gold); color: var(--primary-gold); font-weight: bold; padding: 9px 13px; font-size: 0.85em; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" title="إعدادات المنظومة: الأسعار، الذكاء الاصطناعي، الأصوات، التمارين، وقواعد البيانات">
+                        <span>⚙️</span> إعدادات المنظومة
                     </button>
-                    <button type="button" onclick="forceAppUpdateAndClearCache()" class="btn-header admin-btn-cache" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #6ee7b7; font-weight: bold; padding: 9px 12px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
-                        ⚡ تحديث الكاش (v31.10)
+                    <button type="button" id="btn-broadcast-version-global" onclick="handleUnifiedUpdateAndBroadcast()" class="btn-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 1.5px solid #6ee7b7; color: #ffffff; font-weight: 900; padding: 9px 14px; font-size: 0.85em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);" title="تحديث الكاش، ومزامنة السحابة، وبث التحديث العالمي (v31.10) لجميع الأجهزة والهواتف حول العالم بضغطة واحدة">
+                        <span style="font-size: 1.1em;">🚀</span> تحديث وبث الإصدار (v31.10)
                     </button>
-                    <button type="button" id="btn-broadcast-version-global" onclick="handleBroadcastGlobalVersion()" class="btn-header" style="background: linear-gradient(135deg, rgba(234, 88, 12, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%); border: 1.5px solid #f97316; color: #fdba74; font-weight: 900; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="بث رسالة التحديث الجديد (v31.10) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً">
-                        <span style="font-size: 1.1em;">📢</span> بث التحديث العالمي (v31.10)
-                    </button>
-                    <button type="button" id="btn-force-sync" onclick="handleForceFullSync()" style="background: linear-gradient(135deg,rgba(59,130,246,0.25),rgba(99,102,241,0.2)); border: 1px solid #6366f1; color: #a5b4fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="جلب كافة السجلات من السحابة قسرياً وبثها لجميع الأجهزة">
-                        🔄 مزامنة كاملة
-                    </button>
-                    <a href="calibrator.html" target="_blank" class="btn-header" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(14, 165, 233, 0.15) 100%); border: 1px solid #38bdf8; color: #7dd3fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; text-decoration: none; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" title="فتح أداة معايرة وتحريك نقاط الألم على المجسم">
-                        <span>🎯</span> معايرة نقاط الألم
-                    </a>
-                    <a href="index.html" class="btn-header admin-btn-front" style="background: #1e293b; color: #fff; padding: 9px 14px; font-size: 0.86em; text-decoration: none; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid #334155;">
+                    <a href="index.html" class="btn-header admin-btn-front" style="background: #1e293b; color: #fff; padding: 9px 13px; font-size: 0.85em; text-decoration: none; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid #334155;" title="فتح واجهة المراجعين">
                         🌐 واجهة المراجعين
                     </a>
                 </div>
@@ -816,17 +798,11 @@
                     </div>
 
                     <div class="patient-section-actions">
-                        <button type="button" onclick="triggerManualCloudSync()" class="btn-header" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #fff; border: none; font-weight: bold; padding: 9px 16px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);">
+                        <button type="button" onclick="triggerManualCloudSync()" class="btn-header" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #fff; border: none; font-weight: bold; padding: 9px 16px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);" title="تحديث بيانات وسجلات المراجعين ومزامنتها">
                             <span id="sync-spin-icon-main">🔄</span> تحديث ومزامنة
                         </button>
-                        <button type="button" onclick="openAddPatientModal()" class="btn-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; border: none; font-weight: bold; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+                        <button type="button" onclick="openAddPatientModal()" class="btn-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; border: none; font-weight: bold; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);" title="إضافة ملف مراجع جديد يدوياً">
                             <span>➕</span> إضافة مريض
-                        </button>
-                        <button type="button" onclick="openImportPatientModal()" class="btn-header" style="background: rgba(56, 189, 248, 0.2); border-color: #38bdf8; color: #7dd3fc; font-weight: bold; padding: 9px 14px; font-size: 0.86em; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-                            <span>📥</span> استيراد ملف
-                        </button>
-                        <button type="button" onclick="handleClearAllRecords()" class="btn-header" style="background: rgba(239, 68, 68, 0.15); border-color: #ef4444; color: #fca5a5; font-size: 0.84em; padding: 9px 12px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
-                            <span>🗑️</span> تفريغ
                         </button>
                     </div>
                 </div>
@@ -8062,6 +8038,37 @@ function copyAdminCode(code) {
                 }
             }, 250);
         }
+
+        // 🚀 تحديث الكاش ومزامنة السحابة وبث التحديث العالمي بضغطة واحدة
+        async function handleUnifiedUpdateAndBroadcast() {
+            if (confirm('🚀 تحديث وبث الإصدار (v31.10):\n\nهل تود تحديث الكاش المحلي، ومزامنة السجلات، وبث التحديث الجديد لكافة هواتف وأجهزة المراجعين المتصلة فوراً؟')) {
+                // 1. بث التحديث السحابي الشامل
+                try {
+                    if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
+                        SmartCloudSync.broadcastAppVersionUpdate({
+                            version: 'v31.10',
+                            title: 'تحديث المنظومة (v31.10)',
+                            timestamp: Date.now()
+                        });
+                    }
+                } catch(e) {}
+
+                // 2. مزامنة قسرية للبيانات
+                try {
+                    if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.forceFullSync === 'function') {
+                        await SmartCloudSync.forceFullSync();
+                    }
+                } catch(e) {}
+
+                // 3. تنظيف الكاش وتحديث الصفحة
+                if (typeof forceAppUpdateAndClearCache === 'function') {
+                    forceAppUpdateAndClearCache();
+                } else {
+                    window.location.reload(true);
+                }
+            }
+        }
+        window.handleUnifiedUpdateAndBroadcast = handleUnifiedUpdateAndBroadcast;
 
         // بث رسالة التحديث الجديد الشامل (v31.10) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
         function handleBroadcastGlobalVersion() {
