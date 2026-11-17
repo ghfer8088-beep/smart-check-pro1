@@ -1775,3 +1775,7 @@ const AdminEngine = (function() {
         clearAllPatients
     };
 })();
+
+if (typeof window !== 'undefined') {
+    window.AdminEngine = AdminEngine;
+}

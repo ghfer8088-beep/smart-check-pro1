@@ -6618,6 +6618,123 @@ function copyAdminCode(code) {
             try { renderTable(getFilteredPatientsList()); loadNotificationsData(false); } catch (e) {}
             try { updateGeneratedSubscriberPinPreview(); } catch (e) {}
         }
+
+        // ==========================================
+        // دوال الربط التلقائي للواتساب في لوحة التحكم
+        // ==========================================
+        function toggleCustomUrlFieldVisibility() {
+            const prov = document.getElementById('wa-cfg-provider')?.value;
+            const customRow = document.getElementById('wa-cfg-custom-url-row');
+            const stdRow = document.getElementById('wa-cfg-standard-credentials-row');
+            if (customRow) customRow.style.display = (prov === 'custom') ? 'block' : 'none';
+            if (stdRow) stdRow.style.display = (prov === 'custom') ? 'none' : 'grid';
+        }
+        window.toggleCustomUrlFieldVisibility = toggleCustomUrlFieldVisibility;
+
+        function saveWhatsAppConfigFromAdminUI() {
+            if (typeof SmartWhatsApp === 'undefined') {
+                alert('محرك الواتساب الذكي غير محمل');
+                return;
+            }
+            const enabled = document.getElementById('wa-cfg-enabled')?.checked || false;
+            const provider = document.getElementById('wa-cfg-provider')?.value || 'ultramsg';
+            const instanceId = document.getElementById('wa-cfg-instance-id')?.value?.trim() || '';
+            const token = document.getElementById('wa-cfg-token')?.value?.trim() || '';
+            const senderPhone = document.getElementById('wa-cfg-sender-phone')?.value?.trim() || '0795651388';
+            const customUrl = document.getElementById('wa-cfg-custom-url')?.value?.trim() || '';
+            const autoSendOnApproval = document.getElementById('wa-cfg-auto-approve')?.checked || false;
+            const autoSendOnInstantRequest = document.getElementById('wa-cfg-auto-instant')?.checked || false;
+            const messageTemplate = document.getElementById('wa-cfg-template')?.value || '';
+
+            SmartWhatsApp.saveConfig({
+                enabled,
+                provider,
+                instanceId,
+                token,
+                senderPhone,
+                customUrl,
+                autoSendOnApproval,
+                autoSendOnInstantRequest,
+                messageTemplate
+            });
+
+            const fb = document.getElementById('wa-cfg-feedback');
+            if (fb) {
+                fb.style.display = 'block';
+                fb.style.background = 'rgba(16, 185, 129, 0.2)';
+                fb.style.color = '#6ee7b7';
+                fb.textContent = '✅ تم حفظ إعدادات الواتساب بنجاح وتفعيلها سحابياً!';
+                setTimeout(() => { fb.style.display = 'none'; }, 4000);
+            }
+        }
+        window.saveWhatsAppConfigFromAdminUI = saveWhatsAppConfigFromAdminUI;
+
+        async function handleTestWhatsAppConnection() {
+            if (typeof SmartWhatsApp === 'undefined') {
+                alert('محرك الواتساب الذكي غير محمل');
+                return;
+            }
+            const phone = document.getElementById('wa-test-phone-input')?.value?.trim();
+            const fb = document.getElementById('wa-test-feedback');
+            if (!phone) {
+                if (fb) {
+                    fb.style.display = 'block';
+                    fb.style.background = 'rgba(239, 68, 68, 0.2)';
+                    fb.style.color = '#fca5a5';
+                    fb.textContent = '⚠️ يرجى إدخال رقم الهاتف لإجراء الاختبار.';
+                }
+                return;
+            }
+            if (fb) {
+                fb.style.display = 'block';
+                fb.style.background = 'rgba(56, 189, 248, 0.2)';
+                fb.style.color = '#7dd3fc';
+                fb.textContent = '⏳ جاري إرسال الرسالة الاختبارية عبر الـ API...';
+            }
+            const res = await SmartWhatsApp.testConnection(phone);
+            if (fb) {
+                if (res && res.success) {
+                    fb.style.background = 'rgba(16, 185, 129, 0.2)';
+                    fb.style.color = '#6ee7b7';
+                    fb.textContent = '✅ تم إرسال الرسالة الاختبارية بنجاح إلى ' + phone;
+                } else {
+                    fb.style.background = 'rgba(239, 68, 68, 0.2)';
+                    fb.style.color = '#fca5a5';
+                    fb.textContent = '❌ فشل الإرسال: ' + (res?.error || 'خطأ في الاتصال بالـ API');
+                }
+            }
+        }
+        window.handleTestWhatsAppConnection = handleTestWhatsAppConnection;
+
+        async function handleTriggerAutoWhatsAppFromNotif(notifId, phone, name, pin, type) {
+            if (typeof SmartWhatsApp === 'undefined') {
+                alert('محرك الواتساب غير محمل');
+                return;
+            }
+            const btn = document.getElementById('btn-auto-wa-' + notifId);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '⏳ جارٍ الإرسال...';
+            }
+            const res = await SmartWhatsApp.sendAutomatedWhatsApp({
+                phone: phone,
+                name: name,
+                code: pin,
+                planTitle: (type === 'humanitarian_request' || (pin && String(pin).startsWith('H'))) ? 'إعفاء إنساني (صدقة جارية)' : 'خطة التعافي الكاملة',
+                force: true
+            });
+            if (btn) {
+                if (res && res.success) {
+                    btn.innerHTML = '✅ تم الإرسال بنجاح';
+                    btn.style.background = '#10b981';
+                } else {
+                    btn.innerHTML = '❌ فشل الإرسال';
+                    btn.style.background = '#ef4444';
+                    alert('تعذر الإرسال الآلي: ' + (res?.error || 'يرجى مراجعة إعدادات الـ API'));
+                }
+            }
+        }
+        window.handleTriggerAutoWhatsAppFromNotif = handleTriggerAutoWhatsAppFromNotif;
         function adminCodesBoxHTML(phone, name, highlightTier) {
             const seed = (phone && String(phone).replace(/\D/g, '').length >= 7) ? phone : (name || '');
             if (!seed) return '';

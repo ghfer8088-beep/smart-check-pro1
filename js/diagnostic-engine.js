@@ -1281,3 +1281,8 @@ const ClinicalEngine = (function() {
         analyzeAssessment
     };
 })();
+
+if (typeof window !== 'undefined') {
+    window.ClinicalEngine = ClinicalEngine;
+    window.DiagnosticEngine = ClinicalEngine;
+}
