@@ -4177,16 +4177,11 @@ function renderSpecializedClinicalReportStep3(data, reportContainer) {
                     </div>
                 </div>
                 
-                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                    <button type="button" onclick="saveClinicalReport()" class="btn-header no-print btn-header-emerald" style="padding: 10px 16px; font-weight: bold; font-size: 0.88em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        <span>💾</span> حفظ التقرير
-                    </button>
-                    <button type="button" onclick="printClinicalReport()" class="btn-header no-print" style="background: #3b82f6; color: #fff; border: 1.5px solid #60a5fa; padding: 10px 16px; font-weight: bold; font-size: 0.88em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        <span>🖨️</span> طباعة / PDF
-                    </button>
-                    <a href="${waUrl}" target="_blank" class="btn-header no-print btn-whatsapp-cta" style="padding: 10px 18px; font-weight: bold; font-size: 0.88em; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);">
-                        <span>💬</span> إرسال واتساب
-                    </a>
+                <div class="report-top-badge" style="background: rgba(16, 185, 129, 0.12); border: 1.5px solid #10b981; padding: 10px 16px; border-radius: 12px; text-align: center;">
+                    <div style="color: #6ee7b7; font-weight: 900; font-size: 0.95em; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <span>🩺</span> <span>بطاقة تحويل سريرية معتمدة</span>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 0.74em; margin-top: 3px;">تأهيل عصبي حركي واستشارة مباشرة</div>
                 </div>
             </div>
 
@@ -4894,26 +4889,11 @@ function displayDiagnosticReport(data) {
                     </div>
                 </div>
                 
-                <div class="report-top-actions" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; max-width: 100%; box-sizing: border-box;">
-                    <div style="background: #0f172a; border: 1.5px solid #10b981; padding: 6px 10px; border-radius: 8px; text-align: center; flex: 1 1 70px; box-sizing: border-box;">
-                        <div style="color: #10b981; font-weight: bold; font-size: 1.05em;">${resolvedProbability}%</div>
-                        <div style="color: #94a3b8; font-size: 0.72em;">نسبة الاحتمالية</div>
+                <div class="report-top-badge" style="background: rgba(16, 185, 129, 0.12); border: 1.5px solid #10b981; padding: 10px 18px; border-radius: 12px; text-align: center;">
+                    <div style="color: #6ee7b7; font-weight: 900; font-size: 0.96em; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <span>🩺</span> <span>تقرير طبي استشاري معتمد</span>
                     </div>
-                    <div style="background: #0f172a; border: 1.5px solid var(--primary-gold); padding: 6px 10px; border-radius: 8px; text-align: center; flex: 1 1 70px; box-sizing: border-box;">
-                        <div style="color: var(--primary-gold); font-weight: bold; font-size: 1.05em;">${resolvedConfidence}%</div>
-                        <div style="color: #94a3b8; font-size: 0.72em;">مؤشر الثقة</div>
-                    </div>
-                    <div class="report-header-buttons" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; flex: 3 1 250px; width: 100%; max-width: 100%; box-sizing: border-box;">
-                        <button type="button" onclick="saveClinicalReport()" class="btn-header no-print btn-header-emerald" style="flex: 1 1 75px; padding: 8px 6px; font-weight: bold; font-size: 0.8em; border-radius: 8px; white-space: nowrap; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer;">
-                            <span>💾</span> حفظ التقرير
-                        </button>
-                        <button type="button" onclick="printClinicalReport()" class="btn-header no-print" style="flex: 1 1 75px; background: #3b82f6; color: #fff; border: 1.5px solid #60a5fa; padding: 8px 6px; font-weight: bold; font-size: 0.8em; border-radius: 8px; white-space: nowrap; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer;">
-                            <span>🖨️</span> طباعة / PDF
-                        </button>
-                        <button type="button" onclick="sendWhatsAppDiagnosticReport()" class="btn-header no-print btn-whatsapp-cta" style="flex: 1 1 85px; padding: 8px 6px; font-weight: bold; font-size: 0.8em; border-radius: 8px; white-space: nowrap; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer;">
-                            <span>💬</span> واتساب
-                        </button>
-                    </div>
+                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 3px;">منظومة التشخيص والتقويم الحركي الذكي</div>
                 </div>
             </div>
 
@@ -5037,6 +5017,43 @@ function displayDiagnosticReport(data) {
                             }
                             return evidenceList.join(' • ');
                         })()}
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= 5. مؤشرات الدقة السريرية وإجراءات التقرير (أسفل التقرير) ================= -->
+            <div id="report-bottom-actions-panel" class="report-bottom-summary" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.95) 100%); border: 2px solid var(--primary-gold); border-radius: 16px; padding: 22px 20px; margin-bottom: 25px; box-shadow: 0 10px 35px rgba(0,0,0,0.6);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                    
+                    <!-- مؤشرات الاحتمالية ومؤشر الثقة السريرية -->
+                    <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap; flex: 1 1 320px;">
+                        <div style="background: #080d1a; border: 1.5px solid #10b981; padding: 10px 18px; border-radius: 12px; text-align: center; min-width: 105px; box-shadow: 0 4px 15px rgba(16,185,129,0.15);">
+                            <div style="color: #10b981; font-weight: 900; font-size: 1.5em; font-family: monospace;">${resolvedProbability}%</div>
+                            <div style="color: #94a3b8; font-size: 0.78em; font-weight: bold; margin-top: 2px;">نسبة الاحتمالية</div>
+                        </div>
+                        
+                        <div style="background: #080d1a; border: 1.5px solid var(--primary-gold); padding: 10px 18px; border-radius: 12px; text-align: center; min-width: 105px; box-shadow: 0 4px 15px rgba(212,175,55,0.15);">
+                            <div style="color: var(--primary-gold); font-weight: 900; font-size: 1.5em; font-family: monospace;">${resolvedConfidence}%</div>
+                            <div style="color: #94a3b8; font-size: 0.78em; font-weight: bold; margin-top: 2px;">مؤشر الثقة</div>
+                        </div>
+
+                        <div>
+                            <div style="color: #fef08a; font-weight: 900; font-size: 1.02em;">✓ تم اعتماد التقييم السريري للحالة</div>
+                            <div style="color: #cbd5e1; font-size: 0.82em; margin-top: 3px;">يمكنك الآن حفظ نسختك، طباعتها أو إرسالها للمتابعة مع المعالج:</div>
+                        </div>
+                    </div>
+
+                    <!-- أزرار الإجراءات: حفظ التقرير، طباعة / PDF، إرسال واتساب -->
+                    <div class="report-action-buttons no-print" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; flex: 1 1 320px; justify-content: flex-end;">
+                        <button type="button" onclick="saveClinicalReport()" class="btn-header btn-header-emerald" style="padding: 11px 18px; font-weight: 900; font-size: 0.9em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);">
+                            <span>💾</span> <span>حفظ التقرير</span>
+                        </button>
+                        <button type="button" onclick="printClinicalReport()" class="btn-header" style="background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; border: 1.5px solid #60a5fa; padding: 11px 18px; font-weight: 900; font-size: 0.9em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.35);">
+                            <span>🖨️</span> <span>طباعة / PDF</span>
+                        </button>
+                        <button type="button" onclick="sendWhatsAppDiagnosticReport()" class="btn-header btn-whatsapp-cta" style="padding: 11px 20px; font-weight: 900; font-size: 0.9em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);">
+                            <span>💬</span> <span>إرسال واتساب</span>
+                        </button>
                     </div>
                 </div>
             </div>
