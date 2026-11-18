@@ -1179,13 +1179,21 @@
             } catch (e) {}
         }
 
+        const resolvedPhone = patientRecord.phone
+            || patientRecord.patientPhone
+            || patientRecord.pendingUnlockRequest?.subscriberPhone
+            || patientRecord.assessment?.patientPhone
+            || patientRecord.latestAssessment?.patientPhone
+            || '';
+
         const enhancedRecord = {
             ...patientRecord,
             id: patientId,
             patientId: patientId,
             name: cleanName,
             fullName: patientRecord.fullName && !/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)$/i.test(patientRecord.fullName) ? patientRecord.fullName : cleanName,
-            phone: patientRecord.phone || '',
+            phone: resolvedPhone,
+            patientPhone: resolvedPhone,
             age: patientRecord.age || '',
             gender: patientRecord.gender || 'male',
             height: patientRecord.height || '',
@@ -1221,13 +1229,26 @@
 
         // 1. التخزين في قاعدة البيانات الموحدة
         const currentPatients = getCloudSyncedPatients();
-        const existingIdx = currentPatients.findIndex(p => (p.id && (p.id === enhancedRecord.id || p.patientId === enhancedRecord.id)));
+        const existingIdx = currentPatients.findIndex(p =>
+            (p.id && (p.id === enhancedRecord.id || p.patientId === enhancedRecord.id)) ||
+            (p.patientId && p.patientId === enhancedRecord.patientId)
+        );
 
         if (existingIdx >= 0) {
             const existing = currentPatients[existingIdx];
-            const isDiff = (existing.painArea && enhancedRecord.painArea && existing.painArea !== enhancedRecord.painArea) ||
-                           (existing.chiefDiagnosis && enhancedRecord.chiefDiagnosis && existing.chiefDiagnosis !== enhancedRecord.chiefDiagnosis) ||
-                           (existing.timestamp && enhancedRecord.timestamp && Math.abs(new Date(existing.timestamp) - new Date(enhancedRecord.timestamp)) > 300000);
+            // الحفاظ على رقم الهاتف السابق إذا لم يتضمن التحديث رقماً جديداً
+            if (!enhancedRecord.phone && (existing.phone || existing.patientPhone)) {
+                enhancedRecord.phone = existing.phone || existing.patientPhone;
+                enhancedRecord.patientPhone = enhancedRecord.phone;
+            }
+            const isSameOngoingExam = existing.status === 'in_progress'
+                || String(existing.chiefDiagnosis || '').includes('استشارة سريرية جارية')
+                || (existing.painArea === enhancedRecord.painArea && !existing.isPlanCompleted);
+            const isDiff = !isSameOngoingExam && (
+                (existing.painArea && enhancedRecord.painArea && existing.painArea !== enhancedRecord.painArea) ||
+                (existing.chiefDiagnosis && enhancedRecord.chiefDiagnosis && existing.chiefDiagnosis !== enhancedRecord.chiefDiagnosis) ||
+                (existing.timestamp && enhancedRecord.timestamp && Math.abs(new Date(existing.timestamp) - new Date(enhancedRecord.timestamp)) > 300000)
+            );
             if (isDiff) {
                 enhancedRecord.id = enhancedRecord.id + '_' + Date.now().toString(36);
                 enhancedRecord.patientId = enhancedRecord.id;

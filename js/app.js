@@ -6323,8 +6323,12 @@ async function _submitPromoOrTestUnlockCodeCore(inputIdOverride) {
 
     const pend = getPendingUnlockRequest();
     const type = res.humanitarian ? 'humanitarian' : (res.master ? 'promo_or_test' : (res.gift ? 'gift_code' : (pend?.requestType || 'paid_orange_wallet')));
+    const modalPromoVal = (document.getElementById('promocode-modal-phone')?.value || '').trim();
+    const modalPromoDigits = modalPromoVal.replace(/\D/g, '');
     const phoneUsed = toEnglishDigits(
         document.getElementById('code-alt-phone')?.value?.trim()
+        || (modalPromoDigits.length >= 7 ? modalPromoVal : '')
+        || document.getElementById('chk-subscriber-phone')?.value?.trim()
         || pend?.subscriberPhone
         || document.getElementById('pay-subscriber-phone')?.value?.trim()
         || ''
@@ -6659,7 +6663,8 @@ async function submitSubscriptionCheckout() {
     const pPhone = document.getElementById('pay-subscriber-phone'); if (pPhone) pPhone.value = subPhone;
     const pRef = document.getElementById('pay-transfer-ref'); if (pRef) pRef.value = transferRef;
 
-    await submitOrangeWalletPaymentNotification();
+    const isSubmitted = await submitOrangeWalletPaymentNotification();
+    if (!isSubmitted) return;
 
     const formPane = document.getElementById('chk-form-pane');
     const confPane = document.getElementById('chk-confirmation-pane');
@@ -6762,14 +6767,16 @@ function closeDirectPromoCodeModal() {
 }
 window.closeDirectPromoCodeModal = closeDirectPromoCodeModal;
 
-function submitPromoCodeFromModal() {
+async function submitPromoCodeFromModal() {
     const val = (document.getElementById('promocode-modal-input')?.value || '').trim();
     if (!val) {
         showRoyalPaymentToast('⚠️ يرجى إدخال كود التفعيل أولاً.', 'warning');
         return;
     }
-    submitPromoOrTestUnlockCode('promocode-modal-input');
-    closeDirectPromoCodeModal();
+    await submitPromoOrTestUnlockCode('promocode-modal-input');
+    if (typeof isCurrentPatientPlanUnlocked === 'function' && isCurrentPatientPlanUnlocked()) {
+        closeDirectPromoCodeModal();
+    }
 }
 window.submitPromoCodeFromModal = submitPromoCodeFromModal;
 
@@ -6798,9 +6805,13 @@ function renderPreReportPaywallGate(data, reportContainer) {
     // تشغيل المراقب الحي دائماً طالما شاشة الدفع معروضة ليتم الفتح الفوري بمجرد نقر الأدمن على القفل في لوحة التحكم
     if (!isCurrentPatientPlanUnlocked()) {
         startPendingUnlockLiveWatcher();
-        // فتح نافذة باقات الاشتراك المنبثقة (Pop-up) تلقائياً أمام المراجع فور وصوله للمرحلة 3
+        // فتح نافذة باقات الاشتراك المنبثقة (Pop-up) تلقائياً أمام المراجع فقط إذا لم يكن هناك طلب معلق أو نافذة اشتراك/كود مفتوحة حالياً
         setTimeout(() => {
-            if (typeof openSubscriptionTiersModal === 'function' && !isCurrentPatientPlanUnlocked()) {
+            const hasPendingReq = Boolean(typeof getPendingUnlockRequest === 'function' && getPendingUnlockRequest());
+            const chkOpen = document.getElementById('subscription-checkout-modal')?.style?.display === 'flex';
+            const humOpen = document.getElementById('subscription-humanitarian-modal')?.style?.display === 'flex';
+            const promoOpen = document.getElementById('subscription-promocode-modal')?.style?.display === 'flex';
+            if (typeof openSubscriptionTiersModal === 'function' && !isCurrentPatientPlanUnlocked() && !hasPendingReq && !chkOpen && !humOpen && !promoOpen) {
                 openSubscriptionTiersModal();
             }
         }, 700);
@@ -6924,7 +6935,10 @@ function markCurrentExamAndPatientUnlocked(unlockMeta = {}) {
             activePatient.name = subName;
             activePatient.fullName = subName;
         }
-        if (subPhone) activePatient.phone = subPhone;
+        if (subPhone) {
+            activePatient.phone = subPhone;
+            activePatient.patientPhone = subPhone;
+        }
         activePatient.patientId = pId;
         activePatient.id = pId;
         activePatient.isPaidUnlocked = true;
@@ -6942,6 +6956,9 @@ function markCurrentExamAndPatientUnlocked(unlockMeta = {}) {
             localStorage.setItem('smart_active_patient', JSON.stringify(activePatient));
             if (typeof SmartDB !== 'undefined' && typeof SmartDB.savePatient === 'function') {
                 SmartDB.savePatient(activePatient).catch(() => {});
+            }
+            if (window.SmartCloudSync && typeof window.SmartCloudSync.dispatchPatient === 'function') {
+                window.SmartCloudSync.dispatchPatient(activePatient);
             }
         } catch (e) {}
     }
@@ -7152,14 +7169,29 @@ function syncPendingPatientRequestToAdmin(pId, subName, subPhone, painArea, pend
 // 1. إرسال إشعار تحويل محفظة أورانج للمراجعة والاعتماد من قِبل الإدارة (لا يفتح تلقائياً بدون تدقيق!)
 async function submitOrangeWalletPaymentNotification() {
     const cfg = getActivePaymentGateConfig();
-    const nameInput = document.getElementById('chk-subscriber-name') || document.getElementById('pay-subscriber-name');
-    const phoneInput = document.getElementById('chk-subscriber-phone') || document.getElementById('pay-subscriber-phone');
-    const refInput = document.getElementById('chk-transfer-ref') || document.getElementById('pay-transfer-ref');
+    const chkNameEl = document.getElementById('chk-subscriber-name');
+    const payNameEl = document.getElementById('pay-subscriber-name');
+    const chkPhoneEl = document.getElementById('chk-subscriber-phone');
+    const payPhoneEl = document.getElementById('pay-subscriber-phone');
+    const chkRefEl = document.getElementById('chk-transfer-ref');
+    const payRefEl = document.getElementById('pay-transfer-ref');
     const msgEl = document.getElementById('paywall-status-feedback');
 
-    let subName = (nameInput?.value || '').trim();
-    const subPhone = (phoneInput?.value || '').trim();
-    const transferRef = (refInput?.value || '').trim();
+    const chkNameVal = (chkNameEl?.value || '').trim();
+    const payNameVal = (payNameEl?.value || '').trim();
+    let subName = chkNameVal || payNameVal;
+
+    const chkPhoneVal = (chkPhoneEl?.value || '').trim();
+    const payPhoneVal = (payPhoneEl?.value || '').trim();
+    const subPhone = chkPhoneVal || payPhoneVal;
+
+    const chkRefVal = (chkRefEl?.value || '').trim();
+    const payRefVal = (payRefEl?.value || '').trim();
+    const transferRef = chkRefVal || payRefVal;
+
+    const nameInput = chkNameVal ? chkNameEl : (payNameEl || chkNameEl);
+    const phoneInput = chkPhoneVal ? chkPhoneEl : (payPhoneEl || chkPhoneEl);
+    const refInput = chkRefVal ? chkRefEl : (payRefEl || chkRefEl);
 
     if (!subName || subName.length < 3) {
         const cleanPhone = subPhone.replace(/\D/g, '');
@@ -7173,8 +7205,11 @@ async function submitOrangeWalletPaymentNotification() {
                 msgEl.style.color = '#fca5a5';
                 msgEl.innerHTML = '⚠️ يرجى إدخال <strong>الاسم</strong> أو <strong>رقم الهاتف</strong> على الأقل.';
             }
+            if (typeof showRoyalPaymentToast === 'function') {
+                showRoyalPaymentToast('⚠️ يرجى إدخال الاسم أو رقم الهاتف على الأقل.', 'warning');
+            }
             nameInput?.focus();
-            return;
+            return false;
         }
     }
 
@@ -7187,16 +7222,22 @@ async function submitOrangeWalletPaymentNotification() {
             msgEl.style.color = '#fca5a5';
             msgEl.innerHTML = '⚠️ يرجى إدخال <strong>رقم هاتف صحيح (واتساب)</strong> ليصلك اعتماد التفعيل عليه.';
         }
+        if (typeof showRoyalPaymentToast === 'function') {
+            showRoyalPaymentToast('⚠️ يرجى إدخال رقم هاتف واتساب صحيح.', 'warning');
+        }
         phoneInput?.focus();
-        return;
+        return false;
     }
 
     // فحص استباقي ذكي: إذا قام المريض بكتابة كود التفعيل المعتمد في خانة الرقم المرجعي
     if (transferRef && transferRef.length >= 4) {
         const autoCodeCheck = verifyActivationCode(transferRef, cfg);
         if (autoCodeCheck && !autoCodeCheck.noSeed) {
-            submitPromoOrTestUnlockCode('pay-transfer-ref');
-            return;
+            await submitPromoOrTestUnlockCode(chkRefVal ? 'chk-transfer-ref' : 'pay-transfer-ref');
+            if (typeof isCurrentPatientPlanUnlocked === 'function' && isCurrentPatientPlanUnlocked()) {
+                if (typeof closeSubscriptionCheckoutModal === 'function') closeSubscriptionCheckoutModal();
+            }
+            return false;
         }
     }
 
@@ -7225,25 +7266,25 @@ async function submitOrangeWalletPaymentNotification() {
 
     if (!normRef) {
         refError('⚠️ <strong>رقم الحوالة إجباري.</strong> يرجى إتمام التحويل أولاً ثم إدخال <strong>رقم العملية</strong> الظاهر في رسالة أورانج موني أو في سجل العمليات بالتطبيق.');
-        return;
+        return false;
     }
     if (!/^[A-Z0-9]+$/.test(normRef) || normRef.length < 6 || normRef.length > 30 || refDigits.length < 5) {
         refError('⚠️ رقم الحوالة غير صحيح. يجب أن يتكوّن من <strong>6 خانات على الأقل</strong> (أرقام/حروف إنجليزية) كما يظهر تماماً في رسالة التحويل.');
-        return;
+        return false;
     }
     if (/^0?7[789]\d{7}$/.test(refDigits) || /^9627[789]\d{7}$/.test(refDigits) || (walletDigits && refDigits.endsWith(walletDigits.slice(-9))) || (cleanPhoneDigits && refDigits.endsWith(cleanPhoneDigits.slice(-9)))) {
         refError('⚠️ الرقم المُدخل هو <strong>رقم هاتف/محفظة</strong> وليس رقم حوالة. يرجى إدخال <strong>رقم العملية (Transaction ID)</strong> من رسالة التحويل.');
-        return;
+        return false;
     }
     if (/^(\d)\1+$/.test(refDigits) || '0123456789012345678901234567890'.includes(refDigits) || '9876543210987654321098765432109'.includes(refDigits)) {
         refError('⚠️ رقم الحوالة المُدخل غير منطقي. يرجى نسخه كما هو من رسالة أورانج موني.');
-        return;
+        return false;
     }
     try {
         const usedRefs = JSON.parse(localStorage.getItem('smart_used_transfer_refs') || '[]');
         if (Array.isArray(usedRefs) && usedRefs.includes(normRef)) {
             refError('⚠️ <strong>رقم الحوالة هذا مستخدم مسبقاً</strong> في طلب سابق. كل حوالة تُستخدم لطلب واحد فقط.');
-            return;
+            return false;
         }
     } catch (e) {}
     if (refInput) {
@@ -7278,8 +7319,10 @@ async function submitOrangeWalletPaymentNotification() {
         || 'العمود الفقري والمفاصل';
     const chosenPkg = window._selPkg || 1;
     const pkgPrices = getPkgPrices(cfg);
-    const chosenPrice = pkgPrices[chosenPkg] || 3;
-    const pkgTitle = (chosenPkg === 10) ? 'باقة 10 فحوصات الشاملة (15 د.أ)' : (chosenPkg === 5 ? 'باقة 5 فحوصات العائلية (10 د.أ)' : 'تشخيص فردي (3 د.أ)');
+    const chosenPrice = pkgPrices[chosenPkg] || cfg.priceJod || 3;
+    const pkgTitle = (chosenPkg === 10)
+        ? `باقة 10 فحوصات الشاملة (${chosenPrice} د.أ)`
+        : (chosenPkg === 5 ? `باقة 5 فحوصات العائلية (${chosenPrice} د.أ)` : `تشخيص فردي (${chosenPrice} د.أ)`);
     const nextSerial = chosenPkg === 1 ? getConsumedSingleCodesCountForPhone(subPhone) : 0;
     const unlockPin = generateUserBoundCode(subPhone, chosenPkg, nextSerial);
 
@@ -7344,14 +7387,14 @@ async function submitOrangeWalletPaymentNotification() {
     if (typeof SmartDB !== 'undefined' && typeof SmartDB.addAdminNotification === 'function') {
         SmartDB.addAdminNotification({
             type: 'payment_received',
-            title: `💳 حوالة أورانج بانتظار تأكيدك (${cfg.priceJod} د.أ): ${subName}`,
-            message: `أرسل المشترك [${subName}] (هاتف: ${subPhone}) إشعار تحويل (${cfg.priceJod} د.أ) إلى محفظة أورانج (${cfg.walletPhone}) لمنطقة (${painArea}). رقم الحركة/المحفظة: [${transferRef}]. اضغط (تأكيد وتفعيل) بعد التحقق من وصول الحوالة.`,
+            title: `💳 حوالة أورانج بانتظار تأكيدك (${chosenPrice} د.أ): ${subName}`,
+            message: `أرسل المشترك [${subName}] (هاتف: ${subPhone}) إشعار تحويل (${chosenPrice} د.أ) إلى محفظة أورانج (${cfg.walletPhone}) لمنطقة (${painArea}). رقم الحركة/المحفظة: [${transferRef}]. اضغط (تأكيد وتفعيل) بعد التحقق من وصول الحوالة.`,
             patientId: pId,
             patientName: subName,
             patientPhone: subPhone,
             meta: {
                 paymentType: 'orange_wallet',
-                amountJod: cfg.priceJod,
+                amountJod: chosenPrice,
                 walletPhone: cfg.walletPhone,
                 transferRef: transferRef,
                 packageSize: window._selPkg || 1,
@@ -7375,6 +7418,7 @@ async function submitOrangeWalletPaymentNotification() {
         }
     }, 100);
     showRoyalPaymentToast('✅ وصل طلبك إلى الإدارة. انتقل الآن لإدخال كود التفعيل عند وصوله.', 'success');
+    return true;
 }
 window.submitOrangeWalletPaymentNotification = submitOrangeWalletPaymentNotification;
 
@@ -7421,14 +7465,26 @@ window.sendWhatsAppHumanitarianRequest = sendWhatsAppHumanitarianRequest;
 
 // 2. رفع طلب الاستفادة من مبادرة الرعاية الإنسانية (صدقة جارية) — مع الحفاظ الكامل على كرامة المستفيد
 async function submitHumanitarianFreeActivation() {
-    const nameInput = document.getElementById('hum-modal-name') || document.getElementById('hum-subscriber-name');
-    const phoneInput = document.getElementById('hum-modal-phone') || document.getElementById('hum-subscriber-phone');
-    const oathCheckbox = document.getElementById('hum-modal-pledge') || document.getElementById('hum-oath-checkbox');
+    const humModalNameEl = document.getElementById('hum-modal-name');
+    const humSubNameEl = document.getElementById('hum-subscriber-name');
+    const humModalPhoneEl = document.getElementById('hum-modal-phone');
+    const humSubPhoneEl = document.getElementById('hum-subscriber-phone');
+    const humModalPledgeEl = document.getElementById('hum-modal-pledge');
+    const humOathEl = document.getElementById('hum-oath-checkbox');
     const oathLabelBox = document.getElementById('hum-oath-box-label');
     const msgEl = document.getElementById('paywall-status-feedback');
 
-    let subName = (nameInput?.value || '').trim();
-    const subPhone = (phoneInput?.value || '').trim();
+    const humModalNameVal = (humModalNameEl?.value || '').trim();
+    const humSubNameVal = (humSubNameEl?.value || '').trim();
+    let subName = humModalNameVal || humSubNameVal;
+
+    const humModalPhoneVal = (humModalPhoneEl?.value || '').trim();
+    const humSubPhoneVal = (humSubPhoneEl?.value || '').trim();
+    const subPhone = humModalPhoneVal || humSubPhoneVal;
+
+    const nameInput = humModalNameVal ? humModalNameEl : (humSubNameEl || humModalNameEl);
+    const phoneInput = humModalPhoneVal ? humModalPhoneEl : (humSubPhoneEl || humModalPhoneEl);
+    const oathCheckbox = (humModalPledgeEl && humModalPledgeEl.checked) ? humModalPledgeEl : (humOathEl || humModalPledgeEl);
 
     if (typeof isHumanitarianLockedForUser === 'function' && isHumanitarianLockedForUser(subPhone)) {
         showHumanitarianQuotaExhaustedNotice();
@@ -11814,7 +11870,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v32.80';
+const CURRENT_APP_VERSION = 'v32.90';
 window.CURRENT_APP_VERSION = CURRENT_APP_VERSION;
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
@@ -14908,6 +14964,7 @@ function renderRoyalChatVitalsCard(box) {
     if (existing) existing.remove();
 
     const defaultName = clinicalDialogueState?.patientFullName || clinicalDialogueState?.patientName || document.getElementById('patient-name')?.value || '';
+    const defaultPhone = clinicalDialogueState?.patientPhone || (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') || localStorage.getItem('smart_patient_phone') || document.getElementById('patient-phone')?.value || '';
     const defaultAge = clinicalDialogueState?.patientVitals?.age || document.getElementById('patient-age')?.value || '';
     const defaultWeight = clinicalDialogueState?.patientVitals?.weight || document.getElementById('patient-weight')?.value || '';
     const defaultHeight = clinicalDialogueState?.patientVitals?.height || document.getElementById('patient-height')?.value || '';
@@ -14948,6 +15005,12 @@ function renderRoyalChatVitalsCard(box) {
             <div style="grid-column: 1 / -1;">
                 <label style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: bold;">👤 الاسم الكريم (الاسم الكامل):</label>
                 <input type="text" id="chat-vitals-name" value="${defaultName}" placeholder="مثال: أحمد عبد الله أو سارة..." style="width: 100%; background: #080d1a; border: 1.5px solid #334155; border-radius: 8px; padding: 9px 12px; color: #ffffff; font-size: 0.92em; box-sizing: border-box; outline: none;">
+            </div>
+
+            <!-- رقم الهاتف المحمول / الواتساب -->
+            <div style="grid-column: 1 / -1;">
+                <label style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: bold;">📱 رقم الهاتف المحمول / الواتساب (لحفظ ملفك الطبي):</label>
+                <input type="tel" inputmode="tel" id="chat-vitals-phone" value="${defaultPhone}" placeholder="مثال: 079xxxxxxx أو مع رمز الدولة" dir="ltr" style="width: 100%; background: #080d1a; border: 1.5px solid #334155; border-radius: 8px; padding: 9px 12px; color: #ffffff; font-size: 0.92em; box-sizing: border-box; outline: none; text-align: left;">
             </div>
 
             <!-- الجنس -->
@@ -15037,11 +15100,13 @@ window.setChatVitalsGender = function(g) {
 window.submitChatRoyalVitals = function() {
     try {
         const nameInput = document.getElementById('chat-vitals-name');
+        const phoneInput = document.getElementById('chat-vitals-phone');
         const ageInput = document.getElementById('chat-vitals-age');
         const weightInput = document.getElementById('chat-vitals-weight');
         const heightInput = document.getElementById('chat-vitals-height');
 
         const nameVal = nameInput ? nameInput.value.trim() : '';
+        const rawPhoneInputVal = phoneInput ? (typeof toEnglishDigits === 'function' ? toEnglishDigits(phoneInput.value) : phoneInput.value).trim() : '';
         const ageVal = ageInput ? parseInt(ageInput.value, 10) : null;
         const weightVal = weightInput ? parseFloat(weightInput.value) : null;
         const heightVal = heightInput ? parseFloat(heightInput.value) : null;
@@ -15050,6 +15115,11 @@ window.submitChatRoyalVitals = function() {
         if (!nameVal || nameVal.length < 2) {
             if (nameInput) { nameInput.style.borderColor = '#ef4444'; nameInput.focus(); }
             showToast('⚠️ يرجى إدخال اسمك الكريم للمتابعة', 'warning');
+            return;
+        }
+        if (rawPhoneInputVal && typeof isValidPhoneNumber === 'function' && !isValidPhoneNumber(rawPhoneInputVal)) {
+            if (phoneInput) { phoneInput.style.borderColor = '#ef4444'; phoneInput.focus(); }
+            showToast('⚠️ يرجى إدخال رقم هاتف محمول صحيح (مثال: 079xxxxxxx) أو تركه لإدخاله لاحقاً', 'warning');
             return;
         }
         if (!ageVal || ageVal < 10 || ageVal > 110) {
@@ -15092,11 +15162,22 @@ window.submitChatRoyalVitals = function() {
         };
         clinicalDialogueState.step = 'clinical_questions';
 
+        if (rawPhoneInputVal) {
+            clinicalDialogueState.patientPhone = rawPhoneInputVal;
+            try { localStorage.setItem('smart_patient_phone', rawPhoneInputVal); } catch (e) {}
+        }
+
         // مزامنة مع حقول النموذج العامة لضمان تصديرها للوحة الإدارة
         const domName = document.getElementById('patient-name');
         if (domName) domName.value = nameVal;
         const domSubName = document.getElementById('sub-name');
         if (domSubName) domSubName.value = nameVal;
+        if (rawPhoneInputVal) {
+            const domPhone = document.getElementById('patient-phone');
+            if (domPhone) domPhone.value = rawPhoneInputVal;
+            const domSubPhone = document.getElementById('sub-phone');
+            if (domSubPhone) domSubPhone.value = rawPhoneInputVal;
+        }
         const domAge = document.getElementById('patient-age');
         if (domAge) domAge.value = ageVal;
         const domWeight = document.getElementById('patient-weight');
@@ -15106,15 +15187,19 @@ window.submitChatRoyalVitals = function() {
         const domGenderRadios = document.querySelectorAll('input[name="patient_gender"]');
         domGenderRadios.forEach(r => { if (r.value === genderVal) r.checked = true; });
 
+        const pPhoneVal = rawPhoneInputVal || clinicalDialogueState.patientPhone || (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') || localStorage.getItem('smart_patient_phone') || '';
+        if (pPhoneVal && !clinicalDialogueState.patientPhone) {
+            clinicalDialogueState.patientPhone = pPhoneVal;
+        }
         if (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) {
             currentAssessmentData.patientName = nameVal;
+            if (pPhoneVal) currentAssessmentData.patientPhone = pPhoneVal;
             currentAssessmentData.patientVitals = clinicalDialogueState.patientVitals;
             currentAssessmentData.bmiInfo = calculatedBmiInfo;
         }
 
         // 🌟 حفظ وتوثيق فوري لملف المريض في قاعدة البيانات ولوحة التحكم بمجرد اعتماد المؤشرات
         const ptTitle = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint?.title) ? currentSelectedPoint.title : 'العمود الفقري والمفاصل';
-        const pPhoneVal = clinicalDialogueState.patientPhone || (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') || localStorage.getItem('smart_patient_phone') || '';
         const cleanDigits = pPhoneVal ? pPhoneVal.replace(/\D/g, '') : '';
         const vitalsPtId = 'pat_' + (cleanDigits ? cleanDigits + '_' : '') + Date.now().toString(36);
         clinicalDialogueState.patientId = vitalsPtId;
@@ -15129,6 +15214,7 @@ window.submitChatRoyalVitals = function() {
             name: nameVal,
             fullName: nameVal,
             phone: pPhoneVal,
+            patientPhone: pPhoneVal,
             age: ageVal,
             weight: weightVal,
             height: heightVal,
@@ -15180,6 +15266,7 @@ window.submitChatRoyalVitals = function() {
                 </div>
                 <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; color: #cbd5e1; font-size: 0.86em; background: rgba(0,0,0,0.25); padding: 8px 12px; border-radius: 8px;">
                     <span>👤 <strong>${nameVal}</strong> (${genderVal})</span>
+                    ${pPhoneVal ? `<span>📱 <strong dir="ltr">${pPhoneVal}</strong></span>` : ''}
                     <span>🎂 العمر: <strong>${ageVal} سنة</strong></span>
                     <span>⚖️ الوزن: <strong>${weightVal} كغم</strong></span>
                     <span>📏 الطول: <strong>${heightVal} سم</strong></span>
@@ -15734,7 +15821,8 @@ async function sendChatMessage() {
             }
 
             const pPhoneDigits = clinicalDialogueState.patientPhone ? clinicalDialogueState.patientPhone.replace(/\D/g, '') : '';
-            const pId = 'pat_' + (pPhoneDigits ? pPhoneDigits + '_' + Date.now().toString(36).slice(-4) : Date.now().toString(36));
+            const pId = clinicalDialogueState.patientId || ('pat_' + (pPhoneDigits ? pPhoneDigits + '_' + Date.now().toString(36).slice(-4) : Date.now().toString(36)));
+            clinicalDialogueState.patientId = pId;
             const specType = activeSpec;
 
             // ✅ حفظ ملف المريض بشكل فوري في قاعدة بيانات العيادة مع معالجة الأخطاء
@@ -16035,7 +16123,8 @@ async function sendChatMessage() {
         }
 
         const pPhoneDigits2 = clinicalDialogueState.patientPhone ? clinicalDialogueState.patientPhone.replace(/\D/g, '') : '';
-        const pId2 = 'pat_' + (pPhoneDigits2 ? pPhoneDigits2 + '_' + Date.now().toString(36).slice(-4) : Date.now().toString(36));
+        const pId2 = clinicalDialogueState.patientId || ('pat_' + (pPhoneDigits2 ? pPhoneDigits2 + '_' + Date.now().toString(36).slice(-4) : Date.now().toString(36)));
+        clinicalDialogueState.patientId = pId2;
         SmartDB.savePatient({
             patientId: pId2,
             id: pId2,

@@ -424,7 +424,7 @@
                     <div style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.78em; color: #94a3b8; margin-top: 2px;">
                         <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                         <span>الإصدار المعتمد:</span>
-                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v32.80</strong>
+                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v32.90</strong>
                     </div>
                 </div>
             </div>
@@ -449,11 +449,14 @@
                     <button type="button" onclick="openFinancialLedgerModal()" class="btn-header" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.3) 0%, rgba(180, 83, 9, 0.25) 100%); border: 1.5px solid var(--primary-gold); color: #fef08a; font-weight: 900; padding: 9px 13px; font-size: 0.85em; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(212, 175, 55, 0.3);" title="عرض السجل المحاسبي، إجمالي المبيعات، وتفاصيل الباقات">
                         <span>💰</span> النظام المحاسبي (<span id="header-accounting-rev">0 د.أ</span>)
                     </button>
+                    <button type="button" onclick="openPricingManagementModal()" class="btn-header" style="background: linear-gradient(135deg, rgba(249, 115, 22, 0.3) 0%, rgba(180, 83, 9, 0.25) 100%); border: 1.5px solid #f97316; color: #fed7aa; font-weight: 900; padding: 9px 13px; font-size: 0.85em; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);" title="تعديل أسعار باقات الاشتراك (الفردي، 5 فحوصات، 10 فحوصات) وبثها عالمياً">
+                        <span>🏷️</span> أسعار الاشتراكات
+                    </button>
                     <button type="button" onclick="openSystemSettingsModal()" class="btn-header admin-btn-settings" style="background: rgba(212, 175, 55, 0.18); border-color: var(--primary-gold); color: var(--primary-gold); font-weight: bold; padding: 9px 13px; font-size: 0.85em; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" title="إعدادات المنظومة: الأسعار، الذكاء الاصطناعي، الأصوات، التمارين، وقواعد البيانات">
                         <span>⚙️</span> إعدادات المنظومة
                     </button>
-                    <button type="button" id="btn-broadcast-version-global" onclick="handleUnifiedUpdateAndBroadcast()" class="btn-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 1.5px solid #6ee7b7; color: #ffffff; font-weight: 900; padding: 9px 14px; font-size: 0.85em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);" title="تحديث الكاش، ومزامنة السحابة، وبث التحديث العالمي (v32.80) لجميع الأجهزة والهواتف حول العالم بضغطة واحدة">
-                        <span style="font-size: 1.1em;">🚀</span> تحديث وبث الإصدار (v32.80)
+                    <button type="button" id="btn-broadcast-version-global" onclick="handleUnifiedUpdateAndBroadcast()" class="btn-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 1.5px solid #6ee7b7; color: #ffffff; font-weight: 900; padding: 9px 14px; font-size: 0.85em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);" title="تحديث الكاش، ومزامنة السحابة، وبث التحديث العالمي (v32.90) لجميع الأجهزة والهواتف حول العالم بضغطة واحدة">
+                        <span style="font-size: 1.1em;">🚀</span> تحديث وبث الإصدار (v32.90)
                     </button>
                     <a href="index.html" class="btn-header admin-btn-front" style="background: #1e293b; color: #fff; padding: 9px 13px; font-size: 0.85em; text-decoration: none; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid #334155;" title="فتح واجهة المراجعين">
                         🌐 واجهة المراجعين
@@ -4222,7 +4225,9 @@
                     mobileCardsContainer.innerHTML = pagedList.map((item, localIdx) => {
                         const idx = startIdx + localIdx;
                         const p = item.patient || {};
-                        const cleanPhone = (p.phone || '').replace(/[^0-9]/g, '');
+                        const rawPhoneStr = p.phone || p.patientPhone || p.pendingUnlockRequest?.subscriberPhone || p.assessment?.patientPhone || item.latestAssessment?.patientPhone || item.phone || '';
+                        const displayPhoneStr = String(rawPhoneStr).trim();
+                        const cleanPhone = displayPhoneStr.replace(/[^0-9]/g, '');
                         const flag = p.flag || '🌍';
                         const country = p.country || 'دولي';
                         const city = (p.city && p.city !== 'غير محدد') ? p.city : '';
@@ -4240,7 +4245,7 @@
                         const isPendingHumReq = !p.isPaidUnlocked && ((p.pendingUnlockRequest && p.pendingUnlockRequest.requestType === 'humanitarian') || pPayStatus.includes('إعفاء'));
                         const isPendingOrangeReq = !p.isPaidUnlocked && ((p.pendingUnlockRequest && p.pendingUnlockRequest.requestType === 'paid_orange_wallet') || (pPayStatus.includes('أورانج') && pPayStatus.includes('بانتظار')));
                         const ptReqTier = Number(p.pendingUnlockRequest?.packageSize) || (p.paymentType && p.paymentType.includes('10') ? 10 : (p.paymentType && p.paymentType.includes('5') ? 5 : 1));
-                        const ptUnlockPin = generateAdminUnlockPin(p.phone || p.fullName || p.name || '', ptReqTier);
+                        const ptUnlockPin = generateAdminUnlockPin(displayPhoneStr || p.fullName || p.name || '', ptReqTier);
                         if (isPendingHumReq) {
                             paymentBadgeHTML = `<span style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(212, 175, 55, 0.25)); border: 1.5px solid #10b981; color: #fef08a; padding: 3px 10px; border-radius: 6px; font-size: 0.75em; font-weight: 900; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);">🤲 طلب إعفاء إنساني (أقرّ بالقسم الشرعي) — بانتظار موافقتك</span>`;
                         } else if (isPendingUnlock && !p.isPaidUnlocked) {
@@ -4273,6 +4278,7 @@
                                             <span style="font-size: 0.85em; color: var(--primary-gold);">★</span>
                                         </div>
                                         <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 0.8em; color: #94a3b8; flex-wrap: wrap;">
+                                            ${displayPhoneStr ? `<span style="background: rgba(16, 185, 129, 0.16); border: 1px solid rgba(16, 185, 129, 0.45); padding: 1px 8px; border-radius: 4px; color: #6ee7b7; font-weight: bold; font-family: monospace; direction: ltr; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;" title="رقم موبايل المراجع">📱 ${displayPhoneStr} <button type="button" onclick="event.stopPropagation(); navigator.clipboard?.writeText('${displayPhoneStr.replace(/'/g, '')}'); this.textContent='✓'; setTimeout(()=>this.textContent='📋',1200);" style="background:none;border:none;color:#a7f3d0;cursor:pointer;padding:0;font-size:0.95em;" title="نسخ الرقم">📋</button></span>` : `<span style="background: rgba(100, 116, 139, 0.15); border: 1px solid #334155; padding: 1px 6px; border-radius: 4px; color: #94a3b8; white-space: nowrap;">📱 بدون هاتف</span>`}
                                             <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); padding: 1px 6px; border-radius: 4px; color: #7dd3fc; font-weight: bold; white-space: nowrap;">${locationDisplay}</span>
                                             <span style="color: #cbd5e1; white-space: nowrap;">${deviceIcon} ${p.device || 'Mobile'}</span>
                                             <span style="color: #64748b;">•</span>
@@ -4356,7 +4362,7 @@
                                         }
 
                                         return `
-                                            <button type="button" onclick="openPatientTimingModal('${p.patientId}', '${((p.fullName || p.name) || '').replace(/['\\\\]/g, '')}', ${sNum}, '${p.phone || ''}')" title="جلسة #${sNum} - اضغط لضبط توقيتها أو فتحها" class="${sClass}" style="background: ${sBg}; border: ${sBorder}; color: ${sColor}; padding: 5px 2px; border-radius: 6px; font-size: 0.75em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'">
+                                            <button type="button" onclick="openPatientTimingModal('${p.patientId}', '${((p.fullName || p.name) || '').replace(/['\\\\]/g, '')}', ${sNum}, '${displayPhoneStr.replace(/'/g, '')}')" title="جلسة #${sNum} - اضغط لضبط توقيتها أو فتحها" class="${sClass}" style="background: ${sBg}; border: ${sBorder}; color: ${sColor}; padding: 5px 2px; border-radius: 6px; font-size: 0.75em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'">
                                                 <span style="font-weight: 900;">#${sNum}</span>
                                                 <span style="font-size: 0.7em; white-space: nowrap;">${sBadge}</span>
                                             </button>
@@ -4364,12 +4370,11 @@
                                     }).join('')}
                                 </div>
                             </div>
-                            <div style="display: none;">
-                                ${p.phone ? `
+                            <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 8px; padding: 7px 12px; margin-bottom: 8px; font-size: 0.85em;">
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span style="color: #94a3b8;">📱 رقم الجوال:</span>
-                                    <span style="color: #e2e8f0; font-family: monospace;" dir="ltr">${p.phone}</span>
-                                </div>` : ''}
+                                    <span style="color: #94a3b8;">📱 رقم الجوال / الواتساب:</span>
+                                    ${displayPhoneStr ? `<span style="color: #6ee7b7; font-family: monospace; font-weight: bold;" dir="ltr">${displayPhoneStr}</span>` : `<span style="color: #64748b;">غير مسجل بعد</span>`}
+                                </div>
                             </div>
 
                             <!-- الإجراءات الرئيسية للمدير: زر التقرير الملكي البارز في القمة -->
@@ -4392,7 +4397,7 @@
                                     <div style="color: #94a3b8; font-size: 0.85em; margin-top: 4px;">✔️ طابق رقم الحوالة والمبلغ مع إشعار أورانج موني على محفظتك قبل الموافقة.</div>
                                 </div>
                                 ` : '')}
-                                ${adminCodesBoxHTML(p.phone, p.fullName || p.name, Number(p.pendingUnlockRequest?.packageSize) || 1)}
+                                ${adminCodesBoxHTML(displayPhoneStr, p.fullName || p.name, Number(p.pendingUnlockRequest?.packageSize) || 1)}
                                 ${!p.isPaidUnlocked ? `
                                 <button type="button" onclick="quickAdminUnlockPatient('${p.patientId}', '${cleanPhone}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}', '${isPendingHumReq ? 'humanitarian' : (p.pendingUnlockRequest?.requestType || 'paid_orange_wallet')}')" style="width: 100%; background: ${isPendingHumReq ? 'linear-gradient(135deg, #10b981 0%, #047857 100%)' : 'linear-gradient(135deg, #d4af37 0%, #b45309 100%)'}; color: ${isPendingHumReq ? '#ffffff' : '#050911'}; border: 1.5px solid ${isPendingHumReq ? '#6ee7b7' : '#fef08a'}; padding: 9px 12px; border-radius: 8px; font-size: 0.9em; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);">
                                     <span>${isPendingHumReq ? `✅ اعتماد الإعفاء وفتح التقرير (${ptUnlockPin})` : `🔓 موافقة وتفعيل التقرير (${ptUnlockPin})`}</span>
@@ -4414,7 +4419,7 @@
                                     <button type="button" disabled style="background: #1e293b; color: #64748b; border: 1px solid #334155; padding: 10px; border-radius: 8px; font-size: 0.85em;">
                                         بلا هاتف مسجل
                                     </button>`}
-                                    <button type="button" onclick="openPatientTimingModal('${p.patientId}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}', ${patCurrentSession}, '${p.phone || ''}')" style="background: #2563eb; color: #fff; border: none; padding: 10px; border-radius: 8px; font-size: 0.9em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                                    <button type="button" onclick="openPatientTimingModal('${p.patientId}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}', ${patCurrentSession}, '${displayPhoneStr.replace(/'/g, '')}')" style="background: #2563eb; color: #fff; border: none; padding: 10px; border-radius: 8px; font-size: 0.9em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;">
                                         <span>⏱️ تعديل التوقيت</span>
                                     </button>
                                 </div>
@@ -4431,6 +4436,9 @@
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
                                     <div style="background: #080c14; padding: 7px 10px; border-radius: 6px;">
                                         <span style="color: #94a3b8;">رقم الملف:</span> <strong style="color: var(--primary-gold);">${p.patientId}</strong>
+                                    </div>
+                                    <div style="background: #080c14; padding: 7px 10px; border-radius: 6px;">
+                                        <span style="color: #94a3b8;">📱 رقم الهاتف:</span> <strong style="color: #6ee7b7; font-family: monospace;" dir="ltr">${displayPhoneStr || 'غير مسجل'}</strong>
                                     </div>
                                     <div style="background: #080c14; padding: 7px 10px; border-radius: 6px;">
                                         <span style="color: #94a3b8;">حالة الحساب:</span> <strong style="${(p.isRegistered || item.isRegistered || p.accountPin || item.accountPin) ? 'color:#10b981;' : 'color:#94a3b8;'}">${(p.isRegistered || item.isRegistered || p.accountPin || item.accountPin) ? '🔑 حساب مسجل (محمي بـ PIN)' : 'زائر بدون تسجيل'}</strong>
@@ -8032,6 +8040,99 @@ function copyAdminCode(code) {
             }
         }
 
+        function openPricingManagementModal() {
+            const cfg = getAdminPaymentGateConfig();
+            const singleEl = document.getElementById('admin-pricing-single-jod');
+            const pkg5El = document.getElementById('admin-pricing-pkg5-jod');
+            const pkg10El = document.getElementById('admin-pricing-pkg10-jod');
+            const walletEl = document.getElementById('admin-pricing-wallet-phone');
+
+            if (singleEl) singleEl.value = cfg.priceJod != null ? cfg.priceJod : 3;
+            if (pkg5El) pkg5El.value = cfg.pricePkg5 != null ? cfg.pricePkg5 : 10;
+            if (pkg10El) pkg10El.value = cfg.pricePkg10 != null ? cfg.pricePkg10 : 15;
+            if (walletEl) walletEl.value = cfg.walletPhone || '0795651388';
+
+            const fb = document.getElementById('admin-pricing-feedback');
+            if (fb) fb.style.display = 'none';
+
+            const modal = document.getElementById('pricing-management-modal');
+            if (modal) modal.style.display = 'flex';
+        }
+        window.openPricingManagementModal = openPricingManagementModal;
+
+        function closePricingManagementModal() {
+            const modal = document.getElementById('pricing-management-modal');
+            if (modal) modal.style.display = 'none';
+        }
+        window.closePricingManagementModal = closePricingManagementModal;
+
+        function saveAndBroadcastSubscriptionPrices(customPrices = null) {
+            const cfg = getAdminPaymentGateConfig();
+            const fbEl = document.getElementById('admin-pricing-feedback');
+
+            const rawSingle = customPrices?.priceJod ?? document.getElementById('admin-pricing-single-jod')?.value ?? cfg.priceJod ?? 3;
+            const rawPkg5 = customPrices?.pricePkg5 ?? document.getElementById('admin-pricing-pkg5-jod')?.value ?? cfg.pricePkg5 ?? 10;
+            const rawPkg10 = customPrices?.pricePkg10 ?? document.getElementById('admin-pricing-pkg10-jod')?.value ?? cfg.pricePkg10 ?? 15;
+            const rawWallet = customPrices?.walletPhone ?? document.getElementById('admin-pricing-wallet-phone')?.value ?? cfg.walletPhone ?? '0795651388';
+
+            const singleVal = parseFloat(rawSingle);
+            const pkg5Val = parseFloat(rawPkg5);
+            const pkg10Val = parseFloat(rawPkg10);
+            const walletVal = String(rawWallet || '0795651388').trim();
+
+            if (isNaN(singleVal) || singleVal <= 0 || isNaN(pkg5Val) || pkg5Val <= 0 || isNaN(pkg10Val) || pkg10Val <= 0) {
+                if (fbEl) {
+                    fbEl.style.display = 'block';
+                    fbEl.style.background = 'rgba(239, 68, 68, 0.2)';
+                    fbEl.style.border = '1.5px solid #ef4444';
+                    fbEl.style.color = '#fca5a5';
+                    fbEl.innerHTML = '⚠️ يرجى إدخال أسعار رقمية صحيحة أكبر من صفر لجميع الباقات.';
+                }
+                return false;
+            }
+
+            const newCfg = {
+                ...cfg,
+                enabled: cfg.enabled !== false,
+                priceJod: singleVal,
+                pricePkg5: pkg5Val,
+                pricePkg10: pkg10Val,
+                walletPhone: walletVal || '0795651388',
+                walletProvider: cfg.walletProvider || 'محفظة أورانج (Orange Money)',
+                allowHumanitarian: cfg.allowHumanitarian !== false,
+                allowFreeTestMode: Boolean(cfg.allowFreeTestMode),
+                customPromoCode: cfg.customPromoCode || 'FREE2026'
+            };
+
+            try {
+                localStorage.setItem('smart_payment_gate_config', JSON.stringify(newCfg));
+            } catch (e) {}
+
+            // مزامنة الحقول مع تبويب إعدادات بوابة الدفع في الإعدادات العامة
+            const pSingle = document.getElementById('paycfg-price-jod'); if (pSingle) pSingle.value = singleVal;
+            const pPkg5 = document.getElementById('paycfg-price-pkg5'); if (pPkg5) pPkg5.value = pkg5Val;
+            const pPkg10 = document.getElementById('paycfg-price-pkg10'); if (pPkg10) pPkg10.value = pkg10Val;
+            const pWallet = document.getElementById('paycfg-wallet-phone'); if (pWallet) pWallet.value = newCfg.walletPhone;
+
+            if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.broadcastPaymentConfig === 'function') {
+                SmartCloudSync.broadcastPaymentConfig(newCfg);
+            }
+
+            if (typeof updateAdminPaymentRevenueStats === 'function') {
+                updateAdminPaymentRevenueStats();
+            }
+
+            if (fbEl) {
+                fbEl.style.display = 'block';
+                fbEl.style.background = 'rgba(16, 185, 129, 0.2)';
+                fbEl.style.border = '1.5px solid #10b981';
+                fbEl.style.color = '#6ee7b7';
+                fbEl.innerHTML = `🚀 تم حفظ الأسعار الجديدة وبثها عالمياً بنجاح! (الفردي: ${singleVal} د.أ • باقة 5: ${pkg5Val} د.أ • باقة 10: ${pkg10Val} د.أ • المحفظة: ${newCfg.walletPhone})`;
+            }
+            return true;
+        }
+        window.saveAndBroadcastSubscriptionPrices = saveAndBroadcastSubscriptionPrices;
+
         function quickAdminUnlockPatient(patientId, patientPhone, patientName, unlockType = 'paid_orange_wallet', notifId = '') {
             const cfg = getAdminPaymentGateConfig();
             const resolvedType = unlockType || 'paid_orange_wallet';
@@ -8422,13 +8523,13 @@ function copyAdminCode(code) {
 
         // 🚀 تحديث الكاش ومزامنة السحابة وبث التحديث العالمي بضغطة واحدة
         async function handleUnifiedUpdateAndBroadcast() {
-            if (confirm('🚀 تحديث وبث الإصدار (v32.80):\n\nهل تود تحديث الكاش المحلي، ومزامنة السجلات، وبث التحديث الجديد لكافة هواتف وأجهزة المراجعين المتصلة فوراً؟')) {
+            if (confirm('🚀 تحديث وبث الإصدار (v32.90):\n\nهل تود تحديث الكاش المحلي، ومزامنة السجلات، وبث التحديث الجديد لكافة هواتف وأجهزة المراجعين المتصلة فوراً؟')) {
                 // 1. بث التحديث السحابي الشامل
                 try {
                     if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                         SmartCloudSync.broadcastAppVersionUpdate({
-                            version: 'v32.80',
-                            title: 'تحديث المنظومة (v32.80)',
+                            version: 'v32.90',
+                            title: 'تحديث المنظومة (v32.90)',
                             timestamp: Date.now()
                         });
                     }
@@ -8451,17 +8552,17 @@ function copyAdminCode(code) {
         }
         window.handleUnifiedUpdateAndBroadcast = handleUnifiedUpdateAndBroadcast;
 
-        // بث رسالة التحديث الجديد الشامل (v32.80) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
+        // بث رسالة التحديث الجديد الشامل (v32.90) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
         function handleBroadcastGlobalVersion() {
-            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v32.80) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
+            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v32.90) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
                 if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                     SmartCloudSync.broadcastAppVersionUpdate({
-                        version: 'v32.80',
-                        title: 'تحديث المنظومة (v32.80)',
+                        version: 'v32.90',
+                        title: 'تحديث المنظومة (v32.90)',
                         timestamp: Date.now()
                     });
                 }
-                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v32.80) عبر شبكة البث اللحظي MQTT و NTFY لكافة الأجهزة!');
+                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v32.90) عبر شبكة البث اللحظي MQTT و NTFY لكافة الأجهزة!');
             }
         }
         window.handleBroadcastGlobalVersion = handleBroadcastGlobalVersion;
@@ -8930,7 +9031,7 @@ function copyAdminCode(code) {
 <script>
 // ===== تحديث تلقائي للوحة الإدارة: تقارن إصدارها بإصدار الأداة المنشور (sw.js) وتحدّث نفسها =====
 (function () {
-    const ADMIN_VER = 'v32.80';
+    const ADMIN_VER = 'v32.90';
     window.ADMIN_VER = ADMIN_VER;
     let busy = false;
     async function check(force) {

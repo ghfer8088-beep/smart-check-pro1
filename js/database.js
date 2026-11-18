@@ -250,10 +250,20 @@ const SmartDB = (function() {
             if (existingRaw) {
                 try { prevRecord = JSON.parse(existingRaw); } catch(e) {}
             }
-            const mergedPatient = prevRecord ? { ...prevRecord, ...patient } : patient;
+            let mergedPatient = prevRecord ? { ...prevRecord, ...patient } : { ...patient };
             // الحفاظ الصارم على تاريخ التسجيل الأصلي للمريض وعدم تحديثه لتاريخ اليوم عند تعديل الجلسات
             if (prevRecord && prevRecord.createdAt) {
                 mergedPatient.createdAt = prevRecord.createdAt;
+            }
+            // الحفاظ الصارم على رقم الهاتف وعدم فقدانه عند أي تحديث لاحق لا يتضمنه
+            if (!mergedPatient.phone && prevRecord && (prevRecord.phone || prevRecord.patientPhone)) {
+                mergedPatient.phone = prevRecord.phone || prevRecord.patientPhone;
+            }
+            if (!mergedPatient.phone && mergedPatient.patientPhone) {
+                mergedPatient.phone = mergedPatient.patientPhone;
+            }
+            if (mergedPatient.phone && !mergedPatient.patientPhone) {
+                mergedPatient.patientPhone = mergedPatient.phone;
             }
 
             // تنظيف الاسم إن كان كلمة محظورة مثل 'الاسم' أو 'الآسم'
