@@ -535,8 +535,28 @@ ${greetingInstruction}
 
     // معالجة رد المريض وتوليد رد تفاعلي طبي وإنساني فائق الذكاء (Conversational Clinical Agent)
     async advanceClinicalDialogue(context) {
-        const { currentStep, history, painPointTitle, patientName, patientPhone, patientVitals, lastUserMessage, patientGender } = context;
+        const { currentStep, history, painPointTitle, patientName, patientPhone, patientVitals, lastUserMessage, patientGender, vitalsAlreadyAcknowledged, welcomeAlreadyDone } = context;
         const allContextText = (history || []).map(h => h.text).join(' ') + ' ' + (lastUserMessage || '') + ' ' + (patientName || '');
+        const hasVitalsKnown = !!(vitalsAlreadyAcknowledged || welcomeAlreadyDone || (patientVitals && patientVitals.age));
+
+        // تحليل دقيق لما تم الإجابة عنه وتغطيته في الحوار حتى اللحظة لمنع التكرار نهائياً
+        const hasCoveredProvocation = /(?:جلوس|انحناء|مشي|وقوف|حركة|يزداد|يشتد|عطس|كحة|حمل|ركوع|سجود|بزيد|بشتد)/i.test(allContextText);
+        const hasCoveredNumbness = /(?:خدر|تنميل|لسعة|كهربا|وخز|سليم|ما في|بدون خدر|ما بحس|طبيعي|حرارة|حرقان)/i.test(allContextText);
+        const hasCoveredRadiation = /(?:فخذ|ساق|رجل|قدم|كعب|مشط|عرق النسا|ذراع|يد|أصابع|اصابع|كتف)/i.test(allContextText);
+        const hasCoveredDuration = /(?:منذ|شهر|شهرين|سنة|سنتين|أسبوع|اسبوع|أيام|ايام|فترة|صارلي|زمان)/i.test(allContextText);
+        const hasCoveredMorning = /(?:صباح|استيقاظ|تصلب|تيبس|تخشب)/i.test(allContextText);
+        const hasCoveredSleep = /(?:نوم|ليل|تقلب|استيقظ|بصحى|بفيق)/i.test(allContextText);
+        const hasCoveredCoughPressure = /(?:سعال|عطاس|كحة|نفس عميق|حزق)/i.test(allContextText);
+        const hasCoveredRelief = /(?:استلقاء|تمدد|راحة|وسادة|مخدر|مسكن|كمادات|حرارة|جليد)/i.test(allContextText);
+
+        const coveredFacets = [];
+        if (hasCoveredProvocation) coveredFacets.push('- محفزات الألم مع الحركة والجلوس (تمت تغطيتها وإثباتها، ⛔ ممنوع منعاً باتاً السؤال عن الجلوس أو المشي أو الانحناء أو الوقوف مرة أخرى)');
+        if (hasCoveredNumbness || hasCoveredRadiation) coveredFacets.push('- الخدر والتنميل وامتداد الألم العصبي للأطراف (تمت تغطيتها وإثباتها، ⛔ ممنوع السؤال هل تشعر بخدر أو تنميل ثانية)');
+        if (hasCoveredDuration) coveredFacets.push('- مدة الإصابة وبداية الألم (تمت تغطيتها وإثباتها، ⛔ ممنوع السؤال منذ متى بدأ الألم)');
+        if (hasCoveredMorning) coveredFacets.push('- التيبس والتصلب الصباحي (تمت تغطيتها وإثباتها)');
+        if (hasCoveredSleep) coveredFacets.push('- تأثير الألم على النوم والتقلب ليلاً (تمت تغطيتها وإثباتها)');
+        if (hasCoveredCoughPressure) coveredFacets.push('- اختبار زيادة الضغط النخاعي بالسعال أو العطاس (تمت تغطيتها وإثباتها)');
+        if (hasCoveredRelief) coveredFacets.push('- وضعيات تفريغ الألم والراحة (تمت تغطيتها وإثباتها)');
         const resolvedGender = patientGender || (typeof detectArabicGender === 'function' ? detectArabicGender(patientName || '', allContextText) : 'male');
         const isFemale = (resolvedGender === 'female');
         const specType = context.specialtyType || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint && currentSelectedPoint.specialtyType) || null;
@@ -611,6 +631,29 @@ ${specializedPromptSection}
 - المؤشرات الحيوية: العمر [${patientVitals?.age || 'غير محدد'}] | الوزن [${patientVitals?.weight || 'غير محدد'}] | الطول [${patientVitals?.height || 'غير محدد'}]
 - حالة المراجع في النظام: ${hasValidPhoneNow ? `[مراجع مسجل رسمياً ولديه ملف طبي ورقم هاتف معتمد (${resolvedKnownPhone})]` : '[مراجع جديد غير مسجل ولم يوثق هاتفه بعد]'}
 ${genderDirective}
+
+🌟 ضوابط مسار الحوار السريري التراكمي الذكي (حاسم جداً وإلزامي 100%):
+1. حالة الترحيب والبيانات:
+   - تم الترحيب بالمراجع مسبقاً وتوثيق بياناته ومؤشراته الحيوية رسمياً (${patientName || 'المراجع'} - العمر: ${patientVitals?.age || 'غير محدد'} - الوزن: ${patientVitals?.weight || 'غير محدد'}).
+   ⛔ ممنوع منعاً باتاً ومطلقاً إعادة الترحيب بالمراجع (ممنوع نهائياً: "أهلاً بك"، "مرحباً بك"، "تم تسجيل بياناتك الحيوية")!
+   ⛔ ممنوع تكرار السؤال الافتتاحي ("ما الذي تعاني منه تحديداً") لأن المراجع قد شرح أعراضه بالفعل في سجل الحوار!
+
+2. قاعدة الاعتماد والتثبيت الفوري (Acknowledge & Validate First):
+   - في أول جملة من ردك، أثبت استيعابك لكلام المراجع الأخير ولخص الأعراض التي ذكرها باقتضاب سريري ذكي ومطمئن ومباشر لإشعاره بأنك طبيب ينصت بعناية فائقة لكل كلمة قالها.
+   (مثال: "سلامتك يا ${patientName || (isFemale ? 'يا أختي الكريمة' : 'يا طيب')}، وصفك لألم [تلخيص دقيق ومقتضب لما ذكره المراجع] يشير بوضوح إلى...").
+
+3. قاعدة منع التكرار المطلق (Strict Anti-Repetition):
+   - ⛔ ممنوع منعاً باتاً ومطلقاً تكرار أي سؤال تم التطرق إليه أو أجاب عنه المراجع سابقاً بأي صياغة أخرى أو مرادفات مختلفة!
+${coveredFacets.length > 0 ? `   الأعراض والحقائق المثبتة في هذا الحوار حتى الآن:\n${coveredFacets.join('\n')}` : ''}
+
+4. التقدم نحو سؤال سريري متقدم وجديد تماماً (Advance to a Fresh Diagnostic Facet):
+   - وجّه سؤالك التالي حصراً إلى زاوية فحص سريري جديدة ومختلفة تماماً لم يتم سؤالها إطلاقاً في هذا الحوار، بحسب ما يناسب موضع الألم [${painPointTitle || 'موضع الشكوى'}]:
+     * إذا لم يُسأل عن امتداد الضغط النخاعي: اسأل هل تلاحظ زيادة حادة في وخزة الألم عند السعال أو العطاس أو أخذ نفس عميق؟
+     * إذا لم يُسأل عن طبيعة المفصل صباحاً: اسأل كيف تشعر في أول ربع ساعة عند الاستيقاظ صباحاً؟ هل يوجد تيبس وتخشب عضلي يحتاج وقتاً حتى يلين؟
+     * إذا كان الألم يمتد للساق/الذراع ولم يُسأل عن قوته الطرفية: اسأل هل تشعر بضعف في مشط القدم أو ثقل في حركة الأصابع أو صعوبة رفع المشط؟
+     * إذا لم يُسأل عن وضعيات الراحة: اسأل ما هي الوضعية الأكثر إراحة وتخفيفاً للألم (مثل الاستلقاء وثني الركبتين أم وضع كمادات دافئة)؟
+     * إذا لم يُسأل عن تأثير النوم: اسأل هل يوقظك الألم من النوم ليلاً عند التقلب؟
+
 - سجل الحوار حتى الآن:
 ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h.text}`).join('\n')}
 - رسالة المريض الأخيرة: "${lastUserMessage}"
@@ -790,13 +833,23 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                     const pNameStr = (patientName && patientName !== 'غير محدد') ? ` يا ${patientName}` : '';
                     message = message.replace(/(?:اكتمل الآن تقييمك|أدخل رقم هاتفك|يرجى تزويدي برقم هاتفك|لفتح التقرير الطبي).*$/s, '').trim();
                     if (!message || message.length < 20) {
-                        message = isFemale
-                            ? `لفحص حالتكِ والوقوف على أصل المشكلة بدقة${pNameStr}، صفي لي كيف يتصرف الألم مع الحركة والجلوس؟ وهل تشعرين بأي خدر، تنميل، طقطقة، أو شعور بعدم ثبات في المفصل؟`
-                            : `لفحص حالتك والوقوف على أصل المشكلة بدقة${pNameStr}، صف لي كيف يتصرف الألم مع الحركة والجلوس؟ وهل تشعر بأي خدر، تنميل، طقطقة، أو شعور بعدم ثبات في المفصل؟`;
+                        if (!hasCoveredCoughPressure && (hasCoveredProvocation || hasCoveredRadiation)) {
+                            message = isFemale
+                                ? `وللتدقيق في مستوى الضغط النخاعي بدقة${pNameStr}، هل تلاحظين زيادة مفاجئة أو وخزة حادة في الألم عند السعال، العطاس، أو أخذ نفس عميق؟ وهل يوقظك الألم من النوم ليلاً؟`
+                                : `وللتدقيق في مستوى الضغط النخاعي بدقة${pNameStr}، هل تلاحظ زيادة مفاجئة أو وخزة حادة في الألم عند السعال، العطاس، أو أخذ نفس عميق؟ وهل يوقظك الألم من النوم ليلاً؟`;
+                        } else if (!hasCoveredMorning) {
+                            message = isFemale
+                                ? `واستكمالاً للفحص الحركي${pNameStr}، كيف تشعرين في أول ربع ساعة عند الاستيقاظ صباحاً؟ هل تلاحظين تيبساً وتخشباً في المفصل يحتاج وقتاً حتى يلين؟`
+                                : `واستكمالاً للفحص الحركي${pNameStr}، كيف تشعر في أول ربع ساعة عند الاستيقاظ صباحاً؟ هل تلاحظ تيبساً وتخشباً في المفصل يحتاج وقتاً حتى يلين؟`;
+                        } else {
+                            message = isFemale
+                                ? `ولتحديد مسار الخطة العلاجية بدقة${pNameStr}، ما هي الوضعية الأكثر إراحة لألمكِ، وهل يعيقك الألم عن أنشطتكِ وعملكِ اليومي؟`
+                                : `ولتحديد مسار الخطة العلاجية بدقة${pNameStr}، ما هي الوضعية الأكثر إراحة لألمك، وهل يعيقك الألم عن أنشطتك وعملك اليومي؟`;
+                        }
                     } else if (!message.includes('؟')) {
                         message += isFemale
-                            ? `\n\nواستكمالاً للتدقيق الطبي، هل تلاحظين اشتداد الألم عند حركة معينة أو أثناء الراحة والنوم؟`
-                            : `\n\nواستكمالاً للتدقيق الطبي، هل تلاحظ اشتداد الألم عند حركة معينة أو أثناء الراحة والنوم؟`;
+                            ? `\n\nوللتدقيق السريري، هل تلاحظين زيادة الألم عند السعال أو العطاس أو التقلب أثناء النوم؟`
+                            : `\n\nوللتدقيق السريري، هل تلاحظ زيادة الألم عند السعال أو العطاس أو التقلب أثناء النوم؟`;
                     }
                 }
 
@@ -1118,8 +1171,9 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             };
         }
 
-        // 0.4 تأكيد استلام البيانات الحيوية فور تزويدها (العمر، الوزن، الطول)
-        const hasVitalsInText = /(?:عمري|عمر|سن|سنة|سنه|وزني|وزن|طولي|طول)\s*[:=]?\s*\d+/i.test(userText) || (patientVitals && (patientVitals.age || patientVitals.weight));
+        // 0.4 تأكيد استلام البيانات الحيوية فور تزويدها بالرسائل (فقط إذا لم تكن موثقة مسبقاً)
+        const isVitalsAlreadyDone = !!(context.vitalsAlreadyAcknowledged || context.welcomeAlreadyDone || (patientVitals && patientVitals.age && userTurnCount >= 1));
+        const hasVitalsInText = !isVitalsAlreadyDone && /(?:عمري|عمر|سن|سنة|سنه|وزني|وزن|طولي|طول)\s*[:=]?\s*\d+/i.test(userText);
         if (hasVitalsInText && userTurnCount <= 2) {
             const ageInfo = patientVitals?.age ? ` (العمر: ${patientVitals.age} سنة)` : '';
             const weightInfo = patientVitals?.weight ? ` (الوزن: ${patientVitals.weight} كغم)` : '';
@@ -1242,12 +1296,24 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
         const isAffirmative = /^(?:نعم|ايوه|اي|اه|صحيح|بالضبط|اكيد|مضبوط|تمام|طبعا|فعلا|صح|بصير|بحس)$/i.test(userTextNorm);
         const isSimpleNegative = /^(?:لا|كلا|ما في|ما عندي|ابدا|مش موجود|مو موجود|ما بحس)$/i.test(userTextNorm);
 
-        // إعداد البادئة المناسبة لرد الطبيب بناءً على رد المراجع (نعم / لا / تفصيل)
-        let acknowledgmentPrefix = `فهمت وصفك بدقة${nameSuffix}. `;
+        // إعداد البادئة المناسبة لرد الطبيب: إثبات استيعاب كلام المريض وتأكيد أعراضه باحترافية
+        let acknowledgmentPrefix = isFemale ? `فهمت وصفكِ بدقة${nameSuffix}. ` : `فهمت وصفك بدقة${nameSuffix}. `;
         if (isAffirmative) {
-            acknowledgmentPrefix = `تماماً، تأكيد هذا العرض يساعدنا في استيضاح المسببات الدقيقة لـ **${title}**${nameSuffix}. `;
+            acknowledgmentPrefix = isFemale
+                ? `تماماً، تأكيدكِ لهذا العرض يساعدنا في استيضاح المسببات الدقيقة لـ **${title}**${nameSuffix}. `
+                : `تماماً، تأكيدك لهذا العرض يساعدنا في استيضاح المسببات الدقيقة لـ **${title}**${nameSuffix}. `;
         } else if (isSimpleNegative) {
-            acknowledgmentPrefix = `ممتاز، استبعاد هذا العرض مؤشر سريري طيب يؤكد أن الخلل يتركز ميكانيكياً في **${title}**${nameSuffix}. `;
+            acknowledgmentPrefix = isFemale
+                ? `ممتاز، استبعادكِ لهذا العرض مؤشر سريري طيب يؤكد أن الخلل يتركز ميكانيكياً في **${title}**${nameSuffix}. `
+                : `ممتاز، استبعادك لهذا العرض مؤشر سريري طيب يؤكد أن الخلل يتركز ميكانيكياً في **${title}**${nameSuffix}. `;
+        } else if (/(?:خدر|تنميل|كهربا|وخز|لسعة)/i.test(userText)) {
+            acknowledgmentPrefix = isFemale
+                ? `سلامتكِ${nameSuffix}، ذكركِ لأعراض الخدر والتنميل مؤشر سريري بالغ الأهمية لتحديد مستوى الضغط العصبي الميكانيكي. `
+                : `سلامتك${nameSuffix}، ذكرك لأعراض الخدر والتنميل مؤشر سريري بالغ الأهمية لتحديد مستوى الضغط العصبي الميكانيكي. `;
+        } else if (/(?:جلوس|انحناء|مشي|وقوف|حركة)/i.test(userText)) {
+            acknowledgmentPrefix = isFemale
+                ? `سلامتكِ${nameSuffix}، تأثر الألم بأوضاع الحركة والجلوس يوضح وجود إجهاد ميكانيكي مباشر على الغضاريف والمفاصل. `
+                : `سلامتك${nameSuffix}، تأثر الألم بأوضاع الحركة والجلوس يوضح وجود إجهاد ميكانيكي مباشر على الغضاريف والمفاصل. `;
         }
 
         // ✅ مسار خاص متقدم للحالات السريرية الخاصة (جلطات، سقوط قدم، جنف) دون أسئلة ديسك أو جلوس
@@ -1295,13 +1361,12 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             }
         }
 
-        // ✅ استجواب متسلسل متعمق بلا سقف للأسئلة — يستمر حتى تكتمل الصورة السريرية الكاملة
-        // المرحلة: تحديد نوع السؤال المناسب بناءً على ما سبق تغطيته من أعراض
-        const hasAddressedProvocation = allHistoryText.length > 100 && /يزداد|يشتد|عند|الانحناء|الجلوس|الوقوف|المشي|الحركة|الثني/i.test(allHistoryText);
-        const hasAddressedDuration = /منذ|متى|أسبوع|شهر|سنة|أيام|مدة|يوم/i.test(allHistoryText);
-        const hasAddressedLifeImpact = /نوم|عمل|يومي|يقظ|يوقف|يمنع|يصعب|الحياة|النشاط/i.test(allHistoryText);
-        const hasAddressedMorning = /صباح|الاستيقاظ|النوم|ليل/i.test(allHistoryText);
-        const hasAddressedIntensity = /شدة|حدة|قوي|خفيف|متوسط|رقم|من عشرة|\/10/i.test(allHistoryText);
+        // ✅ استجواب متسلسل متعمق يتقدم في كل دور دون تكرار أي سؤال سابق إطلاقاً
+        const hasAddressedProvocation = /(?:جلوس|انحناء|مشي|وقوف|حركة|يزداد|يشتد|عطس|كحة|حمل|ركوع|سجود|بزيد|بشتد)/i.test(allHistoryText);
+        const hasAddressedDuration = /(?:منذ|شهر|شهرين|سنة|سنتين|أسبوع|اسبوع|أيام|ايام|فترة|صارلي|زمان)/i.test(allHistoryText);
+        const hasAddressedLifeImpact = /(?:نوم|عمل|وظيفة|دوام|يقظ|يمنع|يصعب|حياة)/i.test(allHistoryText);
+        const hasAddressedMorning = /(?:صباح|استيقاظ|تصلب|تيبس|تخشب)/i.test(allHistoryText);
+        const hasAddressedIntensity = /(?:شدة|حدة|قوي|خفيف|متوسط|رقم|من عشرة|\/10)/i.test(allHistoryText);
 
         // اختيار السؤال المناسب بناءً على الفجوات السريرية المتبقية
         if (!hasAddressedProvocation) {
