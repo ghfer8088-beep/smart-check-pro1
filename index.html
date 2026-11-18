@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -46,11 +46,11 @@
     <!-- End Meta Pixel Code -->
 
     <!-- منظومة الأمان السيبراني وحماية الملكية الفكرية وقفل النطاق -->
-    <script src="js/security-shield.js?v=31.10"></script>
-    <script src="js/system-watchdog.js?v=31.10"></script>
+    <script src="js/security-shield.js?v=32.30"></script>
+    <script src="js/system-watchdog.js?v=32.30"></script>
 
     <!-- وسوم تطبيق الويب التقدمي PWA والأيقونات الرسمية -->
-    <link rel="manifest" href="manifest.json?v=31.10">
+    <link rel="manifest" href="manifest.json?v=32.30">
     <link rel="icon" type="image/png" href="assets/logo.png">
     <link rel="shortcut icon" href="assets/logo.png">
     <link rel="apple-touch-icon" href="assets/logo.png">
@@ -178,7 +178,7 @@
                 <div class="brand-version-badge" onclick="event.stopPropagation(); if(typeof forceAppUpdateAndClearCache==='function') forceAppUpdateAndClearCache();" title="انقر لتحديث وتنشيط التطبيق فوراً" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72em; color: #94a3b8; margin-top: 1px; cursor: pointer; user-select: none;">
                     <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                     <span>الإصدار:</span>
-                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v32.10</strong>
+                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v32.30</strong>
                 </div>
             </div>
         </div>
@@ -607,10 +607,10 @@
                         <!-- الرسائل ستولد هنا تلقائياً -->
                     </div>
 
-                    <!-- شريط إدخال الرسائل النصية الواضح والبارز والمخصص لرد المراجع بالتفصيل -->
-                    <div id="ai-chat-input-bar" style="background: #0b1324; border: 2px solid var(--primary-gold); border-radius: 14px; padding: 10px 14px; display: flex; align-items: center; gap: 8px; box-shadow: 0 6px 25px rgba(0,0,0,0.6); margin-top: 6px; box-sizing: border-box; width: 100%; max-width: 100%; overflow: hidden;">
-                        <input type="text" id="ai-chat-input" placeholder="اكتب هنا شرح حالتك وأعراضك بالتفصيل للدكتورة سارة، ثم اضغط إرسال..." onkeypress="if(event.key==='Enter') sendChatMessage()" style="flex: 1 1 auto; min-width: 0; background: transparent; border: none; color: #ffffff; font-size: 1em; font-weight: 500; outline: none; font-family: inherit; padding: 6px 4px; box-sizing: border-box;">
-                        <button type="button" id="ai-chat-send-btn" onclick="sendChatMessage()" style="background: linear-gradient(135deg, var(--primary-gold) 0%, #b8860b 100%); color: #0a0e14; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 900; font-size: 0.95em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0; white-space: nowrap; box-shadow: 0 3px 15px rgba(212, 175, 55, 0.4); transition: transform 0.15s ease;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                    <!-- شريط إدخال الرسائل النصية الواضح والبارز والمخصص لرد المراجع بالتفصيل بمساحة متسعة قابلة للتمدد -->
+                    <div id="ai-chat-input-bar" style="background: #0b1324; border: 2px solid var(--primary-gold); border-radius: 14px; padding: 10px 14px; display: flex; align-items: flex-end; gap: 8px; box-shadow: 0 6px 25px rgba(0,0,0,0.6); margin-top: 6px; box-sizing: border-box; width: 100%; max-width: 100%; overflow: hidden;">
+                        <textarea id="ai-chat-input" rows="2" placeholder="اكتب هنا شرح حالتك وأعراضك بالتفصيل للدكتورة سارة (المساحة متسعة وتتمدد تلقائياً مع كتابتك)..." onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendChatMessage(); }" oninput="this.style.height='auto'; this.style.height=Math.min(this.scrollHeight, 180)+'px';" style="flex: 1 1 auto; min-width: 0; background: transparent; border: none; color: #ffffff; font-size: 1.02em; font-weight: 500; outline: none; font-family: inherit; padding: 6px 4px; box-sizing: border-box; resize: none; min-height: 52px; max-height: 180px; line-height: 1.6; overflow-y: auto;"></textarea>
+                        <button type="button" id="ai-chat-send-btn" onclick="sendChatMessage()" style="background: linear-gradient(135deg, var(--primary-gold) 0%, #b8860b 100%); color: #0a0e14; border: none; padding: 12px 18px; border-radius: 10px; font-weight: 900; font-size: 0.95em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0; white-space: nowrap; box-shadow: 0 3px 15px rgba(212, 175, 55, 0.4); transition: transform 0.15s ease;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
                             <span>إرسال للدكتورة سارة</span> <span>⬅️</span>
                         </button>
                     </div>
@@ -2111,23 +2111,23 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=31.10"></script>
-    <script src="js/cloud-sync.js?v=31.10"></script>
-    <script src="js/geo-tracker.js?v=31.10"></script>
-    <script src="js/database.js?v=31.10"></script>
-    <script src="js/exercise-image-studio.js?v=31.10"></script>
-    <script src="js/exercises-db.js?v=31.10"></script>
-    <script src="js/diagnostic-engine.js?v=31.10"></script>
-    <script src="js/audio-pacer.js?v=31.10"></script>
-    <script src="js/patient-flow.js?v=31.10"></script>
-    <script src="js/admin-engine.js?v=31.10"></script>
-    <script src="js/ai-config.js?v=31.10"></script>
-    <script src="js/ai-engine.js?v=31.10"></script>
-    <script src="js/app.js?v=31.10"></script>
-    <script src="js/text-editor.js?v=31.10"></script>
-    <script src="js/smart-guidance.js?v=31.10"></script>
-    <script src="js/whatsapp-dispatcher.js?v=31.10"></script>
-    <script src="js/mobile-alerts.js?v=31.10"></script>
+    <script src="js/mqtt.min.js?v=32.30"></script>
+    <script src="js/cloud-sync.js?v=32.30"></script>
+    <script src="js/geo-tracker.js?v=32.30"></script>
+    <script src="js/database.js?v=32.30"></script>
+    <script src="js/exercise-image-studio.js?v=32.30"></script>
+    <script src="js/exercises-db.js?v=32.30"></script>
+    <script src="js/diagnostic-engine.js?v=32.30"></script>
+    <script src="js/audio-pacer.js?v=32.30"></script>
+    <script src="js/patient-flow.js?v=32.30"></script>
+    <script src="js/admin-engine.js?v=32.30"></script>
+    <script src="js/ai-config.js?v=32.30"></script>
+    <script src="js/ai-engine.js?v=32.30"></script>
+    <script src="js/app.js?v=32.30"></script>
+    <script src="js/text-editor.js?v=32.30"></script>
+    <script src="js/smart-guidance.js?v=32.30"></script>
+    <script src="js/whatsapp-dispatcher.js?v=32.30"></script>
+    <script src="js/mobile-alerts.js?v=32.30"></script>
 
     <script>
         // مؤشر المراجعين المتواجدين أونلاين الآن (متزامن بدقة مع السحابة ولوحة الإدارة)

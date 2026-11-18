@@ -11568,7 +11568,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v32.10';
+const CURRENT_APP_VERSION = 'v32.30';
 window.CURRENT_APP_VERSION = CURRENT_APP_VERSION;
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
@@ -14583,8 +14583,8 @@ async function initAiClinicalChat() {
     // نص الترحيب الطبي الأولي: ترحيب وقور ودعوة لتعبئة المؤشرات الحيوية دون تكرار الأسئلة
     let instantWelcomeMsg = '';
     const greetingName = (knownName && knownName !== 'المراجع الكريم') ? ` يا ${knownName}` : '';
-    if (!knownName) {
-        instantWelcomeMsg = `مرحباً بك في «وداعاً للألم» للكايروبراكتيك.. سلامتك أولاً. أنا الدكتورة سارة، استشارية التأهيل والتقويم السريري.\n\nلمعايرة استشارتك بدقة وحساب الأحمال البيوميكانيكية على المفاصل، يرجى تزويدي ببياناتك ومؤشراتك الحيوية أدناه لنبدأ استقصاء موضع الألم في **${ptTitle}** فوراً:`;
+    if (!isRegisteredPatient) {
+        instantWelcomeMsg = `مرحباً بك${greetingName} في «وداعاً للألم» للكايروبراكتيك.. سلامتك أولاً. أنا الدكتورة سارة، استشارية التأهيل والتقويم السريري.\n\nلمعايرة استشارتك بدقة وحساب الأحمال البيوميكانيكية على المفاصل، يرجى تزويدي ببياناتك ومؤشراتك الحيوية أدناه لنبدأ استقصاء موضع الألم في **${ptTitle}** فوراً:`;
     } else if (specType === 'stroke') {
         instantWelcomeMsg = `أهلاً بك${greetingName} مجدداً في استشارات التأهيل الحركي وما بعد الجلطات.. سلامتك أولاً.\n\nلنستكمل التقييم السريري المباشر: ما هو الطرف الأكثر تأثراً بالضعف أو التصلب حالياً، ومنذ متى حدثت الجلطة تحديداً؟`;
     } else if (specType === 'foot_drop') {
@@ -14968,7 +14968,7 @@ window.submitChatRoyalVitals = function() {
         const sendBtn = document.getElementById('ai-chat-send-btn');
         if (chatInput) {
             chatInput.disabled = false;
-            chatInput.placeholder = `اكتب ردك للدكتور هنا يا ${nameVal.split(' ')[0]}...`;
+            chatInput.placeholder = `اكتب ردك وشرح حالتك بالتفصيل للدكتورة سارة يا ${nameVal.split(' ')[0]}...`;
             setTimeout(() => {
                 chatInput.focus();
             }, 250);
@@ -15129,6 +15129,7 @@ async function sendChatMessage() {
     if (!text) return;
 
     input.value = '';
+    if (input.tagName === 'TEXTAREA') input.style.height = '';
     appendChatMessage('user', text);
     renderChatQuickReplies([]);
 
@@ -15705,7 +15706,9 @@ async function sendChatMessage() {
             patientPhone: clinicalDialogueState.patientPhone,
             patientVitals: clinicalDialogueState.patientVitals,
             lastUserMessage: text,
-            specialtyType: (currentSelectedPoint && currentSelectedPoint.specialtyType) || null
+            specialtyType: (currentSelectedPoint && currentSelectedPoint.specialtyType) || null,
+            vitalsAlreadyAcknowledged: !!(clinicalDialogueState.vitalsAcknowledged || (clinicalDialogueState.patientVitals && clinicalDialogueState.patientVitals.age)),
+            welcomeAlreadyDone: !!(clinicalDialogueState.welcomeCompleted || clinicalDialogueState.vitalsAcknowledged)
         });
     } finally {
         const indicator = document.getElementById(loadingId);
@@ -15719,9 +15722,12 @@ async function sendChatMessage() {
             painPointTitle: currentSelectedPoint.title,
             patientName: clinicalDialogueState.patientName,
             patientGender: resolvedGender,
+            patientPhone: clinicalDialogueState.patientPhone,
             patientVitals: clinicalDialogueState.patientVitals,
             lastUserMessage: text,
-            specialtyType: (currentSelectedPoint && currentSelectedPoint.specialtyType) || null
+            specialtyType: (currentSelectedPoint && currentSelectedPoint.specialtyType) || null,
+            vitalsAlreadyAcknowledged: !!(clinicalDialogueState.vitalsAcknowledged || (clinicalDialogueState.patientVitals && clinicalDialogueState.patientVitals.age)),
+            welcomeAlreadyDone: !!(clinicalDialogueState.welcomeCompleted || clinicalDialogueState.vitalsAcknowledged)
         });
     }
 
