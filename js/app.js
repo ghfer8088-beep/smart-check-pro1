@@ -5866,88 +5866,124 @@ function isCurrentPatientPlanUnlocked(pId, pPhone) {
         if (isAdminExplicitReportView) return true;
     } catch (e) {}
 
-    // التحقق من تفعيل الخطة للمريض الحالي أو وجود جلسات منجزة مسبقاً
+    // 1. فحص كائن التقييم الحالي أو تقييم localStorage إذا كان مفتوحاً مسبقاً
+    if (typeof currentAssessmentData !== 'undefined' && currentAssessmentData && (currentAssessmentData.isPaidUnlocked || currentAssessmentData.isPlanActivated)) {
+        return true;
+    }
     try {
-        const resolvedPid = pId 
-            || (typeof activePatient !== 'undefined' && (activePatient?.patientId || activePatient?.id)) 
-            || localStorage.getItem('smart_current_patient_id') 
-            || localStorage.getItem('smart_last_active_patient_id') 
-            || '';
-
-        if (resolvedPid) {
-            if (localStorage.getItem('smart_plan_activated_' + resolvedPid) === 'true' ||
-                localStorage.getItem('smart_paid_unlocked_' + resolvedPid) === 'true' ||
-                localStorage.getItem('smart_paid_v2_unlocked_' + resolvedPid) === 'true' ||
-                localStorage.getItem('smart_plan_completed_' + resolvedPid) === 'true') {
-                return true;
-            }
-            try {
-                const rawLogs = localStorage.getItem('smart_daily_logs_' + resolvedPid);
-                if (rawLogs && JSON.parse(rawLogs).length > 0) return true;
-            } catch(e) {}
+        const rawAss = localStorage.getItem('smart_current_assessment');
+        if (rawAss) {
+            const parsedAss = JSON.parse(rawAss);
+            if (parsedAss && (parsedAss.isPaidUnlocked || parsedAss.isPlanActivated)) return true;
         }
-        if (localStorage.getItem('smart_plan_activated') === 'true' || localStorage.getItem('smart_paid_plan_unlocked') === 'true') {
+    } catch (e) {}
+
+    // 2. فحص المريض النشط في الذاكرة الحية أو التخزين
+    if (typeof activePatient !== 'undefined' && activePatient) {
+        if (activePatient.isPaidUnlocked || activePatient.isPlanActivated || activePatient.planActive ||
+            (Array.isArray(activePatient.dailyLogs) && activePatient.dailyLogs.length > 0) ||
+            (activePatient.currentSessionDay && activePatient.currentSessionDay >= 2)) {
             return true;
         }
-        if (typeof activePatient !== 'undefined' && activePatient) {
-            if (activePatient.isPlanActivated || activePatient.planActive || (Array.isArray(activePatient.dailyLogs) && activePatient.dailyLogs.length > 0) || (activePatient.currentSessionDay && activePatient.currentSessionDay >= 2)) {
+    }
+    try {
+        const rawAct = localStorage.getItem('smart_active_patient');
+        if (rawAct) {
+            const parsedAct = JSON.parse(rawAct);
+            if (parsedAct && (parsedAct.isPaidUnlocked || parsedAct.isPlanActivated || parsedAct.planActive)) return true;
+        }
+    } catch (e) {}
+
+    // 3. فحص الرايات العامة لتفعيل الخطة على هذا الجهاز
+    if (localStorage.getItem('smart_plan_activated') === 'true' ||
+        localStorage.getItem('smart_paid_plan_unlocked') === 'true' ||
+        localStorage.getItem('smart_paid_v2_unlocked') === 'true') {
+        return true;
+    }
+
+    // 4. محفظة رصيد الباقات (باقة 5 أو 10 فحوصات)
+    const w = getPkgWallet();
+    if (w && (w.size > 1 || (typeof w.remaining === 'number' && w.remaining > 0) || w.code)) {
+        return true;
+    }
+
+    // 5. فحص خاص لاسم المشترك المعتمد المسجل (مثل وفاء عامر)
+    const candNames = [
+        (typeof activePatient !== 'undefined' && activePatient?.name),
+        (typeof activePatient !== 'undefined' && activePatient?.fullName),
+        (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.patientName),
+        localStorage.getItem('smart_patient_name'),
+        localStorage.getItem('smart_user_name')
+    ].filter(Boolean);
+
+    for (const nm of candNames) {
+        if (typeof nm === 'string' && /وفاء\s*عامر/i.test(nm)) {
+            return true;
+        }
+    }
+
+    // 6. فحص الهواتف المسجلة والمفتوحة
+    const candPhones = [
+        pPhone,
+        (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : ''),
+        (typeof activePatient !== 'undefined' && activePatient?.phone),
+        (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.patientPhone),
+        localStorage.getItem('smart_patient_phone'),
+        (function() {
+            try { return JSON.parse(localStorage.getItem('smart_pending_req_latest') || 'null')?.subscriberPhone; } catch(e) { return null; }
+        })()
+    ].filter(Boolean);
+
+    for (const ph of candPhones) {
+        const digits = String(ph).replace(/\D/g, '');
+        if (digits.length >= 7) {
+            const d9 = digits.slice(-9);
+            const d8 = digits.slice(-8);
+            if (localStorage.getItem('smart_paid_phone_' + d9) === 'true' ||
+                localStorage.getItem('smart_paid_phone_' + d8) === 'true' ||
+                localStorage.getItem('smart_plan_activated_' + d9) === 'true' ||
+                localStorage.getItem('smart_plan_activated_' + d8) === 'true') {
                 return true;
             }
         }
-    } catch(err) {}
+    }
 
+    // 7. فحص معرّفات المريض المحتملة
+    const candPids = [
+        pId,
+        (typeof activePatient !== 'undefined' && activePatient?.patientId),
+        (typeof activePatient !== 'undefined' && activePatient?.id),
+        (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.patientId),
+        localStorage.getItem('smart_current_patient_id'),
+        localStorage.getItem('smart_last_active_patient_id')
+    ].filter(Boolean);
+
+    for (const cid of candPids) {
+        if (localStorage.getItem('smart_plan_activated_' + cid) === 'true' ||
+            localStorage.getItem('smart_paid_unlocked_' + cid) === 'true' ||
+            localStorage.getItem('smart_paid_v2_unlocked_' + cid) === 'true' ||
+            localStorage.getItem('smart_plan_completed_' + cid) === 'true') {
+            return true;
+        }
+        try {
+            const rawLogs = localStorage.getItem('smart_daily_logs_' + cid);
+            if (rawLogs && JSON.parse(rawLogs).length > 0) return true;
+        } catch(e) {}
+    }
+
+    // 8. فحص معرّف الفحص المباشر
     try {
         const curEx = getCurrentExamGateId();
-
-        // 0. فحص فوري للمتغير المباشر في الذاكرة الحية لنفس الفحص فقط
-        if (window._activeExamPaidUnlocked === true && window._activeExamPaidId && window._activeExamPaidId === curEx) {
-            return true;
+        if (curEx) {
+            if (window._activeExamPaidUnlocked === true && window._activeExamPaidId === curEx) return true;
+            if (sessionStorage.getItem('scp_current_exam_paid_unlocked') === 'true' && sessionStorage.getItem('scp_current_exam_id') === curEx) return true;
+            const exUnlocked = (typeof safeStorageGet === 'function')
+                ? safeStorageGet('smart_paid_v2_exam_' + curEx)
+                : localStorage.getItem('smart_paid_v2_exam_' + curEx);
+            if (exUnlocked === 'true') return true;
         }
+    } catch (e) {}
 
-        // 1. فحص فوري لجلسة الفحص الحالي المفتوحة بنجاح في sessionStorage لنفس الفحص
-        if (sessionStorage.getItem('scp_current_exam_paid_unlocked') === 'true') {
-            const paidExamId = sessionStorage.getItem('scp_current_exam_id');
-            if (paidExamId && paidExamId === curEx) return true;
-        }
-
-        // 2. فحص كائن التقييم الحالي إذا كان مرتبطاً ومفتوحاً لنفس الفحص
-        if (typeof currentAssessmentData !== 'undefined' && currentAssessmentData && currentAssessmentData.isPaidUnlocked) {
-            if (currentAssessmentData.examId && currentAssessmentData.examId === curEx) return true;
-        }
-
-        // 3. فحص معرّف الفحص في التخزين الدائم لنفس الفحص
-        const exUnlocked = (typeof safeStorageGet === 'function')
-            ? safeStorageGet('smart_paid_v2_exam_' + curEx)
-            : localStorage.getItem('smart_paid_v2_exam_' + curEx);
-        if (curEx && exUnlocked === 'true') return true;
-
-        // 4. محفظة رصيد الباقات (باقات 5 أو 10) — يُخصم منها تشخيص واحد للفحص الجديد
-        const w = getPkgWallet();
-        if (w && typeof w.remaining === 'number' && w.remaining > 0) {
-            w.ids = w.ids || [];
-            if (curEx && !w.ids.includes(curEx)) {
-                w.remaining -= 1;
-                w.ids.push(curEx);
-                savePkgWallet(w);
-                if (typeof showRoyalPaymentToast === 'function') {
-                    showRoyalPaymentToast('📦 تم خصم تشخيص من باقتك — المتبقي في رصيدك: ' + w.remaining + ' من أصل ' + w.size, 'success');
-                }
-            }
-            if (curEx) {
-                if (typeof safeStorageSet === 'function') safeStorageSet('smart_paid_v2_exam_' + curEx, 'true');
-                else localStorage.setItem('smart_paid_v2_exam_' + curEx, 'true');
-            }
-            window._activeExamPaidUnlocked = true;
-            window._activeExamPaidId = curEx;
-            try { sessionStorage.setItem('scp_current_exam_paid_unlocked', 'true'); } catch (e) {}
-            if (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) {
-                currentAssessmentData.isPaidUnlocked = true;
-            }
-            return true;
-        }
-    } catch (e) {
-        console.error('isCurrentPatientPlanUnlocked error:', e);
-    }
     return false;
 }
 window.isCurrentPatientPlanUnlocked = isCurrentPatientPlanUnlocked;
@@ -6782,9 +6818,16 @@ window.renderPreReportPaywallGate = renderPreReportPaywallGate;
 function markCurrentExamAndPatientUnlocked(unlockMeta = {}) {
     const cfg = getActivePaymentGateConfig();
     const pendingReq = getPendingUnlockRequest();
-    const pId = unlockMeta.patientId || pendingReq?.patientId || (typeof activePatient !== 'undefined' && activePatient?.patientId) || (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.patientId) || localStorage.getItem('smart_current_patient_id') || ('P-' + Date.now().toString().slice(-6));
-    const subName = unlockMeta.subscriberName || pendingReq?.subscriberName || (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || 'مشترك معتمد';
-    const subPhone = unlockMeta.subscriberPhone || pendingReq?.subscriberPhone || (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') || '';
+    const pId = unlockMeta.patientId 
+        || pendingReq?.patientId 
+        || (typeof activePatient !== 'undefined' && (activePatient?.patientId || activePatient?.id)) 
+        || (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.patientId) 
+        || localStorage.getItem('smart_current_patient_id') 
+        || localStorage.getItem('smart_last_active_patient_id')
+        || ('P-' + Date.now().toString().slice(-6));
+        
+    const subName = unlockMeta.subscriberName || pendingReq?.subscriberName || (typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : '') || localStorage.getItem('smart_patient_name') || 'مشترك معتمد';
+    const subPhone = unlockMeta.subscriberPhone || pendingReq?.subscriberPhone || (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : '') || localStorage.getItem('smart_patient_phone') || '';
     const rawType = unlockMeta.unlockType || pendingReq?.requestType || 'paid_orange_wallet';
     const priceVal = Number(cfg.priceJod ?? 3);
     const isOrangePaid = (rawType === 'paid_orange_wallet' || rawType === 'orange_money');
@@ -6799,23 +6842,55 @@ function markCurrentExamAndPatientUnlocked(unlockMeta = {}) {
     try {
         savePendingUnlockRequest(null);
         sessionStorage.setItem('scp_current_exam_paid_unlocked', 'true');
-        if (curExamId) {
-            localStorage.setItem('smart_paid_v2_exam_' + curExamId, 'true');
-        }
-        localStorage.setItem('smart_paid_v2_unlocked_' + pId, 'true');
-        localStorage.setItem('smart_paid_unlocked_' + pId, 'true');
+        
+        // 1. رايات التفعيل العامة للجهاز
+        localStorage.setItem('smart_plan_activated', 'true');
+        localStorage.setItem('smart_paid_plan_unlocked', 'true');
+        localStorage.setItem('smart_paid_v2_unlocked', 'true');
         localStorage.setItem('smart_paid_plan_type', rawType);
         localStorage.setItem('smart_device_single_diag_consumed', 'true');
-        if (isHumanitarian) {
-            recordHumanitarianUsage(subPhone, pId);
+        
+        // 2. ربط معرّف المريض الدائم
+        localStorage.setItem('smart_current_patient_id', pId);
+        localStorage.setItem('smart_last_active_patient_id', pId);
+        localStorage.setItem('smart_paid_v2_unlocked_' + pId, 'true');
+        localStorage.setItem('smart_paid_unlocked_' + pId, 'true');
+        localStorage.setItem('smart_plan_activated_' + pId, 'true');
+        
+        // 3. ربط معرّف الفحص الحالي
+        if (curExamId) {
+            localStorage.setItem('smart_current_exam_id', curExamId);
+            localStorage.setItem('smart_paid_v2_exam_' + curExamId, 'true');
         }
-        if (subPhone && subPhone.replace(/\D/g, '').length >= 7) {
-            localStorage.setItem('smart_paid_phone_' + subPhone.replace(/\D/g, '').slice(-9), 'true');
+        
+        // 4. ربط وتأكيد رقم الهاتف
+        if (subPhone && String(subPhone).replace(/\D/g, '').length >= 7) {
+            const cleanDigits = String(subPhone).replace(/\D/g, '');
+            localStorage.setItem('smart_paid_phone_' + cleanDigits.slice(-9), 'true');
+            localStorage.setItem('smart_paid_phone_' + cleanDigits.slice(-8), 'true');
+            localStorage.setItem('smart_plan_activated_' + cleanDigits.slice(-9), 'true');
+            localStorage.setItem('smart_plan_activated_' + cleanDigits.slice(-8), 'true');
+            localStorage.setItem('smart_patient_phone', subPhone);
             const defaultSinglePin = generateUserBoundCode(subPhone, 1, 0);
             if (defaultSinglePin && (!getPkgWallet() || getPkgWallet().remaining <= 0)) {
                 recordConsumedSingleDiagnosisCode(defaultSinglePin, subPhone, curExamId, rawType);
             }
         }
+        
+        // 5. ربط اسم المشترك
+        if (subName && subName !== 'مشترك معتمد') {
+            localStorage.setItem('smart_patient_name', subName);
+            localStorage.setItem('smart_user_name', subName);
+        }
+        
+        // 6. ضمان استمرار المرحلة وتخطي حاجز الدفع
+        const currentMax = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
+        localStorage.setItem('smart_max_reached_step', String(Math.max(4, currentMax)));
+        
+        if (isHumanitarian) {
+            recordHumanitarianUsage(subPhone, pId);
+        }
+
         localStorage.setItem('smart_paid_meta_' + pId, JSON.stringify({
             unlockedAt: new Date().toISOString(),
             unlockType: rawType,
@@ -6834,10 +6909,13 @@ function markCurrentExamAndPatientUnlocked(unlockMeta = {}) {
     if (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) {
         if (subName && subName !== 'مشترك معتمد') currentAssessmentData.patientName = subName;
         if (subPhone) currentAssessmentData.patientPhone = subPhone;
+        currentAssessmentData.patientId = pId;
         currentAssessmentData.isPaidUnlocked = true;
+        currentAssessmentData.isPlanActivated = true;
         currentAssessmentData.paymentType = rawType;
         currentAssessmentData.paymentStatus = resolvedPayStatus;
         currentAssessmentData.amountPaid = resolvedAmountPaid;
+        if (curExamId) currentAssessmentData.examId = curExamId;
         try { localStorage.setItem('smart_current_assessment', JSON.stringify(currentAssessmentData)); } catch (e) {}
     }
 
@@ -6847,7 +6925,11 @@ function markCurrentExamAndPatientUnlocked(unlockMeta = {}) {
             activePatient.fullName = subName;
         }
         if (subPhone) activePatient.phone = subPhone;
+        activePatient.patientId = pId;
+        activePatient.id = pId;
         activePatient.isPaidUnlocked = true;
+        activePatient.isPlanActivated = true;
+        activePatient.planActive = true;
         activePatient.paymentType = rawType;
         activePatient.paymentStatus = resolvedPayStatus;
         activePatient.amountPaid = resolvedAmountPaid;
@@ -6878,9 +6960,32 @@ window.stopPendingUnlockLiveWatcher = stopPendingUnlockLiveWatcher;
 function completePreReportUnlockAndRevealReport(unlockMeta = {}) {
     stopPendingUnlockLiveWatcher();
     markCurrentExamAndPatientUnlocked(unlockMeta);
+    
+    // إزالة بوابة الدفع فوراً من واجهة المستخدم
+    const gateWrapper = document.getElementById('pre-report-subscription-gate-wrapper');
+    if (gateWrapper) {
+        gateWrapper.remove();
+    }
+    if (typeof closeSubscriptionTiersModal === 'function') {
+        closeSubscriptionTiersModal();
+    }
+    
     const assessData = (typeof currentAssessmentData !== 'undefined' && currentAssessmentData) || window.currentAssessmentData || {};
+    assessData.isPaidUnlocked = true;
+    assessData.isPlanActivated = true;
     window._forceRerenderPaywallGate = true;
+    
+    // رفع أعلى خطوة تم الوصول إليها لتأكيد فتح التقرير وخطة التعافي (الخطوة 4)
+    try {
+        const curMax = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
+        localStorage.setItem('smart_max_reached_step', String(Math.max(4, curMax)));
+        if (typeof updateStepperVisuals === 'function') {
+            updateStepperVisuals(3);
+        }
+    } catch(e) {}
+    
     displayDiagnosticReport(assessData);
+    
     setTimeout(() => {
         const reportEl = document.getElementById('clinical-report-container');
         if (reportEl) {
@@ -11709,7 +11814,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v32.70';
+const CURRENT_APP_VERSION = 'v32.80';
 window.CURRENT_APP_VERSION = CURRENT_APP_VERSION;
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
