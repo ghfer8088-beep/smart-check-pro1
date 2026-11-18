@@ -927,10 +927,13 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
         const savedModel = (typeof localStorage !== 'undefined') ? localStorage.getItem('wada3an_active_ai_model') : null;
         const candidateModels = Array.from(new Set([
             savedModel,
-            'gemini-2.0-flash',
-            'gemini-2.5-flash',
-            'gemini-1.5-flash',
-            'gemini-flash-latest'
+            'gemini-3.1-flash-lite',
+            'gemini-3.5-flash-lite',
+            'gemini-3-flash-preview',
+            'gemini-flash-lite-latest',
+            'gemini-3.8-flash',
+            'gemini-3.7-flash',
+            ...(WADA3AN_AI_CONFIG.CANDIDATE_MODELS || [])
         ].filter(Boolean)));
         let lastError = null;
 
@@ -938,8 +941,8 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             try {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
                 const controller = new AbortController();
-                // ✅ رُفعت المهلة من 3500ms إلى 20000ms لإتاحة الوقت الكافي لجيميني للرد الحقيقي
-                const timeoutId = setTimeout(() => controller.abort(), 7000);
+                // ✅ مهلة 12000ms كافية لاستجابة النموذج السريري دون انقطاع مبكر
+                const timeoutId = setTimeout(() => controller.abort(), 12000);
 
                 const response = await fetch(url, {
                     method: 'POST',
@@ -1378,50 +1381,59 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
         }
 
         // ✅ استجواب متسلسل متعمق يتقدم في كل دور دون تكرار أي سؤال سابق إطلاقاً
+        const botHistoryText = (history || []).filter(h => h.sender === 'bot').map(h => h.text).join(' ');
+
+        const hasAskedProvocation = botHistoryText.includes(rawAnatQ.provocation) || /(?:أوضاع الحركة|عند المشي|نزول الدرج|عند الجلوس الطويل|عظمة الكوع|رفع ذراعك|تشتكين من صعوبة|تشتكي من صعوبة)/i.test(botHistoryText);
+        const hasAskedNumbness = botHistoryText.includes(rawAnatQ.numbness) || /(?:الأعصاب الطرفية|خدر أو تنميل|خدر أو لسعة|يمتد التنميل)/i.test(botHistoryText);
+        const hasAskedDuration = botHistoryText.includes(rawAnatQ.duration) || /(?:منذ متى تعاني|منذ متى بدأت هذه الشكوى|منذ متى بدأت هذه المشكلة)/i.test(botHistoryText);
+        const hasAskedStiffness = botHistoryText.includes(rawAnatQ.stiffness) || /(?:الكمبيوتر|حمل الأشياء|تيبس|تخشب|تصلب|عقدة عضلية|ثنية الفخذ|الاستيقاظ صباحاً)/i.test(botHistoryText);
+        const hasAskedIntensity = /(?:رقماً من 1 إلى 10|شدة الألم)/i.test(botHistoryText);
+        const hasAskedLifeImpact = /(?:كيف يؤثر هذا الألم|روتينك وحياتك)/i.test(botHistoryText);
+
         const hasAddressedProvocation = /(?:جلوس|انحناء|مشي|وقوف|حركة|يزداد|يشتد|عطس|كحة|حمل|ركوع|سجود|بزيد|بشتد)/i.test(allHistoryText);
         const hasAddressedDuration = /(?:منذ|شهر|شهرين|سنة|سنتين|أسبوع|اسبوع|أيام|ايام|فترة|صارلي|زمان)/i.test(allHistoryText);
         const hasAddressedLifeImpact = /(?:نوم|عمل|وظيفة|دوام|يقظ|يمنع|يصعب|حياة)/i.test(allHistoryText);
         const hasAddressedMorning = /(?:صباح|استيقاظ|تصلب|تيبس|تخشب)/i.test(allHistoryText);
         const hasAddressedIntensity = /(?:شدة|حدة|قوي|خفيف|متوسط|رقم|من عشرة|\/10)/i.test(allHistoryText);
 
-        // اختيار السؤال المناسب بناءً على الفجوات السريرية المتبقية
-        if (!hasAddressedProvocation) {
+        // اختيار السؤال التالي المتدرج بناءً على الفجوات السريرية وما لم يُسأل بعد
+        if (!hasAskedProvocation && !hasAddressedProvocation) {
             return {
                 message: `${acknowledgmentPrefix}لاستكمال الصورة السريرية لـ **${title}**:\n${anatQ.provocation}`,
                 quickReplies: [],
                 nextStep: 'chatting'
             };
-        } else if (!hasAddressedNumbness) {
+        } else if (!hasAskedNumbness && !hasAddressedNumbness) {
             return {
                 message: `${acknowledgmentPrefix}سؤال سريري دقيق لفحص الأعصاب الطرفية:\n${anatQ.numbness}`,
                 quickReplies: [],
                 nextStep: 'chatting'
             };
-        } else if (!hasAddressedDuration) {
-            return {
-                message: `${acknowledgmentPrefix}${anatQ.duration}`,
-                quickReplies: [],
-                nextStep: 'chatting'
-            };
-        } else if (!hasAddressedMorning) {
+        } else if (!hasAskedStiffness && !hasAddressedMorning) {
             return {
                 message: `${acknowledgmentPrefix}${anatQ.stiffness}`,
                 quickReplies: [],
                 nextStep: 'chatting'
             };
-        } else if (!hasAddressedIntensity) {
+        } else if (!hasAskedDuration && !hasAddressedDuration) {
+            return {
+                message: `${acknowledgmentPrefix}${anatQ.duration}`,
+                quickReplies: [],
+                nextStep: 'chatting'
+            };
+        } else if (!hasAskedIntensity && !hasAddressedIntensity) {
             return {
                 message: `${acknowledgmentPrefix}لأحدد شدة الخلل الميكانيكي بدقة، لو تعطيني رقماً من 1 إلى 10 يصف شدة الألم في **${title}** في أوقات ذروته؟`,
                 quickReplies: [],
                 nextStep: 'chatting'
             };
-        } else if (!hasAddressedLifeImpact) {
+        } else if (!hasAskedLifeImpact && !hasAddressedLifeImpact) {
             return {
                 message: `${acknowledgmentPrefix}وضح لي، كيف يؤثر هذا الألم في **${title}** على روتينك وحياتك اليومية؟ هل يوقظك من النوم أو يعيق عملك ومشيك؟`,
                 quickReplies: [],
                 nextStep: 'chatting'
             };
-        } else if (userTurnCount < 4) {
+        } else if (userTurnCount < 3) {
             return {
                 message: `${acknowledgmentPrefix}حدثني أكثر، ما هي أكثر حركة أو وضعية تريح الألم في **${title}** وتخفف التوتر عنك؟`,
                 quickReplies: [],
