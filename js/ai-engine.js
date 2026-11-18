@@ -480,7 +480,7 @@ ${greetingInstruction}
         const key = WADA3AN_AI_CONFIG.getApiKey();
         // في حال عدم توفر مفتاح أو تعذر الاتصال، الرد بذكاء تفاعلي يعالج ما قاله المراجع فعلياً بعد محاكاة التحليل الطبي
         if (!key || !WADA3AN_AI_CONFIG.isConfigured()) {
-            await new Promise(resolve => setTimeout(resolve, 1400 + Math.floor(Math.random() * 800)));
+            await new Promise(resolve => setTimeout(resolve, 300));
             return this.generateFallbackDialogueStep(context);
         }
 
@@ -642,7 +642,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
 `;
 
         try {
-            const rawReply = await this.callRawGemini(systemPrompt, { maxTokens: 4096, temperature: 0.6 });
+            const rawReply = await this.callRawGemini(systemPrompt, { maxTokens: 1024, temperature: 0.5 });
             if (rawReply && rawReply.trim()) {
                 let extractedPhone = null;
                 const phoneM = rawReply.match(/\[EXTRACTED_PHONE:\s*([^\]]+)\]/);
@@ -765,7 +765,14 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
         const key = WADA3AN_AI_CONFIG.getApiKey();
         if (!key) throw new Error('No valid API key');
 
-        const candidateModels = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-2.5-flash', 'gemini-2.0-flash'];
+        const savedModel = (typeof localStorage !== 'undefined') ? localStorage.getItem('wada3an_active_ai_model') : null;
+        const candidateModels = Array.from(new Set([
+            savedModel,
+            'gemini-2.0-flash',
+            'gemini-2.5-flash',
+            'gemini-1.5-flash',
+            'gemini-flash-latest'
+        ].filter(Boolean)));
         let lastError = null;
 
         for (const model of candidateModels) {
@@ -773,7 +780,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
                 const controller = new AbortController();
                 // ✅ رُفعت المهلة من 3500ms إلى 20000ms لإتاحة الوقت الكافي لجيميني للرد الحقيقي
-                const timeoutId = setTimeout(() => controller.abort(), 20000);
+                const timeoutId = setTimeout(() => controller.abort(), 7000);
 
                 const response = await fetch(url, {
                     method: 'POST',
@@ -782,7 +789,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                         contents: [{ parts: [{ text: promptText }] }],
                         generationConfig: {
                             temperature,
-                            maxOutputTokens: Math.max(maxTokens, 4096)
+                            maxOutputTokens: Math.min(maxTokens || 1024, 4096)
                         }
                     }),
                     signal: controller.signal

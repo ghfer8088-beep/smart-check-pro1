@@ -1773,7 +1773,9 @@ const AdminEngine = (function() {
         setPatientCompletedSessions,
         exportAllData,
         purgeDemoPatients,
-        clearAllPatients
+        clearAllPatients,
+        openPricingManagementModal: () => (typeof window !== 'undefined' && typeof window.openPricingManagementModal === 'function') && window.openPricingManagementModal(),
+        saveAndBroadcastSubscriptionPrices: (p) => (typeof window !== 'undefined' && typeof window.saveAndBroadcastSubscriptionPrices === 'function') && window.saveAndBroadcastSubscriptionPrices(p)
     };
 })();
 

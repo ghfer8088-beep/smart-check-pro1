@@ -6354,6 +6354,15 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
 // دوال إدارة النوافذ المنبثقة الاحترافية لباقات الاشتراك وتأكيد الدفع (v31.00)
 // =========================================================================
 function openSubscriptionTiersModal() {
+    const cfg = getActivePaymentGateConfig();
+    const pr = getPkgPrices(cfg);
+    const p1 = document.getElementById('tier-price-1'); if (p1) p1.textContent = pr[1];
+    const b1 = document.getElementById('tier-btn-1'); if (b1) b1.textContent = 'اختيار الباقة (' + pr[1] + ' د.أ) ←';
+    const p5 = document.getElementById('tier-price-5'); if (p5) p5.textContent = pr[5];
+    const b5 = document.getElementById('tier-btn-5'); if (b5) b5.textContent = 'اختيار الباقة العائلية (' + pr[5] + ' د.أ) ←';
+    const p10 = document.getElementById('tier-price-10'); if (p10) p10.textContent = pr[10];
+    const b10 = document.getElementById('tier-btn-10'); if (b10) b10.textContent = 'اختيار الباقة الشاملة (' + pr[10] + ' د.أ) ←';
+
     const modal = document.getElementById('subscription-tiers-modal');
     if (modal) modal.style.display = 'flex';
 }
@@ -6400,6 +6409,11 @@ function selectTierForCheckout(pkgTier) {
     const phoneIn = document.getElementById('chk-subscriber-phone');
     if (nameIn && !nameIn.value) nameIn.value = defName;
     if (phoneIn && !phoneIn.value) phoneIn.value = defPhone;
+
+    const formPane = document.getElementById('chk-form-pane');
+    const confPane = document.getElementById('chk-confirmation-pane');
+    if (formPane) formPane.style.display = 'block';
+    if (confPane) confPane.style.display = 'none';
 
     const modal = document.getElementById('subscription-checkout-modal');
     if (modal) modal.style.display = 'flex';
@@ -6451,10 +6465,36 @@ async function submitSubscriptionCheckout() {
     const pPhone = document.getElementById('pay-subscriber-phone'); if (pPhone) pPhone.value = subPhone;
     const pRef = document.getElementById('pay-transfer-ref'); if (pRef) pRef.value = transferRef;
 
-    closeSubscriptionCheckoutModal();
     await submitOrangeWalletPaymentNotification();
+
+    const formPane = document.getElementById('chk-form-pane');
+    const confPane = document.getElementById('chk-confirmation-pane');
+    if (formPane) formPane.style.display = 'none';
+    if (confPane) {
+        confPane.style.display = 'block';
+        setTimeout(() => {
+            document.getElementById('chk-confirmation-code-input')?.focus();
+        }, 150);
+    }
 }
 window.submitSubscriptionCheckout = submitSubscriptionCheckout;
+
+async function submitConfirmationCodeFromCheckout() {
+    const codeInput = document.getElementById('chk-confirmation-code-input');
+    const val = (codeInput?.value || '').trim();
+    if (!val) {
+        showRoyalPaymentToast('⚠️ يرجى إدخال كود التفعيل المستلم أولاً.', 'warning');
+        codeInput?.focus();
+        return;
+    }
+    const syncIn = document.getElementById('pay-promo-code-input');
+    if (syncIn) syncIn.value = val;
+    await submitPromoOrTestUnlockCode('chk-confirmation-code-input');
+    if (typeof isCurrentPatientPlanUnlocked === 'function' && isCurrentPatientPlanUnlocked()) {
+        closeSubscriptionCheckoutModal();
+    }
+}
+window.submitConfirmationCodeFromCheckout = submitConfirmationCodeFromCheckout;
 
 function openHumanitarianSubscriptionModal() {
     closeSubscriptionTiersModal();
@@ -7723,6 +7763,19 @@ window.onPaymentGateConfigUpdated = function(newConfig) {
         const newHash = JSON.stringify(newConfig || {});
         if (newHash === _lastPaywallConfigHash) return;
         _lastPaywallConfigHash = newHash;
+
+        // تحديث أسعار الباقات المفتوحة فورياً دون إعادة تحميل
+        const pr = (typeof getPkgPrices === 'function') ? getPkgPrices(newConfig) : { 1: newConfig?.priceJod || 3, 5: newConfig?.pricePkg5 || 10, 10: newConfig?.pricePkg10 || 15 };
+        const p1 = document.getElementById('tier-price-1'); if (p1) p1.textContent = pr[1];
+        const b1 = document.getElementById('tier-btn-1'); if (b1) b1.textContent = 'اختيار الباقة (' + pr[1] + ' د.أ) ←';
+        const p5 = document.getElementById('tier-price-5'); if (p5) p5.textContent = pr[5];
+        const b5 = document.getElementById('tier-btn-5'); if (b5) b5.textContent = 'اختيار الباقة العائلية (' + pr[5] + ' د.أ) ←';
+        const p10 = document.getElementById('tier-price-10'); if (p10) p10.textContent = pr[10];
+        const b10 = document.getElementById('tier-btn-10'); if (b10) b10.textContent = 'اختيار الباقة الشاملة (' + pr[10] + ' د.أ) ←';
+        if (window._selPkg) {
+            const chkPr = document.getElementById('chk-pkg-price');
+            if (chkPr) chkPr.textContent = pr[window._selPkg] || pr[1];
+        }
 
         if (isCurrentPatientPlanUnlocked()) {
             const gateWrapper = document.getElementById('pre-report-subscription-gate-wrapper');
@@ -14910,6 +14963,23 @@ function refreshUserMessageHeaders(newName) {
 }
 
 // إضافة رسالة للنافذة مع دعم مشغل الصوت البشري وتفريغ التسجيل
+
+function keepFocusOnSarahInterrogation(force = false) {
+    try {
+        const box = document.getElementById('ai-chat-messages-box');
+        if (box) {
+            box.scrollTop = box.scrollHeight;
+        }
+        const inputBar = document.getElementById('ai-chat-input-bar');
+        const intakeContainer = document.getElementById('ai-chat-intake-container');
+        const target = inputBar || box || intakeContainer;
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    } catch (e) {}
+}
+window.keepFocusOnSarahInterrogation = keepFocusOnSarahInterrogation;
+
 function appendChatMessage(sender, text, options = {}) {
     const box = document.getElementById('ai-chat-messages-box');
     if (!box) return;
@@ -14989,9 +15059,8 @@ function appendChatMessage(sender, text, options = {}) {
 
     box.appendChild(msgEl);
     box.scrollTop = box.scrollHeight;
-    if (window.innerWidth <= 768) {
-        msgEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
+    keepFocusOnSarahInterrogation();
+    setTimeout(() => keepFocusOnSarahInterrogation(), 60);
 
     clinicalDialogueState.history.push({ sender, text });
 }
@@ -15037,6 +15106,7 @@ async function sendChatMessage() {
         typingEl.innerHTML = `<span style="animation: spin 1s linear infinite; display: inline-block;">⚙️</span> <span>${persona.name} يحلل إجابتك ويسجل رده...</span>`;
         messagesBox.appendChild(typingEl);
         messagesBox.scrollTop = messagesBox.scrollHeight;
+        keepFocusOnSarahInterrogation();
         if (window.SmartGuidance && typeof SmartGuidance.guideAiTyping === 'function') {
             SmartGuidance.guideAiTyping(typingEl);
         }

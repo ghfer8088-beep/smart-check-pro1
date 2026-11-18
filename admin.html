@@ -1293,6 +1293,89 @@
     </div>
 
     <!-- ========================================================================== -->
+
+    <!-- ========================================================================== -->
+    <!-- 🏷️ نافذة إدارة وتعديل أسعار الاشتراكات والبث السحابي المباشر -->
+    <!-- ========================================================================== -->
+    <div id="pricing-management-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(5, 8, 15, 0.94); backdrop-filter: blur(10px); z-index: 99999; align-items: center; justify-content: center; padding: 18px; overflow-y: auto;">
+        <div class="modal-inner" style="background: linear-gradient(155deg, #070d19 0%, #0d182c 50%, #060a12 100%); border: 2.5px solid #f97316; border-radius: 20px; max-width: 650px; width: 100%; padding: 24px 22px; box-shadow: 0 25px 60px rgba(0,0,0,0.95); box-sizing: border-box; text-align: right; position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(249, 115, 22, 0.3); padding-bottom: 12px; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8em;">🏷️</span>
+                    <div>
+                        <h3 style="color: #fed7aa; margin: 0; font-size: 1.25em; font-weight: 900;">تعديل أسعار الاشتراكات والبث السحابي اللحظي</h3>
+                        <div style="color: #94a3b8; font-size: 0.82em; margin-top: 3px;">بث التعديلات فورياً لكافة الأجهزة والهواتف حول العالم عبر السحابة (MQTT / NTFY)</div>
+                    </div>
+                </div>
+                <button type="button" onclick="closePricingManagementModal()" aria-label="إغلاق" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); color: #cbd5e1; font-size: 1.4em; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+            </div>
+
+            <!-- حالة الاتصال السحابي -->
+            <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid #10b981; border-radius: 10px; padding: 10px 14px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                <div style="color: #6ee7b7; font-size: 0.86em; font-weight: bold; display: flex; align-items: center; gap: 6px;">
+                    <span>🟢</span> <span>خادم البث السحابي اللحظي العالمي نشط وجاهز لنقل أي تعديل فوراً</span>
+                </div>
+                <span style="background: rgba(16,185,129,0.25); color: #a7f3d0; font-size: 0.74em; padding: 3px 8px; border-radius: 6px; font-family: monospace;">EMQX Cloud Live</span>
+            </div>
+
+            <!-- حقول تعديل الأسعار الثلاثة -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 18px;">
+                <!-- 1. سعر الفحص الفردي -->
+                <div style="background: #080c14; border: 1.5px solid #38bdf8; border-radius: 12px; padding: 14px; text-align: center;">
+                    <label style="color: #7dd3fc; font-size: 0.86em; font-weight: 800; display: block; margin-bottom: 6px;">
+                        🔑 فحص سريري فردي
+                    </label>
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <input type="number" id="admin-pricing-single-jod" min="0.5" step="0.5" value="3" style="width: 100px; background: #111827; border: 1.5px solid #38bdf8; color: #ffffff; padding: 8px; border-radius: 8px; font-size: 1.25em; font-weight: 900; text-align: center; font-family: monospace; box-sizing: border-box;">
+                        <span style="color: #cbd5e1; font-size: 0.9em; font-weight: bold;">د.أ</span>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 0.74em; margin-top: 6px;">السعر الأساسي المعتمد</div>
+                </div>
+
+                <!-- 2. سعر باقة 5 فحوصات -->
+                <div style="background: #080c14; border: 1.5px solid #f59e0b; border-radius: 12px; padding: 14px; text-align: center;">
+                    <label style="color: #fed7aa; font-size: 0.86em; font-weight: 800; display: block; margin-bottom: 6px;">
+                        ⭐ باقة التعافي العائلي (5)
+                    </label>
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <input type="number" id="admin-pricing-pkg5-jod" min="1" step="0.5" value="10" style="width: 100px; background: #111827; border: 1.5px solid #f59e0b; color: #ffffff; padding: 8px; border-radius: 8px; font-size: 1.25em; font-weight: 900; text-align: center; font-family: monospace; box-sizing: border-box;">
+                        <span style="color: #cbd5e1; font-size: 0.9em; font-weight: bold;">د.أ</span>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 0.74em; margin-top: 6px;">رصيد 5 فحوصات للعائلة</div>
+                </div>
+
+                <!-- 3. سعر باقة 10 فحوصات -->
+                <div style="background: #080c14; border: 1.5px solid #10b981; border-radius: 12px; padding: 14px; text-align: center;">
+                    <label style="color: #a7f3d0; font-size: 0.86em; font-weight: 800; display: block; margin-bottom: 6px;">
+                        👑 باقة الحل الجذري (10)
+                    </label>
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <input type="number" id="admin-pricing-pkg10-jod" min="1" step="0.5" value="15" style="width: 100px; background: #111827; border: 1.5px solid #10b981; color: #ffffff; padding: 8px; border-radius: 8px; font-size: 1.25em; font-weight: 900; text-align: center; font-family: monospace; box-sizing: border-box;">
+                        <span style="color: #cbd5e1; font-size: 0.9em; font-weight: bold;">د.أ</span>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 0.74em; margin-top: 6px;">10 فحوصات شاملة دائمة</div>
+                </div>
+            </div>
+
+            <!-- رقم المحفظة -->
+            <div style="background: #080c14; border: 1px solid #334155; border-radius: 12px; padding: 12px 16px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <label style="color: #fed7aa; font-size: 0.86em; font-weight: bold; display: block;">📱 رقم محفظة أورانج المعتمدة للتحويل:</label>
+                    <div style="color: #94a3b8; font-size: 0.76em; margin-top: 2px;">يظهر لكافة المراجعين في بطاقات الدفع وصفحة إتمام الطلب</div>
+                </div>
+                <input type="text" id="admin-pricing-wallet-phone" value="0795651388" dir="ltr" style="background: #111827; border: 1.5px solid #f97316; color: #ffffff; padding: 8px 14px; border-radius: 8px; font-size: 1.05em; font-weight: 900; font-family: monospace; text-align: center; width: 140px;">
+            </div>
+
+            <!-- زر الحفظ والبث العالمي الفوري -->
+            <button type="button" onclick="saveAndBroadcastSubscriptionPrices()" style="width: 100%; background: linear-gradient(135deg, #f97316 0%, #ea580c 50%, #b45309 100%); color: #ffffff; border: 1.5px solid #fed7aa; padding: 14px; border-radius: 12px; font-size: 1.1em; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 20px rgba(249,115,22,0.45); transition: transform 0.15s ease;">
+                <span>🚀</span> <span>حفظ وبث الأسعار لحظياً لكافة الأجهزة حول العالم</span>
+            </button>
+
+            <!-- رسالة التأكيد اللحظية -->
+            <div id="admin-pricing-feedback" style="display: none; margin-top: 14px; padding: 12px 16px; border-radius: 10px; text-align: center; font-size: 0.9em; font-weight: bold;"></div>
+        </div>
+    </div>
+
     <!-- ➕ نافذة تسجيل قيد بيع يدوي (Manual Transaction Entry Modal) -->
     <!-- ========================================================================== -->
     <div id="manual-transaction-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;">

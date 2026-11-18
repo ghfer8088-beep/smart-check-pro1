@@ -608,9 +608,9 @@
                     </div>
 
                     <!-- شريط إدخال الرسائل النصية الواضح والبارز والمخصص لرد المراجع بالتفصيل -->
-                    <div id="ai-chat-input-bar" style="background: #0b1324; border: 2px solid var(--primary-gold); border-radius: 14px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 6px 25px rgba(0,0,0,0.6); margin-top: 6px;">
-                        <input type="text" id="ai-chat-input" placeholder="اكتب هنا شرح حالتك وأعراضك بالتفصيل للدكتورة سارة، ثم اضغط إرسال..." onkeypress="if(event.key==='Enter') sendChatMessage()" style="flex: 1; background: transparent; border: none; color: #ffffff; font-size: 1.05em; font-weight: 500; outline: none; font-family: inherit; padding: 6px 4px;">
-                        <button type="button" id="ai-chat-send-btn" onclick="sendChatMessage()" style="background: linear-gradient(135deg, var(--primary-gold) 0%, #b8860b 100%); color: #0a0e14; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 900; font-size: 1em; cursor: pointer; display: flex; align-items: center; gap: 8px; flex-shrink: 0; box-shadow: 0 3px 15px rgba(212, 175, 55, 0.4); transition: transform 0.15s ease;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                    <div id="ai-chat-input-bar" style="background: #0b1324; border: 2px solid var(--primary-gold); border-radius: 14px; padding: 10px 14px; display: flex; align-items: center; gap: 8px; box-shadow: 0 6px 25px rgba(0,0,0,0.6); margin-top: 6px; box-sizing: border-box; width: 100%; max-width: 100%; overflow: hidden;">
+                        <input type="text" id="ai-chat-input" placeholder="اكتب هنا شرح حالتك وأعراضك بالتفصيل للدكتورة سارة، ثم اضغط إرسال..." onkeypress="if(event.key==='Enter') sendChatMessage()" style="flex: 1 1 auto; min-width: 0; background: transparent; border: none; color: #ffffff; font-size: 1em; font-weight: 500; outline: none; font-family: inherit; padding: 6px 4px; box-sizing: border-box;">
+                        <button type="button" id="ai-chat-send-btn" onclick="sendChatMessage()" style="background: linear-gradient(135deg, var(--primary-gold) 0%, #b8860b 100%); color: #0a0e14; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 900; font-size: 0.95em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0; white-space: nowrap; box-shadow: 0 3px 15px rgba(212, 175, 55, 0.4); transition: transform 0.15s ease;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
                             <span>إرسال للدكتورة سارة</span> <span>⬅️</span>
                         </button>
                     </div>
@@ -1596,7 +1596,7 @@
                         <div style="color: #94a3b8; font-size: 0.8em; font-weight: bold; margin-bottom: 4px;">فحص سريري واحد</div>
                         <h3 style="color: #ffffff; margin: 0 0 8px 0; font-size: 1.15em; font-weight: 900;">تشخيص فردي</h3>
                         <div style="margin-bottom: 14px;">
-                            <span style="color: #fef08a; font-size: 1.8em; font-weight: 900; font-family: monospace;">3</span>
+                            <span id="tier-price-1" style="color: #fef08a; font-size: 1.8em; font-weight: 900; font-family: monospace;">3</span>
                             <span style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-right: 4px;">د.أ</span>
                         </div>
                         <div style="border-top: 1px solid rgba(212,175,55,0.15); padding-top: 12px; margin-bottom: 16px; font-size: 0.82em; color: #cbd5e1; line-height: 1.7;">
@@ -1605,7 +1605,7 @@
                             <div style="margin-bottom: 6px;">✓ تمارين اليوم الأول التأهيلية</div>
                         </div>
                     </div>
-                    <button type="button" onclick="selectTierForCheckout(1)" style="width: 100%; background: linear-gradient(135deg, #334155, #1e293b); color: #f8fafc; border: 1px solid #475569; padding: 11px; border-radius: 10px; font-weight: 800; font-size: 0.92em; cursor: pointer; transition: all 0.2s;">
+                    <button type="button" id="tier-btn-1" onclick="selectTierForCheckout(1)" style="width: 100%; background: linear-gradient(135deg, #334155, #1e293b); color: #f8fafc; border: 1px solid #475569; padding: 11px; border-radius: 10px; font-weight: 800; font-size: 0.92em; cursor: pointer; transition: all 0.2s;">
                         اختيار الباقة (3 د.أ) ←
                     </button>
                 </div>
@@ -1620,7 +1620,7 @@
                         <h3 style="color: #ffffff; margin: 0 0 8px 0; font-size: 1.15em; font-weight: 900;">باقة التعافي العائلي</h3>
                         <div style="margin-bottom: 14px;">
                             <span style="color: #94a3b8; font-size: 0.85em; text-decoration: line-through; margin-left: 6px;">15 د.أ</span>
-                            <span style="color: #fef08a; font-size: 1.8em; font-weight: 900; font-family: monospace;">10</span>
+                            <span id="tier-price-5" style="color: #fef08a; font-size: 1.8em; font-weight: 900; font-family: monospace;">10</span>
                             <span style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-right: 4px;">د.أ</span>
                         </div>
                         <div style="border-top: 1px solid rgba(212,175,55,0.25); padding-top: 12px; margin-bottom: 16px; font-size: 0.82em; color: #cbd5e1; line-height: 1.7;">
@@ -1630,7 +1630,7 @@
                             <div style="margin-bottom: 6px;">✓ حفظ دائم ومستمر في ملفك الطبي</div>
                         </div>
                     </div>
-                    <button type="button" onclick="selectTierForCheckout(5)" style="width: 100%; background: linear-gradient(135deg, #d4af37, #b45309); color: #050911; border: 1px solid #fef08a; padding: 11px; border-radius: 10px; font-weight: 900; font-size: 0.95em; cursor: pointer; box-shadow: 0 4px 14px rgba(212,175,55,0.35);">
+                    <button type="button" id="tier-btn-5" onclick="selectTierForCheckout(5)" style="width: 100%; background: linear-gradient(135deg, #d4af37, #b45309); color: #050911; border: 1px solid #fef08a; padding: 11px; border-radius: 10px; font-weight: 900; font-size: 0.95em; cursor: pointer; box-shadow: 0 4px 14px rgba(212,175,55,0.35);">
                         اختيار الباقة العائلية (10 د.أ) ←
                     </button>
                 </div>
@@ -1645,7 +1645,7 @@
                         <h3 style="color: #ffffff; margin: 0 0 8px 0; font-size: 1.15em; font-weight: 900;">باقة الحل الجذري</h3>
                         <div style="margin-bottom: 14px;">
                             <span style="color: #94a3b8; font-size: 0.85em; text-decoration: line-through; margin-left: 6px;">30 د.أ</span>
-                            <span style="color: #fef08a; font-size: 1.8em; font-weight: 900; font-family: monospace;">15</span>
+                            <span id="tier-price-10" style="color: #fef08a; font-size: 1.8em; font-weight: 900; font-family: monospace;">15</span>
                             <span style="color: #cbd5e1; font-size: 0.88em; font-weight: bold; margin-right: 4px;">د.أ</span>
                         </div>
                         <div style="border-top: 1px solid rgba(16,185,129,0.25); padding-top: 12px; margin-bottom: 16px; font-size: 0.82em; color: #cbd5e1; line-height: 1.7;">
@@ -1655,7 +1655,7 @@
                             <div style="margin-bottom: 6px;">✓ أولوية الدعم والاستشارات الحركية</div>
                         </div>
                     </div>
-                    <button type="button" onclick="selectTierForCheckout(10)" style="width: 100%; background: linear-gradient(135deg, #10b981, #047857); color: #ffffff; border: 1px solid #6ee7b7; padding: 11px; border-radius: 10px; font-weight: 900; font-size: 0.95em; cursor: pointer; box-shadow: 0 4px 14px rgba(16,185,129,0.35);">
+                    <button type="button" id="tier-btn-10" onclick="selectTierForCheckout(10)" style="width: 100%; background: linear-gradient(135deg, #10b981, #047857); color: #ffffff; border: 1px solid #6ee7b7; padding: 11px; border-radius: 10px; font-weight: 900; font-size: 0.95em; cursor: pointer; box-shadow: 0 4px 14px rgba(16,185,129,0.35);">
                         اختيار الباقة الشاملة (15 د.أ) ←
                     </button>
                 </div>
@@ -1707,63 +1707,101 @@
                 <button type="button" onclick="closeSubscriptionCheckoutModal()" aria-label="إغلاق" style="background: none; border: none; color: #94a3b8; font-size: 1.6em; cursor: pointer; line-height: 1;">&times;</button>
             </div>
 
-            <!-- ملخص الباقة المختارة -->
-            <div style="background: rgba(212, 175, 55, 0.08); border: 1.5px solid #d4af37; border-radius: 14px; padding: 14px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <div>
-                    <div style="color: #94a3b8; font-size: 0.8em; margin-bottom: 2px;">الباقة المختارة:</div>
-                    <div id="chk-pkg-title" style="color: #ffffff; font-size: 1.15em; font-weight: 900;">باقة التعافي العائلي (5 فحوصات)</div>
-                    <div id="chk-pkg-desc" style="color: #cbd5e1; font-size: 0.8em; margin-top: 2px;">5 فحوصات سريرية كاملة مع خطط التأهيل</div>
-                </div>
-                <div style="text-align: left;">
-                    <div style="color: #94a3b8; font-size: 0.8em; margin-bottom: 2px;">المبلغ المطلوب:</div>
-                    <div style="color: #fef08a; font-size: 1.8em; font-weight: 900; font-family: monospace;">
-                        <span id="chk-pkg-price">10</span> <span style="font-size: 0.55em; color: #cbd5e1;">د.أ</span>
+            <!-- قسم 1: نموذج إدخال الحوالة والبيانات -->
+            <div id="chk-form-pane" style="display: block;">
+                <!-- ملخص الباقة المختارة -->
+                <div style="background: rgba(212, 175, 55, 0.08); border: 1.5px solid #d4af37; border-radius: 14px; padding: 14px 16px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <div style="color: #94a3b8; font-size: 0.8em; margin-bottom: 2px;">الباقة المختارة:</div>
+                        <div id="chk-pkg-title" style="color: #ffffff; font-size: 1.15em; font-weight: 900;">باقة التعافي العائلي (5 فحوصات)</div>
+                        <div id="chk-pkg-desc" style="color: #cbd5e1; font-size: 0.8em; margin-top: 2px;">5 فحوصات سريرية كاملة مع خطط التأهيل</div>
                     </div>
+                    <div style="text-align: left;">
+                        <div style="color: #94a3b8; font-size: 0.8em; margin-bottom: 2px;">المبلغ المطلوب:</div>
+                        <div style="color: #fef08a; font-size: 1.8em; font-weight: 900; font-family: monospace;">
+                            <span id="chk-pkg-price">10</span> <span style="font-size: 0.55em; color: #cbd5e1;">د.أ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- تفاصيل محفظة أورانج موني / كليك -->
+                <div style="background: #080c14; border: 1.5px solid rgba(249, 115, 22, 0.5); border-radius: 14px; padding: 14px 16px; margin-bottom: 18px;">
+                    <div style="color: #fed7aa; font-weight: 800; font-size: 0.9em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                        <span>📲</span> <span>طريقة الدفع المعتمدة: محفظة أورانج موني / CliQ</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: rgba(249, 115, 22, 0.08); padding: 10px 14px; border-radius: 10px; border: 1px dashed rgba(249, 115, 22, 0.35);">
+                        <div>
+                            <div style="color: #94a3b8; font-size: 0.78em;">رقم المحفظة المعتمد للتحويل:</div>
+                            <div id="chk-wallet-number" style="color: #ffffff; font-size: 1.45em; font-weight: 900; font-family: monospace; letter-spacing: 2px; direction: ltr; text-align: right;">0795651388</div>
+                        </div>
+                        <button type="button" onclick="copyOrangeWalletNumber('0795651388')" style="background: linear-gradient(135deg, #f97316, #ea580c); color: #fff; border: none; padding: 9px 16px; border-radius: 8px; font-weight: 900; font-size: 0.88em; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(249,115,22,0.3);">
+                            <span>📋</span> <span>نسخ الرقم</span>
+                        </button>
+                    </div>
+                    <div style="color: #94a3b8; font-size: 0.78em; margin-top: 8px; line-height: 1.5;">
+                        💡 التحويل متاح وسهل من أي تطبيق محفظة (أورانج موني، زين كاش، أمنية) أو عبر خدمة CliQ من أي تطبيق بنكي في الأردن.
+                    </div>
+                </div>
+
+                <!-- نموذج بيانات المشترك ورقم العملية -->
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                    <div>
+                        <label for="chk-subscriber-name" style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: bold;">اسم المراجع / المشترك *</label>
+                        <input type="text" id="chk-subscriber-name" placeholder="أدخل اسمك الكريم" style="width: 100%; background: #080c14; border: 1.5px solid #334155; padding: 11px 14px; border-radius: 10px; color: #ffffff; font-size: 0.95em; box-sizing: border-box; outline: none;">
+                    </div>
+                    <div>
+                        <label for="chk-subscriber-phone" style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: bold;">رقم هاتف الواتساب (لاستلام الكود) *</label>
+                        <input type="tel" id="chk-subscriber-phone" placeholder="079xxxxxxx" style="width: 100%; background: #080c14; border: 1.5px solid #334155; padding: 11px 14px; border-radius: 10px; color: #ffffff; font-size: 0.95em; box-sizing: border-box; outline: none; direction: ltr; text-align: left;">
+                    </div>
+                    <div>
+                        <label for="chk-transfer-ref" style="color: #fde68a; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: 800;">رقم الحوالة (رقم العملية) * إجباري</label>
+                        <input type="text" id="chk-transfer-ref" inputmode="numeric" placeholder="من رسالة أورانج موني أو إشعار التحويل" style="width: 100%; background: #080c14; border: 1.5px solid #d4af37; padding: 11px 14px; border-radius: 10px; color: #fef08a; font-size: 1.05em; font-weight: 900; box-sizing: border-box; outline: none; direction: ltr; text-align: left; font-family: monospace; letter-spacing: 1px;">
+                        <div style="color: #94a3b8; font-size: 0.74em; margin-top: 4px;">📩 تجده في رسالة SMS أو إشعار التحويل في تطبيق المحفظة/البنك بعد إتمام التحويل.</div>
+                    </div>
+                </div>
+
+                <!-- زر التأكيد النهائي -->
+                <button type="button" onclick="submitSubscriptionCheckout()" style="width: 100%; background: linear-gradient(135deg, #d4af37 0%, #b45309 100%); color: #050911; border: 1.5px solid #fef08a; padding: 14px; border-radius: 12px; font-size: 1.05em; font-weight: 900; cursor: pointer; box-shadow: 0 6px 20px rgba(212,175,55,0.4); display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <span>🚀</span> <span>تأكيد التحويل واستلام كود التفعيل</span>
+                </button>
+                <div style="text-align: center; color: #94a3b8; font-size: 0.76em; margin-top: 10px;">
+                    🔒 فور الضغط، يتم إشعار النظام لمطابقة الحوالة وإرسال الكود لك عبر الواتساب فوراً.
                 </div>
             </div>
 
-            <!-- تفاصيل محفظة أورانج موني / كليك -->
-            <div style="background: #080c14; border: 1.5px solid rgba(249, 115, 22, 0.5); border-radius: 14px; padding: 14px 16px; margin-bottom: 18px;">
-                <div style="color: #fed7aa; font-weight: 800; font-size: 0.9em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-                    <span>📲</span> <span>طريقة الدفع المعتمدة: محفظة أورانج موني / CliQ</span>
+            <!-- قسم 2: شاشة تأكيد استلام الحوالة وإدخال كود التفعيل المباشر -->
+            <div id="chk-confirmation-pane" style="display: none; padding: 6px 0; text-align: center;">
+                <div style="background: rgba(16, 185, 129, 0.12); border: 2px solid #10b981; border-radius: 16px; padding: 22px 18px; margin-bottom: 20px; box-shadow: 0 8px 30px rgba(16,185,129,0.2);">
+                    <div style="font-size: 2.8em; margin-bottom: 10px; line-height: 1;">✅</div>
+                    <h3 style="color: #6ee7b7; margin: 0 0 10px 0; font-size: 1.25em; font-weight: 900; line-height: 1.5;">
+                        تم استلام طلبك وجاري التأكد من صحة الحوالة، وفي حال كان رقم الحوالة صحيحاً سيصلك كود التفعيل.
+                    </h3>
+                    <p style="color: #cbd5e1; font-size: 0.88em; margin: 0; line-height: 1.6;">
+                        يتم الآن تدقيق العملية ومطابقتها فورياً. بمجرد استلامك للكود عبر الواتساب أو الرسائل، أدخله أدناه لفتح تقريرك السريري فوراً:
+                    </p>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: rgba(249, 115, 22, 0.08); padding: 10px 14px; border-radius: 10px; border: 1px dashed rgba(249, 115, 22, 0.35);">
-                    <div>
-                        <div style="color: #94a3b8; font-size: 0.78em;">رقم المحفظة المعتمد للتحويل:</div>
-                        <div id="chk-wallet-number" style="color: #ffffff; font-size: 1.45em; font-weight: 900; font-family: monospace; letter-spacing: 2px; direction: ltr; text-align: right;">0795651388</div>
-                    </div>
-                    <button type="button" onclick="copyOrangeWalletNumber('0795651388')" style="background: linear-gradient(135deg, #f97316, #ea580c); color: #fff; border: none; padding: 9px 16px; border-radius: 8px; font-weight: 900; font-size: 0.88em; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(249,115,22,0.3);">
-                        <span>📋</span> <span>نسخ الرقم</span>
+
+                <!-- حقل إدخال كود التفعيل بعد استلامه -->
+                <div style="background: #080c14; border: 1.5px solid #d4af37; border-radius: 14px; padding: 18px 16px; margin-bottom: 20px;">
+                    <label for="chk-confirmation-code-input" style="color: #fef08a; font-size: 0.9em; font-weight: 800; display: block; margin-bottom: 8px;">
+                        🔑 أدخل كود التفعيل هنا:
+                    </label>
+                    <input type="text" id="chk-confirmation-code-input" placeholder="أدخل كود التفعيل (مثلاً: SC-XXXX-XXXX)" onkeypress="if(event.key==='Enter') submitConfirmationCodeFromCheckout()" style="width: 100%; max-width: 440px; margin: 0 auto; display: block; background: #0c1424; border: 2px solid #f59e0b; padding: 13px 16px; border-radius: 12px; color: #fef08a; font-size: 1.15em; font-weight: 900; text-align: center; font-family: monospace; letter-spacing: 2px; box-sizing: border-box; outline: none;">
+                    
+                    <button type="button" onclick="submitConfirmationCodeFromCheckout()" style="width: 100%; max-width: 440px; margin: 12px auto 0 auto; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: 1.5px solid #6ee7b7; padding: 13px; border-radius: 12px; font-size: 1.05em; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);">
+                        <span>🔓</span> <span>تفعيل وفتح التقرير السريري الآن</span>
                     </button>
                 </div>
-                <div style="color: #94a3b8; font-size: 0.78em; margin-top: 8px; line-height: 1.5;">
-                    💡 التحويل متاح وسهل من أي تطبيق محفظة (أورانج موني، زين كاش، أمنية) أو عبر خدمة CliQ من أي تطبيق بنكي في الأردن.
-                </div>
-            </div>
 
-            <!-- نموذج بيانات المشترك ورقم العملية -->
-            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-                <div>
-                    <label for="chk-subscriber-name" style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: bold;">اسم المراجع / المشترك *</label>
-                    <input type="text" id="chk-subscriber-name" placeholder="أدخل اسمك الكريم" style="width: 100%; background: #080c14; border: 1.5px solid #334155; padding: 11px 14px; border-radius: 10px; color: #ffffff; font-size: 0.95em; box-sizing: border-box; outline: none;">
+                <!-- أزرار التنقل والخيارات الأخرى -->
+                <div style="display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <button type="button" onclick="backToSubscriptionTiersModal()" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(212,175,55,0.3); color: #cbd5e1; padding: 9px 18px; border-radius: 10px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                        <span>←</span> <span>العودة للباقات</span>
+                    </button>
+                    <button type="button" onclick="closeSubscriptionCheckoutModal(); openDirectPromoCodeModal();" style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #7dd3fc; padding: 9px 18px; border-radius: 10px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                        <span>🔑</span> <span>لدي كود مسبق</span>
+                    </button>
                 </div>
-                <div>
-                    <label for="chk-subscriber-phone" style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: bold;">رقم هاتف الواتساب (لاستلام الكود) *</label>
-                    <input type="tel" id="chk-subscriber-phone" placeholder="079xxxxxxx" style="width: 100%; background: #080c14; border: 1.5px solid #334155; padding: 11px 14px; border-radius: 10px; color: #ffffff; font-size: 0.95em; box-sizing: border-box; outline: none; direction: ltr; text-align: left;">
-                </div>
-                <div>
-                    <label for="chk-transfer-ref" style="color: #fde68a; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: 800;">رقم الحوالة (رقم العملية) * إجباري</label>
-                    <input type="text" id="chk-transfer-ref" inputmode="numeric" placeholder="من رسالة أورانج موني أو إشعار التحويل" style="width: 100%; background: #080c14; border: 1.5px solid #d4af37; padding: 11px 14px; border-radius: 10px; color: #fef08a; font-size: 1.05em; font-weight: 900; box-sizing: border-box; outline: none; direction: ltr; text-align: left; font-family: monospace; letter-spacing: 1px;">
-                    <div style="color: #94a3b8; font-size: 0.74em; margin-top: 4px;">📩 تجده في رسالة SMS أو إشعار التحويل في تطبيق المحفظة/البنك بعد إتمام التحويل.</div>
-                </div>
-            </div>
-
-            <!-- زر التأكيد النهائي -->
-            <button type="button" onclick="submitSubscriptionCheckout()" style="width: 100%; background: linear-gradient(135deg, #d4af37 0%, #b45309 100%); color: #050911; border: 1.5px solid #fef08a; padding: 14px; border-radius: 12px; font-size: 1.05em; font-weight: 900; cursor: pointer; box-shadow: 0 6px 20px rgba(212,175,55,0.4); display: flex; align-items: center; justify-content: center; gap: 8px;">
-                <span>🚀</span> <span>تأكيد التحويل واستلام كود التفعيل</span>
-            </button>
-            <div style="text-align: center; color: #94a3b8; font-size: 0.76em; margin-top: 10px;">
-                🔒 فور الضغط، يتم إشعار المعالج لمطابقة الحوالة وإرسال الكود لك عبر الواتساب فوراً.
             </div>
         </div>
     </div>

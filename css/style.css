@@ -980,7 +980,33 @@ body {
         z-index: 50;
         background: #0f172a !important;
         box-shadow: 0 -4px 15px rgba(0,0,0,0.5) !important;
-        padding: 8px 10px !important;
+        padding: 8px 8px !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        gap: 6px !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    #ai-chat-input {
+        min-width: 0 !important;
+        flex: 1 1 auto !important;
+        font-size: 0.88em !important;
+        padding: 8px 6px !important;
+        box-sizing: border-box !important;
+    }
+    #ai-chat-send-btn {
+        padding: 9px 12px !important;
+        font-size: 0.86em !important;
+        gap: 4px !important;
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
+        max-width: 48% !important;
+        box-sizing: border-box !important;
+    }
+    #ai-chat-send-btn span {
+        white-space: nowrap !important;
     }
 
     /* أزرار الاتصال والتواصل على الموبايل - أحجام متناسقة ومريحة */
