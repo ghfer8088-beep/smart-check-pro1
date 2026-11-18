@@ -5929,15 +5929,22 @@ function verifyActivationCode(entered, cfg) {
     const pend = getPendingUnlockRequest();
     const raw = toEnglishDigits(String(entered || '')).trim();
     if (!raw) return null;
-    const e = raw.toUpperCase().replace(/\s+/g, '');
-    const cleanCode = e.replace(/[^A-Z0-9]/g, '');
+    let cleanCode = raw.toUpperCase().replace(/\s+/g, '').replace(/[^A-Z0-9]/g, '');
+    // تنظيف البوادئ الشائعة التي قد يكتبها المشترك مثل SC-, SCP-, PIN-, CODE-, KEY-
+    cleanCode = cleanCode.replace(/^(?:SCP|SC|PIN|CODE|KEY)/i, '');
 
     // 1. أكواد الإدارة للاختبار الفوري والتجربة الشاملة
     const masters = {
         [String(cfg.customPromoCode || 'JK3090').toUpperCase()]: 1,
         'JK3090': 1,
         'JK5555': 5,
-        'JK1010': 10
+        'JK1010': 10,
+        'FREE2026': 1,
+        'FREE10': 10,
+        'FREE5': 5,
+        'ADMIN10': 10,
+        'ADMIN5': 5,
+        'ADMIN1': 1
     };
     if (masters[cleanCode]) return { tier: masters[cleanCode], master: true, code: cleanCode };
 
@@ -5959,12 +5966,21 @@ function verifyActivationCode(entered, cfg) {
         document.getElementById('code-alt-name')?.value,
         document.getElementById('pay-subscriber-phone')?.value,
         document.getElementById('pay-subscriber-name')?.value,
+        document.getElementById('chk-subscriber-phone')?.value,
+        document.getElementById('chk-subscriber-name')?.value,
+        document.getElementById('promocode-modal-phone')?.value,
+        document.getElementById('promocode-modal-name')?.value,
         document.getElementById('hum-subscriber-phone')?.value,
         document.getElementById('hum-subscriber-name')?.value,
+        document.getElementById('hum-modal-phone')?.value,
+        document.getElementById('hum-modal-name')?.value,
+        document.getElementById('admin-unlock-subscriber-phone')?.value,
+        document.getElementById('admin-unlock-subscriber-name')?.value,
         pend?.subscriberPhone,
         pend?.subscriberName,
         (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState?.patientPhone),
         (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState?.patientName),
+        (typeof clinicalDialogueState !== 'undefined' && clinicalDialogueState?.patientFullName),
         (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.patientPhone),
         (typeof currentAssessmentData !== 'undefined' && currentAssessmentData?.patientName),
         (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : ''),
@@ -5972,16 +5988,72 @@ function verifyActivationCode(entered, cfg) {
         (typeof activePatient !== 'undefined' && activePatient && (activePatient.phone || '')),
         (typeof activePatient !== 'undefined' && activePatient && (activePatient.fullName || activePatient.name || '')),
         localStorage.getItem('smart_patient_phone'),
-        localStorage.getItem('smart_patient_name')
+        localStorage.getItem('smart_patient_name'),
+        localStorage.getItem('smart_user_name'),
+        localStorage.getItem('smart_last_pending_unlock_phone'),
+        localStorage.getItem('smart_last_pending_unlock_name')
     ];
 
+    // استخراج الهواتف والأسماء من السجل المحلي الشامل لجميع المرضى
     try {
         const allPts = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
         if (Array.isArray(allPts)) {
             allPts.forEach(pt => {
                 if (pt && pt.phone) seeds.push(pt.phone);
                 if (pt && (pt.fullName || pt.name)) seeds.push(pt.fullName || pt.name);
+                if (pt && pt.subscriberPhone) seeds.push(pt.subscriberPhone);
+                if (pt && pt.subscriberName) seeds.push(pt.subscriberName);
+                if (pt && pt.pendingUnlockRequest?.subscriberPhone) seeds.push(pt.pendingUnlockRequest.subscriberPhone);
+                if (pt && pt.pendingUnlockRequest?.subscriberName) seeds.push(pt.pendingUnlockRequest.subscriberName);
             });
+        }
+    } catch (e) {}
+
+    // استخراج الهواتف والأسماء من المرضى السحابيين المشتركين
+    try {
+        if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.getPatients === 'function') {
+            const cloudPts = SmartCloudSync.getPatients();
+            if (Array.isArray(cloudPts)) {
+                cloudPts.forEach(pt => {
+                    if (pt && pt.phone) seeds.push(pt.phone);
+                    if (pt && (pt.fullName || pt.name)) seeds.push(pt.fullName || pt.name);
+                    if (pt && pt.subscriberPhone) seeds.push(pt.subscriberPhone);
+                    if (pt && pt.subscriberName) seeds.push(pt.subscriberName);
+                    if (pt && pt.pendingUnlockRequest?.subscriberPhone) seeds.push(pt.pendingUnlockRequest.subscriberPhone);
+                    if (pt && pt.pendingUnlockRequest?.subscriberName) seeds.push(pt.pendingUnlockRequest.subscriberName);
+                });
+            }
+        }
+    } catch (e) {}
+
+    // فحص مباشر للأكواد المخزنة في طلبات المزامنة السحابية وقاعدة البيانات (مثل طلبات المشتركين عبر أورانج)
+    try {
+        const allCandidatePatients = [];
+        if (typeof SmartCloudSync !== 'undefined' && typeof SmartCloudSync.getPatients === 'function') {
+            const cp = SmartCloudSync.getPatients();
+            if (Array.isArray(cp)) allCandidatePatients.push(...cp);
+        }
+        const lp = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
+        if (Array.isArray(lp)) allCandidatePatients.push(...lp);
+        if (pend) allCandidatePatients.push(pend);
+
+        for (const pt of allCandidatePatients) {
+            if (!pt) continue;
+            const req = pt.pendingUnlockRequest || pt.meta || (pt.requestType ? pt : null);
+            if (req && (req.unlockPin || req.unlockCode || req.pin)) {
+                const savedCode = String(req.unlockPin || req.unlockCode || req.pin).trim().toUpperCase().replace(/^(?:SCP|SC|PIN|CODE|KEY)/i, '');
+                if (savedCode && (
+                    cleanCode === savedCode ||
+                    cleanCode === savedCode.replace(/^P/i, '') ||
+                    cleanCode === ('10' + savedCode.replace(/^(?:10|5)/, '')) ||
+                    cleanCode === ('5' + savedCode.replace(/^(?:10|5)/, '')) ||
+                    cleanCode === savedCode.replace(/^(?:10|5)/, '')
+                )) {
+                    const pTier = Number(req.packageSize) || (savedCode.startsWith('10') ? 10 : (savedCode.startsWith('5') ? 5 : 1));
+                    const pName = pt.subscriberName || pt.name || pt.fullName || pt.patientName || 'مشترك معتمد';
+                    return { tier: pTier, master: false, code: savedCode, matchedPatient: pName };
+                }
+            }
         }
     } catch (e) {}
 
@@ -5992,7 +6064,7 @@ function verifyActivationCode(entered, cfg) {
         return { noSeed: true, code: cleanCode };
     }
 
-    // 4. مطابقة الأكواد المولدة لجميع التسلسلات (0 إلى 9) وللباقات (الإنساني H، 1، 5، 10) مع منع إعادة استخدام كود التشخيص الواحد المستهلك
+    // 4. مطابقة الأكواد المولدة لجميع التسلسلات (0 إلى 9) وللباقات (الإنساني H، 10، 5، 1) مع المرونة الكاملة للبوادئ
     let consumedMatchCode = null;
     let humanitarianAlreadyUsedMatch = false;
     const curExamIdForCheck = getCurrentExamGateId();
@@ -6001,11 +6073,13 @@ function verifyActivationCode(entered, cfg) {
             // مطابقة كود الدعم الإنساني (H + 4 أرقام)
             const cHum = generateUserBoundCode(sd, 'humanitarian', k);
             if (cHum) {
+                const baseHum = cHum.replace(/^H/, '');
                 if (
                     cleanCode === cHum ||
-                    cleanCode === ('HUM' + cHum.substring(1)) ||
-                    cleanCode === ('HUM-' + cHum.substring(1)) ||
-                    cleanCode === ('H-' + cHum.substring(1))
+                    cleanCode === ('HUM' + baseHum) ||
+                    cleanCode === ('HUM-' + baseHum) ||
+                    cleanCode === ('H-' + baseHum) ||
+                    cleanCode === ('P' + cHum)
                 ) {
                     if (isHumanitarianLockedForUser(sd)) {
                         humanitarianAlreadyUsedMatch = true;
@@ -6017,14 +6091,19 @@ function verifyActivationCode(entered, cfg) {
                 }
             }
 
-            for (const t of [1, 5, 10]) {
+            // فحص الباقات (10 أولاً، ثم 5، ثم 1) لضمان منح المشترك أعلى باقة يستحقها
+            for (const t of [10, 5, 1]) {
                 const c = generateUserBoundCode(sd, t, k);
                 if (!c) continue;
+                const basePin = (t === 10) ? c.substring(2) : ((t === 5) ? c.substring(1) : c);
+
                 if (
                     cleanCode === c ||
                     cleanCode === ('P' + c) ||
-                    (t > 1 && cleanCode === ('P' + t + c.replace(/^(10|5)(?=\d{4}$)/, ''))) ||
-                    (t > 1 && cleanCode === (t + c.replace(/^(10|5)(?=\d{4}$)/, '')))
+                    cleanCode === basePin ||
+                    (t === 10 && (cleanCode === ('15' + basePin) || cleanCode === ('P10' + basePin) || cleanCode === ('P15' + basePin))) ||
+                    (t === 5 && (cleanCode === ('P5' + basePin))) ||
+                    (t === 1 && (cleanCode === ('P1' + basePin) || cleanCode === ('1' + basePin)))
                 ) {
                     if (t === 1 && isSingleDiagnosisCodeAlreadyConsumed(c, curExamIdForCheck)) {
                         consumedMatchCode = c;
@@ -6107,10 +6186,18 @@ async function _submitPromoOrTestUnlockCodeCore(inputIdOverride) {
         return;
     }
     if (res.noSeed) {
-        say('⚠️ هذا الكود مرتبط برقم هاتف. يرجى إدخال رقم هاتفك في خانة (رقم الهاتف) لتأكيد ومطابقة الكود الخاص بك.', false);
-        const pInp = document.getElementById('code-alt-phone') || document.getElementById('pay-subscriber-phone');
-        if (pInp) { pInp.focus(); pInp.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+        say('⚠️ هذا الكود مشفر ومربوط برقم هاتف أو اسم مشترك. يرجى إدخال رقم هاتفك في الخانة المخصصة لتأكيد ومطابقة الكود الخاص بك.', false);
+        const pInp = document.getElementById('promocode-modal-phone')
+            || document.getElementById('code-alt-phone')
+            || document.getElementById('pay-subscriber-phone')
+            || document.getElementById('chk-subscriber-phone');
+        if (pInp) { pInp.focus(); try { pInp.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {} }
         return;
+    }
+
+    if (res.matchedPatient) {
+        const pkgName = res.tier === 10 ? 'باقة 10 فحوصات الشاملة (15 د.أ)' : (res.tier === 5 ? 'باقة 5 فحوصات العائلية' : 'التشخيص السريري المعتمد');
+        say(`✅ تم مطابقة واعتماد كود <strong>[${pkgName}]</strong> بنجاح للمشترك: <strong>${res.matchedPatient}</strong> 🌸`, true);
     }
 
     const ex = getCurrentExamGateId();

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <script>
     (function () {
-        const CURRENT_VERSION = 'v32.50';
+        const CURRENT_VERSION = 'v32.60';
         try {
             const savedVer = localStorage.getItem('scp_app_runtime_version');
             if (savedVer && savedVer !== CURRENT_VERSION) {
@@ -1813,7 +1813,7 @@
                     <label for="chk-confirmation-code-input" style="color: #fef08a; font-size: 0.9em; font-weight: 800; display: block; margin-bottom: 8px;">
                         🔑 أدخل كود التفعيل هنا:
                     </label>
-                    <input type="text" id="chk-confirmation-code-input" placeholder="أدخل كود التفعيل (مثلاً: SC-XXXX-XXXX)" onkeypress="if(event.key==='Enter') submitConfirmationCodeFromCheckout()" style="width: 100%; max-width: 440px; margin: 0 auto; display: block; background: #0c1424; border: 2px solid #f59e0b; padding: 13px 16px; border-radius: 12px; color: #fef08a; font-size: 1.15em; font-weight: 900; text-align: center; font-family: monospace; letter-spacing: 2px; box-sizing: border-box; outline: none;">
+                    <input type="text" id="chk-confirmation-code-input" placeholder="أدخل كود التفعيل المعتمد (مثال: 104520 أو 4520)" onkeypress="if(event.key==='Enter') submitConfirmationCodeFromCheckout()" style="width: 100%; max-width: 440px; margin: 0 auto; display: block; background: #0c1424; border: 2px solid #f59e0b; padding: 13px 16px; border-radius: 12px; color: #fef08a; font-size: 1.15em; font-weight: 900; text-align: center; font-family: monospace; letter-spacing: 2px; box-sizing: border-box; outline: none;">
                     
                     <button type="button" onclick="submitConfirmationCodeFromCheckout()" style="width: 100%; max-width: 440px; margin: 12px auto 0 auto; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: 1.5px solid #6ee7b7; padding: 13px; border-radius: 12px; font-size: 1.05em; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);">
                         <span>🔓</span> <span>تفعيل وفتح التقرير السريري الآن</span>
@@ -1898,7 +1898,11 @@
             </p>
 
             <div style="margin-bottom: 18px;">
-                <input type="text" id="promocode-modal-input" maxlength="12" placeholder="أدخل الكود (مثال: 4621 أو 54621)" onkeydown="if(event.key==='Enter'){submitPromoCodeFromModal();}" style="width: 100%; background: #080c14; border: 2px solid #0284c7; padding: 14px; border-radius: 12px; color: #fef08a; font-size: 1.35em; font-weight: 900; text-align: center; letter-spacing: 3px; font-family: monospace; box-sizing: border-box; outline: none;">
+                <input type="text" id="promocode-modal-input" maxlength="12" placeholder="أدخل الكود (مثال: 104520 أو 54621 أو 4621)" onkeydown="if(event.key==='Enter'){submitPromoCodeFromModal();}" style="width: 100%; background: #080c14; border: 2px solid #0284c7; padding: 14px; border-radius: 12px; color: #fef08a; font-size: 1.35em; font-weight: 900; text-align: center; letter-spacing: 3px; font-family: monospace; box-sizing: border-box; outline: none;">
+            </div>
+
+            <div style="margin-bottom: 18px;">
+                <input type="text" id="promocode-modal-phone" placeholder="📱 رقم هاتفك أو اسمك المسجل (لتأكيد المطابقة)" onkeydown="if(event.key==='Enter'){submitPromoCodeFromModal();}" style="width: 100%; background: #080c14; border: 1.5px solid #334155; padding: 11px 14px; border-radius: 12px; color: #fff; font-size: 0.95em; text-align: center; box-sizing: border-box; outline: none;">
             </div>
 
             <button type="button" onclick="submitPromoCodeFromModal()" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: 1.5px solid #7dd3fc; padding: 13px; border-radius: 12px; font-weight: 900; font-size: 1.05em; cursor: pointer; box-shadow: 0 4px 15px rgba(2,132,199,0.35);">

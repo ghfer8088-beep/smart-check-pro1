@@ -90,10 +90,19 @@ const SmartMobileAlerts = (function() {
             if (t === 1 && !clean.startsWith('5') && !clean.startsWith('10') && clean.length === 4) return clean;
         }
 
-        // توليد الكود وفق الخوارزمية المعتمدة
-        const seed = String(phoneOrName || '').replace(/[^a-zA-Z0-9\u0621-\u064A]/g, '').toLowerCase();
+        if (typeof window !== 'undefined' && typeof window.generateUserBoundCode === 'function') {
+            return window.generateUserBoundCode(phoneOrName, t, 0);
+        }
+
+        // توليد الكود وفق الخوارزمية المعتمدة المتطابقة 100% مع js/app.js و admin.html
+        let rawS = String(phoneOrName || '').trim();
+        let sDigits = rawS.replace(/\D/g, '');
+        let seed = (sDigits.length >= 7 && !/[A-Za-z\u0600-\u06FF]/.test(rawS))
+            ? ('P' + sDigits.slice(-7))
+            : ('N' + rawS.replace(/[\u064B-\u0652\u0640]/g, '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/\s+/g, ' ').toLowerCase());
+        if (!seed) seed = 'Pwada3an';
         let hash = 5381;
-        const str = (seed || 'wada3an') + '#0';
+        const str = seed + '#0';
         for (let i = 0; i < str.length; i++) {
             hash = ((hash * 33) ^ str.charCodeAt(i)) & 0x7fffffff;
         }

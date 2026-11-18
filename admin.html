@@ -3794,8 +3794,10 @@
                 } else if (isPendingOrange) {
                     const hasPayNotif = notifs.some(n => (n.patientId === pId || (pPhone && n.patientPhone === pPhone) || (n.patientName && n.patientName === displayName)) && n.type === 'payment_received');
                     if (!hasPayNotif) {
-                        const unlockPin = generateAdminUnlockPin(pPhone || displayName, 1);
                         const amt = pReq?.amountJod || 3;
+                        const pkgSize = Number(pReq?.packageSize) || (amt >= 15 ? 10 : (amt >= 10 ? 5 : 1));
+                        const unlockPin = pReq?.unlockPin || pReq?.unlockCode || generateAdminUnlockPin(pPhone || displayName, pkgSize);
+                        const pkgTitle = pkgSize === 10 ? 'باقة 10 فحوصات الشاملة (15 د.أ)' : (pkgSize === 5 ? 'باقة 5 فحوصات العائلية (10 د.أ)' : 'تشخيص فردي (3 د.أ)');
                         notifs.unshift({
                             id: 'N-PAY-' + (pId || Date.now()),
                             type: 'payment_received',
@@ -3807,6 +3809,7 @@
                             meta: {
                                 paymentType: 'orange_wallet',
                                 amountJod: amt,
+                                packageSize: pkgSize,
                                 transferRef: pReq?.transferRef || '',
                                 unlockPin: unlockPin,
                                 unlockCode: unlockPin,
@@ -4082,9 +4085,11 @@
         function getNotificationWhatsAppText(notif) {
             const name = notif.patientName || 'عزيزي المراجع';
             if (notif.type === 'payment_received') {
-                const pin = getAdminNotifCode(notif);
+                const pin = notif.meta?.unlockPin || notif.meta?.unlockCode || getAdminNotifCode(notif);
                 const amt = notif.meta?.amountJod || 3;
-                return `مرحباً ${name}، تم التحقق من حوالة محفظة أورانج (${amt} دنانير) بنجاح في عيادة «وداعاً للألم» للكايروبراكتيك مع المعالج جمال قبها ✅\n🔑 كود التفعيل الخاص بك (لتشخيص واحد) *${pin}* — أدخله في خانة الكود في الأداة لفتح التقرير والتمارين.\nنتمنى لك الشفاء العاجل.`;
+                const pkgSize = Number(notif.meta?.packageSize) || (amt >= 15 ? 10 : (amt >= 10 ? 5 : 1));
+                const pkgTitle = pkgSize === 10 ? 'باقة 10 فحوصات الشاملة (15 د.أ)' : (pkgSize === 5 ? 'باقة 5 فحوصات العائلية (10 د.أ)' : 'تشخيص فردي (3 د.أ)');
+                return `مرحباً ${name}، تم التحقق من حوالة محفظة أورانج (${amt} دنانير) واعتماد [${pkgTitle}] بنجاح في عيادة «وداعاً للألم» للكايروبراكتيك مع المعالج جمال قبها ✅\n🔑 كود التفعيل المعتمد الخاص بك هو:\n👉 *${pin}* 👈\nأدخله في خانة الكود في الأداة لفتح التقرير والتمارين.\nنتمنى لك الشفاء العاجل.`;
             } else if (notif.type === 'humanitarian_request' || (notif.type === 'new_registration' && notif.meta?.paymentType === 'humanitarian')) {
                 const pin = getAdminNotifCode(notif);
                 return `مرحباً ${name}، تمت الموافقة من المعالج جمال قبها على طلب الإعفاء الإنساني الخاص بك (صدقة جارية عن روح والده المرحوم) ✅🌿\n🔑 كود التفعيل الخاص بك (لتشخيص واحد) *${pin}* — أدخله في خانة الكود في الأداة لفتح التقرير والتمارين.\nنسألكم الدعاء ونتمنى لك الشفاء العاجل.`;
@@ -6708,6 +6713,90 @@ function adminGenerateGiftCode() {
     document.getElementById('admin-gift-code-display').textContent = code;
     return code;
 }
+function adminVerifyCodeDiagnostics() {
+    const input = document.getElementById('admin-verify-code-input');
+    const resEl = document.getElementById('admin-verify-code-result');
+    if (!resEl) return;
+    const raw = (input?.value || '').trim();
+    if (!raw) {
+        resEl.style.display = 'block';
+        resEl.style.background = 'rgba(239, 68, 68, 0.18)';
+        resEl.style.border = '1px solid #ef4444';
+        resEl.style.color = '#fca5a5';
+        resEl.innerHTML = '⚠️ يرجى لصق أو كتابة الكود أولاً.';
+        return;
+    }
+    const clean = raw.toUpperCase().replace(/\s+/g, '').replace(/[^A-Z0-9]/g, '').replace(/^(?:SCP|SC|PIN|CODE|KEY)/i, '');
+    
+    // Check master codes
+    if (clean === 'JK1010' || clean === 'ADMIN10' || clean === 'FREE10') {
+        resEl.style.display = 'block'; resEl.style.background = 'rgba(16,185,129,0.2)'; resEl.style.border = '1px solid #10b981'; resEl.style.color = '#6ee7b7';
+        resEl.innerHTML = '👑 <strong>كود إدارة رئيسي معتمد:</strong> [باقة 10 فحوصات الشاملة] — صالح للاختبار العام على كافة الأجهزة.';
+        return;
+    }
+    if (clean === 'JK5555' || clean === 'ADMIN5' || clean === 'FREE5') {
+        resEl.style.display = 'block'; resEl.style.background = 'rgba(16,185,129,0.2)'; resEl.style.border = '1px solid #10b981'; resEl.style.color = '#6ee7b7';
+        resEl.innerHTML = '👑 <strong>كود إدارة رئيسي معتمد:</strong> [باقة 5 فحوصات العائلية] — صالح للاختبار العام على كافة الأجهزة.';
+        return;
+    }
+    if (clean === 'JK3090' || clean === 'FREE2026' || clean === 'ADMIN1') {
+        resEl.style.display = 'block'; resEl.style.background = 'rgba(16,185,129,0.2)'; resEl.style.border = '1px solid #10b981'; resEl.style.color = '#6ee7b7';
+        resEl.innerHTML = '👑 <strong>كود إدارة رئيسي معتمد:</strong> [تشخيص فردي واحد] — صالح للاختبار العام على كافة الأجهزة.';
+        return;
+    }
+
+    // Check against all patients
+    let matched = null;
+    let matchedTier = 1;
+    let matchedSeed = '';
+    const allPts = (typeof allPatientsList !== 'undefined' && Array.isArray(allPatientsList)) ? allPatientsList.map(it => it.patient || it).filter(Boolean) : [];
+    
+    // Also add currently typed subscriber phone & name in admin fields
+    const curPh = document.getElementById('admin-unlock-subscriber-phone')?.value?.trim();
+    const curNm = document.getElementById('admin-unlock-subscriber-name')?.value?.trim();
+    if (curPh) allPts.push({ phone: curPh, name: curNm || 'المشترك المدخل' });
+    if (curNm) allPts.push({ name: curNm, phone: curPh || '' });
+
+    for (const pt of allPts) {
+        const seeds = [pt.phone, pt.name, pt.fullName, pt.subscriberPhone, pt.subscriberName].filter(Boolean);
+        for (const sd of seeds) {
+            for (let k = 0; k < 10; k++) {
+                for (const t of [10, 5, 1]) {
+                    const c = generateAdminUnlockPin(sd, t, k);
+                    const basePin = (t === 10) ? c.substring(2) : ((t === 5) ? c.substring(1) : c);
+                    if (clean === c || clean === ('P' + c) || clean === basePin || (t === 10 && clean === ('15' + basePin))) {
+                        matched = pt;
+                        matchedTier = t;
+                        matchedSeed = sd;
+                        break;
+                    }
+                }
+                if (matched) break;
+            }
+            if (matched) break;
+        }
+        if (matched) break;
+    }
+
+    if (matched) {
+        const tierTitle = matchedTier === 10 ? 'باقة 10 فحوصات الشاملة (15 د.أ)' : (matchedTier === 5 ? 'باقة 5 فحوصات العائلية (10 د.أ)' : 'تشخيص فردي (3 د.أ)');
+        const ptName = matched.fullName || matched.name || matched.subscriberName || 'المشترك';
+        const ptPhone = matched.phone || matched.subscriberPhone || '';
+        resEl.style.display = 'block';
+        resEl.style.background = 'rgba(16,185,129,0.2)';
+        resEl.style.border = '1.5px solid #10b981';
+        resEl.style.color = '#6ee7b7';
+        resEl.innerHTML = `✅ <strong>الكود صحيح ومعتمد ومطابق 100%!</strong><br>👤 المشترك: <strong>${ptName}</strong><br>📱 الهاتف: <strong>${ptPhone || 'مسجل بالاسم'}</strong><br>📦 الباقة: <strong>${tierTitle}</strong><br>🔑 الكود: <strong>${clean}</strong><br><small style="color:#fef08a;">💡 يمكن للمشترك إدخال هذا الكود في خانة كود التفعيل لفتح تقريره فوراً.</small>`;
+    } else {
+        resEl.style.display = 'block';
+        resEl.style.background = 'rgba(239, 68, 68, 0.18)';
+        resEl.style.border = '1px solid #ef4444';
+        resEl.style.color = '#fca5a5';
+        resEl.innerHTML = `❌ لم يتم العثور على مشترك مطابق لهذا الكود: [${clean}] بالهواتف المسجلة حالياً.<br><small style="color:#cbd5e1;">تأكد من كتابة هاتف المشترك في خانة (رقم هاتف المشترك) بالأعلى ثم إعادة الفحص.</small>`;
+    }
+}
+window.adminVerifyCodeDiagnostics = adminVerifyCodeDiagnostics;
+
 function adminSendGiftCodeWA() {
     const el = document.getElementById('admin-gift-code-display');
     let code = el.textContent.trim();
@@ -7931,7 +8020,8 @@ function copyAdminCode(code) {
                 renderTable(getFilteredPatientsList());
             } catch (e) {}
 
-            const pin = generateAdminUnlockPin(patientPhone || patientName || '');
+            const resolvedPkgSize = (resolvedAmt >= 15 || resolvedType === 'pack10') ? 10 : ((resolvedAmt >= 10 || resolvedType === 'pack5') ? 5 : 1);
+            const pin = generateAdminUnlockPin(patientPhone || patientName || '', resolvedType === 'humanitarian' ? 'humanitarian' : resolvedPkgSize);
 
             // توثيق العملية محاسبياً بشكل دائم وتحديث الشاشات فوراً
             try {
