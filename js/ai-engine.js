@@ -921,64 +921,67 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             throw new Error('Gemini API key is not configured');
         }
 
-        const key = WADA3AN_AI_CONFIG.getApiKey();
-        if (!key) throw new Error('No valid API key');
+        const poolKeys = (WADA3AN_AI_CONFIG.getPoolKeys() || []).filter(k => WADA3AN_AI_CONFIG.isValidApiKey(k));
+        const activeKey = WADA3AN_AI_CONFIG.getApiKey();
+        const keysToTry = Array.from(new Set([activeKey, ...poolKeys].filter(Boolean))).slice(0, 4);
+
+        if (keysToTry.length === 0) throw new Error('No valid API key available');
 
         const savedModel = (typeof localStorage !== 'undefined') ? localStorage.getItem('wada3an_active_ai_model') : null;
         const candidateModels = Array.from(new Set([
-            savedModel,
             'gemini-3.1-flash-lite',
+            'gemini-flash-lite-latest',
             'gemini-3.5-flash-lite',
             'gemini-3-flash-preview',
-            'gemini-flash-lite-latest',
-            'gemini-3.8-flash',
-            'gemini-3.7-flash',
+            savedModel,
             ...(WADA3AN_AI_CONFIG.CANDIDATE_MODELS || [])
         ].filter(Boolean)));
         let lastError = null;
 
-        for (const model of candidateModels) {
-            try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-                const controller = new AbortController();
-                // ✅ مهلة 12000ms كافية لاستجابة النموذج السريري دون انقطاع مبكر
-                const timeoutId = setTimeout(() => controller.abort(), 12000);
+        for (const key of keysToTry) {
+            for (const model of candidateModels) {
+                try {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+                    const controller = new AbortController();
+                    // ✅ مهلة 12000ms كافية لاستجابة النموذج السريري دون انقطاع مبكر
+                    const timeoutId = setTimeout(() => controller.abort(), 12000);
 
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: promptText }] }],
-                        generationConfig: {
-                            temperature,
-                            maxOutputTokens: Math.min(maxTokens || 1024, 4096)
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: promptText }] }],
+                            generationConfig: {
+                                temperature,
+                                maxOutputTokens: Math.min(maxTokens || 1024, 4096)
+                            }
+                        }),
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        const parts = data?.candidates?.[0]?.content?.parts || [];
+                        // استبعاد أجزاء التفكير الداخلي (Thinking/Reasoning parts) والاحتفاظ بالنص السريري الحقيقي فقط
+                        const realParts = parts.filter(p => !p.thought);
+                        const reply = (realParts.length > 0 ? realParts : parts).map(p => p.text || '').join('').trim();
+                        if (reply && reply.trim()) {
+                            return reply;
                         }
-                    }),
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-
-                if (response.ok) {
-                    const data = await response.json();
-                    const parts = data?.candidates?.[0]?.content?.parts || [];
-                    // استبعاد أجزاء التفكير الداخلي (Thinking/Reasoning parts) والاحتفاظ بالنص السريري الحقيقي فقط
-                    const realParts = parts.filter(p => !p.thought);
-                    const reply = (realParts.length > 0 ? realParts : parts).map(p => p.text || '').join('').trim();
-                    if (reply && reply.trim()) {
-                        return reply;
+                    } else if (response.status === 429 || response.status === 403) {
+                        WADA3AN_AI_CONFIG.rotateKey(key);
+                        break; // الانتقال للمفتاح التالي في الحوض فوراً
+                    } else {
+                        lastError = new Error(`Status ${response.status}`);
                     }
-                } else if (response.status === 429) {
-                    WADA3AN_AI_CONFIG.rotateKey(key);
-                    break;
-                } else {
-                    lastError = new Error(`Status ${response.status}`);
+                } catch (err) {
+                    lastError = err;
                 }
-            } catch (err) {
-                lastError = err;
             }
         }
 
-        throw lastError || new Error('All API keys failed');
+        throw lastError || new Error('All API keys and models failed');
     },
 
     // ردود تفاعلية سريرية ذكية تستجيب لمحتوى كلام المراجع الفعلي بمرونة إنسانية عالية

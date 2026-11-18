@@ -32,11 +32,10 @@ const WADA3AN_AI_CONFIG = {
     })(),
 
     // حوض المفاتيح السحابية الموزعة (API Key Rotation Pool)
-    // 11 مفتاحاً سحابياً معتمداً ومؤكداً يوفر آلاف الاستدعاءات السريرية المجانية يومياً لجميع الزوار
+    // 10 مفاتيح سحابية معتمدة ومؤكدة توفر آلاف الاستدعاءات السريرية المجانية يومياً لجميع الزوار
     KEY_POOL: [
         'QVEuQWI4Uk42SzVXelEtRFNsTUF1RXhvbldMbVk2TmlIbmJtSWFWdGIzQWlSSE1OekZfSXc=',
         'QVEuQWI4Uk42SnpfWllVRC1fOUg3LTRlRUVCUE1NakRxT09ySWFNWDlSbURSZXY1RWhaQUE=',
-        'QVEuQWI4Uk42S1JnajhMbklkTGl1X0F6Mk95Z1AxZ2N6RWRoX1lNUHNRYUE3S2NjQ3F6U3c=',
         'QVEuQWI4Uk42TEJXOC1nRUp2Q0Y4dHpZdU84Y0JJNjhyVklwTmNKODNvX1prWVRZeUxyclE=',
         'QVEuQWI4Uk42TFZLVVpObldtY2VydXJRLXBVZnNuY0dLS01JSHkwakxmYXpCeVJGUEtFZFE=',
         'QVEuQWI4Uk42Smthd1dJR0JmalQzNjZUZXZSUFN4bExtYThlWG5Gb3lCeklpeUFjUkw3eVE=',
@@ -162,6 +161,11 @@ const WADA3AN_AI_CONFIG = {
             const coolUntil = Date.now() + 3600000;
             this._exhaustedKeys.set(failedKey, coolUntil);
             try {
+                // إذا كان المفتاح الفاشل مخزناً في التخزين المحلي، يتم حذفه فوراً لعدم إعاقة المستخدم
+                const curLocal = (localStorage.getItem(this.STORAGE_KEY) || '').trim();
+                if (curLocal === failedKey) {
+                    localStorage.removeItem(this.STORAGE_KEY);
+                }
                 const toSave = {};
                 this._exhaustedKeys.forEach((v, k) => { toSave[k] = v; });
                 localStorage.setItem('wada3an_exhausted_keys', JSON.stringify(toSave));
