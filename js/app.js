@@ -1317,7 +1317,7 @@ async function handleStepperClick(stepNum) {
     const maxReached = parseInt(localStorage.getItem('smart_max_reached_step') || '1', 10);
 
     // إذا تم النقر على المرحلة 5 وكان اليوم الأول منجزاً أو المرحلة 5 مفتوحة مسبقاً: الانتقال المباشر للوحة الجلسات
-    if (stepNum === 5 && (day1Done || maxUnlocked >= 5 || maxReached >= 5 || localStorage.getItem('smart_current_step') === '5')) {
+    if (stepNum === 5 && (day1Done || maxUnlocked >= 5 || maxReached >= 5 || (logs && logs.length >= 1) || localStorage.getItem('smart_current_step') === '5' || (activePatient && activePatient.currentSessionDay && activePatient.currentSessionDay >= 2))) {
         const nextTargetDay = logs.length ? Math.min(7, logs.length + 1) : (activePatient?.currentSessionDay || 2);
         await renderStep5SessionsDashboard(savedPatientId, nextTargetDay);
         return;
@@ -3480,112 +3480,138 @@ function formatBidiMedicalText(text) {
     });
 }
 
-// التحديد التشريحي للفقرات المصابة المحتملة (Vertebral Mapping)
-function generateVertebralMappingCard(painArea, contextText = '') {
-    const text = ((painArea || '') + ' ' + (contextText || '')).toLowerCase();
-    
-    // مناطق طرفية (غير فقرية) — تُعرض كروت تشريحية خاصة بها
-    let isElbow   = /كوع|مرفق|elbow|tennis.*elbow|epicondyl/.test(text);
-    let isWrist   = /(?:^|\s|[،.؟!,])(?:معصم|معصمي|المعصم|رسغ|رسغي|الرسغ|نفق\s*رسغي|نفق\s*الرسغ|كف\s*اليد|راحة\s*اليد|أصابع\s*اليد|اصابع\s*اليد|إبهام|ابهام|wrist|carpal)(?:$|\s|[،.؟!,])/i.test(text);
-    let isKnee    = /ركب|ركبه|رضف|صابون|patell|knee/.test(text);
-    let isAnkle   = /كاحل|قدم|كعب|عقب|أخمص|ankle|foot|plantar/.test(text);
-    let isShoulder = /كتف|كفة|كفه|shoulder|rotator/.test(text);
-    let isHip     = /حوض|فخذ|كمثرية|ورك|hip|sciatica/.test(text);
+// التحديد التشريحي الدقيق للبنى والمفاصل المصابة أو المقاطع الفقرية (Anatomical & Joint / Vertebral Mapping)
+function generateVertebralMappingCard(painArea, contextText = '', data = {}) {
+    const primaryArea = String(data.painAreaTitle || data.painArea || data.selectedPoint || data.pointTitle || painArea || '').trim();
+    const pointId = String(data.pointId || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint?.id) || '').toLowerCase();
+    const primaryRegion = String((typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint?.region) || '').toLowerCase();
+    const diagText = String(data.primaryDiagnosis || data.chiefDiagnosis || '').toLowerCase();
+    const symptomsText = String(data.notes || (data.collectedSymptoms ? data.collectedSymptoms.join(' ') : '') || contextText || '').toLowerCase();
 
-    // المناطق الفقرية — فقط إذا كان الألم فقرياً فعلاً
-    let isCervical = /عنق|رقب|cervical|neck|صداع|فك/.test(text);
-    let isThoracic = /صدر|أعلى\s*الظهر|منتصف\s*الظهر|thoracic|أبهر|ابهر|لوح/.test(text);
-    let isLumbar   = /(?<!\w)ظهر(?!\w)|قطن|lumbar|دسك|غضروف|نسا|سياتيكا|عرق\s*النسا/.test(text);
-    let isSacral   = /عجز|عصعص|ردف|مقعدة|sacr|si\s*joint/.test(text);
+    // 1. فحص الإصابات الرضية الميكانيكية (سقوط، اصطدام، التواء، ضربة)
+    const fullContext = (primaryArea + ' ' + diagText + ' ' + symptomsText).toLowerCase();
+    const isTrauma = /سقوط|وقوع|سقطت|وقعت|ضربة|ضربه|حادث|كدمة|كدمه|إصابة\s*مباشرة|اصابة\s*مباشرة|التواء|تمزق|رضّ|رضوض|رضي|fall|trauma|impact/i.test(fullContext);
 
-    // إذا لم تُكتشف أي منطقة → افتراضي قطني
-    if (!isCervical && !isThoracic && !isLumbar && !isSacral &&
-        !isElbow && !isWrist && !isKnee && !isAnkle && !isShoulder && !isHip) {
-        isLumbar = true;
+    // 2. فحص مناطق المفاصل والأطراف الطرفية أولاً بشكل صارم بناءً على موضع الألم المحدد
+    let isElbow = pointId.includes('elbow') || primaryRegion === 'elbow' || /كوع|مرفق|ساعد|زند|ذراع|elbow|epicondyl/i.test(primaryArea) || /كوع|مرفق|ساعد|زند/i.test(diagText);
+    let isWrist = pointId.includes('wrist') || primaryRegion === 'wrist' || /معصم|رسغ|نفق\s*رسغي|نفق\s*الرسغ|كف|أصابع\s*اليد|إبهام|wrist|carpal/i.test(primaryArea) || /معصم|رسغ/i.test(diagText);
+    let isKnee = pointId.includes('knee') || primaryRegion === 'knee' || /ركب|رضف|صابون|knee|patell/i.test(primaryArea) || /ركب|رضف/i.test(diagText);
+    let isAnkle = pointId.includes('ankle') || primaryRegion === 'ankle' || /كاحل|قدم|كعب|عقب|أخمص|أخيل|اخيل|ankle|plantar/i.test(primaryArea) || /كاحل|قدم|كعب/i.test(diagText);
+    let isShoulder = pointId.includes('shoulder') || primaryRegion === 'shoulder' || /كتف|كفة|كفه|ترقوة|لوح\s*الكتف|shoulder|rotator/i.test(primaryArea) || /كتف/i.test(diagText);
+    let isHip = pointId.includes('hip') || primaryRegion === 'hip' || /مفصل\s*الورك|مفصل\s*الفخذ|حوض|كمثرية|hip/i.test(primaryArea) || /مفصل\s*الورك/i.test(diagText);
+
+    const isPeripheral = isElbow || isWrist || isKnee || isAnkle || isShoulder || isHip;
+
+    // 3. إذا كان الألم طرفياً، لا نفحص الفقرات نهائياً إلا إذا كان موضع الألم الأصلي يشير صراحة للعمود الفقري
+    let isCervical = false, isThoracic = false, isLumbar = false, isSacral = false;
+    if (!isPeripheral) {
+        isCervical = /عنق|رقب|فقرات\s*عنقية|cervical|neck|صداع|فك/i.test(primaryArea + ' ' + diagText);
+        isThoracic = /صدر|أعلى\s*الظهر|منتصف\s*الظهر|فقرات\s*صدرية|thoracic|أبهر|ابهر|بين\s*الكتفين/i.test(primaryArea + ' ' + diagText);
+        isLumbar   = /(?<!\w)ظهر(?!\w)|قطن|فقرات\s*قطنية|lumbar|دسك|غضروف|نسا|سياتيكا|عرق\s*النسا/i.test(primaryArea + ' ' + diagText);
+        isSacral   = /عجز|عصعص|ردف|مقعدة|sacr|si\s*joint/i.test(primaryArea + ' ' + diagText);
+
+        if (!isCervical && !isThoracic && !isLumbar && !isSacral) {
+            isLumbar = true;
+        }
     }
 
     const items = [];
 
-    // === الكروت الطرفية (مفاصل غير فقرية) ===
+    // === الكروت الطرفية (مفاصل وأنسجة رخوة وعظام الأطراف) ===
     if (isElbow) {
         items.push({
-            region: 'مفصل الكوع (Elbow Joint)',
+            region: 'مفصل الكوع وعظام الزند والساعد (Elbow & Forearm Complex)',
             icon: '💪',
-            vertebrae: 'العضلة الإشعاعية الأمامية والعضلة ثلاثية الرأس — الرأس اللقيمي الجانبي والإنسي',
-            nerves: 'العصب الكعبري (Radial N.) والعصب الزندي (Ulnar N.) — جذور C5-C8',
-            clinicalImpact: 'ألم المرفق (Tennis Elbow / Golfer\'s Elbow): التهاب أوتار اللقيمة الجانبية أو الإنسية مع تشنج عضلات الساعد. ينجم غالباً عن حركات تكرارية أو إجهاد رياضي.'
+            structures: 'عظم الزند (نتوء الأولكرانون Olecranon Process) • رأس عظمة الكعبرة (Radial Head) • المفصل العضدي الكعبري والزندي • الأربطة الجانبية (LCL / MCL) ومحفظة المرفق • عضلات الساعد الباسطة والقابضة',
+            nerves: 'العصب الكعبري (Radial N.)، العصب الزندي (Ulnar N.)، والعصب المتوسط (Median N.)',
+            clinicalImpact: isTrauma 
+                ? '<strong>طبيعة الإصابة:</strong> رضّ ميكانيكي حاد ناتج عن سقوط أو اصطدام مباشر.<br><strong>التأثير البيوميكانيكي:</strong> إجهاد محفظة المفصل ورضّ أوتار الساعد مع تشنج دفاعي يحد من بسط أو ثني الكوع وتدوير الساعد.<br>⚠️ <strong>توجيه سريري هام:</strong> في حال وجود انتفاخ حاد، كدمة زرقاء، أو عجز كامل عن فرد الذراع، يُلزم نفي وجود شعر أو شرخ عظمي شعاعياً عبر صورة الأشعة (X-Ray) قبل بدء التمارين الحركية.'
+                : '<strong>طبيعة الإصابة:</strong> إجهاد وتشنج أوتار المرفق (مرفق لاعب التنس Tennis Elbow أو المرفق الإنسي).<br><strong>التأثير البيوميكانيكي:</strong> التهاب وتهيج أوتار اللقيمة الجانبية أو الإنسية وتشنج عضلات الساعد نتيجة حركات متكررة أو حمل أوزان؛ ألم عند القبض أو المصافحة.'
         });
     }
+
     if (isWrist) {
         items.push({
-            region: 'مفصل الرسغ ونفق الرسغ (Wrist & Carpal Tunnel)',
+            region: 'مفصل الرسغ ونفق الرسغ واليد (Wrist & Carpal Complex)',
             icon: '🤲',
-            vertebrae: 'عظام الرسغ الثماني (Carpal Bones) — المفصل الكعبري الرسغي',
-            nerves: 'العصب المتوسط (Median N.) داخل نفق الرسغ — جذور C6-C7',
-            clinicalImpact: 'متلازمة نفق الرسغ: خدر وتنميل في الإبهام والسبابة والوسطى، تشتد ليلاً. والتهاب الغمد الزلالي الوظيفي من الحركات التكرارية.'
+            structures: 'عظام الرسغ الثماني (Carpal Bones) ونهاية الكعبرة • النفق الرسغي والأربطة المستعرضة • أوتار اليد والأصابع',
+            nerves: 'العصب المتوسط (Median N.) والعصب الزندي (Ulnar N.)',
+            clinicalImpact: isTrauma
+                ? '<strong>طبيعة الإصابة:</strong> سقوط مباشر على اليد الممدودة (FOOSH Mechanism).<br><strong>التأثير البيوميكانيكي:</strong> تمطط ورضّ أربطة المعصم والمفصل الكعبري الزندي.<br>⚠️ <strong>توجيه سريري هام:</strong> فحص عظم الزورقي (Scaphoid) سريرياً وشعاعياً لنفي أي شعر أو كسر خفي.'
+                : '<strong>طبيعة الإصابة:</strong> متلازمة النفق الرسغي أو التهاب غمد الأوتار الإجهادي.<br><strong>التأثير البيوميكانيكي:</strong> انضغاط العصب المتوسط مسبباً خدراً وتنميلاً في الإبهام والسبابة والوسطى يشتد ليلاً مع ضعف قبضة اليد.'
         });
     }
+
     if (isKnee) {
         items.push({
-            region: 'مفصل الركبة وصابونة الرضفة (Knee & Patella)',
+            region: 'مفصل الركبة وصابونة الرضفة والأربطة (Knee Complex)',
             icon: '🦵',
-            vertebrae: 'الغضروف الرضفي الفخذي والغضروف الهلالي الإنسي والجانبي (Meniscus)',
-            nerves: 'العصب الصافن (Saphenous N.) والأعصاب الوركية الفرعية — جذور L3-S1',
-            clinicalImpact: 'احتكاك الرضفة الفخذي، تلف الغضروف الهلالي، أو التهاب كيسة الركبة؛ ألم عند النزول بالدرج أو الجلوس الطويل مع صوت فرقعة.'
+            structures: 'عظمة الرضفة (Patella) • الغضاريف الهلالية (Meniscus) • الأربطة الصليبية (ACL/PCL) والجانبية (MCL/LCL) • وتر الرضفة ومحفظة المفصل',
+            nerves: 'العصب الصافن (Saphenous N.) والأعصاب الشظوية والظنبوبية',
+            clinicalImpact: isTrauma
+                ? '<strong>طبيعة الإصابة:</strong> رضّ أو التواء ميكانيكي حاد ناتج عن سقوط أو حركة التوائية مفاجئة.<br><strong>التأثير البيوميكانيكي:</strong> إجهاد أربطة الركبة وغضروف الصابونة مع تجمع سوائل دفاعي.<br>⚠️ <strong>توجيه سريري:</strong> التأكد من ثبات الأربطة الصليبية ونفي وجود ارتشاح مفصلي حاد أو تمزق غضروفي.'
+                : '<strong>طبيعة الإصابة:</strong> متلازمة الاحتكاك الرضفي الفخذي (Patellofemoral Syndrome) أو إجهاد الأوتار.<br><strong>التأثير البيوميكانيكي:</strong> اختلال مسار الصابونة أثناء الحركة مسبباً ألماً وفرقعة عند صعود/نزول الدرج أو الجلوس المطول مع ثني الركبة.'
         });
     }
+
     if (isAnkle) {
         items.push({
-            region: 'مفصل الكاحل واللفافة الأخمصية (Ankle & Plantar)',
+            region: 'مفصل الكاحل والقدم واللفافة الأخمصية (Ankle & Foot Complex)',
             icon: '🦶',
-            vertebrae: 'عظام الكاحل والعقب (Talus & Calcaneus) — الأربطة الشظوية والأخيلية',
-            nerves: 'العصب الظنبوبي الخلفي (Posterior Tibial N.) — جذور L4-S2',
-            clinicalImpact: 'التهاب اللفافة الأخمصية، التهاب وتر أخيل، أو إجهاد الرباط الشظوي؛ ألم حاد في باطن القدم عند أولى خطوات الصباح.'
+            structures: 'عظام الكاحل والعقب (Talus & Calcaneus) • الأربطة الشظوية الكاحلية (ATFL / CFL) • وتر أخيل واللفافة الأخمصية (Plantar Fascia)',
+            nerves: 'العصب الظنبوبي الخلفي (Posterior Tibial N.) والأعصاب الشظوية السطحية والعميقة',
+            clinicalImpact: isTrauma
+                ? '<strong>طبيعة الإصابة:</strong> التواء ميكانيكي حاد في الكاحل أو رضّ ناتج عن سقوط/عثرة.<br><strong>التأثير البيوميكانيكي:</strong> تمطط أو تمزق جزئي في الأربطة الجانبية للكاحل مع ورم وتجمع دموي موضعي.<br>⚠️ <strong>توجيه سريري:</strong> تطبيق قواعد أوتاوا (Ottawa Rules) ونفي وجود كسر في الكعب أو قاعدة المشط الخامس.'
+                : '<strong>طبيعة الإصابة:</strong> التهاب اللفافة الأخمصية (Plantar Fasciitis) أو التهاب وتر أخيل.<br><strong>التأثير البيوميكانيكي:</strong> إجهاد قوس القدم مسبباً ألماً حاداً ومسمارياً في باطن القدم والعقب مع أولى خطوات المشي صباحاً.'
         });
     }
+
     if (isShoulder) {
         items.push({
             region: 'مفصل الكتف والكفة المدورة (Shoulder & Rotator Cuff)',
             icon: '🏋️',
-            vertebrae: 'المفصل الحقاني العضدي — عظمة الترقوة ولوح الكتف والكفة المدورة الأربعة',
-            nerves: 'العصب الإبطي (Axillary N.) والعصب فوق الكتفي (Suprascapular N.) — جذور C5-C6',
-            clinicalImpact: 'انحشار الكفة المدورة (Impingement Syndrome)، التهاب الوتر، أو تيبس الكتف المتجمد (Frozen Shoulder)؛ ألم عند رفع الذراع للأمام أو الجانب.'
-        });
-    }
-    if (isHip) {
-        items.push({
-            region: 'مفصل الورك وعضلات الحوض (Hip & Pelvis)',
-            icon: '⚖️',
-            vertebrae: 'مفصل الورك الحقاني الفخذي — عضلة الكمثرية (Piriformis) والمفصل العجزي الحرقفي',
-            nerves: 'العصب الوركي (Sciatic N.) والعصب الجلدي الجانبي للفخذ — جذور L4-S3',
-            clinicalImpact: 'متلازمة عضلة الكمثرية، تهيج العصب الوركي، أو احتكاك مفصل الورك؛ ألم يمتد من الردف إلى الفخذ ويزداد عند الجلوس الطويل.'
+            structures: 'المفصل الحقاني العضدي • أوتار الكفة المدورة الأربعة (Supraspinatus وغيرها) • عظمة الترقوة وجراب تحت الأخرم',
+            nerves: 'العصب فوق الكتفي (Suprascapular N.) والعصب الإبطي (Axillary N.)',
+            clinicalImpact: isTrauma
+                ? '<strong>طبيعة الإصابة:</strong> رضّ مباشر على الكتف نتيجة سقوط أو اصطدام.<br><strong>التأثير البيوميكانيكي:</strong> تمطط أوتار الكفة المدورة أو التواء المفصل الأخرمي الترقوي (AC Joint).<br>⚠️ <strong>توجيه سريري:</strong> نفي الخلع الكتفي أو تمزق الأوتار الكامل في حال تعذر رفع الذراع.'
+                : '<strong>طبيعة الإصابة:</strong> متلازمة انحشار الكتف (Impingement) أو التهاب وتر العضلة فوق الشوكية.<br><strong>التأثير البيوميكانيكي:</strong> احتكاك الأوتار تحت النتوء الأخرمي مسبباً ألماً عند رفع الذراع للأعلى أو للخلف.'
         });
     }
 
-    // === الكروت الفقرية ===
+    if (isHip) {
+        items.push({
+            region: 'مفصل الورك وعضلات الحوض والكمثرية (Hip & Pelvis)',
+            icon: '⚖️',
+            structures: 'المفصل الحقي الفخذي • عضلة الكمثرية (Piriformis) • المفصل العجزي الحرقفي (SI Joint) وعضلات الحوض',
+            nerves: 'العصب الوركي (Sciatic N.) والعصب الفخذي والعصب الجلدي الفخذي',
+            clinicalImpact: '<strong>طبيعة الإصابة:</strong> متلازمة العضلة الكمثرية أو احتكاك مفصل الورك الميكانيكي.<br><strong>التأثير البيوميكانيكي:</strong> انقباض عميق في الحوض يضغط على مسار عصب النسا مسبباً ألماً يمتد للفخذ ويزداد مع الجلوس الطويل.'
+        });
+    }
+
+    // === الكروت الفقرية (فقط إذا كانت الإصابة فقرية) ===
     if (isCervical) {
         items.push({
             region: 'الفقرات العنقية (Cervical Spine)',
             icon: '🦒',
-            vertebrae: 'C3 - C7 (وبالأخص C5-C6 و C6-C7)',
+            structures: 'C3 - C7 (وبالأخص C5-C6 و C6-C7)',
             nerves: 'الجذور العصبية العنقية (C5, C6, C7)',
-            clinicalImpact: 'مسؤولة عن عضلات الرقبة، لوح الكتف، وتمتد أعراض انضغاطها كألم حارق أو خدر وتنميل نحو الكتف، الذراع، واليد وصولاً لإبهام وسبابة اليد.'
+            clinicalImpact: 'مسؤولة عن تثبيت الرقبة والرأس؛ انضغاطها يسبب ألماً حارقاً أو خدراً يمتد نحو الكتف، الذراع، واليد وصولاً لإبهام وسبابة اليد.'
         });
     }
     if (isThoracic) {
         items.push({
-            region: 'الفقرات الصدرية (Thoracic Spine)',
+            region: 'الفقرات الصدرية وأعلى الظهر (Thoracic Spine)',
             icon: '🛡️',
-            vertebrae: 'T3 - T8 (المفاصل الضلعية الفقرية)',
+            structures: 'T3 - T8 والمفاصل الضلعية الفقرية (Costovertebral Joints)',
             nerves: 'الأعصاب الوربية بين الأضلاع (Intercostal Nerves)',
-            clinicalImpact: 'مسؤولة عن تثبيت القفص الصدري وعضلات ما بين لوحي الكتف (متلازمة الأبهر)، وتسبب تشنجاً حاداً وضيق نفس ميكانيكي عند التنفس العميق أو الجلوس الطويل.'
+            clinicalImpact: 'مسؤولة عن تثبيت القفص الصدري وعضلات ما بين لوحي الكتف (متلازمة الأبهر)؛ تسبب تشنجاً حاداً وضيق نفس ميكانيكي عند التنفس العميق أو الجلوس الطويل.'
         });
     }
     if (isLumbar) {
         items.push({
-            region: 'الفقرات القطنية (Lumbar Spine)',
+            region: 'الفقرات القطنية وأأسفل الظهر (Lumbar Spine)',
             icon: '⚡',
-            vertebrae: 'L4 - L5 و L5 - S1 (المفصل القطني العجزي)',
+            structures: 'L4 - L5 و L5 - S1 (المفصل القطني العجزي)',
             nerves: 'الجذور العصبية L4, L5, S1 (عصب النسا Sciatic Nerve)',
             clinicalImpact: 'تتحمل 80% من وزن الجسم المحوري وتعتبر الأكثر عرضة للضغط الغضروفي؛ انضغاطها يسبب ألم أسفل الظهر الممتد إلى المقعدة، خلف الفخذ، بطة الساق، والقدم.'
         });
@@ -3594,24 +3620,40 @@ function generateVertebralMappingCard(painArea, contextText = '') {
         items.push({
             region: 'الفقرات العجزية والمفصل الحوضي (Sacral & Pelvis)',
             icon: '⚖️',
-            vertebrae: 'S1 - S4 والمفصل العجزي الحرقفي (SI Joint)',
+            structures: 'S1 - S4 والمفصل العجزي الحرقفي (SI Joint)',
             nerves: 'الضفيرة العجزية وعصب العضلة الكمثرية',
-            clinicalImpact: 'مسؤولة عن ثبات الحوض والمشية المتزنة؛ اختلال تموضعها يسبب انحباس عصب النسا تحت العضلة الكمثرية وألماً ميكانيكياً عند الوقوف أو تقليب وضعية النوم.'
+            clinicalImpact: 'مسؤولة عن ثبات الحوض والمشية المتزنة؛ اختلال تموضعها يسبب ألماً حاداً عند الانتقال من الجلوس للوقوف أو تقليب وضعية النوم.'
         });
     }
+
+    const cardTitle = isPeripheral
+        ? (isTrauma ? 'التحديد التشريحي للإصابة والمفاصل المتأثرة (Trauma & Joint Mapping)' : 'التحديد التشريحي للبنى والمفاصل المصابة (Anatomical & Joint Mapping)')
+        : 'التحديد التشريحي للمقاطع الفقرية والجذور العصبية (Vertebral & Neurological Mapping)';
+
+    const cardSubtitle = isPeripheral
+        ? (isTrauma ? 'تحليل مسار الصدمة الميكانيكية، العظام، الأوتار، والأربطة المتأثرة بالسقوط أو الرضّ المباشر' : 'تحديد العظام، المفاصل، الأوتار، والأربطة المتأثرة بموضع الإصابة وميكانيكية الحركة')
+        : 'تحديد مقاطع العمود الفقري والجذور العصبية المرتبطة بموضع الألم والضغط الميكانيكي';
+
+    const headerBadge = isPeripheral
+        ? (isTrauma ? 'إصابة رضية ميكانيكية' : 'فحص المفاصل والأنسجة الطرفية')
+        : 'تحليل بيوميكانيكي فقري دقيق';
+
+    const headerIcon = isPeripheral ? (isTrauma ? '🩹' : '🩺') : '🦴';
+    const targetLabel = isPeripheral ? '🎯 البنى التشريحية والمفاصل المستهدفة:' : '🎯 المقاطع الفقرية المستهدفة:';
+    const nerveLabel = isPeripheral ? '⚡ الأعصاب والمسارات الحركية:' : '⚡ الجذور العصبية المرتبطة:';
 
     return `
         <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%); border: 1.5px solid #38bdf8; border-radius: 14px; padding: 20px; margin-bottom: 22px; box-shadow: 0 6px 25px rgba(0,0,0,0.45);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid rgba(56, 189, 248, 0.25); padding-bottom: 10px; flex-wrap: wrap; gap: 8px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 1.6em;">🦴</span>
+                    <span style="font-size: 1.6em;">${headerIcon}</span>
                     <div>
-                        <h4 style="color: #38bdf8; margin: 0; font-size: 1.1em; font-weight: 800;">التحديد التشريحي للفقرات المصابة المحتملة (Vertebral Mapping)</h4>
-                        <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">تحديد مقاطع العمود الفقري والجذور العصبية المرتبطة بموضع الألم</div>
+                        <h4 style="color: #38bdf8; margin: 0; font-size: 1.1em; font-weight: 800;">${cardTitle}</h4>
+                        <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">${cardSubtitle}</div>
                     </div>
                 </div>
                 <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #7dd3fc; font-size: 0.78em; padding: 3px 10px; border-radius: 12px; font-weight: bold;">
-                    تحليل بيوميكانيكي دقيق
+                    ${headerBadge}
                 </span>
             </div>
 
@@ -3619,16 +3661,16 @@ function generateVertebralMappingCard(painArea, contextText = '') {
                 ${items.map(it => `
                     <div style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
                         <div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                <strong style="color: #f8fafc; font-size: 0.95em;">${it.icon} ${it.region}</strong>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <strong style="color: #f8fafc; font-size: 0.98em;">${it.icon} ${it.region}</strong>
                             </div>
-                            <div style="color: var(--primary-gold); font-size: 0.88em; font-weight: bold; margin-bottom: 4px;">
-                                🎯 الفقرات المستهدفة: <span>${it.vertebrae}</span>
+                            <div style="color: var(--primary-gold); font-size: 0.88em; font-weight: bold; margin-bottom: 6px; line-height: 1.5;">
+                                ${targetLabel} <span style="color: #fef08a; font-weight: normal;">${it.structures}</span>
                             </div>
-                            <div style="color: #6ee7b7; font-size: 0.82em; font-weight: bold; margin-bottom: 6px;">
-                                ⚡ الأعصاب المتأثرة: <span>${it.nerves}</span>
+                            <div style="color: #6ee7b7; font-size: 0.84em; font-weight: bold; margin-bottom: 8px; line-height: 1.5;">
+                                ${nerveLabel} <span style="color: #a7f3d0; font-weight: normal;">${it.nerves}</span>
                             </div>
-                            <div style="color: #cbd5e1; font-size: 0.82em; line-height: 1.6;">
+                            <div style="color: #cbd5e1; font-size: 0.83em; line-height: 1.6; border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 6px;">
                                 ${it.clinicalImpact}
                             </div>
                         </div>
@@ -4985,8 +5027,8 @@ function displayDiagnosticReport(data) {
             </div>
 
             
-            <!-- ================= 2.1 التحديد التشريحي للفقرات المصابة المحتملة (Vertebral Mapping) ================= -->
-            ${generateVertebralMappingCard(data.painAreaTitle || data.painArea || data.selectedPoint || data.pointTitle || '', data.notes || (data.collectedSymptoms ? data.collectedSymptoms.join(' ') : ''))}
+            <!-- ================= 2.1 التحديد التشريحي للبنى المصابة (Anatomical & Joint / Vertebral Mapping) ================= -->
+            ${generateVertebralMappingCard(data.painAreaTitle || data.painArea || data.selectedPoint || data.pointTitle || '', data.notes || (data.collectedSymptoms ? data.collectedSymptoms.join(' ') : ''), data)}
 
             <!-- ================= 4. الخلاصة البيوميكانيكية المباشرة والأدلة السريرية ================= -->
             <div style="background: rgba(15, 23, 42, 0.95); border-radius: 14px; padding: 18px 20px; border: 1.5px solid rgba(212, 175, 55, 0.25); margin-bottom: 22px;">
@@ -8667,6 +8709,14 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
     // الاسم المحفوظ في localStorage هو المرجع الأموثق دائماً
     const _S4_INVALID = /^(?:مراجع كريم|المراجع الكريم|المراجع المحترم|مراجع جديد|مريض الفحص الذاتي|فحص ذاتي|زائر|مجهول|pat_guest|عزيزي|عزيزتي|undefined|null|بطل|بطل التعافي|مرحباً بك|مرحبا بك)$/i;
     const _s4StoredName = (function() { try { return (localStorage.getItem('smart_patient_name') || localStorage.getItem('smart_user_name') || '').trim(); } catch(e) { return ''; } })();
+    // جلب ودمج سجلات الجلسات المؤكدة للمريض لضمان تفعيل الجلسات المنجزة
+    let _s4CombinedLogs = [];
+    try {
+        _s4CombinedLogs = await getAllPatientDailyLogsCombined(patientId);
+    } catch(e) {
+        console.warn('getAllPatientDailyLogsCombined in Step 4 error:', e);
+    }
+
 
     if (!sessionData || !sessionData.patient) {
         const curAss = currentAssessmentData || (function() {
@@ -8705,6 +8755,10 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
         }
     }
 
+    if (sessionData && (!sessionData.dailyLogs || sessionData.dailyLogs.length === 0) && _s4CombinedLogs && _s4CombinedLogs.length > 0) {
+        sessionData.dailyLogs = _s4CombinedLogs;
+        sessionData.currentSessionDay = Math.min(7, _s4CombinedLogs.length + 1);
+    }
     activePatient = sessionData.patient;
 
     const container = document.getElementById('step4-day1-container') || document.getElementById('patient-recovery-dashboard');
@@ -11655,7 +11709,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v32.50';
+const CURRENT_APP_VERSION = 'v32.70';
 window.CURRENT_APP_VERSION = CURRENT_APP_VERSION;
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
@@ -13753,6 +13807,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             return;
         } else if (savedTargetStep === 4) {
+            if (hasCompletedDay1 && (maxUnlocked >= 5 || (logs && logs.length >= 1))) {
+                goToStep(5, { fromRender: true });
+                const targetDay = logs.length ? Math.min(7, logs.length + 1) : (activePatient?.currentSessionDay || 2);
+                try {
+                    await renderStep5SessionsDashboard(effectivePatientId, targetDay);
+                    return;
+                } catch(err) {
+                    console.warn('[DOMContentLoaded] Step 5 fallback:', err);
+                }
+            }
             await renderStep4IndependentDay1(effectivePatientId);
             return;
         } else if (savedTargetStep === 3) {

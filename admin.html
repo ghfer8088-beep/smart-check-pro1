@@ -424,7 +424,7 @@
                     <div style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.78em; color: #94a3b8; margin-top: 2px;">
                         <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                         <span>الإصدار المعتمد:</span>
-                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v32.50</strong>
+                        <strong style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px;">v32.70</strong>
                     </div>
                 </div>
             </div>
@@ -452,8 +452,8 @@
                     <button type="button" onclick="openSystemSettingsModal()" class="btn-header admin-btn-settings" style="background: rgba(212, 175, 55, 0.18); border-color: var(--primary-gold); color: var(--primary-gold); font-weight: bold; padding: 9px 13px; font-size: 0.85em; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" title="إعدادات المنظومة: الأسعار، الذكاء الاصطناعي، الأصوات، التمارين، وقواعد البيانات">
                         <span>⚙️</span> إعدادات المنظومة
                     </button>
-                    <button type="button" id="btn-broadcast-version-global" onclick="handleUnifiedUpdateAndBroadcast()" class="btn-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 1.5px solid #6ee7b7; color: #ffffff; font-weight: 900; padding: 9px 14px; font-size: 0.85em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);" title="تحديث الكاش، ومزامنة السحابة، وبث التحديث العالمي (v32.50) لجميع الأجهزة والهواتف حول العالم بضغطة واحدة">
-                        <span style="font-size: 1.1em;">🚀</span> تحديث وبث الإصدار (v32.50)
+                    <button type="button" id="btn-broadcast-version-global" onclick="handleUnifiedUpdateAndBroadcast()" class="btn-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 1.5px solid #6ee7b7; color: #ffffff; font-weight: 900; padding: 9px 14px; font-size: 0.85em; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);" title="تحديث الكاش، ومزامنة السحابة، وبث التحديث العالمي (v32.70) لجميع الأجهزة والهواتف حول العالم بضغطة واحدة">
+                        <span style="font-size: 1.1em;">🚀</span> تحديث وبث الإصدار (v32.70)
                     </button>
                     <a href="index.html" class="btn-header admin-btn-front" style="background: #1e293b; color: #fff; padding: 9px 13px; font-size: 0.85em; text-decoration: none; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid #334155;" title="فتح واجهة المراجعين">
                         🌐 واجهة المراجعين
@@ -5060,49 +5060,137 @@
         let activeAdminReportAssessment = null;
 
         // التحديد التشريحي للفقرات المصابة المحتملة (Vertebral Mapping)
-        function generateVertebralMappingCard(painArea, contextText = '') {
-            const text = ((painArea || '') + ' ' + (contextText || '')).toLowerCase();
-            
-            let isCervical = /عنق|رقب|cervical|neck|صداع|فك|كتف/.test(text);
-            let isThoracic = /صدر|أعلى\s*الظهر|منتصف\s*الظهر|thoracic|أبهر|ابهر|لوح|كتف/.test(text);
-            let isLumbar = /ظهر|قطن|lumbar|دسك|غضروف|نسا|سياتيكا|عرق|فخذ|ساق|ركب/.test(text);
-            let isSacral = /حوض|عجز|عصعص|ردف|كمثرية|مقعدة|sacr|pelvi|si\s*joint/.test(text);
-            
-            if (!isCervical && !isThoracic && !isLumbar && !isSacral) {
-                if (/ركب|قدم|كاحل/.test(text)) {
-                    isLumbar = true;
-                    isSacral = true;
-                } else if (/(?:^|\s|[،.؟!,])(?:معصم|رسغ|نفق\s*الرسغ|كف\s*اليد|كوع|مرفق)(?:$|\s|[،.؟!,])/.test(text)) {
-                    isCervical = true;
-                } else {
+                function generateVertebralMappingCard(painArea, contextText = '', data = {}) {
+            const primaryArea = String(data.painAreaTitle || data.painArea || data.selectedPoint || data.pointTitle || painArea || '').trim();
+            const pointId = String(data.pointId || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint?.id) || '').toLowerCase();
+            const primaryRegion = String((typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint?.region) || '').toLowerCase();
+            const diagText = String(data.primaryDiagnosis || data.chiefDiagnosis || '').toLowerCase();
+            const symptomsText = String(data.notes || (data.collectedSymptoms ? data.collectedSymptoms.join(' ') : '') || contextText || '').toLowerCase();
+        
+            // 1. فحص الإصابات الرضية الميكانيكية (سقوط، اصطدام، التواء، ضربة)
+            const fullContext = (primaryArea + ' ' + diagText + ' ' + symptomsText).toLowerCase();
+            const isTrauma = /سقوط|وقوع|سقطت|وقعت|ضربة|ضربه|حادث|كدمة|كدمه|إصابة\s*مباشرة|اصابة\s*مباشرة|التواء|تمزق|رضّ|رضوض|رضي|fall|trauma|impact/i.test(fullContext);
+        
+            // 2. فحص مناطق المفاصل والأطراف الطرفية أولاً بشكل صارم بناءً على موضع الألم المحدد
+            let isElbow = pointId.includes('elbow') || primaryRegion === 'elbow' || /كوع|مرفق|ساعد|زند|ذراع|elbow|epicondyl/i.test(primaryArea) || /كوع|مرفق|ساعد|زند/i.test(diagText);
+            let isWrist = pointId.includes('wrist') || primaryRegion === 'wrist' || /معصم|رسغ|نفق\s*رسغي|نفق\s*الرسغ|كف|أصابع\s*اليد|إبهام|wrist|carpal/i.test(primaryArea) || /معصم|رسغ/i.test(diagText);
+            let isKnee = pointId.includes('knee') || primaryRegion === 'knee' || /ركب|رضف|صابون|knee|patell/i.test(primaryArea) || /ركب|رضف/i.test(diagText);
+            let isAnkle = pointId.includes('ankle') || primaryRegion === 'ankle' || /كاحل|قدم|كعب|عقب|أخمص|أخيل|اخيل|ankle|plantar/i.test(primaryArea) || /كاحل|قدم|كعب/i.test(diagText);
+            let isShoulder = pointId.includes('shoulder') || primaryRegion === 'shoulder' || /كتف|كفة|كفه|ترقوة|لوح\s*الكتف|shoulder|rotator/i.test(primaryArea) || /كتف/i.test(diagText);
+            let isHip = pointId.includes('hip') || primaryRegion === 'hip' || /مفصل\s*الورك|مفصل\s*الفخذ|حوض|كمثرية|hip/i.test(primaryArea) || /مفصل\s*الورك/i.test(diagText);
+        
+            const isPeripheral = isElbow || isWrist || isKnee || isAnkle || isShoulder || isHip;
+        
+            // 3. إذا كان الألم طرفياً، لا نفحص الفقرات نهائياً إلا إذا كان موضع الألم الأصلي يشير صراحة للعمود الفقري
+            let isCervical = false, isThoracic = false, isLumbar = false, isSacral = false;
+            if (!isPeripheral) {
+                isCervical = /عنق|رقب|فقرات\s*عنقية|cervical|neck|صداع|فك/i.test(primaryArea + ' ' + diagText);
+                isThoracic = /صدر|أعلى\s*الظهر|منتصف\s*الظهر|فقرات\s*صدرية|thoracic|أبهر|ابهر|بين\s*الكتفين/i.test(primaryArea + ' ' + diagText);
+                isLumbar   = /(?<!\w)ظهر(?!\w)|قطن|فقرات\s*قطنية|lumbar|دسك|غضروف|نسا|سياتيكا|عرق\s*النسا/i.test(primaryArea + ' ' + diagText);
+                isSacral   = /عجز|عصعص|ردف|مقعدة|sacr|si\s*joint/i.test(primaryArea + ' ' + diagText);
+        
+                if (!isCervical && !isThoracic && !isLumbar && !isSacral) {
                     isLumbar = true;
                 }
             }
-
+        
             const items = [];
+        
+            // === الكروت الطرفية (مفاصل وأنسجة رخوة وعظام الأطراف) ===
+            if (isElbow) {
+                items.push({
+                    region: 'مفصل الكوع وعظام الزند والساعد (Elbow & Forearm Complex)',
+                    icon: '💪',
+                    structures: 'عظم الزند (نتوء الأولكرانون Olecranon Process) • رأس عظمة الكعبرة (Radial Head) • المفصل العضدي الكعبري والزندي • الأربطة الجانبية (LCL / MCL) ومحفظة المرفق • عضلات الساعد الباسطة والقابضة',
+                    nerves: 'العصب الكعبري (Radial N.)، العصب الزندي (Ulnar N.)، والعصب المتوسط (Median N.)',
+                    clinicalImpact: isTrauma 
+                        ? '<strong>طبيعة الإصابة:</strong> رضّ ميكانيكي حاد ناتج عن سقوط أو اصطدام مباشر.<br><strong>التأثير البيوميكانيكي:</strong> إجهاد محفظة المفصل ورضّ أوتار الساعد مع تشنج دفاعي يحد من بسط أو ثني الكوع وتدوير الساعد.<br>⚠️ <strong>توجيه سريري هام:</strong> في حال وجود انتفاخ حاد، كدمة زرقاء، أو عجز كامل عن فرد الذراع، يُلزم نفي وجود شعر أو شرخ عظمي شعاعياً عبر صورة الأشعة (X-Ray) قبل بدء التمارين الحركية.'
+                        : '<strong>طبيعة الإصابة:</strong> إجهاد وتشنج أوتار المرفق (مرفق لاعب التنس Tennis Elbow أو المرفق الإنسي).<br><strong>التأثير البيوميكانيكي:</strong> التهاب وتهيج أوتار اللقيمة الجانبية أو الإنسية وتشنج عضلات الساعد نتيجة حركات متكررة أو حمل أوزان؛ ألم عند القبض أو المصافحة.'
+                });
+            }
+        
+            if (isWrist) {
+                items.push({
+                    region: 'مفصل الرسغ ونفق الرسغ واليد (Wrist & Carpal Complex)',
+                    icon: '🤲',
+                    structures: 'عظام الرسغ الثماني (Carpal Bones) ونهاية الكعبرة • النفق الرسغي والأربطة المستعرضة • أوتار اليد والأصابع',
+                    nerves: 'العصب المتوسط (Median N.) والعصب الزندي (Ulnar N.)',
+                    clinicalImpact: isTrauma
+                        ? '<strong>طبيعة الإصابة:</strong> سقوط مباشر على اليد الممدودة (FOOSH Mechanism).<br><strong>التأثير البيوميكانيكي:</strong> تمطط ورضّ أربطة المعصم والمفصل الكعبري الزندي.<br>⚠️ <strong>توجيه سريري هام:</strong> فحص عظم الزورقي (Scaphoid) سريرياً وشعاعياً لنفي أي شعر أو كسر خفي.'
+                        : '<strong>طبيعة الإصابة:</strong> متلازمة النفق الرسغي أو التهاب غمد الأوتار الإجهادي.<br><strong>التأثير البيوميكانيكي:</strong> انضغاط العصب المتوسط مسبباً خدراً وتنميلاً في الإبهام والسبابة والوسطى يشتد ليلاً مع ضعف قبضة اليد.'
+                });
+            }
+        
+            if (isKnee) {
+                items.push({
+                    region: 'مفصل الركبة وصابونة الرضفة والأربطة (Knee Complex)',
+                    icon: '🦵',
+                    structures: 'عظمة الرضفة (Patella) • الغضاريف الهلالية (Meniscus) • الأربطة الصليبية (ACL/PCL) والجانبية (MCL/LCL) • وتر الرضفة ومحفظة المفصل',
+                    nerves: 'العصب الصافن (Saphenous N.) والأعصاب الشظوية والظنبوبية',
+                    clinicalImpact: isTrauma
+                        ? '<strong>طبيعة الإصابة:</strong> رضّ أو التواء ميكانيكي حاد ناتج عن سقوط أو حركة التوائية مفاجئة.<br><strong>التأثير البيوميكانيكي:</strong> إجهاد أربطة الركبة وغضروف الصابونة مع تجمع سوائل دفاعي.<br>⚠️ <strong>توجيه سريري:</strong> التأكد من ثبات الأربطة الصليبية ونفي وجود ارتشاح مفصلي حاد أو تمزق غضروفي.'
+                        : '<strong>طبيعة الإصابة:</strong> متلازمة الاحتكاك الرضفي الفخذي (Patellofemoral Syndrome) أو إجهاد الأوتار.<br><strong>التأثير البيوميكانيكي:</strong> اختلال مسار الصابونة أثناء الحركة مسبباً ألماً وفرقعة عند صعود/نزول الدرج أو الجلوس المطول مع ثني الركبة.'
+                });
+            }
+        
+            if (isAnkle) {
+                items.push({
+                    region: 'مفصل الكاحل والقدم واللفافة الأخمصية (Ankle & Foot Complex)',
+                    icon: '🦶',
+                    structures: 'عظام الكاحل والعقب (Talus & Calcaneus) • الأربطة الشظوية الكاحلية (ATFL / CFL) • وتر أخيل واللفافة الأخمصية (Plantar Fascia)',
+                    nerves: 'العصب الظنبوبي الخلفي (Posterior Tibial N.) والأعصاب الشظوية السطحية والعميقة',
+                    clinicalImpact: isTrauma
+                        ? '<strong>طبيعة الإصابة:</strong> التواء ميكانيكي حاد في الكاحل أو رضّ ناتج عن سقوط/عثرة.<br><strong>التأثير البيوميكانيكي:</strong> تمطط أو تمزق جزئي في الأربطة الجانبية للكاحل مع ورم وتجمع دموي موضعي.<br>⚠️ <strong>توجيه سريري:</strong> تطبيق قواعد أوتاوا (Ottawa Rules) ونفي وجود كسر في الكعب أو قاعدة المشط الخامس.'
+                        : '<strong>طبيعة الإصابة:</strong> التهاب اللفافة الأخمصية (Plantar Fasciitis) أو التهاب وتر أخيل.<br><strong>التأثير البيوميكانيكي:</strong> إجهاد قوس القدم مسبباً ألماً حاداً ومسمارياً في باطن القدم والعقب مع أولى خطوات المشي صباحاً.'
+                });
+            }
+        
+            if (isShoulder) {
+                items.push({
+                    region: 'مفصل الكتف والكفة المدورة (Shoulder & Rotator Cuff)',
+                    icon: '🏋️',
+                    structures: 'المفصل الحقاني العضدي • أوتار الكفة المدورة الأربعة (Supraspinatus وغيرها) • عظمة الترقوة وجراب تحت الأخرم',
+                    nerves: 'العصب فوق الكتفي (Suprascapular N.) والعصب الإبطي (Axillary N.)',
+                    clinicalImpact: isTrauma
+                        ? '<strong>طبيعة الإصابة:</strong> رضّ مباشر على الكتف نتيجة سقوط أو اصطدام.<br><strong>التأثير البيوميكانيكي:</strong> تمطط أوتار الكفة المدورة أو التواء المفصل الأخرمي الترقوي (AC Joint).<br>⚠️ <strong>توجيه سريري:</strong> نفي الخلع الكتفي أو تمزق الأوتار الكامل في حال تعذر رفع الذراع.'
+                        : '<strong>طبيعة الإصابة:</strong> متلازمة انحشار الكتف (Impingement) أو التهاب وتر العضلة فوق الشوكية.<br><strong>التأثير البيوميكانيكي:</strong> احتكاك الأوتار تحت النتوء الأخرمي مسبباً ألماً عند رفع الذراع للأعلى أو للخلف.'
+                });
+            }
+        
+            if (isHip) {
+                items.push({
+                    region: 'مفصل الورك وعضلات الحوض والكمثرية (Hip & Pelvis)',
+                    icon: '⚖️',
+                    structures: 'المفصل الحقي الفخذي • عضلة الكمثرية (Piriformis) • المفصل العجزي الحرقفي (SI Joint) وعضلات الحوض',
+                    nerves: 'العصب الوركي (Sciatic N.) والعصب الفخذي والعصب الجلدي الفخذي',
+                    clinicalImpact: '<strong>طبيعة الإصابة:</strong> متلازمة العضلة الكمثرية أو احتكاك مفصل الورك الميكانيكي.<br><strong>التأثير البيوميكانيكي:</strong> انقباض عميق في الحوض يضغط على مسار عصب النسا مسبباً ألماً يمتد للفخذ ويزداد مع الجلوس الطويل.'
+                });
+            }
+        
+            // === الكروت الفقرية (فقط إذا كانت الإصابة فقرية) ===
             if (isCervical) {
                 items.push({
                     region: 'الفقرات العنقية (Cervical Spine)',
                     icon: '🦒',
-                    vertebrae: 'C3 - C7 (وبالأخص C5-C6 و C6-C7)',
+                    structures: 'C3 - C7 (وبالأخص C5-C6 و C6-C7)',
                     nerves: 'الجذور العصبية العنقية (C5, C6, C7)',
-                    clinicalImpact: 'مسؤولة عن عضلات الرقبة، لوح الكتف، وتمتد أعراض انضغاطها كألم حارق أو خدر وتنميل نحو الكتف، الذراع، واليد وصولاً لإبهام وسبابة اليد.'
+                    clinicalImpact: 'مسؤولة عن تثبيت الرقبة والرأس؛ انضغاطها يسبب ألماً حارقاً أو خدراً يمتد نحو الكتف، الذراع، واليد وصولاً لإبهام وسبابة اليد.'
                 });
             }
             if (isThoracic) {
                 items.push({
-                    region: 'الفقرات الصدرية (Thoracic Spine)',
+                    region: 'الفقرات الصدرية وأعلى الظهر (Thoracic Spine)',
                     icon: '🛡️',
-                    vertebrae: 'T3 - T8 (المفاصل الضلعية الفقرية)',
+                    structures: 'T3 - T8 والمفاصل الضلعية الفقرية (Costovertebral Joints)',
                     nerves: 'الأعصاب الوربية بين الأضلاع (Intercostal Nerves)',
-                    clinicalImpact: 'مسؤولة عن تثبيت القفص الصدري وعضلات ما بين لوحي الكتف (متلازمة الأبهر)، وتسبب تشنجاً حاداً وضيق نفس ميكانيكي عند التنفس العميق أو الجلوس الطويل.'
+                    clinicalImpact: 'مسؤولة عن تثبيت القفص الصدري وعضلات ما بين لوحي الكتف (متلازمة الأبهر)؛ تسبب تشنجاً حاداً وضيق نفس ميكانيكي عند التنفس العميق أو الجلوس الطويل.'
                 });
             }
             if (isLumbar) {
                 items.push({
-                    region: 'الفقرات القطنية (Lumbar Spine)',
+                    region: 'الفقرات القطنية وأأسفل الظهر (Lumbar Spine)',
                     icon: '⚡',
-                    vertebrae: 'L4 - L5 و L5 - S1 (المفصل القطني العجزي)',
+                    structures: 'L4 - L5 و L5 - S1 (المفصل القطني العجزي)',
                     nerves: 'الجذور العصبية L4, L5, S1 (عصب النسا Sciatic Nerve)',
                     clinicalImpact: 'تتحمل 80% من وزن الجسم المحوري وتعتبر الأكثر عرضة للضغط الغضروفي؛ انضغاطها يسبب ألم أسفل الظهر الممتد إلى المقعدة، خلف الفخذ، بطة الساق، والقدم.'
                 });
@@ -5111,41 +5199,57 @@
                 items.push({
                     region: 'الفقرات العجزية والمفصل الحوضي (Sacral & Pelvis)',
                     icon: '⚖️',
-                    vertebrae: 'S1 - S4 والمفصل العجزي الحرقفي (SI Joint)',
+                    structures: 'S1 - S4 والمفصل العجزي الحرقفي (SI Joint)',
                     nerves: 'الضفيرة العجزية وعصب العضلة الكمثرية',
-                    clinicalImpact: 'مسؤولة عن ثبات الحوض والمشية المتزنة؛ اختلال تموضعها يسبب انحباس عصب النسا تحت العضلة الكمثرية وألماً ميكانيكياً عند الوقوف أو تقليب وضعية النوم.'
+                    clinicalImpact: 'مسؤولة عن ثبات الحوض والمشية المتزنة؛ اختلال تموضعها يسبب ألماً حاداً عند الانتقال من الجلوس للوقوف أو تقليب وضعية النوم.'
                 });
             }
-
+        
+            const cardTitle = isPeripheral
+                ? (isTrauma ? 'التحديد التشريحي للإصابة والمفاصل المتأثرة (Trauma & Joint Mapping)' : 'التحديد التشريحي للبنى والمفاصل المصابة (Anatomical & Joint Mapping)')
+                : 'التحديد التشريحي للمقاطع الفقرية والجذور العصبية (Vertebral & Neurological Mapping)';
+        
+            const cardSubtitle = isPeripheral
+                ? (isTrauma ? 'تحليل مسار الصدمة الميكانيكية، العظام، الأوتار، والأربطة المتأثرة بالسقوط أو الرضّ المباشر' : 'تحديد العظام، المفاصل، الأوتار، والأربطة المتأثرة بموضع الإصابة وميكانيكية الحركة')
+                : 'تحديد مقاطع العمود الفقري والجذور العصبية المرتبطة بموضع الألم والضغط الميكانيكي';
+        
+            const headerBadge = isPeripheral
+                ? (isTrauma ? 'إصابة رضية ميكانيكية' : 'فحص المفاصل والأنسجة الطرفية')
+                : 'تحليل بيوميكانيكي فقري دقيق';
+        
+            const headerIcon = isPeripheral ? (isTrauma ? '🩹' : '🩺') : '🦴';
+            const targetLabel = isPeripheral ? '🎯 البنى التشريحية والمفاصل المستهدفة:' : '🎯 المقاطع الفقرية المستهدفة:';
+            const nerveLabel = isPeripheral ? '⚡ الأعصاب والمسارات الحركية:' : '⚡ الجذور العصبية المرتبطة:';
+        
             return `
-                <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%); border: 1.5px solid #38bdf8; border-radius: 14px; padding: 18px; margin-bottom: 20px; box-shadow: 0 6px 25px rgba(0,0,0,0.45);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(56, 189, 248, 0.25); padding-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%); border: 1.5px solid #38bdf8; border-radius: 14px; padding: 20px; margin-bottom: 22px; box-shadow: 0 6px 25px rgba(0,0,0,0.45);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid rgba(56, 189, 248, 0.25); padding-bottom: 10px; flex-wrap: wrap; gap: 8px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 1.5em;">🦴</span>
+                            <span style="font-size: 1.6em;">${headerIcon}</span>
                             <div>
-                                <h4 style="color: #38bdf8; margin: 0; font-size: 1.05em; font-weight: 800;">التحديد التشريحي للفقرات المصابة المحتملة (Vertebral Mapping)</h4>
-                                <div style="color: #94a3b8; font-size: 0.76em; margin-top: 2px;">تحديد مقاطع العمود الفقري والجذور العصبية المرتبطة بموضع الألم</div>
+                                <h4 style="color: #38bdf8; margin: 0; font-size: 1.1em; font-weight: 800;">${cardTitle}</h4>
+                                <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">${cardSubtitle}</div>
                             </div>
                         </div>
-                        <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #7dd3fc; font-size: 0.76em; padding: 2px 10px; border-radius: 12px; font-weight: bold;">
-                            تحليل بيوميكانيكي دقيق
+                        <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #7dd3fc; font-size: 0.78em; padding: 3px 10px; border-radius: 12px; font-weight: bold;">
+                            ${headerBadge}
                         </span>
                     </div>
-
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px;">
+        
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
                         ${items.map(it => `
-                            <div style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between;">
+                            <div style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
                                 <div>
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                        <strong style="color: #f8fafc; font-size: 0.92em;">${it.icon} ${it.region}</strong>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <strong style="color: #f8fafc; font-size: 0.98em;">${it.icon} ${it.region}</strong>
                                     </div>
-                                    <div style="color: var(--primary-gold); font-size: 0.85em; font-weight: bold; margin-bottom: 3px;">
-                                        🎯 الفقرات المستهدفة: <span>${it.vertebrae}</span>
+                                    <div style="color: var(--primary-gold); font-size: 0.88em; font-weight: bold; margin-bottom: 6px; line-height: 1.5;">
+                                        ${targetLabel} <span style="color: #fef08a; font-weight: normal;">${it.structures}</span>
                                     </div>
-                                    <div style="color: #6ee7b7; font-size: 0.8em; font-weight: bold; margin-bottom: 5px;">
-                                        ⚡ الأعصاب المتأثرة: <span>${it.nerves}</span>
+                                    <div style="color: #6ee7b7; font-size: 0.84em; font-weight: bold; margin-bottom: 8px; line-height: 1.5;">
+                                        ${nerveLabel} <span style="color: #a7f3d0; font-weight: normal;">${it.nerves}</span>
                                     </div>
-                                    <div style="color: #cbd5e1; font-size: 0.8em; line-height: 1.5;">
+                                    <div style="color: #cbd5e1; font-size: 0.83em; line-height: 1.6; border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 6px;">
                                         ${it.clinicalImpact}
                                     </div>
                                 </div>
@@ -5710,7 +5814,7 @@
                     </div>
 
                     <!-- 3.1 التحديد التشريحي للفقرات المصابة المحتملة (Vertebral Mapping) -->
-                    ${generateVertebralMappingCard(rootLevel, symptomsText)}
+                    ${generateVertebralMappingCard(p.painArea || p.selectedPoint || rootLevel, symptomsText, { ...p, primaryDiagnosis: diagTitle, rootLevel: rootLevel, painAreaTitle: p.painArea })}
 
                     <!-- 4. تقييم الألم والأعراض المسجلة -->
                     <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 14px; margin-bottom: 20px;">
@@ -8318,13 +8422,13 @@ function copyAdminCode(code) {
 
         // 🚀 تحديث الكاش ومزامنة السحابة وبث التحديث العالمي بضغطة واحدة
         async function handleUnifiedUpdateAndBroadcast() {
-            if (confirm('🚀 تحديث وبث الإصدار (v32.50):\n\nهل تود تحديث الكاش المحلي، ومزامنة السجلات، وبث التحديث الجديد لكافة هواتف وأجهزة المراجعين المتصلة فوراً؟')) {
+            if (confirm('🚀 تحديث وبث الإصدار (v32.70):\n\nهل تود تحديث الكاش المحلي، ومزامنة السجلات، وبث التحديث الجديد لكافة هواتف وأجهزة المراجعين المتصلة فوراً؟')) {
                 // 1. بث التحديث السحابي الشامل
                 try {
                     if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                         SmartCloudSync.broadcastAppVersionUpdate({
-                            version: 'v32.50',
-                            title: 'تحديث المنظومة (v32.50)',
+                            version: 'v32.70',
+                            title: 'تحديث المنظومة (v32.70)',
                             timestamp: Date.now()
                         });
                     }
@@ -8347,17 +8451,17 @@ function copyAdminCode(code) {
         }
         window.handleUnifiedUpdateAndBroadcast = handleUnifiedUpdateAndBroadcast;
 
-        // بث رسالة التحديث الجديد الشامل (v32.50) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
+        // بث رسالة التحديث الجديد الشامل (v32.70) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
         function handleBroadcastGlobalVersion() {
-            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v32.50) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
+            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v32.70) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
                 if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                     SmartCloudSync.broadcastAppVersionUpdate({
-                        version: 'v32.50',
-                        title: 'تحديث المنظومة (v32.50)',
+                        version: 'v32.70',
+                        title: 'تحديث المنظومة (v32.70)',
                         timestamp: Date.now()
                     });
                 }
-                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v32.50) عبر شبكة البث اللحظي MQTT و NTFY لكافة الأجهزة!');
+                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v32.70) عبر شبكة البث اللحظي MQTT و NTFY لكافة الأجهزة!');
             }
         }
         window.handleBroadcastGlobalVersion = handleBroadcastGlobalVersion;
@@ -8826,7 +8930,7 @@ function copyAdminCode(code) {
 <script>
 // ===== تحديث تلقائي للوحة الإدارة: تقارن إصدارها بإصدار الأداة المنشور (sw.js) وتحدّث نفسها =====
 (function () {
-    const ADMIN_VER = 'v32.50';
+    const ADMIN_VER = 'v32.70';
     window.ADMIN_VER = ADMIN_VER;
     let busy = false;
     async function check(force) {
