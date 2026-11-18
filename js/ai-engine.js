@@ -472,9 +472,73 @@ ${greetingInstruction}
     },
 
     // معالجة رد المريض وتوليد السؤال السريري التالي المناسب لحالته
+    // موائم الصياغة اللغوية للمؤنث لضمان مخاطبة المراجعات بصيغة التأنيث العربية الدقيقة
+    adaptTextToFeminine(str) {
+        if (!str) return str;
+        const replaceWord = (s, from, to) => {
+            const re = new RegExp(`(^|[^\\u0621-\\u064A])(?:([وفبكل]))?${from}([^\\u0621-\\u064A]|$)`, 'g');
+            return s.replace(re, (match, p1, p2, p3) => `${p1 || ''}${p2 || ''}${to}${p3 || ''}`);
+        };
+
+        let res = str;
+        const map = [
+            ['أهلاً وسهلاً بك', 'أهلاً وسهلاً بكِ'],
+            ['أهلاً بك', 'أهلاً بكِ'],
+            ['طمني', 'طمنيني'],
+            ['كيف تشعر', 'كيف تشعرين'],
+            ['تشعر', 'تشعرين'],
+            ['تعاني', 'تعانين'],
+            ['تلاحظ', 'تلاحظين'],
+            ['تجد', 'تجدين'],
+            ['تشتكي', 'تشتكين'],
+            ['تستطيع', 'تستطيعين'],
+            ['تحتاج', 'تحتاجين'],
+            ['تستخدم', 'تستخدمين'],
+            ['تتعثر', 'تتعثرين'],
+            ['وضح لي', 'وضحي لي'],
+            ['حدثني', 'حدثيني'],
+            ['أخبرني', 'أخبريني'],
+            ['صف لي', 'صفي لي'],
+            ['تفضل', 'تفضلي'],
+            ['يا غالي', 'يا أختي الكريمة'],
+            ['يا طيب', 'يا أختي الكريمة'],
+            ['عنك', 'عنكِ'],
+            ['ألمك', 'ألمكِ'],
+            ['حالتك', 'حالتكِ'],
+            ['رقبتك', 'رقبتكِ'],
+            ['حركتك', 'حركتكِ'],
+            ['نومك', 'نومكِ'],
+            ['عملك', 'عملكِ'],
+            ['مشيك', 'مشيكِ'],
+            ['روتينك', 'روتينكِ'],
+            ['يدك', 'يدكِ'],
+            ['قدمك', 'قدمكِ'],
+            ['ذراعك', 'ذراعكِ'],
+            ['يوقظك', 'يوقظكِ'],
+            ['تمنعك', 'تمنعكِ'],
+            ['سلامتك', 'سلامتكِ'],
+            ['سؤالك', 'سؤالكِ'],
+            ['معك', 'معكِ'],
+            ['لمساعدتك', 'لمساعدتكِ'],
+            ['أدخل رقم هاتفك', 'أدخلي رقم هاتفكِ'],
+            ['أدخل رقمك', 'أدخلي رقمكِ'],
+            ['تزويدي برقم هاتفك', 'تزويدي برقم هاتفكِ'],
+            ['تقريرك', 'تقريركِ'],
+            ['تقييمك', 'تقييمكِ']
+        ];
+
+        for (const [from, to] of map) {
+            res = replaceWord(res, from, to);
+        }
+        return res;
+    },
+
     // معالجة رد المريض وتوليد رد تفاعلي طبي وإنساني فائق الذكاء (Conversational Clinical Agent)
     async advanceClinicalDialogue(context) {
-        const { currentStep, history, painPointTitle, patientName, patientPhone, patientVitals, lastUserMessage } = context;
+        const { currentStep, history, painPointTitle, patientName, patientPhone, patientVitals, lastUserMessage, patientGender } = context;
+        const allContextText = (history || []).map(h => h.text).join(' ') + ' ' + (lastUserMessage || '') + ' ' + (patientName || '');
+        const resolvedGender = patientGender || (typeof detectArabicGender === 'function' ? detectArabicGender(patientName || '', allContextText) : 'male');
+        const isFemale = (resolvedGender === 'female');
         const specType = context.specialtyType || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint && currentSelectedPoint.specialtyType) || null;
 
         const key = WADA3AN_AI_CONFIG.getApiKey();
@@ -524,6 +588,17 @@ ${greetingInstruction}
             : ((typeof getResolvedPatientPhone === 'function') ? getResolvedPatientPhone() : '');
         const hasValidPhoneNow = (resolvedKnownPhone && String(resolvedKnownPhone).replace(/\D/g, '').length >= 7);
 
+        const genderDirective = isFemale ? `
+🌟 ضابط صيغة المخاطبة وجنس المراجع (حاسم ومطلق - المراجع أنثى):
+- المراجع أنثى (اسمها: ${patientName || 'المراجعة الكريمة'}).
+⛔ تنبيه سريري ولغوي حاسم: يجب مخاطبتها بصيغة المؤنث حصراً ومطلقاً وبشكل صارم في كافة الأفعال، الضمائر، والصفات طوال الحوار بلا أي استثناء:
+  * (أهلاً بكِ يا ${patientName || 'أختي الكريمة'} / كيف تشعرين؟ / هل تعانين؟ / أين يمتد ألمكِ؟ / أخبريني / هل تلاحظين؟ / صفي لي / سلامتكِ / دمتِ بخير / تفضلي / أدخلي رقم هاتفكِ / كيف يؤثر على نومكِ وعملكِ؟).
+⛔ ممنوع منعاً باتاً ومطلقاً مخاطبة هذه المراجعة بصيغة المذكر (ممنوع: كيف تشعر، هل تعاني، أخبرني، ألمك، صف لي، أدخل رقمك، يا طيب)!
+` : `
+🌟 ضابط صيغة المخاطبة وجنس المراجع:
+- المراجع ذكر (اسمه: ${patientName || 'المراجع الكريم'}). خاطبه بصيغة المذكر الوقورة المباشرة بدفء واحترام.
+`;
+
         const systemPrompt = `
 أنتِ الدكتورة سارة (استشارية التأهيل والتقويم السريري) في «وداعاً للألم».
 أنتِ طبيبة استشارية سريرية ذكية ومتفاعلة 100%، دافئة ومطمئنة ولستِ آلة جامدة.
@@ -532,8 +607,10 @@ ${specializedPromptSection}
 المراجع اختار موضع الشكوى على المجسم: [${painPointTitle || 'العمود الفقري والمفاصل'}].
 بيانات المريض المعروفة حتى الآن:
 - الاسم: ${patientName || 'لم يُذكر بعد'}
+- الجنس: ${isFemale ? 'أنثى (امرأة / سيدة - يجب مخاطبتها بصيغة المؤنث حصراً ومطلقاً)' : 'ذكر (رجل)'}
 - المؤشرات الحيوية: العمر [${patientVitals?.age || 'غير محدد'}] | الوزن [${patientVitals?.weight || 'غير محدد'}] | الطول [${patientVitals?.height || 'غير محدد'}]
 - حالة المراجع في النظام: ${hasValidPhoneNow ? `[مراجع مسجل رسمياً ولديه ملف طبي ورقم هاتف معتمد (${resolvedKnownPhone})]` : '[مراجع جديد غير مسجل ولم يوثق هاتفه بعد]'}
+${genderDirective}
 - سجل الحوار حتى الآن:
 ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h.text}`).join('\n')}
 - رسالة المريض الأخيرة: "${lastUserMessage}"
@@ -713,9 +790,13 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                     const pNameStr = (patientName && patientName !== 'غير محدد') ? ` يا ${patientName}` : '';
                     message = message.replace(/(?:اكتمل الآن تقييمك|أدخل رقم هاتفك|يرجى تزويدي برقم هاتفك|لفتح التقرير الطبي).*$/s, '').trim();
                     if (!message || message.length < 20) {
-                        message = `لفحص حالتك والوقوف على أصل المشكلة بدقة${pNameStr}، صف لي كيف يتصرف الألم مع الحركة والجلوس؟ وهل تشعر بأي خدر، تنميل، طقطقة، أو شعور بعدم ثبات في المفصل؟`;
+                        message = isFemale
+                            ? `لفحص حالتكِ والوقوف على أصل المشكلة بدقة${pNameStr}، صفي لي كيف يتصرف الألم مع الحركة والجلوس؟ وهل تشعرين بأي خدر، تنميل، طقطقة، أو شعور بعدم ثبات في المفصل؟`
+                            : `لفحص حالتك والوقوف على أصل المشكلة بدقة${pNameStr}، صف لي كيف يتصرف الألم مع الحركة والجلوس؟ وهل تشعر بأي خدر، تنميل، طقطقة، أو شعور بعدم ثبات في المفصل؟`;
                     } else if (!message.includes('؟')) {
-                        message += `\n\nواستكمالاً للتدقيق الطبي، هل تلاحظ اشتداد الألم عند حركة معينة أو أثناء الراحة والنوم؟`;
+                        message += isFemale
+                            ? `\n\nواستكمالاً للتدقيق الطبي، هل تلاحظين اشتداد الألم عند حركة معينة أو أثناء الراحة والنوم؟`
+                            : `\n\nواستكمالاً للتدقيق الطبي، هل تلاحظ اشتداد الألم عند حركة معينة أو أثناء الراحة والنوم؟`;
                     }
                 }
 
@@ -739,19 +820,28 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                     isReady = false;
                     const pNameStr = (patientName && patientName !== 'غير محدد') ? ` يا ${patientName}` : '';
                     if (!message || message.length < 10) {
-                        message = `اكتمل الآن تقييمك السريري الشامل وتحددت طبيعة المشكلة بدقة${pNameStr}! يرجى تزويدي برقم هاتفك لفتح التقرير الطبي الشامل وربط ملفك بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:`;
+                        message = isFemale
+                            ? `اكتمل الآن تقييمكِ السريري الشامل وتحددت طبيعة المشكلة بدقة${pNameStr}! يرجى تزويدي برقم هاتفكِ لفتح التقرير الطبي الشامل وربط ملفكِ بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:`
+                            : `اكتمل الآن تقييمك السريري الشامل وتحددت طبيعة المشكلة بدقة${pNameStr}! يرجى تزويدي برقم هاتفك لفتح التقرير الطبي الشامل وربط ملفك بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:`;
                     }
                 }
 
                 // ننتقل لطلب الهاتف فقط إذا طلب الطبيب الهاتف صراحة بعد اكتمال الاستقصاء وكان الهاتف مفقوداً، وإلا فإن الحوار الطبي السريري يستمر بحرية
                 const nextStep = isReady ? 'completed' : (isExplicitlyAskingPhone ? 'ask_phone' : 'chatting');
+                if (isFemale && message) {
+                    message = this.adaptTextToFeminine(message);
+                }
                 return { message, quickReplies: [], nextStep, isReady, extractedName, extractedFullName, extractedPhone };
             }
         } catch (e) {
             console.warn('Dialogue advance error:', e);
         }
 
-        return this.generateFallbackDialogueStep(context);
+        const fallbackRes = this.generateFallbackDialogueStep(context);
+        if (isFemale && fallbackRes && fallbackRes.message) {
+            fallbackRes.message = this.adaptTextToFeminine(fallbackRes.message);
+        }
+        return fallbackRes;
     },
 
     // استدعاء مباشر لـ Gemini مع محاولة تلقائية عبر النماذج وتدوير حوض المفاتيح عند بلوغ الحصة (Key Rotation)
@@ -821,7 +911,11 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
 
     // ردود تفاعلية سريرية ذكية تستجيب لمحتوى كلام المراجع الفعلي بمرونة إنسانية عالية
     generateFallbackDialogueStep(context) {
-        const { currentStep, painPointTitle, patientName, patientVitals, lastUserMessage, history } = context;
+        const { currentStep, painPointTitle, patientName, patientVitals, lastUserMessage, history, patientGender } = context;
+        const allContextTextFallback = (history || []).map(h => h.text).join(' ') + ' ' + (lastUserMessage || '') + ' ' + (patientName || '');
+        const resolvedGenderFallback = patientGender || (typeof detectArabicGender === 'function' ? detectArabicGender(patientName || '', allContextTextFallback) : 'male');
+        const isFemale = (resolvedGenderFallback === 'female');
+        
         const resolvedFallbackPhone = (context.patientPhone && String(context.patientPhone).replace(/\D/g, '').length >= 7)
             ? context.patientPhone
             : ((typeof getResolvedPatientPhone === 'function') ? getResolvedPatientPhone() : '');
@@ -944,14 +1038,20 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                 default: // lower_back_pelvis
                     return {
                         provocation: `هل يزداد الألم عند الجلوس الطويل والانحناء للأمام، أم عند الوقوف المستقيم والمشي؟`,
-                        numbness: `هل يمتد هذا الشعور كخدر أو لسعة كهربائية من أسفل الظهر والمؤخرة نحو الفخذ والساق (أعراض عرق النسا)؟`,
+                        numbness: `هل يمتد هذا الشعور كخدر أو لسعة كهربائية من أسفل الظهر وعضلات الإلية والورك نحو الفخذ والساق (أعراض عرق النسا)؟`,
                         stiffness: `هل تشعر بتيبس وتشنج في أسفل الظهر عند الاستيقاظ صباحاً أو بعد الجلوس الطويل؟`,
                         duration: `منذ متى تعاني من ألم **${titleStr}**، وهل يوقظك الألم من النوم أو يعيق حركتك؟`
                     };
             }
         };
 
-        const anatQ = getAnatomicalQuestions(anatCat, title);
+        const rawAnatQ = getAnatomicalQuestions(anatCat, title);
+        const anatQ = {
+            provocation: this.adaptTextToFeminine(rawAnatQ.provocation),
+            numbness: this.adaptTextToFeminine(rawAnatQ.numbness),
+            stiffness: this.adaptTextToFeminine(rawAnatQ.stiffness),
+            duration: this.adaptTextToFeminine(rawAnatQ.duration)
+        };
 
         // تتبع شامل للمحادثة لمنع تكرار أي سؤال سابق
         const allHistoryText = (history || []).map(h => h.text).join(' ') + ' ' + userText;

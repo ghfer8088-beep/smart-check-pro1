@@ -125,16 +125,21 @@ function detectArabicGender(name, textContext = '') {
     const cleanName = (name || '').trim();
     const context = `${textContext || ''} ${cleanName}`;
 
-    // 1. فحص الكلمات الصريحة الدالة على الأنوثة في السياق السريري (مع استبعاد الكلمات المشتركة مثل 'حمل' بمعنى رفع الأوزان أو 'أم' بمعنى أو)
-    if (/(?:^|\s|[،.؟!,])(?:أنثى|انثى|سيدة|سيده|امرأة|امراة|آنسة|انسه|فتاة|بنت|حامل\s*في|فترة\s*الحمل|ولادة\s*حديثة|مرضعة|مرضعه|أختي|اختي|والدتي|أمي|امي|ابنتي|زوجتي)(?:$|\s|[،.؟!,])/i.test(context)) {
+    // 1. فحص الكلمات الصريحة الدالة على الأنوثة في السياق السريري
+    if (/(?:^|\s|[،.؟!,])(?:أنثى|انثى|سيدة|سيده|امرأة|امراة|آنسة|انسه|فتاة|بنت|مدام|حامل\s*في|فترة\s*الحمل|ولادة\s*حديثة|مرضعة|مرضعه|أختي|اختي|أختكم|اختكم|الأخت|الاخت|والدتي|أمي|امي|ابنتي|زوجتي|متزوجة|متزوجه|مطلقة|مطلقه|أرملة|ارمله)(?:$|\s|[،.؟!,])/i.test(context)) {
         return 'female';
     }
 
-    // استخراج الكلمة الأولى المجردة (الاسم الأول للمراجع)
-    const firstName = cleanName.split(/\s+/)[0].replace(/[^\u0621-\u064A]/g, '');
-    if (!firstName) return 'male';
+    // تجريد البادئات والضمائر مثل "أنا" أو "معك" أو "اسمي" أو "الأخت" للوصول للاسم الحقيقي
+    const strippedName = cleanName
+        .replace(/^(?:أنا|انا|معك|معاك|اسمي|اسم|الاسم|الآسم|الإسم|الأخت|الاخت|أختكم|اختكم|الأخ|الاخ|أخوكم|اخوكم|يا|المدعو|المدعوة)\s+/gi, '')
+        .trim();
 
-    // 2. معجم الأسماء المؤنثة العربية الشامل والدقيق (متضمناً نسرين وكافة الأسماء)
+    // فحص جميع كلمات الاسم والسياق
+    const nameWords = strippedName.split(/\s+/).map(w => w.replace(/[^\u0621-\u064A]/g, '')).filter(Boolean);
+    const allContextWords = context.split(/\s+/).map(w => w.replace(/[^\u0621-\u064A]/g, '')).filter(Boolean);
+
+    // 2. معجم الأسماء المؤنثة العربية الشامل والدقيق (متضمناً نسرين وجواهر وكافة الأسماء)
     const femaleNamesSet = new Set([
         'نسرين', 'سارة', 'ساره', 'مريم', 'فاطمة', 'فاطمه', 'عائشة', 'عائشه', 'خديجة', 'خديجه',
         'زينب', 'رقية', 'رقيه', 'إسراء', 'اسراء', 'إيمان', 'ايمان', 'آية', 'ايه', 'دعاء',
@@ -165,9 +170,16 @@ function detectArabicGender(name, textContext = '') {
         'سما', 'سماء', 'صفا', 'تقوى', 'ميسون', 'فاطين', 'علا'
     ]);
 
-    if (femaleNamesSet.has(firstName)) {
-        return 'female';
+    for (const w of nameWords) {
+        if (femaleNamesSet.has(w)) return 'female';
     }
+    for (const w of allContextWords) {
+        if (femaleNamesSet.has(w)) return 'female';
+    }
+
+    // استخراج الكلمة الأولى المجردة للتحليل الصرفي
+    const firstName = nameWords[0] || cleanName.split(/\s+/)[0].replace(/[^\u0621-\u064A]/g, '');
+    if (!firstName) return 'male';
 
     // 3. استثناء الأسماء المذكرة المشهورة المنتهية بتاء مربوطة
     const maleWithTaaMarbuta = /^(حمزة|حمزه|أسامة|اسامة|اسامه|معاوية|معاويه|طلحة|طلحه|عنترة|عنتره|قتادة|قتاده|عبيدة|عبيده|حذيفة|حذيفه|عكرمة|عكرمه|ميسرة|ميسره|ربيعة|ربيعه|سلامة|سلامه|طرفة|طرفه|جمعة|جمعه|عطية|عطيه|شحتة|شحته|طلبة|طلبه)$/;
@@ -15137,6 +15149,8 @@ async function sendChatMessage() {
             'حكيتلك', 'قلتلك', 'حكيت', 'قلت', 'راجع', 'موجوع', 'متألم', 'شخص', 'انسان',
             'مرحبا', 'صباح', 'مساء', 'سلام', 'هلا', 'اهلين', 'أهلين', 'شكرا', 'يسلمو', 'نعم',
             'السلام', 'عليكم', 'وعليكم', 'الخير', 'أهلا', 'أهلاً',
+            'أنا', 'انا', 'معك', 'معاك', 'الأخت', 'الاخت', 'الأخ', 'الاخ', 'أختكم', 'اختكم', 'أخوكم', 'اخوكم',
+            'مدام', 'سيدة', 'آنسة', 'انسه', 'إني', 'اني',
             'اسم', 'الاسم', 'الآسم', 'الإسم', 'اسمي', 'اسمها', 'اسمه', 'اسمك',
             'عمري', 'عمر', 'وزني', 'وزن', 'طولي', 'طول', 'كيلو', 'سنة', 'سم',
             'وعمري', 'ووزني', 'وطولي', 'وسني', 'وأنا', 'وانا',
@@ -15147,32 +15161,35 @@ async function sendChatMessage() {
             'ممكن', 'ساعدني', 'سؤال', 'استفسار', 'طيب', 'ماشي', 'اوك', 'أوك', 'يلا'
         ];
 
-        // استخراج الاسم الحقيقي بدقة وتجريده من البادئات مثل "الاسم" أو "الآسم"
+        // استخراج الاسم الحقيقي بدقة وتجريده من البادئات مثل "الاسم" أو "أنا" أو "معك"
         const sanitizeNameResult = (raw) => {
             if (!raw) return null;
             let clean = raw.trim()
                 .replace(/^يا\s+/i, '')
+                .replace(/^(?:أنا|انا|معك|معاك|أختكم|اختكم|الأخت|الاخت|أخوكم|اخوكم|إني|اني)\s+/i, '')
                 .replace(/^(?:الاسم|الآسم|الإسم|اسمي|اسمها|اسمه|اسمك|اسم)\s*[:=-]?\s*/i, '')
+                .replace(/^(?:أنا|انا|معك|معاك|أختكم|اختكم|الأخت|الاخت|أخوكم|اخوكم|إني|اني)\s+/i, '')
                 .replace(/^[،,.-]+/g, '')
                 .replace(/[،,.:؛!?\d]+$/g, '')
                 .trim();
             if (!clean || clean.length < 2) return null;
             
-            const words = clean.split(/\s+/).filter(w => w && w.length >= 2);
+            let words = clean.split(/\s+/).filter(w => w && w.length >= 2);
             if (words.length === 0) return null;
 
-            // فحص واستخراج الكلمات الصالحة للاسم (قطع الاسم عند أي مؤشر حيوي أو كلمة محظورة)
-            let skipFirst = false;
-            let firstWord = words[0];
-            let lowerFirst = firstWord.toLowerCase();
-            if (forbiddenWords.includes(lowerFirst) || lowerFirst.startsWith('وعمر') || lowerFirst.startsWith('ووزن') || lowerFirst.startsWith('وطول') || lowerFirst.startsWith('وسن')) {
-                // إذا كانت الكلمة الأولى من المحظورات (مثل كتابة "الاسم لجين") نتجاوزها للكلمة التالية
-                skipFirst = true;
+            // تجاوز أي كلمات تمهيدية من المحظورات (مثل: أنا الاخت جواهر -> جواهر)
+            while (words.length > 0) {
+                let lw = words[0].toLowerCase();
+                if (forbiddenWords.includes(lw) || lw.startsWith('وعمر') || lw.startsWith('ووزن') || lw.startsWith('وطول') || lw.startsWith('وسن')) {
+                    words.shift();
+                } else {
+                    break;
+                }
             }
+            if (words.length === 0) return null;
 
-            const searchWords = skipFirst ? words.slice(1) : words;
             const validWords = [];
-            for (let w of searchWords) {
+            for (let w of words) {
                 let lw = w.toLowerCase();
                 if (forbiddenWords.includes(lw) || lw.startsWith('وعمر') || lw.startsWith('ووزن') || lw.startsWith('وطول') || lw.startsWith('وسن') || lw.startsWith('وعند') || lw.startsWith('اعان') || lw.startsWith('أعان')) {
                     break;
@@ -15198,6 +15215,7 @@ async function sendChatMessage() {
                     clinicalDialogueState.patientName = res.full || res.first;
                     clinicalDialogueState.patientFullName = res.full || res.first;
                     clinicalDialogueState.patientFirstName = res.first;
+                    clinicalDialogueState.patientGender = detectArabicGender(clinicalDialogueState.patientName, text);
                     break;
                 }
             }
@@ -15212,6 +15230,7 @@ async function sendChatMessage() {
                     clinicalDialogueState.patientName = res.full || res.first;
                     clinicalDialogueState.patientFullName = res.full || res.first;
                     clinicalDialogueState.patientFirstName = res.first;
+                    clinicalDialogueState.patientGender = detectArabicGender(clinicalDialogueState.patientName, text);
                 }
             }
         }
@@ -15650,12 +15669,16 @@ async function sendChatMessage() {
 
     // الانتقال للخطوة التالية في الحوار (مع حماية تامة ضد التوقف أو التعليق)
     let nextResponse;
+    const resolvedGender = clinicalDialogueState.patientGender || detectArabicGender(clinicalDialogueState.patientName || '', text);
+    clinicalDialogueState.patientGender = resolvedGender;
+
     try {
         nextResponse = await Wada3anAiEngine.advanceClinicalDialogue({
             currentStep: clinicalDialogueState.step,
             history: clinicalDialogueState.history,
             painPointTitle: currentSelectedPoint.title,
             patientName: clinicalDialogueState.patientName,
+            patientGender: resolvedGender,
             patientPhone: clinicalDialogueState.patientPhone,
             patientVitals: clinicalDialogueState.patientVitals,
             lastUserMessage: text,
@@ -15668,6 +15691,7 @@ async function sendChatMessage() {
             history: clinicalDialogueState.history,
             painPointTitle: currentSelectedPoint.title,
             patientName: clinicalDialogueState.patientName,
+            patientGender: resolvedGender,
             patientPhone: clinicalDialogueState.patientPhone,
             patientVitals: clinicalDialogueState.patientVitals,
             lastUserMessage: text,
@@ -15684,6 +15708,7 @@ async function sendChatMessage() {
             history: clinicalDialogueState.history,
             painPointTitle: currentSelectedPoint.title,
             patientName: clinicalDialogueState.patientName,
+            patientGender: resolvedGender,
             patientVitals: clinicalDialogueState.patientVitals,
             lastUserMessage: text,
             specialtyType: (currentSelectedPoint && currentSelectedPoint.specialtyType) || null
@@ -15693,6 +15718,7 @@ async function sendChatMessage() {
     // التقاط الاسم ورقم الهاتف في حال استخرجهما الذكاء الاصطناعي من سياق الحديث
     if (nextResponse.extractedName && !clinicalDialogueState.patientName) {
         clinicalDialogueState.patientName = nextResponse.extractedName;
+        clinicalDialogueState.patientGender = detectArabicGender(clinicalDialogueState.patientName, text);
         refreshUserMessageHeaders(clinicalDialogueState.patientName);
     }
     if (nextResponse.extractedFullName) {
