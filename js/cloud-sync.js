@@ -3845,7 +3845,7 @@
     function handleAppVersionUpdateMessage(data) {
         if (!data || !data.version) return;
         const newVer = String(data.version).trim();
-        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v32.50');
+        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v33.00');
         const numNew = _parseVersionNumber(newVer);
         const numCur = _parseVersionNumber(curVer);
 
@@ -3864,7 +3864,7 @@
     }
 
     function broadcastAppVersionUpdate(options = {}) {
-        const ver = options.version || (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v32.50');
+        const ver = options.version || (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v33.00');
         const payload = {
             type: 'app_version_update',
             version: ver,
@@ -4030,11 +4030,12 @@
                     const curActId = curActive.patientId || curActive.id || '';
                     const curActPh = String(curActive.phone || '').replace(/\D/g, '');
                     const curActNm = String(curActive.fullName || curActive.name || '').trim().replace(/\s+/g, '_').toLowerCase();
+                    const examOk = !unlockData.examId || !curActive.examId || curActive.examId === unlockData.examId;
                     if (
-                        unlockData.sameBrowserForceUnlock ||
-                        (curActId && allIds.includes(curActId)) ||
-                        (pPhone.length >= 7 && curActPh.length >= 7 && curActPh.slice(-8) === pPhone.slice(-8)) ||
-                        (cleanNameKey && curActNm && curActNm === cleanNameKey)
+                        examOk && (
+                            unlockData.sameBrowserForceUnlock ||
+                            (curActId && allIds.includes(curActId))
+                        )
                     ) {
                         curActive.isPaidUnlocked = true;
                         curActive.paymentType = unlockType;

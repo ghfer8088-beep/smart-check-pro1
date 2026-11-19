@@ -611,12 +611,102 @@ const SmartDB = (function() {
     async function deletePatient(patientId) {
         try {
             const baseId = (patientId || '').replace(/(_notif_.*|_test\d*|_cloud_test.*|_\d{10,})$/, '');
+            const normCleanName = (s) => String(s || '').toLowerCase().replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/[^\u0621-\u064Aa-z0-9]/gi, '');
+            const delMeta = [];
+            try {
+                const rawCur = localStorage.getItem('smart_patient_' + patientId);
+                if (rawCur) delMeta.push(JSON.parse(rawCur));
+                if (baseId) {
+                    const rawBase = localStorage.getItem('smart_patient_' + baseId);
+                    if (rawBase) delMeta.push(JSON.parse(rawBase));
+                }
+                const allPtsSnap = JSON.parse(localStorage.getItem('smart_all_patients') || '[]');
+                if (Array.isArray(allPtsSnap)) {
+                    allPtsSnap.forEach(p => {
+                        const pId = p?.patientId || p?.id || '';
+                        if (pId === patientId || (baseId && pId.startsWith(baseId))) delMeta.push(p);
+                    });
+                }
+            } catch(e) {}
+
             localStorage.removeItem('smart_patient_' + patientId);
             if (baseId) localStorage.removeItem('smart_patient_' + baseId);
             localStorage.removeItem('smart_daily_logs_' + patientId);
             if (baseId) localStorage.removeItem('smart_daily_logs_' + baseId);
             localStorage.removeItem('smart_assessments_' + patientId);
             if (baseId) localStorage.removeItem('smart_assessments_' + baseId);
+            localStorage.removeItem('smart_paid_v2_unlocked_' + patientId);
+            localStorage.removeItem('smart_paid_unlocked_' + patientId);
+            localStorage.removeItem('smart_plan_activated_' + patientId);
+            localStorage.removeItem('smart_paid_meta_' + patientId);
+            localStorage.removeItem('smart_paid_plan_unlocked_' + patientId);
+
+            // تنظيف رايات الاشتراك ومحفظة الباقات الخاصة بالمريض المحذوف
+            try {
+                const phoneSuffixes = [];
+                const nameNorms = [];
+                const examIds = [];
+                delMeta.forEach(m => {
+                    if (!m) return;
+                    const ph = String(m.phone || m.patientPhone || '').replace(/\D/g, '');
+                    if (ph.length >= 7) {
+                        localStorage.removeItem('smart_paid_phone_' + ph.slice(-9));
+                        localStorage.removeItem('smart_paid_phone_' + ph.slice(-8));
+                        phoneSuffixes.push(ph.slice(-8));
+                    }
+                    const nm = normCleanName(m.fullName || m.name || m.subscriberName || '');
+                    if (nm) nameNorms.push(nm);
+                    if (m.examId) {
+                        localStorage.removeItem('smart_paid_v2_exam_' + m.examId);
+                        examIds.push(String(m.examId));
+                    }
+                });
+                for (let i = localStorage.length - 1; i >= 0; i--) {
+                    const k = localStorage.key(i);
+                    if (k && k.startsWith('smart_paid_name_')) {
+                        const kn = normCleanName(k.slice('smart_paid_name_'.length));
+                        if (kn && nameNorms.includes(kn)) localStorage.removeItem(k);
+                    }
+                }
+                const rawW = localStorage.getItem('smart_pkg_wallet');
+                if (rawW) {
+                    const w = JSON.parse(rawW);
+                    const wPh = String(w?.subscriberPhone || '').replace(/\D/g, '');
+                    const wNm = normCleanName(w?.subscriberName || w?.name || '');
+                    const matchW = Boolean(w && (
+                        w.patientId === patientId ||
+                        (baseId && w.patientId === baseId) ||
+                        (Array.isArray(w.ids) && examIds.some(ex => w.ids.includes(ex))) ||
+                        (wPh.length >= 7 && phoneSuffixes.includes(wPh.slice(-8))) ||
+                        (wNm && nameNorms.includes(wNm))
+                    ));
+                    if (matchW) {
+                        if (w.code) localStorage.removeItem('smart_pkg_code_' + w.code);
+                        localStorage.removeItem('smart_pkg_wallet');
+                    }
+                }
+                const curPid = localStorage.getItem('smart_current_patient_id') || '';
+                let parsedAct = null, parsedAss = null;
+                try { parsedAct = JSON.parse(localStorage.getItem('smart_active_patient') || 'null'); } catch(e) {}
+                try { parsedAss = JSON.parse(localStorage.getItem('smart_current_assessment') || 'null'); } catch(e) {}
+                const matchObj = (o) => {
+                    if (!o) return false;
+                    const oid = o.patientId || o.id || '';
+                    const oph = String(o.phone || o.patientPhone || '').replace(/\D/g, '');
+                    const onm = normCleanName(o.fullName || o.name || o.patientName || '');
+                    return oid === patientId || (baseId && oid.startsWith(baseId)) || (o.examId && examIds.includes(String(o.examId))) || (oph.length >= 7 && phoneSuffixes.includes(oph.slice(-8))) || (onm && nameNorms.includes(onm));
+                };
+                if (curPid === patientId || (baseId && curPid.startsWith(baseId)) || matchObj(parsedAct) || matchObj(parsedAss)) {
+                    localStorage.removeItem('smart_current_patient_id');
+                    localStorage.removeItem('smart_active_patient');
+                    localStorage.removeItem('smart_current_assessment');
+                    localStorage.removeItem('smart_current_exam_id');
+                    localStorage.removeItem('smart_paid_plan_unlocked');
+                    localStorage.removeItem('smart_paid_v2_unlocked');
+                    localStorage.removeItem('smart_plan_activated');
+                    try { sessionStorage.removeItem('scp_current_exam_paid_unlocked'); } catch(e) {}
+                }
+            } catch(e) {}
 
             // مسح أي مفاتيح فرعية للمريض في التخزين المحلي
             for (let i = localStorage.length - 1; i >= 0; i--) {
