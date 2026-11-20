@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <script>
     (function () {
-        const CURRENT_VERSION = 'v33.00';
+        const CURRENT_VERSION = 'v33.10';
         try {
             const savedVer = localStorage.getItem('scp_app_runtime_version');
             if (savedVer && savedVer !== CURRENT_VERSION) {
@@ -73,11 +73,11 @@
     <!-- End Meta Pixel Code -->
 
     <!-- منظومة الأمان السيبراني وحماية الملكية الفكرية وقفل النطاق -->
-    <script src="js/security-shield.js?v=33.00"></script>
-    <script src="js/system-watchdog.js?v=33.00"></script>
+    <script src="js/security-shield.js?v=33.10"></script>
+    <script src="js/system-watchdog.js?v=33.10"></script>
 
     <!-- وسوم تطبيق الويب التقدمي PWA والأيقونات الرسمية -->
-    <link rel="manifest" href="manifest.json?v=33.00">
+    <link rel="manifest" href="manifest.json?v=33.10">
     <link rel="icon" type="image/png" href="assets/logo.png">
     <link rel="shortcut icon" href="assets/logo.png">
     <link rel="apple-touch-icon" href="assets/logo.png">
@@ -89,7 +89,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=33.00">
+    <link rel="stylesheet" href="css/style.css?v=33.10">
     <script>
         // التحقق من وصول أحدث إصدار وبث التحديث عالمياً لجميع الأجهزة
         (function() {
@@ -205,7 +205,7 @@
                 <div class="brand-version-badge" onclick="event.stopPropagation(); if(typeof forceAppUpdateAndClearCache==='function') forceAppUpdateAndClearCache();" title="انقر لتحديث وتنشيط التطبيق فوراً" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72em; color: #94a3b8; margin-top: 1px; cursor: pointer; user-select: none;">
                     <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                     <span>الإصدار:</span>
-                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v33.00</strong>
+                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v33.10</strong>
                 </div>
             </div>
         </div>
@@ -230,7 +230,12 @@
                 <!-- 4. اتصل بالمعالج (أساسي مباشر) -->
                 <a href="tel:00962790360440" class="btn-header btn-header-call">📞 اتصل بالمعالج</a>
 
-                <!-- 5. قائمة المزيد المنسدلة لشاشات الديسك توب والتابلت -->
+                <!-- 5. الدعم الفني (أساسي مباشر في القائمة الرئيسية) -->
+                <button type="button" class="btn-header btn-header-support btn-span-full" onclick="openTechSupportModal(); closeAllHeaderMenus();" title="الدعم الفني والمساعدة الفورية في حال واجهتك أي مشكلة في الأداة">
+                    🛠️ الدعم الفني
+                </button>
+
+                <!-- 6. قائمة المزيد المنسدلة لشاشات الديسك توب والتابلت -->
                 <div class="header-more-dropdown-wrapper" id="header-more-dropdown-wrapper">
                     <button type="button" class="btn-header btn-header-more" id="btn-header-more" onclick="toggleHeaderMoreDropdown(event)">
                         <span>✨ المزيد</span> <span id="more-dropdown-arrow" style="font-size: 0.8em; margin-right: 2px;">▾</span>
@@ -284,6 +289,13 @@
                             <div class="dropdown-item-text">
                                 <strong>تنشيط وتحديث التطبيق</strong>
                                 <small>مزامنة أحدث التمارين والبيانات</small>
+                            </div>
+                        </button>
+                        <button type="button" class="header-dropdown-item" onclick="openTechSupportModal(); closeAllHeaderMenus();" title="الدعم الفني والمساعدة الفورية في حال واجهتك أي مشكلة في الأداة">
+                            <span class="dropdown-item-icon">🛠️</span>
+                            <div class="dropdown-item-text">
+                                <strong>الدعم الفني</strong>
+                                <small>مساعدة فورية وحل مشاكل الأداة</small>
                             </div>
                         </button>
                         <button type="button" id="btn-header-text-editor" class="header-dropdown-item" onclick="openTextEditorModal(); closeAllHeaderMenus();" style="display: none;">
@@ -1914,6 +1926,132 @@
         </div>
     </div>
 
+    <!-- نافذة 5: الدعم الفني والمساعدة الفورية (Technical Support Modal) -->
+    <div id="tech-support-modal" class="app-modal" onclick="if(event.target===this) closeTechSupportModal()" style="display: none; position: fixed; inset: 0; background: rgba(5, 8, 15, 0.94); backdrop-filter: blur(10px); z-index: 999999; align-items: center; justify-content: center; padding: 16px; overflow-y: auto;">
+        <div class="modal-inner" style="background: linear-gradient(155deg, #070d19 0%, #0d182c 50%, #060a12 100%); border: 2px solid #38bdf8; border-radius: 22px; max-width: 560px; width: 100%; padding: 24px 20px; box-shadow: 0 25px 60px rgba(0,0,0,0.9); box-sizing: border-box; text-align: right; position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid rgba(56,189,248,0.28); padding-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.5em;">🛠️</span>
+                    <div>
+                        <div style="color: #7dd3fc; font-weight: 900; font-size: 1.12em;">مركز الدعم الفني والمساعدة الفورية</div>
+                        <div style="color: #94a3b8; font-size: 0.78em;">فريق وداعاً للألم جاهز لمساعدتك وحل أي مشكلة تقنية فوراً</div>
+                    </div>
+                </div>
+                <button type="button" onclick="closeTechSupportModal()" aria-label="إغلاق" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(56,189,248,0.35); color: #cbd5e1; font-size: 1.4em; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 11px; margin-bottom: 16px;">
+                <div>
+                    <label for="support-issue-select" style="color: #fde68a; font-size: 0.84em; font-weight: 800; display: block; margin-bottom: 5px;">اختر نوع المشكلة التي واجهتك:</label>
+                    <select id="support-issue-select" style="width: 100%; background: #080c14; border: 1.5px solid #38bdf8; padding: 11px 12px; border-radius: 10px; color: #ffffff; font-size: 0.92em; font-weight: bold; box-sizing: border-box; outline: none;">
+                        <option value="لم يصلني كود التفعيل بعد التحويل">💳 لم يصلني كود التفعيل بعد التحويل</option>
+                        <option value="مشكلة في تفعيل الكود أو فتح التقرير">🔑 مشكلة في تفعيل الكود أو فتح التقرير</option>
+                        <option value="توقف أو بطء أثناء الفحص أو الجلسات">⚙️ توقف أو بطء أثناء الفحص أو الجلسات</option>
+                        <option value="مشكلة تقنية أخرى في الأداة">🛠️ مشكلة تقنية أخرى في الأداة</option>
+                    </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label for="support-user-name" style="color: #cbd5e1; font-size: 0.8em; font-weight: bold; display: block; margin-bottom: 4px;">اسمك الكريم (اختياري)</label>
+                        <input type="text" id="support-user-name" placeholder="الاسم" style="width: 100%; background: #080c14; border: 1.5px solid #334155; padding: 10px 12px; border-radius: 10px; color: #ffffff; font-size: 0.9em; box-sizing: border-box; outline: none;">
+                    </div>
+                    <div>
+                        <label for="support-user-phone" style="color: #cbd5e1; font-size: 0.8em; font-weight: bold; display: block; margin-bottom: 4px;">رقم هاتفك (واتساب)</label>
+                        <input type="tel" id="support-user-phone" placeholder="079xxxxxxx" style="width: 100%; background: #080c14; border: 1.5px solid #334155; padding: 10px 12px; border-radius: 10px; color: #ffffff; font-size: 0.9em; box-sizing: border-box; outline: none; direction: ltr; text-align: left;">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="support-user-note" style="color: #cbd5e1; font-size: 0.8em; font-weight: bold; display: block; margin-bottom: 4px;">وصف مختصر للمشكلة (اختياري)</label>
+                    <textarea id="support-user-note" rows="2" placeholder="اكتب تفاصيل المشكلة أو رقم الحوالة إن وجد..." style="width: 100%; background: #080c14; border: 1.5px solid #334155; padding: 10px 12px; border-radius: 10px; color: #ffffff; font-size: 0.88em; box-sizing: border-box; outline: none; resize: vertical; font-family: inherit;"></textarea>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button type="button" onclick="sendTechSupportWhatsApp()" style="width: 100%; background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); color: #ffffff; border: 1.5px solid #6ee7b7; padding: 13px 16px; border-radius: 12px; font-weight: 900; font-size: 1em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 18px rgba(37, 211, 102, 0.35);">
+                    <span>💬</span> <span>مراسلة الدعم الفني عبر واتساب فوراً</span>
+                </button>
+
+                <a href="tel:00962790360440" style="width: 100%; background: rgba(16, 185, 129, 0.16); color: #6ee7b7; border: 1.5px solid #10b981; padding: 11px 16px; border-radius: 12px; font-weight: 800; font-size: 0.94em; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; box-sizing: border-box;">
+                    <span>📞</span> <span>اتصال مباشر بالدعم الفني (0790360440)</span>
+                </a>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 2px;">
+                    <button type="button" onclick="closeTechSupportModal(); if(typeof forceAppUpdateAndClearCache==='function') forceAppUpdateAndClearCache();" style="background: rgba(212, 175, 55, 0.14); color: #fef08a; border: 1px solid rgba(212, 175, 55, 0.5); padding: 10px 10px; border-radius: 10px; font-weight: 800; font-size: 0.82em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                        <span>⚡</span> <span>إصلاح وتنشيط الأداة تلقائياً</span>
+                    </button>
+                    <button type="button" onclick="closeTechSupportModal(); if(typeof openDirectPromoCodeModal==='function') openDirectPromoCodeModal();" style="background: rgba(2, 132, 199, 0.16); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.5); padding: 10px 10px; border-radius: 10px; font-weight: 800; font-size: 0.82em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                        <span>🔑</span> <span>إدخال كود التفعيل المعتمد</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openTechSupportModal() {
+            const modal = document.getElementById('tech-support-modal');
+            if (!modal) return;
+            try {
+                const nameInput = document.getElementById('support-user-name');
+                const phoneInput = document.getElementById('support-user-phone');
+                const detectedName = (typeof window.getResolvedPatientName === 'function' ? window.getResolvedPatientName() : '')
+                    || (window.activePatient && (window.activePatient.fullName || window.activePatient.name))
+                    || (window.clinicalDialogueState && (window.clinicalDialogueState.patientFullName || window.clinicalDialogueState.patientName))
+                    || localStorage.getItem('smart_patient_name')
+                    || localStorage.getItem('smart_user_name')
+                    || '';
+                const detectedPhone = (typeof window.getResolvedPatientPhone === 'function' ? window.getResolvedPatientPhone() : '')
+                    || (window.activePatient && (window.activePatient.phone || window.activePatient.patientPhone))
+                    || (window.clinicalDialogueState && window.clinicalDialogueState.patientPhone)
+                    || localStorage.getItem('smart_patient_phone')
+                    || '';
+                if (nameInput && !nameInput.value && detectedName && !/^(?:مراجع|زائر|ضيف)/.test(detectedName)) {
+                    nameInput.value = detectedName;
+                }
+                if (phoneInput && !phoneInput.value && detectedPhone) {
+                    phoneInput.value = detectedPhone;
+                }
+            } catch (e) {}
+            modal.style.display = 'flex';
+        }
+        window.openTechSupportModal = openTechSupportModal;
+
+        function closeTechSupportModal() {
+            const modal = document.getElementById('tech-support-modal');
+            if (modal) modal.style.display = 'none';
+        }
+        window.closeTechSupportModal = closeTechSupportModal;
+
+        function sendTechSupportWhatsApp() {
+            const issue = document.getElementById('support-issue-select')?.value || 'مشكلة تقنية في الأداة';
+            const userName = (document.getElementById('support-user-name')?.value || '').trim() || 'غير محدد';
+            const userPhone = (document.getElementById('support-user-phone')?.value || '').trim() || 'غير محدد';
+            const userNote = (document.getElementById('support-user-note')?.value || '').trim();
+            let currentStep = 'غير محدد';
+            let appVer = 'v33.10';
+            try {
+                currentStep = localStorage.getItem('smart_current_step') || '1';
+                appVer = document.getElementById('app-current-version-text')?.textContent?.trim() || localStorage.getItem('scp_app_runtime_version') || 'v33.10';
+            } catch (e) {}
+
+            const msg =
+                `السلام عليكم فريق الدعم الفني في عيادة «وداعاً للألم» 🛠️\n` +
+                `أحتاج مساعدة بخصوص مشكلة في أداة Smart Check Pro:\n\n` +
+                `⚠️ *نوع المشكلة:* ${issue}\n` +
+                `👤 *الاسم:* ${userName}\n` +
+                `📱 *الهاتف:* ${userPhone}\n` +
+                `📍 *المرحلة الحالية:* المرحلة ${currentStep} (${appVer})\n` +
+                (userNote ? `📝 *التفاصيل:* ${userNote}\n` : '') +
+                `\nيرجى مساعدتي مشكورين.`;
+
+            const waNum = (typeof CLINIC_WHATSAPP_NUMBER !== 'undefined' && CLINIC_WHATSAPP_NUMBER) ? CLINIC_WHATSAPP_NUMBER : '962790360440';
+            window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
+        }
+        window.sendTechSupportWhatsApp = sendTechSupportWhatsApp;
+    </script>
+
     <!-- دوال تسجيل الدخول والباب الخلفي السري -->
     <script>
         function openAiKeySettingsModal() {
@@ -2142,23 +2280,23 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=33.00"></script>
-    <script src="js/cloud-sync.js?v=33.00"></script>
-    <script src="js/geo-tracker.js?v=33.00"></script>
-    <script src="js/database.js?v=33.00"></script>
-    <script src="js/exercise-image-studio.js?v=33.00"></script>
-    <script src="js/exercises-db.js?v=33.00"></script>
-    <script src="js/diagnostic-engine.js?v=33.00"></script>
-    <script src="js/audio-pacer.js?v=33.00"></script>
-    <script src="js/patient-flow.js?v=33.00"></script>
-    <script src="js/admin-engine.js?v=33.00"></script>
-    <script src="js/ai-config.js?v=33.00"></script>
-    <script src="js/ai-engine.js?v=33.00"></script>
-    <script src="js/app.js?v=33.00"></script>
-    <script src="js/text-editor.js?v=33.00"></script>
-    <script src="js/smart-guidance.js?v=33.00"></script>
-    <script src="js/whatsapp-dispatcher.js?v=33.00"></script>
-    <script src="js/mobile-alerts.js?v=33.00"></script>
+    <script src="js/mqtt.min.js?v=33.10"></script>
+    <script src="js/cloud-sync.js?v=33.10"></script>
+    <script src="js/geo-tracker.js?v=33.10"></script>
+    <script src="js/database.js?v=33.10"></script>
+    <script src="js/exercise-image-studio.js?v=33.10"></script>
+    <script src="js/exercises-db.js?v=33.10"></script>
+    <script src="js/diagnostic-engine.js?v=33.10"></script>
+    <script src="js/audio-pacer.js?v=33.10"></script>
+    <script src="js/patient-flow.js?v=33.10"></script>
+    <script src="js/admin-engine.js?v=33.10"></script>
+    <script src="js/ai-config.js?v=33.10"></script>
+    <script src="js/ai-engine.js?v=33.10"></script>
+    <script src="js/app.js?v=33.10"></script>
+    <script src="js/text-editor.js?v=33.10"></script>
+    <script src="js/smart-guidance.js?v=33.10"></script>
+    <script src="js/whatsapp-dispatcher.js?v=33.10"></script>
+    <script src="js/mobile-alerts.js?v=33.10"></script>
 
     <script>
         // مؤشر المراجعين المتواجدين أونلاين الآن (متزامن بدقة مع السحابة ولوحة الإدارة)

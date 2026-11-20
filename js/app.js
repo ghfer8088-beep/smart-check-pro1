@@ -7532,6 +7532,43 @@ async function submitOrangeWalletPaymentNotification() {
     const nextSerial = chosenPkg === 1 ? getConsumedSingleCodesCountForPhone(subPhone) : 0;
     const unlockPin = generateUserBoundCode(subPhone, chosenPkg, nextSerial);
 
+    // 🔔 1. إرسال تنبيه فوري لهاتف الطبيب عبر منظومة SmartMobileAlerts أولاً قبل المزامنات السحابية لمنع التزاحم
+    try {
+        if (typeof SmartMobileAlerts !== 'undefined' && typeof SmartMobileAlerts.notifyUnlockRequest === 'function') {
+            SmartMobileAlerts.notifyUnlockRequest({
+                name: subName,
+                phone: subPhone,
+                painArea: painArea,
+                requestType: 'paid_orange_wallet',
+                packageSize: chosenPkg,
+                pin: unlockPin,
+                transferRef: normRef
+            });
+        } else {
+            const cleanDigits = subPhone.replace(/\D/g, '').replace(/^0/, '962');
+            const waDirectMsg = `مرحباً ${subName} 🌸 عيادة وداعاً للألم\nتم تفعيل اشتراكك (${pkgTitle}) ✅\n🔑 كود التفعيل: *${unlockPin}*`;
+            const waDirectUrl = `https://wa.me/${cleanDigits}?text=${encodeURIComponent(waDirectMsg)}`;
+            const pushPayload = {
+                title: `💳 طلب كود [${pkgTitle}]: ${subName}`,
+                message: `👤 المشترك: ${subName}\n📱 الهاتف: ${subPhone}\n📦 الباقة: ${pkgTitle}\n🩺 الشكوى: ${painArea}\n🔖 الحوالة: ${normRef}\n🔑 كود التفعيل: ${unlockPin}`,
+                priority: 5,
+                tags: ['bell', 'moneybag', 'key'],
+                click: 'https://smartchecktools.com/admin.html',
+                actions: cleanDigits ? [{ action: 'view', label: '💬 إرسال الكود بالواتساب', url: waDirectUrl }] : undefined
+            };
+            fetch('https://ntfy.sh', {
+                method: 'POST',
+                mode: 'cors',
+                credentials: 'omit',
+                keepalive: true,
+                headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+                body: JSON.stringify({ ...pushPayload, topic: 'wada3an_doctor_phone_alerts' })
+            }).catch(() => {});
+        }
+    } catch (pushErr) {
+        console.warn('SmartMobileAlerts error:', pushErr);
+    }
+
     const pendingObj = {
         patientId: pId,
         examId: (typeof getCurrentExamGateId === 'function' ? getCurrentExamGateId() : '') || '',
@@ -7546,49 +7583,6 @@ async function submitOrangeWalletPaymentNotification() {
     };
     savePendingUnlockRequest(pendingObj);
     syncPendingPatientRequestToAdmin(pId, subName, subPhone, painArea, `⏳ بانتظار تأكيد حوالة أورانج (${chosenPrice} د.أ - ${pkgTitle})`, pendingObj);
-
-    // 🔔 1. إرسال تنبيه فوري لهاتف الطبيب عبر منظومة SmartMobileAlerts
-    try {
-        if (typeof SmartMobileAlerts !== 'undefined' && typeof SmartMobileAlerts.notifyUnlockRequest === 'function') {
-            SmartMobileAlerts.notifyUnlockRequest({
-                name: subName,
-                phone: subPhone,
-                painArea: painArea,
-                requestType: 'paid_orange_wallet',
-                packageSize: chosenPkg,
-                pin: unlockPin
-            });
-        }
-    } catch (pushErr) {
-        console.warn('SmartMobileAlerts error:', pushErr);
-    }
-
-    // 🔔 2. بث إشعار مباشر ومضمون إلى هاتف الطبيب عبر NTFY للقناتين المعتمدتين مع صوت واهتزاز عالٍ وزر واتساب
-    try {
-        const cleanDigits = subPhone.replace(/\D/g, '').replace(/^0/, '962');
-        const waDirectMsg = `مرحباً بك أخي/أختي ${subName} 🌸\nعيادة «وداعاً للألم» للكايروبراكتيك.\nتم تأكيد اشتراكك في [${pkgTitle}].\n🔑 كود التفعيل المعتمد لفتح تقريرك هو:\n👉 *${unlockPin}* 👈\nنسأل الله لك دوام العافية 🤲`;
-        const waDirectUrl = `https://api.whatsapp.com/send?phone=${cleanDigits}&text=${encodeURIComponent(waDirectMsg)}`;
-        
-        const pushPayload = {
-            title: `💳 طلب كود [${pkgTitle}]: ${subName}`,
-            message: `👤 المشترك: ${subName}\n📱 الهاتف: ${subPhone}\n📦 الباقة: ${pkgTitle}\n🩺 موضع الألم: ${painArea}\n🔖 مرجع الحوالة: ${transferRef || 'حوالة عبر المحفظة'}\n🔑 كود التفعيل: ${unlockPin}\n👉 اضغط الزر بالأسفل لمراسلة المريض بالواتساب فوراً!`,
-            priority: 5,
-            tags: ['bell', 'moneybag', 'key', 'rotating_light'],
-            click: 'https://smartchecktools.com/admin.html',
-            actions: [
-                { action: 'view', label: '💬 إرسال الكود بالواتساب', url: waDirectUrl },
-                { action: 'view', label: '🖥️ لوحة الإدارة', url: 'https://smartchecktools.com/admin.html' }
-            ]
-        };
-
-        ['wada3an_doctor_phone_alerts', 'smartcheckpro_updates'].forEach(top => {
-            fetch('https://ntfy.sh', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...pushPayload, topic: top })
-            }).catch(() => {});
-        });
-    } catch (directPushErr) {}
     
 
     if (typeof SmartDB !== 'undefined' && typeof SmartDB.addAdminNotification === 'function') {
@@ -7770,6 +7764,40 @@ async function submitHumanitarianFreeActivation() {
         || 'العمود الفقري والمفاصل';
     const unlockPin = generateUserBoundCode(subPhone, 'humanitarian', 0);
 
+    // 🔔 1. إرسال تنبيه فوري لهاتف الطبيب عبر منظومة SmartMobileAlerts أولاً قبل المزامنات السحابية لمنع التزاحم
+    try {
+        if (typeof SmartMobileAlerts !== 'undefined' && typeof SmartMobileAlerts.notifyUnlockRequest === 'function') {
+            SmartMobileAlerts.notifyUnlockRequest({
+                name: subName,
+                phone: subPhone,
+                painArea: painArea,
+                requestType: 'humanitarian',
+                packageSize: 1,
+                pin: unlockPin
+            });
+        } else {
+            const cleanDigits = subPhone.replace(/\D/g, '').replace(/^0/, '962');
+            const waDirectMsg = `مرحباً ${subName} 🌸 عيادة وداعاً للألم\nتم اعتماد طلبك (رعاية إنسانية ❤️) ✅\n🔑 كود التفعيل: *${unlockPin}*`;
+            const waDirectUrl = `https://wa.me/${cleanDigits}?text=${encodeURIComponent(waDirectMsg)}`;
+            const pushPayload = {
+                title: `❤️ طلب مبادرة الرعاية الإنسانية: ${subName}`,
+                message: `👤 المستفيد: ${subName}\n📱 الهاتف: ${subPhone}\n🩺 الشكوى: ${painArea}\n📦 الباقة: رعاية إنسانية ❤️\n🔑 كود التفعيل: ${unlockPin}`,
+                priority: 5,
+                tags: ['seedling', 'hands', 'key'],
+                click: 'https://smartchecktools.com/admin.html',
+                actions: cleanDigits ? [{ action: 'view', label: '💬 إرسال الكود بالواتساب', url: waDirectUrl }] : undefined
+            };
+            fetch('https://ntfy.sh', {
+                method: 'POST',
+                mode: 'cors',
+                credentials: 'omit',
+                keepalive: true,
+                headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+                body: JSON.stringify({ ...pushPayload, topic: 'wada3an_doctor_phone_alerts' })
+            }).catch(() => {});
+        }
+    } catch (pushErr) {}
+
     const pendingObj = {
         patientId: pId,
         examId: (typeof getCurrentExamGateId === 'function' ? getCurrentExamGateId() : '') || '',
@@ -7785,46 +7813,6 @@ async function submitHumanitarianFreeActivation() {
     savePendingUnlockRequest(pendingObj);
     // ملاحظة: يتم تسجيل استهلاك الإعفاء الإنساني فعلياً فور اعتماد الكود/الطلب وعرض التقرير
     syncPendingPatientRequestToAdmin(pId, subName, subPhone, painArea, '⏳ طلب مبادرة الدعم الإنساني بانتظار الاعتماد', pendingObj);
-
-    // 🔔 1. إرسال تنبيه فوري لهاتف الطبيب عبر منظومة SmartMobileAlerts
-    try {
-        if (typeof SmartMobileAlerts !== 'undefined' && typeof SmartMobileAlerts.notifyUnlockRequest === 'function') {
-            SmartMobileAlerts.notifyUnlockRequest({
-                name: subName,
-                phone: subPhone,
-                painArea: painArea,
-                requestType: 'humanitarian',
-                pin: unlockPin
-            });
-        }
-    } catch (pushErr) {}
-
-    // 🔔 2. بث مباشر ومضمون إلى هاتف الطبيب عبر NTFY للقناتين المعتمدتين مع زر واتساب
-    try {
-        const cleanDigits = subPhone.replace(/\D/g, '').replace(/^0/, '962');
-        const waDirectMsg = `مرحباً بك أخي/أختي ${subName} 🌸\nعيادة «وداعاً للألم» للكايروبراكتيك ترحب بك.\nتم اعتماد طلبك في «مبادرة الدعم الإنساني» بنجاح.\n🔑 كود التفعيل المعتمد لفتح تقريرك هو:\n👉 *${unlockPin}* 👈\nنسأل الله لك دوام الصحة والعافية 🤲`;
-        const waDirectUrl = `https://api.whatsapp.com/send?phone=${cleanDigits}&text=${encodeURIComponent(waDirectMsg)}`;
-
-        const pushPayload = {
-            title: `❤️ طلب مبادرة الدعم الإنساني: ${subName}`,
-            message: `👤 المستفيد: ${subName}\n📱 الهاتف: ${subPhone}\n🩺 موضع الألم: ${painArea}\n❤️ نوع الطلب: مبادرة الدعم الإنساني (غير مقتدر مادياً)\n🔑 كود التفعيل: ${unlockPin}\n👉 اضغط الزر بالأسفل لمراسلة المستفيد بالواتساب فوراً!`,
-            priority: 5,
-            tags: ['heart', 'hands', 'key', 'seedling'],
-            click: 'https://smartchecktools.com/admin.html',
-            actions: [
-                { action: 'view', label: '💬 إرسال الكود بالواتساب', url: waDirectUrl },
-                { action: 'view', label: '🖥️ لوحة الإدارة', url: 'https://smartchecktools.com/admin.html' }
-            ]
-        };
-
-        ['wada3an_doctor_phone_alerts', 'smartcheckpro_updates'].forEach(top => {
-            fetch('https://ntfy.sh', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...pushPayload, topic: top })
-            }).catch(() => {});
-        });
-    } catch (directPushErr) {}
 
     if (typeof SmartDB !== 'undefined' && typeof SmartDB.addAdminNotification === 'function') {
         SmartDB.addAdminNotification({
@@ -12084,7 +12072,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v33.00';
+const CURRENT_APP_VERSION = 'v33.10';
 window.CURRENT_APP_VERSION = CURRENT_APP_VERSION;
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;

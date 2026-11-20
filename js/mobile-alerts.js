@@ -112,25 +112,13 @@ const SmartMobileAlerts = (function() {
         return basePin;
     }
 
-    // صياغة رسالة الواتساب الاحترافية الجاهزة للإرسال
-    function buildWhatsAppReadyMessage({ name, code, packageTitle, painArea }) {
-        return `مرحباً بك أخي/أختي ${name || 'المراجع الكريم'} 🌸
-عيادة «وداعاً للألم» للكايروبراكتيك ترحب بك.
-
-تم اعتماد طلبك وتفعيل اشتراكك بنجاح ✅
-📦 نوع الاشتراك: ${packageTitle}
-🩺 موضع الشكوى: ${painArea || 'فحص واستشارة سريرية'}
-
-🔑 كود التفعيل المعتمد الخاص بك هو:
-👉 *${code}* 👈
-
-طريقة الاستخدام:
-1. افتح صفحة التقرير الطبي.
-2. اختر تبويب (لدي كود تفعيل معتمد).
-3. أدخل رقم هاتفك والكود أعلاه واضغط (تفعيل وفتح التقرير).
-
-نسأل الله لك الشفاء العاجل ودوام العافية 🤲
-— د. جمال (عيادة وداعاً للألم)`;
+    // صياغة رسالة الواتساب الاحترافية الجاهزة للإرسال (مختصرة وخالية من الرموز الثقيلة لتفادي تضخم رابط FCM 4KB)
+    function buildWhatsAppReadyMessage({ name, code, packageTitle, shortBadge }) {
+        const rawBadge = shortBadge || packageTitle || 'التشخيص الذكي';
+        const cleanBadge = String(rawBadge).replace(/[\u{1F300}-\u{1FAFF}\u2600-\u27BF\uFE0F]/gu, '').trim();
+        return `مرحبا ${name || 'المراجع'}، عيادة وداعا للألم\n` +
+               `تم تفعيل: ${cleanBadge}\n` +
+               `كود التفعيل: *${code}*`;
     }
 
     // تنسيق رابط الواتساب العالمي لفتح التطبيق بالرسالة الجاهزة
@@ -148,12 +136,41 @@ const SmartMobileAlerts = (function() {
             digits = digits.substring(2);
         }
 
-        return `https://api.whatsapp.com/send?phone=${digits}&text=${encodeURIComponent(text)}`;
+        return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
     }
 
     const SENT_ALERTS_KEY = 'smart_sent_push_alerts_v2';
     const _inFlightKeys = new Set();
-    const DEDUPE_TTL_MS = 15 * 1000; // 15 ثانية لمنع النقر المزدوج المتتالي فقط والسماح بالتجربة وإعادة الطلب فوراً
+    const DEDUPE_TTL_MS = 5 * 1000; // 5 ثوانٍ لمنع النقر المزدوج المتتالي فقط
+
+    // حساب حجم النص بالبايت (UTF-8) لضمان بقاء الإشعار ضمن حدود Firebase FCM/APNs
+    function getUtf8ByteLength(str) {
+        try {
+            if (typeof TextEncoder !== 'undefined') {
+                return new TextEncoder().encode(str).length;
+            }
+        } catch(e) {}
+        return unescape(encodeURIComponent(str)).length;
+    }
+
+    function fitPayloadUnderLimit(payloadObj, maxBytes = 1400) {
+        const clone = { ...payloadObj };
+        if (getUtf8ByteLength(JSON.stringify(clone)) <= maxBytes) return clone;
+
+        // تقليص نص الرسالة تدريجياً بالحفاظ على الحروف الكاملة
+        if (clone.message) {
+            const chars = Array.from(String(clone.message));
+            while (chars.length > 40 && getUtf8ByteLength(JSON.stringify(clone)) > maxBytes) {
+                chars.pop();
+                clone.message = chars.join('') + '…';
+            }
+        }
+        // إزالة الأزرار فقط كحل أخير إذا استمر تجاوز الحد الأقصى
+        if (getUtf8ByteLength(JSON.stringify(clone)) > maxBytes && clone.actions) {
+            delete clone.actions;
+        }
+        return clone;
+    }
 
     // التحقق الصارم ومنع تكرار الإشعار عبر التخزين الدائم (localStorage) وقفل التزامن اللحظي
     function isDuplicateAlert(key) {
@@ -200,7 +217,35 @@ const SmartMobileAlerts = (function() {
         }
     }
 
-    // إرسال تنبيه Push لهاتف الطبيب عبر كافة القنوات المعتمدة لضمان الوصول 100%
+    // إرسال طلب نشر مفرد إلى ntfy.sh بصيغة نصية خفيفة لتفادي CORS Preflight وإعادة المحاولة عند التعثر
+    async function publishNtfyPayload(payloadObj, allowRetry = true) {
+        const bodyStr = JSON.stringify(fitPayloadUnderLimit(payloadObj, 1400));
+        try {
+            const resp = await fetch('https://ntfy.sh', {
+                method: 'POST',
+                mode: 'cors',
+                credentials: 'omit',
+                keepalive: true,
+                headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+                body: bodyStr
+            });
+            if (!resp.ok) {
+                throw new Error('HTTP ' + resp.status);
+            }
+            const res = await resp.json().catch(() => ({}));
+            console.log(`[MobileAlerts] Push notification delivered via NTFY [${payloadObj.topic}]:`, res?.id || 'OK');
+            return { ok: true, id: res?.id || 'OK' };
+        } catch (err) {
+            console.warn(`[MobileAlerts] Push error [${payloadObj.topic}]:`, err);
+            if (allowRetry) {
+                await new Promise(resolve => setTimeout(resolve, 2500));
+                return publishNtfyPayload(payloadObj, false);
+            }
+            return { ok: false, error: err?.message || 'network_error' };
+        }
+    }
+
+    // إرسال تنبيه Push لهاتف الطبيب عبر كافة القنوات المعتمدة دون تزامن متصادم وبحجم آمن لـ FCM/APNs
     async function sendPushToPhone(alertData) {
         if (!alertData) return { success: false, reason: 'empty_data' };
         const cfg = getConfig();
@@ -211,37 +256,37 @@ const SmartMobileAlerts = (function() {
         const priority = alertData.priority || 5; // 5 = Urgent (صوت واهتزاز عالي)
         const tags = alertData.tags || ['bell', 'busts_in_silhouette', 'key'];
         const clickUrl = alertData.click || 'https://smartchecktools.com/admin.html';
-        const actions = alertData.actions || [
-            { action: 'view', label: '🖥️ لوحة الإدارة', url: clickUrl }
-        ];
+        const actions = (Array.isArray(alertData.actions) && alertData.actions.length > 0)
+            ? alertData.actions
+            : undefined;
 
-        // قائمة القنوات المعتمدة لضمان وصول الإشعار مهما كانت قناة الهاتف المشترك بها
+        // قائمة القنوات المعتمدة لضمان وصول الإشعار مع تباعد زمني 1.5 ثانية لتجنب حظر التزامن في ntfy/FCM
         const targetTopics = Array.from(new Set([
             cfg.topic,
             DEFAULT_TOPIC,
             'smartcheckpro_updates'
         ].filter(Boolean)));
 
-        targetTopics.forEach(topic => {
-            try {
-                fetch('https://ntfy.sh', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        topic: topic,
-                        title: title,
-                        message: message,
-                        priority: priority,
-                        tags: tags,
-                        click: clickUrl,
-                        actions: actions
-                    })
-                }).then(r => r.json()).then(res => {
-                    console.log(`[MobileAlerts] Push notification delivered via NTFY [${topic}]:`, res?.id || 'OK');
-                }).catch(err => {
-                    console.warn(`[MobileAlerts] Push error [${topic}]:`, err);
-                });
-            } catch(e) {}
+        const basePayload = {
+            title: title,
+            message: message,
+            priority: priority,
+            tags: tags,
+            click: clickUrl
+        };
+        if (actions) basePayload.actions = actions;
+
+        // إرسال فوري للقناة الأساسية عند 0ms
+        const primaryTopic = targetTopics[0];
+        const primaryPromise = primaryTopic
+            ? publishNtfyPayload({ ...basePayload, topic: primaryTopic }, true)
+            : Promise.resolve({ ok: false });
+
+        // تأخير القنوات الاحتياطية بمقدار 1500ms لكل قناة لمنع تداخل طلبات FCM في نفس اللحظة
+        targetTopics.slice(1).forEach((topic, idx) => {
+            setTimeout(() => {
+                publishNtfyPayload({ ...basePayload, topic: topic }, true).catch(() => {});
+            }, (idx + 1) * 1500);
         });
 
         // إشعار المتصفح الأصلي (Native Web Notification)
@@ -255,7 +300,8 @@ const SmartMobileAlerts = (function() {
             }
         } catch(e) {}
 
-        return { success: true, topics: targetTopics };
+        const primaryRes = await primaryPromise;
+        return { success: !!primaryRes?.ok, topics: targetTopics };
     }
 
     // إرسال تنبيه مشترك جديد يطلب كود التفعيل (دفع باقة أو إعفاء إنساني فقط!)
@@ -276,10 +322,11 @@ const SmartMobileAlerts = (function() {
             return null;
         }
 
-        // بناء مفتاح التمييز الصارم لمنع التكرار (رقم هاتف المريض أو اسمه + نوع الطلب)
+        // بناء مفتاح التمييز الصارم لمنع التكرار (رقم هاتف المريض أو اسمه + نوع الطلب + الباقة + المرجع)
         const cleanPhoneDigits = subPhone.replace(/\D/g, '').slice(-9);
         const patientIdentity = cleanPhoneDigits || subName.toLowerCase().replace(/\s+/g, '_');
-        const dedupeKey = `req_${patientIdentity}_${isHumanitarian ? 'humanitarian' : 'paid'}`;
+        const refClean = String(data.transferRef || '').trim().toUpperCase();
+        const dedupeKey = `req_${patientIdentity}_${isHumanitarian ? 'humanitarian' : ('paid_' + pkgSize + '_' + refClean)}`;
 
         if (isDuplicateAlert(dedupeKey)) {
             console.log('[MobileAlerts] Push notification already sent for this request, skipped:', dedupeKey);
@@ -292,12 +339,12 @@ const SmartMobileAlerts = (function() {
         // 2. توليد الكود المطابق تماماً للباقة
         const finalCode = getMatchedCode(subPhone || subName, pkgInfo.tier, data.pin || data.unlockPin);
 
-        // 3. بناء نص الواتساب الجاهز
+        // 3. بناء نص الواتساب الجاهز المختصر
         const readyWhatsAppMsg = buildWhatsAppReadyMessage({
             name: subName,
             code: finalCode,
             packageTitle: pkgInfo.title,
-            painArea: painArea
+            shortBadge: pkgInfo.shortBadge
         });
 
         // 4. بناء رابط الواتساب المباشر
@@ -308,19 +355,19 @@ const SmartMobileAlerts = (function() {
             ? `❤️ طلب مبادرة الرعاية الإنسانية: ${subName}`
             : `💳 طلب كود [${pkgInfo.shortBadge}]: ${subName}`;
 
+        const refLine = refClean ? `🔖 الحوالة: ${refClean}\n` : '';
         const alertMessage = 
             `👤 المشترك: ${subName}\n` +
             `📱 الهاتف: ${subPhone || 'غير مسجل'}\n` +
-            `📦 الباقة: ${pkgInfo.title}\n` +
-            `🩺 موضع الشكوى: ${painArea}\n` +
-            `🔑 كود التفعيل: ${finalCode}\n` +
-            `👉 اضغط الزر بالأسفل لمراسلة العميل بالواتساب فوراً`;
+            `📦 الباقة: ${pkgInfo.shortBadge}\n` +
+            `🩺 الشكوى: ${painArea}\n` +
+            refLine +
+            `🔑 كود التفعيل: ${finalCode}`;
 
         const actions = [];
         if (waLink) {
             actions.push({ action: 'view', label: '💬 إرسال الكود بالواتساب', url: waLink });
         }
-        actions.push({ action: 'view', label: '🖥️ لوحة الإدارة', url: 'https://smartchecktools.com/admin.html' });
 
         return sendPushToPhone({
             title: alertTitle,
@@ -352,7 +399,7 @@ const SmartMobileAlerts = (function() {
             name: 'أحمد الخالد (تجربة)',
             code: '53035',
             packageTitle: '💼 باقة 5 تشخيصات (10 د.أ)',
-            painArea: 'الفقرات القطنية وأسفل الظهر'
+            shortBadge: 'باقة 5 💼'
         });
         const waLink = buildWhatsAppUrl(testPhone, readyMsg);
 
@@ -360,17 +407,15 @@ const SmartMobileAlerts = (function() {
             title: '💳 طلب كود [باقة 5 💼]: مراجع تجريبي',
             message: '👤 المشترك: أحمد الخالد (فحص تجريبي)\n' +
                      '📱 الهاتف: ' + testPhone + '\n' +
-                     '📦 الباقة: 💼 باقة 5 تشخيصات (10 د.أ)\n' +
-                     '🩺 موضع الشكوى: الفقرات القطنية وأسفل الظهر\n' +
-                     '🔑 كود التفعيل: 53035\n' +
-                     '👉 اضغط (إرسال الكود بالواتساب) لتجربة الرسالة الجاهزة!',
+                     '📦 الباقة: باقة 5 💼 (10 د.أ)\n' +
+                     '🩺 الشكوى: الفقرات القطنية وأسفل الظهر\n' +
+                     '🔑 كود التفعيل: 53035',
             priority: 5,
             tags: ['bell', 'moneybag', 'key', 'test_tube'],
             click: 'https://smartchecktools.com/admin.html',
-            actions: [
-                { action: 'view', label: '💬 إرسال الكود بالواتساب', url: waLink },
-                { action: 'view', label: '🖥️ لوحة الإدارة', url: 'https://smartchecktools.com/admin.html' }
-            ]
+            actions: waLink ? [
+                { action: 'view', label: '💬 إرسال الكود بالواتساب', url: waLink }
+            ] : []
         });
     }
 
