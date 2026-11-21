@@ -60,9 +60,9 @@
     /></noscript>
     <!-- End Meta Pixel Code -->
 
-    <script src="js/system-watchdog.js?v=33.45"></script>
-    <script src="js/security-shield.js?v=33.45"></script>
-    <link rel="stylesheet" href="css/style.css?v=33.45">
+    <script src="js/system-watchdog.js?v=33.50"></script>
+    <script src="js/security-shield.js?v=33.50"></script>
+    <link rel="stylesheet" href="css/style.css?v=33.50">
     <style>
         :root {
             --primary-gold: #0284c7;
@@ -531,7 +531,7 @@
                     <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78em; color: #334155; margin-top: 3px; background: #f0f9ff; border: 1px solid #bae6fd; padding: 2px 10px; border-radius: 20px;">
                         <span style="display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #10b981;"></span>
                         <span>الإصدار المعتمد:</span>
-                        <strong style="color: #0369a1; font-family: monospace, sans-serif; font-size: 1.06em; font-weight: 900;">v33.45</strong>
+                        <strong style="color: #0369a1; font-family: monospace, sans-serif; font-size: 1.06em; font-weight: 900;">v33.50</strong>
                     </div>
                 </div>
             </div>
@@ -550,8 +550,8 @@
                         <span id="health-badge-icon">🛡️</span>
                         <span id="health-badge-text">درع المراقبة</span>
                     </button>
-                    <button type="button" id="btn-broadcast-version-global" onclick="handleUnifiedUpdateAndBroadcast()" class="btn-header" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border: 1.5px solid #047857; color: #ffffff; font-weight: 900; padding: 9px 14px; font-size: 0.85em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);" title="تحديث الكاش، ومزامنة السحابة، وبث التحديث العالمي (v33.45) لجميع الأجهزة والهواتف حول العالم بضغطة واحدة">
-                        <span>🚀</span> تحديث وبث الإصدار (v33.45)
+                    <button type="button" id="btn-broadcast-version-global" onclick="handleUnifiedUpdateAndBroadcast()" class="btn-header" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border: 1.5px solid #047857; color: #ffffff; font-weight: 900; padding: 9px 14px; font-size: 0.85em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);" title="تحديث الكاش، ومزامنة السحابة، وبث التحديث العالمي (v33.50) لجميع الأجهزة والهواتف حول العالم بضغطة واحدة">
+                        <span>🚀</span> تحديث وبث الإصدار (v33.50)
                     </button>
                     <a href="index.html" class="btn-header admin-btn-front" style="background: #0284c7; color: #ffffff; padding: 9px 14px; font-size: 0.85em; font-weight: 800; text-decoration: none; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1.5px solid #0369a1;" title="فتح واجهة المراجعين">
                         🌐 واجهة المراجعين
@@ -735,6 +735,16 @@
                         </div>
                     </div>
 
+                    <!-- دليل الألوان السريري المميز لباقات المشتركين -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 8px 14px; margin-bottom: 14px; font-size: 0.8em;">
+                        <span style="color: #0f172a; font-weight: 900;">🎨 دليل تمييز باقات المراجعين في السجل:</span>
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <span style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; padding: 3px 10px; border-radius: 20px; font-weight: 800;">🩺 باقة الجلسة الفردية (3 د.أ)</span>
+                            <span style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: #ffffff; padding: 3px 10px; border-radius: 20px; font-weight: 800;">⭐ باقة 5 العائلية (10 د.أ)</span>
+                            <span style="background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; padding: 3px 10px; border-radius: 20px; font-weight: 800;">👑 باقة 10 الشاملة (15 د.أ)</span>
+                            <span style="background: #ffe4e6; color: #9f1239; border: 1.5px solid #f43f5e; padding: 2px 10px; border-radius: 20px; font-weight: 900;">❤️ مبادرة الدعم الإنساني</span>
+                        </div>
+                    </div>
                     <div id="patients-cards-container" class="patients-cards-grid"></div>
                     <div id="patients-cards-pagination"></div>
                 </div>
@@ -2605,17 +2615,17 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/clinic-patients-data.js?v=33.45"></script>
-    <script src="js/mqtt.min.js?v=33.45"></script>
-    <script src="js/cloud-sync.js?v=33.45"></script>
-    <script src="js/geo-tracker.js?v=33.45"></script>
-    <script src="js/database.js?v=33.45"></script>
-    <script src="js/exercise-image-studio.js?v=33.45"></script>
-    <script src="js/admin-engine.js?v=33.45"></script>
-    <script src="js/ai-config.js?v=33.45"></script>
-    <script src="js/ai-engine.js?v=33.45"></script>
-    <script src="js/whatsapp-dispatcher.js?v=33.45"></script>
-    <script src="js/mobile-alerts.js?v=33.45"></script>
+    <script src="js/clinic-patients-data.js?v=33.50"></script>
+    <script src="js/mqtt.min.js?v=33.50"></script>
+    <script src="js/cloud-sync.js?v=33.50"></script>
+    <script src="js/geo-tracker.js?v=33.50"></script>
+    <script src="js/database.js?v=33.50"></script>
+    <script src="js/exercise-image-studio.js?v=33.50"></script>
+    <script src="js/admin-engine.js?v=33.50"></script>
+    <script src="js/ai-config.js?v=33.50"></script>
+    <script src="js/ai-engine.js?v=33.50"></script>
+    <script src="js/whatsapp-dispatcher.js?v=33.50"></script>
+    <script src="js/mobile-alerts.js?v=33.50"></script>
 
     <script>
         // محرك صيانة وتطهير التخزين التلقائي لمنع تجاوز السعة (QuotaExceededError)
@@ -4533,18 +4543,50 @@
                         const ptReqTier = Number(p.pendingUnlockRequest?.packageSize) || (p.paymentType && p.paymentType.includes('10') ? 10 : (p.paymentType && p.paymentType.includes('5') ? 5 : 1));
                         const ptUnlockPin = generateAdminUnlockPin(displayPhoneStr || p.fullName || p.name || '', ptReqTier);
 
-                        // شارة حالة الاشتراك الموحدة والمختصرة (بدون نصوص طويلة تربك أعلى البطاقة)
+                        // تمييز الباقة المختارة لكل مراجع بلون سريري خاص وواضح فوراً في السجل:
+                        // - باقة 10 فحوصات (الحل الجذري): زمردي ملكي (#059669)
+                        // - باقة 5 فحوصات (التعافي العائلي): بنفسجي ملكي (#7c3aed)
+                        // - باقة الجلسة الفردية (تشخيص فردي): أزرق طبي (#0284c7)
+                        // - مبادرة الدعم الإنساني (صدقة جارية): عنابي/وردي دافئ (#e11d48)
+                        const amtVal = Number(p.amountPaid || p.pendingUnlockRequest?.amountJod || 0);
+                        const pinStr = String(p.unlockPin || p.pendingUnlockRequest?.unlockPin || '');
+                        const isHumTier = isPendingHumReq || pPayType === 'humanitarian' || pPayType === 'humanitarian_waiver' || pPayStatus.includes('إنساني') || pPayStatus.includes('إعفاء') || pinStr.startsWith('H');
+                        const isPack10Tier = !isHumTier && (ptReqTier === 10 || p.packageSize === 10 || amtVal >= 15 || pPayStatus.includes('10') || pinStr.startsWith('10'));
+                        const isPack5Tier = !isHumTier && !isPack10Tier && (ptReqTier === 5 || p.packageSize === 5 || amtVal === 10 || pPayStatus.includes('5') || pinStr.startsWith('5'));
+                        const isSinglePaidTier = !isHumTier && !isPack10Tier && !isPack5Tier && (isPendingOrangeReq || isPendingUnlock || p.isPaidUnlocked || pPayType === 'paid_orange_wallet' || pPayType === 'orange_money' || pPayStatus.includes('أورانج') || amtVal > 0);
+
+                        let pkgStripeColor = '#94a3b8';
+                        let pkgCardBorderColor = '#bae6fd';
                         let paymentBadgeHTML = '';
-                        if (isPendingHumReq) {
-                            paymentBadgeHTML = `<span style="background: #fffbeb; border: 1.5px solid #f59e0b; color: #92400e; padding: 2px 8px; border-radius: 6px; font-size: 0.72em; font-weight: 900;">🤲 طلب إعفاء بالانتظار</span>`;
-                        } else if (isPendingOrangeReq || (isPendingUnlock && !p.isPaidUnlocked)) {
-                            paymentBadgeHTML = `<span style="background: #fff7ed; border: 1.5px solid #f97316; color: #9a3412; padding: 2px 8px; border-radius: 6px; font-size: 0.72em; font-weight: 900;">💳 حوالة بالانتظار</span>`;
-                        } else if (pPayType === 'humanitarian' || pPayType === 'humanitarian_waiver' || pPayStatus.includes('إنساني') || pPayStatus.includes('إعفاء')) {
-                            paymentBadgeHTML = `<span style="background: #fef2f2; border: 1px solid #ef4444; color: #b91c1c; padding: 2px 8px; border-radius: 6px; font-size: 0.72em; font-weight: 800;">❤️ إعفاء إنساني</span>`;
-                        } else if (pPayType === 'paid_orange_wallet' || pPayType === 'orange_money' || pPayStatus.includes('أورانج') || p.amountPaid > 0) {
-                            paymentBadgeHTML = `<span style="background: #ecfdf5; border: 1px solid #10b981; color: #065f46; padding: 2px 8px; border-radius: 6px; font-size: 0.72em; font-weight: 800;">💳 مدفوع (${p.amountPaid || 3} د.أ)</span>`;
-                        } else if (p.isPaidUnlocked) {
-                            paymentBadgeHTML = `<span style="background: #e0f2fe; border: 1px solid #0284c7; color: #0369a1; padding: 2px 8px; border-radius: 6px; font-size: 0.72em; font-weight: 800;">🔑 مفعّل</span>`;
+
+                        if (isHumTier) {
+                            pkgStripeColor = '#e11d48';
+                            pkgCardBorderColor = '#fda4af';
+                            paymentBadgeHTML = isPendingHumReq
+                                ? `<span style="background: linear-gradient(135deg, #e11d48 0%, #be123c 100%); color: #ffffff; border: 1px solid #9f1239; padding: 3px 10px; border-radius: 20px; font-size: 0.74em; font-weight: 900; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(225, 29, 72, 0.25);">🤲 مبادرة إنسانية • بالانتظار</span>`
+                                : `<span style="background: #ffe4e6; color: #9f1239; border: 1.5px solid #f43f5e; padding: 2px 10px; border-radius: 20px; font-size: 0.74em; font-weight: 900; display: inline-flex; align-items: center; gap: 4px;">❤️ مبادرة إنسانية (مجاني)</span>`;
+                        } else if (isPack10Tier) {
+                            pkgStripeColor = '#059669';
+                            pkgCardBorderColor = '#6ee7b7';
+                            paymentBadgeHTML = (isPendingOrangeReq || (isPendingUnlock && !p.isPaidUnlocked))
+                                ? `<span style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%); color: #ffffff; border: 1px solid #92400e; padding: 3px 10px; border-radius: 20px; font-size: 0.74em; font-weight: 900; display: inline-flex; align-items: center; gap: 4px;">👑 باقة 10 فحوصات (15 د.أ) • بالانتظار</span>`
+                                : `<span style="background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; border: 1px solid #065f46; padding: 3px 10px; border-radius: 20px; font-size: 0.74em; font-weight: 900; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);">👑 باقة 10 فحوصات (15 د.أ)</span>`;
+                        } else if (isPack5Tier) {
+                            pkgStripeColor = '#7c3aed';
+                            pkgCardBorderColor = '#c4b5fd';
+                            paymentBadgeHTML = (isPendingOrangeReq || (isPendingUnlock && !p.isPaidUnlocked))
+                                ? `<span style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%); color: #ffffff; border: 1px solid #92400e; padding: 3px 10px; border-radius: 20px; font-size: 0.74em; font-weight: 900; display: inline-flex; align-items: center; gap: 4px;">⭐ باقة 5 العائلية (10 د.أ) • بالانتظار</span>`
+                                : `<span style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: #ffffff; border: 1px solid #5b21b6; padding: 3px 10px; border-radius: 20px; font-size: 0.74em; font-weight: 900; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(124, 58, 237, 0.25);">⭐ باقة 5 العائلية (10 د.أ)</span>`;
+                        } else if (isSinglePaidTier) {
+                            pkgStripeColor = '#0284c7';
+                            pkgCardBorderColor = '#7dd3fc';
+                            paymentBadgeHTML = (isPendingOrangeReq || (isPendingUnlock && !p.isPaidUnlocked))
+                                ? `<span style="background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%); color: #ffffff; border: 1px solid #9a3412; padding: 3px 10px; border-radius: 20px; font-size: 0.74em; font-weight: 900; display: inline-flex; align-items: center; gap: 4px;">🩺 باقة الجلسة الفردية (${amtVal || 3} د.أ) • بالانتظار</span>`
+                                : `<span style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: 1px solid #075985; padding: 3px 10px; border-radius: 20px; font-size: 0.74em; font-weight: 900; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.22);">🩺 باقة الجلسة الفردية (${amtVal || 3} د.أ)</span>`;
+                        } else {
+                            pkgStripeColor = '#94a3b8';
+                            pkgCardBorderColor = '#cbd5e1';
+                            paymentBadgeHTML = `<span style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 2px 9px; border-radius: 20px; font-size: 0.72em; font-weight: 800;">⏳ فحص قيد التفعيل</span>`;
                         }
 
                         const recordTs = getAdminRecordSortTimestamp(item);
@@ -4554,11 +4596,11 @@
                         const bmiShort = p.bmi || (p.weight && p.height ? (p.weight / Math.pow(p.height / 100, 2)).toFixed(1) : '');
 
                         return `
-                        <div class="royal-patient-card" style="display: flex; flex-direction: column; gap: 9px; padding: 14px 16px;">
+                        <div class="royal-patient-card" style="display: flex; flex-direction: column; gap: 9px; padding: 14px 16px; border: 2px solid ${pkgCardBorderColor} !important; border-top: 5px solid ${pkgStripeColor} !important;">
                             <!-- 1. الترويسة المدمجة والمنظمة (Header) -->
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
                                 <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
-                                    <div style="width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.15em; font-weight: 900; flex-shrink: 0;">
+                                    <div style="width: 40px; height: 40px; border-radius: 12px; background: ${pkgStripeColor}; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.15em; font-weight: 900; flex-shrink: 0; box-shadow: 0 3px 8px rgba(15, 23, 42, 0.12);">
                                         ${((p.fullName || p.name) || 'م')[0]}
                                     </div>
                                     <div style="min-width: 0; flex: 1;">
@@ -8912,13 +8954,13 @@ function copyAdminCode(code) {
 
         // 🚀 تحديث الكاش ومزامنة السحابة وبث التحديث العالمي بضغطة واحدة
         async function handleUnifiedUpdateAndBroadcast() {
-            if (confirm('🚀 تحديث وبث الإصدار (v33.45):\n\nهل تود تحديث الكاش المحلي، ومزامنة السجلات، وبث التحديث الجديد لكافة هواتف وأجهزة المراجعين المتصلة فوراً؟')) {
+            if (confirm('🚀 تحديث وبث الإصدار (v33.50):\n\nهل تود تحديث الكاش المحلي، ومزامنة السجلات، وبث التحديث الجديد لكافة هواتف وأجهزة المراجعين المتصلة فوراً؟')) {
                 // 1. بث التحديث السحابي الشامل
                 try {
                     if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                         SmartCloudSync.broadcastAppVersionUpdate({
-                            version: 'v33.45',
-                            title: 'تحديث المنظومة (v33.45)',
+                            version: 'v33.50',
+                            title: 'تحديث المنظومة (v33.50)',
                             timestamp: Date.now()
                         });
                     }
@@ -8941,17 +8983,17 @@ function copyAdminCode(code) {
         }
         window.handleUnifiedUpdateAndBroadcast = handleUnifiedUpdateAndBroadcast;
 
-        // بث رسالة التحديث الجديد الشامل (v33.45) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
+        // بث رسالة التحديث الجديد الشامل (v33.50) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
         function handleBroadcastGlobalVersion() {
-            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v33.45) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
+            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v33.50) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
                 if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                     SmartCloudSync.broadcastAppVersionUpdate({
-                        version: 'v33.45',
-                        title: 'تحديث المنظومة (v33.45)',
+                        version: 'v33.50',
+                        title: 'تحديث المنظومة (v33.50)',
                         timestamp: Date.now()
                     });
                 }
-                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v33.45) عبر شبكة البث اللحظي MQTT و NTFY لكافة الأجهزة!');
+                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v33.50) عبر شبكة البث اللحظي MQTT و NTFY لكافة الأجهزة!');
             }
         }
         window.handleBroadcastGlobalVersion = handleBroadcastGlobalVersion;
@@ -9420,7 +9462,7 @@ function copyAdminCode(code) {
 
 <script>
 // ==========================================================================
-// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي في لوحة القيادة السريرية (v33.45)
+// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي في لوحة القيادة السريرية (v33.50)
 // ==========================================================================
 (function initAdminMedicalSvgIconAndContrastEngine() {
     const P = {
@@ -9533,7 +9575,7 @@ function copyAdminCode(code) {
 
             // صمام أمان التباين الفوري للوحة الإدارة
             const styledEls = (root.nodeType === 1 && root.querySelectorAll) ? [root, ...root.querySelectorAll('[style]')] : [];
-            const SOLID_DARK_BG = /(?:#0284c7|#0369a1|#075985|#0d9488|#059669|#047857|#065f46|#064e3b|#10b981|#25d366|#128c7e|#1d4ed8|#2563eb|#1e40af|#ef4444|#dc2626|#b91c1c|#7f1d1d|#0f172a|#1e293b|#111827|#f97316|#ea580c|rgb\(\s*(?:2,\s*132,\s*199|3,\s*105,\s*161|13,\s*148,\s*136|5,\s*150,\s*105|4,\s*120,\s*87|16,\s*185,\s*129|37,\s*211,\s*102|29,\s*78,\s*216|37,\s*99,\s*235|239,\s*68,\s*68|220,\s*38,\s*38|15,\s*23,\s*42|30,\s*41,\s*59|17,\s*24,\s*39|249,\s*115,\s*22|234,\s*88,\s*12)\s*\))/i;
+            const SOLID_DARK_BG = /(?:#0284c7|#0369a1|#075985|#0d9488|#059669|#047857|#065f46|#064e3b|#10b981|#25d366|#128c7e|#1d4ed8|#2563eb|#1e40af|#7c3aed|#6d28d9|#5b21b6|#e11d48|#be123c|#d97706|#b45309|#ef4444|#dc2626|#b91c1c|#7f1d1d|#0f172a|#1e293b|#111827|#f97316|#ea580c|rgb\(\s*(?:2,\s*132,\s*199|3,\s*105,\s*161|13,\s*148,\s*136|5,\s*150,\s*105|4,\s*120,\s*87|16,\s*185,\s*129|37,\s*211,\s*102|29,\s*78,\s*216|37,\s*99,\s*235|239,\s*68,\s*68|220,\s*38,\s*38|15,\s*23,\s*42|30,\s*41,\s*59|17,\s*24,\s*39|249,\s*115,\s*22|234,\s*88,\s*12)\s*\))/i;
             const LIGHT_BG = /(?:#ffffff|#fff|#f8fafc|#f1f5f9|#f0f9ff|#e0f2fe|#f0fdf4|#dcfce7|#ecfdf5|#fef2f2|#fee2e2|#fffbeb|rgb\(\s*(?:255,\s*255,\s*255|248,\s*250,\s*252|241,\s*245,\s*249|240,\s*249,\s*255|224,\s*242,\s*254|240,\s*253,\s*244|220,\s*252,\s*231|236,\s*253,\s*245|254,\s*242,\s*242|254,\s*226,\s*226|255,\s*251,\s*235)\s*\)|rgba\(\s*(?:16,\s*185,\s*129|56,\s*189,\s*248|2,\s*132,\s*199|239,\s*68,\s*68|245,\s*158,\s*11|212,\s*175,\s*55)\s*,\s*0\.[0123]\d*\s*\))/i;
             const LIGHT_TEXT = /(?:#(?:ffffff|fff|f8fafc|f1f5f9|e2e8f0|cbd5e1|94a3b8|6ee7b7|a7f3d0|34d399|7dd3fc|38bdf8|fca5a5|fecaca|fef08a|fde047|fbbf24|fed7aa|fdba74)|rgb\(\s*(?:255,\s*255,\s*255|248,\s*250,\s*252|241,\s*245,\s*249|226,\s*232,\s*240|203,\s*213,\s*225|148,\s*163,\s*184|110,\s*231,\s*183|167,\s*243,\s*208|125,\s*211,\s*252|56,\s*189,\s*248|252,\s*165,\s*165|254,\s*240,\s*138|253,\s*224,\s*71)\s*\))/i;
             const DARK_TEXT = /(?:#0f172a|#1e293b|#334155|#475569|#0a0e14|#080c14|#000000|#000|rgb\(\s*(?:15,\s*23,\s*42|30,\s*41,\s*59|51,\s*65,\s*85|71,\s*85,\s*105|10,\s*14,\s*20|0,\s*0,\s*0)\s*\))/i;
@@ -9594,7 +9636,7 @@ function copyAdminCode(code) {
 <script>
 // ===== تحديث تلقائي للوحة الإدارة: تقارن إصدارها بإصدار الأداة المنشور (sw.js) وتحدّث نفسها =====
 (function () {
-    const ADMIN_VER = 'v33.45';
+    const ADMIN_VER = 'v33.50';
     window.ADMIN_VER = ADMIN_VER;
     let busy = false;
     async function check(force) {

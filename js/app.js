@@ -10,7 +10,7 @@
 })();
 
 // ==========================================================================
-// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي (Medical SVG Icon & Contrast Engine v33.45)
+// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي (Medical SVG Icon & Contrast Engine v33.50)
 // يحول كافة الأيقونات التفاعلية إلى أيقونات SVG طبية حديثة موحدة اللون (currentColor) دون أي تشتت لوني
 // ==========================================================================
 (function initMedicalSvgIconAndContrastEngine() {
@@ -120,7 +120,7 @@
 
             // صمام أمان التباين الفوري: يمنع أي نص فاتح على أرضية فاتحة أو نص غامق على زر غامق
             const styledEls = (root.nodeType === 1 && root.querySelectorAll) ? [root, ...root.querySelectorAll('[style]')] : [];
-            const SOLID_DARK_BG = /(?:#0284c7|#0369a1|#075985|#0d9488|#059669|#047857|#065f46|#064e3b|#10b981|#25d366|#128c7e|#1d4ed8|#2563eb|#1e40af|#ef4444|#dc2626|#b91c1c|#0f172a|#1e293b|#111827|rgb\(\s*(?:2,\s*132,\s*199|3,\s*105,\s*161|13,\s*148,\s*136|5,\s*150,\s*105|4,\s*120,\s*87|16,\s*185,\s*129|37,\s*211,\s*102|29,\s*78,\s*216|37,\s*99,\s*235|239,\s*68,\s*68|220,\s*38,\s*38|15,\s*23,\s*42|30,\s*41,\s*59|17,\s*24,\s*39)\s*\))/i;
+            const SOLID_DARK_BG = /(?:#0284c7|#0369a1|#075985|#0d9488|#059669|#047857|#065f46|#064e3b|#10b981|#25d366|#128c7e|#1d4ed8|#2563eb|#1e40af|#7c3aed|#6d28d9|#5b21b6|#e11d48|#be123c|#d97706|#b45309|#ef4444|#dc2626|#b91c1c|#0f172a|#1e293b|#111827|rgb\(\s*(?:2,\s*132,\s*199|3,\s*105,\s*161|13,\s*148,\s*136|5,\s*150,\s*105|4,\s*120,\s*87|16,\s*185,\s*129|37,\s*211,\s*102|29,\s*78,\s*216|37,\s*99,\s*235|239,\s*68,\s*68|220,\s*38,\s*38|15,\s*23,\s*42|30,\s*41,\s*59|17,\s*24,\s*39)\s*\))/i;
             const LIGHT_BG = /(?:#ffffff|#fff|#f8fafc|#f0f9ff|#e0f2fe|#f0fdf4|#dcfce7|#ecfdf5|#fef2f2|#fee2e2|rgb\(\s*(?:255,\s*255,\s*255|248,\s*250,\s*252|240,\s*249,\s*255|224,\s*242,\s*254|240,\s*253,\s*244|220,\s*252,\s*231|236,\s*253,\s*245|254,\s*242,\s*242|254,\s*226,\s*226)\s*\)|rgba\(\s*(?:16,\s*185,\s*129|56,\s*189,\s*248|2,\s*132,\s*199|239,\s*68,\s*68)\s*,\s*0\.[0123]\d*\s*\))/i;
             const LIGHT_TEXT = /(?:#(?:ffffff|fff|f8fafc|f1f5f9|e2e8f0|cbd5e1|94a3b8|6ee7b7|a7f3d0|34d399|7dd3fc|38bdf8|fca5a5|fecaca)|rgb\(\s*(?:255,\s*255,\s*255|248,\s*250,\s*252|241,\s*245,\s*249|226,\s*232,\s*240|203,\s*213,\s*225|148,\s*163,\s*184|110,\s*231,\s*183|167,\s*243,\s*208|125,\s*211,\s*252|56,\s*189,\s*248|252,\s*165,\s*165)\s*\))/i;
             const DARK_TEXT = /(?:#0f172a|#1e293b|#334155|#475569|#0a0e14|#080c14|#000000|#000|rgb\(\s*(?:15,\s*23,\s*42|30,\s*41,\s*59|51,\s*65,\s*85|71,\s*85,\s*105|10,\s*14,\s*20|0,\s*0,\s*0)\s*\))/i;
@@ -6897,7 +6897,7 @@ function openSubscriptionTiersModal() {
     const cfg = getActivePaymentGateConfig();
     const pr = getPkgPrices(cfg);
     const p1 = document.getElementById('tier-price-1'); if (p1) p1.textContent = pr[1];
-    const b1 = document.getElementById('tier-btn-1'); if (b1) b1.textContent = 'اختيار الباقة (' + pr[1] + ' د.أ) ←';
+    const b1 = document.getElementById('tier-btn-1'); if (b1) b1.textContent = 'اختيار باقة الجلسة (' + pr[1] + ' د.أ) ←';
     const p5 = document.getElementById('tier-price-5'); if (p5) p5.textContent = pr[5];
     const b5 = document.getElementById('tier-btn-5'); if (b5) b5.textContent = 'اختيار الباقة العائلية (' + pr[5] + ' د.أ) ←';
     const p10 = document.getElementById('tier-price-10'); if (p10) p10.textContent = pr[10];
@@ -12240,7 +12240,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v33.45';
+const CURRENT_APP_VERSION = 'v33.50';
 window.CURRENT_APP_VERSION = CURRENT_APP_VERSION;
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;

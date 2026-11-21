@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <script>
     (function () {
-        const CURRENT_VERSION = 'v33.45';
+        const CURRENT_VERSION = 'v33.50';
         try {
             const savedVer = localStorage.getItem('scp_app_runtime_version');
             if (savedVer && savedVer !== CURRENT_VERSION) {
@@ -73,11 +73,11 @@
     <!-- End Meta Pixel Code -->
 
     <!-- منظومة الأمان السيبراني وحماية الملكية الفكرية وقفل النطاق -->
-    <script src="js/security-shield.js?v=33.45"></script>
-    <script src="js/system-watchdog.js?v=33.45"></script>
+    <script src="js/security-shield.js?v=33.50"></script>
+    <script src="js/system-watchdog.js?v=33.50"></script>
 
     <!-- وسوم تطبيق الويب التقدمي PWA والأيقونات الرسمية -->
-    <link rel="manifest" href="manifest.json?v=33.45">
+    <link rel="manifest" href="manifest.json?v=33.50">
     <link rel="icon" type="image/png" href="assets/logo.png">
     <link rel="shortcut icon" href="assets/logo.png">
     <link rel="apple-touch-icon" href="assets/logo.png">
@@ -89,7 +89,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=33.45">
+    <link rel="stylesheet" href="css/style.css?v=33.50">
     <script>
         // التحقق من وصول أحدث إصدار وبث التحديث عالمياً لجميع الأجهزة
         (function() {
@@ -205,7 +205,7 @@
                 <div class="brand-version-badge" onclick="event.stopPropagation(); if(typeof forceAppUpdateAndClearCache==='function') forceAppUpdateAndClearCache();" title="انقر لتحديث وتنشيط التطبيق فوراً" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72em; color: #475569; margin-top: 1px; cursor: pointer; user-select: none;">
                     <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                     <span>الإصدار:</span>
-                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v33.45</strong>
+                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v33.50</strong>
                 </div>
             </div>
         </div>
@@ -1610,127 +1610,149 @@
     <!-- 🌟 النوافذ المنبثقة الاحترافية لباقات الاشتراك وتأكيد الدفع (Two-Step Subscription Modals) -->
     <!-- ========================================================================= -->
 
-    <!-- نافذة 1: اختيار الباقة العلاجية (Subscription Tiers Modal) -->
-    <div id="subscription-tiers-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(10px); z-index: 999999; align-items: center; justify-content: center; padding: 16px; overflow-y: auto;">
-        <div class="modal-inner" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2.5px solid var(--primary-gold); border-radius: 22px; max-width: 960px; width: 100%; padding: 26px 22px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); box-sizing: border-box; text-align: right; position: relative;">
+    <!-- نافذة 1: اختيار الباقة العلاجية الفاخرة والمكبرة (Subscription Tiers Modal v33.50) -->
+    <div id="subscription-tiers-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(12px); z-index: 999999; align-items: center; justify-content: center; padding: 18px; overflow-y: auto;">
+        <div class="modal-inner" style="background: #ffffff; border: 3px solid #0284c7; border-radius: 28px; max-width: 1240px; width: 96%; padding: 34px 30px; box-shadow: 0 24px 60px rgba(2, 132, 199, 0.22); box-sizing: border-box; text-align: right; position: relative; overflow: hidden;">
             
-            <button type="button" onclick="closeSubscriptionTiersModal()" aria-label="إغلاق" style="position: absolute; left: 16px; top: 16px; background: #f8fafc; border: 1px solid #bae6fd; color: #475569; font-size: 1.4em; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; z-index: 10;">&times;</button>
+            <!-- شريط علوي طبي متدرج فخم -->
+            <div style="position: absolute; top: 0; left: 0; right: 0; height: 7px; background: linear-gradient(90deg, #0284c7 0%, #7c3aed 50%, #059669 100%);"></div>
 
-            <!-- مقدمة راقية ومختصرة -->
-            <div style="text-align: center; margin-bottom: 22px;">
-                <div style="display: inline-flex; align-items: center; gap: 8px; background: #f0f9ff; border: 1px solid #bae6fd; padding: 5px 18px; border-radius: 20px; color: #0369a1; font-size: 0.85em; font-weight: 800; margin-bottom: 10px;">
-                    <span><svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></span> منصة وداعاً للألم | Smart Check Pro 2.0
+            <button type="button" onclick="closeSubscriptionTiersModal()" aria-label="إغلاق" style="position: absolute; left: 20px; top: 20px; background: #f0f9ff; border: 2px solid #0284c7; color: #0369a1; font-size: 1.5em; font-weight: 900; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; z-index: 10;">&times;</button>
+
+            <!-- ترويسة البوب المكبرة والواضحة جداً -->
+            <div style="text-align: center; margin-bottom: 28px; padding-top: 4px;">
+                <div style="display: inline-flex; align-items: center; gap: 8px; background: #e0f2fe; border: 1.5px solid #0284c7; padding: 6px 20px; border-radius: 30px; color: #0369a1; font-size: 0.92em; font-weight: 900; margin-bottom: 12px;">
+                    <span>🩺</span> <span>منصة وداعاً للألم للتشخيص السريري والكايروبراكتيك | Smart Check Pro 2.0</span>
                 </div>
-                <h2 style="color: #0f172a; margin: 0 0 8px 0; font-size: 1.5em; font-weight: 900; line-height: 1.35;">
-                    اختر الباقة العلاجية لتفعيل تقريرك وخطة الـ 7 أيام <svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                <h2 style="color: #0f172a; margin: 0 0 10px 0; font-size: 1.85em; font-weight: 900; line-height: 1.35;">
+                    اختر باقتك العلاجية لتفعيل التقرير الطبي الكامل وخطة الـ 7 أيام
                 </h2>
-                <p style="color: #475569; font-size: 0.9em; max-width: 680px; margin: 0 auto; line-height: 1.6;">
-                    تشخيص سريري تفاعلي بالذكاء الاصطناعي لكشف المسبب الجذري للألم، مع تقرير استشاري شامل وخطة تعافي حركية وتأهيلية موجهة لحالتك خطوة بخطوة.
+                <p style="color: #334155; font-size: 1.02em; font-weight: 600; max-width: 780px; margin: 0 auto; line-height: 1.65;">
+                    تقرير استشاري مفصّل يكشف الجذر الميكانيكي والعصبي للألم، مع برنامج تمارين تأهيلية يومية مصورة وموجهة صوتياً لحالتك خطوة بخطوة.
                 </p>
             </div>
 
-            <!-- شبكة الباقات الأربع -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 20px;">
+            <!-- شبكة الباقات الأربع الفاخرة والمكبرة -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(255px, 1fr)); gap: 18px; margin-bottom: 24px; align-items: stretch;">
                 
-                <!-- باقة 1: تشخيص فردي -->
-                <div style="background: #f8fafc; border: 1.5px solid #bae6fd; border-radius: 16px; padding: 20px 16px; display: flex; flex-direction: column; justify-content: space-between; position: relative; transition: transform 0.2s, border-color 0.2s;">
+                <!-- 1. باقة الجلسة الفردية (تشخيص سريري شامل + ستايل طبي سماوي فاخر ومميز) -->
+                <div style="background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%); border: 2.5px solid #0284c7; border-radius: 22px; padding: 26px 20px 22px 20px; display: flex; flex-direction: column; justify-content: space-between; position: relative; box-shadow: 0 10px 26px rgba(2, 132, 199, 0.12); transition: transform 0.2s, box-shadow 0.2s;">
+                    <div style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; font-size: 0.78em; font-weight: 900; padding: 4px 16px; border-radius: 20px; border: 1.5px solid #bae6fd; white-space: nowrap; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);">
+                        🩺 الباقة الأساسية المعتمدة
+                    </div>
                     <div>
-                        <div style="color: #475569; font-size: 0.8em; font-weight: bold; margin-bottom: 4px;">فحص سريري واحد</div>
-                        <h3 style="color: #0f172a; margin: 0 0 8px 0; font-size: 1.15em; font-weight: 900;">تشخيص فردي</h3>
-                        <div style="margin-bottom: 14px;">
-                            <span id="tier-price-1" style="color: #0369a1; font-size: 1.8em; font-weight: 900; font-family: monospace;">3</span>
-                            <span style="color: #1e293b; font-size: 0.88em; font-weight: bold; margin-right: 4px;">د.أ</span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; margin-top: 4px;">
+                            <span style="background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; padding: 3px 10px; border-radius: 8px; font-size: 0.8em; font-weight: 900;">فحص سريري واحد كامل</span>
+                            <span style="font-size: 1.5em; color: #0284c7;">🩺</span>
                         </div>
-                        <div style="border-top: 1px solid #bae6fd; padding-top: 12px; margin-bottom: 16px; font-size: 0.82em; color: #1e293b; line-height: 1.7;">
-                            <div style="margin-bottom: 6px;">✓ تقرير سريري تفصيلي كامل</div>
-                            <div style="margin-bottom: 6px;">✓ كشف جذور الألم ومؤشرات الأمان</div>
-                            <div style="margin-bottom: 6px;">✓ تمارين اليوم الأول التأهيلية</div>
+                        <h3 style="color: #0f172a; margin: 0 0 10px 0; font-size: 1.32em; font-weight: 900;">باقة الجلسة الفردية</h3>
+                        <div style="background: #ffffff; border: 1.5px solid #bae6fd; border-radius: 14px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: baseline; justify-content: center; gap: 6px;">
+                            <span id="tier-price-1" style="color: #0284c7; font-size: 2.35em; font-weight: 900; font-family: monospace; line-height: 1;">3</span>
+                            <span style="color: #0f172a; font-size: 1.02em; font-weight: 900;">دنانير فقط</span>
+                        </div>
+                        <div style="border-top: 1.5px dashed #bae6fd; padding-top: 14px; margin-bottom: 18px; font-size: 0.9em; color: #0f172a; font-weight: 700; line-height: 1.85;">
+                            <div style="margin-bottom: 7px; display: flex; align-items: center; gap: 7px;"><span style="color: #0284c7; font-weight: 900;">✓</span> <span>تقرير تشخيصي سريري مفصّل وكامل</span></div>
+                            <div style="margin-bottom: 7px; display: flex; align-items: center; gap: 7px;"><span style="color: #0284c7; font-weight: 900;">✓</span> <span>تحديد الفقرات والأعصاب المتأثرة بدقة</span></div>
+                            <div style="margin-bottom: 7px; display: flex; align-items: center; gap: 7px;"><span style="color: #0284c7; font-weight: 900;">✓</span> <span>برنامج تمارين التأهيل وخطة الـ 7 أيام</span></div>
+                            <div style="margin-bottom: 4px; display: flex; align-items: center; gap: 7px;"><span style="color: #0284c7; font-weight: 900;">✓</span> <span>إمكانية طباعة التقرير وحفظه في ملفك</span></div>
                         </div>
                     </div>
-                    <button type="button" id="tier-btn-1" onclick="selectTierForCheckout(1)" style="width: 100%; background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); color: #0f172a; border: 1px solid #cbd5e1; padding: 11px; border-radius: 10px; font-weight: 800; font-size: 0.92em; cursor: pointer; transition: all 0.2s;">
-                        اختيار الباقة (3 د.أ) ←
+                    <button type="button" id="tier-btn-1" onclick="selectTierForCheckout(1)" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: 1.5px solid #0369a1; padding: 14px 16px; border-radius: 14px; font-weight: 900; font-size: 1.02em; cursor: pointer; box-shadow: 0 6px 18px rgba(2, 132, 199, 0.28); transition: all 0.2s;">
+                        اختيار باقة الجلسة (3 د.أ) ←
                     </button>
                 </div>
 
-                <!-- باقة 2: باقة التعافي العائلي (5 فحوصات) -->
-                <div style="background: #f0f9ff; border: 2px solid #bae6fd; border-radius: 16px; padding: 20px 16px; display: flex; flex-direction: column; justify-content: space-between; position: relative; box-shadow: 0 8px 24px rgba(2, 132, 199, 0.15); transform: translateY(-4px);">
-                    <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; font-size: 0.72em; font-weight: 900; padding: 3px 12px; border-radius: 12px; border: 1px solid #bae6fd; white-space: nowrap; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
-                        <svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> الأكثر طلباً • وفر 33%
+                <!-- 2. باقة التعافي العائلي (5 فحوصات - ستايل بنفسجي/نيلي ملكي مميز) -->
+                <div style="background: linear-gradient(180deg, #f5f3ff 0%, #ffffff 100%); border: 2.5px solid #7c3aed; border-radius: 22px; padding: 26px 20px 22px 20px; display: flex; flex-direction: column; justify-content: space-between; position: relative; box-shadow: 0 14px 32px rgba(124, 58, 237, 0.16); transform: translateY(-4px);">
+                    <div style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: #ffffff; font-size: 0.78em; font-weight: 900; padding: 4px 16px; border-radius: 20px; border: 1.5px solid #ddd6fe; white-space: nowrap; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);">
+                        ⭐ الأكثر طلباً للعائلة • وفر 33%
                     </div>
                     <div>
-                        <div style="color: #0369a1; font-size: 0.8em; font-weight: bold; margin-bottom: 4px;">5 فحوصات كاملة</div>
-                        <h3 style="color: #0f172a; margin: 0 0 8px 0; font-size: 1.15em; font-weight: 900;">باقة التعافي العائلي</h3>
-                        <div style="margin-bottom: 14px;">
-                            <span style="color: #475569; font-size: 0.85em; text-decoration: line-through; margin-left: 6px;">15 د.أ</span>
-                            <span id="tier-price-5" style="color: #0369a1; font-size: 1.8em; font-weight: 900; font-family: monospace;">10</span>
-                            <span style="color: #1e293b; font-size: 0.88em; font-weight: bold; margin-right: 4px;">د.أ</span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; margin-top: 4px;">
+                            <span style="background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd; padding: 3px 10px; border-radius: 8px; font-size: 0.8em; font-weight: 900;">5 فحوصات كاملة</span>
+                            <span style="font-size: 1.5em; color: #7c3aed;">⭐</span>
                         </div>
-                        <div style="border-top: 1px solid #bae6fd; padding-top: 12px; margin-bottom: 16px; font-size: 0.82em; color: #1e293b; line-height: 1.7;">
-                            <div style="margin-bottom: 6px;">✓ رصيد 5 فحوصات سريرية شاملة</div>
-                            <div style="margin-bottom: 6px;">✓ رصيد دائم ومستمر لك وللعائلة</div>
-                            <div style="margin-bottom: 6px;">✓ خطة تمارين وتأهيل كاملة لكل فحص</div>
-                            <div style="margin-bottom: 6px;">✓ حفظ دائم ومستمر في ملفك الطبي</div>
+                        <h3 style="color: #0f172a; margin: 0 0 10px 0; font-size: 1.32em; font-weight: 900;">باقة التعافي العائلي</h3>
+                        <div style="background: #ffffff; border: 1.5px solid #c4b5fd; border-radius: 14px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: baseline; justify-content: center; gap: 6px;">
+                            <span style="color: #64748b; font-size: 0.92em; text-decoration: line-through; font-weight: 700;">15 د.أ</span>
+                            <span id="tier-price-5" style="color: #6d28d9; font-size: 2.35em; font-weight: 900; font-family: monospace; line-height: 1;">10</span>
+                            <span style="color: #0f172a; font-size: 1.02em; font-weight: 900;">دنانير</span>
+                        </div>
+                        <div style="border-top: 1.5px dashed #c4b5fd; padding-top: 14px; margin-bottom: 18px; font-size: 0.9em; color: #0f172a; font-weight: 700; line-height: 1.85;">
+                            <div style="margin-bottom: 7px; display: flex; align-items: center; gap: 7px;"><span style="color: #7c3aed; font-weight: 900;">✓</span> <span>رصيد 5 فحوصات سريرية شاملة</span></div>
+                            <div style="margin-bottom: 7px; display: flex; align-items: center; gap: 7px;"><span style="color: #7c3aed; font-weight: 900;">✓</span> <span>رصيد مفتوح لك ولجميع أفراد العائلة</span></div>
+                            <div style="margin-bottom: 7px; display: flex; align-items: center; gap: 7px;"><span style="color: #7c3aed; font-weight: 900;">✓</span> <span>خطة تمارين وتأهيل كاملة لكل فحص</span></div>
+                            <div style="margin-bottom: 4px; display: flex; align-items: center; gap: 7px;"><span style="color: #7c3aed; font-weight: 900;">✓</span> <span>حفظ دائم ومستمر في ملفك الطبي</span></div>
                         </div>
                     </div>
-                    <button type="button" id="tier-btn-5" onclick="selectTierForCheckout(5)" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: 1px solid #bae6fd; padding: 11px; border-radius: 10px; font-weight: 900; font-size: 0.95em; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
+                    <button type="button" id="tier-btn-5" onclick="selectTierForCheckout(5)" style="width: 100%; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: #ffffff; border: 1.5px solid #5b21b6; padding: 14px 16px; border-radius: 14px; font-weight: 900; font-size: 1.02em; cursor: pointer; box-shadow: 0 6px 18px rgba(124, 58, 237, 0.3);">
                         اختيار الباقة العائلية (10 د.أ) ←
                     </button>
                 </div>
 
-                <!-- باقة 3: باقة الحل الجذري الشاملة (10 فحوصات) -->
-                <div style="background: #f0fdf4; border: 2px solid #10b981; border-radius: 16px; padding: 20px 16px; display: flex; flex-direction: column; justify-content: space-between; position: relative; box-shadow: 0 8px 24px #dcfce7;">
-                    <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; font-size: 0.72em; font-weight: 900; padding: 3px 12px; border-radius: 12px; border: 1px solid #6ee7b7; white-space: nowrap; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
-                        <svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> القيمة القصوى • وفر 50%
+                <!-- 3. باقة الحل الجذري الشاملة (10 فحوصات - ستايل زمردي طبي فاخر) -->
+                <div style="background: linear-gradient(180deg, #ecfdf5 0%, #ffffff 100%); border: 2.5px solid #059669; border-radius: 22px; padding: 26px 20px 22px 20px; display: flex; flex-direction: column; justify-content: space-between; position: relative; box-shadow: 0 12px 28px rgba(5, 150, 105, 0.15);">
+                    <div style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; font-size: 0.78em; font-weight: 900; padding: 4px 16px; border-radius: 20px; border: 1.5px solid #a7f3d0; white-space: nowrap; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);">
+                        👑 القيمة القصوى • وفر 50%
                     </div>
                     <div>
-                        <div style="color: #047857; font-size: 0.8em; font-weight: bold; margin-bottom: 4px;">10 فحوصات شاملة</div>
-                        <h3 style="color: #0f172a; margin: 0 0 8px 0; font-size: 1.15em; font-weight: 900;">باقة الحل الجذري</h3>
-                        <div style="margin-bottom: 14px;">
-                            <span style="color: #475569; font-size: 0.85em; text-decoration: line-through; margin-left: 6px;">30 د.أ</span>
-                            <span id="tier-price-10" style="color: #0369a1; font-size: 1.8em; font-weight: 900; font-family: monospace;">15</span>
-                            <span style="color: #1e293b; font-size: 0.88em; font-weight: bold; margin-right: 4px;">د.أ</span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; margin-top: 4px;">
+                            <span style="background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; padding: 3px 10px; border-radius: 8px; font-size: 0.8em; font-weight: 900;">10 فحوصات شاملة</span>
+                            <span style="font-size: 1.5em; color: #059669;">👑</span>
                         </div>
-                        <div style="border-top: 1px solid #dcfce7; padding-top: 12px; margin-bottom: 16px; font-size: 0.82em; color: #1e293b; line-height: 1.7;">
-                            <div style="margin-bottom: 6px;">✓ 10 فحوصات سريرية شاملة مدى الحياة</div>
-                            <div style="margin-bottom: 6px;">✓ متابعة دورية ومقارنة مؤشرات الشفاء</div>
-                            <div style="margin-bottom: 6px;">✓ أعلى قيمة توفيرية لك ولأحبائك</div>
-                            <div style="margin-bottom: 6px;">✓ أولوية الدعم والاستشارات الحركية</div>
+                        <h3 style="color: #0f172a; margin: 0 0 10px 0; font-size: 1.32em; font-weight: 900;">باقة الحل الجذري</h3>
+                        <div style="background: #ffffff; border: 1.5px solid #6ee7b7; border-radius: 14px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: baseline; justify-content: center; gap: 6px;">
+                            <span style="color: #64748b; font-size: 0.92em; text-decoration: line-through; font-weight: 700;">30 د.أ</span>
+                            <span id="tier-price-10" style="color: #047857; font-size: 2.35em; font-weight: 900; font-family: monospace; line-height: 1;">15</span>
+                            <span style="color: #0f172a; font-size: 1.02em; font-weight: 900;">دنانير</span>
+                        </div>
+                        <div style="border-top: 1.5px dashed #6ee7b7; padding-top: 14px; margin-bottom: 18px; font-size: 0.9em; color: #0f172a; font-weight: 700; line-height: 1.85;">
+                            <div style="margin-bottom: 7px; display: flex; align-items: center; gap: 7px;"><span style="color: #059669; font-weight: 900;">✓</span> <span>10 فحوصات سريرية شاملة مدى الحياة</span></div>
+                            <div style="margin-bottom: 7px; display: flex; align-items: center; gap: 7px;"><span style="color: #059669; font-weight: 900;">✓</span> <span>متابعة دورية لكافة مفاصل وفقرات الجسم</span></div>
+                            <div style="margin-bottom: 7px; display: flex; align-items: center; gap: 7px;"><span style="color: #059669; font-weight: 900;">✓</span> <span>أعلى قيمة توفيرية (1.5 دينار للفحص)</span></div>
+                            <div style="margin-bottom: 4px; display: flex; align-items: center; gap: 7px;"><span style="color: #059669; font-weight: 900;">✓</span> <span>أولوية الدعم والاستشارات السريرية</span></div>
                         </div>
                     </div>
-                    <button type="button" id="tier-btn-10" onclick="selectTierForCheckout(10)" style="width: 100%; background: linear-gradient(135deg, #10b981, #047857); color: #ffffff; border: 1px solid #6ee7b7; padding: 11px; border-radius: 10px; font-weight: 900; font-size: 0.95em; cursor: pointer; box-shadow: 0 4px 14px #dcfce7;">
+                    <button type="button" id="tier-btn-10" onclick="selectTierForCheckout(10)" style="width: 100%; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; border: 1.5px solid #065f46; padding: 14px 16px; border-radius: 14px; font-weight: 900; font-size: 1.02em; cursor: pointer; box-shadow: 0 6px 18px rgba(5, 150, 105, 0.28);">
                         اختيار الباقة الشاملة (15 د.أ) ←
                     </button>
                 </div>
 
-                <!-- باقة 4: مبادرة الدعم الإنساني -->
-                <div style="background: #fef2f2; border: 1.5px solid rgba(239, 68, 68, 0.4); border-radius: 16px; padding: 20px 16px; display: flex; flex-direction: column; justify-content: space-between; position: relative;">
-                    <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ef4444, #b91c1c); color: #ffffff; font-size: 0.72em; font-weight: 900; padding: 3px 12px; border-radius: 12px; border: 1px solid #fca5a5; white-space: nowrap; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
-                        ❤️ صدقة جارية
+                <!-- 4. مبادرة الدعم الإنساني (صدقة جارية لغير المقتدرين) -->
+                <div style="background: linear-gradient(180deg, #fff1f2 0%, #ffffff 100%); border: 2.5px solid #e11d48; border-radius: 22px; padding: 26px 20px 22px 20px; display: flex; flex-direction: column; justify-content: space-between; position: relative; box-shadow: 0 10px 24px rgba(225, 29, 72, 0.1);">
+                    <div style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #e11d48 0%, #be123c 100%); color: #ffffff; font-size: 0.78em; font-weight: 900; padding: 4px 16px; border-radius: 20px; border: 1.5px solid #fecdd3; white-space: nowrap; box-shadow: 0 4px 12px rgba(225, 29, 72, 0.28);">
+                        ❤️ صدقة جارية (لغير المقتدرين)
                     </div>
                     <div>
-                        <div style="color: #dc2626; font-size: 0.8em; font-weight: bold; margin-bottom: 4px;">مخصصة لغير المقتدرين مادياً</div>
-                        <h3 style="color: #0f172a; margin: 0 0 8px 0; font-size: 1.15em; font-weight: 900;">مبادرة الدعم الإنساني</h3>
-                        <div style="margin-bottom: 14px;">
-                            <span style="color: #047857; font-size: 1.5em; font-weight: 900;">مجاناً 100%</span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; margin-top: 4px;">
+                            <span style="background: #ffe4e6; color: #9f1239; border: 1px solid #fda4af; padding: 3px 10px; border-radius: 8px; font-size: 0.8em; font-weight: 900;">لغير المقتدرين مادياً</span>
+                            <span style="font-size: 1.5em; color: #e11d48;">🤲</span>
                         </div>
-                        <div style="border-top: 1px solid #fee2e2; padding-top: 12px; margin-bottom: 16px; font-size: 0.82em; color: #1e293b; line-height: 1.7;">
-                            <div style="margin-bottom: 6px;">✓ تُقدَّم مجاناً لوجه الله تعالى</div>
-                            <div style="margin-bottom: 6px;">✓ صدقة جارية عن روح والد المعالج</div>
-                            <div style="margin-bottom: 6px;">✓ فحص سريري كامل + خطة تمارين</div>
-                            <div style="margin-bottom: 6px;">✓ مخصصة لغير المقتدرين مادياً</div>
+                        <h3 style="color: #0f172a; margin: 0 0 10px 0; font-size: 1.32em; font-weight: 900;">مبادرة الدعم الإنساني</h3>
+                        <div style="background: #ffffff; border: 1.5px solid #fda4af; border-radius: 14px; padding: 12px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center;">
+                            <span style="color: #be123c; font-size: 1.7em; font-weight: 900; line-height: 1.2;">مجاناً 100%</span>
+                        </div>
+                        <div style="border-top: 1.5px dashed #fda4af; padding-top: 14px; margin-bottom: 18px; font-size: 0.9em; color: #0f172a; font-weight: 700; line-height: 1.85;">
+                            <div style="margin-bottom: 7px; display: flex; align-items: center; gap: 7px;"><span style="color: #e11d48; font-weight: 900;">✓</span> <span>تُقدَّم مجاناً لوجه الله تعالى</span></div>
+                            <div style="margin-bottom: 7px; display: flex; align-items: center; gap: 7px;"><span style="color: #e11d48; font-weight: 900;">✓</span> <span>صدقة جارية عن روح والد المعالج</span></div>
+                            <div style="margin-bottom: 7px; display: flex; align-items: center; gap: 7px;"><span style="color: #e11d48; font-weight: 900;">✓</span> <span>فحص سريري كامل + خطة تمارين</span></div>
+                            <div style="margin-bottom: 4px; display: flex; align-items: center; gap: 7px;"><span style="color: #e11d48; font-weight: 900;">✓</span> <span>مخصصة لغير المقتدرين مادياً فقط</span></div>
                         </div>
                     </div>
-                    <button type="button" onclick="openHumanitarianSubscriptionModal()" style="width: 100%; background: linear-gradient(135deg, #475569, #334155); color: #0f172a; border: 1px solid #64748b; padding: 11px; border-radius: 10px; font-weight: 800; font-size: 0.9em; cursor: pointer;">
+                    <button type="button" onclick="openHumanitarianSubscriptionModal()" style="width: 100%; background: linear-gradient(135deg, #e11d48 0%, #be123c 100%); color: #ffffff; border: 1.5px solid #9f1239; padding: 14px 16px; border-radius: 14px; font-weight: 900; font-size: 1.02em; cursor: pointer; box-shadow: 0 6px 18px rgba(225, 29, 72, 0.25);">
                         طلب مبادرة الدعم الإنساني ←
                     </button>
                 </div>
             </div>
 
-            <!-- أسفل النافذة: رابط إدخال الكود المسبق -->
-            <div style="text-align: center; border-top: 1px dashed #bae6fd; padding-top: 16px; display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <span style="color: #475569; font-size: 0.88em;">لديك كود تفعيل معتمد مسبقاً؟</span>
-                <button type="button" onclick="openDirectPromoCodeModal()" style="background: none; border: none; color: #0284c7; font-weight: 900; font-size: 0.92em; cursor: pointer; text-decoration: underline; padding: 4px 8px;">
-                    <svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> أدخل كود التفعيل هنا للتفعيل الفوري
+            <!-- شريط سفلي بارز وواضح لإدخال كود التفعيل المسبق -->
+            <div style="background: #f0f9ff; border: 2px solid #bae6fd; border-radius: 16px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.4em; color: #0284c7;">🔑</span>
+                    <span style="color: #0f172a; font-size: 0.98em; font-weight: 800;">هل لديك كود تفعيل معتمد مسبقاً أو كود باقة عائلية؟</span>
+                </div>
+                <button type="button" onclick="openDirectPromoCodeModal()" style="background: #0284c7; color: #ffffff; border: 1.5px solid #0369a1; padding: 10px 22px; border-radius: 12px; font-weight: 900; font-size: 0.95em; cursor: pointer; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.22);">
+                    🔑 أدخل كود التفعيل هنا للتفعيل الفوري
                 </button>
             </div>
         </div>
@@ -2033,10 +2055,10 @@
             const userPhone = (document.getElementById('support-user-phone')?.value || '').trim() || 'غير محدد';
             const userNote = (document.getElementById('support-user-note')?.value || '').trim();
             let currentStep = 'غير محدد';
-            let appVer = 'v33.45';
+            let appVer = 'v33.50';
             try {
                 currentStep = localStorage.getItem('smart_current_step') || '1';
-                appVer = document.getElementById('app-current-version-text')?.textContent?.trim() || localStorage.getItem('scp_app_runtime_version') || 'v33.45';
+                appVer = document.getElementById('app-current-version-text')?.textContent?.trim() || localStorage.getItem('scp_app_runtime_version') || 'v33.50';
             } catch (e) {}
 
             const msg =
@@ -2283,23 +2305,23 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=33.45"></script>
-    <script src="js/cloud-sync.js?v=33.45"></script>
-    <script src="js/geo-tracker.js?v=33.45"></script>
-    <script src="js/database.js?v=33.45"></script>
-    <script src="js/exercise-image-studio.js?v=33.45"></script>
-    <script src="js/exercises-db.js?v=33.45"></script>
-    <script src="js/diagnostic-engine.js?v=33.45"></script>
-    <script src="js/audio-pacer.js?v=33.45"></script>
-    <script src="js/patient-flow.js?v=33.45"></script>
-    <script src="js/admin-engine.js?v=33.45"></script>
-    <script src="js/ai-config.js?v=33.45"></script>
-    <script src="js/ai-engine.js?v=33.45"></script>
-    <script src="js/app.js?v=33.45"></script>
-    <script src="js/text-editor.js?v=33.45"></script>
-    <script src="js/smart-guidance.js?v=33.45"></script>
-    <script src="js/whatsapp-dispatcher.js?v=33.45"></script>
-    <script src="js/mobile-alerts.js?v=33.45"></script>
+    <script src="js/mqtt.min.js?v=33.50"></script>
+    <script src="js/cloud-sync.js?v=33.50"></script>
+    <script src="js/geo-tracker.js?v=33.50"></script>
+    <script src="js/database.js?v=33.50"></script>
+    <script src="js/exercise-image-studio.js?v=33.50"></script>
+    <script src="js/exercises-db.js?v=33.50"></script>
+    <script src="js/diagnostic-engine.js?v=33.50"></script>
+    <script src="js/audio-pacer.js?v=33.50"></script>
+    <script src="js/patient-flow.js?v=33.50"></script>
+    <script src="js/admin-engine.js?v=33.50"></script>
+    <script src="js/ai-config.js?v=33.50"></script>
+    <script src="js/ai-engine.js?v=33.50"></script>
+    <script src="js/app.js?v=33.50"></script>
+    <script src="js/text-editor.js?v=33.50"></script>
+    <script src="js/smart-guidance.js?v=33.50"></script>
+    <script src="js/whatsapp-dispatcher.js?v=33.50"></script>
+    <script src="js/mobile-alerts.js?v=33.50"></script>
 
     <script>
         // مؤشر المراجعين المتواجدين أونلاين الآن (متزامن بدقة مع السحابة ولوحة الإدارة)
