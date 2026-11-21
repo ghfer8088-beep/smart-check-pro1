@@ -499,34 +499,34 @@ function renderSpecializedConsultationReferralCard(patientData) {
     const waUrl = `https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${waText}`;
 
     const cardHTML = `
-        <div class="specialized-referral-card" style="background: linear-gradient(135deg, #0d1522 0%, #152238 100%); border: 2px solid var(--primary-gold); border-radius: 16px; padding: 22px 24px; margin-top: 15px; box-shadow: 0 10px 35px rgba(0,0,0,0.6); animation: fadeIn 0.4s ease;">
-            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1.5px solid rgba(212, 175, 55, 0.35); padding-bottom: 14px; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+        <div class="specialized-referral-card" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2px solid var(--primary-gold); border-radius: 16px; padding: 22px 24px; margin-top: 15px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); animation: fadeIn 0.4s ease;">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1.5px solid #bae6fd; padding-bottom: 14px; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <span style="font-size: 2.2em; background: rgba(212, 175, 55, 0.15); border: 1.5px solid var(--primary-gold); padding: 8px; border-radius: 12px;">${specIcon}</span>
+                    <span style="font-size: 2.2em; background: #f0f9ff; border: 1.5px solid var(--primary-gold); padding: 8px; border-radius: 12px;">${specIcon}</span>
                     <div>
-                        <h3 style="color: #fef08a; margin: 0; font-size: 1.22em; font-weight: 800;">بطاقة التقييم والاستشارة السريرية العاجلة</h3>
-                        <div style="color: #38bdf8; font-size: 0.9em; font-weight: bold; margin-top: 3px;">${specTitle}</div>
+                        <h3 style="color: #0369a1; margin: 0; font-size: 1.22em; font-weight: 800;">بطاقة التقييم والاستشارة السريرية العاجلة</h3>
+                        <div style="color: #0284c7; font-size: 0.9em; font-weight: bold; margin-top: 3px;">${specTitle}</div>
                     </div>
                 </div>
-                <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.8em; font-weight: bold; padding: 5px 14px; border-radius: 20px;">
+                <span style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; font-size: 0.8em; font-weight: bold; padding: 5px 14px; border-radius: 20px;">
                     ✅ تم التوثيق والاعتماد
                 </span>
             </div>
 
             <!-- تفاصيل الملف -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 14px; margin-bottom: 16px; color: #cbd5e1; font-size: 0.9em;">
-                <div>👤 <strong>المراجع:</strong> <span style="color: #fff;">${pName}</span></div>
-                <div>🎂 <strong>العمر:</strong> <span style="color: #fff;">${pAge}</span></div>
-                <div>📱 <strong>الهاتف:</strong> <span style="color: #6ee7b7; direction: ltr; display: inline-block;">${pPhone}</span></div>
-                <div>🩺 <strong>التصنيف:</strong> <span style="color: #fef08a;">حالة تأهيل حركي خاصة</span></div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 14px; margin-bottom: 16px; color: #1e293b; font-size: 0.9em;">
+                <div>👤 <strong>المراجع:</strong> <span style="color: #0f172a;">${pName}</span></div>
+                <div>🎂 <strong>العمر:</strong> <span style="color: #0f172a;">${pAge}</span></div>
+                <div>📱 <strong>الهاتف:</strong> <span style="color: #047857; direction: ltr; display: inline-block;">${pPhone}</span></div>
+                <div>🩺 <strong>التصنيف:</strong> <span style="color: #0369a1;">حالة تأهيل حركي خاصة</span></div>
             </div>
 
             <!-- التوجيه السريري للأمان -->
-            <div style="background: rgba(234, 179, 8, 0.12); border: 1.5px solid #eab308; border-radius: 10px; padding: 14px 16px; margin-bottom: 20px;">
-                <div style="color: #fef08a; font-weight: bold; font-size: 0.95em; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+            <div style="background: #f0f9ff; border: 1.5px solid #bae6fd; border-radius: 10px; padding: 14px 16px; margin-bottom: 20px;">
+                <div style="color: #0369a1; font-weight: bold; font-size: 0.95em; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
                     <span>⚠️</span> توجيه أمان طبي وسريري خاص:
                 </div>
-                <div style="color: #f1f5f9; font-size: 0.88em; line-height: 1.6;">
+                <div style="color: #0f172a; font-size: 0.88em; line-height: 1.6;">
                     ${specAdvice}
                 </div>
             </div>
@@ -538,7 +538,7 @@ function renderSpecializedConsultationReferralCard(patientData) {
                     <span>إرسال التقرير للمعالج جمال قبها مباشرة عبر واتساب</span>
                     <span>➔</span>
                 </a>
-                <div style="color: #94a3b8; font-size: 0.82em; margin-top: 10px;">
+                <div style="color: #475569; font-size: 0.82em; margin-top: 10px;">
                     🌿 يتوفر خيار التنسيق لجلسات في العيادة أو زيارات تأهيل منزلية للحالات التي يصعب نقلها.
                 </div>
             </div>
@@ -565,13 +565,13 @@ function showToast(message, type = 'info', duration = 7000) {
     }
 
     const toast = document.createElement('div');
-    const bg = type === 'success' ? '#10b981' : (type === 'error' ? '#ef4444' : '#d4af37');
-    const color = type === 'info' ? '#0a0e14' : '#ffffff';
+    const bg = type === 'success' ? '#059669' : (type === 'error' ? '#dc2626' : '#0284c7');
+    const color = '#ffffff';
     
-    toast.style.cssText = `background: ${bg}; color: ${color}; padding: 14px 20px; border-radius: 12px; font-weight: bold; font-size: 0.96em; box-shadow: 0 8px 30px rgba(0,0,0,0.6); pointer-events: auto; animation: fadeInToast 0.3s ease; display: flex; align-items: center; justify-content: space-between; gap: 14px; border: 1.5px solid rgba(255,255,255,0.3);`;
+    toast.style.cssText = `background: ${bg}; color: ${color}; padding: 14px 20px; border-radius: 12px; font-weight: 800; font-size: 0.98em; box-shadow: 0 8px 25px rgba(15, 23, 42, 0.22); pointer-events: auto; animation: fadeInToast 0.3s ease; display: flex; align-items: center; justify-content: space-between; gap: 14px; border: 1.5px solid rgba(255,255,255,0.4);`;
     toast.innerHTML = `
         <span style="flex: 1; line-height: 1.5;">${message}</span>
-        <button type="button" onclick="this.parentElement.remove()" style="background: rgba(0,0,0,0.25); border: none; color: ${color}; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 0.85em; font-weight: bold; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">✖</button>
+        <button type="button" onclick="this.parentElement.remove()" style="background: #f8fafc; border: none; color: ${color}; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 0.85em; font-weight: bold; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">✖</button>
     `;
 
     container.appendChild(toast);
@@ -741,9 +741,21 @@ function selectAnatomyPoint(point, element) {
     
     const statusText = document.getElementById('selected-point-label');
     if (statusText) {
-        statusText.textContent = `🎯 تم تحديد: ${point.title}`;
-        statusText.style.color = '#10b981';
+        statusText.textContent = `✅ تم تحديد: ${point.title}`;
+        statusText.style.color = '#047857';
     }
+
+    // مزامنة أزرار الاختيار السريع لكبار السن مع النقطة المختارة
+    try {
+        document.querySelectorAll('.senior-pain-region-btn').forEach(btn => {
+            const bId = btn.getAttribute('data-point-id');
+            if (bId === point.id) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    } catch (e) {}
 
     renderAdaptiveQuestions(point.id);
     
@@ -776,11 +788,36 @@ function selectAnatomyPoint(point, element) {
     }
 }
 
+// دالة الاختيار السريع بضغطة واحدة لكبار السن والمستخدمين الجدد
+window.selectSeniorQuickPainRegion = function(pointId, view, btnEl) {
+    const targetView = view || 'back';
+    if (typeof switchAnatomyView === 'function') {
+        switchAnatomyView(targetView);
+    }
+    const list = targetView === 'front' ? frontPoints : backPoints;
+    const pt = Array.isArray(list) ? list.find(p => p.id === pointId) : null;
+    if (pt) {
+        const containerId = targetView === 'front' ? 'front-anatomy-container' : 'back-anatomy-container';
+        const hotspotEl = document.querySelector(`#${containerId} .anatomy-hotspot[data-point-id="${pointId}"]`);
+        selectAnatomyPoint(pt, hotspotEl);
+        if (btnEl && btnEl.classList) {
+            document.querySelectorAll('.senior-pain-region-btn').forEach(b => b.classList.remove('active'));
+            btnEl.classList.add('active');
+        }
+        const proceedBtn = document.getElementById('btn-goto-step2');
+        if (proceedBtn) {
+            try {
+                proceedBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } catch (e) {}
+        }
+    }
+};
+
 window.handleStep1ProceedClick = function() {
     if (!currentSelectedPoint) {
         if (typeof SmartGuidance !== 'undefined' && typeof SmartGuidance.pointTo === 'function') {
-            const viewport = document.querySelector('.skeleton-viewport') || document.querySelector('.anatomy-card');
-            SmartGuidance.pointTo(viewport, 'يا غالي، انقر أولاً على موضع ألمك من النقاط المضيئة على المجسم لنبدأ معك 👇', {
+            const quickGrid = document.getElementById('senior-quick-pain-grid') || document.querySelector('.skeleton-viewport') || document.querySelector('.anatomy-card');
+            SmartGuidance.pointTo(quickGrid, 'يا غالي، اختر أولاً مكان ألمك بضغطة واحدة من القائمة أو من المجسم لنبدأ معك 👇', {
                 handIcon: '👇',
                 placement: 'top',
                 autoScroll: true
@@ -809,15 +846,15 @@ function handleSmartPainSearch(query) {
     });
 
     if (matches.length === 0) {
-        resultsContainer.innerHTML = `<div style="padding: 10px 14px; color: #94a3b8; font-size: 0.88em;">لم يتم العثور على نقطة مطابقة، يمكنك النقر مباشرة على المجسم.</div>`;
+        resultsContainer.innerHTML = `<div style="padding: 10px 14px; color: #475569; font-size: 0.88em;">لم يتم العثور على نقطة مطابقة، يمكنك النقر مباشرة على المجسم.</div>`;
         resultsContainer.style.display = 'block';
         return;
     }
 
     resultsContainer.innerHTML = matches.slice(0, 6).map(m => `
-        <div onclick="selectPointFromSearch('${m.id}', '${m.view}')" style="padding: 10px 14px; border-bottom: 1px solid #1e293b; color: #ffffff; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;" onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background='transparent'">
+        <div onclick="selectPointFromSearch('${m.id}', '${m.view}')" style="padding: 10px 14px; border-bottom: 1px solid #cbd5e1; color: #0f172a; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s;" onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='transparent'">
             <span style="font-weight: bold; font-size: 0.92em;">🎯 ${m.title}</span>
-            <span style="background: rgba(212, 175, 55, 0.15); color: var(--primary-gold); font-size: 0.78em; padding: 2px 8px; border-radius: 4px;">${m.view === 'front' ? 'المجسم الأمامي' : 'المجسم الخلفي'}</span>
+            <span style="background: #f0f9ff; color: var(--primary-gold); font-size: 0.78em; padding: 2px 8px; border-radius: 4px;">${m.view === 'front' ? 'المجسم الأمامي' : 'المجسم الخلفي'}</span>
         </div>
     `).join('');
     resultsContainer.style.display = 'block';
@@ -1473,16 +1510,16 @@ function renderAdaptiveQuestions(pointId) {
     // الطبقة 1: توصيف نوع وجودة الألم والمسار العصبي (Multi-Select Checkboxes)
     if (pData.tier1_quality) {
         html += `
-        <div style="background: rgba(30, 41, 59, 0.7); padding: 18px 20px; border-radius: 12px; margin-bottom: 18px; border: 1px solid rgba(212, 175, 55, 0.35);">
+        <div style="background: #f8fafc; padding: 18px 20px; border-radius: 12px; margin-bottom: 18px; border: 1px solid #bae6fd;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                 <div style="color: var(--primary-gold); font-weight: bold; font-size: 1.05em;">${pData.tier1_quality.title}</div>
-                <span style="color: #38bdf8; font-size: 0.78em; background: rgba(56, 189, 248, 0.12); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.3);">يمكن اختيار أكثر من عرض</span>
+                <span style="color: #0284c7; font-size: 0.78em; background: #f0f9ff; padding: 3px 8px; border-radius: 6px; border: 1px solid #bae6fd;">يمكن اختيار أكثر من عرض</span>
             </div>
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 ${pData.tier1_quality.options.map(opt => `
-                    <label style="display: flex; align-items: center; gap: 12px; background: #0f172a; border: 1px solid #334155; padding: 12px 14px; border-radius: 8px; cursor: pointer; transition: 0.2s;">
+                    <label style="display: flex; align-items: center; gap: 12px; background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px 14px; border-radius: 8px; cursor: pointer; transition: 0.2s;">
                         <input type="checkbox" name="clinical_q1" value="${opt.value}" data-label="${opt.label}" style="accent-color: var(--primary-gold); width: 18px; height: 18px;">
-                        <span style="color: #f1f5f9; font-size: 0.92em; line-height: 1.5;">${opt.label}</span>
+                        <span style="color: #0f172a; font-size: 0.92em; line-height: 1.5;">${opt.label}</span>
                     </label>
                 `).join('')}
             </div>
@@ -1492,16 +1529,16 @@ function renderAdaptiveQuestions(pointId) {
     // الطبقة 2: الاستجابة الاتجاهية والمحفزات الميكانيكية (Multi-Select Checkboxes)
     if (pData.tier2_mechanical) {
         html += `
-        <div style="background: rgba(30, 41, 59, 0.7); padding: 18px 20px; border-radius: 12px; margin-bottom: 18px; border: 1px solid rgba(212, 175, 55, 0.35);">
+        <div style="background: #f8fafc; padding: 18px 20px; border-radius: 12px; margin-bottom: 18px; border: 1px solid #bae6fd;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                 <div style="color: var(--primary-gold); font-weight: bold; font-size: 1.05em;">${pData.tier2_mechanical.title}</div>
-                <span style="color: #38bdf8; font-size: 0.78em; background: rgba(56, 189, 248, 0.12); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.3);">يمكن اختيار أكثر من محفز</span>
+                <span style="color: #0284c7; font-size: 0.78em; background: #f0f9ff; padding: 3px 8px; border-radius: 6px; border: 1px solid #bae6fd;">يمكن اختيار أكثر من محفز</span>
             </div>
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 ${pData.tier2_mechanical.options.map(opt => `
-                    <label style="display: flex; align-items: center; gap: 12px; background: #0f172a; border: 1px solid #334155; padding: 12px 14px; border-radius: 8px; cursor: pointer; transition: 0.2s;">
+                    <label style="display: flex; align-items: center; gap: 12px; background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px 14px; border-radius: 8px; cursor: pointer; transition: 0.2s;">
                         <input type="checkbox" name="clinical_q2" value="${opt.value}" data-label="${opt.label}" style="accent-color: var(--primary-gold); width: 18px; height: 18px;">
-                        <span style="color: #f1f5f9; font-size: 0.92em; line-height: 1.5;">${opt.label}</span>
+                        <span style="color: #0f172a; font-size: 0.92em; line-height: 1.5;">${opt.label}</span>
                     </label>
                 `).join('')}
             </div>
@@ -1511,16 +1548,16 @@ function renderAdaptiveQuestions(pointId) {
     // الطبقة 3: خريطة الأعصاب والأعراض الحسية والحركية (Checkboxes)
     if (pData.tier3_neuro_mapping) {
         html += `
-        <div style="background: rgba(30, 41, 59, 0.7); padding: 18px 20px; border-radius: 12px; margin-bottom: 18px; border: 1px solid rgba(212, 175, 55, 0.35);">
+        <div style="background: #f8fafc; padding: 18px 20px; border-radius: 12px; margin-bottom: 18px; border: 1px solid #bae6fd;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                 <div style="color: var(--primary-gold); font-weight: bold; font-size: 1.05em;">${pData.tier3_neuro_mapping.title}</div>
-                <span style="color: #10b981; font-size: 0.78em; background: rgba(16, 185, 129, 0.12); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.3);">اختر كل ما تشعر به</span>
+                <span style="color: #10b981; font-size: 0.78em; background: #f0fdf4; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.3);">اختر كل ما تشعر به</span>
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px;">
                 ${pData.tier3_neuro_mapping.options.map(opt => `
-                    <label style="display: flex; align-items: center; gap: 10px; background: #0f172a; border: 1px solid #334155; padding: 11px 14px; border-radius: 8px; cursor: pointer;">
+                    <label style="display: flex; align-items: center; gap: 10px; background: #f8fafc; border: 1px solid #cbd5e1; padding: 11px 14px; border-radius: 8px; cursor: pointer;">
                         <input type="checkbox" name="clinical_q3" value="${opt.id}" data-label="${opt.label}" style="accent-color: #10b981; width: 18px; height: 18px;">
-                        <span style="color: #cbd5e1; font-size: 0.9em; line-height: 1.4;">${opt.label}</span>
+                        <span style="color: #1e293b; font-size: 0.9em; line-height: 1.4;">${opt.label}</span>
                     </label>
                 `).join('')}
             </div>
@@ -1530,17 +1567,17 @@ function renderAdaptiveQuestions(pointId) {
     // الطبقة 4: الاختبار السريري الاستدلالي (Provocation Test)
     if (pData.tier4_provocation) {
         html += `
-        <div style="background: rgba(30, 41, 59, 0.7); padding: 18px 20px; border-radius: 12px; margin-bottom: 18px; border: 1px solid rgba(212, 175, 55, 0.35);">
+        <div style="background: #f8fafc; padding: 18px 20px; border-radius: 12px; margin-bottom: 18px; border: 1px solid #bae6fd;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
                 <div style="color: var(--primary-gold); font-weight: bold; font-size: 1.05em;">${pData.tier4_provocation.title}</div>
-                <span style="color: #38bdf8; font-size: 0.78em; background: rgba(56, 189, 248, 0.12); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.3);">اختبار استدلالي</span>
+                <span style="color: #0284c7; font-size: 0.78em; background: #f0f9ff; padding: 3px 8px; border-radius: 6px; border: 1px solid #bae6fd;">اختبار استدلالي</span>
             </div>
-            <div style="color: #cbd5e1; font-size: 0.9em; margin-bottom: 12px;">${pData.tier4_provocation.question}</div>
+            <div style="color: #1e293b; font-size: 0.9em; margin-bottom: 12px;">${pData.tier4_provocation.question}</div>
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 ${pData.tier4_provocation.options.map(opt => `
-                    <label style="display: flex; align-items: center; gap: 12px; background: #0f172a; border: 1px solid #334155; padding: 12px 14px; border-radius: 8px; cursor: pointer; transition: 0.2s;">
+                    <label style="display: flex; align-items: center; gap: 12px; background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px 14px; border-radius: 8px; cursor: pointer; transition: 0.2s;">
                         <input type="checkbox" name="clinical_q4" value="${opt.value}" data-label="${opt.label}" style="accent-color: var(--primary-gold); width: 18px; height: 18px;">
-                        <span style="color: #f1f5f9; font-size: 0.92em; line-height: 1.5;">${opt.label}</span>
+                        <span style="color: #0f172a; font-size: 0.92em; line-height: 1.5;">${opt.label}</span>
                     </label>
                 `).join('')}
             </div>
@@ -1558,9 +1595,9 @@ function renderRedFlags() {
     let html = '';
     ClinicalEngine.RED_FLAGS_CRITERIA.forEach(rf => {
         html += `
-        <label class="red-flag-item" style="display: flex; align-items: center; gap: 10px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; cursor: pointer;">
+        <label class="red-flag-item" style="display: flex; align-items: center; gap: 10px; background: #fef2f2; border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; cursor: pointer;">
             <input type="checkbox" name="red_flag" value="${rf.id}" style="accent-color: #ef4444; width: 16px; height: 16px;">
-            <span style="color: #fca5a5; font-size: 0.9em; font-weight: 500;">${rf.label}</span>
+            <span style="color: #dc2626; font-size: 0.9em; font-weight: 500;">${rf.label}</span>
         </label>`;
     });
 
@@ -1594,37 +1631,37 @@ function showRoyalReportLoadingModal() {
         `;
 
         modal.innerHTML = `
-            <div style="background: linear-gradient(135deg, #0b1320 0%, #16243b 50%, #0d1a2d 100%); border: 2px solid var(--primary-gold, #d4af37); box-shadow: 0 0 50px rgba(212, 175, 55, 0.4), 0 25px 60px rgba(0,0,0,0.85); border-radius: 22px; padding: 36px 28px; max-width: 480px; width: 100%; text-align: center; color: #fff; position: relative; overflow: hidden;">
-                <div style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, transparent 60%); pointer-events: none;"></div>
+            <div style="background: linear-gradient(135deg, #0b1320 0%, #16243b 50%, #0d1a2d 100%); border: 2px solid var(--primary-gold, #bae6fd); box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); border-radius: 22px; padding: 36px 28px; max-width: 480px; width: 100%; text-align: center; color: #0f172a; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); pointer-events: none;"></div>
                 
                 <div style="font-size: 3.8rem; margin-bottom: 16px; line-height: 1; display: inline-block; filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.7)); animation: royalHourglassSpin 2.5s cubic-bezier(0.65, 0, 0.35, 1) infinite;">
                     ⏳
                 </div>
                 
                 <div style="margin-bottom: 14px;">
-                    <span style="display: inline-flex; align-items: center; gap: 6px; background: rgba(212, 175, 55, 0.15); border: 1px solid #d4af37; padding: 5px 14px; border-radius: 30px; font-size: 0.85rem; color: #fef08a; font-weight: 700;">
+                    <span style="display: inline-flex; align-items: center; gap: 6px; background: #f0f9ff; border: 1px solid #bae6fd; padding: 5px 14px; border-radius: 30px; font-size: 0.85rem; color: #0369a1; font-weight: 700;">
                         <span>✨</span> الاستشاري الافتراضي • «وداعاً للألم»
                     </span>
                 </div>
                 
-                <h3 style="color: #ffffff; font-size: 1.4rem; font-weight: 900; margin: 0 0 10px 0; letter-spacing: 0.3px;">
+                <h3 style="color: #0f172a; font-size: 1.4rem; font-weight: 900; margin: 0 0 10px 0; letter-spacing: 0.3px;">
                     تقريرك السريري قيد التحضير والتجهيز
                 </h3>
                 
-                <p style="color: #cbd5e1; font-size: 0.92rem; line-height: 1.7; margin: 0 0 18px 0;">
+                <p style="color: #1e293b; font-size: 0.92rem; line-height: 1.7; margin: 0 0 18px 0;">
                     يرجى الانتظار ثوانٍ معدودة... يقوم النظام بتحليل كافة الأعراض وصياغة التفسير البيوميكانيكي وخطة التعافي المخصصة لك بدقة.
                 </p>
                 
-                <div style="background: rgba(15, 23, 42, 0.8); height: 8px; border-radius: 10px; overflow: hidden; border: 1px solid rgba(212, 175, 55, 0.35); margin-bottom: 14px; position: relative;">
-                    <div id="royal-loading-bar-inner" style="background: linear-gradient(90deg, #d4af37 0%, #10b981 50%, #38bdf8 100%); height: 100%; width: 25%; border-radius: 10px; transition: width 0.35s ease; box-shadow: 0 0 12px rgba(212, 175, 55, 0.8);"></div>
+                <div style="background: #f8fafc; height: 8px; border-radius: 10px; overflow: hidden; border: 1px solid #bae6fd; margin-bottom: 14px; position: relative;">
+                    <div id="royal-loading-bar-inner" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); height: 100%; width: 25%; border-radius: 10px; transition: width 0.35s ease; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);"></div>
                 </div>
                 
-                <div id="royal-loading-status-text" style="font-size: 0.84rem; color: #38bdf8; font-weight: 600; min-height: 20px;">
+                <div id="royal-loading-status-text" style="font-size: 0.84rem; color: #0284c7; font-weight: 600; min-height: 20px;">
                     🔍 جاري مضاهاة المعايير السريرية وتحديد المستوى التشريحي...
                 </div>
 
                 <div style="margin-top: 20px;">
-                    <button type="button" onclick="hideRoyalReportLoadingModal(); goToStep(3);" style="background: rgba(212, 175, 55, 0.15); border: 1.5px solid rgba(212, 175, 55, 0.4); color: #fef08a; padding: 7px 20px; border-radius: 20px; font-size: 0.86rem; font-weight: bold; cursor: pointer; transition: 0.2s;">
+                    <button type="button" onclick="hideRoyalReportLoadingModal(); goToStep(3);" style="background: #f0f9ff; border: 1.5px solid #bae6fd; color: #0369a1; padding: 7px 20px; border-radius: 20px; font-size: 0.86rem; font-weight: bold; cursor: pointer; transition: 0.2s;">
                         ⚡ تخطي الانتظار وعرض التقرير فوراً ❯
                     </button>
                 </div>
@@ -2426,64 +2463,64 @@ function sendWhatsAppDiagnosticReport() {
 
 function getChiropracticDefinitionHTML() {
     return `
-        <div style="background: #0f172a; border-radius: 14px; padding: 20px; border: 1.5px solid var(--primary-gold); margin-top: 25px; margin-bottom: 25px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
+        <div style="background: #f8fafc; border-radius: 14px; padding: 20px; border: 1.5px solid var(--primary-gold); margin-top: 25px; margin-bottom: 25px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
                 <div>
                     <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.2em; font-weight: 800;">✨ ما هي تقنية الكايروبراكتيك اليدوية (Chiropractic Technique)؟</h3>
-                    <div style="color: #94a3b8; font-size: 0.84em; margin-top: 3px;">العلم الطبي المتخصص في تقويم مفاصل العمود الفقري يدوياً لتحرير الضغط العصبي وإزالة أسباب الألم الحقيقية.</div>
+                    <div style="color: #475569; font-size: 0.84em; margin-top: 3px;">العلم الطبي المتخصص في تقويم مفاصل العمود الفقري يدوياً لتحرير الضغط العصبي وإزالة أسباب الألم الحقيقية.</div>
                 </div>
-                <span style="color: #10b981; font-weight: bold; font-size: 0.84em; background: rgba(16, 185, 129, 0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid #10b981;">تحسن ملموس وفارق واضح من أول جلسة</span>
+                <span style="color: #10b981; font-weight: bold; font-size: 0.84em; background: #f0fdf4; padding: 4px 10px; border-radius: 6px; border: 1px solid #10b981;">تحسن ملموس وفارق واضح من أول جلسة</span>
             </div>
             
             <!-- قائمة ميزات الكايروبراكتيك الأنيقة والذكية على شكل نقاط منسقة بدون كروت ضخمة -->
             <div style="display: flex; flex-direction: column; gap: 8px;">
-                <div style="display: flex; align-items: flex-start; gap: 10px; background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 8px; padding: 10px 14px;">
+                <div style="display: flex; align-items: flex-start; gap: 10px; background: #f8fafc; border: 1px solid #bae6fd; border-radius: 8px; padding: 10px 14px;">
                     <span style="font-size: 1.15em; line-height: 1.2;">🎯</span>
                     <div style="flex: 1;">
                         <span style="color: var(--primary-gold); font-weight: bold; font-size: 0.9em;">علاج السبب الميكانيكي الجذري: </span>
                         <span style="color: #10b981; font-weight: bold; font-size: 0.88em;">إعادة اصطفاف الفقرات والمفاصل يدوياً بدقة</span>
-                        <div style="color: #cbd5e1; font-size: 0.82em; margin-top: 2px;">تفريغ فوري للضغط الانضغاطي عن جذور الأعصاب والأوتار المشدودة.</div>
+                        <div style="color: #1e293b; font-size: 0.82em; margin-top: 2px;">تفريغ فوري للضغط الانضغاطي عن جذور الأعصاب والأوتار المشدودة.</div>
                     </div>
                 </div>
 
-                <div style="display: flex; align-items: flex-start; gap: 10px; background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 8px; padding: 10px 14px;">
+                <div style="display: flex; align-items: flex-start; gap: 10px; background: #f8fafc; border: 1px solid #bae6fd; border-radius: 8px; padding: 10px 14px;">
                     <span style="font-size: 1.15em; line-height: 1.2;">💧</span>
                     <div style="flex: 1;">
                         <span style="color: var(--primary-gold); font-weight: bold; font-size: 0.9em;">تغذية وتروية الغضاريف: </span>
                         <span style="color: #10b981; font-weight: bold; font-size: 0.88em;">تفريغ الضغط واستعادة تدفق السائل الزلالي</span>
-                        <div style="color: #cbd5e1; font-size: 0.82em; margin-top: 2px;">تغذية الديسك ومنع تآكله واستعادة المرونة الفسيولوجية الطبيعية.</div>
+                        <div style="color: #1e293b; font-size: 0.82em; margin-top: 2px;">تغذية الديسك ومنع تآكله واستعادة المرونة الفسيولوجية الطبيعية.</div>
                     </div>
                 </div>
 
-                <div style="display: flex; align-items: flex-start; gap: 10px; background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 8px; padding: 10px 14px;">
+                <div style="display: flex; align-items: flex-start; gap: 10px; background: #f8fafc; border: 1px solid #bae6fd; border-radius: 8px; padding: 10px 14px;">
                     <span style="font-size: 1.15em; line-height: 1.2;">🛡️</span>
                     <div style="flex: 1;">
                         <span style="color: var(--primary-gold); font-weight: bold; font-size: 0.9em;">الأمان والسلامة الصحية 100%: </span>
                         <span style="color: #10b981; font-weight: bold; font-size: 0.88em;">علاج طبيعي يدوي بدون أدوية ولا جراحة</span>
-                        <div style="color: #cbd5e1; font-size: 0.82em; margin-top: 2px;">تجنب أضرار المسكنات ومخاطر العمليات الجراحية والالتصاقات.</div>
+                        <div style="color: #1e293b; font-size: 0.82em; margin-top: 2px;">تجنب أضرار المسكنات ومخاطر العمليات الجراحية والالتصاقات.</div>
                     </div>
                 </div>
 
-                <div style="display: flex; align-items: flex-start; gap: 10px; background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 8px; padding: 10px 14px;">
+                <div style="display: flex; align-items: flex-start; gap: 10px; background: #f8fafc; border: 1px solid #bae6fd; border-radius: 8px; padding: 10px 14px;">
                     <span style="font-size: 1.15em; line-height: 1.2;">⚡</span>
                     <div style="flex: 1;">
                         <span style="color: var(--primary-gold); font-weight: bold; font-size: 0.9em;">سرعة الاستجابة والشفاء: </span>
                         <span style="color: #10b981; font-weight: bold; font-size: 0.88em;">فارق ملموس وراحة ملحوظة من أول جلسة</span>
-                        <div style="color: #cbd5e1; font-size: 0.82em; margin-top: 2px;">استعادة سريعة للقدرة على المشي والعمل والجلوس والنوم براحة تامة.</div>
+                        <div style="color: #1e293b; font-size: 0.82em; margin-top: 2px;">استعادة سريعة للقدرة على المشي والعمل والجلوس والنوم براحة تامة.</div>
                     </div>
                 </div>
 
-                <div style="display: flex; align-items: flex-start; gap: 10px; background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 8px; padding: 10px 14px;">
+                <div style="display: flex; align-items: flex-start; gap: 10px; background: #f8fafc; border: 1px solid #bae6fd; border-radius: 8px; padding: 10px 14px;">
                     <span style="font-size: 1.15em; line-height: 1.2;">👨‍⚕️</span>
                     <div style="flex: 1;">
-                        <span style="color: #38bdf8; font-weight: bold; font-size: 0.9em;">تحديد عدد الجلسات وخصوصية الحالة: </span>
-                        <span style="color: #38bdf8; font-weight: bold; font-size: 0.88em;">المعالج المختص هو الذي يحدد عدد الجلسات</span>
-                        <div style="color: #cbd5e1; font-size: 0.82em; margin-top: 2px;">خطة موجهة لكل مراجع بناءً على التقييم السريري الدقيق بعد أول جلسة فحص.</div>
+                        <span style="color: #0284c7; font-weight: bold; font-size: 0.9em;">تحديد عدد الجلسات وخصوصية الحالة: </span>
+                        <span style="color: #0284c7; font-weight: bold; font-size: 0.88em;">المعالج المختص هو الذي يحدد عدد الجلسات</span>
+                        <div style="color: #1e293b; font-size: 0.82em; margin-top: 2px;">خطة موجهة لكل مراجع بناءً على التقييم السريري الدقيق بعد أول جلسة فحص.</div>
                     </div>
                 </div>
             </div>
 
-            <div style="margin-top: 12px; background: rgba(56, 189, 248, 0.08); padding: 10px 14px; border-radius: 8px; border-right: 3px solid #38bdf8; color: #cbd5e1; font-size: 0.82em; line-height: 1.6;">
+            <div style="margin-top: 12px; background: #f0f9ff; padding: 10px 14px; border-radius: 8px; border-right: 3px solid #38bdf8; color: #1e293b; font-size: 0.82em; line-height: 1.6;">
                 💡 <strong>تنويه سريري هام:</strong> كل حالة لها خصوصيتها التشريحية؛ لذلك لا يتم توحيد عدد الجلسات لجميع المرضى، بل يحدد المعالج المختص احتياجك الفعلي بدقة بعد جلسة الفحص والتقييم السريري المباشر.
             </div>
         </div>
@@ -2493,21 +2530,21 @@ function getChiropracticDefinitionHTML() {
 // بطاقة حاسبة المقارنة والتوفير المالي (Cost Avoidance & Psychological Contrast Calculator)
 function getTreatmentCostCalculatorHTML() {
     return `
-        <details class="no-print" style="background: linear-gradient(135deg, #0f172a 0%, #17253d 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; margin-bottom: 22px; box-shadow: 0 6px 25px rgba(0,0,0,0.35); overflow: hidden;">
+        <details class="no-print" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; margin-bottom: 22px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); overflow: hidden;">
             <summary style="padding: 14px 18px; cursor: pointer; color: var(--primary-gold); font-weight: 800; font-size: 1em; display: flex; align-items: center; justify-content: space-between; list-style: none; user-select: none;">
                 <span style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 1.3em;">💰</span>
                     <span>مقارنة التوفير والأمان: الكايروبراكتيك مقابل الجراحة والأدوية</span>
                 </span>
-                <span style="background: rgba(16, 185, 129, 0.18); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 12px; border-radius: 6px; font-size: 0.82em; font-weight: bold;">
+                <span style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; padding: 4px 12px; border-radius: 6px; font-size: 0.82em; font-weight: bold;">
                     عرض المقارنة ⬅️
                 </span>
             </summary>
-            <div style="padding: 16px 18px; border-top: 1px solid rgba(212, 175, 55, 0.2);">
+            <div style="padding: 16px 18px; border-top: 1px solid #bae6fd;">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
-                    <div style="background: rgba(239, 68, 68, 0.08); border: 1.5px solid rgba(239, 68, 68, 0.4); border-radius: 10px; padding: 16px;">
+                    <div style="background: #fef2f2; border: 1.5px solid rgba(239, 68, 68, 0.4); border-radius: 10px; padding: 16px;">
                         <div style="color: #ef4444; font-weight: bold; font-size: 0.95em; margin-bottom: 8px;">❌ مسار المسكنات والجراحة (تكلفة باهظة وقلق دائم):</div>
-                        <ul style="color: #fca5a5; font-size: 0.86em; line-height: 1.8; margin: 0; padding-right: 18px;">
+                        <ul style="color: #dc2626; font-size: 0.86em; line-height: 1.8; margin: 0; padding-right: 18px;">
                             <li>مسكنات وأدوية دورية تخفي الألم مؤقتاً وتجهد الكلى والمعدة.</li>
                             <li>صور رنين متكررة وفحوصات تكلف مئات الدنانير دون حل ميكانيكي حقيقي.</li>
                             <li>شبح العمليات الجراحية المعقدة وفترات النقاهة الطويلة ومخاطر الالتصاقات.</li>
@@ -2515,9 +2552,9 @@ function getTreatmentCostCalculatorHTML() {
                         </ul>
                     </div>
 
-                    <div style="background: rgba(16, 185, 129, 0.08); border: 1.5px solid rgba(16, 185, 129, 0.4); border-radius: 10px; padding: 16px;">
+                    <div style="background: #f0fdf4; border: 1.5px solid rgba(16, 185, 129, 0.4); border-radius: 10px; padding: 16px;">
                         <div style="color: #10b981; font-weight: bold; font-size: 0.95em; margin-bottom: 8px;">✅ مسار الكايروبراكتيك اليدوي في وداعاً للألم:</div>
-                        <ul style="color: #6ee7b7; font-size: 0.86em; line-height: 1.8; margin: 0; padding-right: 18px;">
+                        <ul style="color: #047857; font-size: 0.86em; line-height: 1.8; margin: 0; padding-right: 18px;">
                             <li>علاج السبب الميكانيكي وتفريغ ضغط جذر العصب من الجلسة الأولى.</li>
                             <li>طبيعي وآمن 100% يدوياً بدون أي أدوية ولا حقن كورتيزون ولا جراحة.</li>
                             <li>تحسن ملموس وفارق واضح يختصر عليك شهوراً من التعب والمراجعات.</li>
@@ -2533,18 +2570,18 @@ function getTreatmentCostCalculatorHTML() {
 // بطاقة خدمة قراءة الرنين المغناطيسي المجانية (MRI Second Opinion Card)
 function getMriConsultationCardHTML() {
     return `
-        <div class="no-print" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #38bdf8; border-radius: 14px; padding: 22px; margin-bottom: 25px; box-shadow: 0 8px 30px rgba(56, 189, 248, 0.15);">
+        <div class="no-print" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid #38bdf8; border-radius: 14px; padding: 22px; margin-bottom: 25px; box-shadow: 0 8px 30px rgba(56, 189, 248, 0.15);">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                 <div style="flex: 1; min-width: 270px;">
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
                         <span style="font-size: 1.5em;">🩻</span>
-                        <h4 style="color: #38bdf8; margin: 0; font-size: 1.2em;">خدمة قراءة وتفسير تقرير الرنين المغناطيسي (MRI) مجاناً</h4>
+                        <h4 style="color: #0284c7; margin: 0; font-size: 1.2em;">خدمة قراءة وتفسير تقرير الرنين المغناطيسي (MRI) مجاناً</h4>
                     </div>
-                    <p style="color: #e2e8f0; font-size: 0.92em; line-height: 1.6; margin: 0 0 6px 0;">
+                    <p style="color: #1e293b; font-size: 0.92em; line-height: 1.6; margin: 0 0 6px 0;">
                         لديك صورة رنين مغناطيسي (MRI) أو أشعة سينية سابقة للعمود الفقري أو المفاصل؟ 
                         أرسل التقرير أو الصور مباشرة للمعالج عبر واتساب ليقوم بقراءتها وتوضيح الخلل الميكانيكي لك <strong>مجاناً وبشكل مفصل</strong>.
                     </p>
-                    <div style="color: #fef08a; font-size: 0.82em;">✓ استشارة سريرية وتوجيه دقيق بدون أي التزام مالي مسبق.</div>
+                    <div style="color: #0369a1; font-size: 0.82em;">✓ استشارة سريرية وتوجيه دقيق بدون أي التزام مالي مسبق.</div>
                 </div>
                 <div>
                     <a href="https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent('مرحباً دكتور، لدي صورة/تقرير رنين مغناطيسي (MRI) وأود إرسالها لقراءتها وتحديد خطة العلاج المناسبة لحالتي.')}" target="_blank" style="background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); color: #0a0e14; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.95em; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);">
@@ -2559,17 +2596,17 @@ function getMriConsultationCardHTML() {
 // محاكي ضغط الفقرات وتفريغ الأعصاب التفاعلي المطور (Advanced 3D Biomechanical Spine Simulator)
 function getInteractiveSpinalSimulatorHTML(painAreaTitle = 'العمود الفقري') {
     return `
-        <details class="no-print spinal-simulator-card" style="background: linear-gradient(135deg, #070d18 0%, #101c2e 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; margin-top: 14px; margin-bottom: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.5); overflow: hidden;">
+        <details class="no-print spinal-simulator-card" style="background: linear-gradient(135deg, #070d18 0%, #101c2e 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; margin-top: 14px; margin-bottom: 20px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); overflow: hidden;">
             <summary style="padding: 14px 18px; cursor: pointer; color: var(--primary-gold); font-weight: 800; font-size: 1em; display: flex; align-items: center; justify-content: space-between; list-style: none; user-select: none;">
                 <span style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 1.4em;">🩻</span>
                     <span>محاكي آلية ضغط الديسك وتفريغ العصب (Live 3D)</span>
                 </span>
-                <span style="background: rgba(212, 175, 55, 0.2); border: 1px solid var(--primary-gold); color: #fef08a; padding: 4px 12px; border-radius: 6px; font-size: 0.82em; font-weight: bold;">
+                <span style="background: #f0f9ff; border: 1px solid var(--primary-gold); color: #0369a1; padding: 4px 12px; border-radius: 6px; font-size: 0.82em; font-weight: bold;">
                     🔬 انقر للمشاهدة والتفاعل ⬅️
                 </span>
             </summary>
-            <div style="padding: 16px 14px; border-top: 1px solid rgba(212, 175, 55, 0.2);">
+            <div style="padding: 16px 14px; border-top: 1px solid #bae6fd;">
             
             <!-- ترويسة المحاكي -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
@@ -2577,24 +2614,24 @@ function getInteractiveSpinalSimulatorHTML(painAreaTitle = 'العمود الف�
                     <span style="font-size: 1.6em;">🩻</span>
                     <div>
                         <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.15em; font-weight: 800;">محاكي آلية حدوث الديسك وتفريغ الضغط عن العصب (Live 3D)</h3>
-                        <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">توضيح سريري مبسط لكيفية فتق الديسك واصطدامه بالعصب، وكيف يحرره الكايروبراكتيك</div>
+                        <div style="color: #475569; font-size: 0.78em; margin-top: 2px;">توضيح سريري مبسط لكيفية فتق الديسك واصطدامه بالعصب، وكيف يحرره الكايروبراكتيك</div>
                     </div>
                 </div>
-                <span id="simulator-status-badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1.5px solid #ef4444; padding: 5px 10px; border-radius: 6px; font-size: 0.8em; font-weight: bold;">
+                <span id="simulator-status-badge" style="background: #fef2f2; color: #ef4444; border: 1.5px solid #ef4444; padding: 5px 10px; border-radius: 6px; font-size: 0.8em; font-weight: bold;">
                     ⚠️ المرحلة 1: انضغاط حاد وبروز الديسك على العصب
                 </span>
             </div>
 
             <!-- توجيه إرشادي لاستخدام مؤشر المحاكاة -->
-            <div style="background: rgba(212, 175, 55, 0.1); border: 1px solid var(--primary-gold); border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+            <div style="background: #f0f9ff; border: 1px solid var(--primary-gold); border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
                 <span style="font-size: 1.2em;">👆</span>
-                <div style="color: #fef08a; font-size: 0.82em; line-height: 1.5;">
+                <div style="color: #0369a1; font-size: 0.82em; line-height: 1.5;">
                     <strong>توجيه المريض:</strong> اسحب <strong>مؤشر المحاكاة</strong> بالأسفل أو اضغط على <strong>المراحل (1، 2، 3)</strong> لمشاهدة كيف يتباعد عظم الفقرتين وتتحرر جذور الأعصاب مباشرة من قبضة الديسك.
                 </div>
             </div>
 
             <!-- منطقة المحاكاة البصرية الكبيرة SVG -->
-            <div style="display: flex; justify-content: center; align-items: center; background: radial-gradient(circle at center, #0a1322 0%, #03060c 100%); border-radius: 12px; padding: 8px 4px; border: 1.5px solid #1e293b; margin-bottom: 10px; position: relative; overflow: hidden;">
+            <div style="display: flex; justify-content: center; align-items: center; background: radial-gradient(circle at center, #0a1322 0%, #03060c 100%); border-radius: 12px; padding: 8px 4px; border: 1.5px solid #cbd5e1; margin-bottom: 10px; position: relative; overflow: hidden;">
                 <svg id="spinal-sim-svg" viewBox="0 0 860 460" width="100%" class="spinal-sim-svg" style="max-width: 860px; display: block; margin: 0 auto; filter: drop-shadow(0 8px 25px rgba(0,0,0,0.7));">
                     <defs>
                         <!-- تدرج الفقرة العلوية -->
@@ -2812,7 +2849,7 @@ function getInteractiveSpinalSimulatorHTML(painAreaTitle = 'العمود الف�
             </div>
 
             <!-- لوحة التحكم المباشرة الملتصقة بالمجسم (Control Dock) -->
-            <div style="background: #090f1a; border: 1.5px solid rgba(212, 175, 55, 0.4); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px;">
+            <div style="background: #090f1a; border: 1.5px solid #bae6fd; border-radius: 12px; padding: 12px 14px; margin-bottom: 12px;">
                 
                 <!-- السلايدر التفاعلي المباشر -->
                 <div style="margin-bottom: 10px;">
@@ -2826,36 +2863,36 @@ function getInteractiveSpinalSimulatorHTML(painAreaTitle = 'العمود الف�
 
                 <!-- أزرار المراحل السريرية بنقرة واحدة (3-Column Grid) -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px;">
-                    <button type="button" onclick="setSpinalPreset(0)" style="background: rgba(239, 68, 68, 0.18); border: 1px solid #ef4444; color: #fca5a5; padding: 8px 4px; border-radius: 6px; font-weight: bold; font-size: 0.78em; cursor: pointer; text-align: center;">
+                    <button type="button" onclick="setSpinalPreset(0)" style="background: #fef2f2; border: 1px solid #ef4444; color: #dc2626; padding: 8px 4px; border-radius: 6px; font-weight: bold; font-size: 0.78em; cursor: pointer; text-align: center;">
                         🔴 1. انضغاط وفتق الديسك
                     </button>
-                    <button type="button" onclick="setSpinalPreset(50)" style="background: rgba(245, 158, 11, 0.18); border: 1px solid #f59e0b; color: #fef08a; padding: 8px 4px; border-radius: 6px; font-weight: bold; font-size: 0.78em; cursor: pointer; text-align: center;">
+                    <button type="button" onclick="setSpinalPreset(50)" style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0369a1; padding: 8px 4px; border-radius: 6px; font-weight: bold; font-size: 0.78em; cursor: pointer; text-align: center;">
                         🟡 2. تباعد جزئي للفقرات
                     </button>
-                    <button type="button" onclick="setSpinalPreset(100)" style="background: rgba(16, 185, 129, 0.18); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 4px; border-radius: 6px; font-weight: bold; font-size: 0.78em; cursor: pointer; text-align: center;">
+                    <button type="button" onclick="setSpinalPreset(100)" style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; padding: 8px 4px; border-radius: 6px; font-weight: bold; font-size: 0.78em; cursor: pointer; text-align: center;">
                         🟢 3. تحرر العصب بالكايروبراكتيك
                     </button>
                 </div>
 
                 <!-- شريط المؤشرات السريرية الحية المدمج بنقرة واحدة -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
-                    <div style="background: #111827; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 6px; padding: 6px 4px; text-align: center;">
-                        <div style="color: #94a3b8; font-size: 0.7em;">بروز نتوء الديسك:</div>
+                    <div style="background: #ffffff; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 6px; padding: 6px 4px; text-align: center;">
+                        <div style="color: #475569; font-size: 0.7em;">بروز نتوء الديسك:</div>
                         <div id="sim-metric-bulge" style="font-size: 1.05em; font-weight: 800; color: #ef4444;">8.8 ملم</div>
                     </div>
-                    <div style="background: #111827; border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 6px; padding: 6px 4px; text-align: center;">
-                        <div style="color: #94a3b8; font-size: 0.7em;">الضغط على العصب:</div>
-                        <div id="sim-metric-nerve" style="font-size: 1.05em; font-weight: 800; color: #f59e0b;">95%</div>
+                    <div style="background: #ffffff; border: 1px solid #bae6fd; border-radius: 6px; padding: 6px 4px; text-align: center;">
+                        <div style="color: #475569; font-size: 0.7em;">الضغط على العصب:</div>
+                        <div id="sim-metric-nerve" style="font-size: 1.05em; font-weight: 800; color: #0369a1;">95%</div>
                     </div>
-                    <div style="background: #111827; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 6px; padding: 6px 4px; text-align: center;">
-                        <div style="color: #94a3b8; font-size: 0.7em;">المسافة بين الفقرتين:</div>
-                        <div id="sim-metric-disc" style="font-size: 1.05em; font-weight: 800; color: #38bdf8;">5.5 ملم</div>
+                    <div style="background: #ffffff; border: 1px solid #bae6fd; border-radius: 6px; padding: 6px 4px; text-align: center;">
+                        <div style="color: #475569; font-size: 0.7em;">المسافة بين الفقرتين:</div>
+                        <div id="sim-metric-disc" style="font-size: 1.05em; font-weight: 800; color: #0284c7;">5.5 ملم</div>
                     </div>
                 </div>
             </div>
 
             <!-- مربع التفسير السريري المتغير -->
-            <div id="sim-explanation-text" style="background: rgba(15, 23, 42, 0.95); border-right: 4px solid #ef4444; padding: 10px 14px; border-radius: 8px; font-size: 0.84em; color: #fca5a5; line-height: 1.6;">
+            <div id="sim-explanation-text" style="background: #f8fafc; border-right: 4px solid #ef4444; padding: 10px 14px; border-radius: 8px; font-size: 0.84em; color: #dc2626; line-height: 1.6;">
                 المرحلة 1 (انضغاط حاد): تتقارب الفقرتان بسبب تشنج العضلات أو الخلل الميكانيكي، مما يضغط النواة اللبية ويجعل الألياف الخارجية للديسك تبرز للخلف وتصطدم مباشرة بالعصب الشوكي؛ فينتج ألم حاد وتنميل ممتد للساق أو الذراع.
             </div>
             </div>
@@ -3064,7 +3101,7 @@ function updateSpinalSimulation(val) {
         }
         if (explanation) {
             explanation.style.borderColor = '#f59e0b';
-            explanation.style.color = '#fef08a';
+            explanation.style.color = '#0369a1';
             explanation.innerHTML = '⚡ <strong>المرحلة 2 (تأثير الراحة والاستطالة):</strong> بفضل تمارين الإطالة والوضعيات الصحيحة تتباعد الفقرات جزئياً، مما يخفف شدة الاحتكاك المباشر مع العصب بنسبة 50% ويقلل من حدة الكهرباء والتنميل مؤقتاً.';
         }
     } else {
@@ -3094,21 +3131,21 @@ function updateSpinalSimulation(val) {
 // بطاقة خدمة الزيارات المنزلية الفاخرة لكبار السن والحالات الحادة (Home Visit Concierge)
 function getHomeVisitCardHTML() {
     return `
-        <div class="no-print" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 22px; margin-bottom: 25px; box-shadow: 0 8px 30px rgba(212, 175, 55, 0.2);">
+        <div class="no-print" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 22px; margin-bottom: 25px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                 <div style="flex: 1; min-width: 270px;">
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
                         <span style="font-size: 1.5em;">🏡</span>
                         <h4 style="color: var(--primary-gold); margin: 0; font-size: 1.2em;">خدمة الزيارات المنزلية الفاخرة (Home Treatment Concierge)</h4>
                     </div>
-                    <p style="color: #cbd5e1; font-size: 0.92em; line-height: 1.6; margin: 0 0 6px 0;">
+                    <p style="color: #1e293b; font-size: 0.92em; line-height: 1.6; margin: 0 0 6px 0;">
                         ألمك حاد ولا تستطيع القيادة أو التنقل؟ أو ترغب في جلسة تقويم يدوي لكبار السن في راحة المنزل؟ 
                         نوفر خدمة جلسات الكايروبراكتيك المتكاملة في منزلك داخل <strong>عمان والزرقاء</strong> بكافة التجهيزات الطبية المعتمدة.
                     </p>
                     <div style="color: #10b981; font-size: 0.82em; font-weight: bold;">🚗 تغطية شاملة لجميع مناطق عمان والزرقاء بأعلى معايير الخصوصية والأمان.</div>
                 </div>
                 <div>
-                    <a href="https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent('مرحباً دكتور، أود الاستفسار عن إمكانية حجز جلسة زيارة منزلية (Home Visit) في عمان/الزرقاء.')}" target="_blank" style="background: linear-gradient(135deg, var(--primary-gold) 0%, var(--primary-gold-dark) 100%); color: #0a0e14; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.95em; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);">
+                    <a href="https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent('مرحباً دكتور، أود الاستفسار عن إمكانية حجز جلسة زيارة منزلية (Home Visit) في عمان/الزرقاء.')}" target="_blank" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.95em; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                         🏠 طلب جلسة زيارة منزلية
                     </a>
                 </div>
@@ -3403,21 +3440,21 @@ function getPatientSuccessStoriesHTML(pointId = '') {
     const stories = CLINICAL_SUCCESS_CASES[categoryKey] || CLINICAL_SUCCESS_CASES.lumbar;
 
     return `
-        <div class="video-cases-showcase-card no-print" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(24, 119, 242, 0.15) 100%); border: 1.5px solid rgba(24, 119, 242, 0.5); border-radius: 14px; padding: 22px 20px; margin-bottom: 25px; box-shadow: 0 8px 30px rgba(0,0,0,0.45); text-align: center;">
+        <div class="video-cases-showcase-card no-print" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid rgba(24, 119, 242, 0.5); border-radius: 14px; padding: 22px 20px; margin-bottom: 25px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); text-align: center;">
             <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px;">
                 <span style="font-size: 1.6em;">📹</span>
-                <h3 style="color: #ffffff; margin: 0; font-size: 1.25em; font-weight: 800;">
+                <h3 style="color: #0f172a; margin: 0; font-size: 1.25em; font-weight: 800;">
                     شاهد بالفيديو: حالات تعافي حقيقية موثقة بالصوت والصورة
                 </h3>
             </div>
-            <p style="color: #cbd5e1; font-size: 0.92em; line-height: 1.65; max-width: 720px; margin: 0 auto 16px auto;">
+            <p style="color: #1e293b; font-size: 0.92em; line-height: 1.65; max-width: 720px; margin: 0 auto 16px auto;">
                 توثيق سريري مرئي لعشرات الحالات لمرضى ومراجعين تخلصوا من آلام الديسك، عرق النسا، احتكاك المفاصل، وتيبس الفقرات بتقنية الكايروبراكتيك المعتمدة في <strong>«وداعاً للألم»</strong>.
             </p>
             <div class="stories-action-buttons" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-width: 500px; margin: 0 auto; width: 100%; box-sizing: border-box;">
-                <a href="${CLINIC_FACEBOOK}" target="_blank" rel="noopener noreferrer" style="background: linear-gradient(135deg, #1877f2 0%, #0d65d9 100%); color: #ffffff; text-decoration: none; padding: 10px 8px; border-radius: 10px; font-weight: 800; font-size: 0.85em; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 18px rgba(24, 119, 242, 0.45); white-space: nowrap; width: 100%; box-sizing: border-box;">
+                <a href="${CLINIC_FACEBOOK}" target="_blank" rel="noopener noreferrer" style="background: linear-gradient(135deg, #1877f2 0%, #0d65d9 100%); color: #0f172a; text-decoration: none; padding: 10px 8px; border-radius: 10px; font-weight: 800; font-size: 0.85em; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 18px rgba(24, 119, 242, 0.45); white-space: nowrap; width: 100%; box-sizing: border-box;">
                     <span>👍 تجارب الحالات (فيسبوك)</span>
                 </a>
-                <a href="${CLINIC_WHATSAPP}" target="_blank" rel="noopener noreferrer" style="background: rgba(16, 185, 129, 0.18); border: 1.5px solid #10b981; color: #6ee7b7; text-decoration: none; padding: 10px 8px; border-radius: 10px; font-weight: 800; font-size: 0.85em; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; width: 100%; box-sizing: border-box;">
+                <a href="${CLINIC_WHATSAPP}" target="_blank" rel="noopener noreferrer" style="background: #f0fdf4; border: 1.5px solid #10b981; color: #047857; text-decoration: none; padding: 10px 8px; border-radius: 10px; font-weight: 800; font-size: 0.85em; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; width: 100%; box-sizing: border-box;">
                     <span>💬 استفسار المعالج</span>
                 </a>
             </div>
@@ -3428,31 +3465,31 @@ function getPatientSuccessStoriesHTML(pointId = '') {
 // كود البطاقة الترويجية الكبرى وأزرار التواصل
 function getPromotionalContactHubHTML() {
     return `
-        <div class="promotional-hub-card no-print" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(30, 41, 59, 0.9) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 20px 16px; margin-bottom: 25px; box-sizing: border-box; overflow: hidden;">
+        <div class="promotional-hub-card no-print" style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 20px 16px; margin-bottom: 25px; box-sizing: border-box; overflow: hidden;">
             <div>
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
                     <span style="font-size: 1.4em;">📲</span>
                     <h4 style="color: #10b981; margin: 0; font-size: 1.25em;">استشارة مباشرة مع المعالج المختص</h4>
                 </div>
-                <p style="color: #e2e8f0; font-size: 0.95em; line-height: 1.6; margin: 0 0 8px 0;">احصل على توجيه سريري فوري من المعالج في <strong>وداعاً للألم</strong> بناءً على نتائج فحصك وتشخيصك.</p>
-                <div style="color: #fef08a; font-size: 0.9em; font-weight: 600; line-height: 1.6; margin-bottom: 14px;">⚠️ للتشخيص الدقيق ، ننصح بشدة بالتواصل مع المعالج للحصول على جلسة كايروبراكتيك سريرية أو طلب زيارة منزلية.</div>
+                <p style="color: #1e293b; font-size: 0.95em; line-height: 1.6; margin: 0 0 8px 0;">احصل على توجيه سريري فوري من المعالج في <strong>وداعاً للألم</strong> بناءً على نتائج فحصك وتشخيصك.</p>
+                <div style="color: #0369a1; font-size: 0.9em; font-weight: 600; line-height: 1.6; margin-bottom: 14px;">⚠️ للتشخيص الدقيق ، ننصح بشدة بالتواصل مع المعالج للحصول على جلسة كايروبراكتيك سريرية أو طلب زيارة منزلية.</div>
                 
                 <!-- الأزرار الثلاثة بصف واحد متناسق محكم داخل حواف الكرت تماماً -->
                 <div class="promotional-contact-actions" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; box-sizing: border-box;">
-                    <a href="tel:00962790360440" class="btn-header promotional-action-btn promotional-phone-btn" style="background: rgba(16, 185, 129, 0.28); color: #6ee7b7; border: 2px solid #10b981; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 4px; border-radius: 10px; text-decoration: none; padding: 10px 4px; min-width: 0; box-sizing: border-box;">📞 <span style="font-family: monospace, 'Cairo', sans-serif; font-size: 1.05em; font-weight: 900; letter-spacing: 0;">0790360440</span></a>
+                    <a href="tel:00962790360440" class="btn-header promotional-action-btn promotional-phone-btn" style="background: #f0fdf4; color: #047857; border: 2px solid #10b981; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 4px; border-radius: 10px; text-decoration: none; padding: 10px 4px; min-width: 0; box-sizing: border-box;">📞 <span style="font-family: monospace, 'Cairo', sans-serif; font-size: 1.05em; font-weight: 900; letter-spacing: 0;">0790360440</span></a>
                     <a href="${CLINIC_WHATSAPP}" target="_blank" class="btn-header btn-whatsapp-cta promotional-action-btn" style="font-weight: 800; border-radius: 10px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 10px 4px; min-width: 0; box-sizing: border-box;">💬 <span class="hide-on-compact">استشارة </span>واتساب</a>
-                    <a href="${CLINIC_FACEBOOK}" target="_blank" class="btn-header promotional-action-btn" style="background: #1877f2; color: #fff; border: 1.5px solid #1877f2; font-weight: 800; border-radius: 10px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 10px 4px; min-width: 0; box-sizing: border-box;">👍 فيسبوك</a>
+                    <a href="${CLINIC_FACEBOOK}" target="_blank" class="btn-header promotional-action-btn" style="background: #1877f2; color: #0f172a; border: 1.5px solid #1877f2; font-weight: 800; border-radius: 10px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 10px 4px; min-width: 0; box-sizing: border-box;">👍 فيسبوك</a>
                 </div>
             </div>
         </div>
 
         <div class="no-print" style="text-align: center; margin-bottom: 25px;">
-            <button type="button" onclick="openAppInstallShareModal()" class="btn-header" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(16, 185, 129, 0.25) 100%); border-color: var(--primary-gold); color: #fef08a; padding: 12px 32px; font-size: 1.05em; font-weight: bold; cursor: pointer; border-radius: 8px;">
+            <button type="button" onclick="openAppInstallShareModal()" class="btn-header" style="background: linear-gradient(135deg, #f0f9ff 0%, #f0fdf4 100%); border-color: var(--primary-gold); color: #0369a1; padding: 12px 32px; font-size: 1.05em; font-weight: bold; cursor: pointer; border-radius: 8px;">
                 📲 تثبيت التطبيق على هاتفك أو مشاركته مع أصدقائك
             </button>
         </div>
 
-        <footer style="text-align: center; color: #94a3b8; font-size: 0.85em; padding: 18px 12px; border-top: 1px solid rgba(212, 175, 55, 0.25); line-height: 1.7;">
+        <footer style="text-align: center; color: #475569; font-size: 0.85em; padding: 18px 12px; border-top: 1px solid #bae6fd; line-height: 1.7;">
             © Smart Check Pro 2026 - مطورة من قبل <strong>«وداعاً للألم»</strong> (تقنية الكايروبراكتيك). جميع الحقوق محفوظة.<br>
             هذه الأداة السريرية استرشادية ذكية ولا تغني عن الفحص السريري المباشر.
         </footer>
@@ -3505,12 +3542,12 @@ function calculateInlineReportBMI() {
 
     if (res) {
         res.innerHTML = `
-            <div style="margin-top: 10px; padding: 10px 14px; background: rgba(15, 23, 42, 0.9); border-radius: 8px; border: 1.5px solid ${color}; line-height: 1.6;">
+            <div style="margin-top: 10px; padding: 10px 14px; background: #f8fafc; border-radius: 8px; border: 1.5px solid ${color}; line-height: 1.6;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; flex-wrap: wrap; gap: 6px;">
                     <strong style="color: ${color}; font-size: 1em;">BMI: ${bmi} kg/m² (${status})</strong>
                     <span style="color: ${color}; font-weight: bold; font-size: 0.85em;">${deltaText}</span>
                 </div>
-                <div style="color: #cbd5e1; font-size: 0.85em;">💡 <strong>الأثر الميكانيكي:</strong> ${impact}</div>
+                <div style="color: #1e293b; font-size: 0.85em;">💡 <strong>الأثر الميكانيكي:</strong> ${impact}</div>
             </div>
         `;
     }
@@ -3692,34 +3729,34 @@ function generateVertebralMappingCard(painArea, contextText = '', data = {}) {
     const nerveLabel = isPeripheral ? '⚡ الأعصاب والمسارات الحركية:' : '⚡ الجذور العصبية المرتبطة:';
 
     return `
-        <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%); border: 1.5px solid #38bdf8; border-radius: 14px; padding: 20px; margin-bottom: 22px; box-shadow: 0 6px 25px rgba(0,0,0,0.45);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid rgba(56, 189, 248, 0.25); padding-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+        <div style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid #38bdf8; border-radius: 14px; padding: 20px; margin-bottom: 22px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #bae6fd; padding-bottom: 10px; flex-wrap: wrap; gap: 8px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span style="font-size: 1.6em;">${headerIcon}</span>
                     <div>
-                        <h4 style="color: #38bdf8; margin: 0; font-size: 1.1em; font-weight: 800;">${cardTitle}</h4>
-                        <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">${cardSubtitle}</div>
+                        <h4 style="color: #0284c7; margin: 0; font-size: 1.1em; font-weight: 800;">${cardTitle}</h4>
+                        <div style="color: #475569; font-size: 0.78em; margin-top: 2px;">${cardSubtitle}</div>
                     </div>
                 </div>
-                <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #7dd3fc; font-size: 0.78em; padding: 3px 10px; border-radius: 12px; font-weight: bold;">
+                <span style="background: #f0f9ff; border: 1px solid #38bdf8; color: #0284c7; font-size: 0.78em; padding: 3px 10px; border-radius: 12px; font-weight: bold;">
                     ${headerBadge}
                 </span>
             </div>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
                 ${items.map(it => `
-                    <div style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div style="background: #f8fafc; border: 1px solid #bae6fd; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;">
                         <div>
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <strong style="color: #f8fafc; font-size: 0.98em;">${it.icon} ${it.region}</strong>
+                                <strong style="color: #0f172a; font-size: 0.98em;">${it.icon} ${it.region}</strong>
                             </div>
                             <div style="color: var(--primary-gold); font-size: 0.88em; font-weight: bold; margin-bottom: 6px; line-height: 1.5;">
-                                ${targetLabel} <span style="color: #fef08a; font-weight: normal;">${it.structures}</span>
+                                ${targetLabel} <span style="color: #0369a1; font-weight: normal;">${it.structures}</span>
                             </div>
-                            <div style="color: #6ee7b7; font-size: 0.84em; font-weight: bold; margin-bottom: 8px; line-height: 1.5;">
-                                ${nerveLabel} <span style="color: #a7f3d0; font-weight: normal;">${it.nerves}</span>
+                            <div style="color: #047857; font-size: 0.84em; font-weight: bold; margin-bottom: 8px; line-height: 1.5;">
+                                ${nerveLabel} <span style="color: #047857; font-weight: normal;">${it.nerves}</span>
                             </div>
-                            <div style="color: #cbd5e1; font-size: 0.83em; line-height: 1.6; border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 6px;">
+                            <div style="color: #1e293b; font-size: 0.83em; line-height: 1.6; border-top: 1px dashed #cbd5e1; padding-top: 6px;">
                                 ${it.clinicalImpact}
                             </div>
                         </div>
@@ -3733,59 +3770,59 @@ function generateVertebralMappingCard(painArea, contextText = '', data = {}) {
 // الفحوصات المخبرية والتكاملية الموصى بها (مدمجة وقابلة للتوسيع لتفادي الزحام)
 function generateIntegrativeLabCard() {
     return `
-        <details class="no-print" style="background: rgba(15, 23, 42, 0.75); border: 1.5px solid rgba(168, 85, 247, 0.4); border-radius: 12px; padding: 12px 18px; margin-bottom: 22px; cursor: pointer;">
+        <details class="no-print" style="background: #f8fafc; border: 1.5px solid #bae6fd; border-radius: 12px; padding: 12px 18px; margin-bottom: 22px; cursor: pointer;">
             <summary style="display: flex; justify-content: space-between; align-items: center; list-style: none; user-select: none;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span style="font-size: 1.4em;">🔬</span>
                     <div>
-                        <h4 style="color: #c084fc; margin: 0; font-size: 1em; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
+                        <h4 style="color: #0369a1; margin: 0; font-size: 1em; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
                             الفحوصات المخبرية الداعمة المقترحة (الفيتامينات والمعادن)
                         </h4>
-                        <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">اضغط للاطلاع على الفحوصات المخبرية لاستبعاد المسببات الأيضية وتغذية الأعصاب</div>
+                        <div style="color: #475569; font-size: 0.78em; margin-top: 2px;">اضغط للاطلاع على الفحوصات المخبرية لاستبعاد المسببات الأيضية وتغذية الأعصاب</div>
                     </div>
                 </div>
-                <span style="color: #d8b4fe; font-size: 0.82em; background: rgba(168, 85, 247, 0.18); border: 1px solid #a855f7; padding: 3px 10px; border-radius: 12px; font-weight: bold;">
+                <span style="color: #0369a1; font-size: 0.82em; background: #f0f9ff; border: 1px solid #bae6fd; padding: 3px 10px; border-radius: 12px; font-weight: bold;">
                     عرض التفاصيل ▾
                 </span>
             </summary>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 14px; border-top: 1px solid rgba(168, 85, 247, 0.2); padding-top: 14px; cursor: default;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 14px; border-top: 1px solid #bae6fd; padding-top: 14px; cursor: default;">
                 <!-- فيتامين B12 -->
-                <div style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 10px; padding: 12px;">
-                    <div style="color: #fef08a; font-weight: bold; font-size: 0.92em; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                <div style="background: #f8fafc; border: 1px solid #bae6fd; border-radius: 10px; padding: 12px;">
+                    <div style="color: #0369a1; font-weight: bold; font-size: 0.92em; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                         <span>💊</span> فيتامين B12 (Cobalamin)
                     </div>
-                    <p style="color: #cbd5e1; font-size: 0.82em; line-height: 1.6; margin: 0;">
+                    <p style="color: #1e293b; font-size: 0.82em; line-height: 1.6; margin: 0;">
                         ضروري لترميم غلاف المايلين النخاعي. نقصه يسبب خدراناً وتنميلاً ولسعات كهربائية طرفية قد تتداخل أو تفاقم أعراض الديسك وعرق النسا.
                     </p>
                 </div>
 
                 <!-- فيتامين D3 والكالسيوم -->
-                <div style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 10px; padding: 12px;">
-                    <div style="color: #fef08a; font-weight: bold; font-size: 0.92em; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                <div style="background: #f8fafc; border: 1px solid #bae6fd; border-radius: 10px; padding: 12px;">
+                    <div style="color: #0369a1; font-weight: bold; font-size: 0.92em; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                         <span>☀️</span> فيتامين د3 (Vit D3) والكالسيوم
                     </div>
-                    <p style="color: #cbd5e1; font-size: 0.82em; line-height: 1.6; margin: 0;">
+                    <p style="color: #1e293b; font-size: 0.82em; line-height: 1.6; margin: 0;">
                         أساس صلابة وكثافة الفقرات العظمية. نقصه يسبب وهن العظام وآلاماً هيكلية مزمنة وضعف استجابة الأربطة للتأهيل الحركي.
                     </p>
                 </div>
 
                 <!-- المغنيسيوم -->
-                <div style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 10px; padding: 12px;">
-                    <div style="color: #fef08a; font-weight: bold; font-size: 0.92em; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                <div style="background: #f8fafc; border: 1px solid #bae6fd; border-radius: 10px; padding: 12px;">
+                    <div style="color: #0369a1; font-weight: bold; font-size: 0.92em; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                         <span>⚡</span> المغنيسيوم (Serum Magnesium)
                     </div>
-                    <p style="color: #cbd5e1; font-size: 0.82em; line-height: 1.6; margin: 0;">
+                    <p style="color: #1e293b; font-size: 0.82em; line-height: 1.6; margin: 0;">
                         المنظم الحيوي لانبساط العضلات. نقصه يؤدي إلى تقلصات عضلية مستمرة وتشنجات عضلية حادة (Spasms) تمنع فك احتقان المفصل.
                     </p>
                 </div>
 
                 <!-- الالتهاب والغدة -->
-                <div style="background: rgba(8, 12, 20, 0.75); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 10px; padding: 12px;">
-                    <div style="color: #fef08a; font-weight: bold; font-size: 0.92em; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                <div style="background: #f8fafc; border: 1px solid #bae6fd; border-radius: 10px; padding: 12px;">
+                    <div style="color: #0369a1; font-weight: bold; font-size: 0.92em; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                         <span>🧪</span> مؤشرات الالتهاب والغدة (CBC, ESR, TSH)
                     </div>
-                    <p style="color: #cbd5e1; font-size: 0.82em; line-height: 1.6; margin: 0;">
+                    <p style="color: #1e293b; font-size: 0.82em; line-height: 1.6; margin: 0;">
                         فحوصات استبعادية هامة لنفي الالتهابات الروماتيزمية وخمول الغدة الدرقية الذي يسبب تيبساً عاماً وآلاماً متعددة في المفاصل.
                     </p>
                 </div>
@@ -3817,8 +3854,8 @@ function updatePortalHeaderButton() {
         label.textContent = 'ملفي الطبي';
         if (icon) icon.textContent = '📁';
         btn.style.borderColor = 'var(--primary-gold)';
-        btn.style.color = '#fef08a';
-        btn.style.background = 'linear-gradient(135deg, rgba(212,175,55,0.18), rgba(15,23,42,0.85))';
+        btn.style.color = '#0369a1';
+        btn.style.background = '#f0f9ff';
     }
 }
 window.updatePortalHeaderButton = updatePortalHeaderButton;
@@ -3928,7 +3965,7 @@ async function renderPatientPortalData(authPatient) {
 
     if (!listContainer) return;
 
-    listContainer.innerHTML = `<div style="text-align:center;padding:20px;color:#94a3b8;">⏳ جاري جلب تقاريرك الطبية...</div>`;
+    listContainer.innerHTML = `<div style="text-align:center;padding:20px;color: #475569;">⏳ جاري جلب تقاريرك الطبية...</div>`;
 
     const phone = authPatient.phone || authPatient.originalPhone;
     const history = await SmartDB.getPatientHistoryByPhone(phone, authPatient.patientId || authPatient.id);
@@ -3937,9 +3974,9 @@ async function renderPatientPortalData(authPatient) {
 
     if (!history || history.length === 0) {
         listContainer.innerHTML = `
-            <div style="text-align: center; padding: 25px; background: #080c14; border-radius: 10px; border: 1px dashed #334155; color: #94a3b8; font-size: 0.9em;">
+            <div style="text-align: center; padding: 25px; background: #ffffff; border-radius: 10px; border: 1px dashed #cbd5e1; color: #475569; font-size: 0.9em;">
                 📂 لا توجد تقارير سابقة محفوظة لهذا الرقم.<br>
-                <span style="color: #cbd5e1; font-size: 0.85em; margin-top: 6px; display: block;">قم بإجراء الفحص السريري وسيتم حفظ تقريرك تلقائياً في ملفك الطبي.</span>
+                <span style="color: #1e293b; font-size: 0.85em; margin-top: 6px; display: block;">قم بإجراء الفحص السريري وسيتم حفظ تقريرك تلقائياً في ملفك الطبي.</span>
             </div>
         `;
         return;
@@ -3956,18 +3993,18 @@ async function renderPatientPortalData(authPatient) {
         const recovery = pt.recoveryScore != null ? `${pt.recoveryScore}%` : (logsCount > 0 ? `${Math.min(100, Math.round((logsCount / 7) * 100))}%` : '--');
 
         return `
-            <div style="background: #080c14; border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 10px; padding: 14px 16px;">
+            <div style="background: #ffffff; border: 1px solid #bae6fd; border-radius: 10px; padding: 14px 16px;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
                     <div>
                         <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.98em;">${pain}</div>
-                        <div style="color: #ffffff; font-size: 0.9em; margin-top: 2px;">${diag}</div>
+                        <div style="color: #0f172a; font-size: 0.9em; margin-top: 2px;">${diag}</div>
                     </div>
-                    <span style="background: #1e293b; color: #94a3b8; font-size: 0.78em; padding: 3px 8px; border-radius: 4px;">📅 ${dateStr}</span>
+                    <span style="background: #f8fafc; color: #475569; font-size: 0.78em; padding: 3px 8px; border-radius: 4px;">📅 ${dateStr}</span>
                 </div>
 
-                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px; font-size: 0.82em; color: #cbd5e1; flex-wrap: wrap;">
-                    <span style="background: rgba(56, 189, 248, 0.12); color: #7dd3fc; padding: 2px 7px; border-radius: 4px;">الجلسات: ${logsCount >= 7 ? '🏆 مكتمل (7 جلسات)' : `اليوم ${Math.min(7, logsCount + 1)} من 7 (أنجز ${logsCount})`}</span>
-                    <span style="background: rgba(16, 185, 129, 0.12); color: #6ee7b7; padding: 2px 7px; border-radius: 4px;">التعافي: ${recovery}</span>
+                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px; font-size: 0.82em; color: #1e293b; flex-wrap: wrap;">
+                    <span style="background: #f0f9ff; color: #0284c7; padding: 2px 7px; border-radius: 4px;">الجلسات: ${logsCount >= 7 ? '🏆 مكتمل (7 جلسات)' : `اليوم ${Math.min(7, logsCount + 1)} من 7 (أنجز ${logsCount})`}</span>
+                    <span style="background: #f0fdf4; color: #047857; padding: 2px 7px; border-radius: 4px;">التعافي: ${recovery}</span>
                 </div>
 
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -4029,16 +4066,16 @@ function getReportSaveCardHTML(patientPhone = '', patientName = '') {
 
     if (isRegistered) {
         return `
-            <div id="report-save-account-box" class="no-print" style="margin-top: 22px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(15, 23, 42, 0.95)); border: 1.5px solid #10b981; border-radius: 14px; padding: 18px 22px; text-align: right; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+            <div id="report-save-account-box" class="no-print" style="margin-top: 22px; background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 18px 22px; text-align: right; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
                 <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <span style="font-size: 2em;">📁</span>
                         <div>
-                            <div style="color: #6ee7b7; font-weight: bold; font-size: 1.05em;">تم حفظ هذا التقرير في ملفك الطبي الشخصي ✅</div>
-                            <div style="color: #cbd5e1; font-size: 0.85em; margin-top: 3px;">مرتبط برقم هاتفك: <strong style="color: #fff; font-family: monospace;">${auth.originalPhone || auth.phone}</strong>. يمكنك الرجوع إليه دائماً عبر زر "ملفي الطبي" بأعلى الشاشة.</div>
+                            <div style="color: #047857; font-weight: bold; font-size: 1.05em;">تم حفظ هذا التقرير في ملفك الطبي الشخصي ✅</div>
+                            <div style="color: #1e293b; font-size: 0.85em; margin-top: 3px;">مرتبط برقم هاتفك: <strong style="color: #0f172a; font-family: monospace;">${auth.originalPhone || auth.phone}</strong>. يمكنك الرجوع إليه دائماً عبر زر "ملفي الطبي" بأعلى الشاشة.</div>
                         </div>
                     </div>
-                    <button type="button" onclick="openPatientPortalModal()" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.88em; cursor: pointer;">
+                    <button type="button" onclick="openPatientPortalModal()" style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.88em; cursor: pointer;">
                         📂 فتح ملفي وسجلاتي
                     </button>
                 </div>
@@ -4047,42 +4084,42 @@ function getReportSaveCardHTML(patientPhone = '', patientName = '') {
     }
 
     return `
-        <div id="report-save-account-box" class="no-print" style="margin-top: 22px; background: linear-gradient(135deg, rgba(212, 175, 55, 0.12), rgba(15, 23, 42, 0.98)); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 22px; text-align: right; box-shadow: 0 6px 25px rgba(0,0,0,0.5);">
+        <div id="report-save-account-box" class="no-print" style="margin-top: 22px; background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 22px; text-align: right; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                <span style="font-size: 2.2em; background: rgba(212,175,55,0.2); border: 1px solid var(--primary-gold); border-radius: 12px; padding: 6px 12px;">🔒</span>
+                <span style="font-size: 2.2em; background: #f0f9ff; border: 1px solid var(--primary-gold); border-radius: 12px; padding: 6px 12px;">🔒</span>
                 <div>
                     <h3 style="color: var(--primary-gold); margin: 0 0 4px 0; font-size: 1.18em; font-weight: 800;">هل تود حفظ تقريرك الطبي وسجل متابعتك دائماً؟</h3>
-                    <div style="color: #cbd5e1; font-size: 0.86em; line-height: 1.5;">أنشئ ملفك الطبي الآن باختيار رمز سري (PIN من 4 أرقام) لتتمكن من مراجعة تقريرك واستكمال خطتك من أي هاتف أو جهاز آخر.</div>
+                    <div style="color: #1e293b; font-size: 0.86em; line-height: 1.5;">أنشئ ملفك الطبي الآن باختيار رمز سري (PIN من 4 أرقام) لتتمكن من مراجعة تقريرك واستكمال خطتك من أي هاتف أو جهاز آخر.</div>
                 </div>
             </div>
 
-            <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;">
+            <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; align-items: flex-end;">
                     <div>
-                        <label style="display: block; color: #cbd5e1; font-size: 0.84em; margin-bottom: 5px; font-weight: bold;">📱 رقم الهاتف / الواتساب:</label>
-                        <input type="tel" id="report-save-phone-input" value="${cleanPhone}" placeholder="مثال: 0790000000" style="width: 100%; background: #080c14; border: 1px solid #334155; padding: 10px 12px; border-radius: 8px; color: #fff; font-size: 0.95em; box-sizing: border-box; text-align: left; direction: ltr;">
+                        <label style="display: block; color: #1e293b; font-size: 0.84em; margin-bottom: 5px; font-weight: bold;">📱 رقم الهاتف / الواتساب:</label>
+                        <input type="tel" id="report-save-phone-input" value="${cleanPhone}" placeholder="مثال: 0790000000" style="width: 100%; background: #ffffff; border: 1px solid #cbd5e1; padding: 10px 12px; border-radius: 8px; color: #0f172a; font-size: 0.95em; box-sizing: border-box; text-align: left; direction: ltr;">
                     </div>
                     <div>
-                        <label style="display: block; color: #cbd5e1; font-size: 0.84em; margin-bottom: 5px; font-weight: bold;">🔑 أنشئ رمز سري خاص بك (PIN من 4 أرقام):</label>
-                        <input type="password" id="report-save-pin-input" maxlength="6" placeholder="مثال: 1234" style="width: 100%; background: #080c14; border: 1.5px solid var(--primary-gold); padding: 10px 12px; border-radius: 8px; color: #fef08a; font-size: 1.1em; text-align: center; letter-spacing: 4px; box-sizing: border-box;">
+                        <label style="display: block; color: #1e293b; font-size: 0.84em; margin-bottom: 5px; font-weight: bold;">🔑 أنشئ رمز سري خاص بك (PIN من 4 أرقام):</label>
+                        <input type="password" id="report-save-pin-input" maxlength="6" placeholder="مثال: 1234" style="width: 100%; background: #ffffff; border: 1.5px solid var(--primary-gold); padding: 10px 12px; border-radius: 8px; color: #0369a1; font-size: 1.1em; text-align: center; letter-spacing: 4px; box-sizing: border-box;">
                     </div>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <button type="button" onclick="handleRegisterFromReport()" style="width: 100%; background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; border: none; padding: 11px 16px; border-radius: 8px; font-weight: bold; font-size: 0.98em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(212,175,55,0.35);">
+                        <button type="button" onclick="handleRegisterFromReport()" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #0a0e14; border: none; padding: 11px 16px; border-radius: 8px; font-weight: bold; font-size: 0.98em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                             <span>🔒</span> <span>حفظ وإنشاء ملفي الطبي (برمز PIN)</span>
                         </button>
                     </div>
                 </div>
                 <div style="margin-top: 10px; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
-                    <button type="button" onclick="saveClinicalReport()" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 16px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <button type="button" onclick="saveClinicalReport()" style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; padding: 8px 16px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                         <span>💾</span> حفظ التقرير في هذا المتصفح فوراً بدون رمز سري
                     </button>
-                    <button type="button" onclick="printClinicalReport()" style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #7dd3fc; padding: 8px 16px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <button type="button" onclick="printClinicalReport()" style="background: #f0f9ff; border: 1px solid #38bdf8; color: #0284c7; padding: 8px 16px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                         <span>🖨️</span> طباعة التقرير أو حفظه كـ PDF
                     </button>
                 </div>
                 <div id="report-save-status-msg" style="display: none; margin-top: 10px; padding: 8px 12px; border-radius: 6px; font-size: 0.85em; font-weight: bold;"></div>
             </div>
-            <div style="color: #94a3b8; font-size: 0.8em; line-height: 1.5;">
+            <div style="color: #475569; font-size: 0.8em; line-height: 1.5;">
                 ✨ <strong>اختياري ومجاني 100%:</strong> يضمن لك الوصول لتقاريرك السابقة فوراً بدون تكرار الفحص، ومتابعة نسبة التعافي يوماً بيوم.
             </div>
         </div>
@@ -4167,17 +4204,17 @@ async function handleRegisterFromReport() {
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <span style="font-size: 2em;">📁</span>
                             <div>
-                                <div style="color: #6ee7b7; font-weight: bold; font-size: 1.05em;">تم حفظ هذا التقرير في ملفك الطبي الشخصي بنجاح ✅</div>
-                                <div style="color: #cbd5e1; font-size: 0.85em; margin-top: 3px;">مرتبط برقم: <strong style="color: #fff; font-family: monospace;">${phone}</strong>. يمكنك مراجعته دائماً من زر "ملفي الطبي".</div>
+                                <div style="color: #047857; font-weight: bold; font-size: 1.05em;">تم حفظ هذا التقرير في ملفك الطبي الشخصي بنجاح ✅</div>
+                                <div style="color: #1e293b; font-size: 0.85em; margin-top: 3px;">مرتبط برقم: <strong style="color: #0f172a; font-family: monospace;">${phone}</strong>. يمكنك مراجعته دائماً من زر "ملفي الطبي".</div>
                             </div>
                         </div>
-                        <button type="button" onclick="openPatientPortalModal()" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.88em; cursor: pointer;">
+                        <button type="button" onclick="openPatientPortalModal()" style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.88em; cursor: pointer;">
                             📂 فتح ملفي وسجلاتي
                         </button>
                     </div>
                 `;
                 box.style.border = '1.5px solid #10b981';
-                box.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(15, 23, 42, 0.95))';
+                box.style.background = '#f0fdf4';
             }
         }, 1200);
     } else {
@@ -4265,7 +4302,7 @@ function renderSpecializedClinicalReportStep3(data, reportContainer) {
     const waUrl = `https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${waText}`;
 
     reportContainer.innerHTML = `
-        <div class="clinical-report-printable" style="background: linear-gradient(135deg, #0d1522 0%, #152238 100%); border-radius: 16px; padding: 28px; border: 2px solid var(--primary-gold); box-shadow: 0 12px 40px rgba(0,0,0,0.6); margin-bottom: 30px; animation: fadeIn 0.4s ease;">
+        <div class="clinical-report-printable" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border-radius: 16px; padding: 28px; border: 2px solid var(--primary-gold); box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); margin-bottom: 30px; animation: fadeIn 0.4s ease;">
             
             <!-- شريط حالة الاشتراك ورصيد الباقة المتبقي (1 أو 5 أو 10 تشخيصات) -->
             ${typeof getActiveSubscriptionStatusBannerHTML === 'function' ? getActiveSubscriptionStatusBannerHTML() : ''}
@@ -4273,86 +4310,86 @@ function renderSpecializedClinicalReportStep3(data, reportContainer) {
             <!-- 1. الترويسة الطبية الملكية -->
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary-gold); padding-bottom: 20px; margin-bottom: 22px; flex-wrap: wrap; gap: 15px;">
                 <div style="display: flex; align-items: center; gap: 16px;">
-                    <img src="assets/logo.png" alt="شعار وداعاً للألم" style="height: 68px; width: 68px; border-radius: 50%; border: 2px solid var(--primary-gold); background: #000; box-shadow: 0 4px 15px rgba(212,175,55,0.3);">
+                    <img src="assets/logo.png" alt="شعار وداعاً للألم" style="height: 68px; width: 68px; border-radius: 50%; border: 2px solid var(--primary-gold); background: #000; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                     <div>
-                        <h1 style="color: #ffffff; margin: 0 0 4px 0; font-size: 1.5em; font-weight: 800;">التقرير السريري وبطاقة التحويل للتأهيل المباشر</h1>
+                        <h1 style="color: #0f172a; margin: 0 0 4px 0; font-size: 1.5em; font-weight: 800;">التقرير السريري وبطاقة التحويل للتأهيل المباشر</h1>
                         <div style="color: var(--primary-gold); font-size: 0.95em; font-weight: bold;">
-                            المراجع: <span style="color: #38bdf8; font-weight: 900;">${pName}</span> • «وداعاً للألم» للتأهيل والكايروبراكتيك
+                            المراجع: <span style="color: #0284c7; font-weight: 900;">${pName}</span> • «وداعاً للألم» للتأهيل والكايروبراكتيك
                         </div>
-                        <div style="color: #94a3b8; font-size: 0.82em; margin-top: 2px;">رقم الملف: <span style="color: #e2e8f0; font-weight: bold;">${reportId}</span> | التاريخ: ${currentDate}</div>
+                        <div style="color: #475569; font-size: 0.82em; margin-top: 2px;">رقم الملف: <span style="color: #1e293b; font-weight: bold;">${reportId}</span> | التاريخ: ${currentDate}</div>
                     </div>
                 </div>
                 
-                <div class="report-top-badge" style="background: rgba(16, 185, 129, 0.12); border: 1.5px solid #10b981; padding: 10px 16px; border-radius: 12px; text-align: center;">
-                    <div style="color: #6ee7b7; font-weight: 900; font-size: 0.95em; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <div class="report-top-badge" style="background: #f0fdf4; border: 1.5px solid #10b981; padding: 10px 16px; border-radius: 12px; text-align: center;">
+                    <div style="color: #047857; font-weight: 900; font-size: 0.95em; display: flex; align-items: center; justify-content: center; gap: 6px;">
                         <span>🩺</span> <span>بطاقة تحويل سريرية معتمدة</span>
                     </div>
-                    <div style="color: #94a3b8; font-size: 0.74em; margin-top: 3px;">تأهيل عصبي حركي واستشارة مباشرة</div>
+                    <div style="color: #475569; font-size: 0.74em; margin-top: 3px;">تأهيل عصبي حركي واستشارة مباشرة</div>
                 </div>
             </div>
 
             <!-- بطاقة تعريف المريض والمؤشرات -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 16px; margin-bottom: 22px; color: #cbd5e1; font-size: 0.9em;">
-                <div>👤 <strong>المراجع:</strong> <span style="color: #fff; font-weight: bold;">${pName}</span></div>
-                <div>📱 <strong>الهاتف المعتمد:</strong> <span style="color: #6ee7b7; direction: ltr; display: inline-block; font-weight: bold;">${pPhone}</span></div>
-                <div>🎂 <strong>العمر:</strong> <span style="color: #fff;">${pAge}</span></div>
-                <div>⚖️ <strong>الوزن:</strong> <span style="color: #fff;">${pWeight}</span></div>
-                <div>📏 <strong>الطول:</strong> <span style="color: #fff;">${pHeight}</span></div>
-                <div>📊 <strong>مؤشر الكتلة:</strong> <span style="color: #fef08a;">${pBmi}</span></div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; background: #f8fafc; border: 1px solid #bae6fd; border-radius: 12px; padding: 16px; margin-bottom: 22px; color: #1e293b; font-size: 0.9em;">
+                <div>👤 <strong>المراجع:</strong> <span style="color: #0f172a; font-weight: bold;">${pName}</span></div>
+                <div>📱 <strong>الهاتف المعتمد:</strong> <span style="color: #047857; direction: ltr; display: inline-block; font-weight: bold;">${pPhone}</span></div>
+                <div>🎂 <strong>العمر:</strong> <span style="color: #0f172a;">${pAge}</span></div>
+                <div>⚖️ <strong>الوزن:</strong> <span style="color: #0f172a;">${pWeight}</span></div>
+                <div>📏 <strong>الطول:</strong> <span style="color: #0f172a;">${pHeight}</span></div>
+                <div>📊 <strong>مؤشر الكتلة:</strong> <span style="color: #0369a1;">${pBmi}</span></div>
             </div>
 
             <!-- 2. بطاقة التشخيص والتصنيف السريري المتقدم -->
-            <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.9) 100%); border-radius: 14px; padding: 24px; border: 2px solid ${specColor}; margin-bottom: 22px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
+            <div style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border-radius: 14px; padding: 24px; border: 2px solid ${specColor}; margin-bottom: 22px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <span style="font-size: 2.4em; background: rgba(0,0,0,0.3); border: 1.5px solid ${specColor}; border-radius: 14px; padding: 8px;">${specIcon}</span>
+                        <span style="font-size: 2.4em; background: #f8fafc; border: 1.5px solid ${specColor}; border-radius: 14px; padding: 8px;">${specIcon}</span>
                         <div>
-                            <div style="color: #94a3b8; font-size: 0.86em; font-weight: bold;">التصنيف السريري المتقدم:</div>
-                            <h2 style="color: #ffffff; margin: 4px 0 2px 0; font-size: 1.35em; font-weight: 900;">${specTitle}</h2>
+                            <div style="color: #475569; font-size: 0.86em; font-weight: bold;">التصنيف السريري المتقدم:</div>
+                            <h2 style="color: #0f172a; margin: 4px 0 2px 0; font-size: 1.35em; font-weight: 900;">${specTitle}</h2>
                             <div style="color: ${specColor}; font-size: 0.85em; font-weight: bold;">${specEnTitle}</div>
                         </div>
                     </div>
-                    <span style="background: rgba(16, 185, 129, 0.2); border: 1.5px solid #10b981; color: #6ee7b7; padding: 6px 16px; border-radius: 25px; font-weight: 800; font-size: 0.92em;">
+                    <span style="background: #f0fdf4; border: 1.5px solid #10b981; color: #047857; padding: 6px 16px; border-radius: 25px; font-weight: 800; font-size: 0.92em;">
                         🌟 حالة سريرية خاصة معتمدة
                     </span>
                 </div>
-                <div style="color: #cbd5e1; font-size: 0.92em; line-height: 1.7; background: rgba(0,0,0,0.25); border-radius: 10px; padding: 14px 16px; border: 1px solid rgba(255,255,255,0.08);">
+                <div style="color: #1e293b; font-size: 0.92em; line-height: 1.7; background: #f8fafc; border-radius: 10px; padding: 14px 16px; border: 1px solid #cbd5e1;">
                     📌 <strong>طبيعة التدخل الموصى به:</strong> ${specInterventionDesc}
                 </div>
             </div>
 
             <!-- 3. ملخص بيانات وأعراض الحالة المستلمة -->
-            <div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 18px 20px; margin-bottom: 22px;">
+            <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 18px 20px; margin-bottom: 22px;">
                 <h4 style="color: var(--primary-gold); margin: 0 0 10px 0; font-size: 1.05em; display: flex; align-items: center; gap: 8px;">
                     <span>📝</span> ملخص الأعراض والبيانات المسجلة في الاستجواب السريري:
                 </h4>
-                <div style="color: #e2e8f0; font-size: 0.92em; line-height: 1.7; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 12px 14px; border-right: 4px solid var(--primary-gold);">
+                <div style="color: #1e293b; font-size: 0.92em; line-height: 1.7; background: #f8fafc; border-radius: 8px; padding: 12px 14px; border-right: 4px solid var(--primary-gold);">
                     ${notes}
                 </div>
             </div>
 
             <!-- 4. تنبيه الأمان السريري الحاسم -->
-            <div style="background: rgba(234, 179, 8, 0.12); border: 2px solid #eab308; border-radius: 14px; padding: 18px 20px; margin-bottom: 24px;">
-                <div style="color: #fef08a; font-weight: bold; font-size: 1em; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+            <div style="background: #f0f9ff; border: 2px solid #bae6fd; border-radius: 14px; padding: 18px 20px; margin-bottom: 24px;">
+                <div style="color: #0369a1; font-weight: bold; font-size: 1em; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
                     <span>⚠️</span> توجيه أمان طبي وسريري حاسم:
                 </div>
-                <p style="color: #f1f5f9; font-size: 0.92em; line-height: 1.7; margin: 0;">
+                <p style="color: #0f172a; font-size: 0.92em; line-height: 1.7; margin: 0;">
                     ${specAdvice}
                 </p>
             </div>
 
             <!-- 5. محاور الخطة السريرية المقترحة مع المعالج جمال قبها -->
-            <div style="background: rgba(15, 23, 42, 0.95); border: 1.5px solid rgba(56, 189, 248, 0.35); border-radius: 14px; padding: 20px; margin-bottom: 25px;">
-                <h4 style="color: #38bdf8; margin: 0 0 14px 0; font-size: 1.1em; display: flex; align-items: center; gap: 8px;">
+            <div style="background: #f8fafc; border: 1.5px solid #bae6fd; border-radius: 14px; padding: 20px; margin-bottom: 25px;">
+                <h4 style="color: #0284c7; margin: 0 0 14px 0; font-size: 1.1em; display: flex; align-items: center; gap: 8px;">
                     <span>🎯</span> محاور البروتوكول السريري والتأهيلي المقترح:
                 </h4>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px;">
                     ${specKeyPoints.map(kp => `
-                        <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px;">
-                            <div style="color: #fef08a; font-weight: bold; font-size: 0.92em; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+                        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 14px;">
+                            <div style="color: #0369a1; font-weight: bold; font-size: 0.92em; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
                                 <span>${kp.icon}</span> <span>${kp.title}</span>
                             </div>
-                            <div style="color: #cbd5e1; font-size: 0.84em; line-height: 1.6;">
+                            <div style="color: #1e293b; font-size: 0.84em; line-height: 1.6;">
                                 ${kp.desc}
                             </div>
                         </div>
@@ -4364,10 +4401,10 @@ function renderSpecializedClinicalReportStep3(data, reportContainer) {
             ${typeof getRecoveryPlanPaywallCardHTML === 'function' ? getRecoveryPlanPaywallCardHTML(data, true, pName, pPhone, String(pPhone || '').replace(/\D/g, ''), null) : ''}
 
             <!-- 6. بطاقة التحويل المباشر وحجز الموعد / الزيارة المنزلية -->
-            <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.98) 100%); border: 2px solid #10b981; border-radius: 16px; padding: 24px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 2px solid #10b981; border-radius: 16px; padding: 24px; text-align: center; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
                 <div style="font-size: 2.6em; margin-bottom: 10px;">🩺</div>
-                <h3 style="color: #6ee7b7; margin: 0 0 8px 0; font-size: 1.3em; font-weight: 800;">تنسيق جلسة التقييم والتأهيل السريري المباشر</h3>
-                <p style="color: #cbd5e1; font-size: 0.93em; line-height: 1.6; max-width: 650px; margin: 0 auto 20px auto;">
+                <h3 style="color: #047857; margin: 0 0 8px 0; font-size: 1.3em; font-weight: 800;">تنسيق جلسة التقييم والتأهيل السريري المباشر</h3>
+                <p style="color: #1e293b; font-size: 0.93em; line-height: 1.6; max-width: 650px; margin: 0 auto 20px auto;">
                     لضمان أعلى معايير السلامة واستعادة القدرة الحركية، يرجى إرسال هذا التقرير مباشرة للمعالج <strong>جمال قبها</strong> لترتيب موعد جلسة بالعيادة أو تنسيق <strong>زيارة منزلية متكاملة</strong> للحالات التي يصعب نقلها.
                 </p>
                 <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
@@ -4377,8 +4414,8 @@ function renderSpecializedClinicalReportStep3(data, reportContainer) {
                         <span>➔</span>
                     </a>
                 </div>
-                <div style="color: #94a3b8; font-size: 0.85em; margin-top: 14px;">
-                    🌿 رقم التواصل والعيادة المباشر: <strong style="color: #fef08a; direction: ltr; display: inline-block;">0790360440</strong> (الأردن - عمان والزرقاء)
+                <div style="color: #475569; font-size: 0.85em; margin-top: 14px;">
+                    🌿 رقم التواصل والعيادة المباشر: <strong style="color: #0369a1; direction: ltr; display: inline-block;">0790360440</strong> (الأردن - عمان والزرقاء)
                 </div>
             </div>
 
@@ -4843,13 +4880,13 @@ function displayDiagnosticReport(data) {
 
     if (data && data.isRedFlag) {
         reportContainer.innerHTML = `
-            <div style="background: rgba(239, 68, 68, 0.12); border: 2px solid #ef4444; border-radius: 16px; padding: 30px; text-align: center;">
+            <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 16px; padding: 30px; text-align: center;">
                 <div style="font-size: 3.5em; margin-bottom: 12px;">🚨</div>
                 <h2 style="color: #ef4444; margin: 0 0 10px 0;">${data.title}</h2>
-                <p style="color: #fca5a5; font-size: 1.1em; line-height: 1.7;">${data.summary}</p>
-                <div style="background: #111827; border-radius: 10px; padding: 20px; margin-top: 20px; text-align: right;">
-                    <h4 style="color: #d4af37; margin: 0 0 10px 0;">التوصيات الطبية الفورية من المعالج:</h4>
-                    <ul style="color: #e2e8f0; margin: 0; padding-right: 20px; line-height: 1.8;">
+                <p style="color: #dc2626; font-size: 1.1em; line-height: 1.7;">${data.summary}</p>
+                <div style="background: #ffffff; border-radius: 10px; padding: 20px; margin-top: 20px; text-align: right;">
+                    <h4 style="color: #0369a1; margin: 0 0 10px 0;">التوصيات الطبية الفورية من المعالج:</h4>
+                    <ul style="color: #1e293b; margin: 0; padding-right: 20px; line-height: 1.8;">
                         ${(data.recommendations || []).map(r => `<li>${r}</li>`).join('')}
                     </ul>
                 </div>
@@ -4962,15 +4999,15 @@ function displayDiagnosticReport(data) {
     const formattedSec = formatBidiMedicalText(data.secondaryDiagnosis);
 
     reportContainer.innerHTML = `
-        <div class="clinical-report-printable" style="background: linear-gradient(135deg, #0d1522 0%, #152238 100%); border-radius: 16px; padding: 32px; border: 1.5px solid var(--primary-gold); box-shadow: 0 12px 40px rgba(0,0,0,0.6); margin-bottom: 30px;">
+        <div class="clinical-report-printable" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border-radius: 16px; padding: 32px; border: 1.5px solid var(--primary-gold); box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); margin-bottom: 30px;">
             
             <!-- شريط حالة الاشتراك ورصيد الباقة المتبقي (1 أو 5 أو 10 تشخيصات) -->
             ${typeof getActiveSubscriptionStatusBannerHTML === 'function' ? getActiveSubscriptionStatusBannerHTML() : ''}
 
             <!-- بنر العودة السريعة للجلسات إذا كانت الخطة مفعلة مسبقاً لهذا المريض تحديداً -->
             ${((data.patientId && localStorage.getItem('smart_plan_activated_' + data.patientId) === 'true') || (data.dailyLogs && data.dailyLogs.length > 0) || (activePatient && activePatient.isPlanActivated && activePatient.patientId === data.patientId)) ? `
-            <div class="no-print" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <div style="color: #6ee7b7; font-size: 0.92em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+            <div class="no-print" style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="color: #047857; font-size: 0.92em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
                     <span>🟢</span> أنت تراجع التقرير الطبي - خطتك العلاجية مفعلة وجلساتك الحركية جارية.
                 </div>
                 <button type="button" onclick="handleStepperClick(getMaxUnlockedStepSync() >= 5 ? 5 : 4)" class="btn-header btn-header-emerald" style="padding: 7px 16px; font-size: 0.85em; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
@@ -4981,11 +5018,11 @@ function displayDiagnosticReport(data) {
             <!-- ================= 1. الترويسة الطبية الملكية ================= -->
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary-gold); padding-bottom: 22px; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
                 <div style="display: flex; align-items: center; gap: 16px;">
-                    <img src="assets/logo.png" alt="شعار وداعاً للألم" style="height: 70px; width: 70px; border-radius: 50%; border: 2px solid var(--primary-gold); background: #000; box-shadow: 0 4px 15px rgba(212,175,55,0.3);">
+                    <img src="assets/logo.png" alt="شعار وداعاً للألم" style="height: 70px; width: 70px; border-radius: 50%; border: 2px solid var(--primary-gold); background: #000; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                     <div>
-                        <h1 style="color: #ffffff; margin: 0 0 4px 0; font-size: 1.65em; font-weight: 800; letter-spacing: 0.5px;">التقرير التشخيصي والتقييم السريري الذكي</h1>
+                        <h1 style="color: #0f172a; margin: 0 0 4px 0; font-size: 1.65em; font-weight: 800; letter-spacing: 0.5px;">التقرير التشخيصي والتقييم السريري الذكي</h1>
                         <div style="color: var(--primary-gold); font-size: 0.95em; font-weight: bold;">
-                            المراجع: <span style="color: #38bdf8; font-weight: 900;">${(() => {
+                            المراجع: <span style="color: #0284c7; font-weight: 900;">${(() => {
                                 let rName = (activePatient && (activePatient.fullName || activePatient.name))
                                     || (data.patientName && data.patientName !== 'المراجع الكريم' ? data.patientName : '')
                                     || (typeof clinicalDialogueState !== 'undefined' && (clinicalDialogueState.patientFullName || clinicalDialogueState.patientName))
@@ -4997,59 +5034,59 @@ function displayDiagnosticReport(data) {
                                 return rName;
                             })()}</span> • «وداعاً للألم» للكايروبراكتيك
                         </div>
-                        <div style="color: #94a3b8; font-size: 0.82em; margin-top: 2px;">رقم التقرير السريري: <span style="color: #e2e8f0; font-weight: bold;">${reportId}</span> | التاريخ: ${currentDate}</div>
+                        <div style="color: #475569; font-size: 0.82em; margin-top: 2px;">رقم التقرير السريري: <span style="color: #1e293b; font-weight: bold;">${reportId}</span> | التاريخ: ${currentDate}</div>
                     </div>
                 </div>
                 
-                <div class="report-top-badge" style="background: rgba(16, 185, 129, 0.12); border: 1.5px solid #10b981; padding: 10px 18px; border-radius: 12px; text-align: center;">
-                    <div style="color: #6ee7b7; font-weight: 900; font-size: 0.96em; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <div class="report-top-badge" style="background: #f0fdf4; border: 1.5px solid #10b981; padding: 10px 18px; border-radius: 12px; text-align: center;">
+                    <div style="color: #047857; font-weight: 900; font-size: 0.96em; display: flex; align-items: center; justify-content: center; gap: 6px;">
                         <span>🩺</span> <span>تقرير طبي استشاري معتمد</span>
                     </div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 3px;">منظومة التشخيص والتقويم الحركي الذكي</div>
+                    <div style="color: #475569; font-size: 0.75em; margin-top: 3px;">منظومة التشخيص والتقويم الحركي الذكي</div>
                 </div>
             </div>
 
             <!-- ================= 2. النتيجة التشخيصية الكبرى المباشرة ================= -->
-            <div id="report-section-diagnosis" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.9) 100%); border-radius: 14px; padding: 24px; border: 2px solid ${data.isPreliminary ? '#38bdf8' : 'var(--primary-gold)'}; margin-bottom: 22px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
+            <div id="report-section-diagnosis" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border-radius: 14px; padding: 24px; border: 2px solid ${data.isPreliminary ? '#38bdf8' : 'var(--primary-gold)'}; margin-bottom: 22px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
                     <div>
-                        <div style="color: #94a3b8; font-size: 0.88em; font-weight: bold;">🩺 ${data.isPreliminary ? 'التقييم الاسترشادي الأولي:' : 'خلاصة التشخيص السريري المباشر:'}</div>
+                        <div style="color: #475569; font-size: 0.88em; font-weight: bold;">🩺 ${data.isPreliminary ? 'التقييم الاسترشادي الأولي:' : 'خلاصة التشخيص السريري المباشر:'}</div>
                         <h2 style="color: ${data.isPreliminary ? '#7dd3fc' : 'var(--primary-gold)'}; margin: 6px 0 2px 0; font-size: 1.45em; font-weight: 900;">${formattedDiag}</h2>
-                        ${formattedRoot ? `<div style="color: #38bdf8; font-size: 0.88em; font-weight: bold; margin-top: 4px;">🎯 المستوى التشريحي المستهدف: ${formattedRoot}</div>` : ''}
+                        ${formattedRoot ? `<div style="color: #0284c7; font-size: 0.88em; font-weight: bold; margin-top: 4px;">🎯 المستوى التشريحي المستهدف: ${formattedRoot}</div>` : ''}
                     </div>
                     <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
                         <span style="background: ${data.isPreliminary ? 'rgba(56, 189, 248, 0.2)' : 'rgba(16, 185, 129, 0.2)'}; border: 1.5px solid ${data.isPreliminary ? '#38bdf8' : '#10b981'}; color: ${data.isPreliminary ? '#7dd3fc' : '#6ee7b7'}; padding: 8px 18px; border-radius: 25px; font-weight: 800; font-size: 1em; letter-spacing: 0.5px;">
                             ${data.isPreliminary ? 'فحص استرشادي أولي' : `احتمالية التشخيص: ${resolvedProbability}%`}
                         </span>
-                        <div style="color: #94a3b8; font-size: 0.76em;">${data.isPreliminary ? 'بانتظار استكمال الأعراض الدقيقة' : 'مبني على الفحص السريري الدقيق'}</div>
+                        <div style="color: #475569; font-size: 0.76em;">${data.isPreliminary ? 'بانتظار استكمال الأعراض الدقيقة' : 'مبني على الفحص السريري الدقيق'}</div>
                     </div>
                 </div>
 
-                <div style="background: #1e293b; height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 16px;">
+                <div style="background: #f8fafc; height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 16px;">
                     <div style="background: ${data.isPreliminary ? 'linear-gradient(90deg, #38bdf8 0%, #0284c7 100%)' : 'linear-gradient(90deg, #d4af37 0%, #10b981 100%)'}; height: 100%; width: ${data.isPreliminary ? 60 : resolvedProbability}%;"></div>
                 </div>
 
-                <div style="color: #cbd5e1; font-size: 0.9em; background: rgba(8, 12, 20, 0.6); padding: 10px 14px; border-radius: 8px; border-right: 3px solid #38bdf8;">
+                <div style="color: #1e293b; font-size: 0.9em; background: #f8fafc; padding: 10px 14px; border-radius: 8px; border-right: 3px solid #38bdf8;">
                     <strong>التشخيص التفريقي المصاحب (Differential Diagnosis):</strong> ${formattedSec}
                 </div>
             </div>
 
             <!-- ================= 3. تقرير وتفسير الطبيب الافتراضي المباشر (Gemini AI Clinical Engine) ================= -->
-            <div id="ai-clinical-insight-card" class="ai-clinical-card" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(6, 78, 59, 0.28) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 24px; margin-bottom: 22px; box-shadow: 0 8px 30px rgba(0,0,0,0.55); position: relative;">
+            <div id="ai-clinical-insight-card" class="ai-clinical-card" style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 24px; margin-bottom: 22px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); position: relative;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid rgba(16, 185, 129, 0.25); padding-bottom: 14px;">
                     <div style="display: flex; align-items: center; gap: 12px; flex: 1 1 240px;">
                         <span style="font-size: 1.8em; filter: drop-shadow(0 2px 6px rgba(16,185,129,0.5));">👩‍⚕️</span>
                         <div>
-                            <h3 style="color: #6ee7b7; margin: 0; font-size: 1.18em; font-weight: 800;">تقرير وتفسير د. سارة للحالة السريرية</h3>
-                            <div style="color: #94a3b8; font-size: 0.8em;">تحليل سريري لأصل الخلل الحركي • <strong style="color: #fef08a;">بروتوكول التأهيل المخصص متاح أدناه</strong></div>
+                            <h3 style="color: #047857; margin: 0; font-size: 1.18em; font-weight: 800;">تقرير وتفسير د. سارة للحالة السريرية</h3>
+                            <div style="color: #475569; font-size: 0.8em;">تحليل سريري لأصل الخلل الحركي • <strong style="color: #0369a1;">بروتوكول التأهيل المخصص متاح أدناه</strong></div>
                         </div>
                     </div>
                     <div class="ai-card-header-actions" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; max-width: 320px; box-sizing: border-box;">
-                        <button type="button" id="btn-listen-ai-insight" onclick="togglePlayAiInsightAudio()" style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #38bdf8; padding: 7px 8px; border-radius: 20px; font-size: 0.8em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: 0.2s; white-space: nowrap; width: 100%; box-sizing: border-box;">
+                        <button type="button" id="btn-listen-ai-insight" onclick="togglePlayAiInsightAudio()" style="background: #f0f9ff; border: 1px solid #38bdf8; color: #0284c7; padding: 7px 8px; border-radius: 20px; font-size: 0.8em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: 0.2s; white-space: nowrap; width: 100%; box-sizing: border-box;">
                             <span id="ai-audio-icon">🔊</span>
                             <span id="ai-audio-text">استمع للتقرير</span>
                         </button>
-                        <span id="ai-status-badge" style="background: rgba(16, 185, 129, 0.18); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.8em; font-weight: bold; padding: 7px 8px; border-radius: 20px; display: flex; align-items: center; justify-content: center; text-align: center; white-space: nowrap; width: 100%; box-sizing: border-box;">
+                        <span id="ai-status-badge" style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; font-size: 0.8em; font-weight: bold; padding: 7px 8px; border-radius: 20px; display: flex; align-items: center; justify-content: center; text-align: center; white-space: nowrap; width: 100%; box-sizing: border-box;">
                             ✨ جاري التحليل...
                         </span>
                     </div>
@@ -5057,27 +5094,27 @@ function displayDiagnosticReport(data) {
 
                 <!-- مساحة التحليل البيوميكانيكي والسريري المخصص (تأثير نابض يحدد مكان التقرير بدقة) -->
                 <div id="ai-insight-content-area" style="min-height: 90px; margin-bottom: 18px;">
-                    <div class="report-target-beacon" style="display: flex; align-items: center; gap: 16px; color: #ffffff; background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(15, 23, 42, 0.92) 100%); border: 2px solid var(--primary-gold); border-radius: 14px; padding: 18px 22px; font-size: 0.98em; box-shadow: 0 0 28px rgba(212, 175, 55, 0.45);">
+                    <div class="report-target-beacon" style="display: flex; align-items: center; gap: 16px; color: #0f172a; background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2px solid var(--primary-gold); border-radius: 14px; padding: 18px 22px; font-size: 0.98em; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                         <span style="font-size: 2.2em; animation: reportPointerBounce 1.2s infinite ease-in-out; display: inline-block;">👇</span>
                         <div>
-                            <div style="color: var(--primary-gold); font-size: 1.18em; font-weight: 900; margin-bottom: 4px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">تقريرك الطبي المعتمد سيظهر هنا مباشرة</div>
-                            <div style="color: #f1f5f9; font-size: 0.88em; font-weight: 500;">يقوم النظام بصياغة التفسير السريري والبيوميكانيكي المخصص لحالتك، يُرجى البقاء هنا ثوانٍ معدودة...</div>
+                            <div style="color: var(--primary-gold); font-size: 1.18em; font-weight: 900; margin-bottom: 4px; ">تقريرك الطبي المعتمد سيظهر هنا مباشرة</div>
+                            <div style="color: #0f172a; font-size: 0.88em; font-weight: 500;">يقوم النظام بصياغة التفسير السريري والبيوميكانيكي المخصص لحالتك، يُرجى البقاء هنا ثوانٍ معدودة...</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- شبكة المحفزات والمسكنات البيوميكانيكية الإكلينيكية -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px;">
-                    <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); padding: 15px; border-radius: 10px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; border-top: 1px solid #cbd5e1; padding-top: 16px;">
+                    <div style="background: #fef2f2; border: 1px solid rgba(239, 68, 68, 0.3); padding: 15px; border-radius: 10px;">
                         <div style="color: #ef4444; font-weight: bold; font-size: 0.92em; margin-bottom: 8px;">⚠️ محفزات تفاقم الألم (يجب تجنبها لحين الفحص):</div>
-                        <ul style="color: #fca5a5; margin: 0; padding-right: 18px; line-height: 1.7; font-size: 0.86em;">
+                        <ul style="color: #dc2626; margin: 0; padding-right: 18px; line-height: 1.7; font-size: 0.86em;">
                             ${(data.aggravatingFactors || []).map(f => `<li>${f}</li>`).join('')}
                         </ul>
                     </div>
 
-                    <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); padding: 15px; border-radius: 10px;">
+                    <div style="background: #f0fdf4; border: 1px solid rgba(16, 185, 129, 0.3); padding: 15px; border-radius: 10px;">
                         <div style="color: #10b981; font-weight: bold; font-size: 0.92em; margin-bottom: 8px;">✨ وضعيات الراحة المسكنة المبدئية:</div>
-                        <ul style="color: #6ee7b7; margin: 0; padding-right: 18px; line-height: 1.7; font-size: 0.86em;">
+                        <ul style="color: #047857; margin: 0; padding-right: 18px; line-height: 1.7; font-size: 0.86em;">
                             ${(data.relievingFactors || []).map(f => `<li>${f}</li>`).join('')}
                         </ul>
                     </div>
@@ -5089,7 +5126,7 @@ function displayDiagnosticReport(data) {
             ${generateVertebralMappingCard(data.painAreaTitle || data.painArea || data.selectedPoint || data.pointTitle || '', data.notes || (data.collectedSymptoms ? data.collectedSymptoms.join(' ') : ''), data)}
 
             <!-- ================= 4. الخلاصة البيوميكانيكية المباشرة والأدلة السريرية ================= -->
-            <div style="background: rgba(15, 23, 42, 0.95); border-radius: 14px; padding: 18px 20px; border: 1.5px solid rgba(212, 175, 55, 0.25); margin-bottom: 22px;">
+            <div style="background: #f8fafc; border-radius: 14px; padding: 18px 20px; border: 1.5px solid #bae6fd; margin-bottom: 22px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                     <div style="color: var(--primary-gold); font-size: 1.05em; font-weight: 800; display: flex; align-items: center; gap: 8px;">
                         <span>📊</span> المؤشرات البيوميكانيكية والأدلة السريرية للحالة
@@ -5103,22 +5140,22 @@ function displayDiagnosticReport(data) {
                 ${(data.bmiInfo || data.biomechanicalIndex) ? `
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 12px;">
                     ${data.bmiInfo ? `
-                    <div style="background: rgba(11, 18, 32, 0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; font-size: 0.85em; color: #cbd5e1; line-height: 1.6;">
+                    <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px; font-size: 0.85em; color: #1e293b; line-height: 1.6;">
                         <div style="color: ${data.bmiInfo.color}; font-weight: bold; margin-bottom: 4px;">${data.bmiInfo.deltaText}</div>
                         <div>${data.bmiInfo.impact}</div>
                     </div>` : ''}
                     
                     ${data.biomechanicalIndex ? `
-                    <div style="background: rgba(11, 18, 32, 0.85); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; font-size: 0.85em; color: #cbd5e1; line-height: 1.6;">
+                    <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px; font-size: 0.85em; color: #1e293b; line-height: 1.6;">
                         <div style="color: ${data.biomechanicalIndex.color}; font-weight: bold; margin-bottom: 4px;">🧬 مؤشر الإجهاد: ${data.biomechanicalIndex.score}% (${data.biomechanicalIndex.level})</div>
                         <div>${data.biomechanicalIndex.analysis}</div>
                     </div>` : ''}
                 </div>` : ''}
 
                 <!-- الأدلة السريرية المكتشفة -->
-                <div style="background: rgba(11, 18, 32, 0.7); padding: 12px 16px; border-radius: 10px; border-right: 3px solid var(--primary-gold);">
+                <div style="background: #f8fafc; padding: 12px 16px; border-radius: 10px; border-right: 3px solid var(--primary-gold);">
                     <div style="color: var(--primary-gold); font-size: 0.85em; font-weight: bold; margin-bottom: 6px;">📋 العلامات السريرية المرصودة:</div>
-                    <div style="color: #e2e8f0; font-size: 0.85em; line-height: 1.7;">
+                    <div style="color: #1e293b; font-size: 0.85em; line-height: 1.7;">
                         ${(function() {
                             let evidenceList = Array.isArray(data.clinicalEvidence) ? data.clinicalEvidence.filter(Boolean) : [];
                             if (evidenceList.length === 0) {
@@ -5134,24 +5171,24 @@ function displayDiagnosticReport(data) {
             </div>
 
             <!-- ================= 5. مؤشرات الدقة السريرية وإجراءات التقرير (أسفل التقرير) ================= -->
-            <div id="report-bottom-actions-panel" class="report-bottom-summary" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.95) 100%); border: 2px solid var(--primary-gold); border-radius: 16px; padding: 22px 20px; margin-bottom: 25px; box-shadow: 0 10px 35px rgba(0,0,0,0.6);">
+            <div id="report-bottom-actions-panel" class="report-bottom-summary" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2px solid var(--primary-gold); border-radius: 16px; padding: 22px 20px; margin-bottom: 25px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
                     
                     <!-- مؤشرات الاحتمالية ومؤشر الثقة السريرية -->
                     <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap; flex: 1 1 320px;">
-                        <div style="background: #080d1a; border: 1.5px solid #10b981; padding: 10px 18px; border-radius: 12px; text-align: center; min-width: 105px; box-shadow: 0 4px 15px rgba(16,185,129,0.15);">
+                        <div style="background: #ffffff; border: 1.5px solid #10b981; padding: 10px 18px; border-radius: 12px; text-align: center; min-width: 105px; box-shadow: 0 4px 15px rgba(16,185,129,0.15);">
                             <div style="color: #10b981; font-weight: 900; font-size: 1.5em; font-family: monospace;">${resolvedProbability}%</div>
-                            <div style="color: #94a3b8; font-size: 0.78em; font-weight: bold; margin-top: 2px;">نسبة الاحتمالية</div>
+                            <div style="color: #475569; font-size: 0.78em; font-weight: bold; margin-top: 2px;">نسبة الاحتمالية</div>
                         </div>
                         
-                        <div style="background: #080d1a; border: 1.5px solid var(--primary-gold); padding: 10px 18px; border-radius: 12px; text-align: center; min-width: 105px; box-shadow: 0 4px 15px rgba(212,175,55,0.15);">
+                        <div style="background: #ffffff; border: 1.5px solid var(--primary-gold); padding: 10px 18px; border-radius: 12px; text-align: center; min-width: 105px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                             <div style="color: var(--primary-gold); font-weight: 900; font-size: 1.5em; font-family: monospace;">${resolvedConfidence}%</div>
-                            <div style="color: #94a3b8; font-size: 0.78em; font-weight: bold; margin-top: 2px;">مؤشر الثقة</div>
+                            <div style="color: #475569; font-size: 0.78em; font-weight: bold; margin-top: 2px;">مؤشر الثقة</div>
                         </div>
 
                         <div>
-                            <div style="color: #fef08a; font-weight: 900; font-size: 1.02em;">✓ تم اعتماد التقييم السريري للحالة</div>
-                            <div style="color: #cbd5e1; font-size: 0.82em; margin-top: 3px;">يمكنك الآن حفظ نسختك، طباعتها أو إرسالها للمتابعة مع المعالج:</div>
+                            <div style="color: #0369a1; font-weight: 900; font-size: 1.02em;">✓ تم اعتماد التقييم السريري للحالة</div>
+                            <div style="color: #1e293b; font-size: 0.82em; margin-top: 3px;">يمكنك الآن حفظ نسختك، طباعتها أو إرسالها للمتابعة مع المعالج:</div>
                         </div>
                     </div>
 
@@ -5177,13 +5214,13 @@ function displayDiagnosticReport(data) {
             ${getReportSaveCardHTML(data.patientPhone || (typeof getResolvedPatientPhone === 'function' ? getResolvedPatientPhone() : ''), data.patientName || activePatient?.name)}
 
             <!-- ================= 8. خدمات الرعاية المتقدمة (الزيارات المنزلية واستشارات الخارج) ================= -->
-            <div class="no-print" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(212, 175, 55, 0.12) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 18px 20px; margin-top: 18px; margin-bottom: 22px; box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
+            <div class="no-print" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 18px 20px; margin-top: 18px; margin-bottom: 22px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
                     <div style="display: flex; align-items: center; gap: 12px; flex: 1 1 300px;">
                         <span style="font-size: 2em;">👑</span>
                         <div>
                             <h4 style="color: var(--primary-gold); margin: 0; font-size: 1.12em; font-weight: 800;">خدمات الرعاية المتقدمة (العيادة المباشرة والزيارات المنزلية)</h4>
-                            <p style="color: #cbd5e1; font-size: 0.86em; line-height: 1.5; margin: 3px 0 0 0;">
+                            <p style="color: #1e293b; font-size: 0.86em; line-height: 1.5; margin: 3px 0 0 0;">
                                 نوفر جلسات التقويم اليدوي (كايروبراكتيك) والزيارات المنزلية داخل الأردن، وتنسيق استشارات قراءة صور الرنين لمرضانا الكرام من خارج الأردن.
                             </p>
                         </div>
@@ -5192,7 +5229,7 @@ function displayDiagnosticReport(data) {
                         <a href="https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent('مرحباً دكتور جمال، أود الاستفسار عن ترتيب جلسة علاجية / زيارة منزلية (داخل الأردن) بخصوص حالتي.')}" target="_blank" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; padding: 9px 16px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.86em; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(16,185,129,0.3);">
                             <span>🏠</span> طلب زيارة منزلية
                         </a>
-                        <a href="https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent('مرحباً دكتور جمال، أنا مقيم خارج الأردن وأود التنسيق معكم لقراءة صورة الرنين / استشارة دولية عن بُعد.')}" target="_blank" style="background: rgba(56, 189, 248, 0.18); border: 1px solid #38bdf8; color: #7dd3fc; padding: 9px 16px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.86em; display: inline-flex; align-items: center; gap: 6px;">
+                        <a href="https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent('مرحباً دكتور جمال، أنا مقيم خارج الأردن وأود التنسيق معكم لقراءة صورة الرنين / استشارة دولية عن بُعد.')}" target="_blank" style="background: #f0f9ff; border: 1px solid #38bdf8; color: #0284c7; padding: 9px 16px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.86em; display: inline-flex; align-items: center; gap: 6px;">
                             <span>🌍</span> استشارة مرضى الخارج
                         </a>
                     </div>
@@ -5263,7 +5300,7 @@ function displayDiagnosticReport(data) {
                 if (statusBadge) {
                     const isLive = typeof WADA3AN_AI_CONFIG !== 'undefined' && WADA3AN_AI_CONFIG.isConfigured();
                     statusBadge.innerHTML = isLive ? '🟢 تحليل فوري' : '⚡ تحليل ذكي';
-                    statusBadge.style.color = isLive ? '#6ee7b7' : '#fef08a';
+                    statusBadge.style.color = isLive ? '#047857' : '#0369a1';
                     statusBadge.style.borderColor = isLive ? '#10b981' : '#d4af37';
                 }
             }).catch(err => {
@@ -5365,20 +5402,20 @@ function renderVideoSuccessStories() {
         const whatsappUrl = `https://wa.me/962799307770?text=${whatsappMsg}`;
 
         return `
-            <div style="background: #111e33; border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+            <div style="background: #111e33; border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
                 <div>
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                         <span style="color: var(--primary-gold); font-size: 0.82em; font-weight: bold;">${catSafe}</span>
-                        <span style="color: #10b981; font-size: 0.75em; background: rgba(16, 185, 129, 0.15); padding: 2px 8px; border-radius: 4px; font-weight: bold;">فيديو فيسبوك موثق</span>
+                        <span style="color: #10b981; font-size: 0.75em; background: #f0fdf4; padding: 2px 8px; border-radius: 4px; font-weight: bold;">فيديو فيسبوك موثق</span>
                     </div>
-                    <h4 style="color: #ffffff; margin: 0 0 8px 0; font-size: 1.05em; line-height: 1.4;">${item.title}</h4>
-                    <p style="color: #cbd5e1; font-size: 0.84em; line-height: 1.6; margin: 0 0 14px 0;">${descSafe}</p>
+                    <h4 style="color: #0f172a; margin: 0 0 8px 0; font-size: 1.05em; line-height: 1.4;">${item.title}</h4>
+                    <p style="color: #1e293b; font-size: 0.84em; line-height: 1.6; margin: 0 0 14px 0;">${descSafe}</p>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <a href="${urlSafe}" target="_blank" rel="noopener noreferrer" style="background: linear-gradient(135deg, #1877f2 0%, #166fe5 100%); color: #fff; text-decoration: none; padding: 10px 14px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(24,119,242,0.35);">
+                    <a href="${urlSafe}" target="_blank" rel="noopener noreferrer" style="background: linear-gradient(135deg, #1877f2 0%, #166fe5 100%); color: #0f172a; text-decoration: none; padding: 10px 14px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(24,119,242,0.35);">
                         <span>▶️ مشاهدة الفيديو على فيسبوك ↗️</span>
                     </a>
-                    <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; text-decoration: none; padding: 8px 12px; border-radius: 8px; font-size: 0.8em; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; text-decoration: none; padding: 8px 12px; border-radius: 8px; font-size: 0.8em; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 6px;">
                         <span>💬 اطلب فيديو الحالة عبر واتساب</span>
                     </a>
                 </div>
@@ -5508,40 +5545,40 @@ function toggleAudioMuteStatus(btn) {
 // حل مبتكر ورعاية متكاملة لمرضى خارج الأردن
 function getInternationalPatientsCardHTML() {
     return `
-        <div class="international-patients-card" style="background: linear-gradient(135deg, #0b1329 0%, #0d1e3a 50%, #064e3b 100%); border: 1.5px solid #38bdf8; border-radius: 14px; padding: 22px; margin-top: 22px; margin-bottom: 22px; box-shadow: 0 8px 30px rgba(0,0,0,0.55);">
+        <div class="international-patients-card" style="background: linear-gradient(135deg, #0b1329 0%, #0d1e3a 50%, #064e3b 100%); border: 1.5px solid #38bdf8; border-radius: 14px; padding: 22px; margin-top: 22px; margin-bottom: 22px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span style="font-size: 1.6em;">🌍</span>
                     <div>
-                        <h3 style="color: #38bdf8; margin: 0; font-size: 1.18em; font-weight: 800;">خدمة المرضى والمغتربين خارج الأردن (International Patient Care)</h3>
-                        <div style="color: #94a3b8; font-size: 0.82em; margin-top: 2px;">حلول سريرية متكاملة عن بُعد وتنسيق للراغبين بالقدوم للعلاج في الأردن</div>
+                        <h3 style="color: #0284c7; margin: 0; font-size: 1.18em; font-weight: 800;">خدمة المرضى والمغتربين خارج الأردن (International Patient Care)</h3>
+                        <div style="color: #475569; font-size: 0.82em; margin-top: 2px;">حلول سريرية متكاملة عن بُعد وتنسيق للراغبين بالقدوم للعلاج في الأردن</div>
                     </div>
                 </div>
-                <span style="color: #10b981; font-weight: bold; font-size: 0.82em; background: rgba(16, 185, 129, 0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid #10b981;">رعاية ممتدة عبر الحدود</span>
+                <span style="color: #10b981; font-weight: bold; font-size: 0.82em; background: #f0fdf4; padding: 4px 10px; border-radius: 6px; border: 1px solid #10b981;">رعاية ممتدة عبر الحدود</span>
             </div>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 20px;">
-                <div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(56, 189, 248, 0.35); border-radius: 12px; padding: 16px 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-                    <div style="color: #38bdf8; font-weight: 800; font-size: 1.05em; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+                <div style="background: #f8fafc; border: 1.5px solid #bae6fd; border-radius: 12px; padding: 16px 18px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
+                    <div style="color: #0284c7; font-weight: 800; font-size: 1.05em; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
                         <span style="font-size: 1.25em;">📹</span> استشارة سريرية مجانية وتأهيل عن بُعد
                     </div>
-                    <div style="color: #cbd5e1; font-size: 0.88em; line-height: 1.6;">
+                    <div style="color: #1e293b; font-size: 0.88em; line-height: 1.6;">
                         جلسة استشارية مرئية وتصميم خطة تمارين تأهيلية حركية موجهة بالفيديو لمتابعة حالتك أينما كنت حول العالم دون تكلفة.
                     </div>
                 </div>
 
-                <div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(212, 175, 55, 0.35); border-radius: 12px; padding: 16px 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                <div style="background: #f8fafc; border: 1.5px solid #bae6fd; border-radius: 12px; padding: 16px 18px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
                     <div style="color: var(--primary-gold); font-weight: 800; font-size: 1.05em; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
                         <span style="font-size: 1.25em;">🩻</span> قراءة الرنين المغناطيسي مجاناً
                     </div>
-                    <div style="color: #cbd5e1; font-size: 0.88em; line-height: 1.6;">
+                    <div style="color: #1e293b; font-size: 0.88em; line-height: 1.6;">
                         إرسال تقارير وصور الرنين المغناطيسي (MRI) عبر الواتساب لتحديد درجة فتق الديسك وانضغاط العصب بدقة ومجاناً.
                     </div>
                 </div>
             </div>
 
             <div style="text-align: center;">
-                <button type="button" onclick="contactInternationalPatientCoordinator()" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, var(--primary-gold) 100%); color: #ffffff; border: 1.5px solid #7dd3fc; padding: 12px 28px; border-radius: 10px; font-weight: bold; font-size: 0.95em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);">
+                <button type="button" onclick="contactInternationalPatientCoordinator()" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: 1.5px solid #7dd3fc; padding: 12px 28px; border-radius: 10px; font-weight: bold; font-size: 0.95em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);">
                     <span>💬 تواصل مع المعالج للاستشارة الدولية أو قراءة الرنين</span>
                     <span>⬅️</span>
                 </button>
@@ -5849,12 +5886,12 @@ window.getConsumedSingleCodesCountForPhone = getConsumedSingleCodesCountForPhone
 
 function showHumanitarianQuotaExhaustedNotice() {
     const msgEl = document.getElementById('paywall-status-feedback');
-    const noticeHTML = '🔒 <strong>تنبيه نظام الاستحقاق:</strong> مبادرة الرعاية الإنسانية المجانية متاحة <strong>لتشخيص واحد فقط لكل مراجع (على نفس الجهاز أو رقم الهاتف)</strong> وقد تم الاستفادة منها مسبقاً.<br><span style="color:#fde68a;">لإجراء فحص وتشخيص سريري جديد، يرجى اختيار إحدى الباقات المدفوعة عبر محفظة أورانج موني.</span>';
+    const noticeHTML = '🔒 <strong>تنبيه نظام الاستحقاق:</strong> مبادرة الرعاية الإنسانية المجانية متاحة <strong>لتشخيص واحد فقط لكل مراجع (على نفس الجهاز أو رقم الهاتف)</strong> وقد تم الاستفادة منها مسبقاً.<br><span style="color: #0369a1;">لإجراء فحص وتشخيص سريري جديد، يرجى اختيار إحدى الباقات المدفوعة عبر محفظة أورانج موني.</span>';
     if (msgEl) {
         msgEl.style.display = 'block';
         msgEl.style.background = 'rgba(245, 158, 11, 0.18)';
         msgEl.style.border = '1.5px solid #f59e0b';
-        msgEl.style.color = '#fef08a';
+        msgEl.style.color = '#0369a1';
         msgEl.innerHTML = noticeHTML;
         try { msgEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
     }
@@ -6091,7 +6128,7 @@ function getActiveSubscriptionStatusBannerHTML() {
         if (!cfg.enabled || cfg.allowFreeTestMode || (typeof isAdminSession === 'function' && isAdminSession())) return '';
         const w = getPkgWallet();
         if (w && w.size > 1) {
-            return `<div class="no-print" style="background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(15,23,42,0.95)); border: 1.5px solid #d4af37; border-radius: 12px; padding: 10px 16px; margin-bottom: 16px; color: #fef08a; font-weight: 900; font-size: 0.92em; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;"><span>📦 باقة ${w.size} تشخيصات فعّالة — تم خصم (1) لإصدار هذا التقرير</span><span>المتبقي في رصيدك: <strong style="font-size:1.2em; color:#fff;">${w.remaining}</strong> من ${w.size}</span></div>`;
+            return `<div class="no-print" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid #bae6fd; border-radius: 12px; padding: 10px 16px; margin-bottom: 16px; color: #0369a1; font-weight: 900; font-size: 0.92em; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;"><span>📦 باقة ${w.size} تشخيصات فعّالة — تم خصم (1) لإصدار هذا التقرير</span><span>المتبقي في رصيدك: <strong style="font-size:1.2em; color: #0f172a;">${w.remaining}</strong> من ${w.size}</span></div>`;
         }
         const isHum = Boolean(
             (w && (w.type === 'humanitarian' || w.type === 'humanitarian_waiver')) ||
@@ -6099,9 +6136,9 @@ function getActiveSubscriptionStatusBannerHTML() {
             (typeof currentAssessmentData !== 'undefined' && currentAssessmentData && (currentAssessmentData.paymentType === 'humanitarian' || currentAssessmentData.paymentType === 'humanitarian_waiver'))
         );
         if (isHum) {
-            return `<div class="no-print" style="background: rgba(16,185,129,0.12); border: 1px solid #10b981; border-radius: 12px; padding: 8px 14px; margin-bottom: 16px; color: #6ee7b7; font-weight: 800; font-size: 0.86em; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;"><span>❤️ مبادرة الرعاية الإنسانية (تشخيص واحد فقط)</span><span>تم استهلاك الحصة بإصدار التقرير • المتبقي: <strong style="color:#fff;">0</strong></span></div>`;
+            return `<div class="no-print" style="background: #f0fdf4; border: 1px solid #10b981; border-radius: 12px; padding: 8px 14px; margin-bottom: 16px; color: #047857; font-weight: 800; font-size: 0.86em; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;"><span>❤️ مبادرة الرعاية الإنسانية (تشخيص واحد فقط)</span><span>تم استهلاك الحصة بإصدار التقرير • المتبقي: <strong style="color: #0f172a;">0</strong></span></div>`;
         }
-        return `<div class="no-print" style="background: rgba(16,185,129,0.12); border: 1px solid #10b981; border-radius: 12px; padding: 8px 14px; margin-bottom: 16px; color: #6ee7b7; font-weight: 800; font-size: 0.86em; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;"><span>🩺 تفعيل لتشخيص واحد فقط — خاص بهذا الفحص</span><span>تم استهلاك الحصة بإصدار التقرير • المتبقي: <strong style="color:#fff;">0</strong></span></div>`;
+        return `<div class="no-print" style="background: #f0fdf4; border: 1px solid #10b981; border-radius: 12px; padding: 8px 14px; margin-bottom: 16px; color: #047857; font-weight: 800; font-size: 0.86em; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;"><span>🩺 تفعيل لتشخيص واحد فقط — خاص بهذا الفحص</span><span>تم استهلاك الحصة بإصدار التقرير • المتبقي: <strong style="color: #0f172a;">0</strong></span></div>`;
     } catch (e) { return ''; }
 }
 window.getActiveSubscriptionStatusBannerHTML = getActiveSubscriptionStatusBannerHTML;
@@ -6365,15 +6402,15 @@ async function _submitPromoOrTestUnlockCodeCore(inputIdOverride) {
     }
     const res = verifyActivationCode(entered, cfg);
     if (!res) {
-        say('❌ كود التفعيل غير صحيح أو غير مخصص لرقم الهاتف المدخل.<br><small style="color:#cbd5e1;">تأكد من كتابة نفس رقم هاتفك المسجل لدى الإدارة ثم كتابة الكود بدقة.</small>', false);
+        say('❌ كود التفعيل غير صحيح أو غير مخصص لرقم الهاتف المدخل.<br><small style="color: #1e293b;">تأكد من كتابة نفس رقم هاتفك المسجل لدى الإدارة ثم كتابة الكود بدقة.</small>', false);
         return;
     }
     if (res.humanitarianAlreadyUsed) {
-        say('🔒 <strong>سبق الاستفادة من مبادرة الرعاية الإنسانية:</strong> هذا الكود أو رقم الهاتف/الجهاز مسجل لديه استفادة سابقة من مبادرة الإعفاء الإنساني (المتاحة لمرة واحدة فقط لكل مستفيد).<br><small style="color:#fde68a;">لفتح فحص جديد، يرجى الاشتراك في إحدى الباقات الرمزية المتاحة لدعم استمرار الخدمة.</small>', false);
+        say('🔒 <strong>سبق الاستفادة من مبادرة الرعاية الإنسانية:</strong> هذا الكود أو رقم الهاتف/الجهاز مسجل لديه استفادة سابقة من مبادرة الإعفاء الإنساني (المتاحة لمرة واحدة فقط لكل مستفيد).<br><small style="color: #0369a1;">لفتح فحص جديد، يرجى الاشتراك في إحدى الباقات الرمزية المتاحة لدعم استمرار الخدمة.</small>', false);
         return;
     }
     if (res.alreadyConsumed) {
-        say('🔒 <strong>انتهت صلاحية هذا الكود:</strong> كود التفعيل المُدخل مخصص <strong>لتشخيص واحد فقط</strong> وقد تم استهلاكه مسبقاً في فحصك السابق.<br><small style="color:#fde68a;">لفتح هذا التشخيص الجديد، يرجى الاشتراك في باقة جديدة عبر محفظة أورانج موني للحصول على كود تفعيل جديد.</small>', false);
+        say('🔒 <strong>انتهت صلاحية هذا الكود:</strong> كود التفعيل المُدخل مخصص <strong>لتشخيص واحد فقط</strong> وقد تم استهلاكه مسبقاً في فحصك السابق.<br><small style="color: #0369a1;">لفتح هذا التشخيص الجديد، يرجى الاشتراك في باقة جديدة عبر محفظة أورانج موني للحصول على كود تفعيل جديد.</small>', false);
         return;
     }
     if (res.noSeed) {
@@ -6576,7 +6613,7 @@ function selectPaywallPackage(n) {
         const el = document.getElementById('pkg-card-' + k);
         if (el) {
             el.style.borderColor = (k === n) ? '#fef08a' : 'rgba(212,175,55,0.3)';
-            el.style.background = (k === n) ? 'rgba(212,175,55,0.2)' : 'rgba(11,18,32,0.88)';
+            el.style.background = (k === n) ? '#e0f2fe' : '#ffffff';
             el.style.boxShadow = (k === n) ? '0 0 25px rgba(254,240,138,0.3)' : 'none';
         }
     });
@@ -6596,19 +6633,19 @@ function renderRoyalPendingApprovalCardHTML(pendingReq, cfg) {
     const pkg = pendingReq.packageSize || 1;
     const what = isHum ? 'طلب الاستفادة من مبادرة الرعاية الإنسانية' : (pkg > 1 ? 'اشتراك باقة ' + pkg + ' تشخيصات' : 'اشتراك تشخيص واحد');
     return `
-        <div id="recovery-plan-master-card" class="recovery-plan-distinct-card no-print" style="max-width: 920px; margin: 0 auto 28px auto; padding: 28px 22px; background: radial-gradient(circle at top, rgba(212,175,55,0.14) 0%, rgba(8,13,25,0.98) 65%); border: 2.5px solid ${isHum ? '#10b981' : '#d4af37'}; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.85); text-align: center;">
-            <div style="color: #6ee7b7; font-weight: 900; font-size: 1.25em; margin-bottom: 6px;">✅ تم إرسال ${what} بنجاح إلى الإدارة</div>
-            <div style="color: #cbd5e1; font-size: 0.96em; margin-bottom: 18px;">المراجع: <strong style="color: #fff;">${pendingReq.subscriberName}</strong> • الهاتف: <span dir="ltr" style="color: #fef08a; font-weight: bold;">${pendingReq.subscriberPhone}</span></div>
-            <div style="background: rgba(5,9,17,0.92); border: 2px solid #d4af37; border-radius: 18px; padding: 22px 20px; max-width: 580px; margin: 0 auto;">
-                <div style="color: #fef08a; font-weight: 900; font-size: 1.15em; margin-bottom: 6px;">🔑 خطوتك الأخيرة: أدخل كود التفعيل</div>
-                <div style="color: #94a3b8; font-size: 0.9em; margin-bottom: 14px;">تم إشعار هاتف الطبيب فوراً، وسيصلك كود التفعيل المعتمد عبر الواتساب.</div>
-                <input type="text" id="pending-pin-code-input" maxlength="12" placeholder="أدخل كود التفعيل هنا" onkeydown="if(event.key==='Enter'){submitPromoOrTestUnlockCode('pending-pin-code-input');}" style="width: 100%; background: #0b1324; border: 2px solid #d4af37; padding: 14px; border-radius: 12px; color: #fef08a; font-size: 1.4em; font-weight: 900; text-align: center; letter-spacing: 4px; font-family: monospace; box-sizing: border-box; margin-bottom: 12px;">
-                <input type="tel" id="code-alt-phone" value="${pendingReq.subscriberPhone || ''}" placeholder="📱 الهاتف المسجل عليه الكود" style="width: 100%; background: #0b1324; border: 1px solid #475569; padding: 11px; border-radius: 10px; color: #fff; font-size: 0.95em; text-align: center; direction: ltr; box-sizing: border-box; margin-bottom: 12px;">
-                <button type="button" onclick="submitPromoOrTestUnlockCode('pending-pin-code-input')" style="width: 100%; background: linear-gradient(135deg, #d4af37 0%, #b45309 100%); color: #050911; border: none; padding: 14px; border-radius: 12px; font-weight: 900; font-size: 1.05em; cursor: pointer; box-shadow: 0 4px 18px rgba(212,175,55,0.45);">🔓 تفعيل وفتح التقرير السريري الآن</button>
+        <div id="recovery-plan-master-card" class="recovery-plan-distinct-card no-print" style="max-width: 920px; margin: 0 auto 28px auto; padding: 28px 22px; background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2.5px solid ${isHum ? '#10b981' : '#bae6fd'}; border-radius: 24px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); text-align: center;">
+            <div style="color: #047857; font-weight: 900; font-size: 1.25em; margin-bottom: 6px;">✅ تم إرسال ${what} بنجاح إلى الإدارة</div>
+            <div style="color: #1e293b; font-size: 0.96em; margin-bottom: 18px;">المراجع: <strong style="color: #0f172a;">${pendingReq.subscriberName}</strong> • الهاتف: <span dir="ltr" style="color: #0369a1; font-weight: bold;">${pendingReq.subscriberPhone}</span></div>
+            <div style="background: #f8fafc; border: 2px solid #bae6fd; border-radius: 18px; padding: 22px 20px; max-width: 580px; margin: 0 auto;">
+                <div style="color: #0369a1; font-weight: 900; font-size: 1.15em; margin-bottom: 6px;">🔑 خطوتك الأخيرة: أدخل كود التفعيل</div>
+                <div style="color: #475569; font-size: 0.9em; margin-bottom: 14px;">تم إشعار هاتف الطبيب فوراً، وسيصلك كود التفعيل المعتمد عبر الواتساب.</div>
+                <input type="text" id="pending-pin-code-input" maxlength="12" placeholder="أدخل كود التفعيل هنا" onkeydown="if(event.key==='Enter'){submitPromoOrTestUnlockCode('pending-pin-code-input');}" style="width: 100%; background: #ffffff; border: 2px solid #bae6fd; padding: 14px; border-radius: 12px; color: #0369a1; font-size: 1.4em; font-weight: 900; text-align: center; letter-spacing: 4px; font-family: monospace; box-sizing: border-box; margin-bottom: 12px;">
+                <input type="tel" id="code-alt-phone" value="${pendingReq.subscriberPhone || ''}" placeholder="📱 الهاتف المسجل عليه الكود" style="width: 100%; background: #ffffff; border: 1px solid #cbd5e1; padding: 11px; border-radius: 10px; color: #0f172a; font-size: 0.95em; text-align: center; direction: ltr; box-sizing: border-box; margin-bottom: 12px;">
+                <button type="button" onclick="submitPromoOrTestUnlockCode('pending-pin-code-input')" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #050911; border: none; padding: 14px; border-radius: 12px; font-weight: 900; font-size: 1.05em; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">🔓 تفعيل وفتح التقرير السريري الآن</button>
             </div>
             <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 18px;">
                 <button type="button" onclick="${isHum ? 'sendWhatsAppHumanitarianRequest()' : 'sendWhatsAppOrangePaymentReceipt()'}" style="background: #25d366; color: #fff; border: none; padding: 12px 22px; border-radius: 12px; font-weight: 800; font-size: 0.95em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(37,211,102,0.35);">💬 مراسلة الطبيب عبر واتساب للاستلام الفوري</button>
-                <button type="button" onclick="cancelPendingRequestAndEdit()" style="background: rgba(30,41,59,0.85); border: 1px solid #475569; color: #cbd5e1; padding: 12px 18px; border-radius: 12px; font-size: 0.92em; cursor: pointer;">✏️ تعديل البيانات أو اختيار باقة أخرى</button>
+                <button type="button" onclick="cancelPendingRequestAndEdit()" style="background: #f8fafc; border: 1px solid #cbd5e1; color: #1e293b; padding: 12px 18px; border-radius: 12px; font-size: 0.92em; cursor: pointer;">✏️ تعديل البيانات أو اختيار باقة أخرى</button>
             </div>
             <div id="paywall-status-feedback" style="display: none; margin-top: 14px; padding: 12px 16px; border-radius: 10px; font-size: 0.92em;"></div>
         </div>`;
@@ -6624,16 +6661,16 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
     // 1. إذا كان المريض قد فعّل اشتراكه بالفعل لهذا الفحص أو بالرصيد
     if (!cfg.enabled || cfg.allowFreeTestMode || isUnlocked) {
         return `
-            <div id="recovery-plan-master-card" class="recovery-plan-distinct-card no-print" style="max-width: 920px; margin: 0 auto 28px auto; padding: 26px 22px; background: linear-gradient(145deg, #070d19 0%, #0d182c 55%, #060a12 100%); border: 2.5px solid #10b981; border-radius: 22px; box-shadow: 0 18px 45px rgba(0,0,0,0.8);">
+            <div id="recovery-plan-master-card" class="recovery-plan-distinct-card no-print" style="max-width: 920px; margin: 0 auto 28px auto; padding: 26px 22px; background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2.5px solid #10b981; border-radius: 22px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
                     <div>
-                        <h3 style="color: #d4af37; margin: 0 0 6px 0; font-size: 1.3em; font-weight: 900; display: inline-flex; align-items: center; gap: 8px;">
+                        <h3 style="color: #0369a1; margin: 0 0 6px 0; font-size: 1.3em; font-weight: 900; display: inline-flex; align-items: center; gap: 8px;">
                             <span>👑</span>
                             <span>خطة التأهيل والعلاج الذاتي (7 أيام — مفعّلة ومعتمدة لك)</span>
                         </h3>
-                        <p style="color: #e2e8f0; font-size: 0.95em; margin: 0;">برنامج علاجي مخصص لمنطقة <strong style="color: #fef08a;">${data?.painAreaTitle || 'الألم'}</strong> مبني بالكامل على تقييمك السريري.</p>
+                        <p style="color: #1e293b; font-size: 0.95em; margin: 0;">برنامج علاجي مخصص لمنطقة <strong style="color: #0369a1;">${data?.painAreaTitle || 'الألم'}</strong> مبني بالكامل على تقييمك السريري.</p>
                     </div>
-                    <span style="background: rgba(16, 185, 129, 0.22); border: 1.5px solid #10b981; color: #6ee7b7; padding: 6px 18px; border-radius: 20px; font-weight: 800; font-size: 0.92em;">
+                    <span style="background: #f0fdf4; border: 1.5px solid #10b981; color: #047857; padding: 6px 18px; border-radius: 20px; font-weight: 800; font-size: 0.92em;">
                         ✓ باقتك مفعّلة وجاهزة
                     </span>
                 </div>
@@ -6646,8 +6683,8 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
                                 <span class="royal-icon-emoji" style="font-size: 1.5em;">🏋️</span>
                             </div>
                             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1;">
-                                <div class="pulsing-click-here" style="color: #fef08a; font-size: 1.18em; font-weight: 900; margin-bottom: 2px;">إضغط هنا الآن</div>
-                                <div class="royal-cta-headline" style="font-size: 1.3em; font-weight: 900; color: #fff;">للدخول إلى جلسة اليوم الأول والتمارين العلاجية</div>
+                                <div class="pulsing-click-here" style="color: #0369a1; font-size: 1.18em; font-weight: 900; margin-bottom: 2px;">إضغط هنا الآن</div>
+                                <div class="royal-cta-headline" style="font-size: 1.3em; font-weight: 900; color: #0f172a;">للدخول إلى جلسة اليوم الأول والتمارين العلاجية</div>
                             </div>
                             <div class="royal-arrow-box" style="width: 46px; height: 46px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
                                 <span class="royal-arrow-anim" style="font-size: 1.3em;">⬅️</span>
@@ -6670,37 +6707,37 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
     const confScore = data?.confidenceScore || data?.probability || 94;
 
     return `
-        <div id="recovery-plan-master-card" class="recovery-plan-distinct-card no-print" style="max-width: 920px; margin: 0 auto 30px auto; padding: 32px 24px; background: linear-gradient(145deg, #070d19 0%, #0d182c 55%, #060a12 100%); border: 2.5px solid #d4af37; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.85); font-family: 'Cairo', 'Almarai', sans-serif; position: relative; overflow: hidden; text-align: center;">
+        <div id="recovery-plan-master-card" class="recovery-plan-distinct-card no-print" style="max-width: 920px; margin: 0 auto 30px auto; padding: 32px 24px; background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2.5px solid #bae6fd; border-radius: 24px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); font-family: 'Cairo', 'Almarai', sans-serif; position: relative; overflow: hidden; text-align: center;">
             
             <!-- شريط ذهبي علوي متدرج -->
-            <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, transparent 0%, #d4af37 25%, #fef08a 50%, #d4af37 75%, transparent 100%);"></div>
+            <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);"></div>
 
             <!-- شارة الإنجاز -->
-            <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(212, 175, 55, 0.12); border: 1px solid rgba(212, 175, 55, 0.35); padding: 6px 20px; border-radius: 25px; color: #fef08a; font-size: 0.9em; font-weight: 800; margin-bottom: 14px;">
+            <div style="display: inline-flex; align-items: center; gap: 8px; background: #f0f9ff; border: 1px solid #bae6fd; padding: 6px 20px; border-radius: 25px; color: #0369a1; font-size: 0.9em; font-weight: 800; margin-bottom: 14px;">
                 <span>✨</span> اكتمل الفحص السريري بنجاح 100%
             </div>
 
             <!-- العنوان الرئيسي -->
-            <h2 style="color: #ffffff; margin: 0 0 10px 0; font-size: 1.55em; font-weight: 900; line-height: 1.35;">
+            <h2 style="color: #0f172a; margin: 0 0 10px 0; font-size: 1.55em; font-weight: 900; line-height: 1.35;">
                 تفعيل التقرير الطبي الكامل وخطة التأهيل (7 أيام) 🌿
             </h2>
 
             <!-- مؤشرات الحالة السريرية -->
-            <div style="color: #94a3b8; font-size: 0.92em; display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px;">
-                <span>موضع الشكوى: <strong style="color: #fef08a;">${painAreaTitle}</strong></span>
+            <div style="color: #475569; font-size: 0.92em; display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px;">
+                <span>موضع الشكوى: <strong style="color: #0369a1;">${painAreaTitle}</strong></span>
                 <span>•</span>
                 <span>دقة التقييم السريري: <strong style="color: #10b981;">${confScore}%</strong></span>
                 <span>•</span>
-                <span>البروتوكول: <strong style="color: #7dd3fc;">كايروبراكتيك + تأهيل حركي</strong></span>
+                <span>البروتوكول: <strong style="color: #0284c7;">كايروبراكتيك + تأهيل حركي</strong></span>
             </div>
 
-            <p style="color: #cbd5e1; font-size: 0.95em; max-width: 660px; margin: 0 auto 24px auto; line-height: 1.7;">
+            <p style="color: #1e293b; font-size: 0.95em; max-width: 660px; margin: 0 auto 24px auto; line-height: 1.7;">
                 تم تجهيز تقريرك السريري الشامل وتحديد جذور الألم بدقة. اختر الباقة العلاجية المناسبة لفتح ملفك الطبي والبدء بتمارين اليوم الأول فوراً.
             </p>
 
             <!-- زر فتح بوب الباقات الرئيسي (Magnetic Luxury CTA) -->
             <div style="max-width: 540px; margin: 0 auto 20px auto;">
-                <button type="button" onclick="openSubscriptionTiersModal()" class="royal-magnetic-pulse-btn" style="width: 100%; background: linear-gradient(135deg, #d4af37 0%, #b45309 100%); color: #050911; border: 2px solid #fef08a; padding: 18px 24px; border-radius: 16px; font-size: 1.22em; font-weight: 900; cursor: pointer; box-shadow: 0 10px 30px rgba(212,175,55,0.45); display: flex; align-items: center; justify-content: center; gap: 12px; transition: transform 0.2s, box-shadow 0.2s;">
+                <button type="button" onclick="openSubscriptionTiersModal()" class="royal-magnetic-pulse-btn" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #050911; border: 2px solid #bae6fd; padding: 18px 24px; border-radius: 16px; font-size: 1.22em; font-weight: 900; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14); display: flex; align-items: center; justify-content: center; gap: 12px; transition: transform 0.2s, box-shadow 0.2s;">
                     <span style="font-size: 1.3em;">🌟</span>
                     <span>عرض باقات الاشتراك وتفعيل التقرير</span>
                     <span style="font-size: 1.1em;">←</span>
@@ -6708,11 +6745,11 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
             </div>
 
             <!-- أزرار و روابط سريعة إضافية -->
-            <div style="display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; border-top: 1px dashed rgba(212,175,55,0.25); padding-top: 16px;">
-                <button type="button" onclick="openDirectPromoCodeModal()" style="background: rgba(2, 132, 199, 0.15); border: 1px solid #0284c7; color: #7dd3fc; padding: 8px 16px; border-radius: 10px; font-weight: 800; font-size: 0.88em; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+            <div style="display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; border-top: 1px dashed #bae6fd; padding-top: 16px;">
+                <button type="button" onclick="openDirectPromoCodeModal()" style="background: #f0f9ff; border: 1px solid #0284c7; color: #0284c7; padding: 8px 16px; border-radius: 10px; font-weight: 800; font-size: 0.88em; cursor: pointer; display: flex; align-items: center; gap: 6px;">
                     <span>🔑</span> <span>لدي كود تفعيل مسبق</span>
                 </button>
-                <button type="button" onclick="openHumanitarianSubscriptionModal()" style="background: rgba(16, 185, 129, 0.12); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 16px; border-radius: 10px; font-weight: 800; font-size: 0.88em; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <button type="button" onclick="openHumanitarianSubscriptionModal()" style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; padding: 8px 16px; border-radius: 10px; font-weight: 800; font-size: 0.88em; cursor: pointer; display: flex; align-items: center; gap: 6px;">
                     <span>❤️</span> <span>مبادرة الرعاية الإنسانية (مجاناً)</span>
                 </button>
             </div>
@@ -7328,7 +7365,7 @@ function switchPaywallOptionTab(tabId) {
                     btn.style.boxShadow = '0 6px 20px rgba(2, 132, 199, 0.35)';
                 }
             } else {
-                btn.style.background = 'rgba(11, 18, 32, 0.9)';
+                btn.style.background = '#f0f9ff';
                 btn.style.color = '#cbd5e1';
                 btn.style.borderColor = 'rgba(212, 175, 55, 0.25)';
                 btn.style.boxShadow = 'none';
@@ -8016,28 +8053,28 @@ function _legacyPendingCardUnused(pendingReq, cfg) {
         ? '🌿 طلب الإعفاء الإنساني قيد الاعتماد المباشر لدى الإدارة'
         : `💳 إشعار حوالة محفظة أورانج (${cfg.priceJod} د.أ) قيد المصادقة الفورية`;
     const descText = isHum
-        ? `تم توثيق طلب الإعفاء باسم <strong style="color:#fff;">(${pendingReq.subscriberName})</strong> ورقم الهاتف <strong style="color:#fef08a;" dir="ltr">(${pendingReq.subscriberPhone})</strong> بموجب الإقرار الشرعي لغير المقتدرين. <strong>ابقَ على هذه الشاشة أو تواصل عبر واتساب لتسريع الاعتماد الفوري!</strong>`
-        : `تم استلام بيانات حوالتك باسم <strong style="color:#fff;">(${pendingReq.subscriberName})</strong> ورقم الهاتف <strong style="color:#fef08a;" dir="ltr">(${pendingReq.subscriberPhone})</strong> (مرجع: <code style="color:#fdba74;">${pendingReq.transferRef}</code>). تقوم الإدارة الآن بمطابقة الحوالة في محفظة أورانج، <strong>وسيفتح التقرير والتمارين أمامك تلقائياً فور تأكيدها!</strong>`;
+        ? `تم توثيق طلب الإعفاء باسم <strong style="color: #0f172a;">(${pendingReq.subscriberName})</strong> ورقم الهاتف <strong style="color: #0369a1;" dir="ltr">(${pendingReq.subscriberPhone})</strong> بموجب الإقرار الشرعي لغير المقتدرين. <strong>ابقَ على هذه الشاشة أو تواصل عبر واتساب لتسريع الاعتماد الفوري!</strong>`
+        : `تم استلام بيانات حوالتك باسم <strong style="color: #0f172a;">(${pendingReq.subscriberName})</strong> ورقم الهاتف <strong style="color: #0369a1;" dir="ltr">(${pendingReq.subscriberPhone})</strong> (مرجع: <code style="color: #0369a1;">${pendingReq.transferRef}</code>). تقوم الإدارة الآن بمطابقة الحوالة في محفظة أورانج، <strong>وسيفتح التقرير والتمارين أمامك تلقائياً فور تأكيدها!</strong>`;
 
     return `
-        <div id="recovery-plan-master-card" class="recovery-plan-distinct-card no-print" style="padding: 28px 22px; margin-bottom: 25px; background: radial-gradient(circle at top, rgba(212, 175, 55, 0.14) 0%, rgba(8, 13, 25, 0.98) 65%); border: 2px solid ${badgeColor}; border-radius: 22px; box-shadow: 0 18px 45px rgba(0,0,0,0.8);">
+        <div id="recovery-plan-master-card" class="recovery-plan-distinct-card no-print" style="padding: 28px 22px; margin-bottom: 25px; background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2px solid ${badgeColor}; border-radius: 22px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
             <!-- شريط تأكيد إرسال الطلب البارز في قمة البطاقة -->
-            <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.28) 0%, rgba(6, 78, 59, 0.65) 100%); border: 2px solid #10b981; border-radius: 16px; padding: 16px 18px; margin-bottom: 22px; text-align: center; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.25);">
-                <div style="color: #fef08a; font-size: 1.15em; font-weight: 900; margin-bottom: 6px;">${sentBannerTitle}</div>
-                <div style="color: #e2e8f0; font-size: 0.92em; line-height: 1.6;">${sentBannerSub}</div>
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 2px solid #10b981; border-radius: 16px; padding: 16px 18px; margin-bottom: 22px; text-align: center; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.25);">
+                <div style="color: #0369a1; font-size: 1.15em; font-weight: 900; margin-bottom: 6px;">${sentBannerTitle}</div>
+                <div style="color: #1e293b; font-size: 0.92em; line-height: 1.6;">${sentBannerSub}</div>
             </div>
 
             <div style="text-align: center; max-width: 680px; margin: 0 auto;">
                 <!-- أيقونة الرادار الحي النابض -->
-                <div style="width: 74px; height: 74px; margin: 0 auto 14px auto; border-radius: 50%; background: rgba(212, 175, 55, 0.12); border: 2px solid ${badgeColor}; display: flex; align-items: center; justify-content: center; font-size: 2.1em; box-shadow: 0 0 25px rgba(212, 175, 55, 0.35); animation: pulse 2s infinite;">
+                <div style="width: 74px; height: 74px; margin: 0 auto 14px auto; border-radius: 50%; background: #f0f9ff; border: 2px solid ${badgeColor}; display: flex; align-items: center; justify-content: center; font-size: 2.1em; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14); animation: pulse 2s infinite;">
                     ⏳
                 </div>
-                <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 5px 16px; border-radius: 20px; font-size: 0.84em; font-weight: 800; margin-bottom: 12px;">
+                <div style="display: inline-flex; align-items: center; gap: 8px; background: #f0fdf4; border: 1px solid #10b981; color: #047857; padding: 5px 16px; border-radius: 20px; font-size: 0.84em; font-weight: 800; margin-bottom: 12px;">
                     <span style="width: 9px; height: 9px; border-radius: 50%; background: #10b981; display: inline-block; box-shadow: 0 0 8px #10b981;"></span>
                     <span>متصل مباشرة بلوحة الإدارة — يفتح تلقائياً فور الموافقة دون تحديث الصفحة</span>
                 </div>
-                <h3 style="color: #fef08a; margin: 0 0 10px 0; font-size: 1.32em; font-weight: 900;">${titleText}</h3>
-                <p style="color: #cbd5e1; font-size: 0.94em; line-height: 1.7; margin: 0 0 20px 0;">${descText}</p>
+                <h3 style="color: #0369a1; margin: 0 0 10px 0; font-size: 1.32em; font-weight: 900;">${titleText}</h3>
+                <p style="color: #1e293b; font-size: 0.94em; line-height: 1.7; margin: 0 0 20px 0;">${descText}</p>
 
                 <!-- أزرار تسريع الاعتماد عبر واتساب أو تعديل البيانات -->
                 <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 22px;">
@@ -8050,19 +8087,19 @@ function _legacyPendingCardUnused(pendingReq, cfg) {
                             <span>💬</span> إرسال لقطة الحوالة عبر واتساب للتفعيل الفوري
                         </button>
                     `}
-                    <button type="button" onclick="cancelPendingRequestAndEdit()" style="background: rgba(30, 41, 59, 0.85); border: 1px solid #475569; color: #cbd5e1; padding: 12px 16px; border-radius: 12px; font-weight: bold; font-size: 0.88em; cursor: pointer;">
+                    <button type="button" onclick="cancelPendingRequestAndEdit()" style="background: #f8fafc; border: 1px solid #cbd5e1; color: #1e293b; padding: 12px 16px; border-radius: 12px; font-weight: bold; font-size: 0.88em; cursor: pointer;">
                         ✏️ تعديل بيانات الطلب
                     </button>
                 </div>
 
                 <!-- صندوق إدخال كود التفعيل المعتمد (4 أرقام) في حال أرسله الأدمن عبر واتساب -->
-                <div style="background: rgba(5, 9, 17, 0.92); border: 1.5px solid rgba(212, 175, 55, 0.5); border-radius: 16px; padding: 18px; text-align: right;">
-                    <div style="color: #fef08a; font-weight: 800; font-size: 0.92em; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                <div style="background: #f8fafc; border: 1.5px solid #bae6fd; border-radius: 16px; padding: 18px; text-align: right;">
+                    <div style="color: #0369a1; font-weight: 800; font-size: 0.92em; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
                         <span>🔑</span> هل وصلك كود التفعيل المعتمد (4 أرقام) من الإدارة؟ أدخله هنا للفتح الفوري:
                     </div>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <input type="text" id="pending-pin-code-input" maxlength="10" placeholder="أدخل كود التفعيل المكون من 4 أرقام..." style="flex: 2 1 180px; background: #0b1324; border: 1.5px solid #d4af37; padding: 12px 14px; border-radius: 10px; color: #fef08a; font-size: 1.15em; font-weight: 900; text-align: center; letter-spacing: 3px; font-family: monospace; box-sizing: border-box;">
-                        <button type="button" onclick="submitPromoOrTestUnlockCode('pending-pin-code-input')" style="flex: 1 1 150px; background: linear-gradient(135deg, #d4af37 0%, #b45309 100%); color: #050911; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 900; font-size: 0.98em; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);">
+                        <input type="text" id="pending-pin-code-input" maxlength="10" placeholder="أدخل كود التفعيل المكون من 4 أرقام..." style="flex: 2 1 180px; background: #ffffff; border: 1.5px solid #bae6fd; padding: 12px 14px; border-radius: 10px; color: #0369a1; font-size: 1.15em; font-weight: 900; text-align: center; letter-spacing: 3px; font-family: monospace; box-sizing: border-box;">
+                        <button type="button" onclick="submitPromoOrTestUnlockCode('pending-pin-code-input')" style="flex: 1 1 150px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #050911; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 900; font-size: 0.98em; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                             🔓 تفعيل وفتح التقرير الآن
                         </button>
                     </div>
@@ -8083,16 +8120,16 @@ function _legacyPaywallCardHTML(data, isRegisteredPatient, resolvedReportName, r
     // 1. إذا كان المريض قد فعّل باقته بالفعل أو اعتمدها الأدمن
     if (!cfg.enabled || cfg.allowFreeTestMode || isUnlocked) {
         return `
-            <div id="recovery-plan-master-card" class="recovery-plan-distinct-card no-print" style="padding: 22px 18px; margin-bottom: 25px; background: linear-gradient(135deg, rgba(10, 17, 32, 0.98) 0%, rgba(6, 78, 59, 0.28) 100%); border: 2px solid #d4af37; border-radius: 18px; box-shadow: 0 12px 35px rgba(0,0,0,0.6);">
+            <div id="recovery-plan-master-card" class="recovery-plan-distinct-card no-print" style="padding: 22px 18px; margin-bottom: 25px; background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 2px solid #bae6fd; border-radius: 18px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
                     <div>
-                        <h3 style="color: #d4af37; margin: 0 0 6px 0; font-size: 1.25em; font-weight: 900; display: inline-flex; align-items: center; gap: 8px;">
+                        <h3 style="color: #0369a1; margin: 0 0 6px 0; font-size: 1.25em; font-weight: 900; display: inline-flex; align-items: center; gap: 8px;">
                             <span style="font-size: 1.25em;">👑</span>
                             <span>خطة التأهيل والعلاج الذاتي (7 أيام — مفعّلة ومعتمدة لك)</span>
                         </h3>
-                        <p style="color: #e2e8f0; font-size: 0.92em; margin: 0; line-height: 1.5;">برنامج راحة واستطالة مؤتمت مخصص لمنطقة <strong style="color: #fef08a;">${data.painAreaTitle || 'الألم'}</strong> مبني بالكامل على تشخيصك السريري.</p>
+                        <p style="color: #1e293b; font-size: 0.92em; margin: 0; line-height: 1.5;">برنامج راحة واستطالة مؤتمت مخصص لمنطقة <strong style="color: #0369a1;">${data.painAreaTitle || 'الألم'}</strong> مبني بالكامل على تشخيصك السريري.</p>
                     </div>
-                    <span style="background: rgba(16, 185, 129, 0.22); border: 1.5px solid #10b981; color: #6ee7b7; padding: 6px 16px; border-radius: 20px; font-weight: 800; font-size: 0.88em; white-space: nowrap;">
+                    <span style="background: #f0fdf4; border: 1.5px solid #10b981; color: #047857; padding: 6px 16px; border-radius: 20px; font-weight: 800; font-size: 0.88em; white-space: nowrap;">
                         ✓ باقتك مفعّلة وجاهزة
                     </span>
                 </div>
@@ -8106,10 +8143,10 @@ function _legacyPaywallCardHTML(data, isRegisteredPatient, resolvedReportName, r
                                 <span class="royal-icon-emoji" style="font-size: 1.4em;">🏋️</span>
                             </div>
                             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex: 1;">
-                                <div class="pulsing-click-here" style="color: #fef08a; font-size: 1.15em; font-weight: 900; letter-spacing: 0.8px; margin-bottom: 2px;">
+                                <div class="pulsing-click-here" style="color: #0369a1; font-size: 1.15em; font-weight: 900; letter-spacing: 0.8px; margin-bottom: 2px;">
                                     إضغط هنا الآن
                                 </div>
-                                <div class="royal-cta-headline" style="font-size: 1.35em; font-weight: 900; color: #ffffff; text-shadow: 0 2px 8px rgba(0,0,0,0.8); letter-spacing: 0.4px; line-height: 1.25; text-align: center;">
+                                <div class="royal-cta-headline" style="font-size: 1.35em; font-weight: 900; color: #0f172a;  letter-spacing: 0.4px; line-height: 1.25; text-align: center;">
                                     للدخول إلى جلسة اليوم الأول والتمارين العلاجية
                                 </div>
                             </div>
@@ -8131,121 +8168,121 @@ function _legacyPaywallCardHTML(data, isRegisteredPatient, resolvedReportName, r
 
     // 3. التصميم الملكي الفاخر لبوابة الاشتراك (3 دنانير محفظة أورانج + طلب إعفاء لغير المقتدرين بموافقة الإدارة + كود التفعيل المعتمد)
     return `
-        <div id="recovery-plan-master-card" class="recovery-plan-distinct-card no-print" style="padding: 26px 22px; margin-bottom: 25px; background: linear-gradient(145deg, #070d19 0%, #0d182c 55%, #060a12 100%); border: 2px solid #d4af37; border-radius: 22px; box-shadow: 0 20px 55px rgba(0,0,0,0.85), inset 0 0 35px rgba(212, 175, 55, 0.08); position: relative;">
+        <div id="recovery-plan-master-card" class="recovery-plan-distinct-card no-print" style="padding: 26px 22px; margin-bottom: 25px; background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2px solid #bae6fd; border-radius: 22px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); position: relative;">
             
             <!-- الهيدر الملكي لبطاقة الاشتراك -->
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 20px; border-bottom: 1.5px solid rgba(212, 175, 55, 0.3); padding-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 20px; border-bottom: 1.5px solid #bae6fd; padding-bottom: 16px;">
                 <div>
-                    <div style="color: #d4af37; font-size: 0.82em; font-weight: 900; letter-spacing: 0.5px; margin-bottom: 4px;">
+                    <div style="color: #0369a1; font-size: 0.82em; font-weight: 900; letter-spacing: 0.5px; margin-bottom: 4px;">
                         👑 الباقة السريرية الملكية المتكاملة — عيادة وداعاً للألم (المعالج جمال قبها)
                     </div>
-                    <h3 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.32em; font-weight: 900;">
+                    <h3 style="color: #0f172a; margin: 0 0 6px 0; font-size: 1.32em; font-weight: 900;">
                         اختر طريقة تفعيل ملفك الطبي وخطة التأهيل الذكية (7 أيام)
                     </h3>
-                    <p style="color: #cbd5e1; font-size: 0.9em; margin: 0; line-height: 1.5;">
-                        يشمل التقرير التشخيصي الكامل لمنطقة <strong style="color: #fef08a;">${data.painAreaTitle || 'الألم'}</strong> + التمارين العلاجية المصورة + المتابعة اليومية.
+                    <p style="color: #1e293b; font-size: 0.9em; margin: 0; line-height: 1.5;">
+                        يشمل التقرير التشخيصي الكامل لمنطقة <strong style="color: #0369a1;">${data.painAreaTitle || 'الألم'}</strong> + التمارين العلاجية المصورة + المتابعة اليومية.
                     </p>
                 </div>
 
                 <!-- وسام السعر الذهبي الملكي -->
-                <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(120, 53, 15, 0.45) 100%); border: 2px solid #d4af37; padding: 10px 20px; border-radius: 16px; text-align: center; box-shadow: 0 8px 25px rgba(212, 175, 55, 0.25); min-width: 155px;">
-                    <div style="color: #94a3b8; font-size: 0.76em; text-decoration: line-through;">القيمة الفعلية: ${cfg.originalPriceJod || 10} د.أ</div>
-                    <div style="color: #fef08a; font-weight: 900; font-size: 1.5em; line-height: 1.15; text-shadow: 0 2px 8px rgba(0,0,0,0.6);">${cfg.priceJod} دنانير فقط</div>
-                    <div style="color: #fde68a; font-size: 0.75em; font-weight: 800; margin-top: 2px;">دفعة رمزية لمرة واحدة</div>
+                <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px solid #bae6fd; padding: 10px 20px; border-radius: 16px; text-align: center; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14); min-width: 155px;">
+                    <div style="color: #475569; font-size: 0.76em; text-decoration: line-through;">القيمة الفعلية: ${cfg.originalPriceJod || 10} د.أ</div>
+                    <div style="color: #0369a1; font-weight: 900; font-size: 1.5em; line-height: 1.15; ">${cfg.priceJod} دنانير فقط</div>
+                    <div style="color: #0369a1; font-size: 0.75em; font-weight: 800; margin-top: 2px;">دفعة رمزية لمرة واحدة</div>
                 </div>
             </div>
 
             <!-- أزرار التبويبات الملكية -->
             <div style="display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap;">
-                <button type="button" id="paywall-tab-btn-orange" onclick="switchPaywallOptionTab('orange')" style="flex: 2 1 220px; background: linear-gradient(135deg, #d4af37 0%, #b45309 100%); color: #050911; border: 1.5px solid #fef08a; padding: 13px 16px; border-radius: 12px; font-weight: 900; font-size: 0.95em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4); transition: all 0.2s;">
+                <button type="button" id="paywall-tab-btn-orange" onclick="switchPaywallOptionTab('orange')" style="flex: 2 1 220px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #050911; border: 1.5px solid #bae6fd; padding: 13px 16px; border-radius: 12px; font-weight: 900; font-size: 0.95em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14); transition: all 0.2s;">
                     <span>💳</span> <span>الاشتراك عبر محفظة أورانج (${cfg.priceJod} د.أ)</span>
                 </button>
                 ${cfg.allowHumanitarian !== false ? (isHumanitarianLockedForUser(defaultPhone) ? `
-                <button type="button" id="paywall-tab-btn-humanitarian" onclick="showHumanitarianQuotaExhaustedNotice()" style="flex: 1.5 1 200px; background: rgba(30, 41, 59, 0.55); color: #64748b; border: 1.5px dashed #475569; padding: 13px 14px; border-radius: 12px; font-weight: 800; font-size: 0.85em; cursor: not-allowed; display: flex; align-items: center; justify-content: center; gap: 7px; opacity: 0.8;" title="تم الاستفادة من المبادرة الإنسانية مسبقاً (لمرة واحدة فقط)">
+                <button type="button" id="paywall-tab-btn-humanitarian" onclick="showHumanitarianQuotaExhaustedNotice()" style="flex: 1.5 1 200px; background: #f8fafc; color: #475569; border: 1.5px dashed #cbd5e1; padding: 13px 14px; border-radius: 12px; font-weight: 800; font-size: 0.85em; cursor: not-allowed; display: flex; align-items: center; justify-content: center; gap: 7px; opacity: 0.8;" title="تم الاستفادة من المبادرة الإنسانية مسبقاً (لمرة واحدة فقط)">
                     <span>🔒</span> <span>المبادرة الإنسانية (استُنفدت)</span>
                 </button>
                 ` : `
-                <button type="button" id="paywall-tab-btn-humanitarian" onclick="switchPaywallOptionTab('humanitarian')" style="flex: 1.5 1 200px; background: rgba(11, 18, 32, 0.9); color: #cbd5e1; border: 1.5px solid rgba(212, 175, 55, 0.25); padding: 13px 14px; border-radius: 12px; font-weight: 800; font-size: 0.9em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; transition: all 0.2s;">
+                <button type="button" id="paywall-tab-btn-humanitarian" onclick="switchPaywallOptionTab('humanitarian')" style="flex: 1.5 1 200px; background: #f8fafc; color: #1e293b; border: 1.5px solid #bae6fd; padding: 13px 14px; border-radius: 12px; font-weight: 800; font-size: 0.9em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; transition: all 0.2s;">
                     <span>❤️</span> <span>مبادرة الرعاية الإنسانية (إعفاء لغير المقتدرين)</span>
                 </button>
                 `) : ''}
-                <button type="button" id="paywall-tab-btn-code" onclick="switchPaywallOptionTab('code')" style="flex: 1 1 160px; background: rgba(11, 18, 32, 0.9); color: #cbd5e1; border: 1.5px solid rgba(212, 175, 55, 0.25); padding: 13px 14px; border-radius: 12px; font-weight: 800; font-size: 0.88em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+                <button type="button" id="paywall-tab-btn-code" onclick="switchPaywallOptionTab('code')" style="flex: 1 1 160px; background: #f8fafc; color: #1e293b; border: 1.5px solid #bae6fd; padding: 13px 14px; border-radius: 12px; font-weight: 800; font-size: 0.88em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
                     <span>🔑</span> <span>لديّ كود تفعيل معتمد</span>
                 </button>
             </div>
 
             <!-- التبويب 1: الدفع عبر محفظة أورانج (Orange Money) -->
-            <div id="paywall-pane-orange" style="background: rgba(5, 9, 18, 0.95); border: 1.5px solid rgba(212, 175, 55, 0.55); border-radius: 16px; padding: 20px;">
+            <div id="paywall-pane-orange" style="background: #f8fafc; border: 1.5px solid #bae6fd; border-radius: 16px; padding: 20px;">
                 <!-- بطاقة رقم المحفظة الذهبية -->
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; background: linear-gradient(135deg, rgba(212, 175, 55, 0.16) 0%, rgba(15, 23, 42, 0.96) 100%); border: 1.5px solid #d4af37; padding: 16px 18px; border-radius: 14px; margin-bottom: 18px; box-shadow: inset 0 0 18px rgba(212, 175, 55, 0.12);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid #bae6fd; padding: 16px 18px; border-radius: 14px; margin-bottom: 18px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                     <div>
-                        <div style="color: #fde68a; font-size: 0.86em; font-weight: 800; margin-bottom: 4px;">
+                        <div style="color: #0369a1; font-size: 0.86em; font-weight: 800; margin-bottom: 4px;">
                             🍊 الخطوة (1): حوّل مبلغ (${cfg.priceJod} دنانير) إلى رقم ${cfg.walletName} المعتمد:
                         </div>
                         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                            <span style="color: #ffffff; font-size: 1.7em; font-weight: 900; font-family: monospace; letter-spacing: 2px; direction: ltr; text-shadow: 0 2px 10px rgba(212, 175, 55, 0.4);">${cfg.walletPhone}</span>
-                            <span style="background: rgba(249, 115, 22, 0.2); border: 1px solid #f97316; color: #fdba74; font-size: 0.76em; padding: 2px 10px; border-radius: 12px; font-weight: bold;">Orange Money</span>
+                            <span style="color: #0f172a; font-size: 1.7em; font-weight: 900; font-family: monospace; letter-spacing: 2px; direction: ltr; text-shadow: 0 2px 10px rgba(212, 175, 55, 0.4);">${cfg.walletPhone}</span>
+                            <span style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0369a1; font-size: 0.76em; padding: 2px 10px; border-radius: 12px; font-weight: bold;">Orange Money</span>
                         </div>
                     </div>
-                    <button type="button" id="btn-copy-orange-wallet" onclick="copyOrangeWalletNumber('${cfg.walletPhone}')" style="background: linear-gradient(135deg, #d4af37, #b45309); border: 1px solid #fef08a; color: #050911; padding: 11px 20px; border-radius: 10px; font-weight: 900; font-size: 0.92em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(212, 175, 55, 0.35);">
+                    <button type="button" id="btn-copy-orange-wallet" onclick="copyOrangeWalletNumber('${cfg.walletPhone}')" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid #bae6fd; color: #050911; padding: 11px 20px; border-radius: 10px; font-weight: 900; font-size: 0.92em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                         <span>📋</span> نسخ رقم المحفظة
                     </button>
                 </div>
 
-                <div style="color: #fef08a; font-size: 0.9em; font-weight: 800; margin-bottom: 14px; line-height: 1.5;">
+                <div style="color: #0369a1; font-size: 0.9em; font-weight: 800; margin-bottom: 14px; line-height: 1.5;">
                     ✍️ الخطوة (2): بعد إتمام التحويل، أدخل بيانات الحوالة أدناه ليتم التحقق منها واعتماد فتح تقريرك الطبي فوراً:
                 </div>
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 18px;">
                     <div>
-                        <label style="color: #e2e8f0; font-size: 0.84em; display: block; margin-bottom: 6px; font-weight: 800;">👤 اسم المشترك / المحوّل الثلاثي: *</label>
-                        <input type="text" id="pay-subscriber-name" value="${defaultName}" placeholder="الاسم الثلاثي كما في المحفظة" style="width: 100%; background: #0b1324; border: 1.5px solid #475569; padding: 12px; border-radius: 10px; color: #fff; font-size: 0.95em; box-sizing: border-box;">
+                        <label style="color: #1e293b; font-size: 0.84em; display: block; margin-bottom: 6px; font-weight: 800;">👤 اسم المشترك / المحوّل الثلاثي: *</label>
+                        <input type="text" id="pay-subscriber-name" value="${defaultName}" placeholder="الاسم الثلاثي كما في المحفظة" style="width: 100%; background: #ffffff; border: 1.5px solid #cbd5e1; padding: 12px; border-radius: 10px; color: #0f172a; font-size: 0.95em; box-sizing: border-box;">
                     </div>
                     <div>
-                        <label style="color: #e2e8f0; font-size: 0.84em; display: block; margin-bottom: 6px; font-weight: 800;">📱 رقم هاتف المشترك (الواتساب): *</label>
-                        <input type="tel" id="pay-subscriber-phone" value="${defaultPhone}" placeholder="079xxxxxxx" style="width: 100%; background: #0b1324; border: 1.5px solid #475569; padding: 12px; border-radius: 10px; color: #fff; font-size: 0.95em; direction: ltr; text-align: left; box-sizing: border-box;">
+                        <label style="color: #1e293b; font-size: 0.84em; display: block; margin-bottom: 6px; font-weight: 800;">📱 رقم هاتف المشترك (الواتساب): *</label>
+                        <input type="tel" id="pay-subscriber-phone" value="${defaultPhone}" placeholder="079xxxxxxx" style="width: 100%; background: #ffffff; border: 1.5px solid #cbd5e1; padding: 12px; border-radius: 10px; color: #0f172a; font-size: 0.95em; direction: ltr; text-align: left; box-sizing: border-box;">
                     </div>
                     <div>
-                        <label style="color: #fde68a; font-size: 0.84em; display: block; margin-bottom: 6px; font-weight: 800;">🔢 رقم الحوالة (رقم العملية من رسالة أورانج موني): * إجباري</label>
-                        <input type="text" id="pay-transfer-ref" inputmode="numeric" autocomplete="off" required placeholder="أدخل رقم العملية الظاهر في رسالة التحويل" style="width: 100%; background: #0b1324; border: 1.5px solid rgba(212, 175, 55, 0.6); padding: 12px; border-radius: 10px; color: #fef08a; font-size: 0.92em; box-sizing: border-box;">
+                        <label style="color: #0369a1; font-size: 0.84em; display: block; margin-bottom: 6px; font-weight: 800;">🔢 رقم الحوالة (رقم العملية من رسالة أورانج موني): * إجباري</label>
+                        <input type="text" id="pay-transfer-ref" inputmode="numeric" autocomplete="off" required placeholder="أدخل رقم العملية الظاهر في رسالة التحويل" style="width: 100%; background: #ffffff; border: 1.5px solid #bae6fd; padding: 12px; border-radius: 10px; color: #0369a1; font-size: 0.92em; box-sizing: border-box;">
                     </div>
                 </div>
 
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button type="button" onclick="submitOrangeWalletPaymentNotification()" style="flex: 2 1 280px; background: linear-gradient(135deg, #d4af37 0%, #b45309 100%); color: #050911; border: 1px solid #fef08a; padding: 14px 22px; border-radius: 12px; font-size: 1.04em; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);">
+                    <button type="button" onclick="submitOrangeWalletPaymentNotification()" style="flex: 2 1 280px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #050911; border: 1px solid #bae6fd; padding: 14px 22px; border-radius: 12px; font-size: 1.04em; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                         <span>📤</span> <span>أتممت التحويل (${cfg.priceJod} د.أ) — إرسال للإدارة للتأكيد وفتح التقرير</span>
                     </button>
                 </div>
             </div>
 
             <!-- التبويب 2: مبادرة الدعم الإنساني (مخصصة لغير المقتدرين مادياً) -->
-            <div id="paywall-pane-humanitarian" style="display: none; background: rgba(5, 9, 18, 0.95); border: 1.5px solid #10b981; border-radius: 16px; padding: 20px;">
+            <div id="paywall-pane-humanitarian" style="display: none; background: #f8fafc; border: 1.5px solid #10b981; border-radius: 16px; padding: 20px;">
                 <!-- بيان أدبي وشرعي بارز يوضح أن المبادرة لغير المقتدرين مادياً -->
-                <div style="background: linear-gradient(135deg, rgba(120, 53, 15, 0.32) 0%, rgba(6, 78, 59, 0.35) 55%, rgba(9, 14, 26, 0.98) 100%); border: 2px solid #d4af37; border-radius: 14px; padding: 18px 18px; margin-bottom: 18px; box-shadow: 0 8px 25px rgba(0,0,0,0.5);">
-                    <div style="color: #fef08a; font-weight: 900; font-size: 1.05em; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 2px solid #bae6fd; border-radius: 14px; padding: 18px 18px; margin-bottom: 18px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
+                    <div style="color: #0369a1; font-weight: 900; font-size: 1.05em; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
                         <span>🌿</span> <span>مبادرة الدعم الإنساني (مخصصة لغير المقتدرين مادياً)</span>
                     </div>
-                    <div style="color: #f8fafc; font-size: 0.93em; line-height: 1.85; text-align: justify;">
+                    <div style="color: #0f172a; font-size: 0.93em; line-height: 1.85; text-align: justify;">
                         تُقدَّم هذه الباقة مجاناً لوجه الله تعالى كصدقة جارية عن روح المرحوم والد المعالج جمال قبها من منصة «وداعاً للألم» كدعمٍ خاص للأشخاص غير المقتدرين مادياً على تحمل تكاليف الفحص. نرجو الاستفادة منها بصدقٍ وأمانة استشعاراً للمسؤولية أمام الله عز وجل، وإفساحاً للمجال لمن هم في أمسّ الحاجة إليها.
                     </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 16px;">
                     <div>
-                        <label style="color: #e2e8f0; font-size: 0.86em; display: block; margin-bottom: 6px; font-weight: 800;">👤 الاسم الكريم: *</label>
-                        <input type="text" id="hum-subscriber-name" value="${defaultName}" placeholder="أدخل اسمك الكريم" style="width: 100%; background: #0b1324; border: 1.5px solid #475569; padding: 12px; border-radius: 10px; color: #fff; font-size: 0.95em; box-sizing: border-box;">
+                        <label style="color: #1e293b; font-size: 0.86em; display: block; margin-bottom: 6px; font-weight: 800;">👤 الاسم الكريم: *</label>
+                        <input type="text" id="hum-subscriber-name" value="${defaultName}" placeholder="أدخل اسمك الكريم" style="width: 100%; background: #ffffff; border: 1.5px solid #cbd5e1; padding: 12px; border-radius: 10px; color: #0f172a; font-size: 0.95em; box-sizing: border-box;">
                     </div>
                     <div>
-                        <label style="color: #e2e8f0; font-size: 0.86em; display: block; margin-bottom: 6px; font-weight: 800;">📱 رقم هاتف الواتساب (لاستلام كود التفعيل): *</label>
-                        <input type="tel" id="hum-subscriber-phone" value="${defaultPhone}" placeholder="079xxxxxxx" style="width: 100%; background: #0b1324; border: 1.5px solid #475569; padding: 12px; border-radius: 10px; color: #fff; font-size: 0.95em; direction: ltr; text-align: left; box-sizing: border-box;">
+                        <label style="color: #1e293b; font-size: 0.86em; display: block; margin-bottom: 6px; font-weight: 800;">📱 رقم هاتف الواتساب (لاستلام كود التفعيل): *</label>
+                        <input type="tel" id="hum-subscriber-phone" value="${defaultPhone}" placeholder="079xxxxxxx" style="width: 100%; background: #ffffff; border: 1.5px solid #cbd5e1; padding: 12px; border-radius: 10px; color: #0f172a; font-size: 0.95em; direction: ltr; text-align: left; box-sizing: border-box;">
                     </div>
                 </div>
 
                 <!-- مربع الاختيار الفارغ لإقرار الأمانة والاستحقاق -->
-                <label id="hum-oath-box-label" for="hum-oath-checkbox" style="display: flex; align-items: flex-start; gap: 14px; background: rgba(16, 185, 129, 0.12); border: 2px solid #10b981; border-radius: 14px; padding: 16px 18px; margin-bottom: 18px; cursor: pointer; transition: all 0.25s; box-shadow: inset 0 0 18px rgba(16, 185, 129, 0.1);">
+                <label id="hum-oath-box-label" for="hum-oath-checkbox" style="display: flex; align-items: flex-start; gap: 14px; background: #f0fdf4; border: 2px solid #10b981; border-radius: 14px; padding: 16px 18px; margin-bottom: 18px; cursor: pointer; transition: all 0.25s; box-shadow: inset 0 0 18px rgba(16, 185, 129, 0.1);">
                     <input type="checkbox" id="hum-oath-checkbox" onchange="const lbl=document.getElementById('hum-oath-box-label'); if(lbl){lbl.style.borderColor=this.checked?'#fef08a':'#10b981'; lbl.style.background=this.checked?'rgba(16,185,129,0.24)':'rgba(16,185,129,0.12)';}" style="width: 24px; height: 24px; margin-top: 3px; accent-color: #10b981; cursor: pointer; flex-shrink: 0;">
                     <div style="flex: 1;">
-                        <div style="color: #fef08a; font-weight: 900; font-size: 1.02em; line-height: 1.7;">
+                        <div style="color: #0369a1; font-weight: 900; font-size: 1.02em; line-height: 1.7;">
                             «أُقرّ أمام الله بأمانتي واستحقاقي لهذه المبادرة، وبأنني غير قادر مادياً على سداد قيمة الفحص في الأداة والبالغة 3 دنانير.»
                         </div>
                     </div>
@@ -8257,13 +8294,13 @@ function _legacyPaywallCardHTML(data, isRegisteredPatient, resolvedReportName, r
             </div>
 
             <!-- التبويب 3: إدخال كود التفعيل المعتمد من الإدارة -->
-            <div id="paywall-pane-code" style="display: none; background: rgba(5, 9, 18, 0.95); border: 1.5px solid #38bdf8; border-radius: 16px; padding: 20px;">
-                <div style="color: #e2e8f0; font-size: 0.92em; font-weight: bold; margin-bottom: 12px; line-height: 1.6;">
+            <div id="paywall-pane-code" style="display: none; background: #f8fafc; border: 1.5px solid #38bdf8; border-radius: 16px; padding: 20px;">
+                <div style="color: #1e293b; font-size: 0.92em; font-weight: bold; margin-bottom: 12px; line-height: 1.6;">
                     🔑 إذا قمت بالتواصل مع إدارة العيادة وحصلت على <strong>رمز التفعيل الرقمي المعتمد (4 أرقام)</strong> الخاص برقم هاتفك، أدخله هنا لفتح التقرير والتمارين فوراً:
                 </div>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <input type="text" id="pay-promo-code-input" maxlength="12" placeholder="أدخل رمز التفعيل المعتمد هنا..." style="flex: 2 1 200px; background: #0b1324; border: 1.5px solid #d4af37; padding: 13px 16px; border-radius: 10px; color: #fef08a; font-size: 1.15em; font-weight: 900; text-align: center; letter-spacing: 3px; font-family: monospace; box-sizing: border-box;">
-                    <button type="button" onclick="submitPromoOrTestUnlockCode('pay-promo-code-input')" style="flex: 1 1 160px; background: linear-gradient(135deg, #d4af37 0%, #b45309 100%); color: #050911; border: none; padding: 13px 22px; border-radius: 10px; font-weight: 900; font-size: 0.98em; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);">
+                    <input type="text" id="pay-promo-code-input" maxlength="12" placeholder="أدخل رمز التفعيل المعتمد هنا..." style="flex: 2 1 200px; background: #ffffff; border: 1.5px solid #bae6fd; padding: 13px 16px; border-radius: 10px; color: #0369a1; font-size: 1.15em; font-weight: 900; text-align: center; letter-spacing: 3px; font-family: monospace; box-sizing: border-box;">
+                    <button type="button" onclick="submitPromoOrTestUnlockCode('pay-promo-code-input')" style="flex: 1 1 160px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #050911; border: none; padding: 13px 22px; border-radius: 10px; font-weight: 900; font-size: 0.98em; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                         🔓 تفعيل الكود وعرض التقرير
                     </button>
                 </div>
@@ -8926,46 +8963,46 @@ function getVitalsSummaryCardHTML(patient, assessment) {
         }
 
         bmiHTML = `
-            <div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid ${color}; border-radius: 10px; padding: 14px; margin-top: 10px;">
+            <div style="background: #f8fafc; border: 1.5px solid ${color}; border-radius: 10px; padding: 14px; margin-top: 10px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
-                    <div style="color: #ffffff; font-weight: bold; font-size: 0.92em;">⚖️ مؤشر كتلة الجسم (BMI):</div>
+                    <div style="color: #0f172a; font-weight: bold; font-size: 0.92em;">⚖️ مؤشر كتلة الجسم (BMI):</div>
                     <span style="background: ${color}22; border: 1px solid ${color}; color: ${color}; font-weight: bold; font-size: 0.88em; padding: 2px 8px; border-radius: 6px;">
                         ${bmi} kg/m² (${status})
                     </span>
                 </div>
                 <div style="color: ${color}; font-weight: bold; font-size: 0.82em; margin-bottom: 4px;">${deltaText}</div>
-                <div style="color: #cbd5e1; font-size: 0.82em; line-height: 1.5;">💡 <strong>الأثر السريري:</strong> ${impact}</div>
+                <div style="color: #1e293b; font-size: 0.82em; line-height: 1.5;">💡 <strong>الأثر السريري:</strong> ${impact}</div>
             </div>
         `;
     }
 
     return `
-        <div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%); border: 1.5px solid var(--primary-gold); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid rgba(212, 175, 55, 0.25); padding-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+        <div style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid var(--primary-gold); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #bae6fd; padding-bottom: 8px; flex-wrap: wrap; gap: 6px;">
                 <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.95em; display: flex; align-items: center; gap: 6px;">
                     <span>📋</span> بيانات المراجع والملف البيوميكانيكي الأساسي
                 </div>
-                <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.75em; padding: 2px 8px; border-radius: 14px; font-weight: bold;">
+                <span style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; font-size: 0.75em; padding: 2px 8px; border-radius: 14px; font-weight: bold;">
                     الجلسة الأولى • انطلاقة البرنامج
                 </span>
             </div>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 8px; margin-bottom: 8px;">
-                <div style="background: #0f172a; padding: 8px 10px; border-radius: 8px; border: 1px solid #1e293b; min-width: 0;">
-                    <div style="color: #94a3b8; font-size: 0.72em;">اسم المراجع:</div>
-                    <div style="color: #ffffff; font-weight: bold; font-size: 0.88em; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${pName}">${pName}</div>
+                <div style="background: #f8fafc; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1; min-width: 0;">
+                    <div style="color: #475569; font-size: 0.72em;">اسم المراجع:</div>
+                    <div style="color: #0f172a; font-weight: bold; font-size: 0.88em; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${pName}">${pName}</div>
                 </div>
-                <div style="background: #0f172a; padding: 8px 10px; border-radius: 8px; border: 1px solid #1e293b; min-width: 0;">
-                    <div style="color: #94a3b8; font-size: 0.72em;">العمر والجنس:</div>
-                    <div style="color: #ffffff; font-weight: bold; font-size: 0.88em; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${age ? `${age} سنة` : 'غير محدد'} ${genderDisplay ? `• ${genderDisplay}` : ''}</div>
+                <div style="background: #f8fafc; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1; min-width: 0;">
+                    <div style="color: #475569; font-size: 0.72em;">العمر والجنس:</div>
+                    <div style="color: #0f172a; font-weight: bold; font-size: 0.88em; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${age ? `${age} سنة` : 'غير محدد'} ${genderDisplay ? `• ${genderDisplay}` : ''}</div>
                 </div>
-                <div style="background: #0f172a; padding: 8px 10px; border-radius: 8px; border: 1px solid #1e293b; min-width: 0;">
-                    <div style="color: #94a3b8; font-size: 0.72em;">الوزن والطول:</div>
-                    <div style="color: #ffffff; font-weight: bold; font-size: 0.88em; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${weight ? `${weight} كجم` : '--'} • ${height ? `${height} سم` : '--'}</div>
+                <div style="background: #f8fafc; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1; min-width: 0;">
+                    <div style="color: #475569; font-size: 0.72em;">الوزن والطول:</div>
+                    <div style="color: #0f172a; font-weight: bold; font-size: 0.88em; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${weight ? `${weight} كجم` : '--'} • ${height ? `${height} سم` : '--'}</div>
                 </div>
-                <div style="background: #0f172a; padding: 8px 10px; border-radius: 8px; border: 1px solid #1e293b; min-width: 0;">
-                    <div style="color: #94a3b8; font-size: 0.72em;">موضع الشكوى:</div>
-                    <div style="color: #38bdf8; font-weight: bold; font-size: 0.88em; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${painAreaTitle}">${painAreaTitle}</div>
+                <div style="background: #f8fafc; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1; min-width: 0;">
+                    <div style="color: #475569; font-size: 0.72em;">موضع الشكوى:</div>
+                    <div style="color: #0284c7; font-weight: bold; font-size: 0.88em; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${painAreaTitle}">${painAreaTitle}</div>
                 </div>
             </div>
 
@@ -9179,48 +9216,48 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
     let clockSectionHTML = '';
     if (lockStatus.isLocked && lockStatus.remainingMs > 0) {
         clockSectionHTML = `
-            <div style="background: linear-gradient(135deg, #0b101b 0%, #172033 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+            <div style="background: linear-gradient(135deg, #0b101b 0%, #172033 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
                     <div style="color: var(--primary-gold); font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
                         <span>⏱️</span> ساعة التوقيت المعتمدة (فترة استشفاء جارية بعد الجلسة الأولى)
                     </div>
-                    <span style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
+                    <span style="background: #f0f9ff; border: 1px solid var(--primary-gold); color: #0369a1; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
                         الجلسة 1 منجزة (متبقي للاستشفاء حتى فتح الجلسة 2)
                     </span>
                 </div>
                 
                 <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 12px;">
-                    <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
-                        <div id="countdown-hours" style="font-size: 2.2em; font-weight: bold; color: #ffffff; font-family: monospace;">${s4InitialH}</div>
-                        <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">ساعة</div>
+                    <div style="background: #f8fafc; padding: 12px 18px; border-radius: 10px; border: 1px solid #bae6fd; min-width: 75px;">
+                        <div id="countdown-hours" style="font-size: 2.2em; font-weight: bold; color: #0f172a; font-family: monospace;">${s4InitialH}</div>
+                        <div style="color: #475569; font-size: 0.78em; margin-top: 2px;">ساعة</div>
                     </div>
-                    <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
-                        <div id="countdown-mins" style="font-size: 2.2em; font-weight: bold; color: #ffffff; font-family: monospace;">${s4InitialM}</div>
-                        <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">دقيقة</div>
+                    <div style="background: #f8fafc; padding: 12px 18px; border-radius: 10px; border: 1px solid #bae6fd; min-width: 75px;">
+                        <div id="countdown-mins" style="font-size: 2.2em; font-weight: bold; color: #0f172a; font-family: monospace;">${s4InitialM}</div>
+                        <div style="color: #475569; font-size: 0.78em; margin-top: 2px;">دقيقة</div>
                     </div>
-                    <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
+                    <div style="background: #f8fafc; padding: 12px 18px; border-radius: 10px; border: 1px solid #bae6fd; min-width: 75px;">
                         <div id="countdown-secs" style="font-size: 2.2em; font-weight: bold; color: var(--primary-gold); font-family: monospace;">${s4InitialS}</div>
-                        <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">ثانية</div>
+                        <div style="color: #475569; font-size: 0.78em; margin-top: 2px;">ثانية</div>
                     </div>
                 </div>
 
-                <p style="color: #cbd5e1; font-size: 0.85em; margin: 0; line-height: 1.6;">
+                <p style="color: #1e293b; font-size: 0.85em; margin: 0; line-height: 1.6;">
                     ⏳ يجري احتساب فترة استشفاء الأنسجة (24 ساعة) بعد الجلسة الأولى. يمكنك مراجعة التمارين المقررة أدناه حتى اكتمال العداد لفتح الجلسة الثانية.
                 </p>
             </div>
         `;
     } else if (isDay1Completed) {
         clockSectionHTML = `
-            <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);">
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
                     <div style="color: #10b981; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
                         <span>✅</span> تمارين الجلسة الأولى مكتملة وموثقة سريرياً
                     </div>
-                    <span style="background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">
+                    <span style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">
                         الجلسة الثانية جاهزة للبدء الآن
                     </span>
                 </div>
-                <p style="color: #cbd5e1; font-size: 0.9em; margin: 0 0 14px 0; line-height: 1.6;">
+                <p style="color: #1e293b; font-size: 0.9em; margin: 0 0 14px 0; line-height: 1.6;">
                     🎉 اكتملت فترة الاستشفاء الحيوي للأنسجة! يمكنك الانتقال للجلسة الثانية مباشرة لمواصلة برنامج التعافي.
                 </p>
                 <button type="button" onclick="renderStep5SessionsDashboard('${patientId}', 2)" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; font-weight: 900; border: none; padding: 10px 24px; border-radius: 25px; font-size: 0.95em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);">
@@ -9231,52 +9268,52 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
     }
 
     container.innerHTML = `
-        <div class="patient-recovery-master-card" style="background: #111827; border: 1px solid var(--primary-gold); border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
+        <div class="patient-recovery-master-card" style="background: #ffffff; border: 1px solid var(--primary-gold); border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
             
         ${isAdminSession() ? `
         <!-- شريط التنقل الخاص بالإدارة (يظهر فقط للأدمن عند فتح جلسة مريض) -->
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; padding: 10px 14px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; padding: 10px 14px; background: #f8fafc; border: 1px solid #bae6fd; border-radius: 10px;">
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button type="button" onclick="goToStep(1)" style="background: rgba(212, 175, 55, 0.2); border: 1px solid var(--primary-gold); color: #fef08a; padding: 8px 16px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;">
+                    <button type="button" onclick="goToStep(1)" style="background: #f0f9ff; border: 1px solid var(--primary-gold); color: #0369a1; padding: 8px 16px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;">
                         🏠 الرئيسية
                     </button>
-                    <button type="button" onclick="window.location.href='admin.html'" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 16px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;">
+                    <button type="button" onclick="window.location.href='admin.html'" style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; padding: 8px 16px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;">
                         🛡️ لوحة الأدمن
                     </button>
                 </div>
-                <button type="button" onclick="handleStepperClick(3)" style="background: rgba(56, 189, 248, 0.1); border: 1px solid #38bdf8; color: #7dd3fc; padding: 8px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                <button type="button" onclick="handleStepperClick(3)" style="background: #f0f9ff; border: 1px solid #38bdf8; color: #0284c7; padding: 8px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                     📋 العودة للتقرير الطبي
                 </button>
             </div>` : ''}
 
             <!-- 1. الترويسة الطبية الملكية الموحدة للجلسة الأولى -->
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(212, 175, 55, 0.25); padding-bottom: 16px; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #bae6fd; padding-bottom: 16px; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
                 <div style="display: flex; align-items: center; gap: 14px;">
                     <img src="assets/logo.png" alt="شعار وداعاً للألم" style="height: 52px; width: 52px; border-radius: 50%; border: 1.5px solid var(--primary-gold);">
                     <div>
-                        <div style="color: #ffffff; font-size: 1.25em; font-weight: 800; margin: 0 0 2px 0;">${formatPatientGreeting(sessionData.patient?.name)}</div>
+                        <div style="color: #0f172a; font-size: 1.25em; font-weight: 800; margin: 0 0 2px 0;">${formatPatientGreeting(sessionData.patient?.name)}</div>
                         <div style="color: var(--primary-gold); font-size: 0.88em; font-weight: bold;">
-                            برنامج التأهيل الحركي • <span style="color: #38bdf8;">الجلسة الأولى (1 من 7)</span> • منطقة ${sessionData.latestAssessment?.painAreaTitle || 'الموضع المستهدف'}
+                            برنامج التأهيل الحركي • <span style="color: #0284c7;">الجلسة الأولى (1 من 7)</span> • منطقة ${sessionData.latestAssessment?.painAreaTitle || 'الموضع المستهدف'}
                         </div>
                     </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                    <button type="button" id="btn-replay-sarah-charity" onclick="playSarahCharityIntroAudio('${(sessionData.patient?.name || '').replace(/'/g, "\\'")}', true)" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(16, 185, 129, 0.25) 100%); border: 1.5px solid var(--primary-gold); color: #fef08a; padding: 8px 16px; border-radius: 20px; font-weight: 800; font-size: 0.84em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+                    <button type="button" id="btn-replay-sarah-charity" onclick="playSarahCharityIntroAudio('${(sessionData.patient?.name || '').replace(/'/g, "\\'")}', true)" style="background: linear-gradient(135deg, #f0f9ff 0%, #f0fdf4 100%); border: 1.5px solid var(--primary-gold); color: #0369a1; padding: 8px 16px; border-radius: 20px; font-weight: 800; font-size: 0.84em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
                         <span id="sarah-charity-voice-status">🔊 إرشادات د. سارة</span>
                     </button>
                     ${(!isCurrentPatientPaidPlan() && (sessionData.patient?.paymentType === 'humanitarian' || localStorage.getItem('smart_paid_plan_type') === 'humanitarian')) ? `
-                    <button type="button" onclick="showRoyalDuaaModal('${patientId}')" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #a7f3d0; padding: 8px 14px; border-radius: 20px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                    <button type="button" onclick="showRoyalDuaaModal('${patientId}')" style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; padding: 8px 14px; border-radius: 20px; font-size: 0.82em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
                         <span>🤲</span> <span>نص الدعاء</span>
                     </button>` : ''}
                 </div>
             </div>
 
             <!-- 2. جدول جلسات برنامج التعافي (الأيام 1 إلى 7) مصغر وأنيق -->
-            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 12px; padding: 10px 14px; margin-bottom: 18px;">
+            <div style="background: #f8fafc; border: 1px solid #bae6fd; border-radius: 12px; padding: 10px 14px; margin-bottom: 18px;">
                 <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; overflow-x: auto;">
-                    <button type="button" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.35) 0%, rgba(180, 130, 20, 0.25) 100%); border: 2px solid var(--primary-gold); color: #ffffff; padding: 8px 4px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: default; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 55px;">
+                    <button type="button" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px solid var(--primary-gold); color: #0f172a; padding: 8px 4px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: default; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 55px;">
                         <span>الجلسة 1</span>
-                        <span style="font-size: 0.72em; color: #6ee7b7;">${isDay1Completed ? '✓ منجزة' : '🟢 الحالية'}</span>
+                        <span style="font-size: 0.72em; color: #047857;">${isDay1Completed ? '✓ منجزة' : '🟢 الحالية'}</span>
                     </button>
                     ${[2, 3, 4, 5, 6, 7].map(d => {
                         const hasLog = (sessionData.dailyLogs || []).some(l => Number(l.sessionNumber || l.day) === d);
@@ -9297,22 +9334,22 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
             </div>
 
             <!-- 3. شريط إرشادات البدء الآمن (موجز وعملي) -->
-            <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 12px; padding: 12px 16px; margin-bottom: 20px;">
+            <div style="background: #f8fafc; border: 1px solid #bae6fd; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px;">
                 <div style="color: var(--primary-gold); font-size: 0.88em; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
                     <span>🛡️</span> إرشادات البدء الآمن:
                 </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; font-size: 0.82em; color: #cbd5e1;">
-                    <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); padding: 8px 10px; border-radius: 8px;">
-                        <strong style="color: #6ee7b7;">🫁 تنفس هادئ:</strong> تنفس بعمق ولا تكتم نَفَسَك أثناء التمرين.
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; font-size: 0.82em; color: #1e293b;">
+                    <div style="background: #f0fdf4; border: 1px solid rgba(16, 185, 129, 0.25); padding: 8px 10px; border-radius: 8px;">
+                        <strong style="color: #047857;">🫁 تنفس هادئ:</strong> تنفس بعمق ولا تكتم نَفَسَك أثناء التمرين.
                     </div>
-                    <div style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); padding: 8px 10px; border-radius: 8px;">
-                        <strong style="color: #7dd3fc;">🎯 تدرج بالحركة:</strong> ابدأ بنصف المدى وزده برفق دون أي إجهاد.
+                    <div style="background: #f0f9ff; border: 1px solid #bae6fd; padding: 8px 10px; border-radius: 8px;">
+                        <strong style="color: #0284c7;">🎯 تدرج بالحركة:</strong> ابدأ بنصف المدى وزده برفق دون أي إجهاد.
                     </div>
-                    <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); padding: 8px 10px; border-radius: 8px;">
-                        <strong style="color: #fca5a5;">🛑 ضابط الأمان:</strong> توقف فوراً إذا شعرت بوخز حاد أو ألم كهربائي.
+                    <div style="background: #fef2f2; border: 1px solid rgba(239, 68, 68, 0.25); padding: 8px 10px; border-radius: 8px;">
+                        <strong style="color: #dc2626;">🛑 ضابط الأمان:</strong> توقف فوراً إذا شعرت بوخز حاد أو ألم كهربائي.
                     </div>
-                    <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.25); padding: 8px 10px; border-radius: 8px;">
-                        <strong style="color: #fef08a;">💧 بعد الجلسة:</strong> اشرب كوب ماء دافئ واسترح 10 دقائق.
+                    <div style="background: #f0f9ff; border: 1px solid #bae6fd; padding: 8px 10px; border-radius: 8px;">
+                        <strong style="color: #0369a1;">💧 بعد الجلسة:</strong> اشرب كوب ماء دافئ واسترح 10 دقائق.
                     </div>
                 </div>
             </div>
@@ -9323,20 +9360,20 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
             <!-- 4. مؤشرات التحسن (تظهر حصراً إذا كانت الجلسة الأولى قد أُنجزت ووُثقت، أما قبل الإنجاز فلا تظهر لتجنب الأرقام الفارغة 0%) -->
             ${(isDay1Completed && day1Log) ? `
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 22px;">
-                <div style="background: #0f172a; padding: 14px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3); text-align: center;">
+                <div style="background: #f8fafc; padding: 14px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3); text-align: center;">
                     <div style="font-size: 1.8em; font-weight: bold; color: #ef4444;">${s4PainReduction}%</div>
-                    <div style="color: #cbd5e1; font-size: 0.85em; font-weight: bold; margin-top: 4px;">مؤشر انخفاض الألم</div>
-                    <div style="color: #94a3b8; font-size: 0.74em; margin-top: 2px;">الألم الحالي (${day1Log.painScore}/10) مقارنة بالبداية (${basePain}/10)</div>
+                    <div style="color: #1e293b; font-size: 0.85em; font-weight: bold; margin-top: 4px;">مؤشر انخفاض الألم</div>
+                    <div style="color: #475569; font-size: 0.74em; margin-top: 2px;">الألم الحالي (${day1Log.painScore}/10) مقارنة بالبداية (${basePain}/10)</div>
                 </div>
-                <div style="background: #0f172a; padding: 14px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3); text-align: center;">
-                    <div style="font-size: 1.8em; font-weight: bold; color: #38bdf8;">${s4Mobility !== null ? s4Mobility + '%' : 'موثق ✓'}</div>
-                    <div style="color: #cbd5e1; font-size: 0.85em; font-weight: bold; margin-top: 4px;">مؤشر المدى الحركي</div>
-                    <div style="color: #94a3b8; font-size: 0.74em; margin-top: 2px;">المرونة المقاسة بعد الجلسة الأولى</div>
+                <div style="background: #f8fafc; padding: 14px; border-radius: 12px; border: 1px solid #bae6fd; text-align: center;">
+                    <div style="font-size: 1.8em; font-weight: bold; color: #0284c7;">${s4Mobility !== null ? s4Mobility + '%' : 'موثق ✓'}</div>
+                    <div style="color: #1e293b; font-size: 0.85em; font-weight: bold; margin-top: 4px;">مؤشر المدى الحركي</div>
+                    <div style="color: #475569; font-size: 0.74em; margin-top: 2px;">المرونة المقاسة بعد الجلسة الأولى</div>
                 </div>
-                <div style="background: #0f172a; padding: 14px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); text-align: center;">
+                <div style="background: #f8fafc; padding: 14px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); text-align: center;">
                     <div style="font-size: 1.8em; font-weight: bold; color: #10b981;">${s4Sleep !== null ? s4Sleep + '%' : 'موثق ✓'}</div>
-                    <div style="color: #cbd5e1; font-size: 0.85em; font-weight: bold; margin-top: 4px;">مؤشر جودة النوم والراحة</div>
-                    <div style="color: #94a3b8; font-size: 0.74em; margin-top: 2px;">تقييم الاسترخاء العصبي الموثق</div>
+                    <div style="color: #1e293b; font-size: 0.85em; font-weight: bold; margin-top: 4px;">مؤشر جودة النوم والراحة</div>
+                    <div style="color: #475569; font-size: 0.74em; margin-top: 2px;">تقييم الاسترخاء العصبي الموثق</div>
                 </div>
             </div>` : ''}
 
@@ -9344,51 +9381,51 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
             <div style="margin-bottom: 25px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 8px;">
                     <h3 style="color: var(--primary-gold); margin: 0; font-size: 1.3em;">🏋️ تمارين الراحة المقررة لليوم الأول (1 من 7) - ${sessionData.stageTitle}</h3>
-                    <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">⚡ ابدأ بالتمارين أدناه</span>
+                    <span style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">⚡ ابدأ بالتمارين أدناه</span>
                 </div>
 
                 <!-- تنبيه وإخلاء مسؤولية طبي سريري للتمارين -->
-                <div style="background: rgba(245, 158, 11, 0.1); border-right: 4px solid #f59e0b; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px;">
+                <div style="background: #f0f9ff; border-right: 4px solid #bae6fd; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px;">
                     <span style="font-size: 1.3em; line-height: 1;">⚠️</span>
-                    <div style="font-size: 0.85em; color: #fde68a; line-height: 1.6;">
-                        <strong style="color: #fbbf24;">تنبيه وإخلاء مسؤولية طبي:</strong> 
+                    <div style="font-size: 0.85em; color: #0369a1; line-height: 1.6;">
+                        <strong style="color: #0369a1;">تنبيه وإخلاء مسؤولية طبي:</strong> 
                         هذه التمارين التأهيلية مصممة للاستشفاء المنزلي التدريجي للحالات المستقرة، وقد لا تلائم بعض الحالات المتقدمة أو الانزلاقات الغضروفية الحادة أو التورم والالتهاب النشط. يُرجى التوقف فوراً عند أي زيادة في الألم واستشارة الطبيب أو المعالج المختص لتقييم حالتك بدقة.
                     </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px;">
                     ${dayExercises.map((ex, idx) => `
-                        <div class="clinical-exercise-card" style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div class="clinical-exercise-card" style="background: #f8fafc; border: 1px solid #bae6fd; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
                             <div>
                                 ${generateExerciseIllustration(ex.visualType, ex.id, { name: ex.name })}
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0 6px 0;">
                                     <span style="color: var(--primary-gold); font-size: 0.78em; font-weight: bold;">تمرين #${idx+1} (اليوم 1)</span>
                                     <span style="color: #10b981; font-size: 0.78em;">⏱️ ${ex.duration}</span>
                                 </div>
-                                <h4 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.15em;">${ex.name}</h4>
-                                <p style="color: #cbd5e1; font-size: 0.86em; margin: 0 0 12px 0;">${ex.description}</p>
+                                <h4 style="color: #0f172a; margin: 0 0 6px 0; font-size: 1.15em;">${ex.name}</h4>
+                                <p style="color: #1e293b; font-size: 0.86em; margin: 0 0 12px 0;">${ex.description}</p>
                                 
-                                <div style="background: #111827; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85em; color: #e2e8f0; line-height: 1.7; border-right: 3px solid var(--primary-gold);">
+                                <div style="background: #ffffff; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85em; color: #1e293b; line-height: 1.7; border-right: 3px solid var(--primary-gold);">
                                     <strong>طريقة الأداء:</strong><br>${ex.instructions}
                                 </div>
 
                                 <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
-                                    <span style="background: #1e293b; color: #d4af37; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">🔁 ${ex.reps}</span>
-                                    <span style="background: #1e293b; color: #f59e0b; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">📦 ${ex.sets}</span>
+                                    <span style="background: #f8fafc; color: #0369a1; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">🔁 ${ex.reps}</span>
+                                    <span style="background: #f8fafc; color: #0369a1; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">📦 ${ex.sets}</span>
                                 </div>
 
                                 <!-- دليل التكنيك السليم والأخطاء الشائعة -->
                                 ${typeof getExerciseFormGuideHTML === 'function' ? getExerciseFormGuideHTML(ex) : ''}
                             </div>
                             <div>
-                                <div style="background: #1e2633; height: 5px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
-                                    <div class="timer-progress-fill" style="background: linear-gradient(90deg, #d4af37 0%, #10b981 100%); height: 100%; width: ${isDay1Completed ? '100%' : '0%'}; transition: width 1s linear;"></div>
+                                <div style="background: #f8fafc; height: 5px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
+                                    <div class="timer-progress-fill" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); height: 100%; width: ${isDay1Completed ? '100%' : '0%'}; transition: width 1s linear;"></div>
                                 </div>
                                 <div style="display: flex; gap: 8px; align-items: stretch;">
-                                    <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-completed="${isDay1Completed ? 'true' : 'false'}" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="flex: 1; background: ${isDay1Completed ? '#10b981' : 'linear-gradient(135deg, #d4af37 0%, #aa820a 100%)'}; color: ${isDay1Completed ? '#ffffff' : '#0a0e14'}; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.92em;">
+                                    <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-completed="${isDay1Completed ? 'true' : 'false'}" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="flex: 1; background: ${isDay1Completed ? '#10b981' : 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'}; color: #0f172a; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.92em;">
                                         ${isDay1Completed ? '✓ تم إنجاز التمرين بنجاح (انقر للإعادة إن رغبت)' : `⏱️ ابدأ مؤقت التمرين (${ex.duration})`}
                                     </button>
-                                    <button type="button" onclick="PatientFlow.markExerciseDone(this)" class="btn-mark-exercise-done" title="تأكيد إنجاز التمرين فوراً دون المؤقت" style="background: ${isDay1Completed ? 'rgba(16,185,129,0.2)' : 'rgba(100,116,139,0.15)'}; border: 1px solid ${isDay1Completed ? '#10b981' : '#475569'}; color: ${isDay1Completed ? '#10b981' : '#94a3b8'}; padding: 0 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85em; white-space: nowrap; transition: all 0.25s;">
+                                    <button type="button" onclick="PatientFlow.markExerciseDone(this)" class="btn-mark-exercise-done" title="تأكيد إنجاز التمرين فوراً دون المؤقت" style="background: ${isDay1Completed ? 'rgba(16,185,129,0.2)' : 'rgba(100,116,139,0.15)'}; border: 1px solid ${isDay1Completed ? '#10b981' : '#cbd5e1'}; color: ${isDay1Completed ? '#10b981' : '#94a3b8'}; padding: 0 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85em; white-space: nowrap; transition: all 0.25s;">
                                         ${isDay1Completed ? 'منجز ✓' : 'تم ☑'}
                                     </button>
                                 </div>
@@ -9400,15 +9437,15 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
 
             <!-- 5. زر توثيق إنجاز تمارين اليوم الأول أو بطاقة المتابعة في حال الإنجاز المسبق -->
             ${isDay1Completed ? `
-            <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(15, 23, 42, 0.95) 100%); border: 2px solid #10b981; border-radius: 14px; padding: 24px; text-align: center; margin: 25px 0; box-shadow: 0 8px 30px rgba(16, 185, 129, 0.25);">
-                <div style="color: #6ee7b7; font-size: 1.25em; font-weight: bold; margin-bottom: 8px;">✨ تمارين الجلسة الأولى مُنجزة وموثقة مسبقاً!</div>
-                <div style="color: #cbd5e1; font-size: 0.92em; margin-bottom: 20px; line-height: 1.7; max-width: 620px; margin-left: auto; margin-right: auto;">
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 2px solid #10b981; border-radius: 14px; padding: 24px; text-align: center; margin: 25px 0; box-shadow: 0 8px 30px rgba(16, 185, 129, 0.25);">
+                <div style="color: #047857; font-size: 1.25em; font-weight: bold; margin-bottom: 8px;">✨ تمارين الجلسة الأولى مُنجزة وموثقة مسبقاً!</div>
+                <div style="color: #1e293b; font-size: 0.92em; margin-bottom: 20px; line-height: 1.7; max-width: 620px; margin-left: auto; margin-right: auto;">
                     لقد أتممت بنجاح تمارين اليوم الأول وهي مسجلة في سجلك الطبي. يمكنك مراجعة الحركات هنا في أي وقت، أو الانتقال مباشرة لمتابعة باقي الجلسات في المرحلة الخامسة.
                 </div>
                 <button type="button" onclick="handleStepperClick(5)" class="btn-plan-royal-card" style="margin: 0 auto; max-width: 620px; width: 100%; border-color: #10b981;">
                     <div class="royal-card-halo" style="background: radial-gradient(circle, rgba(16,185,129,0.3) 0%, transparent 70%);"></div>
                     <div class="royal-card-shimmer"></div>
-                    <div class="royal-badge-pill" style="border-color: #10b981; color: #6ee7b7;">
+                    <div class="royal-badge-pill" style="border-color: #10b981; color: #047857;">
                         <span class="royal-badge-dot" style="background: #10b981;"></span>
                         <span>📅 الجلسة الأولى مكتملة وموثقة</span>
                     </div>
@@ -9417,7 +9454,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                             <span class="royal-icon-emoji">🚀</span>
                         </div>
                         <div class="royal-text-col">
-                            <div class="royal-cta-headline" style="color: #6ee7b7;">الانتقال إلى متابعة الجلسات (المرحلة 5)</div>
+                            <div class="royal-cta-headline" style="color: #047857;">الانتقال إلى متابعة الجلسات (المرحلة 5)</div>
                             <div class="royal-cta-subline">استعراض الجلسات التالية ومؤشرات التعافي المعتمدة 📈</div>
                         </div>
                         <div class="royal-arrow-box" style="background: #10b981; color: #0a0e14;">
@@ -9427,9 +9464,9 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                 </button>
             </div>
             ` : `
-            <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%); border: 2px solid #10b981; border-radius: 14px; padding: 24px; text-align: center; margin: 25px 0; box-shadow: 0 8px 30px rgba(16, 185, 129, 0.25);">
-                <div style="color: #6ee7b7; font-size: 1.15em; font-weight: bold; margin-bottom: 8px;">🎯 خطوتك التالية بعد إتمام التمارين أعلاه:</div>
-                <div style="color: #cbd5e1; font-size: 0.9em; margin-bottom: 20px; line-height: 1.7; max-width: 600px; margin-left: auto; margin-right: auto;">
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 2px solid #10b981; border-radius: 14px; padding: 24px; text-align: center; margin: 25px 0; box-shadow: 0 8px 30px rgba(16, 185, 129, 0.25);">
+                <div style="color: #047857; font-size: 1.15em; font-weight: bold; margin-bottom: 8px;">🎯 خطوتك التالية بعد إتمام التمارين أعلاه:</div>
+                <div style="color: #1e293b; font-size: 0.9em; margin-bottom: 20px; line-height: 1.7; max-width: 600px; margin-left: auto; margin-right: auto;">
                     بعد انتهائك من أداء تمارين اليوم الأول، انقر على الزر أدناه لتوثيق إنجاز الجلسة الأولى وبدء فترة الاستشفاء الحيوي للأنسجة (24 ساعة). ستنتقل بعدها مباشرة لمتابعة باقي الجلسات (2 إلى 7) مع التقييم اليومي المعتمد.
                 </div>
                 <button type="button" id="btn-complete-day1-session" onclick="handleStep4CompletionClick('${patientId}')" class="btn-plan-royal-card" style="margin: 0 auto; max-width: 620px; width: 100%;">
@@ -9453,7 +9490,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                     </div>
                 </button>
                 <div style="margin-top: 12px; text-align: center;">
-                    <button type="button" onclick="handleStep4CompletionClick('${patientId}', true)" style="background: none; border: none; color: #94a3b8; font-size: 0.84em; text-decoration: underline; cursor: pointer; padding: 4px 10px; transition: 0.2s;">
+                    <button type="button" onclick="handleStep4CompletionClick('${patientId}', true)" style="background: none; border: none; color: #475569; font-size: 0.84em; text-decoration: underline; cursor: pointer; padding: 4px 10px; transition: 0.2s;">
                         أديت التمارين مسبقاً خارج الأداة؟ انقر هنا للمتابعة والتوثيق المباشر ❯
                     </button>
                 </div>
@@ -9810,29 +9847,29 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
         const isPrevLog = (Number(logSessionNum) !== Number(activeDay));
         const reportBadgeTitle = isPrevLog ? `(مستند لنتائج الجلسة السابقة #${logSessionNum})` : `(الجلسة #${logSessionNum})`;
         behavioralReportHTML = `
-            <div style="background: #0f172a; border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px; margin-bottom: 22px;">
+            <div style="background: #f8fafc; border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px; margin-bottom: 22px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                     <div style="color: var(--primary-gold); font-weight: bold; font-size: 1.05em;">🧬 تقرير السلوك الحركي والميكانيكا الحيوية ${reportBadgeTitle}:</div>
-                    <span style="color: #94a3b8; font-size: 0.8em;">مسجل بتاريخ: ${lastDailyLog.date ? new Date(lastDailyLog.date).toLocaleDateString('ar-EG') : 'موثق سريرياً'}</span>
+                    <span style="color: #475569; font-size: 0.8em;">مسجل بتاريخ: ${lastDailyLog.date ? new Date(lastDailyLog.date).toLocaleDateString('ar-EG') : 'موثق سريرياً'}</span>
                 </div>
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 12px;">
-                    <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 14px;">
+                    <div style="background: #f0fdf4; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 14px;">
                         <div style="color: #10b981; font-weight: bold; font-size: 0.9em; margin-bottom: 8px;">✨ الإنجازات الإيجابية وأثرها البيوميكانيكي:</div>
-                        <ul style="color: #6ee7b7; margin: 0; padding-right: 18px; line-height: 1.7; font-size: 0.85em;">
+                        <ul style="color: #047857; margin: 0; padding-right: 18px; line-height: 1.7; font-size: 0.85em;">
                             ${posHabits.length > 0 ? posHabits.map(h => `<li>${h}</li>`).join('') : '<li>لم يتم تسجيل سلوكيات إيجابية في هذه الجلسة.</li>'}
                         </ul>
                     </div>
 
-                    <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; padding: 14px;">
+                    <div style="background: #fef2f2; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; padding: 14px;">
                         <div style="color: #ef4444; font-weight: bold; font-size: 0.9em; margin-bottom: 8px;">⚠️ السلوكيات السلبية وأثرها على المفاصل:</div>
-                        <ul style="color: #fca5a5; margin: 0; padding-right: 18px; line-height: 1.7; font-size: 0.85em;">
+                        <ul style="color: #dc2626; margin: 0; padding-right: 18px; line-height: 1.7; font-size: 0.85em;">
                             ${negHabits.length > 0 ? negHabits.map(h => `<li>${h}</li>`).join('') : '<li style="color: #10b981;">ممتاز! لم يتم رصد أي سلوكيات مجهدة للمفاصل.</li>'}
                         </ul>
                     </div>
                 </div>
 
-                <div style="background: #111827; padding: 10px 14px; border-radius: 8px; border-right: 3px solid var(--primary-gold); font-size: 0.85em; color: #fef08a;">
+                <div style="background: #ffffff; padding: 10px 14px; border-radius: 8px; border-right: 3px solid var(--primary-gold); font-size: 0.85em; color: #0369a1;">
                     💡 <strong>توجيه لجلسة اليوم:</strong> ${negHabits.length > 0 ? 'ركز اليوم على تجنب السلوكيات المذكورة أعلاه أثناء أداء التمارين لضمان استمرار تسكين الألم.' : 'واصل بهذا الانضباط، التزامك بالوضعية الصحيحة يسرع وصولك للراحة التامة.'}
                 </div>
             </div>
@@ -9841,12 +9878,12 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
 
     // توليد أزرار الجلسات الكاملة (الجلسة 1 المستقلة + الجلسات 2 إلى 7)
     const sessionTabsHTML = `
-        <div style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 12px 16px; margin-bottom: 22px;">
+        <div style="background: #f8fafc; border: 1px solid #bae6fd; border-radius: 12px; padding: 12px 16px; margin-bottom: 22px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
                 <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.95em;">📅 جدول جلسات برنامج التعافي (الأيام 1 إلى 7):</div>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                     ${sessionData.isPlanCompleted ? `
-                        <button type="button" onclick="renderStep6Completion('${patientId}')" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.3) 0%, rgba(180, 130, 20, 0.3) 100%); border: 1px solid var(--primary-gold); color: #fef08a; padding: 5px 12px; border-radius: 6px; font-size: 0.78em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                        <button type="button" onclick="renderStep6Completion('${patientId}')" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1px solid var(--primary-gold); color: #0369a1; padding: 5px 12px; border-radius: 6px; font-size: 0.78em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
                             <span>👑</span> بوابة الحل الجذري
                         </button>
                     ` : ''}
@@ -9857,7 +9894,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 ${(() => {
                     const isDay1Done = (sessionData.dailyLogs || []).some(l => Number(l.sessionNumber || l.day) === 1);
                     return `
-                    <button type="button" onclick="renderStep4IndependentDay1('${patientId}')" title="مراجعة تمارين الجلسة الأولى" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 10px 4px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: 0.2s; min-width: 60px;">
+                    <button type="button" onclick="renderStep4IndependentDay1('${patientId}')" title="مراجعة تمارين الجلسة الأولى" style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; padding: 10px 4px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: 0.2s; min-width: 60px;">
                         <span>الجلسة 1</span>
                         <span style="font-size: 0.75em; opacity: 0.9;">${isDay1Done ? '✓ منجزة' : '🔵 اليوم 1'}</span>
                     </button>
@@ -9947,20 +9984,20 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
 
     if (isDayAlreadyCompleted) {
         clock24HTML = `
-            <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);">
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
                     <div style="color: #10b981; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
                         <span>✓</span> جلسة منجزة وموثقة سريرياً
                     </div>
-                    <span style="background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">
+                    <span style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">
                         الجلسة ${activeDay} من 7 (مكتملة ومسجلة)
                     </span>
                 </div>
-                <p style="color: #cbd5e1; font-size: 0.9em; margin: 0 0 14px 0; line-height: 1.6;">
+                <p style="color: #1e293b; font-size: 0.9em; margin: 0 0 14px 0; line-height: 1.6;">
                     تم استكمال كافة تمارين وبروتوكول هذه الجلسة وتوثيق استجابة الأنسجة ومؤشرات التحسن بنجاح في خطتك العلاجية. يمكنك استعراض التمارين أدناه في أي وقت لتثبيت الشفاء.
                 </p>
                 ${sessionData.isPlanCompleted ? `
-                    <button type="button" onclick="renderStep6Completion('${patientId}')" style="background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; font-weight: bold; border: none; padding: 8px 20px; border-radius: 20px; font-size: 0.88em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);">
+                    <button type="button" onclick="renderStep6Completion('${patientId}')" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #0a0e14; font-weight: bold; border: none; padding: 8px 20px; border-radius: 20px; font-size: 0.88em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                         🚀 الانتقال لبوابة الحل الجذري (الكايروبراكتيك)
                     </button>
                 ` : ''}
@@ -9969,51 +10006,51 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
     } else if (lockStatus.prevSessionNotDone || isDay1NotDone) {
         const reqNum = lockStatus.requiredSession || (activeDay - 1);
         clock24HTML = `
-            <div style="background: linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #eab308; border-radius: 14px; padding: 22px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+            <div style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid #bae6fd; border-radius: 14px; padding: 22px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
-                    <div style="color: #fef08a; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                    <div style="color: #0369a1; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
                         <span>🔒</span> تتطلب الجلسة (${activeDay}) إتمام وتوثيق الجلسة (${reqNum}) أولاً
                     </div>
-                    <span style="background: rgba(234, 179, 8, 0.2); border: 1px solid #eab308; color: #fef08a; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
+                    <span style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0369a1; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
                         بانتظار إنجاز الجلسة ${reqNum}
                     </span>
                 </div>
-                <p style="color: #cbd5e1; font-size: 0.9em; margin: 0 0 16px 0; line-height: 1.6;">
+                <p style="color: #1e293b; font-size: 0.9em; margin: 0 0 16px 0; line-height: 1.6;">
                     لحماية مفاصلك وأنسجتك وتحقيق التعافي السريري المتدرج، لا يمكن تخطي الجلسات أو فتح الجلسة (${activeDay}) إلا بعد إتمام تمارين الجلسة السابقة (${reqNum}) وتوثيقها واستكمال فترة الاستشفاء الحيوي المقررة (24 ساعة).
                 </p>
-                <button type="button" onclick="${reqNum === 1 ? `renderStep4IndependentDay1('${patientId}')` : `renderStep5SessionsDashboard('${patientId}', ${reqNum})`}" style="background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; font-weight: 900; border: none; padding: 10px 24px; border-radius: 25px; font-size: 0.95em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);">
+                <button type="button" onclick="${reqNum === 1 ? `renderStep4IndependentDay1('${patientId}')` : `renderStep5SessionsDashboard('${patientId}', ${reqNum})`}" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #0a0e14; font-weight: 900; border: none; padding: 10px 24px; border-radius: 25px; font-size: 0.95em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                     <span>🏋️</span> الانتقال للجلسة المطلوبة (#${reqNum}) ❯
                 </button>
             </div>
         `;
     } else if (lockStatus.isLocked && lockStatus.remainingMs > 0) {
         clock24HTML = `
-            <div id="session-24h-clock-card" style="background: linear-gradient(135deg, #0b101b 0%, #172033 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+            <div id="session-24h-clock-card" style="background: linear-gradient(135deg, #0b101b 0%, #172033 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
                     <div style="color: var(--primary-gold); font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
                         <span>⏱️</span> ساعة التوقيت المعتمدة (فترة استشفاء جارية)
                     </div>
-                    <span style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #fef08a; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
+                    <span style="background: #f0f9ff; border: 1px solid var(--primary-gold); color: #0369a1; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
                         الجلسة ${activeDay} من 7 (مقفلة مؤقتاً للاستشفاء)
                     </span>
                 </div>
                 
                 <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 12px;">
-                    <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
-                        <div id="countdown-hours" style="font-size: 2.2em; font-weight: bold; color: #ffffff; font-family: monospace;">${initialH}</div>
-                        <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">ساعة</div>
+                    <div style="background: #f8fafc; padding: 12px 18px; border-radius: 10px; border: 1px solid #bae6fd; min-width: 75px;">
+                        <div id="countdown-hours" style="font-size: 2.2em; font-weight: bold; color: #0f172a; font-family: monospace;">${initialH}</div>
+                        <div style="color: #475569; font-size: 0.78em; margin-top: 2px;">ساعة</div>
                     </div>
-                    <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
-                        <div id="countdown-mins" style="font-size: 2.2em; font-weight: bold; color: #ffffff; font-family: monospace;">${initialM}</div>
-                        <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">دقيقة</div>
+                    <div style="background: #f8fafc; padding: 12px 18px; border-radius: 10px; border: 1px solid #bae6fd; min-width: 75px;">
+                        <div id="countdown-mins" style="font-size: 2.2em; font-weight: bold; color: #0f172a; font-family: monospace;">${initialM}</div>
+                        <div style="color: #475569; font-size: 0.78em; margin-top: 2px;">دقيقة</div>
                     </div>
-                    <div style="background: #0f172a; padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.35); min-width: 75px;">
+                    <div style="background: #f8fafc; padding: 12px 18px; border-radius: 10px; border: 1px solid #bae6fd; min-width: 75px;">
                         <div id="countdown-secs" style="font-size: 2.2em; font-weight: bold; color: var(--primary-gold); font-family: monospace;">${initialS}</div>
-                        <div style="color: #94a3b8; font-size: 0.78em; margin-top: 2px;">ثانية</div>
+                        <div style="color: #475569; font-size: 0.78em; margin-top: 2px;">ثانية</div>
                     </div>
                 </div>
 
-                <p style="color: #cbd5e1; font-size: 0.85em; margin: 0; line-height: 1.6;">
+                <p style="color: #1e293b; font-size: 0.85em; margin: 0; line-height: 1.6;">
                     ⏳ يجري احتساب فترة استشفاء الأنسجة (24 ساعة). التزم بالتمارين المقررة أدناه واسترح حتى اكتمال العداد لتوثيق الجلسة.
                 </p>
             </div>
@@ -10021,16 +10058,16 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
     } else {
         // إذا اكتمل العداد، نعرض شارة إنجاز فترة الاستشفاء واستعداد الجلسة للتوثيق
         clock24HTML = `
-            <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 16px 20px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 18px rgba(16, 185, 129, 0.2);">
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 16px 20px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 18px rgba(16, 185, 129, 0.2);">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                    <div style="color: #6ee7b7; font-size: 1.02em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                    <div style="color: #047857; font-size: 1.02em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
                         <span>🎉</span> اكتملت فترة استشفاء الأنسجة (24 ساعة) بنجاح
                     </div>
-                    <span style="background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; color: #6ee7b7; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
+                    <span style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; padding: 3px 10px; border-radius: 20px; font-size: 0.78em; font-weight: bold;">
                         الجلسة ${activeDay} من 7 (مفتوحة وجاهزة)
                     </span>
                 </div>
-                <div style="color: #cbd5e1; font-size: 0.86em; margin-top: 6px; text-align: right;">
+                <div style="color: #1e293b; font-size: 0.86em; margin-top: 6px; text-align: right;">
                     أهلاً بك! لقد أتم جسدك فترة الاستشفاء الحيوية اللازمة؛ طبّق تمارين الجلسة المقررة أدناه ثم اضغط زر حفظ التقييم لاعتماد تقدمك العلاجي.
                 </div>
             </div>
@@ -10044,15 +10081,15 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
     let sessionCompletionSectionHTML = '';
     if (isDayAlreadyCompleted) {
         sessionCompletionSectionHTML = `
-            <div style="background: rgba(16, 185, 129, 0.1); border: 1.5px solid #10b981; border-radius: 12px; padding: 18px; text-align: center; color: #6ee7b7; font-weight: bold; margin-top: 25px;">
+            <div style="background: #f0fdf4; border: 1.5px solid #10b981; border-radius: 12px; padding: 18px; text-align: center; color: #047857; font-weight: bold; margin-top: 25px;">
                 <div style="font-size: 1.08em; margin-bottom: 8px;">✓ تم إنجاز الجلسة (#${activeDay}) بنجاح مسبقاً وهي موثقة في سجلك الطبي للتعافي.</div>
                 <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
                     ${sessionData.isPlanCompleted ? `
-                        <button type="button" onclick="renderStep6Completion('${patientId}')" style="background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; font-weight: bold; border: none; padding: 10px 22px; border-radius: 25px; font-size: 0.92em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);">
+                        <button type="button" onclick="renderStep6Completion('${patientId}')" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #0a0e14; font-weight: bold; border: none; padding: 10px 22px; border-radius: 25px; font-size: 0.92em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                             👑 الانتقال لبوابة الحل الجذري (الكايروبراكتيك)
                         </button>
                     ` : (activeDay < progressionDay ? `
-                        <button type="button" onclick="renderStep5SessionsDashboard('${patientId}', ${progressionDay})" style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #7dd3fc; font-weight: bold; padding: 8px 18px; border-radius: 20px; font-size: 0.88em; cursor: pointer;">
+                        <button type="button" onclick="renderStep5SessionsDashboard('${patientId}', ${progressionDay})" style="background: #f0f9ff; border: 1px solid #38bdf8; color: #0284c7; font-weight: bold; padding: 8px 18px; border-radius: 20px; font-size: 0.88em; cursor: pointer;">
                             الانتقال لجلستك الحالية النشطة (#${progressionDay}) ⬅️
                         </button>
                     ` : '')}
@@ -10074,7 +10111,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 <div id="session-completion-control-wrapper" style="text-align: center; margin-top: 25px;">
                     <!-- عنوان الجلسة التالية أو إتمام البرنامج بخط كبير ولون ذهبي فخم -->
                     <div style="text-align: center; margin-bottom: 14px;">
-                        <span style="font-size: 1.5em; font-weight: 900; color: #d4af37; text-shadow: 0 0 16px rgba(212, 175, 55, 0.6), 0 2px 4px rgba(0,0,0,0.8); letter-spacing: 0.8px; display: inline-block;">
+                        <span style="font-size: 1.5em; font-weight: 900; color: #0369a1;  letter-spacing: 0.8px; display: inline-block;">
                             ${activeDay === 7 ? '🏆 إتمام البرنامج والتعافي الشامل' : 'الجلسة التالية'}
                         </span>
                     </div>
@@ -10082,16 +10119,16 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                     <div class="royal-clinical-lock-btn">
                         <!-- اليمين (RTL): أيقونة القفل الملكية ونص سيتم تفعيل الزر بعد انتهاء الوقت -->
                         <div style="display: flex; align-items: center; gap: 12px; text-align: right; flex-grow: 1;">
-                            <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.05) 45%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.5) 100%), linear-gradient(135deg, #d4af37 0%, #aa820a 100%); border: 2px solid #fef08a; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.6); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 2px solid #bae6fd; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                                 <span style="font-size: 1.25em; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));">🔒</span>
                             </div>
                             <div>
-                                <div style="color: #ffffff; font-weight: 800; font-size: 1em; line-height: 1.35; text-shadow: 0 1px 3px rgba(0,0,0,0.8);">
+                                <div style="color: #0f172a; font-weight: 800; font-size: 1em; line-height: 1.35; ">
                                     سيتم تفعيل الزر بعد انتهاء الوقت
                                 </div>
-                                <div style="color: #94a3b8; font-size: 0.82em; margin-top: 3px; display: flex; align-items: center; gap: 6px;">
+                                <div style="color: #475569; font-size: 0.82em; margin-top: 3px; display: flex; align-items: center; gap: 6px;">
                                     <span>⏳ متبقي:</span>
-                                    <strong id="recovery-progress-remaining-text" style="color: #38bdf8; font-family: monospace; font-size: 1.05em;">${remText}</strong>
+                                    <strong id="recovery-progress-remaining-text" style="color: #0284c7; font-family: monospace; font-size: 1.05em;">${remText}</strong>
                                 </div>
                             </div>
                         </div>
@@ -10110,8 +10147,8 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                                 <circle id="circular-progress-stroke" cx="27" cy="27" r="22" fill="transparent" stroke="url(#circular-gauge-grad)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="138.23" stroke-dashoffset="${(138.23 * (1 - (initialPct / 100))).toFixed(1)}" />
                             </svg>
                             <div style="position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none;">
-                                <span id="circular-progress-pct" style="font-size: 0.72em; font-weight: 900; color: #38bdf8; font-family: monospace; line-height: 1;">${initialPct}%</span>
-                                <span style="font-size: 0.48em; color: #94a3b8; letter-spacing: 0.5px; text-transform: uppercase; margin-top: 1px;">Loading</span>
+                                <span id="circular-progress-pct" style="font-size: 0.72em; font-weight: 900; color: #0284c7; font-family: monospace; line-height: 1;">${initialPct}%</span>
+                                <span style="font-size: 0.48em; color: #475569; letter-spacing: 0.5px; text-transform: uppercase; margin-top: 1px;">Loading</span>
                             </div>
                         </div>
                     </div>
@@ -10122,18 +10159,18 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 <div id="session-completion-control-wrapper" style="text-align: center; margin-top: 25px;">
                     <!-- عنوان الجلسة التالية أو إتمام البرنامج بخط كبير ولون ذهبي فخم -->
                     <div style="text-align: center; margin-bottom: 14px;">
-                        <span style="font-size: 1.5em; font-weight: 900; color: #d4af37; text-shadow: 0 0 16px rgba(212, 175, 55, 0.6), 0 2px 4px rgba(0,0,0,0.8); letter-spacing: 0.8px; display: inline-block;">
+                        <span style="font-size: 1.5em; font-weight: 900; color: #0369a1;  letter-spacing: 0.8px; display: inline-block;">
                             ${activeDay === 7 ? '🏆 إتمام البرنامج والتعافي الشامل' : 'الجلسة التالية'}
                         </span>
                     </div>
 
-                    <button type="button" onclick="handleStep5CompletionClick('${patientId}', ${activeDay})" class="royal-clinical-next-btn active-unlocked" style="width: 100%; max-width: 620px; margin: 0 auto; background: linear-gradient(180deg, #10b981 0%, #059669 50%, #047857 51%, #065f46 100%) !important; color: #ffffff !important; border: 2px solid #6ee7b7 !important; border-radius: 50px !important; padding: 10px 24px 10px 14px !important; font-size: 1.15em !important; font-weight: 900 !important; letter-spacing: 0.5px; cursor: pointer; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 14px !important; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.7), 0 2px 4px rgba(0, 0, 0, 0.3) !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important; box-sizing: border-box;">
+                    <button type="button" onclick="handleStep5CompletionClick('${patientId}', ${activeDay})" class="royal-clinical-next-btn active-unlocked" style="width: 100%; max-width: 620px; margin: 0 auto; background: linear-gradient(180deg, #10b981 0%, #059669 50%, #047857 51%, #065f46 100%) !important; color: #0f172a !important; border: 2px solid #6ee7b7 !important; border-radius: 50px !important; padding: 10px 24px 10px 14px !important; font-size: 1.15em !important; font-weight: 900 !important; letter-spacing: 0.5px; cursor: pointer; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 14px !important; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;  box-sizing: border-box;">
                         <!-- Left Glossy Orb Icon Circle (لون الصحة والتعافي والراحة) -->
-                        <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 45%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.4) 100%), linear-gradient(135deg, #10b981 0%, #047857 100%); border: 2.5px solid #ffffff; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.8); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 45%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.4) 100%), linear-gradient(135deg, #10b981 0%, #047857 100%); border: 2.5px solid #ffffff; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff" style="margin-left: 2px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));"><polygon points="6,4 20,12 6,20"/></svg>
                         </div>
                         <!-- Main Text -->
-                        <span style="flex-grow: 1; text-align: center; font-size: 1.08em; font-weight: 900; color: #ffffff !important; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7) !important;">
+                        <span style="flex-grow: 1; text-align: center; font-size: 1.08em; font-weight: 900; color: #0f172a !important; ">
                             ${activeDay === 7 ? 'حفظ توثيق الجلسة الختامية (#7) وإتمام البرنامج والتخرج 🏆' : `حفظ تسجيل الجلسة (#${activeDay}) وتوثيق التقييم والانتقال للجلسة التالية 🚀`}
                         </span>
                         <!-- Right Arrow Chevron -->
@@ -10145,21 +10182,21 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
     }
 
     container.innerHTML = `
-        <div class="patient-recovery-master-card" style="background: #111827; border: 1px solid var(--primary-gold); border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
+        <div class="patient-recovery-master-card" style="background: #ffffff; border: 1px solid var(--primary-gold); border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
             <input type="hidden" id="current-session-number" data-session-number="${activeDay}" value="${activeDay}">
             
             ${isAdminSession() ? `
             <!-- شريط التنقل الخاص بالإدارة (يظهر فقط للأدمن عند فتح جلسة مريض) -->
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; padding: 10px 14px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; padding: 10px 14px; background: #f8fafc; border: 1px solid #bae6fd; border-radius: 10px;">
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button type="button" onclick="goToStep(1)" style="background: rgba(212, 175, 55, 0.2); border: 1px solid var(--primary-gold); color: #fef08a; padding: 8px 16px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;">
+                    <button type="button" onclick="goToStep(1)" style="background: #f0f9ff; border: 1px solid var(--primary-gold); color: #0369a1; padding: 8px 16px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;">
                         🏠 الرئيسية
                     </button>
-                    <button type="button" onclick="window.location.href='admin.html'" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 16px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;">
+                    <button type="button" onclick="window.location.href='admin.html'" style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; padding: 8px 16px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;">
                         🛡️ لوحة الأدمن
                     </button>
                 </div>
-                <button type="button" onclick="handleStepperClick(3)" style="background: rgba(56, 189, 248, 0.1); border: 1px solid #38bdf8; color: #7dd3fc; padding: 8px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                <button type="button" onclick="handleStepperClick(3)" style="background: #f0f9ff; border: 1px solid #38bdf8; color: #0284c7; padding: 8px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                     📋 العودة للتقرير الطبي
                 </button>
             </div>` : ''}
@@ -10167,26 +10204,26 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
             ${sessionData.isPlanCompleted ? `
             <!-- زر العودة لبوابة الحل الجذري عند اكتمال البرنامج -->
             <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 14px;">
-                <button type="button" onclick="renderStep6Completion('${patientId}')" class="btn-header" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(180, 130, 20, 0.25) 100%); border: 1px solid var(--primary-gold); color: #fef08a; padding: 7px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                <button type="button" onclick="renderStep6Completion('${patientId}')" class="btn-header" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1px solid var(--primary-gold); color: #0369a1; padding: 7px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                     <span>🏆</span> العودة لبوابة الحل الجذري
                 </button>
             </div>
             ` : ''}
 
             <!-- ترويسة الجلسة الموحدة مع تحفيز د. سارة -->
-            <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid rgba(212, 175, 55, 0.35); border-radius: 14px; padding: 18px 22px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+            <div style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid #bae6fd; border-radius: 14px; padding: 18px 22px; margin-bottom: 20px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
                     <div style="display: flex; align-items: center; gap: 14px;">
                         <img src="assets/logo.png" alt="شعار وداعاً للألم" style="height: 50px; width: 50px; border-radius: 50%; border: 1.5px solid var(--primary-gold);">
                         <div>
-                            <h2 style="color: #ffffff; margin: 0; font-size: 1.25em;">${formatPatientGreeting(sessionData.patient?.name)}</h2>
+                            <h2 style="color: #0f172a; margin: 0; font-size: 1.25em;">${formatPatientGreeting(sessionData.patient?.name)}</h2>
                             <div style="color: var(--primary-gold); font-size: 0.88em; margin-top: 3px;">
                                 متابعة جلسات التأهيل الحركي (الجلسة ${activeDay} من 7) - منطقة ${sessionData.latestAssessment?.painAreaTitle || 'المفصل المختار'}
                             </div>
                         </div>
                     </div>
                     <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                        <div style="background: #0f172a; border: 1.5px solid #10b981; padding: 6px 14px; border-radius: 8px; color: #10b981; font-weight: bold; font-size: 0.8em;">
+                        <div style="background: #f8fafc; border: 1.5px solid #10b981; padding: 6px 14px; border-radius: 8px; color: #10b981; font-weight: bold; font-size: 0.8em;">
                             ✓ ${currentDisplayStageTitle}
                         </div>
                         <button type="button" onclick="playDailyMotivationAudio(${activeDay}, '${(typeof getResolvedPatientName === 'function' ? getResolvedPatientName() : sessionData.patient?.name || '').replace(/'/g, "\\'")}')" class="btn-header btn-header-emerald" style="padding: 7px 14px; font-size: 0.8em; border-radius: 20px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-weight: bold; white-space: nowrap;">
@@ -10195,7 +10232,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                     </div>
                 </div>
                 ${currentDisplayMotivation ? `
-                    <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed rgba(212, 175, 55, 0.2); color: #6ee7b7; font-size: 0.88em; line-height: 1.6;">
+                    <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed #bae6fd; color: #047857; font-size: 0.88em; line-height: 1.6;">
                         ⭐ <strong>توجيه الجلسة:</strong> ${currentDisplayMotivation}
                     </div>
                 ` : ''}
@@ -10209,33 +10246,33 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
 
             <!-- مؤشرات التحسن الثلاثة -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px;">
-                <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1.5px solid rgba(239, 68, 68, 0.4); text-align: center; position: relative; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1);">
+                <div style="background: #f8fafc; padding: 18px; border-radius: 12px; border: 1.5px solid rgba(239, 68, 68, 0.4); text-align: center; position: relative; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1);">
                     <div style="font-size: 2.2em; font-weight: bold; color: #ef4444; font-family: monospace;">${displayPainReduction}%</div>
-                    <div style="color: #cbd5e1; font-size: 0.9em; font-weight: bold; margin-top: 4px;">مؤشر انخفاض وتلاشي الألم</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 4px; line-height: 1.4;">
+                    <div style="color: #1e293b; font-size: 0.9em; font-weight: bold; margin-top: 4px;">مؤشر انخفاض وتلاشي الألم</div>
+                    <div style="color: #475569; font-size: 0.75em; margin-top: 4px; line-height: 1.4;">
                         ${(activeDayLog && typeof activeDayLog.painScore === 'number') 
                             ? `تراجع الألم التراكمي (الألم الحالي ${activeDayLog.painScore}/10 مقارنة بالبداية ${sessionData.baselinePain || 10}/10)` 
                             : (lastPrevLog ? `تراجع الألم التراكمي المكتسب حتى الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day} مقارنة بالبداية (${sessionData.baselinePain || 10}/10)` : 'بانتظار تقييمك للجلسة الأولى')}
                     </div>
                     ${lastPrevLog ? `
                     <div style="margin-top: 8px;">
-                        <button type="button" onclick="openSessionAssessmentModal('${patientId}', ${lastPrevLog.sessionNumber || lastPrevLog.day})" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; padding: 4px 12px; border-radius: 14px; font-size: 0.74em; cursor: pointer; font-weight: bold; transition: 0.2s;">
+                        <button type="button" onclick="openSessionAssessmentModal('${patientId}', ${lastPrevLog.sessionNumber || lastPrevLog.day})" style="background: #fef2f2; border: 1px solid rgba(239, 68, 68, 0.4); color: #dc2626; padding: 4px 12px; border-radius: 14px; font-size: 0.74em; cursor: pointer; font-weight: bold; transition: 0.2s;">
                             ✏️ تعديل تقييم ألم وحركة الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day}
                         </button>
                     </div>
                     ` : ''}
                 </div>
 
-                <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1.5px solid rgba(56, 189, 248, 0.4); text-align: center; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.1);">
-                    <div style="font-size: 2.2em; font-weight: bold; color: #38bdf8; font-family: monospace;">${displayMobility ? displayMobility + '%' : '<span style="font-size: 0.62em; color: #38bdf8;">قيد القياس ⏱️</span>'}</div>
-                    <div style="color: #cbd5e1; font-size: 0.9em; font-weight: bold; margin-top: 4px;">مؤشر استعادة المدى الحركي</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 4px; line-height: 1.4;">${(activeDayLog) ? 'المرونة التراكمية الموثقة للجلسة ' + activeDay : (lastPrevLog ? `استعادة الحركة التراكمية حتى الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day}` : 'سيُحسب بعد تقييمك لتمارين الجلسة الأولى')}</div>
+                <div style="background: #f8fafc; padding: 18px; border-radius: 12px; border: 1.5px solid #bae6fd; text-align: center; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.1);">
+                    <div style="font-size: 2.2em; font-weight: bold; color: #0284c7; font-family: monospace;">${displayMobility ? displayMobility + '%' : '<span style="font-size: 0.62em; color: #0284c7;">قيد القياس ⏱️</span>'}</div>
+                    <div style="color: #1e293b; font-size: 0.9em; font-weight: bold; margin-top: 4px;">مؤشر استعادة المدى الحركي</div>
+                    <div style="color: #475569; font-size: 0.75em; margin-top: 4px; line-height: 1.4;">${(activeDayLog) ? 'المرونة التراكمية الموثقة للجلسة ' + activeDay : (lastPrevLog ? `استعادة الحركة التراكمية حتى الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day}` : 'سيُحسب بعد تقييمك لتمارين الجلسة الأولى')}</div>
                 </div>
 
-                <div style="background: #0f172a; padding: 18px; border-radius: 12px; border: 1.5px solid rgba(16, 185, 129, 0.4); text-align: center; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.1);">
+                <div style="background: #f8fafc; padding: 18px; border-radius: 12px; border: 1.5px solid rgba(16, 185, 129, 0.4); text-align: center; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.1);">
                     <div style="font-size: 2.2em; font-weight: bold; color: #10b981; font-family: monospace;">${displaySleep ? displaySleep + '%' : '<span style="font-size: 0.62em; color: #10b981;">قيد التقييم ⏱️</span>'}</div>
-                    <div style="color: #cbd5e1; font-size: 0.9em; font-weight: bold; margin-top: 4px;">مؤشر جودة وعمق النوم والراحة</div>
-                    <div style="color: #94a3b8; font-size: 0.75em; margin-top: 4px; line-height: 1.4;">${(activeDayLog) ? 'جودة النوم والراحة التراكمية للجلسة ' + activeDay : (lastPrevLog ? `تراكم جودة النوم والراحة حتى الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day}` : 'سيُحسب بعد تقييمك لجودة النوم في الجلسة الأولى')}</div>
+                    <div style="color: #1e293b; font-size: 0.9em; font-weight: bold; margin-top: 4px;">مؤشر جودة وعمق النوم والراحة</div>
+                    <div style="color: #475569; font-size: 0.75em; margin-top: 4px; line-height: 1.4;">${(activeDayLog) ? 'جودة النوم والراحة التراكمية للجلسة ' + activeDay : (lastPrevLog ? `تراكم جودة النوم والراحة حتى الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day}` : 'سيُحسب بعد تقييمك لجودة النوم في الجلسة الأولى')}</div>
                 </div>
             </div>
 
@@ -10250,47 +10287,47 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 <h3 style="color: var(--primary-gold); margin: 0 0 15px 0; font-size: 1.3em;">🏋️ تمارين الراحة المقررة للجلسة (${activeDay} من 7) - ${currentDisplayStageTitle}</h3>
 
                 <!-- تنبيه وإخلاء مسؤولية طبي سريري للتمارين -->
-                <div style="background: rgba(245, 158, 11, 0.1); border-right: 4px solid #f59e0b; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px;">
+                <div style="background: #f0f9ff; border-right: 4px solid #bae6fd; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px;">
                     <span style="font-size: 1.3em; line-height: 1;">⚠️</span>
-                    <div style="font-size: 0.85em; color: #fde68a; line-height: 1.6;">
-                        <strong style="color: #fbbf24;">تنبيه وإخلاء مسؤولية طبي:</strong> 
+                    <div style="font-size: 0.85em; color: #0369a1; line-height: 1.6;">
+                        <strong style="color: #0369a1;">تنبيه وإخلاء مسؤولية طبي:</strong> 
                         هذه التمارين التأهيلية مصممة للاستشفاء المنزلي التدريجي للحالات المستقرة، وقد لا تلائم بعض الحالات المتقدمة أو الانزلاقات الغضروفية الحادة أو التورم والالتهاب النشط. يُرجى التوقف فوراً عند أي زيادة في الألم واستشارة الطبيب أو المعالج المختص لتقييم حالتك بدقة.
                     </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px;">
                     ${dayExercises.map((ex, idx) => `
-                        <div class="clinical-exercise-card" style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div class="clinical-exercise-card" style="background: #f8fafc; border: 1px solid #bae6fd; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
                             <div>
                                 ${generateExerciseIllustration(ex.visualType, ex.id, { name: ex.name })}
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                                     <span style="color: var(--primary-gold); font-size: 0.78em; font-weight: bold;">تمرين #${idx+1} (الجلسة ${activeDay})</span>
                                     <span style="color: #10b981; font-size: 0.78em;">⏱️ ${ex.duration}</span>
                                 </div>
-                                <h4 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.15em;">${ex.name}</h4>
-                                <p style="color: #cbd5e1; font-size: 0.86em; margin: 0 0 12px 0;">${ex.description}</p>
+                                <h4 style="color: #0f172a; margin: 0 0 6px 0; font-size: 1.15em;">${ex.name}</h4>
+                                <p style="color: #1e293b; font-size: 0.86em; margin: 0 0 12px 0;">${ex.description}</p>
                                 
-                                <div style="background: #111827; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85em; color: #e2e8f0; line-height: 1.7; border-right: 3px solid var(--primary-gold);">
+                                <div style="background: #ffffff; padding: 12px; border-radius: 8px; margin-bottom: 12px; font-size: 0.85em; color: #1e293b; line-height: 1.7; border-right: 3px solid var(--primary-gold);">
                                     <strong>طريقة الأداء:</strong><br>${ex.instructions}
                                 </div>
 
                                 <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
-                                    <span style="background: #1e293b; color: #d4af37; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">🔁 ${ex.reps}</span>
-                                    <span style="background: #1e293b; color: #f59e0b; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">📦 ${ex.sets}</span>
+                                    <span style="background: #f8fafc; color: #0369a1; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">🔁 ${ex.reps}</span>
+                                    <span style="background: #f8fafc; color: #0369a1; font-size: 0.8em; padding: 3px 8px; border-radius: 4px; font-weight: bold;">📦 ${ex.sets}</span>
                                 </div>
 
                                 <!-- دليل التكنيك السليم والأخطاء الشائعة -->
                                 ${typeof getExerciseFormGuideHTML === 'function' ? getExerciseFormGuideHTML(ex) : ''}
                             </div>
                             <div>
-                                <div style="background: #1e2633; height: 5px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
-                                    <div class="timer-progress-fill" style="background: linear-gradient(90deg, #d4af37 0%, #10b981 100%); height: 100%; width: ${isDayAlreadyCompleted ? '100%' : '0%'}; transition: width 1s linear;"></div>
+                                <div style="background: #f8fafc; height: 5px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
+                                    <div class="timer-progress-fill" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); height: 100%; width: ${isDayAlreadyCompleted ? '100%' : '0%'}; transition: width 1s linear;"></div>
                                 </div>
                                 <div style="display: flex; gap: 8px; align-items: stretch;">
-                                    <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-completed="${isDayAlreadyCompleted ? 'true' : 'false'}" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="flex: 1; background: ${isDayAlreadyCompleted ? '#10b981' : 'linear-gradient(135deg, #d4af37 0%, #aa820a 100%)'}; color: ${isDayAlreadyCompleted ? '#ffffff' : '#0a0e14'}; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.92em;">
+                                    <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-completed="${isDayAlreadyCompleted ? 'true' : 'false'}" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="flex: 1; background: ${isDayAlreadyCompleted ? '#10b981' : 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'}; color: #0f172a; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.92em;">
                                         ${isDayAlreadyCompleted ? '✓ تم إنجاز التمرين بنجاح (انقر للإعادة إن رغبت)' : `⏱️ ابدأ مؤقت التمرين (${ex.duration})`}
                                     </button>
-                                    <button type="button" onclick="PatientFlow.markExerciseDone(this)" class="btn-mark-exercise-done" title="تأكيد إنجاز التمرين فوراً دون المؤقت" style="background: ${isDayAlreadyCompleted ? 'rgba(16,185,129,0.2)' : 'rgba(100,116,139,0.15)'}; border: 1px solid ${isDayAlreadyCompleted ? '#10b981' : '#475569'}; color: ${isDayAlreadyCompleted ? '#10b981' : '#94a3b8'}; padding: 0 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85em; white-space: nowrap; transition: all 0.25s;">
+                                    <button type="button" onclick="PatientFlow.markExerciseDone(this)" class="btn-mark-exercise-done" title="تأكيد إنجاز التمرين فوراً دون المؤقت" style="background: ${isDayAlreadyCompleted ? 'rgba(16,185,129,0.2)' : 'rgba(100,116,139,0.15)'}; border: 1px solid ${isDayAlreadyCompleted ? '#10b981' : '#cbd5e1'}; color: ${isDayAlreadyCompleted ? '#10b981' : '#94a3b8'}; padding: 0 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85em; white-space: nowrap; transition: all 0.25s;">
                                         ${isDayAlreadyCompleted ? 'منجز ✓' : 'تم ☑'}
                                     </button>
                                 </div>
@@ -10326,15 +10363,15 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                         <div style="color: #10b981; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
                             <span>✅</span> الجلسة مفتوحة ومتاحة للبدء الآن
                         </div>
-                        <span style="background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">
+                        <span style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">
                             الجلسة ${activeDay} من 7 (جاهزة للتطبيق والتوثيق)
                         </span>
                     </div>
-                    <p style="color: #cbd5e1; font-size: 0.9em; margin: 0; line-height: 1.6;">
+                    <p style="color: #1e293b; font-size: 0.9em; margin: 0; line-height: 1.6;">
                         🎉 اكتملت فترة الاستشفاء الحيوي للأنسجة! يمكنك الآن أداء التمارين الموضحة بالأسفل ثم توثيق التقييم الحركي والانتقال للجلسة التالية.
                     </p>
                 `;
-                countdownCard.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%)';
+                countdownCard.style.background = '#f0fdf4';
                 countdownCard.style.borderColor = '#10b981';
             }
             const wrapper = document.getElementById('session-completion-control-wrapper');
@@ -10348,25 +10385,25 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                     <div style="text-align: center; margin-top: 25px;">
                         <!-- عنوان الجلسة التالية أو إتمام البرنامج بخط كبير ولون ذهبي فخم -->
                         <div style="text-align: center; margin-bottom: 14px;">
-                            <span style="font-size: 1.5em; font-weight: 900; color: #d4af37; text-shadow: 0 0 16px rgba(212, 175, 55, 0.6), 0 2px 4px rgba(0,0,0,0.8); letter-spacing: 0.8px; display: inline-block;">
+                            <span style="font-size: 1.5em; font-weight: 900; color: #0369a1;  letter-spacing: 0.8px; display: inline-block;">
                                 ${activeDay === 7 ? '🏆 إتمام البرنامج والتعافي الشامل' : 'الجلسة التالية'}
                             </span>
                         </div>
 
-                        <button type="button" onclick="handleStep5CompletionClick('${effectivePid || patientId}', ${activeDay})" class="royal-clinical-next-btn active-unlocked" style="width: 100%; max-width: 620px; margin: 0 auto; background: linear-gradient(180deg, #10b981 0%, #059669 50%, #047857 51%, #065f46 100%) !important; color: #ffffff !important; border: 2px solid #6ee7b7 !important; border-radius: 50px !important; padding: 10px 24px 10px 14px !important; font-size: 1.15em !important; font-weight: 900 !important; letter-spacing: 0.5px; cursor: pointer; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 14px !important; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.55), inset 0 2px 4px rgba(255, 255, 255, 0.7), 0 2px 4px rgba(0, 0, 0, 0.3) !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important; box-sizing: border-box;">
+                        <button type="button" onclick="handleStep5CompletionClick('${effectivePid || patientId}', ${activeDay})" class="royal-clinical-next-btn active-unlocked" style="width: 100%; max-width: 620px; margin: 0 auto; background: linear-gradient(180deg, #10b981 0%, #059669 50%, #047857 51%, #065f46 100%) !important; color: #0f172a !important; border: 2px solid #6ee7b7 !important; border-radius: 50px !important; padding: 10px 24px 10px 14px !important; font-size: 1.15em !important; font-weight: 900 !important; letter-spacing: 0.5px; cursor: pointer; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 14px !important; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;  box-sizing: border-box;">
                             <!-- Left Glossy Orb Icon Circle -->
-                            <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 45%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.4) 100%), linear-gradient(135deg, #10b981 0%, #047857 100%); border: 2.5px solid #ffffff; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.8); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 45%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.4) 100%), linear-gradient(135deg, #10b981 0%, #047857 100%); border: 2.5px solid #ffffff; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                                 <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff" style="margin-left: 2px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));"><polygon points="6,4 20,12 6,20"/></svg>
                             </div>
                             <!-- Main Text -->
-                            <span style="flex-grow: 1; text-align: center; font-size: 1.08em; font-weight: 900; color: #ffffff !important; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7) !important;">
+                            <span style="flex-grow: 1; text-align: center; font-size: 1.08em; font-weight: 900; color: #0f172a !important; ">
                                 ${activeDay === 7 ? 'حفظ توثيق الجلسة الختامية (#7) وإتمام البرنامج والتخرج 🏆' : `حفظ تسجيل الجلسة (#${activeDay}) وتوثيق التقييم والانتقال للجلسة التالية 🚀`}
                             </span>
                             <!-- Right Arrow Chevron -->
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));"><polyline points="15 18 9 12 15 6"/></svg>
                         </button>
                         <div style="margin-top: 10px; text-align: center;">
-                            <button type="button" onclick="handleStep5CompletionClick('${effectivePid || patientId}', ${activeDay}, true)" style="background: none; border: none; color: #94a3b8; font-size: 0.82em; text-decoration: underline; cursor: pointer; padding: 4px 10px; transition: 0.2s;">
+                            <button type="button" onclick="handleStep5CompletionClick('${effectivePid || patientId}', ${activeDay}, true)" style="background: none; border: none; color: #475569; font-size: 0.82em; text-decoration: underline; cursor: pointer; padding: 4px 10px; transition: 0.2s;">
                                 أديت التمارين مسبقاً خارج الأداة؟ انقر هنا للمتابعة والتوثيق المباشر ❯
                             </button>
                         </div>
@@ -10666,12 +10703,12 @@ async function renderStep6Completion(patientId, sessionData = null) {
         )}`;
 
         const sessionLogsTimelineHTML = realLogs.length > 0 ? `
-            <div style="background: rgba(11, 18, 34, 0.85); border: 1px solid rgba(212, 175, 55, 0.28); border-radius: 16px; padding: 18px 16px; max-width: 780px; margin: 0 auto 24px auto; text-align: right;">
+            <div style="background: #f8fafc; border: 1px solid #bae6fd; border-radius: 16px; padding: 18px 16px; max-width: 780px; margin: 0 auto 24px auto; text-align: right;">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
-                    <div style="color: #fef08a; font-weight: 900; font-size: 0.96em; display: flex; align-items: center; gap: 8px;">
+                    <div style="color: #0369a1; font-weight: 900; font-size: 0.96em; display: flex; align-items: center; gap: 8px;">
                         <span>📊</span> <span>سجل تقييماتك السريرية الحقيقية خلال جلسات الخطة:</span>
                     </div>
-                    <span style="color: #94a3b8; font-size: 0.78em;">بيانات موثقة من مدخلاتك المباشرة 100%</span>
+                    <span style="color: #475569; font-size: 0.78em;">بيانات موثقة من مدخلاتك المباشرة 100%</span>
                 </div>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); gap: 8px;">
                     ${realLogs.map(l => {
@@ -10680,11 +10717,11 @@ async function renderStep6Completion(patientId, sessionData = null) {
                         const mV = typeof l.mobilityRate === 'number' ? l.mobilityRate : '-';
                         const slV = typeof l.sleepRate === 'number' ? l.sleepRate : '-';
                         return `
-                        <div style="background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 10px 8px; text-align: center;">
-                            <div style="color: #d4af37; font-weight: 900; font-size: 0.82em; margin-bottom: 4px;">الجلسة #${sN}</div>
-                            <div style="color: #f87171; font-size: 0.78em; font-weight: 800;">الألم: ${pV}/10</div>
-                            <div style="color: #38bdf8; font-size: 0.76em; margin-top: 2px;">الحركة: ${mV}%</div>
-                            <div style="color: #6ee7b7; font-size: 0.76em; margin-top: 2px;">النوم: ${slV}%</div>
+                        <div style="background: #f8fafc; border: 1px solid #bae6fd; border-radius: 10px; padding: 10px 8px; text-align: center;">
+                            <div style="color: #0369a1; font-weight: 900; font-size: 0.82em; margin-bottom: 4px;">الجلسة #${sN}</div>
+                            <div style="color: #dc2626; font-size: 0.78em; font-weight: 800;">الألم: ${pV}/10</div>
+                            <div style="color: #0284c7; font-size: 0.76em; margin-top: 2px;">الحركة: ${mV}%</div>
+                            <div style="color: #047857; font-size: 0.76em; margin-top: 2px;">النوم: ${slV}%</div>
                         </div>`;
                     }).join('')}
                 </div>
@@ -10692,61 +10729,61 @@ async function renderStep6Completion(patientId, sessionData = null) {
         ` : '';
 
         container.innerHTML = `
-            <div style="background: radial-gradient(circle at top, rgba(212, 175, 55, 0.14) 0%, rgba(7, 13, 25, 0.98) 45%, #04070f 100%); border: 2px solid var(--primary-gold); border-radius: 24px; padding: 34px 24px; color: #ffffff; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.85), inset 0 1px 0 rgba(254, 240, 138, 0.35); margin-bottom: 28px; position: relative; overflow: hidden;">
+            <div style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2px solid var(--primary-gold); border-radius: 24px; padding: 34px 24px; color: #0f172a; text-align: center; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); margin-bottom: 28px; position: relative; overflow: hidden;">
                 
                 <!-- خط ذهبي علوي فاخر -->
-                <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, transparent 0%, #d4af37 25%, #fef08a 50%, #10b981 75%, transparent 100%);"></div>
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);"></div>
 
                 <!-- وسام الإنجاز والتحفيز النفسي الإيجابي -->
                 <div style="margin-bottom: 26px;">
-                    <div style="width: 76px; height: 76px; margin: 0 auto 14px auto; border-radius: 50%; background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(16, 185, 129, 0.25)); border: 2.5px solid #fef08a; box-shadow: 0 0 30px rgba(212, 175, 55, 0.4); display: flex; align-items: center; justify-content: center; font-size: 2.3em;">
+                    <div style="width: 76px; height: 76px; margin: 0 auto 14px auto; border-radius: 50%; background: linear-gradient(135deg, #f0f9ff 0%, #f0fdf4 100%); border: 2.5px solid #bae6fd; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14); display: flex; align-items: center; justify-content: center; font-size: 2.3em;">
                         👑
                     </div>
-                    <div style="display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(90deg, rgba(16, 185, 129, 0.2), rgba(212, 175, 55, 0.2)); border: 1.5px solid #10b981; color: #a7f3d0; padding: 6px 20px; border-radius: 30px; font-weight: 800; font-size: 0.9em; margin-bottom: 14px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);">
+                    <div style="display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #f0f9ff 0%, #f0fdf4 100%); border: 1.5px solid #10b981; color: #047857; padding: 6px 20px; border-radius: 30px; font-weight: 800; font-size: 0.9em; margin-bottom: 14px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);">
                         <span>✨</span> <span>إنجاز إرادي رائع — أتممتَ برنامج التهيئة الحركية (7 أيام) بنجاح</span>
                     </div>
-                    <h2 style="font-size: 1.95em; margin: 0 0 10px 0; background: linear-gradient(90deg, #fef08a 0%, #f59e0b 50%, #fef08a 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; line-height: 1.35;">
+                    <h2 style="font-size: 1.95em; margin: 0 0 10px 0; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; line-height: 1.35;">
                         فخورون بعزيمتك وإصرارك على التعافي يا ${displayName}!
                     </h2>
-                    <p style="max-width: 680px; margin: 0 auto 12px auto; color: #e2e8f0; font-size: 1em; line-height: 1.8; font-weight: 600;">
-                        إن التزامك اليومي بتمارين الاستطالة والاستشفاء طوال الأيام السبعة الماضية هو <strong style="color: #6ee7b7;">انتصار نفسي وجسدي حقيقي</strong>؛ فقد منحتَ جسدك الفرصة الذهبية لكسر حلقة الألم والتشنج الدفاعي حول <strong style="color: #fef08a;">(${profile.jointTitle})</strong>، وأصبحت أنسجتك الآن مهيأةً تماماً لمرحلة التصحيح الجذري.
+                    <p style="max-width: 680px; margin: 0 auto 12px auto; color: #1e293b; font-size: 1em; line-height: 1.8; font-weight: 600;">
+                        إن التزامك اليومي بتمارين الاستطالة والاستشفاء طوال الأيام السبعة الماضية هو <strong style="color: #047857;">انتصار نفسي وجسدي حقيقي</strong>؛ فقد منحتَ جسدك الفرصة الذهبية لكسر حلقة الألم والتشنج الدفاعي حول <strong style="color: #0369a1;">(${profile.jointTitle})</strong>، وأصبحت أنسجتك الآن مهيأةً تماماً لمرحلة التصحيح الجذري.
                     </p>
                 </div>
 
                 <!-- لوحة المؤشرات السريرية الحقيقية (من مدخلات المريض الفعلية 100%) -->
                 <div style="max-width: 780px; margin: 0 auto 18px auto; text-align: right;">
-                    <div style="color: #cbd5e1; font-size: 0.88em; font-weight: 800; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
+                    <div style="color: #1e293b; font-size: 0.88em; font-weight: 800; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
                         <span>📈 حصيلة استجابتك الفعلية الموثقة بناءً على تقييماتك اليومية:</span>
-                        <span style="color: #6ee7b7; font-size: 0.85em;">✓ أرقام حقيقية مستخرجة من تقييمك الشخصي</span>
+                        <span style="color: #047857; font-size: 0.85em;">✓ أرقام حقيقية مستخرجة من تقييمك الشخصي</span>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
                         <!-- بطاقة تراجع الألم -->
-                        <div style="background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(6, 78, 59, 0.22)); padding: 18px 16px; border-radius: 16px; border: 1.5px solid rgba(16, 185, 129, 0.6); text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.4);">
+                        <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); padding: 18px 16px; border-radius: 16px; border: 1.5px solid rgba(16, 185, 129, 0.6); text-align: center; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
                             <div style="font-size: 2.35em; font-weight: 900; color: #10b981; font-family: monospace;">${painDrop}%</div>
-                            <div style="font-size: 0.92em; color: #ffffff; font-weight: 900; margin-top: 4px;">نسبة انخفاض وتسكين الألم 📉</div>
-                            <div style="color: #a7f3d0; font-size: 0.8em; margin-top: 4px; font-weight: 700;">من (${basePain}/10) في البداية إلى (${endPain}/10) حالياً</div>
-                            <div style="background: #1e293b; height: 6px; border-radius: 4px; overflow: hidden; margin-top: 10px;">
+                            <div style="font-size: 0.92em; color: #0f172a; font-weight: 900; margin-top: 4px;">نسبة انخفاض وتسكين الألم 📉</div>
+                            <div style="color: #047857; font-size: 0.8em; margin-top: 4px; font-weight: 700;">من (${basePain}/10) في البداية إلى (${endPain}/10) حالياً</div>
+                            <div style="background: #f8fafc; height: 6px; border-radius: 4px; overflow: hidden; margin-top: 10px;">
                                 <div style="background: linear-gradient(90deg, #10b981, #34d399); width: ${painDrop}%; height: 100%;"></div>
                             </div>
                         </div>
 
                         <!-- بطاقة استعادة المرونة -->
-                        <div style="background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(12, 74, 110, 0.25)); padding: 18px 16px; border-radius: 16px; border: 1.5px solid rgba(56, 189, 248, 0.6); text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.4);">
-                            <div style="font-size: 2.35em; font-weight: 900; color: #38bdf8; font-family: monospace;">${mobilityScore}%</div>
-                            <div style="font-size: 0.92em; color: #ffffff; font-weight: 900; margin-top: 4px;">مؤشر حرية الحركة والمرونة 🤸‍♂️</div>
-                            <div style="color: #bae6fd; font-size: 0.8em; margin-top: 4px; font-weight: 700;">تقييمك الفعلي لحركة المفصل في آخر جلسة</div>
-                            <div style="background: #1e293b; height: 6px; border-radius: 4px; overflow: hidden; margin-top: 10px;">
+                        <div style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); padding: 18px 16px; border-radius: 16px; border: 1.5px solid #bae6fd; text-align: center; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
+                            <div style="font-size: 2.35em; font-weight: 900; color: #0284c7; font-family: monospace;">${mobilityScore}%</div>
+                            <div style="font-size: 0.92em; color: #0f172a; font-weight: 900; margin-top: 4px;">مؤشر حرية الحركة والمرونة 🤸‍♂️</div>
+                            <div style="color: #0284c7; font-size: 0.8em; margin-top: 4px; font-weight: 700;">تقييمك الفعلي لحركة المفصل في آخر جلسة</div>
+                            <div style="background: #f8fafc; height: 6px; border-radius: 4px; overflow: hidden; margin-top: 10px;">
                                 <div style="background: linear-gradient(90deg, #0284c7, #38bdf8); width: ${mobilityScore}%; height: 100%;"></div>
                             </div>
                         </div>
 
                         <!-- بطاقة جودة النوم -->
-                        <div style="background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(120, 53, 15, 0.25)); padding: 18px 16px; border-radius: 16px; border: 1.5px solid rgba(245, 158, 11, 0.6); text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.4);">
-                            <div style="font-size: 2.35em; font-weight: 900; color: #fef08a; font-family: monospace;">${sleepScore}%</div>
-                            <div style="font-size: 0.92em; color: #ffffff; font-weight: 900; margin-top: 4px;">مؤشر جودة وعمق النوم 🌙</div>
-                            <div style="color: #fde68a; font-size: 0.8em; margin-top: 4px; font-weight: 700;">تقييمك الفعلي للراحة الليلية في آخر جلسة</div>
-                            <div style="background: #1e293b; height: 6px; border-radius: 4px; overflow: hidden; margin-top: 10px;">
-                                <div style="background: linear-gradient(90deg, #d97706, #fef08a); width: ${sleepScore}%; height: 100%;"></div>
+                        <div style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); padding: 18px 16px; border-radius: 16px; border: 1.5px solid #bae6fd; text-align: center; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
+                            <div style="font-size: 2.35em; font-weight: 900; color: #0369a1; font-family: monospace;">${sleepScore}%</div>
+                            <div style="font-size: 0.92em; color: #0f172a; font-weight: 900; margin-top: 4px;">مؤشر جودة وعمق النوم 🌙</div>
+                            <div style="color: #0369a1; font-size: 0.8em; margin-top: 4px; font-weight: 700;">تقييمك الفعلي للراحة الليلية في آخر جلسة</div>
+                            <div style="background: #f8fafc; height: 6px; border-radius: 4px; overflow: hidden; margin-top: 10px;">
+                                <div style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); width: ${sleepScore}%; height: 100%;"></div>
                             </div>
                         </div>
                     </div>
@@ -10756,32 +10793,32 @@ async function renderStep6Completion(patientId, sessionData = null) {
                 ${sessionLogsTimelineHTML}
 
                 <!-- رسالة التحفيز النفسي الإيجابي وجسر التعافي الجذري -->
-                <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 23, 42, 0.96) 55%, rgba(212, 175, 55, 0.12) 100%); border: 1.5px solid var(--primary-gold); border-radius: 18px; padding: 24px 22px; max-width: 780px; margin: 0 auto 24px auto; text-align: right; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px solid var(--primary-gold); border-radius: 18px; padding: 24px 22px; max-width: 780px; margin: 0 auto 24px auto; text-align: right; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
-                        <h3 style="color: #fef08a; margin: 0; font-size: 1.18em; font-weight: 900; display: flex; align-items: center; gap: 8px;">
+                        <h3 style="color: #0369a1; margin: 0; font-size: 1.18em; font-weight: 900; display: flex; align-items: center; gap: 8px;">
                             <span>🌟</span> <span>لماذا تُعد هذه اللحظة نقطة التحول الأهم في رحلة شفائك؟</span>
                         </h3>
-                        <span style="background: rgba(16, 185, 129, 0.22); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 14px; border-radius: 20px; font-weight: 800; font-size: 0.8em;">
+                        <span style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; padding: 4px 14px; border-radius: 20px; font-weight: 800; font-size: 0.8em;">
                             الأنسجة في أعلى جاهزية للتقويم اليدوي
                         </span>
                     </div>
-                    <p style="color: #e2e8f0; font-size: 0.92em; line-height: 1.85; margin: 0 0 16px 0; text-align: justify;">
+                    <p style="color: #1e293b; font-size: 0.92em; line-height: 1.85; margin: 0 0 16px 0; text-align: justify;">
                         ${profile.readinessDesc} إن الجسم البشري يمتلك قدرة فطرية مذهلة على التشافي متى ما زال عنه الضغط الميكانيكي؛ وما أنجزته في المنزل قد مهّد الطريق بنسبة كبيرة لإنهاء المسبب الجذري للألم بكل سهولة وأمان.
                     </p>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
-                        <div style="background: rgba(11, 18, 34, 0.9); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 16px;">
-                            <div style="color: #6ee7b7; font-weight: 900; font-size: 0.94em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                        <div style="background: #f8fafc; border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 16px;">
+                            <div style="color: #047857; font-weight: 900; font-size: 0.94em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
                                 <span>✅</span> <span>المرحلة الأولى (ما حققته بالتزامك المنزلي):</span>
                             </div>
-                            <div style="color: #cbd5e1; font-size: 0.86em; line-height: 1.7;">
+                            <div style="color: #1e293b; font-size: 0.86em; line-height: 1.7;">
                                 ${profile.phase1DoneText}
                             </div>
                         </div>
-                        <div style="background: rgba(11, 18, 34, 0.9); border: 1px solid rgba(212, 175, 55, 0.5); border-radius: 12px; padding: 16px;">
-                            <div style="color: #fef08a; font-weight: 900; font-size: 0.94em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                        <div style="background: #f8fafc; border: 1px solid #bae6fd; border-radius: 12px; padding: 16px;">
+                            <div style="color: #0369a1; font-weight: 900; font-size: 0.94em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
                                 <span>👑</span> <span>المرحلة الثانية (خطوة الحل الجذري المباشر):</span>
                             </div>
-                            <div style="color: #cbd5e1; font-size: 0.86em; line-height: 1.7;">
+                            <div style="color: #1e293b; font-size: 0.86em; line-height: 1.7;">
                                 ${profile.phase2RootNeed}
                             </div>
                         </div>
@@ -10789,14 +10826,14 @@ async function renderStep6Completion(patientId, sessionData = null) {
                 </div>
 
                 <!-- درع الوقاية اليومي وتفادي الانتكاسة الميكانيكية -->
-                <div style="background: rgba(15, 23, 42, 0.92); border-radius: 16px; padding: 20px 22px; max-width: 780px; margin: 0 auto 26px auto; text-align: right; border: 1px solid rgba(56, 189, 248, 0.35); border-right: 4px solid #38bdf8;">
-                    <h4 style="color: #7dd3fc; margin: 0 0 12px 0; font-size: 1.05em; font-weight: 900; display: flex; align-items: center; gap: 8px;">
+                <div style="background: #f8fafc; border-radius: 16px; padding: 20px 22px; max-width: 780px; margin: 0 auto 26px auto; text-align: right; border: 1px solid #bae6fd; border-right: 4px solid #38bdf8;">
+                    <h4 style="color: #0284c7; margin: 0 0 12px 0; font-size: 1.05em; font-weight: 900; display: flex; align-items: center; gap: 8px;">
                         <span>🛡️</span> <span>وصايا الأمان اليومية للحفاظ على تعافي (${profile.shortName}):</span>
                     </h4>
                     <div style="display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 12px;">
                         ${profile.preventionRules.map((rule, idx) => `
-                            <div style="background: rgba(11, 18, 34, 0.75); border: 1px solid rgba(56, 189, 248, 0.18); border-radius: 10px; padding: 10px 14px; color: #e2e8f0; font-size: 0.88em; line-height: 1.6; display: flex; align-items: center; gap: 10px;">
-                                <span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; font-weight: 900; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8em; flex-shrink: 0;">${idx + 1}</span>
+                            <div style="background: #f8fafc; border: 1px solid #bae6fd; border-radius: 10px; padding: 10px 14px; color: #1e293b; font-size: 0.88em; line-height: 1.6; display: flex; align-items: center; gap: 10px;">
+                                <span style="background: #f0f9ff; color: #0284c7; font-weight: 900; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8em; flex-shrink: 0;">${idx + 1}</span>
                                 <span>${rule}</span>
                             </div>
                         `).join('')}
@@ -10804,14 +10841,14 @@ async function renderStep6Completion(patientId, sessionData = null) {
                 </div>
 
                 <!-- بوابة الحجز المباشر مع المعالج جمال قبها -->
-                <div id="step6-booking-cta-section" style="background: linear-gradient(145deg, rgba(17, 24, 39, 0.96), rgba(8, 13, 25, 0.98)); border: 2px solid #d4af37; border-radius: 20px; padding: 24px 20px; max-width: 780px; margin: 0 auto; text-align: center; box-shadow: 0 12px 35px rgba(0,0,0,0.6);">
-                    <div style="display: inline-block; background: rgba(212, 175, 55, 0.15); border: 1px solid rgba(212, 175, 55, 0.45); color: #fde68a; padding: 4px 16px; border-radius: 20px; font-size: 0.82em; font-weight: 800; margin-bottom: 10px;">
-                        🔖 كود أولوية المراجع الملتزم: <span style="font-family: monospace; color: #ffffff; letter-spacing: 1px;">${certCode}</span>
+                <div id="step6-booking-cta-section" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2px solid #bae6fd; border-radius: 20px; padding: 24px 20px; max-width: 780px; margin: 0 auto; text-align: center; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
+                    <div style="display: inline-block; background: #f0f9ff; border: 1px solid #bae6fd; color: #0369a1; padding: 4px 16px; border-radius: 20px; font-size: 0.82em; font-weight: 800; margin-bottom: 10px;">
+                        🔖 كود أولوية المراجع الملتزم: <span style="font-family: monospace; color: #0f172a; letter-spacing: 1px;">${certCode}</span>
                     </div>
-                    <div style="color: #fef08a; font-weight: 900; font-size: 1.25em; margin-bottom: 6px;">
+                    <div style="color: #0369a1; font-weight: 900; font-size: 1.25em; margin-bottom: 6px;">
                         👑 انتقل الآن لخطوتك العلاجية الحاسمة مع المعالج جمال قبها
                     </div>
-                    <p style="color: #94a3b8; font-size: 0.88em; margin: 0 auto 18px auto; max-width: 600px; line-height: 1.6;">
+                    <p style="color: #475569; font-size: 0.88em; margin: 0 auto 18px auto; max-width: 600px; line-height: 1.6;">
                         اختر طريقة الموعد الأنسب لك لإجراء الفحص السريري المباشر وجلسة التقويم اليدوي (الكايروبراكتيك) لتثبيت التعافي:
                     </p>
                     
@@ -10821,14 +10858,14 @@ async function renderStep6Completion(patientId, sessionData = null) {
                             <span style="font-size: 1.3em;">🏠</span> <span>حجز زيارة منزلية للتقويم اليدوي (داخل الأردن)</span>
                         </a>
                         <!-- زر موعد العيادة المباشرة -->
-                        <a href="${clinicVisitWhatsAppUrl}" target="_blank" style="background: linear-gradient(135deg, #d4af37 0%, #b45309 100%); color: #050911; padding: 15px 18px; border-radius: 12px; text-decoration: none; font-weight: 900; font-size: 0.98em; border: 1.5px solid #fef08a; box-shadow: 0 6px 22px rgba(212, 175, 55, 0.4); display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.2s;">
+                        <a href="${clinicVisitWhatsAppUrl}" target="_blank" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #050911; padding: 15px 18px; border-radius: 12px; text-decoration: none; font-weight: 900; font-size: 0.98em; border: 1.5px solid #bae6fd; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14); display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.2s;">
                             <span style="font-size: 1.3em;">🏥</span> <span>حجز موعد في العيادة (عمّان - خلدا)</span>
                         </a>
                     </div>
 
-                    <div style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 14px; margin-top: 6px; display: flex; justify-content: center;">
+                    <div style="border-top: 1px solid #cbd5e1; padding-top: 14px; margin-top: 6px; display: flex; justify-content: center;">
                         <!-- زر فحص موضع ألم جديد (محمي ببوابة الرصيد والباقات) -->
-                        <button type="button" onclick="resetToInitialState()" style="background: rgba(30, 41, 59, 0.85); color: #cbd5e1; border: 1px solid #475569; padding: 11px 22px; border-radius: 10px; cursor: pointer; font-weight: 800; font-size: 0.88em; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+                        <button type="button" onclick="resetToInitialState()" style="background: #f8fafc; color: #1e293b; border: 1px solid #cbd5e1; padding: 11px 22px; border-radius: 10px; cursor: pointer; font-weight: 800; font-size: 0.88em; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
                             <span>🔄</span> <span>بدء فحص جديد لمنطقة ألم أخرى (يتطلب باقة فعّالة)</span>
                         </button>
                     </div>
@@ -11087,17 +11124,17 @@ function showFutureSessionLockedPopup(currentDay, targetDay) {
     `;
 
     popup.innerHTML = `
-        <div style="background: linear-gradient(145deg, #111827 0%, #0b0f19 100%); border: 2px solid var(--primary-gold); border-radius: 18px; padding: 25px 30px; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,0.85), 0 0 25px rgba(212, 175, 55, 0.3); animation: scaleIn 0.2s ease-out;">
-            <div style="width: 58px; height: 58px; margin: 0 auto 14px auto; background: rgba(212, 175, 55, 0.15); border: 2px solid var(--primary-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.7em;">
+        <div style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2px solid var(--primary-gold); border-radius: 18px; padding: 25px 30px; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); animation: scaleIn 0.2s ease-out;">
+            <div style="width: 58px; height: 58px; margin: 0 auto 14px auto; background: #f0f9ff; border: 2px solid var(--primary-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.7em;">
                 ⏳
             </div>
             <h3 style="color: var(--primary-gold); margin: 0 0 8px 0; font-size: 1.25em; font-weight: bold;">
                 تنبيه سريري: الجلسة #${targetDay} مقفلة
             </h3>
-            <p style="color: #f1f5f9; font-size: 0.98em; line-height: 1.6; margin: 0 0 12px 0;">
+            <p style="color: #0f172a; font-size: 0.98em; line-height: 1.6; margin: 0 0 12px 0;">
                 أنت لم تكمل الجلسة الحالية (<strong style="color: var(--primary-gold);">#${currentDay}</strong>) بعد!
             </p>
-            <div style="background: rgba(15, 23, 42, 0.9); border: 1px dashed rgba(212, 175, 55, 0.4); border-radius: 10px; padding: 10px 14px; color: #94a3b8; font-size: 0.84em; line-height: 1.6;">
+            <div style="background: #f8fafc; border: 1px dashed #bae6fd; border-radius: 10px; padding: 10px 14px; color: #475569; font-size: 0.84em; line-height: 1.6;">
                 💡 يرجى إتمام تمارين الجلسة الحالية وانتظار انقضاء فترة الاستشفاء البيولوجي (24 ساعة) لفتح الجلسة القادمة.
             </div>
         </div>
@@ -11356,24 +11393,24 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                 <h3 style="color: #10b981; margin: 0 0 4px 0; font-size: 1.35em; display: flex; align-items: center; gap: 8px;">
                     <span>📝</span> تقييم ومتابعة تقدم الجلسة (${sessionNumber === 1 ? 'الأولى #1' : `#${sessionNumber}`}) - ${areaTitle}
                 </h3>
-                <div style="color: #94a3b8; font-size: 0.85em;">${sessionNumber === 1 ? 'توثيق إنجاز تمارين اليوم الأول وبدء فترة الاستشفاء (24 ساعة)' : 'متاح لتوثيق الجلسة المنتهية واعتماد مؤشرات التعافي'}</div>
+                <div style="color: #475569; font-size: 0.85em;">${sessionNumber === 1 ? 'توثيق إنجاز تمارين اليوم الأول وبدء فترة الاستشفاء (24 ساعة)' : 'متاح لتوثيق الجلسة المنتهية واعتماد مؤشرات التعافي'}</div>
             </div>
-            <button type="button" onclick="closeSessionAssessmentModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.8em; cursor: pointer; padding: 0 5px;">&times;</button>
+            <button type="button" onclick="closeSessionAssessmentModal()" style="background: none; border: none; color: #475569; font-size: 1.8em; cursor: pointer; padding: 0 5px;">&times;</button>
         </div>
 
-        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 10px; padding: 10px 14px; margin-bottom: 20px; color: #6ee7b7; font-size: 0.88em; line-height: 1.6;">
+        <div style="background: #f0fdf4; border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 10px; padding: 10px 14px; margin-bottom: 20px; color: #047857; font-size: 0.88em; line-height: 1.6;">
             💡 <strong>${formatPatientGreeting(sessionData.patient?.name)}:</strong> يرجى توثيق استجابتك الحقيقية لتمارين الجلسة وفترة الاستشفاء السابقة. إجاباتك تُحدّث فوراً مؤشرات الشفاء والرسم البياني للجلسة التالية.
         </div>
 
         <!-- 1. مستوى شدة الألم الحالي ونسبة انخفاضه -->
-        <div style="margin-bottom: 20px; background: #111827; padding: 18px; border-radius: 12px; border: 1.5px solid rgba(239, 68, 68, 0.4);">
+        <div style="margin-bottom: 20px; background: #ffffff; padding: 18px; border-radius: 12px; border: 1.5px solid rgba(239, 68, 68, 0.4);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
-                <label style="color: #f87171; font-size: 0.98em; font-weight: bold;">
+                <label style="color: #dc2626; font-size: 0.98em; font-weight: bold;">
                     1. شدة الألم الحالي ومستوى تراجعه (من 0 إلى 10):
                 </label>
                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                     <span id="modal-pain-val" style="color: var(--primary-gold); font-weight: bold; font-size: 1.15em;">${initialPainVal} من 10</span>
-                    <span id="modal-pain-reduction-badge" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; padding: 3px 12px; border-radius: 20px; font-size: 0.82em; font-weight: bold;">
+                    <span id="modal-pain-reduction-badge" style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; padding: 3px 12px; border-radius: 20px; font-size: 0.82em; font-weight: bold;">
                         انخفاض وتلاشي الألم: ${initialReductionPct}%
                     </span>
                 </div>
@@ -11389,31 +11426,31 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
 
             <!-- أزرار الاختيار السريع لشدة وتراجع الألم -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 6px;">
-                <button type="button" onclick="window.setModalPainQuick(1, ${basePainModal})" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 7px 4px; border-radius: 6px; font-size: 0.78em; font-weight: bold; cursor: pointer;">
+                <button type="button" onclick="window.setModalPainQuick(1, ${basePainModal})" style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; padding: 7px 4px; border-radius: 6px; font-size: 0.78em; font-weight: bold; cursor: pointer;">
                     🟢 خفيف جداً (1/10)
                 </button>
-                <button type="button" onclick="window.setModalPainQuick(3, ${basePainModal})" style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #7dd3fc; padding: 7px 4px; border-radius: 6px; font-size: 0.78em; font-weight: bold; cursor: pointer;">
+                <button type="button" onclick="window.setModalPainQuick(3, ${basePainModal})" style="background: #f0f9ff; border: 1px solid #38bdf8; color: #0284c7; padding: 7px 4px; border-radius: 6px; font-size: 0.78em; font-weight: bold; cursor: pointer;">
                     🔵 خفيف (3/10)
                 </button>
-                <button type="button" onclick="window.setModalPainQuick(5, ${basePainModal})" style="background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b; color: #fde68a; padding: 7px 4px; border-radius: 6px; font-size: 0.78em; font-weight: bold; cursor: pointer;">
+                <button type="button" onclick="window.setModalPainQuick(5, ${basePainModal})" style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0369a1; padding: 7px 4px; border-radius: 6px; font-size: 0.78em; font-weight: bold; cursor: pointer;">
                     🟡 متوسط (5/10)
                 </button>
-                <button type="button" onclick="window.setModalPainQuick(7, ${basePainModal})" style="background: rgba(249, 115, 22, 0.15); border: 1px solid #f97316; color: #fdba74; padding: 7px 4px; border-radius: 6px; font-size: 0.78em; font-weight: bold; cursor: pointer;">
+                <button type="button" onclick="window.setModalPainQuick(7, ${basePainModal})" style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0369a1; padding: 7px 4px; border-radius: 6px; font-size: 0.78em; font-weight: bold; cursor: pointer;">
                     🟠 ملحوظ (7/10)
                 </button>
-                <button type="button" onclick="window.setModalPainQuick(9, ${basePainModal})" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; padding: 7px 4px; border-radius: 6px; font-size: 0.78em; font-weight: bold; cursor: pointer;">
+                <button type="button" onclick="window.setModalPainQuick(9, ${basePainModal})" style="background: #fef2f2; border: 1px solid #ef4444; color: #dc2626; padding: 7px 4px; border-radius: 6px; font-size: 0.78em; font-weight: bold; cursor: pointer;">
                     🔴 شديد (9/10)
                 </button>
             </div>
         </div>
 
         <!-- 2. نسبة استعادة حرية الحركة وقوة المفصل -->
-        <div style="margin-bottom: 20px; background: #111827; padding: 16px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3);">
+        <div style="margin-bottom: 20px; background: #ffffff; padding: 16px; border-radius: 12px; border: 1px solid #bae6fd;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <label style="color: #38bdf8; font-size: 0.95em; font-weight: bold;">
+                <label style="color: #0284c7; font-size: 0.95em; font-weight: bold;">
                     ${anatomicalConfig ? anatomicalConfig.mobilityQuestion : '2. نسبة استعادة حرية الحركة وقوة المفصل اليوم:'}
                 </label>
-                <span id="modal-mobility-val" style="color: #38bdf8; font-weight: bold; font-size: 1.2em;">${initialMobilityVal} %</span>
+                <span id="modal-mobility-val" style="color: #0284c7; font-weight: bold; font-size: 1.2em;">${initialMobilityVal} %</span>
             </div>
             <div style="text-align: center; margin: 4px 0 8px 0;">
                 <div class="slider-drag-hint-animated">
@@ -11424,7 +11461,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
             </div>
             <input type="range" id="modal-mobility-slider" min="10" max="100" value="${initialMobilityVal}" oninput="document.getElementById('modal-mobility-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #38bdf8; margin-bottom: 12px; cursor: pointer;">
             
-            <div style="color: #94a3b8; font-size: 0.84em; margin-bottom: 8px;">اختر كل ما ينطبق على حركتك اليوم (اختيار متعدد):</div>
+            <div style="color: #475569; font-size: 0.84em; margin-bottom: 8px;">اختر كل ما ينطبق على حركتك اليوم (اختيار متعدد):</div>
             <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
                 ${(anatomicalConfig ? anatomicalConfig.mobilityOptions : [
                     { val: 95, text: "حرية حركة ممتازة دون تيبس أو إعاقة" },
@@ -11432,7 +11469,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                     { val: 45, text: "حركة مقيدة جزئياً مع تيبس يستغرق وقتاً ليلين" },
                     { val: 20, text: "صعوبة وتيبس شديد ومحدودية حركية واضحة" }
                 ]).map((opt) => `
-                    <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <label style="color: #1e293b; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
                         <input type="checkbox" name="modal_mobility_check" value="${opt.val}" onchange="window.updateModalMobilityFromCheck()" data-text="${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}" style="accent-color: #38bdf8; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
                     </label>
                 `).join('')}
@@ -11440,7 +11477,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
         </div>
 
         <!-- 3. جودة النوم مع الأعراض الليلية -->
-        <div style="margin-bottom: 20px; background: #111827; padding: 16px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3);">
+        <div style="margin-bottom: 20px; background: #ffffff; padding: 16px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <label style="color: #10b981; font-size: 0.95em; font-weight: bold;">
                     ${anatomicalConfig ? anatomicalConfig.sleepQuestion : '3. جودة النوم والراحة الليلة الماضية:'}
@@ -11456,7 +11493,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
             </div>
             <input type="range" id="modal-sleep-slider" min="10" max="100" value="${initialSleepVal}" oninput="document.getElementById('modal-sleep-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #10b981; margin-bottom: 12px; cursor: pointer;">
 
-            <div style="color: #94a3b8; font-size: 0.84em; margin-bottom: 8px;">اختر كل ما ينطبق على نومك (اختيار متعدد):</div>
+            <div style="color: #475569; font-size: 0.84em; margin-bottom: 8px;">اختر كل ما ينطبق على نومك (اختيار متعدد):</div>
             <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
                 ${(anatomicalConfig ? anatomicalConfig.sleepOptions : [
                     { val: 95, text: "نوم عميق ومريح ومتواصل طوال الليل دون ألم" },
@@ -11464,7 +11501,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                     { val: 45, text: "نوم متقطع وصعوبة في إيجاد وضعية مريحة للمفصل" },
                     { val: 20, text: "أرق شديد واستيقاظ متكرر بسبب نوبات الألم" }
                 ]).map((opt) => `
-                    <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <label style="color: #1e293b; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
                         <input type="checkbox" name="modal_sleep_check" value="${opt.val}" onchange="window.updateModalSleepFromCheck()" data-text="${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}" style="accent-color: #10b981; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
                     </label>
                 `).join('')}
@@ -11473,7 +11510,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
 
         <!-- 4. السلوكيات الإيجابية والسلبية المنجزة -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 25px;">
-            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); padding: 16px; border-radius: 12px;">
+            <div style="background: #f0fdf4; border: 1px solid rgba(16, 185, 129, 0.3); padding: 16px; border-radius: 12px;">
                 <div style="color: #10b981; font-weight: bold; font-size: 0.95em; margin-bottom: 10px;">✨ السلوكيات الإيجابية المنجزة اليوم:</div>
                 ${(anatomicalConfig ? anatomicalConfig.positiveBehaviors : [
                     { id: "beh-exercise", text: "نفذت التمارين التأهيلية بانتظام" },
@@ -11481,14 +11518,14 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                     { id: "beh-walk", text: "قمت بالمشي الخفيف وتنشيط الدورة الدموية" },
                     { id: "beh-heat", text: "استخدمت الكمادات الدافئة / الراحة الكافية" }
                 ]).map((beh) => `
-                    <label style="color: #e2e8f0; font-size: 0.88em; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;">
+                    <label style="color: #1e293b; font-size: 0.88em; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;">
                         <input type="checkbox" id="modal-${beh.id}" class="modal-pos-habit-checkbox" data-text="${beh.text}" data-id="${beh.id}" style="accent-color: #10b981; width: 16px; height: 16px;">
                         <span>${beh.text}</span>
                     </label>
                 `).join('')}
             </div>
 
-            <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); padding: 16px; border-radius: 12px;">
+            <div style="background: #fef2f2; border: 1px solid rgba(239, 68, 68, 0.3); padding: 16px; border-radius: 12px;">
                 <div style="color: #ef4444; font-weight: bold; font-size: 0.95em; margin-bottom: 10px;">⚠️ سلوكيات سلبية حدثت اليوم (للتصحيح):</div>
                 ${(anatomicalConfig ? anatomicalConfig.negativeBehaviors : [
                     { id: "neg-sitting", text: "جلوس طويل متواصل لأكثر من ساعة" },
@@ -11496,7 +11533,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                     { id: "neg-phone", text: "استخدام طويل للهاتف مع انحناء الرقبة" },
                     { id: "neg-sleep", text: "نوم غير مريح أو على وسادة مرتفعة" }
                 ]).map(neg => `
-                    <label style="color: #fca5a5; font-size: 0.88em; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;">
+                    <label style="color: #dc2626; font-size: 0.88em; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;">
                         <input type="checkbox" id="modal-${neg.id}" class="modal-neg-habit-checkbox" data-text="${neg.text}" data-id="${neg.id}" style="accent-color: #ef4444; width: 16px; height: 16px;">
                         <span>${neg.text}</span>
                     </label>
@@ -11505,7 +11542,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
         </div>
 
         <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; margin-top: 25px; margin-bottom: 25px; padding-bottom: 15px;">
-            <button type="button" onclick="closeSessionAssessmentModal()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+            <button type="button" onclick="closeSessionAssessmentModal()" style="background: #f8fafc; color: #1e293b; border: 1px solid #cbd5e1; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer;">
                 إلغاء والعودة للتمارين
             </button>
             <button type="button" id="btn-modal-submit-daily-log" onclick="window.submitComprehensiveDailyLog('${patientId}', ${sessionNumber})" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; padding: 14px 32px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.05em; box-shadow: 0 4px 18px rgba(16, 185, 129, 0.4); flex-grow: 1; max-width: 450px;">
@@ -11985,39 +12022,39 @@ function openExerciseLibraryModal(filterCategory = 'all') {
     document.querySelectorAll('#exercise-library-modal .btn-header').forEach(btn => {
         if (btn.dataset.category === filterCategory) {
             btn.style.background = 'var(--primary-gold)';
-            btn.style.color = '#0a0e14';
+            btn.style.color = '#ffffff';
         } else {
-            btn.style.background = '#1e293b';
+            btn.style.background = '#f0f9ff';
             btn.style.color = '#ffffff';
         }
     });
 
     container.innerHTML = allExercises.map((ex, idx) => `
-        <div class="clinical-exercise-card" style="background: #111827; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
+        <div class="clinical-exercise-card" style="background: #ffffff; border: 1px solid #bae6fd; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
             <div>
                 ${generateExerciseIllustration(ex.visualType, ex.id, { name: ex.name })}
                 <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0 6px 0;">
-                    <span style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: var(--primary-gold); font-size: 0.78em; padding: 2px 8px; border-radius: 4px; font-weight: bold;">تمرين علاجي #${idx+1}</span>
+                    <span style="background: #f0f9ff; border: 1px solid var(--primary-gold); color: var(--primary-gold); font-size: 0.78em; padding: 2px 8px; border-radius: 4px; font-weight: bold;">تمرين علاجي #${idx+1}</span>
                     <span style="color: #10b981; font-size: 0.78em;">⏱️ ${ex.duration}</span>
                 </div>
-                <h4 style="color: #ffffff; margin: 0 0 6px 0; font-size: 1.1em;">${ex.name}</h4>
-                <p style="color: #cbd5e1; font-size: 0.85em; margin: 0 0 10px 0;">${ex.description}</p>
-                <div style="background: #0f172a; padding: 10px; border-radius: 6px; margin-bottom: 12px; font-size: 0.82em; color: #e2e8f0; line-height: 1.6;">
+                <h4 style="color: #0f172a; margin: 0 0 6px 0; font-size: 1.1em;">${ex.name}</h4>
+                <p style="color: #1e293b; font-size: 0.85em; margin: 0 0 10px 0;">${ex.description}</p>
+                <div style="background: #f8fafc; padding: 10px; border-radius: 6px; margin-bottom: 12px; font-size: 0.82em; color: #1e293b; line-height: 1.6;">
                     <strong>طريقة التطبيق:</strong><br>${ex.instructions}
                 </div>
                 <div style="display: flex; gap: 6px; margin-bottom: 8px;">
-                    <span style="background: #1e293b; color: #d4af37; font-size: 0.75em; padding: 2px 6px; border-radius: 4px;">🔁 ${ex.reps}</span>
-                    <span style="background: #1e293b; color: #f59e0b; font-size: 0.75em; padding: 2px 6px; border-radius: 4px;">📦 ${ex.sets}</span>
+                    <span style="background: #f8fafc; color: #0369a1; font-size: 0.75em; padding: 2px 6px; border-radius: 4px;">🔁 ${ex.reps}</span>
+                    <span style="background: #f8fafc; color: #0369a1; font-size: 0.75em; padding: 2px 6px; border-radius: 4px;">📦 ${ex.sets}</span>
                 </div>
 
                 <!-- دليل التكنيك السليم والأخطاء الشائعة -->
                 ${typeof getExerciseFormGuideHTML === 'function' ? getExerciseFormGuideHTML(ex) : ''}
             </div>
             <div>
-                <div style="background: #1e2633; height: 5px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
-                    <div class="timer-progress-fill" style="background: linear-gradient(90deg, #d4af37 0%, #10b981 100%); height: 100%; width: 0%; transition: width 1s linear;"></div>
+                <div style="background: #f8fafc; height: 5px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
+                    <div class="timer-progress-fill" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); height: 100%; width: 0%; transition: width 1s linear;"></div>
                 </div>
-                <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="width: 100%; background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.88em;">
+                <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.88em;">
                     ⏱️ ابدأ مؤقت التمرين (${ex.duration})
                 </button>
             </div>
@@ -12050,16 +12087,16 @@ function showAppUpdateNoticeBanner() {
     if (document.getElementById('pwa-update-available-banner')) return;
     const banner = document.createElement('div');
     banner.id = 'pwa-update-available-banner';
-    banner.style.cssText = 'position: fixed; bottom: 25px; left: 15px; right: 15px; max-width: 480px; margin: 0 auto; background: linear-gradient(135deg, #0b1322 0%, #17253d 100%); border: 2px solid var(--primary-gold); border-radius: 14px; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; z-index: 9999999; box-shadow: 0 10px 30px rgba(0,0,0,0.85), 0 0 20px rgba(212, 175, 55, 0.45); animation: slideUpBanner 0.4s ease;';
+    banner.style.cssText = 'position: fixed; bottom: 25px; left: 15px; right: 15px; max-width: 480px; margin: 0 auto; background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2px solid var(--primary-gold); border-radius: 14px; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; z-index: 9999999; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.1); animation: slideUpBanner 0.4s ease;';
     banner.innerHTML = `
         <div style="display: flex; align-items: center; gap: 10px;">
             <span style="font-size: 1.6em;">⚡</span>
             <div>
-                <strong style="color: #ffffff; font-size: 0.92em; display: block;">يتوفر تحديث جديد للمنظومة!</strong>
-                <span style="color: #94a3b8; font-size: 0.78em;">تم إطلاق تحسينات وتمارين سريرية جديدة</span>
+                <strong style="color: #0f172a; font-size: 0.92em; display: block;">يتوفر تحديث جديد للمنظومة!</strong>
+                <span style="color: #475569; font-size: 0.78em;">تم إطلاق تحسينات وتمارين سريرية جديدة</span>
             </div>
         </div>
-        <button type="button" onclick="forceAppUpdateAndClearCache()" style="background: linear-gradient(135deg, #d4af37 0%, #f59e0b 100%); color: #0a0e14; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 900; font-size: 0.86em; cursor: pointer; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.4);">
+        <button type="button" onclick="forceAppUpdateAndClearCache()" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #0f172a; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 900; font-size: 0.86em; cursor: pointer; white-space: nowrap; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
             تحديث الآن 🔄
         </button>
     `;
@@ -12072,7 +12109,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v33.10';
+const CURRENT_APP_VERSION = 'v33.20';
 window.CURRENT_APP_VERSION = CURRENT_APP_VERSION;
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
@@ -12123,19 +12160,19 @@ function _triggerAutoReloadCountdown(targetVer = null) {
     const countdownStart = 5;
     overlay.innerHTML = `
         <div style="font-size: 3.5em; filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.7));">🔄</div>
-        <div style="color: #d4af37; font-size: 1.55em; font-weight: 900; line-height: 1.4; text-shadow: 0 2px 10px rgba(212,175,55,0.4);">
+        <div style="color: #0369a1; font-size: 1.55em; font-weight: 900; line-height: 1.4; text-shadow: 0 2px 10px rgba(212,175,55,0.4);">
             تم إطلاق تحديث جديد للمنظومة (${ver})!
         </div>
-        <div style="color: #e2e8f0; font-size: 1.05em; line-height: 1.8; max-width: 440px;">
+        <div style="color: #1e293b; font-size: 1.05em; line-height: 1.8; max-width: 440px;">
             جاري تطبيق أحدث التحسينات السريرية والتقنية تلقائياً.<br>
-            <span style="color: #6ee7b7; font-weight: bold;">ستحتفظ بكافة بياناتك ومرحلتك العلاجية بالكامل 🔒</span>
+            <span style="color: #047857; font-weight: bold;">ستحتفظ بكافة بياناتك ومرحلتك العلاجية بالكامل 🔒</span>
         </div>
-        <div style="background: #0f172a; border: 3px solid #d4af37; border-radius: 50%; width: 78px; height: 78px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 25px rgba(212,175,55,0.45);">
-            <span id="auto-update-countdown" style="color: #d4af37; font-size: 2.3em; font-weight: 900;">${countdownStart}</span>
+        <div style="background: #f8fafc; border: 3px solid #bae6fd; border-radius: 50%; width: 78px; height: 78px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
+            <span id="auto-update-countdown" style="color: #0369a1; font-size: 2.3em; font-weight: 900;">${countdownStart}</span>
         </div>
-        <div style="color: #94a3b8; font-size: 0.88em;">يتم التحديث تلقائياً خلال ثوانٍ...</div>
+        <div style="color: #475569; font-size: 0.88em;">يتم التحديث تلقائياً خلال ثوانٍ...</div>
         <button type="button" onclick="_doSafeReload('${ver}');"
-            style="background: linear-gradient(135deg, #d4af37 0%, #f59e0b 100%); color: #0a0e14; border: none; padding: 12px 34px; border-radius: 12px; font-weight: 900; font-size: 1.05em; cursor: pointer; margin-top: 6px; box-shadow: 0 4px 15px rgba(212,175,55,0.5); transition: transform 0.2s;">
+            style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: none; padding: 12px 34px; border-radius: 12px; font-weight: 900; font-size: 1.05em; cursor: pointer; margin-top: 6px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14); transition: transform 0.2s;">
             تحديث الآن فوراً ⚡
         </button>
     `;
@@ -12283,11 +12320,11 @@ function openAppInstallShareModal(defaultTab = 'install') {
     if (cardAndroid && cardIOS && cardLocal) {
         if (isIOS) {
             cardIOS.style.borderColor = 'var(--primary-gold)';
-            cardIOS.style.background = 'rgba(212, 175, 55, 0.1)';
+            cardIOS.style.background = '#f0f9ff';
             cardAndroid.style.opacity = '0.7';
         } else if (isAndroid) {
             cardAndroid.style.borderColor = 'var(--primary-gold)';
-            cardAndroid.style.background = 'rgba(212, 175, 55, 0.1)';
+            cardAndroid.style.background = '#f0f9ff';
             cardIOS.style.opacity = '0.7';
         }
         
@@ -12392,22 +12429,22 @@ function switchAppModalTab(tab) {
     if (!tabBtnInstall || !tabBtnShare || !contentInstall || !contentShare) return;
 
     if (tab === 'install') {
-        tabBtnInstall.style.background = 'linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(16, 185, 129, 0.2) 100%)';
+        tabBtnInstall.style.background = '#e0f2fe';
         tabBtnInstall.style.borderColor = 'var(--primary-gold)';
-        tabBtnInstall.style.color = '#fef08a';
+        tabBtnInstall.style.color = '#0369a1';
 
-        tabBtnShare.style.background = '#0f172a';
+        tabBtnShare.style.background = '#f8fafc';
         tabBtnShare.style.borderColor = '#334155';
         tabBtnShare.style.color = '#94a3b8';
 
         contentInstall.style.display = 'block';
         contentShare.style.display = 'none';
     } else {
-        tabBtnShare.style.background = 'linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(16, 185, 129, 0.2) 100%)';
+        tabBtnShare.style.background = '#e0f2fe';
         tabBtnShare.style.borderColor = 'var(--primary-gold)';
-        tabBtnShare.style.color = '#fef08a';
+        tabBtnShare.style.color = '#0369a1';
 
-        tabBtnInstall.style.background = '#0f172a';
+        tabBtnInstall.style.background = '#f8fafc';
         tabBtnInstall.style.borderColor = '#334155';
         tabBtnInstall.style.color = '#94a3b8';
 
@@ -12737,26 +12774,26 @@ function openNewDiagnosisQuotaGateModal() {
     modal.id = 'new-diagnosis-quota-gate-modal';
     modal.style.cssText = 'position: fixed; inset: 0; z-index: 99999999; background: rgba(4, 7, 15, 0.88); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 18px; font-family: Cairo, Almarai, sans-serif; direction: rtl;';
     modal.innerHTML = `
-        <div style="max-width: 560px; width: 100%; background: linear-gradient(145deg, #070d19 0%, #0f172a 60%, #050811 100%); border: 2px solid #d4af37; border-radius: 22px; padding: 28px 24px; color: #ffffff; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.9); position: relative;">
-            <div style="width: 64px; height: 64px; margin: 0 auto 14px auto; border-radius: 50%; background: rgba(212, 175, 55, 0.16); border: 2px solid #fef08a; display: flex; align-items: center; justify-content: center; font-size: 1.9em;">
+        <div style="max-width: 560px; width: 100%; background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2px solid #bae6fd; border-radius: 22px; padding: 28px 24px; color: #0f172a; text-align: center; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); position: relative;">
+            <div style="width: 64px; height: 64px; margin: 0 auto 14px auto; border-radius: 50%; background: #f0f9ff; border: 2px solid #bae6fd; display: flex; align-items: center; justify-content: center; font-size: 1.9em;">
                 🔒
             </div>
-            <h3 style="color: #fef08a; margin: 0 0 10px 0; font-size: 1.35em; font-weight: 900;">
+            <h3 style="color: #0369a1; margin: 0 0 10px 0; font-size: 1.35em; font-weight: 900;">
                 ${wasHum ? 'تم استنفاد حصة التشخيص المجاني (لمرة واحدة فقط)' : 'تم استنفاد رصيد باقة التشخيص الواحد'}
             </h3>
-            <p style="color: #e2e8f0; font-size: 0.94em; line-height: 1.8; margin: 0 0 16px 0; text-align: justify;">
+            <p style="color: #1e293b; font-size: 0.94em; line-height: 1.8; margin: 0 0 16px 0; text-align: justify;">
                 ${wasHum
                     ? 'لقد استفدتَ مسبقاً من <strong>مبادرة الرعاية الإنسانية المجانية</strong> على هذا الجهاز أو رقم الهاتف، وهي متاحة نظامياً <strong>لتشخيص واحد فقط</strong>.<br><br>لإجراء فحص وتشخيص سريري جديد لمنطقة ألم أخرى، يتطلب النظام <strong>الاشتراك في إحدى الباقات المدفوعة</strong> عبر محفظة أورانج موني (مع إغلاق خيار الإعفاء المجاني للفحوصات الإضافية).'
                     : 'باقتك الحالية كانت مخصصة <strong>لتشخيص سريري واحد فقط</strong> وقد تم استهلاكها في فحصك الحالي' + (curName ? ` باسم (${curName})` : '') + '.<br><br>لإجراء فحص وتشخيص سريري جديد لمنطقة ألم أخرى، يرجى <strong>شراء باقة جديدة</strong> (تشخيص فردي 3 د.أ، أو باقة 5 فحوصات التوفيرية 10 د.أ، أو باقة 10 فحوصات 15 د.أ) عند الوصول للتقرير.'}
             </p>
-            <div style="background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 12px; padding: 12px 14px; margin-bottom: 20px; text-align: right; font-size: 0.84em; color: #fde68a; line-height: 1.65;">
+            <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 12px 14px; margin-bottom: 20px; text-align: right; font-size: 0.84em; color: #0369a1; line-height: 1.65;">
                 💡 <strong>نصيحة توفيرية:</strong> عند بدء الفحص الجديد والوصول لخطوة التقرير، يمكنك اختيار <strong>باقة 5 فحوصات</strong> أو <strong>باقة 10 فحوصات</strong> لتحتفظ برصيد مفتوح لك ولعائلتك دون الحاجة للتفعيل في كل مرة.
             </div>
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <button type="button" onclick="const m=document.getElementById('new-diagnosis-quota-gate-modal'); if(m)m.remove(); resetToInitialState(true);" style="width: 100%; background: linear-gradient(135deg, #d4af37 0%, #b45309 100%); color: #050911; border: 1.5px solid #fef08a; padding: 14px 18px; border-radius: 12px; font-weight: 900; font-size: 1em; cursor: pointer; box-shadow: 0 6px 20px rgba(212, 175, 55, 0.35);">
+                <button type="button" onclick="const m=document.getElementById('new-diagnosis-quota-gate-modal'); if(m)m.remove(); resetToInitialState(true);" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #050911; border: 1.5px solid #bae6fd; padding: 14px 18px; border-radius: 12px; font-weight: 900; font-size: 1em; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                     💳 أوافق — بدء فحص جديد (مع شراء باقة جديدة للتقرير)
                 </button>
-                <button type="button" onclick="const m=document.getElementById('new-diagnosis-quota-gate-modal'); if(m)m.remove();" style="width: 100%; background: rgba(30, 41, 59, 0.9); color: #cbd5e1; border: 1px solid #475569; padding: 12px 18px; border-radius: 12px; font-weight: 800; font-size: 0.92em; cursor: pointer;">
+                <button type="button" onclick="const m=document.getElementById('new-diagnosis-quota-gate-modal'); if(m)m.remove();" style="width: 100%; background: #f8fafc; color: #1e293b; border: 1px solid #cbd5e1; padding: 12px 18px; border-radius: 12px; font-weight: 800; font-size: 0.92em; cursor: pointer;">
                     🔙 إلغاء والبقاء في خطتي العلاجية الحالية
                 </button>
             </div>
@@ -13336,62 +13373,62 @@ async function exportClinicalSummaryForDoctor(patientId) {
         container.innerHTML = `
             <div style="border-bottom: 2px solid #38bdf8; padding-bottom: 14px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div>
-                    <h2 style="color: #38bdf8; margin: 0 0 4px 0; font-size: 1.35em;">الملخص السريري لتحويل المريض (Clinical Referral Dossier)</h2>
-                    <div style="color: #94a3b8; font-size: 0.85em;">مركز وداعاً للألم للكايروبراكتيك | التاريخ: ${activeDoctorSummaryData.createdDate}</div>
+                    <h2 style="color: #0284c7; margin: 0 0 4px 0; font-size: 1.35em;">الملخص السريري لتحويل المريض (Clinical Referral Dossier)</h2>
+                    <div style="color: #475569; font-size: 0.85em;">مركز وداعاً للألم للكايروبراكتيك | التاريخ: ${activeDoctorSummaryData.createdDate}</div>
                 </div>
-                <div style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #38bdf8; padding: 6px 14px; border-radius: 8px; font-weight: bold; font-size: 0.88em;">
+                <div style="background: #f0f9ff; border: 1px solid #38bdf8; color: #0284c7; padding: 6px 14px; border-radius: 8px; font-weight: bold; font-size: 0.88em;">
                     ملف مراجع رقم: #${(patientId || '000').substring(0,8)}
                 </div>
             </div>
 
             <!-- بطاقة بيانات المريض الأساسية -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: #111827; padding: 14px; border-radius: 10px; margin-bottom: 16px; border: 1px solid #1e293b;">
-                <div><span style="color: #94a3b8; font-size: 0.82em;">الاسم الكامل:</span> <div style="color: #ffffff; font-weight: bold;">${patient.name}</div></div>
-                <div><span style="color: #94a3b8; font-size: 0.82em;">رقم الهاتف:</span> <div style="color: #ffffff; font-weight: bold; font-family: monospace;">${patient.phone}</div></div>
-                <div><span style="color: #94a3b8; font-size: 0.82em;">العمر / الجنس:</span> <div style="color: #ffffff; font-weight: bold;">${activeDoctorSummaryData.patientAge} سنة | ${activeDoctorSummaryData.patientGender}</div></div>
-                <div><span style="color: #94a3b8; font-size: 0.82em;">الوزن / الطول / BMI:</span> <div style="color: #38bdf8; font-weight: bold;">${patientWeight ? `${patientWeight} كجم` : '--'} | ${patientHeight ? `${patientHeight} سم` : '--'} | ${bmiDisplay}</div></div>
-                <div><span style="color: #94a3b8; font-size: 0.82em;">موضع الشكوى:</span> <div style="color: var(--primary-gold); font-weight: bold;">${painArea}</div></div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: #ffffff; padding: 14px; border-radius: 10px; margin-bottom: 16px; border: 1px solid #cbd5e1;">
+                <div><span style="color: #475569; font-size: 0.82em;">الاسم الكامل:</span> <div style="color: #0f172a; font-weight: bold;">${patient.name}</div></div>
+                <div><span style="color: #475569; font-size: 0.82em;">رقم الهاتف:</span> <div style="color: #0f172a; font-weight: bold; font-family: monospace;">${patient.phone}</div></div>
+                <div><span style="color: #475569; font-size: 0.82em;">العمر / الجنس:</span> <div style="color: #0f172a; font-weight: bold;">${activeDoctorSummaryData.patientAge} سنة | ${activeDoctorSummaryData.patientGender}</div></div>
+                <div><span style="color: #475569; font-size: 0.82em;">الوزن / الطول / BMI:</span> <div style="color: #0284c7; font-weight: bold;">${patientWeight ? `${patientWeight} كجم` : '--'} | ${patientHeight ? `${patientHeight} سم` : '--'} | ${bmiDisplay}</div></div>
+                <div><span style="color: #475569; font-size: 0.82em;">موضع الشكوى:</span> <div style="color: var(--primary-gold); font-weight: bold;">${painArea}</div></div>
             </div>
 
             <!-- التشخيص السريري والمستوى الشوكي -->
-            <div style="background: #111827; padding: 14px; border-radius: 10px; margin-bottom: 16px; border-right: 4px solid #38bdf8;">
-                <div style="color: #38bdf8; font-weight: bold; font-size: 0.95em; margin-bottom: 4px;">🎯 التشخيص الأرجح ومستوى الضغط:</div>
-                <div style="color: #ffffff; font-size: 1.05em; font-weight: bold;">${diagTitle}</div>
-                ${rootLevel ? `<div style="color: #94a3b8; font-size: 0.85em; margin-top: 4px;">المستوى العصبي المستهدف: <strong style="color: #fef08a;">${rootLevel}</strong></div>` : ''}
+            <div style="background: #ffffff; padding: 14px; border-radius: 10px; margin-bottom: 16px; border-right: 4px solid #38bdf8;">
+                <div style="color: #0284c7; font-weight: bold; font-size: 0.95em; margin-bottom: 4px;">🎯 التشخيص الأرجح ومستوى الضغط:</div>
+                <div style="color: #0f172a; font-size: 1.05em; font-weight: bold;">${diagTitle}</div>
+                ${rootLevel ? `<div style="color: #475569; font-size: 0.85em; margin-top: 4px;">المستوى العصبي المستهدف: <strong style="color: #0369a1;">${rootLevel}</strong></div>` : ''}
                 <div style="color: #10b981; font-size: 0.82em; margin-top: 4px;">فحص الأمان السريري: ${redFlags}</div>
             </div>
 
             <!-- مؤشرات التعافي الحركي ونتائج الأيام السبعة -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 18px;">
-                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="background: #f0fdf4; border: 1px solid #10b981; border-radius: 8px; padding: 12px; text-align: center;">
                     <div style="font-size: 1.8em; font-weight: bold; color: #10b981;">${painDrop}%</div>
-                    <div style="color: #cbd5e1; font-size: 0.78em;">تراجع شدة الألم</div>
-                    <div style="color: #94a3b8; font-size: 0.72em;">(من ${baselinePain}/10 إلى ${currentPain}/10)</div>
+                    <div style="color: #1e293b; font-size: 0.78em;">تراجع شدة الألم</div>
+                    <div style="color: #475569; font-size: 0.72em;">(من ${baselinePain}/10 إلى ${currentPain}/10)</div>
                 </div>
-                <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid #38bdf8; border-radius: 8px; padding: 12px; text-align: center;">
-                    <div style="font-size: 1.8em; font-weight: bold; color: #38bdf8;">${activeDoctorSummaryData.completedDays} من 7</div>
-                    <div style="color: #cbd5e1; font-size: 0.78em;">الجلسات المؤداة بنجاح</div>
-                    <div style="color: #94a3b8; font-size: 0.72em;">التزام تأهيلي مستمر</div>
+                <div style="background: #f0f9ff; border: 1px solid #38bdf8; border-radius: 8px; padding: 12px; text-align: center;">
+                    <div style="font-size: 1.8em; font-weight: bold; color: #0284c7;">${activeDoctorSummaryData.completedDays} من 7</div>
+                    <div style="color: #1e293b; font-size: 0.78em;">الجلسات المؤداة بنجاح</div>
+                    <div style="color: #475569; font-size: 0.72em;">التزام تأهيلي مستمر</div>
                 </div>
             </div>
 
             <!-- تقرير السلوكيات الحركية والبيوميكانيكية المرصودة للمريض -->
             ${(recordedPosHabits.length > 0 || recordedNegHabits.length > 0) ? `
-                <div style="background: #111827; padding: 14px; border-radius: 10px; margin-bottom: 16px; border: 1px solid #334155;">
+                <div style="background: #ffffff; padding: 14px; border-radius: 10px; margin-bottom: 16px; border: 1px solid #cbd5e1;">
                     <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.92em; margin-bottom: 8px;">🧬 السلوكيات الحركية والبيوميكانيكية الموثقة من جلسات المراجع:</div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px;">
                         ${recordedPosHabits.length > 0 ? `
-                            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 10px;">
+                            <div style="background: #f0fdf4; border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 10px;">
                                 <div style="color: #10b981; font-weight: bold; font-size: 0.82em; margin-bottom: 4px;">✨ إنجازات إيجابية:</div>
-                                <ul style="color: #6ee7b7; margin: 0; padding-right: 16px; font-size: 0.8em; line-height: 1.6;">
+                                <ul style="color: #047857; margin: 0; padding-right: 16px; font-size: 0.8em; line-height: 1.6;">
                                     ${recordedPosHabits.map(h => `<li>${h}</li>`).join('')}
                                 </ul>
                             </div>
                         ` : ''}
                         ${recordedNegHabits.length > 0 ? `
-                            <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px; padding: 10px;">
+                            <div style="background: #fef2f2; border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px; padding: 10px;">
                                 <div style="color: #ef4444; font-weight: bold; font-size: 0.82em; margin-bottom: 4px;">⚠️ إجهادات رُصدت للتصحيح:</div>
-                                <ul style="color: #fca5a5; margin: 0; padding-right: 16px; font-size: 0.8em; line-height: 1.6;">
+                                <ul style="color: #dc2626; margin: 0; padding-right: 16px; font-size: 0.8em; line-height: 1.6;">
                                     ${recordedNegHabits.map(h => `<li>${h}</li>`).join('')}
                                 </ul>
                             </div>
@@ -13401,19 +13438,19 @@ async function exportClinicalSummaryForDoctor(patientId) {
             ` : ''}
 
             <!-- سجل متابعة الأيام السبعة التفصيلي -->
-            <div style="background: #111827; padding: 14px; border-radius: 10px; margin-bottom: 16px;">
+            <div style="background: #ffffff; padding: 14px; border-radius: 10px; margin-bottom: 16px;">
                 <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.9em; margin-bottom: 8px;">📈 التدرج اليومي لمقياس الألم (VAS) والمدى الحركي:</div>
                 ${logsSummary.length > 0 ? `
-                    <ul style="color: #cbd5e1; font-size: 0.85em; margin: 0; padding-right: 20px; line-height: 1.8;">
+                    <ul style="color: #1e293b; font-size: 0.85em; margin: 0; padding-right: 20px; line-height: 1.8;">
                         ${logsSummary.map(s => `<li>${s}</li>`).join('')}
                     </ul>
-                ` : `<div style="color: #fef08a; background: rgba(212, 175, 55, 0.1); border: 1px dashed var(--primary-gold); padding: 12px; border-radius: 8px; font-size: 0.88em; line-height: 1.6;">🌱 <strong>المريض في الجلسة الأولى (بداية خطة التعافي والتأهيل المنزلي):</strong> تم رصد القياس السريري المبدئي (Baseline Pain: ${baselinePain}/10) لمنطقة (${painArea})، وهو مهيأ لبدء تمارين اليوم الأول وبانتظار أول تقييم يومي للمتابعة.</div>`}
+                ` : `<div style="color: #0369a1; background: #f0f9ff; border: 1px dashed var(--primary-gold); padding: 12px; border-radius: 8px; font-size: 0.88em; line-height: 1.6;">🌱 <strong>المريض في الجلسة الأولى (بداية خطة التعافي والتأهيل المنزلي):</strong> تم رصد القياس السريري المبدئي (Baseline Pain: ${baselinePain}/10) لمنطقة (${painArea})، وهو مهيأ لبدء تمارين اليوم الأول وبانتظار أول تقييم يومي للمتابعة.</div>`}
             </div>
 
             <!-- توجيهات جلسة المعالج اليدوية في جلسة التقويم -->
-            <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid var(--primary-gold); padding: 14px; border-radius: 10px;">
+            <div style="background: #f0f9ff; border: 1px solid var(--primary-gold); padding: 14px; border-radius: 10px;">
                 <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.9em; margin-bottom: 6px;">👐 خطة التدخل اليدوي الموصى بها للمعالج جمال:</div>
-                <p style="color: #e2e8f0; font-size: 0.85em; line-height: 1.6; margin: 0;">
+                <p style="color: #1e293b; font-size: 0.85em; line-height: 1.6; margin: 0;">
                     ${logsSummary.length > 0 
                         ? `المريض أبدى استجابة حركية بنسبة ${painDrop}% مع التمارين المنزلية، وهو جاهز حالياً لجلسة <strong>تفريغ ضغط الفقرات بالكايروبراكتيك (Chiropractic Adjustment)</strong> وفك التشنج الليفي العميق لتثبيت النتائج ومنع الانتكاس.`
                         : `المريض في مرحلة تسكين الألم الحاد والبدء ببرنامج التعافي لمنطقة (${painArea}) بمستوى ألم مبدئي (${baselinePain}/10). يُوصى بالبدء بتمارين التليين والتفريغ المقررة لليوم الأول مع إمكانية خضوعه لجلسة <strong>تقويم كايروبراكتيك وتفريغ يدوي (Manual Decompression)</strong> لإزالة الضغط عن الأعصاب والمفاصل فوراً.`}
@@ -13475,14 +13512,14 @@ function getNotificationReminderBannerHTML(patientId) {
     const isEnabled = localStorage.getItem('scp_daily_reminder_enabled') === 'true';
 
     return `
-        <div id="notification-reminder-banner" class="no-print" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1.5px solid ${isEnabled && isGranted ? '#10b981' : '#38bdf8'}; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+        <div id="notification-reminder-banner" class="no-print" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid ${isEnabled && isGranted ? '#10b981' : '#38bdf8'}; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
             <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 250px;">
                 <span style="font-size: 1.6em;">🔔</span>
                 <div>
                     <div style="color: ${isEnabled && isGranted ? '#10b981' : '#38bdf8'}; font-weight: bold; font-size: 0.96em;">
                         ${isEnabled && isGranted ? '✓ تذكيرات الجلسات اليومية مفعلة بنجاح' : 'تفعيل التذكير اليومي الذكي للجلسات'}
                     </div>
-                    <div style="color: #cbd5e1; font-size: 0.82em; margin-top: 2px;">
+                    <div style="color: #1e293b; font-size: 0.82em; margin-top: 2px;">
                         ${isEnabled && isGranted ? 'ستتلقى إشعاراً ذكياً على جهازك فور حلول موعد جلستك التالية لضمان عدم تفويت التمارين.' : 'احصل على تنبيه تلقائي على جهازك عند انتهاء العداد لفتح الجلسة التالية دون الحاجة لتذكر الموعد.'}
                     </div>
                 </div>
@@ -14499,7 +14536,7 @@ function switchIntakeMode(mode) {
         if (formContainer) formContainer.style.display = 'none';
         if (btnChat) {
             btnChat.style.background = 'var(--primary-gold)';
-            btnChat.style.color = '#0a0e14';
+            btnChat.style.color = '#ffffff';
         }
         if (btnForm) {
             btnForm.style.background = 'transparent';
@@ -14518,7 +14555,7 @@ function switchIntakeMode(mode) {
         }
         if (btnForm) {
             btnForm.style.background = 'var(--primary-gold)';
-            btnForm.style.color = '#0a0e14';
+            btnForm.style.color = '#ffffff';
         }
         if (subtitle) subtitle.textContent = 'الفحص السريع عبر الخيارات المحددة لمنطقة الألم';
     }
@@ -14759,7 +14796,7 @@ function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
                     playBtn.style.border = 'none';
                 }
                 const desc = document.getElementById('report-audio-status-desc');
-                if (desc) desc.innerHTML = '<span style="color: #6ee7b7; font-weight: bold;">🎙️ دكتورة سارة سجلت لك شرحاً صوتياً لتقريرك وخطة علاجك (اضغط هنا للاستماع)</span>';
+                if (desc) desc.innerHTML = '<span style="color: #047857; font-weight: bold;">🎙️ دكتورة سارة سجلت لك شرحاً صوتياً لتقريرك وخطة علاجك (اضغط هنا للاستماع)</span>';
             } else if (stationKey === 'recovery') {
                 const iconEl = document.getElementById('duaa-audio-icon');
                 const textEl = document.getElementById('duaa-audio-text');
@@ -14911,7 +14948,7 @@ function renderVerifiedPatientVitalsBadge(box, vitals, name) {
     const badgeEl = document.createElement('div');
     badgeEl.id = 'royal-chat-vitals-card';
     badgeEl.style.cssText = `
-        background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.95) 100%);
+        background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
         border: 1.5px solid #10b981;
         border-radius: 14px;
         padding: 12px 16px;
@@ -14927,15 +14964,15 @@ function renderVerifiedPatientVitalsBadge(box, vitals, name) {
 
     badgeEl.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
-            <div style="color: #6ee7b7; font-weight: bold; font-size: 0.92em; display: flex; align-items: center; gap: 8px;">
+            <div style="color: #047857; font-weight: bold; font-size: 0.92em; display: flex; align-items: center; gap: 8px;">
                 <span style="font-size: 1.25em;">✅</span>
                 <span>تم اعتماد وتوثيق ملفك الطبي ومؤشراتك الحيوية تلقائياً (ملف مراجع مسجل 📁)</span>
             </div>
-            <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.75em; padding: 3px 10px; border-radius: 12px; font-weight: bold;">
+            <span style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; font-size: 0.75em; padding: 3px 10px; border-radius: 12px; font-weight: bold;">
                 ملف معتمد 🔒
             </span>
         </div>
-        <div style="display: flex; flex-wrap: wrap; gap: 12px; color: #cbd5e1; font-size: 0.85em; background: rgba(0,0,0,0.25); padding: 8px 12px; border-radius: 8px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; color: #1e293b; font-size: 0.85em; background: #f8fafc; padding: 8px 12px; border-radius: 8px;">
             <span>👤 <strong>${name}</strong> (${genderText})</span>
             ${vitals?.age ? `<span>🎂 العمر: <strong>${vitals.age} سنة</strong></span>` : ''}
             ${vitals?.weight ? `<span>⚖️ الوزن: <strong>${vitals.weight} كغم</strong></span>` : ''}
@@ -15080,19 +15117,19 @@ async function initAiClinicalChat() {
 
     // 1. عرض شاشة "جاري الاتصال بالطبيب الافتراضي" البصرية الفخمة والمميزة
     messagesBox.innerHTML = `
-        <div id="ai-doctor-calling-banner" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.95) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 18px 20px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.45); animation: fadeIn 0.3s ease;">
+        <div id="ai-doctor-calling-banner" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 18px 20px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 14px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); animation: fadeIn 0.3s ease;">
             <div style="display: flex; align-items: center; gap: 14px;">
                 <div style="position: relative; width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); display: flex; align-items: center; justify-content: center; font-size: 1.5em; border: 2px solid #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);">
                     📞
                 </div>
                 <div>
-                    <div style="color: #38bdf8; font-weight: 800; font-size: 1.05em; display: flex; align-items: center; gap: 8px;">
+                    <div style="color: #0284c7; font-weight: 800; font-size: 1.05em; display: flex; align-items: center; gap: 8px;">
                         <span>جاري الاتصال بالطبيب الافتراضي...</span>
                     </div>
-                    <div style="color: #94a3b8; font-size: 0.83em; margin-top: 3px;">تجهيز القناة السريرية للاستشارة المباشرة لموضع: (${ptTitle})</div>
+                    <div style="color: #475569; font-size: 0.83em; margin-top: 3px;">تجهيز القناة السريرية للاستشارة المباشرة لموضع: (${ptTitle})</div>
                 </div>
             </div>
-            <div style="color: #fef08a; font-size: 0.82em; font-weight: bold; background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); padding: 5px 12px; border-radius: 20px; white-space: nowrap;">
+            <div style="color: #0369a1; font-size: 0.82em; font-weight: bold; background: #f0f9ff; border: 1px solid var(--primary-gold); padding: 5px 12px; border-radius: 20px; white-space: nowrap;">
                 ⏱️ ثوانٍ معدودة...
             </div>
         </div>
@@ -15116,24 +15153,24 @@ async function initAiClinicalChat() {
     // 2. إتمام الاتصال وعرض بطاقة الطبيب فوراً وتشغيل الصوت المحضر مسبقاً
     setTimeout(async () => {
         messagesBox.innerHTML = `
-            <div class="doctor-welcome-presentation-card" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.95) 50%, rgba(212, 175, 55, 0.15) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 14px 18px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.45); animation: fadeIn 0.3s ease;">
+            <div class="doctor-welcome-presentation-card" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 14px 18px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); animation: fadeIn 0.3s ease;">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="position: relative; width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, #10b981 0%, #047857 100%); display: flex; align-items: center; justify-content: center; font-size: 1.45em; border: 1.5px solid #fef08a; box-shadow: 0 0 12px rgba(16, 185, 129, 0.5); flex-shrink: 0;">
+                    <div style="position: relative; width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, #10b981 0%, #047857 100%); display: flex; align-items: center; justify-content: center; font-size: 1.45em; border: 1.5px solid #bae6fd; box-shadow: 0 0 12px rgba(16, 185, 129, 0.5); flex-shrink: 0;">
                         🩺
                         <span style="position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; background: #10b981; border: 2px solid #0f172a; box-shadow: 0 0 8px #10b981;"></span>
                     </div>
                     <div>
-                        <div style="color: #ffffff; font-weight: 800; font-size: 1em; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <div style="color: #0f172a; font-weight: 800; font-size: 1em; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                             <span>الاستشارية السريرية</span>
-                            <span style="color: #10b981; font-size: 0.82em; background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; padding: 2px 10px; border-radius: 10px; font-weight: bold;">🟢 متصلة الآن .. د. سارة</span>
+                            <span style="color: #10b981; font-size: 0.82em; background: #f0fdf4; border: 1px solid #10b981; padding: 2px 10px; border-radius: 10px; font-weight: bold;">🟢 متصلة الآن .. د. سارة</span>
                         </div>
                         <div style="color: var(--primary-gold); font-size: 0.83em; margin-top: 2px;">استشارية التأهيل والتقويم السريري • «وداعاً للألم»</div>
                     </div>
                 </div>
-                <div style="color: #cbd5e1; font-size: 0.8em; background: rgba(15, 23, 42, 0.8); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(212, 175, 55, 0.3); display: flex; align-items: center; gap: 6px;">
+                <div style="color: #1e293b; font-size: 0.8em; background: #f8fafc; padding: 5px 12px; border-radius: 20px; border: 1px solid #bae6fd; display: flex; align-items: center; gap: 6px;">
                     <span>🔒</span> استشارة سريرية خاصة وآمنة 100%
                 </div>
-                <div style="background: rgba(234, 179, 8, 0.12); border: 1px solid rgba(234, 179, 8, 0.4); border-radius: 8px; padding: 8px 12px; margin-top: 10px; color: #fef08a; font-size: 0.82em; line-height: 1.5; width: 100%; box-sizing: border-box; text-align: right;">
+                <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 8px 12px; margin-top: 10px; color: #0369a1; font-size: 0.82em; line-height: 1.5; width: 100%; box-sizing: border-box; text-align: right;">
                     ⚠️ <strong>تنبيه دقة التشخيص:</strong> يرجى الإجابة بدقة وأمانة على أسئلة الدكتورة سارة لتشخيص ميكانيكية ألمك بدقة متناهية وتحديد الخطة العلاجية والتمارين الآمنة لحالتك تماماً.
                 </div>
             </div>
@@ -15183,50 +15220,50 @@ function renderRoyalChatVitalsCard(box) {
     const cardEl = document.createElement('div');
     cardEl.id = 'royal-chat-vitals-card';
     cardEl.style.cssText = `
-        background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.95) 100%);
-        border: 2px solid var(--primary-gold);
-        border-radius: 14px;
-        padding: 16px;
+        background: #ffffff;
+        border: 2px solid #0284c7;
+        border-radius: 16px;
+        padding: 18px;
         margin: 10px 0 14px 0;
-        box-shadow: 0 6px 25px rgba(0,0,0,0.55);
+        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
         animation: fadeIn 0.4s ease;
     `;
 
     cardEl.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(212, 175, 55, 0.3); padding-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 10px; flex-wrap: wrap; gap: 8px;">
             <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 1.4em;">📋</span>
+                <span style="font-size: 1.5em;">📋</span>
                 <div>
-                    <strong style="color: var(--primary-gold); font-size: 1em; display: block;">المؤشرات الحيوية الضرورية للتشخيص</strong>
-                    <span style="color: #94a3b8; font-size: 0.78em;">لحساب مؤشر الأحمال البيوميكانيكية ومعايرة التمارين لحالتك</span>
+                    <strong style="color: #0369a1; font-size: 1.08em; display: block;">البيانات الأساسية الضرورية للتشخيص</strong>
+                    <span style="color: #475569; font-size: 0.85em;">لحفظ ملفك الطبي ومعايرة التقرير والتمارين لحالتك</span>
                 </div>
             </div>
-            <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.78em; padding: 3px 10px; border-radius: 12px; font-weight: bold;">
-                خطوة أساسية واحدة
+            <span style="background: #f0fdf4; border: 1.5px solid #10b981; color: #047857; font-size: 0.82em; padding: 4px 12px; border-radius: 12px; font-weight: 800;">
+                خطوة أساسية سهلة
             </span>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 12px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 14px;">
             <!-- الاسم الكامل -->
             <div style="grid-column: 1 / -1;">
-                <label style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: bold;">👤 الاسم الكريم (الاسم الكامل):</label>
-                <input type="text" id="chat-vitals-name" value="${defaultName}" placeholder="مثال: أحمد عبد الله أو سارة..." style="width: 100%; background: #080d1a; border: 1.5px solid #334155; border-radius: 8px; padding: 9px 12px; color: #ffffff; font-size: 0.92em; box-sizing: border-box; outline: none;">
+                <label style="color: #0f172a; font-size: 0.92em; display: block; margin-bottom: 5px; font-weight: 800;">👤 الاسم الكريم (الاسم الكامل):</label>
+                <input type="text" id="chat-vitals-name" value="${defaultName}" placeholder="مثال: أحمد عبد الله أو سارة..." style="width: 100%; background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 10px; padding: 11px 14px; color: #0f172a; font-size: 1em; font-weight: 700; box-sizing: border-box; outline: none;">
             </div>
 
             <!-- رقم الهاتف المحمول / الواتساب -->
             <div style="grid-column: 1 / -1;">
-                <label style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: bold;">📱 رقم الهاتف المحمول / الواتساب (لحفظ ملفك الطبي):</label>
-                <input type="tel" inputmode="tel" id="chat-vitals-phone" value="${defaultPhone}" placeholder="مثال: 079xxxxxxx أو مع رمز الدولة" dir="ltr" style="width: 100%; background: #080d1a; border: 1.5px solid #334155; border-radius: 8px; padding: 9px 12px; color: #ffffff; font-size: 0.92em; box-sizing: border-box; outline: none; text-align: left;">
+                <label style="color: #0f172a; font-size: 0.92em; display: block; margin-bottom: 5px; font-weight: 800;">📱 رقم الهاتف المحمول / الواتساب (لحفظ ملفك الطبي):</label>
+                <input type="tel" inputmode="tel" id="chat-vitals-phone" value="${defaultPhone}" placeholder="مثال: 079xxxxxxx أو مع رمز الدولة" dir="ltr" style="width: 100%; background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 10px; padding: 11px 14px; color: #0f172a; font-size: 1em; font-weight: 700; box-sizing: border-box; outline: none; text-align: left;">
             </div>
 
             <!-- الجنس -->
             <div style="grid-column: 1 / -1;">
-                <label style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: bold;">⚧ الجنس:</label>
+                <label style="color: #0f172a; font-size: 0.92em; display: block; margin-bottom: 5px; font-weight: 800;">⚧ الجنس:</label>
                 <div style="display: flex; gap: 10px;">
-                    <button type="button" id="btn-chat-gender-male" onclick="window.setChatVitalsGender('ذكر')" style="flex: 1; padding: 8px 12px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; background: ${defaultGender === 'ذكر' ? 'var(--primary-gold)' : '#1e293b'}; border: 1.5px solid ${defaultGender === 'ذكر' ? 'var(--primary-gold)' : '#334155'}; color: ${defaultGender === 'ذكر' ? '#0a0e14' : '#94a3b8'}; transition: all 0.2s ease;">
+                    <button type="button" id="btn-chat-gender-male" onclick="window.setChatVitalsGender('ذكر')" style="flex: 1; padding: 11px 14px; border-radius: 10px; font-size: 0.98em; font-weight: 800; cursor: pointer; background: ${defaultGender === 'ذكر' ? '#0284c7' : '#f8fafc'}; border: 2px solid ${defaultGender === 'ذكر' ? '#0284c7' : '#cbd5e1'}; color: ${defaultGender === 'ذكر' ? '#ffffff' : '#334155'}; transition: all 0.2s ease;">
                         👨 ذكر
                     </button>
-                    <button type="button" id="btn-chat-gender-female" onclick="window.setChatVitalsGender('أنثى')" style="flex: 1; padding: 8px 12px; border-radius: 8px; font-size: 0.88em; font-weight: bold; cursor: pointer; background: ${defaultGender === 'أنثى' ? 'var(--primary-gold)' : '#1e293b'}; border: 1.5px solid ${defaultGender === 'أنثى' ? 'var(--primary-gold)' : '#334155'}; color: ${defaultGender === 'أنثى' ? '#0a0e14' : '#94a3b8'}; transition: all 0.2s ease;">
+                    <button type="button" id="btn-chat-gender-female" onclick="window.setChatVitalsGender('أنثى')" style="flex: 1; padding: 11px 14px; border-radius: 10px; font-size: 0.98em; font-weight: 800; cursor: pointer; background: ${defaultGender === 'أنثى' ? '#0284c7' : '#f8fafc'}; border: 2px solid ${defaultGender === 'أنثى' ? '#0284c7' : '#cbd5e1'}; color: ${defaultGender === 'أنثى' ? '#ffffff' : '#334155'}; transition: all 0.2s ease;">
                         👩 أنثى
                     </button>
                 </div>
@@ -15234,25 +15271,25 @@ function renderRoyalChatVitalsCard(box) {
 
             <!-- العمر -->
             <div>
-                <label style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: bold;">🎂 العمر (سنة):</label>
-                <input type="number" inputmode="numeric" id="chat-vitals-age" value="${defaultAge}" min="10" max="110" placeholder="مثال: 38" style="width: 100%; background: #080d1a; border: 1.5px solid #334155; border-radius: 8px; padding: 9px 10px; color: #ffffff; font-size: 0.92em; box-sizing: border-box; outline: none;">
+                <label style="color: #0f172a; font-size: 0.9em; display: block; margin-bottom: 5px; font-weight: 800;">🎂 العمر (سنة):</label>
+                <input type="number" inputmode="numeric" id="chat-vitals-age" value="${defaultAge}" min="10" max="110" placeholder="مثال: 38" style="width: 100%; background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 10px; padding: 11px 12px; color: #0f172a; font-size: 1em; font-weight: 700; box-sizing: border-box; outline: none;">
             </div>
 
             <!-- الوزن -->
             <div>
-                <label style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: bold;">⚖️ الوزن (كغم):</label>
-                <input type="number" inputmode="decimal" id="chat-vitals-weight" value="${defaultWeight}" min="30" max="250" placeholder="مثال: 72" style="width: 100%; background: #080d1a; border: 1.5px solid #334155; border-radius: 8px; padding: 9px 10px; color: #ffffff; font-size: 0.92em; box-sizing: border-box; outline: none;">
+                <label style="color: #0f172a; font-size: 0.9em; display: block; margin-bottom: 5px; font-weight: 800;">⚖️ الوزن (كغم):</label>
+                <input type="number" inputmode="decimal" id="chat-vitals-weight" value="${defaultWeight}" min="30" max="250" placeholder="مثال: 72" style="width: 100%; background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 10px; padding: 11px 12px; color: #0f172a; font-size: 1em; font-weight: 700; box-sizing: border-box; outline: none;">
             </div>
 
             <!-- الطول -->
             <div>
-                <label style="color: #cbd5e1; font-size: 0.82em; display: block; margin-bottom: 4px; font-weight: bold;">📏 الطول (سم):</label>
-                <input type="number" inputmode="numeric" id="chat-vitals-height" value="${defaultHeight}" min="100" max="230" placeholder="مثال: 170" style="width: 100%; background: #080d1a; border: 1.5px solid #334155; border-radius: 8px; padding: 9px 10px; color: #ffffff; font-size: 0.92em; box-sizing: border-box; outline: none;">
+                <label style="color: #0f172a; font-size: 0.9em; display: block; margin-bottom: 5px; font-weight: 800;">📏 الطول (سم):</label>
+                <input type="number" inputmode="numeric" id="chat-vitals-height" value="${defaultHeight}" min="100" max="230" placeholder="مثال: 170" style="width: 100%; background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 10px; padding: 11px 12px; color: #0f172a; font-size: 1em; font-weight: 700; box-sizing: border-box; outline: none;">
             </div>
         </div>
 
-        <button type="button" onclick="window.submitChatRoyalVitals()" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; padding: 12px; border-radius: 8px; font-size: 0.95em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);">
-            <span>⚡ اعتماد المؤشرات وبدء الاستشارة السريرية</span>
+        <button type="button" onclick="window.submitChatRoyalVitals()" style="width: 100%; background: linear-gradient(135deg, #0d9488 0%, #059669 100%); color: #ffffff; border: none; padding: 14px; border-radius: 12px; font-size: 1.05em; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);">
+            <span>⚡ حفظ البيانات وبدء الاستشارة مع د. سارة</span>
             <span>⬅️</span>
         </button>
     `;
@@ -15280,25 +15317,25 @@ window.setChatVitalsGender = function(g) {
     const btnFemale = document.getElementById('btn-chat-gender-female');
     if (g === 'ذكر') {
         if (btnMale) {
-            btnMale.style.background = 'var(--primary-gold)';
-            btnMale.style.borderColor = 'var(--primary-gold)';
-            btnMale.style.color = '#0a0e14';
+            btnMale.style.background = '#0284c7';
+            btnMale.style.borderColor = '#0284c7';
+            btnMale.style.color = '#ffffff';
         }
         if (btnFemale) {
-            btnFemale.style.background = '#1e293b';
-            btnFemale.style.borderColor = '#334155';
-            btnFemale.style.color = '#94a3b8';
+            btnFemale.style.background = '#f8fafc';
+            btnFemale.style.borderColor = '#cbd5e1';
+            btnFemale.style.color = '#334155';
         }
     } else {
         if (btnFemale) {
-            btnFemale.style.background = 'var(--primary-gold)';
-            btnFemale.style.borderColor = 'var(--primary-gold)';
-            btnFemale.style.color = '#0a0e14';
+            btnFemale.style.background = '#0284c7';
+            btnFemale.style.borderColor = '#0284c7';
+            btnFemale.style.color = '#ffffff';
         }
         if (btnMale) {
-            btnMale.style.background = '#1e293b';
-            btnMale.style.borderColor = '#334155';
-            btnMale.style.color = '#94a3b8';
+            btnMale.style.background = '#f8fafc';
+            btnMale.style.borderColor = '#cbd5e1';
+            btnMale.style.color = '#334155';
         }
     }
 };
@@ -15476,14 +15513,14 @@ window.submitChatRoyalVitals = function() {
         if (cardEl) {
             cardEl.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div style="color: #6ee7b7; font-weight: bold; font-size: 0.95em; display: flex; align-items: center; gap: 8px;">
+                    <div style="color: #047857; font-weight: bold; font-size: 0.95em; display: flex; align-items: center; gap: 8px;">
                         <span>✅</span> تم اعتماد وتوثيق مؤشراتك الحيوية بنجاح
                     </div>
-                    <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; font-size: 0.76em; padding: 2px 8px; border-radius: 10px; font-weight: bold;">
+                    <span style="background: #f0fdf4; border: 1px solid #10b981; color: #047857; font-size: 0.76em; padding: 2px 8px; border-radius: 10px; font-weight: bold;">
                         موثق سريرياً
                     </span>
                 </div>
-                <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; color: #cbd5e1; font-size: 0.86em; background: rgba(0,0,0,0.25); padding: 8px 12px; border-radius: 8px;">
+                <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; color: #1e293b; font-size: 0.86em; background: #f8fafc; padding: 8px 12px; border-radius: 8px;">
                     <span>👤 <strong>${nameVal}</strong> (${genderVal})</span>
                     ${pPhoneVal ? `<span>📱 <strong dir="ltr">${pPhoneVal}</strong></span>` : ''}
                     <span>🎂 العمر: <strong>${ageVal} سنة</strong></span>
@@ -15605,19 +15642,19 @@ function appendChatMessage(sender, text, options = {}) {
         display: flex;
         flex-direction: column;
         align-self: ${isBot ? 'flex-start' : 'flex-end'};
-        max-width: 88%;
-        background: ${isBot ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' : 'linear-gradient(135deg, #065f46 0%, #047857 100%)'};
-        border: 1px solid ${isBot ? 'rgba(56, 189, 248, 0.35)' : '#10b981'};
-        padding: 13px 16px;
-        border-radius: ${isBot ? '16px 16px 16px 2px' : '16px 16px 2px 16px'};
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        max-width: 90%;
+        background: ${isBot ? '#f0f9ff' : '#ecfdf5'};
+        border: 1.5px solid ${isBot ? '#7dd3fc' : '#6ee7b7'};
+        padding: 14px 18px;
+        border-radius: ${isBot ? '16px 16px 16px 4px' : '16px 16px 4px 16px'};
+        box-shadow: 0 3px 12px rgba(15, 23, 42, 0.06);
         animation: fadeIn 0.3s ease;
     `;
 
-    let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong style="color: #fef08a;">$1</strong>');
+    let formattedText = text.replace(/\*\*(.*?)\*\*/g, `<strong style="color: ${isBot ? '#0369a1' : '#065f46'}; font-weight: 900;">$1</strong>`);
 
     let transcriptionHtml = transcription ? `
-        <div style="font-size: 0.82em; color: #a7f3d0; margin-top: 6px; border-top: 1px dashed rgba(16, 185, 129, 0.4); padding-top: 6px; display: flex; align-items: center; gap: 6px;">
+        <div style="font-size: 0.86em; color: #047857; margin-top: 6px; border-top: 1px dashed #6ee7b7; padding-top: 6px; display: flex; align-items: center; gap: 6px;">
             <span>🎙️</span> <span>فهم الطبيب من تسجيلك: <em>"${transcription}"</em></span>
         </div>
     ` : '';
@@ -15629,12 +15666,12 @@ function appendChatMessage(sender, text, options = {}) {
 
     let html = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 8px;">
-            <span class="${isBot ? 'bot-sender-label' : 'user-sender-label'}" style="font-size: 0.82em; font-weight: bold; color: ${isBot ? '#38bdf8' : '#6ee7b7'};">
+            <span class="${isBot ? 'bot-sender-label' : 'user-sender-label'}" style="font-size: 0.86em; font-weight: 800; color: ${isBot ? '#0369a1' : '#047857'};">
                 ${senderName}
             </span>
             ${audioReplayBtnHtml}
         </div>
-        <div style="color: #e2e8f0; font-size: 0.94em; line-height: 1.75;">
+        <div style="color: #0f172a; font-size: 1em; font-weight: 500; line-height: 1.8;">
             ${formattedText}
         </div>
         ${transcriptionHtml}
@@ -15664,13 +15701,29 @@ function appendChatMessage(sender, text, options = {}) {
     clinicalDialogueState.history.push({ sender, text });
 }
 
-// إلغاء الردود الافتراضية لمنح المريض كامل الحرية في شرح حالته بالتفصيل دون قيود
+// عرض أزرار الردود السريعة المقترحة لتسهيل الإجابة على كبار السن بضغطة واحدة مع بقاء حرية الكتابة والصوت
 function renderChatQuickReplies(replies) {
     const container = document.getElementById('ai-chat-quick-replies');
-    if (container) {
-        container.innerHTML = '';
+    if (!container) return;
+    container.innerHTML = '';
+    if (!Array.isArray(replies) || replies.length === 0) {
         container.style.display = 'none';
+        return;
     }
+    container.style.display = 'flex';
+    const labelEl = document.createElement('span');
+    labelEl.style.cssText = 'font-size: 0.84em; font-weight: 800; color: #0369a1; width: 100%; margin-bottom: 2px;';
+    labelEl.textContent = '👆 إجابات سريعة بضغطة واحدة (أو اكتب بحرية بالأسفل):';
+    container.appendChild(labelEl);
+    replies.forEach(replyText => {
+        if (!replyText) return;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'chat-quick-reply-pill';
+        btn.textContent = replyText;
+        btn.onclick = () => handleQuickReplyClick(replyText);
+        container.appendChild(btn);
+    });
 }
 
 function handleQuickReplyClick(text) {
@@ -16137,7 +16190,7 @@ async function sendChatMessage() {
                 }
 
                 const pGreeting = savedName ? ` يا ${savedName}` : '';
-                const closingMsg = `✅ تم اعتماد رقم هاتفك وبياناتك بنجاح${pGreeting}. نقوم الآن بإصدار بطاقة التقييم السريري الشاملة وتحويلك فوراً لصفحة التقرير والتأهيل المباشر... ⏱️<div style="margin-top: 10px; text-align: center;"><button type="button" onclick="window.doDirectTransitionToSpecializedReport && window.doDirectTransitionToSpecializedReport()" class="btn-header btn-header-gold" style="padding: 7px 18px; font-size: 0.86em; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);">⚡ الانتقال المباشر لتقرير الحالة</button></div>`;
+                const closingMsg = `✅ تم اعتماد رقم هاتفك وبياناتك بنجاح${pGreeting}. نقوم الآن بإصدار بطاقة التقييم السريري الشاملة وتحويلك فوراً لصفحة التقرير والتأهيل المباشر... ⏱️<div style="margin-top: 10px; text-align: center;"><button type="button" onclick="window.doDirectTransitionToSpecializedReport && window.doDirectTransitionToSpecializedReport()" class="btn-header btn-header-gold" style="padding: 7px 18px; font-size: 0.86em; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">⚡ الانتقال المباشر لتقرير الحالة</button></div>`;
                 appendChatMessage('bot', closingMsg);
 
                 if (typeof Wada3anAiEngine !== 'undefined') {
@@ -16175,7 +16228,7 @@ async function sendChatMessage() {
             }
 
             const patientGreeting = (clinicalDialogueState.patientName && clinicalDialogueState.patientName !== 'المراجع الكريم') ? ` يا ${clinicalDialogueState.patientName}` : '';
-            const closingMsg = `✅ تم تسجيل رقم هاتفك بنجاح${patientGreeting}. نقوم الآن بإصدار تقريرك السريري المتكامل وتحويلك فوراً لصفحة التشخيص وخطة التعافي... ⏱️<div style="margin-top: 10px; text-align: center;"><button type="button" onclick="window.doDirectTransitionToReport && window.doDirectTransitionToReport()" class="btn-header btn-header-gold" style="padding: 7px 18px; font-size: 0.86em; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);">⚡ الانتقال المباشر للتقرير</button></div>`;
+            const closingMsg = `✅ تم تسجيل رقم هاتفك بنجاح${patientGreeting}. نقوم الآن بإصدار تقريرك السريري المتكامل وتحويلك فوراً لصفحة التشخيص وخطة التعافي... ⏱️<div style="margin-top: 10px; text-align: center;"><button type="button" onclick="window.doDirectTransitionToReport && window.doDirectTransitionToReport()" class="btn-header btn-header-gold" style="padding: 7px 18px; font-size: 0.86em; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">⚡ الانتقال المباشر للتقرير</button></div>`;
             
             const indicator = document.getElementById(loadingId);
             if (indicator) indicator.remove();
@@ -16422,7 +16475,7 @@ async function sendChatMessage() {
             const btnCard = document.createElement('div');
             btnCard.id = 'chat-direct-report-button-box';
             btnCard.className = 'report-target-beacon';
-            btnCard.style.cssText = 'margin: 16px auto 12px auto; text-align: center; width: 100%; max-width: 420px; padding: 16px; background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%); border: 2px solid var(--primary-gold); border-radius: 18px; box-shadow: 0 0 30px rgba(212, 175, 55, 0.5);';
+            btnCard.style.cssText = 'margin: 16px auto 12px auto; text-align: center; width: 100%; max-width: 420px; padding: 16px; background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2px solid var(--primary-gold); border-radius: 18px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.1);';
             const btnText = isRegisteredPatient ? '⏳ إنتظر لتجهيز ملفك' : '📄 اضغط هنا لمشاهدة التقرير';
             const btnSubText = isRegisteredPatient
                 ? '✅ اكتمل التقييم السريري بنجاح، جاري تحويلك تلقائياً لملفك الطبي'
@@ -16430,14 +16483,14 @@ async function sendChatMessage() {
 
             btnCard.innerHTML = `
                 <div style="font-size: 2.2em; animation: reportPointerBounce 1.2s infinite ease-in-out; display: inline-block; margin-bottom: 6px;">👇</div>
-                <div style="color: #ffffff; font-weight: 900; font-size: 1.05rem; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.6);">
+                <div style="color: #0f172a; font-weight: 900; font-size: 1.05rem; margin-bottom: 10px; ">
                     تقريرك الطبي المعتمد وخطة التعافي ستظهر هنا مباشرة
                 </div>
                 <button type="button" onclick="window.doDirectTransitionToReport && window.doDirectTransitionToReport()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: 2px solid #34d399; padding: 14px 24px; border-radius: 30px; font-size: 1.12rem; font-weight: bold; cursor: pointer; box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45); display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
                     <span>${btnText}</span>
                     <span style="font-size: 1.3rem;">⬅️</span>
                 </button>
-                <div style="font-size: 0.82rem; color: #a7f3d0; margin-top: 8px; font-weight: 500;">
+                <div style="font-size: 0.82rem; color: #047857; margin-top: 8px; font-weight: 500;">
                     ${btnSubText}
                 </div>
             `;
@@ -16828,7 +16881,7 @@ async function stopAndSendVoiceNote() {
     if (messagesBox) {
         const typingEl = document.createElement('div');
         typingEl.id = loadingId;
-        typingEl.style.cssText = 'color: #38bdf8; font-size: 0.88em; padding: 10px 14px; display: flex; align-items: center; gap: 10px; background: rgba(15,23,42,0.85); border-radius: 10px; border: 1.5px solid #0284c7; box-shadow: 0 4px 15px rgba(2,132,199,0.25);';
+        typingEl.style.cssText = 'color: #0369a1; font-size: 0.88em; padding: 10px 14px; display: flex; align-items: center; gap: 10px; background: #f0f9ff; border-radius: 10px; border: 1.5px solid #0284c7; box-shadow: 0 4px 15px rgba(2,132,199,0.25);';
         typingEl.innerHTML = `<span style="animation: spin 1s linear infinite; display: inline-block;">👂</span> ${persona.name} يستمع لصوتك ويحلل كلامك بدقة...`;
         messagesBox.appendChild(typingEl);
         messagesBox.scrollTop = messagesBox.scrollHeight;
@@ -16951,6 +17004,96 @@ function cancelVoiceNoteRecording() {
 function toggleChatVoiceSpeech() {
     startVoiceNoteRecording();
 }
+
+// إملاء صوتي مباشر داخل مربع محادثة د. سارة (مخصص لتسهيل الاستخدام على كبار السن)
+let _chatSpeechDictationInstance = null;
+let _isChatSpeechDictationActive = false;
+window.toggleVoiceDictation = function() {
+    const btn = document.getElementById('btn-chat-voice-dictate');
+    const chatInput = document.getElementById('ai-chat-input');
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRec) {
+        if (typeof startVoiceNoteRecording === 'function') {
+            startVoiceNoteRecording();
+            return;
+        }
+        showToast('💡 للتحدث بصوتك: اضغط على ميكروفون لوحة مفاتيح هاتفك 🎙️ وسيتم كتابة حديثك فوراً!', 'info');
+        if (chatInput) chatInput.focus();
+        return;
+    }
+
+    if (_isChatSpeechDictationActive && _chatSpeechDictationInstance) {
+        try { _chatSpeechDictationInstance.stop(); } catch (e) {}
+        _isChatSpeechDictationActive = false;
+        if (btn) {
+            btn.classList.remove('recording-active');
+            btn.innerHTML = '<span>🎤</span> <span>تحدث بالصوت</span>';
+        }
+        return;
+    }
+
+    try {
+        if (typeof Wada3anAiEngine !== 'undefined') {
+            Wada3anAiEngine.stopSpeaking();
+        }
+        _chatSpeechDictationInstance = new SpeechRec();
+        _chatSpeechDictationInstance.lang = 'ar-JO';
+        _chatSpeechDictationInstance.interimResults = true;
+        _chatSpeechDictationInstance.continuous = false;
+
+        const baseText = chatInput ? chatInput.value.trim() : '';
+
+        _chatSpeechDictationInstance.onstart = () => {
+            _isChatSpeechDictationActive = true;
+            if (btn) {
+                btn.classList.add('recording-active');
+                btn.innerHTML = '<span>🔴</span> <span>تحدث الآن...</span>';
+            }
+            showToast('🎙️ تحدث الآن بوضوح، د. سارة تستمع إليك...', 'info');
+        };
+
+        _chatSpeechDictationInstance.onresult = (event) => {
+            let spoken = '';
+            for (let i = 0; i < event.results.length; ++i) {
+                spoken += event.results[i][0].transcript;
+            }
+            if (chatInput && spoken.trim()) {
+                chatInput.value = baseText ? `${baseText} ${spoken.trim()}` : spoken.trim();
+                chatInput.style.height = 'auto';
+                chatInput.style.height = Math.min(chatInput.scrollHeight, 180) + 'px';
+            }
+        };
+
+        _chatSpeechDictationInstance.onerror = () => {
+            _isChatSpeechDictationActive = false;
+            if (btn) {
+                btn.classList.remove('recording-active');
+                btn.innerHTML = '<span>🎤</span> <span>تحدث بالصوت</span>';
+            }
+        };
+
+        _chatSpeechDictationInstance.onend = () => {
+            _isChatSpeechDictationActive = false;
+            if (btn) {
+                btn.classList.remove('recording-active');
+                btn.innerHTML = '<span>🎤</span> <span>تحدث بالصوت</span>';
+            }
+            if (chatInput && chatInput.value.trim()) {
+                showToast('✅ تم كتابة حديثك بنجاح! اضغط «أرسل ⬅️» لإرساله للدكتورة سارة.', 'success');
+            }
+        };
+
+        _chatSpeechDictationInstance.start();
+    } catch (err) {
+        _isChatSpeechDictationActive = false;
+        if (btn) {
+            btn.classList.remove('recording-active');
+            btn.innerHTML = '<span>🎤</span> <span>تحدث بالصوت</span>';
+        }
+        showToast('يرجى السماح بصلاحية الميكروفون للتحدث بالصوت.', 'info');
+    }
+};
 
 // تشغيل / إيقاف قراءة التفسير البيوميكانيكي صوتياً في الخطوة 3
 function togglePlayAiInsightAudio() {

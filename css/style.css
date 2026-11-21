@@ -1,26 +1,26 @@
 /* ==========================================================================
-   Smart Check Pro 2.0 - Clinic Design System
+   Smart Check Pro 2.0 - Clinic Design System (v33.20)
    مطورة من قبل "وداعاً للألم" (تقنية الكايروبراكتيك)
-   Theme: Medical Dark Elegance (Emerald & Gold)
+   Theme: Clean Clinical Daylight & Senior-Friendly Medical System (المظهر الطبي النهاري الفاتح)
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Cairo:wght@400;600;700;800&display=swap');
 
 :root {
-    --primary-gold: #d4af37;
-    --primary-gold-dark: #997819;
-    --primary-gold-light: #fef08a;
-    --bg-dark-obsidian: #0c1424;
-    --bg-card: #121c32;
-    --bg-card-alt: #182642;
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    --accent-emerald: #10b981;
-    --accent-red: #ef4444;
-    --accent-blue: #38bdf8;
-    --border-gold-subtle: rgba(212, 175, 55, 0.22);
-    --shadow-gold-glow: 0 8px 32px rgba(212, 175, 55, 0.15);
-    --font-main: 'Almarai', 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
+    --primary-gold: #0284c7;
+    --primary-gold-dark: #0369a1;
+    --primary-gold-light: #0369a1;
+    --bg-dark-obsidian: #f4f7fb;
+    --bg-card: #ffffff;
+    --bg-card-alt: #f0f9ff;
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    --accent-emerald: #0d9488;
+    --accent-red: #dc2626;
+    --accent-blue: #0284c7;
+    --border-gold-subtle: rgba(2, 132, 199, 0.24);
+    --shadow-gold-glow: 0 6px 24px rgba(15, 23, 42, 0.07);
+    --font-main: 'Cairo', 'Almarai', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
 }
 
 * {
@@ -36,17 +36,19 @@ body {
     direction: rtl;
     min-height: 100vh;
     padding-bottom: 60px;
+    font-size: 17px;
+    line-height: 1.65;
     background-image: 
-        radial-gradient(circle at 15% 15%, rgba(212, 175, 55, 0.07) 0%, transparent 45%),
-        radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.06) 0%, transparent 45%);
+        radial-gradient(circle at 15% 15%, rgba(2, 132, 199, 0.05) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(13, 148, 136, 0.05) 0%, transparent 45%);
 }
 
 /* Header */
 .app-header {
-    background: rgba(11, 16, 27, 0.96);
+    background: #ffffff;
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    border-bottom: 1px solid var(--border-gold-subtle);
+    border-bottom: 2px solid #bae6fd;
     padding: calc(12px + env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) 12px max(24px, env(safe-area-inset-left, 0px));
     position: sticky;
     top: 0;
@@ -54,7 +56,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 4px 25px rgba(0,0,0,0.6);
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.07);
 }
 
 .brand-wrapper {
@@ -66,35 +68,36 @@ body {
 }
 
 .clinic-logo-img {
-    height: 52px;
-    width: 52px;
+    height: 54px;
+    width: 54px;
     object-fit: contain;
     border-radius: 50%;
-    border: 2px solid var(--primary-gold);
-    background: #0a0e14;
-    box-shadow: 0 0 14px rgba(212, 175, 55, 0.45);
+    border: 2.5px solid #0284c7;
+    background: #ffffff;
+    box-shadow: 0 2px 10px rgba(2, 132, 199, 0.2);
     flex-shrink: 0;
 }
 
 .brand-title {
-    font-size: 1.25em;
-    font-weight: bold;
-    color: #ffffff;
+    font-size: 1.3em;
+    font-weight: 800;
+    color: #0f172a;
     line-height: 1.2;
     white-space: nowrap;
 }
 
 .brand-subtitle {
-    font-size: 0.8em;
-    color: var(--primary-gold);
-    letter-spacing: 0.5px;
+    font-size: 0.85em;
+    color: #0369a1;
+    font-weight: 700;
+    letter-spacing: 0.2px;
     margin-top: 2px;
     white-space: nowrap;
 }
 
 .brand-version-badge {
-    font-size: 0.72em;
-    color: #94a3b8;
+    font-size: 0.74em;
+    color: #64748b;
     margin-top: 1px;
     display: inline-flex;
     align-items: center;
@@ -119,13 +122,13 @@ body {
 
 .btn-mobile-menu-toggle {
     display: none;
-    background: #1e293b;
-    border: 1.5px solid var(--primary-gold);
-    color: var(--primary-gold);
-    border-radius: 8px;
-    width: 40px;
-    height: 40px;
-    font-size: 1.3em;
+    background: #f0f9ff;
+    border: 2px solid #0284c7;
+    color: #0369a1;
+    border-radius: 10px;
+    width: 44px;
+    height: 44px;
+    font-size: 1.35em;
     cursor: pointer;
     align-items: center;
     justify-content: center;
@@ -134,8 +137,8 @@ body {
 }
 
 .btn-mobile-menu-toggle:active {
-    background: var(--primary-gold);
-    color: #080c14;
+    background: #0284c7;
+    color: #ffffff;
 }
 
 .mobile-backdrop {
@@ -145,7 +148,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(15, 23, 42, 0.45);
     z-index: 999998;
     touch-action: manipulation;
 }
@@ -167,14 +170,14 @@ body {
 }
 
 .btn-header-more {
-    background: linear-gradient(135deg, rgba(212, 175, 55, 0.18) 0%, rgba(15, 23, 42, 0.9) 100%) !important;
-    border: 1.5px solid var(--primary-gold) !important;
-    color: #fef08a !important;
+    background: #f0f9ff !important;
+    border: 1.5px solid #0284c7 !important;
+    color: #0369a1 !important;
     font-weight: 800 !important;
-    padding: 7px 14px !important;
-    border-radius: 8px !important;
+    padding: 8px 15px !important;
+    border-radius: 10px !important;
     cursor: pointer !important;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35), 0 0 10px rgba(212, 175, 55, 0.2) !important;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.12) !important;
     display: inline-flex !important;
     align-items: center !important;
     gap: 6px !important;
@@ -184,9 +187,9 @@ body {
 .btn-header-more:hover,
 .header-more-dropdown-wrapper:hover .btn-header-more,
 .header-more-dropdown-wrapper.open .btn-header-more {
-    background: var(--primary-gold) !important;
-    color: #080c14 !important;
-    box-shadow: 0 0 16px rgba(212, 175, 55, 0.6) !important;
+    background: #0284c7 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3) !important;
     transform: translateY(-1px);
 }
 
@@ -195,12 +198,12 @@ body {
     position: absolute;
     top: calc(100% + 8px);
     left: 0;
-    min-width: 260px;
-    background: linear-gradient(180deg, #0f172a 0%, #090e17 100%);
-    border: 1.5px solid var(--primary-gold);
-    border-radius: 12px;
-    padding: 8px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), 0 0 20px rgba(212, 175, 55, 0.25);
+    min-width: 270px;
+    background: #ffffff;
+    border: 2px solid #0284c7;
+    border-radius: 14px;
+    padding: 10px;
+    box-shadow: 0 15px 35px rgba(15, 23, 42, 0.18);
     z-index: 1000010;
     animation: fadeInDropdown 0.18s ease-out;
 }
@@ -220,9 +223,9 @@ body {
 .header-dropdown-item {
     background: transparent;
     border: 1px solid transparent;
-    border-radius: 8px;
-    padding: 8px 12px;
-    color: #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: #0f172a;
     cursor: pointer;
     text-align: right;
     display: flex;
@@ -236,14 +239,14 @@ body {
 }
 
 .header-dropdown-item:hover {
-    background: rgba(212, 175, 55, 0.15);
-    border-color: rgba(212, 175, 55, 0.4);
-    color: #ffffff;
+    background: #f0f9ff;
+    border-color: #bae6fd;
+    color: #0369a1;
     transform: translateX(-3px);
 }
 
 .header-dropdown-item .dropdown-item-icon {
-    font-size: 1.25em;
+    font-size: 1.3em;
     flex-shrink: 0;
 }
 
@@ -254,18 +257,18 @@ body {
 }
 
 .header-dropdown-item .dropdown-item-text strong {
-    font-size: 0.88em;
-    color: #f8fafc;
+    font-size: 0.92em;
+    color: #0f172a;
 }
 
 .header-dropdown-item .dropdown-item-text small {
-    font-size: 0.72em;
-    color: #94a3b8;
+    font-size: 0.76em;
+    color: #475569;
 }
 
 .dropdown-divider {
     height: 1px;
-    background: rgba(212, 175, 55, 0.2);
+    background: #e2e8f0;
     margin: 4px 6px;
 }
 
@@ -356,51 +359,51 @@ body {
 }
 
 .btn-header {
-    background: #1e293b;
-    color: #e2e8f0;
-    border: 1px solid rgba(212, 175, 55, 0.35);
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 0.82em;
-    font-weight: 700;
+    background: #f0f9ff;
+    color: #0369a1;
+    border: 1.5px solid #7dd3fc;
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 0.88em;
+    font-weight: 800;
     cursor: pointer;
     transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     text-decoration: none;
     white-space: nowrap;
     line-height: 1.3;
 }
 
 .btn-header:hover {
-    background: var(--primary-gold);
-    color: #0a0e14;
-    border-color: var(--primary-gold);
+    background: #0284c7;
+    color: #ffffff;
+    border-color: #0284c7;
     transform: translateY(-1px);
 }
 
 .btn-whatsapp-cta,
 .btn-header-emerald {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #059669 100%);
     color: #ffffff !important;
-    border: 1px solid #34d399;
-    box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+    border: 1.5px solid #0d9488;
+    box-shadow: 0 3px 10px rgba(13, 148, 136, 0.25);
 }
 
 .btn-header-emerald:hover,
 .btn-whatsapp-cta:hover {
     background: linear-gradient(135deg, #059669 0%, #047857 100%);
-    border-color: #6ee7b7;
+    border-color: #047857;
     color: #ffffff !important;
     transform: translateY(-1px);
 }
 
 .btn-header-emerald-soft {
-    background: rgba(16, 185, 129, 0.18);
-    border: 1px solid #10b981;
-    color: #6ee7b7;
-    font-weight: bold;
+    background: #f0fdf4;
+    border: 1.5px solid #10b981;
+    color: #047857;
+    font-weight: 800;
 }
 
 .btn-header-emerald-soft:hover {
@@ -410,37 +413,35 @@ body {
 }
 
 .btn-header-gold {
-    background: #1e293b;
-    border: 1px solid rgba(212, 175, 55, 0.45);
-    color: #fef08a;
+    background: #f0f9ff;
+    border: 1.5px solid #0284c7;
+    color: #0369a1;
 }
 
 .btn-header-gold:hover {
-    background: var(--primary-gold);
-    border-color: var(--primary-gold);
-    color: #0a0e14;
+    background: #0284c7;
+    border-color: #0284c7;
+    color: #ffffff;
     transform: translateY(-1px);
 }
 
 .btn-header-unified {
-    background: rgba(212, 175, 55, 0.22) !important;
-    border: 1.5px solid var(--primary-gold) !important;
-    color: #ffffff !important;
+    background: #f0f9ff !important;
+    border: 1.5px solid #0284c7 !important;
+    color: #0369a1 !important;
     font-weight: 800 !important;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(254, 240, 138, 0.35), 0 0 10px rgba(212, 175, 55, 0.2) !important;
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
+    text-shadow: none !important;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.12) !important;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
     position: relative !important;
 }
 
 .btn-header-unified:hover {
-    background: rgba(212, 175, 55, 0.38) !important;
-    border-color: #fef08a !important;
+    background: #0284c7 !important;
+    border-color: #0369a1 !important;
     color: #ffffff !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 4px 18px rgba(212, 175, 55, 0.55), inset 0 0 10px rgba(254, 240, 138, 0.35) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.28) !important;
 }
 
 .btn-header-whatsapp {
@@ -560,22 +561,22 @@ body {
 
 /* شريط المشاكل والتخصصات التي نعالجها */
 .clinical-specialties-banner {
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%);
-    border: 1px solid rgba(212, 175, 55, 0.35);
-    border-radius: 14px;
-    padding: 16px 20px;
+    background: #ffffff;
+    border: 1.5px solid #bae6fd;
+    border-radius: 16px;
+    padding: 18px 22px;
     margin-bottom: 20px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
 }
 
 .specialties-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
     flex-wrap: wrap;
     gap: 8px;
-    border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+    border-bottom: 1.5px solid #e2e8f0;
     padding-bottom: 10px;
 }
 
@@ -586,23 +587,23 @@ body {
 }
 
 .specialties-icon {
-    font-size: 1.3em;
+    font-size: 1.35em;
 }
 
 .specialties-title {
-    color: var(--primary-gold);
+    color: #0369a1;
     margin: 0;
-    font-size: 1.08em;
+    font-size: 1.12em;
     font-weight: 800;
 }
 
 .specialties-tag {
-    background: rgba(16, 185, 129, 0.15);
-    border: 1px solid #10b981;
-    color: #6ee7b7;
-    font-size: 0.78em;
-    font-weight: bold;
-    padding: 3px 10px;
+    background: #f0fdf4;
+    border: 1.5px solid #10b981;
+    color: #047857;
+    font-size: 0.82em;
+    font-weight: 800;
+    padding: 4px 12px;
     border-radius: 20px;
 }
 
@@ -613,23 +614,24 @@ body {
 }
 
 .specialty-chip {
-    background: rgba(15, 23, 42, 0.7);
-    border: 1px solid #334155;
-    border-radius: 10px;
-    padding: 10px 12px;
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 12px 14px;
     display: flex;
     align-items: flex-start;
     gap: 10px;
-    transition: transform 0.18s ease, border-color 0.18s ease;
+    transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
 }
 
 .specialty-chip:hover {
-    border-color: var(--primary-gold);
+    background: #f0f9ff;
+    border-color: #0284c7;
     transform: translateY(-2px);
 }
 
 .chip-icon {
-    font-size: 1.25em;
+    font-size: 1.3em;
     flex-shrink: 0;
     margin-top: 1px;
 }
@@ -642,15 +644,15 @@ body {
 }
 
 .chip-content strong {
-    color: #ffffff;
-    font-size: 0.88em;
-    font-weight: 700;
+    color: #0f172a;
+    font-size: 0.92em;
+    font-weight: 800;
 }
 
 .chip-content span {
-    color: #94a3b8;
-    font-size: 0.75em;
-    line-height: 1.4;
+    color: #475569;
+    font-size: 0.8em;
+    line-height: 1.45;
 }
 
 /* التنسيق المتجاوب مع شاشات الهواتف والتابلت */
@@ -660,7 +662,7 @@ body {
         position: sticky !important;
         top: 0 !important;
         z-index: 999999 !important;
-        background: #0b101b !important;
+        background: #ffffff !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
         padding-top: calc(14px + env(safe-area-inset-top, 0px)) !important;
@@ -669,7 +671,7 @@ body {
         padding-right: max(14px, env(safe-area-inset-right, 0px)) !important;
         min-height: calc(66px + env(safe-area-inset-top, 0px)) !important;
         box-sizing: border-box !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7) !important;
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08) !important;
     }
 
     .brand-wrapper {
@@ -677,38 +679,39 @@ body {
     }
 
     .clinic-logo-img {
-        height: 44px;
-        width: 44px;
+        height: 46px;
+        width: 46px;
     }
 
     .brand-title {
-        font-size: 1.05em !important;
+        font-size: 1.08em !important;
         font-weight: 800 !important;
+        color: #0f172a !important;
         white-space: nowrap;
         line-height: 1.25;
     }
 
     .brand-subtitle {
-        font-size: 0.72em !important;
+        font-size: 0.76em !important;
         line-height: 1.3;
-        color: var(--primary-gold-light) !important;
+        color: #0369a1 !important;
     }
 
     .brand-version-badge {
-        font-size: 0.68em !important;
+        font-size: 0.7em !important;
         margin-top: 0px !important;
     }
 
     .btn-mobile-menu-toggle {
         display: inline-flex !important;
-        width: 44px !important;
-        height: 44px !important;
-        min-width: 44px !important;
-        min-height: 44px !important;
-        background: #1e293b !important;
-        border: 2px solid #fef08a !important;
-        color: #fef08a !important;
-        box-shadow: 0 0 12px rgba(254, 240, 138, 0.35) !important;
+        width: 46px !important;
+        height: 46px !important;
+        min-width: 46px !important;
+        min-height: 46px !important;
+        background: #f0f9ff !important;
+        border: 2px solid #0284c7 !important;
+        color: #0369a1 !important;
+        box-shadow: 0 2px 8px rgba(2, 132, 199, 0.18) !important;
         border-radius: 10px !important;
         font-size: 1.4em !important;
         cursor: pointer !important;
@@ -717,8 +720,8 @@ body {
     }
 
     .btn-mobile-menu-toggle:active {
-        background: var(--primary-gold) !important;
-        color: #080c14 !important;
+        background: #0284c7 !important;
+        color: #ffffff !important;
     }
 
     .header-right-group {
@@ -739,11 +742,11 @@ body {
         right: 12px !important;
         max-width: 440px;
         margin: 0 auto;
-        background: linear-gradient(180deg, #111c33 0%, #0a101d 100%) !important;
-        border: 2px solid var(--primary-gold) !important;
+        background: #ffffff !important;
+        border: 2px solid #0284c7 !important;
         border-radius: 16px;
         padding: 16px 12px;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.95), 0 0 25px rgba(212, 175, 55, 0.3) !important;
+        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.22) !important;
         z-index: 1000005 !important;
         max-height: calc(100vh - 90px - env(safe-area-inset-top, 0px));
         overflow-y: auto;
@@ -769,12 +772,12 @@ body {
         align-items: center;
         justify-content: center;
         padding: 8px 4px 4px 4px;
-        border-top: 1px solid rgba(212, 175, 55, 0.3);
+        border-top: 1.5px solid #e2e8f0;
         margin-top: 4px;
-        color: #fef08a;
-        font-size: 0.82em;
+        color: #0369a1;
+        font-size: 0.86em;
         font-weight: 800;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.2px;
     }
 
     .mobile-only-menu-item {
@@ -785,16 +788,16 @@ body {
         width: 100%;
         justify-content: center;
         padding: 12px 10px !important;
-        font-size: 0.9em !important;
+        font-size: 0.92em !important;
         font-weight: 800 !important;
         text-align: center;
         white-space: nowrap;
-        background: rgba(212, 175, 55, 0.22) !important;
-        color: #ffffff !important;
-        border: 1.5px solid var(--primary-gold) !important;
+        background: #f0f9ff !important;
+        color: #0369a1 !important;
+        border: 1.5px solid #7dd3fc !important;
         border-radius: 10px !important;
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(254, 240, 138, 0.3), 0 0 10px rgba(212, 175, 55, 0.2) !important;
+        text-shadow: none !important;
+        box-shadow: 0 2px 6px rgba(2, 132, 199, 0.1) !important;
         cursor: pointer !important;
         pointer-events: auto !important;
         touch-action: manipulation !important;
@@ -803,8 +806,8 @@ body {
     }
 
     .header-actions .btn-header:active {
-        background: rgba(212, 175, 55, 0.4) !important;
-        border-color: #fef08a !important;
+        background: #0284c7 !important;
+        border-color: #0369a1 !important;
         color: #ffffff !important;
         transform: scale(0.98);
     }
@@ -1000,9 +1003,9 @@ body {
         position: sticky;
         bottom: 0;
         z-index: 50;
-        background: #0f172a !important;
-        box-shadow: 0 -4px 15px rgba(0,0,0,0.5) !important;
-        padding: 8px 10px !important;
+        background: #ffffff !important;
+        box-shadow: 0 -4px 15px rgba(15, 23, 42, 0.08) !important;
+        padding: 10px 10px !important;
         box-sizing: border-box !important;
         width: 100% !important;
         max-width: 100% !important;
@@ -1014,20 +1017,21 @@ body {
     #ai-chat-input {
         min-width: 0 !important;
         flex: 1 1 auto !important;
-        font-size: 0.94em !important;
-        padding: 8px 8px !important;
+        font-size: 1em !important;
+        padding: 10px 10px !important;
         box-sizing: border-box !important;
         min-height: 52px !important;
         max-height: 140px !important;
         line-height: 1.5 !important;
         resize: none !important;
-        background: transparent !important;
-        border: none !important;
-        color: #ffffff !important;
+        background: #f8fafc !important;
+        border: 1.5px solid #cbd5e1 !important;
+        border-radius: 10px !important;
+        color: #0f172a !important;
     }
     #ai-chat-send-btn {
-        padding: 10px 12px !important;
-        font-size: 0.85em !important;
+        padding: 12px 14px !important;
+        font-size: 0.92em !important;
         gap: 4px !important;
         flex-shrink: 0 !important;
         white-space: nowrap !important;
@@ -1060,12 +1064,12 @@ body {
     }
 
     .comparison-table tr {
-        background: #111827 !important;
-        border: 1.5px solid rgba(212, 175, 55, 0.3) !important;
+        background: #ffffff !important;
+        border: 1.5px solid #bae6fd !important;
         border-radius: 12px;
         margin-bottom: 12px;
         padding: 12px 14px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
     }
 
     .comparison-table td {
@@ -1073,29 +1077,29 @@ body {
         padding: 6px 0 !important;
         position: relative;
         text-align: right !important;
-        font-size: 0.88em;
+        font-size: 0.92em;
     }
 
     .comparison-table td:nth-child(1) {
-        color: var(--primary-gold);
-        font-size: 0.98em;
+        color: #0369a1;
+        font-size: 1.02em;
         font-weight: 800;
-        border-bottom: 1px solid rgba(212, 175, 55, 0.2) !important;
+        border-bottom: 1px solid #e2e8f0 !important;
         padding-bottom: 8px !important;
         margin-bottom: 6px;
     }
 
     .comparison-table td:nth-child(2) {
-        color: #10b981;
-        font-weight: 700;
+        color: #047857;
+        font-weight: 800;
         padding: 6px 0;
     }
 
     .comparison-table td:nth-child(3) {
-        color: #cbd5e1;
-        font-size: 0.82em;
-        line-height: 1.5;
-        border-top: 1px dashed rgba(255,255,255,0.1) !important;
+        color: #334155;
+        font-size: 0.88em;
+        line-height: 1.55;
+        border-top: 1px dashed #cbd5e1 !important;
         padding-top: 8px !important;
         margin-top: 6px;
     }
@@ -1260,9 +1264,13 @@ body {
 
 /* Stepper Indicator */
 .stepper-container {
-    max-width: 1000px;
-    margin: 20px auto 15px auto;
-    padding: 0 20px;
+    max-width: 1040px;
+    margin: 18px auto 16px auto;
+    padding: 14px 22px;
+    background: #ffffff;
+    border: 1.5px solid #bae6fd;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
     display: flex;
     justify-content: space-between;
     position: relative;
@@ -1271,11 +1279,11 @@ body {
 .stepper-container::before {
     content: '';
     position: absolute;
-    top: 20px;
-    left: 40px;
-    right: 40px;
-    height: 2px;
-    background: #1e293b;
+    top: 35px;
+    left: 48px;
+    right: 48px;
+    height: 3px;
+    background: #e2e8f0;
     z-index: 1;
 }
 
@@ -1290,46 +1298,47 @@ body {
 }
 
 .node-circle {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    background: #0f172a;
-    border: 2px solid #334155;
-    color: #94a3b8;
+    background: #f8fafc;
+    border: 2.5px solid #cbd5e1;
+    color: #475569;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: bold;
-    font-size: 0.95em;
+    font-weight: 800;
+    font-size: 1.05em;
     transition: all 0.3s ease;
 }
 
 .node-label {
-    font-size: 0.82em;
-    color: #94a3b8;
-    font-weight: 500;
+    font-size: 0.88em;
+    color: #475569;
+    font-weight: 700;
 }
 
 .stepper-node.active .node-circle {
-    border-color: var(--primary-gold);
-    background: var(--primary-gold);
-    color: #0a0e14;
-    box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+    border-color: #0284c7;
+    background: #0284c7;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
 }
 
 .stepper-node.active .node-label {
-    color: var(--primary-gold);
-    font-weight: bold;
+    color: #0369a1;
+    font-weight: 800;
 }
 
 .stepper-node.completed .node-circle {
-    border-color: var(--accent-emerald);
-    background: var(--accent-emerald);
+    border-color: #059669;
+    background: #059669;
     color: #ffffff;
 }
 
 .stepper-node.completed .node-label {
-    color: #6ee7b7;
+    color: #047857;
+    font-weight: 800;
 }
 
 .stepper-node.completed,
@@ -1340,13 +1349,13 @@ body {
 
 .stepper-node.completed:hover .node-circle,
 .stepper-node.unlocked:hover .node-circle {
-    transform: scale(1.1);
-    box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
 }
 
 .stepper-node.locked {
     cursor: not-allowed;
-    opacity: 0.55;
+    opacity: 0.65;
 }
 
 /* Expansive Full-Width Layout */
@@ -1358,15 +1367,15 @@ body {
 
 /* Anatomy Section & Hotspots */
 .anatomy-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-gold-subtle);
-    border-radius: 16px;
-    padding: 30px;
-    box-shadow: var(--shadow-gold-glow);
+    background: #ffffff;
+    border: 2px solid #bae6fd;
+    border-radius: 18px;
+    padding: 28px;
+    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
     display: grid;
-    grid-template-columns: 1.1fr 1.3fr;
-    gap: 35px;
-    align-items: center;
+    grid-template-columns: 1.05fr 1.35fr;
+    gap: 32px;
+    align-items: start;
 }
 
 @media (max-width: 860px) {
@@ -1383,24 +1392,26 @@ body {
 }
 
 .btn-view-toggle {
-    background: #1e293b;
-    border: 1px solid #334155;
-    color: #94a3b8;
-    padding: 9px 22px;
-    border-radius: 8px;
-    font-weight: bold;
+    background: #f0f9ff;
+    border: 2px solid #7dd3fc;
+    color: #0369a1;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 1em;
+    font-weight: 800;
     cursor: pointer;
     transition: 0.2s;
 }
 
 .btn-view-toggle.active {
-    background: var(--primary-gold);
-    color: #0a0e14;
-    border-color: var(--primary-gold);
+    background: #0284c7;
+    color: #ffffff;
+    border-color: #0369a1;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.28);
 }
 
 .anatomy-form-col {
-    padding: 30px;
+    padding: 16px;
 }
 
 .skeleton-viewport {
@@ -1420,10 +1431,11 @@ body {
     width: 100% !important;
     max-width: 380px !important;
     margin: 0 auto !important;
-    background: #090e17 !important;
-    border-radius: 14px !important;
+    background: #0f172a !important;
+    border-radius: 16px !important;
     padding: 15px !important;
-    border: 1px solid rgba(212, 175, 55, 0.4) !important;
+    border: 2.5px solid #0284c7 !important;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14) !important;
     box-sizing: border-box !important;
     user-select: none !important;
     height: auto !important;
@@ -1448,18 +1460,18 @@ body {
     aspect-ratio: unset !important;
 }
 
-/* Vivid Red/Gold High-Visibility Hotspots */
+/* Vivid Red/Emerald High-Visibility Senior-Friendly Hotspots */
 .anatomy-hotspot {
     position: absolute;
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    background: radial-gradient(circle, #ef4444 20%, #b91c1c 80%);
-    border: 2px solid #ffffff;
+    background: radial-gradient(circle, #ef4444 25%, #dc2626 85%);
+    border: 2.5px solid #ffffff;
     transform: translate(-50%, -50%);
     cursor: pointer;
     z-index: 100;
-    box-shadow: 0 0 10px rgba(239, 68, 68, 0.8), 0 0 16px rgba(212, 175, 55, 0.5);
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.9), 0 0 18px rgba(2, 132, 199, 0.5);
     transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     animation: pulseHotspot 2.2s infinite ease-in-out;
     will-change: transform;
@@ -1467,31 +1479,31 @@ body {
 
 .anatomy-hotspot:hover {
     transform: translate(-50%, -50%) scale(1.35);
-    background: #f59e0b;
-    box-shadow: 0 0 20px #f59e0b;
+    background: #0284c7;
+    box-shadow: 0 0 20px #0284c7;
 }
 
 .anatomy-hotspot.active {
-    background: radial-gradient(circle, #10b981 30%, #047857 100%);
+    background: radial-gradient(circle, #10b981 30%, #059669 100%);
     border-color: #ffffff;
-    box-shadow: 0 0 22px #10b981;
-    transform: translate(-50%, -50%) scale(1.3);
+    box-shadow: 0 0 24px #10b981;
+    transform: translate(-50%, -50%) scale(1.35);
     animation: none;
 }
 
 @keyframes pulseHotspot {
     0% { transform: translate(-50%, -50%) scale(1); }
-    50% { transform: translate(-50%, -50%) scale(1.15); }
+    50% { transform: translate(-50%, -50%) scale(1.16); }
     100% { transform: translate(-50%, -50%) scale(1); }
 }
 
-/* التمييز الفاخر لكرت خطة التعافي المجانية */
+/* التمييز الطبي النهاري لكرت خطة التعافي */
 .recovery-plan-distinct-card {
     position: relative;
-    background: radial-gradient(ellipse at top, #0f2723 0%, #0c1a2c 50%, #070c14 100%) !important;
-    border: 2.5px solid #10b981 !important;
+    background: #ffffff !important;
+    border: 2.5px solid #0d9488 !important;
     border-radius: 18px !important;
-    box-shadow: 0 0 35px rgba(16, 185, 129, 0.3), 0 0 15px rgba(212, 175, 55, 0.25), 0 10px 40px rgba(0, 0, 0, 0.8) !important;
+    box-shadow: 0 8px 30px rgba(13, 148, 136, 0.14) !important;
     transition: all 0.3s ease;
     overflow: hidden;
 }
@@ -1853,15 +1865,16 @@ body {
 }
 
 .modal-inner {
-    background: #111827;
-    border: 1px solid var(--primary-gold);
-    border-radius: 16px;
+    background: #ffffff;
+    border: 2px solid #0284c7;
+    border-radius: 18px;
     max-width: 950px;
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
     padding: 25px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
+    color: #0f172a;
 }
 
 /* Matrix Table */
@@ -1869,23 +1882,25 @@ body {
     width: 100%;
     border-collapse: collapse;
     margin-top: 15px;
-    font-size: 0.9em;
+    font-size: 0.94em;
+    background: #ffffff;
 }
 
 .comparison-table th, .comparison-table td {
     padding: 12px 14px;
-    border: 1px solid rgba(212, 175, 55, 0.2);
+    border: 1px solid #cbd5e1;
     text-align: right;
+    color: #0f172a;
 }
 
 .comparison-table th {
-    background: #1e293b;
-    color: var(--primary-gold);
-    font-weight: bold;
+    background: #f0f9ff;
+    color: #0369a1;
+    font-weight: 800;
 }
 
 .comparison-table tr:nth-child(even) {
-    background: rgba(30, 41, 59, 0.4);
+    background: #f8fafc;
 }
 
 /* Print Optimization */
@@ -2082,13 +2097,13 @@ body {
 .world-first-prestige-showcase {
     display: flex;
     align-items: center;
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(8, 12, 20, 0.98) 50%, rgba(6, 78, 59, 0.35) 100%);
-    border: 1.5px solid rgba(212, 175, 55, 0.45);
+    background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 60%, #f0fdf4 100%);
+    border: 2px solid #bae6fd;
     border-radius: 18px;
     padding: 18px 26px;
     margin-bottom: 22px;
     gap: 26px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(254, 240, 138, 0.25), 0 0 25px rgba(212, 175, 55, 0.15);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
     position: relative;
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -2101,13 +2116,13 @@ body {
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle at 30% 30%, rgba(212, 175, 55, 0.08) 0%, transparent 60%);
+    background: radial-gradient(circle at 30% 30%, rgba(2, 132, 199, 0.05) 0%, transparent 60%);
     pointer-events: none;
 }
 
 .world-first-prestige-showcase:hover {
-    border-color: rgba(212, 175, 55, 0.75);
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65), 0 0 32px rgba(212, 175, 55, 0.25);
+    border-color: #0284c7;
+    box-shadow: 0 10px 28px rgba(2, 132, 199, 0.12);
 }
 
 .prestige-medal-col {
@@ -2203,15 +2218,14 @@ body {
     align-items: center;
     align-self: flex-start;
     gap: 7px;
-    background: rgba(212, 175, 55, 0.16);
-    border: 1px solid rgba(212, 175, 55, 0.45);
-    color: #fef08a;
-    font-size: 0.82em;
+    background: #e0f2fe;
+    border: 1.5px solid #0284c7;
+    color: #0369a1;
+    font-size: 0.85em;
     font-weight: 800;
-    padding: 4px 14px;
+    padding: 5px 14px;
     border-radius: 20px;
     margin-bottom: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .prestige-sparkle {
@@ -2225,26 +2239,22 @@ body {
 }
 
 .prestige-heading {
-    color: #ffffff;
+    color: #0f172a;
     font-size: 1.38em;
     font-weight: 900;
     margin: 0 0 8px 0;
     line-height: 1.35;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
 }
 
 .gold-text-gradient {
-    background: linear-gradient(135deg, #fff59d 0%, #fef08a 40%, #d4af37 80%, #eab308 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 2px 6px rgba(212, 175, 55, 0.4));
+    color: #0284c7;
     font-weight: 900;
 }
 
 .prestige-desc {
-    color: #cbd5e1;
-    font-size: 0.93em;
-    line-height: 1.68;
+    color: #334155;
+    font-size: 0.96em;
+    line-height: 1.7;
     margin: 0 0 14px 0;
 }
 
@@ -2258,20 +2268,20 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    background: rgba(15, 23, 42, 0.8);
-    border: 1px solid rgba(212, 175, 55, 0.3);
-    padding: 6px 13px;
+    background: #ffffff;
+    border: 1.5px solid #bae6fd;
+    padding: 7px 14px;
     border-radius: 20px;
-    font-size: 0.84em;
-    color: #f1f5f9;
-    font-weight: 700;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    font-size: 0.88em;
+    color: #0f172a;
+    font-weight: 800;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
     transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .prestige-highlight-item:hover {
-    background: rgba(212, 175, 55, 0.2);
-    border-color: var(--primary-gold);
+    background: #f0f9ff;
+    border-color: #0284c7;
 }
 
 .highlight-icon {
@@ -2658,9 +2668,9 @@ body {
     unicode-bidi: isolate !important;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
     font-weight: 700 !important;
-    color: #38bdf8 !important;
-    background: rgba(56, 189, 248, 0.12) !important;
-    border: 1px solid rgba(56, 189, 248, 0.28) !important;
+    color: #0369a1 !important;
+    background: #e0f2fe !important;
+    border: 1px solid #7dd3fc !important;
     border-radius: 6px !important;
     padding: 1px 7px !important;
     margin: 0 3px !important;
@@ -2676,15 +2686,15 @@ body {
     unicode-bidi: isolate !important;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
     font-size: 0.92em !important;
-    color: #38bdf8 !important;
+    color: #0284c7 !important;
     margin: 0 2px !important;
 }
 
 /* ================= AI Clinical Insight Formatted Typography ================= */
 .ai-insight-formatted-content {
-    color: #e2e8f0;
-    font-size: 0.95em;
-    line-height: 1.8;
+    color: #0f172a;
+    font-size: 1em;
+    line-height: 1.85;
     direction: rtl !important;
     text-align: right !important;
     text-justify: none !important;
@@ -2693,9 +2703,9 @@ body {
 }
 
 .ai-report-paragraph {
-    color: #cbd5e1;
-    font-size: 0.94em;
-    line-height: 1.8;
+    color: #1e293b;
+    font-size: 1em;
+    line-height: 1.85;
     margin: 0 0 12px 0;
     direction: rtl !important;
     text-align: right !important;
@@ -2706,29 +2716,29 @@ body {
 }
 
 .ai-report-mainheading {
-    color: var(--primary-gold);
+    color: #0369a1;
     margin: 18px 0 10px 0;
-    font-size: 1.15em;
+    font-size: 1.18em;
     font-weight: 900;
     text-align: right !important;
     direction: rtl !important;
-    border-right: 3px solid var(--primary-gold);
+    border-right: 4px solid #0284c7;
     padding-right: 10px;
 }
 
 .ai-report-subheading {
-    color: #fef08a;
+    color: #0f766e;
     margin: 14px 0 8px 0;
-    font-size: 1.02em;
+    font-size: 1.06em;
     font-weight: 800;
     text-align: right !important;
     direction: rtl !important;
-    border-right: 2.5px solid #38bdf8;
+    border-right: 3px solid #0d9488;
     padding-right: 8px;
 }
 
 .ai-bold-highlight {
-    color: #38bdf8;
+    color: #0369a1;
     font-weight: 800;
 }
 
@@ -2747,9 +2757,9 @@ body {
 .ai-styled-list li,
 .ai-styled-num-list li {
     margin-bottom: 8px;
-    color: #e2e8f0;
-    line-height: 1.75;
-    font-size: 0.93em;
+    color: #1e293b;
+    line-height: 1.8;
+    font-size: 0.98em;
     text-align: right !important;
     text-justify: none !important;
     word-spacing: normal !important;
@@ -2757,11 +2767,11 @@ body {
 }
 
 .ai-styled-list li::marker {
-    color: var(--primary-gold);
+    color: #0284c7;
 }
 
 .ai-styled-num-list li::marker {
-    color: #38bdf8;
+    color: #0d9488;
     font-weight: bold;
 }
 
@@ -3069,12 +3079,12 @@ body {
     left: 0;
     right: 0;
     z-index: 3000010 !important;
-    background: rgba(11, 17, 30, 0.95);
+    background: rgba(255, 255, 255, 0.97);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border-top: 2px solid rgba(212, 175, 55, 0.65);
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.8), 0 -2px 10px rgba(212, 175, 55, 0.2);
-    padding: 10px 16px;
+    border-top: 2.5px solid #0284c7;
+    box-shadow: 0 -6px 24px rgba(15, 23, 42, 0.12);
+    padding: 12px 18px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -3100,16 +3110,15 @@ body {
 }
 
 .sticky-guidance-icon {
-    font-size: 2em;
+    font-size: 2.1em;
     line-height: 1;
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
     animation: stickyIconPulse 2s infinite ease-in-out;
     flex-shrink: 0;
 }
 
 @keyframes stickyIconPulse {
     0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.15); }
+    50% { transform: scale(1.12); }
 }
 
 .sticky-guidance-texts {
@@ -3120,22 +3129,21 @@ body {
 }
 
 .sticky-guidance-sub {
-    font-size: 0.78em;
+    font-size: 0.82em;
     font-weight: 800;
-    color: #d4af37;
+    color: #0369a1;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .sticky-guidance-main {
-    font-size: 0.98em;
+    font-size: 1.02em;
     font-weight: 900;
-    color: #ffffff;
+    color: #0f172a;
     line-height: 1.35;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
 .sticky-guidance-action-btn {
@@ -3143,7 +3151,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    padding: 12px 22px;
+    padding: 12px 24px;
     border-radius: 50px;
     font-size: 1.05em;
     font-weight: 900;
@@ -3153,38 +3161,32 @@ body {
     white-space: nowrap;
     flex-shrink: 0;
     text-decoration: none;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
 }
 
 /* حالة الانتظار والتوجيه للمجسم (قبل الاختيار) */
 .sticky-guidance-action-btn.state-pending {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
-    border-color: rgba(212, 175, 55, 0.6);
-    color: #fef08a;
-    box-shadow: 0 0 15px rgba(212, 175, 55, 0.25);
-    animation: stickyBtnPendingGlow 2.5s infinite alternate;
-}
-
-@keyframes stickyBtnPendingGlow {
-    0% { border-color: rgba(212, 175, 55, 0.4); box-shadow: 0 0 8px rgba(212, 175, 55, 0.15); }
-    100% { border-color: rgba(212, 175, 55, 0.9); box-shadow: 0 0 20px rgba(212, 175, 55, 0.45); }
+    background: #f0f9ff;
+    border-color: #0284c7;
+    color: #0369a1;
+    box-shadow: 0 2px 10px rgba(2, 132, 199, 0.18);
 }
 
 /* حالة الجاهزية التامة (أخضر زمردي برّاق للمتابعة) */
 .sticky-guidance-action-btn.state-ready {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    border-color: #ffffff;
+    background: linear-gradient(135deg, #0d9488 0%, #059669 100%);
+    border-color: #059669;
     color: #ffffff;
-    box-shadow: 0 0 24px rgba(16, 185, 129, 0.65), 0 4px 14px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 4px 18px rgba(5, 150, 105, 0.35);
     animation: stickyBtnReadyPulse 1.6s infinite ease-in-out;
 }
 
-/* حالة التوجيه الذهبي الفخم للبدء بالتمارين أو تحميل الشهادة */
+/* حالة التوجيه الطبي الأزرق للبدء بالتمارين أو تحميل الشهادة */
 .sticky-guidance-action-btn.state-gold {
-    background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
-    border-color: #fef08a;
-    color: #0a0e14;
-    box-shadow: 0 0 24px rgba(212, 175, 55, 0.65), 0 4px 14px rgba(0, 0, 0, 0.6);
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    border-color: #0284c7;
+    color: #ffffff;
+    box-shadow: 0 4px 18px rgba(2, 132, 199, 0.35);
     animation: stickyBtnReadyPulse 1.6s infinite ease-in-out;
 }
 
@@ -3295,23 +3297,23 @@ body {
    أشرطة مسار المرحلة التفاعلية (Stage Flow Banners)
    ========================================================================== */
 .stage-flow-banner {
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.92) 100%);
-    border: 1.5px solid rgba(212, 175, 55, 0.45);
-    border-radius: 14px;
-    padding: 10px 18px;
+    background: #ffffff;
+    border: 2px solid #bae6fd;
+    border-radius: 16px;
+    padding: 12px 20px;
     margin-bottom: 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 12px;
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
 }
 
 .stage-flow-title {
-    color: #fef08a;
+    color: #0369a1;
     font-weight: 800;
-    font-size: 0.92em;
+    font-size: 0.96em;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -3328,34 +3330,33 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
-    background: rgba(15, 23, 42, 0.7);
-    border: 1px solid #334155;
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
     border-radius: 20px;
-    padding: 5px 12px;
-    font-size: 0.82em;
-    font-weight: 700;
-    color: #94a3b8;
+    padding: 6px 14px;
+    font-size: 0.88em;
+    font-weight: 800;
+    color: #475569;
     transition: all 0.3s ease;
 }
 
 .stage-flow-step.active {
-    background: rgba(212, 175, 55, 0.2);
-    border-color: #d4af37;
+    background: #0284c7;
+    border-color: #0369a1;
     color: #ffffff;
-    box-shadow: 0 0 10px rgba(212, 175, 55, 0.35);
-    animation: pulseGoldStep 2s infinite ease-in-out;
+    box-shadow: 0 3px 10px rgba(2, 132, 199, 0.25);
 }
 
 .stage-flow-step.completed {
-    background: rgba(16, 185, 129, 0.2);
+    background: #f0fdf4;
     border-color: #10b981;
-    color: #6ee7b7;
+    color: #047857;
 }
 
 .stage-flow-arrow {
-    color: #d4af37;
+    color: #0284c7;
     font-weight: 900;
-    font-size: 0.9em;
+    font-size: 0.95em;
 }
 
 @keyframes pulseGoldStep {
@@ -3382,7 +3383,7 @@ body {
         font-size: 0.76em;
         padding: 4px 9px;
     }
-}
+}
 
 /* ==========================================================================
    Report Target Beacon Animations
@@ -3446,11 +3447,273 @@ body {
 }
 
 .admin-current-session-badge {
-  background: linear-gradient(135deg, #d4af37 0%, #0284c7 100%) !important;
-  color: #060b13 !important;
-  border: 2px solid #fef08a !important;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  color: #ffffff !important;
+  border: 2px solid #7dd3fc !important;
   font-weight: 900 !important;
   animation: adminActiveSessionPulse 1.8s infinite ease-in-out !important;
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.6) !important;
+  box-shadow: 0 0 15px rgba(2, 132, 199, 0.45) !important;
 }
+
+/* ==========================================================================
+   🏥 نظام التصميم الطبي النهاري الموحد وتسهيل الاستخدام لكبار السن (v33.20)
+   Clean Clinical Daylight & Senior-Friendly Guided UX System
+   ========================================================================== */
+
+/* 1. شبكة الاختيار السريع لمكان الألم بضغطة واحدة (مخصصة لكبار السن والمستخدمين الجدد) */
+.senior-quick-pain-wrapper {
+    background: #f0f9ff;
+    border: 2px solid #0284c7;
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 18px;
+    box-shadow: 0 4px 16px rgba(2, 132, 199, 0.08);
+}
+
+.senior-quick-pain-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.senior-quick-pain-title {
+    color: #0369a1;
+    font-size: 1.12em;
+    font-weight: 900;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.senior-quick-pain-badge {
+    background: #ffffff;
+    border: 1.5px solid #0d9488;
+    color: #0f766e;
+    font-size: 0.82em;
+    font-weight: 800;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.senior-quick-pain-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+    gap: 10px;
+}
+
+.senior-pain-region-btn {
+    background: #ffffff;
+    border: 2px solid #bae6fd;
+    border-radius: 14px;
+    padding: 12px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: right;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+    min-height: 60px;
+    width: 100%;
+    font-family: var(--font-main);
+}
+
+.senior-pain-region-btn:hover {
+    background: #e0f2fe;
+    border-color: #0284c7;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(2, 132, 199, 0.14);
+}
+
+.senior-pain-region-btn.active {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%) !important;
+    border: 2.5px solid #059669 !important;
+    box-shadow: 0 6px 18px rgba(5, 150, 105, 0.22) !important;
+    transform: translateY(-1px);
+}
+
+.senior-pain-region-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #f0f9ff;
+    border: 1.5px solid #bae6fd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35em;
+    flex-shrink: 0;
+}
+
+.senior-pain-region-btn.active .senior-pain-region-icon {
+    background: #059669;
+    border-color: #047857;
+    color: #ffffff;
+}
+
+.senior-pain-region-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.senior-pain-region-name {
+    color: #0f172a;
+    font-size: 0.96em;
+    font-weight: 900;
+    line-height: 1.3;
+}
+
+.senior-pain-region-btn.active .senior-pain-region-name {
+    color: #065f46;
+}
+
+.senior-pain-region-sub {
+    color: #475569;
+    font-size: 0.76em;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.senior-pain-region-btn.active .senior-pain-region-sub {
+    color: #047857;
+}
+
+@media (max-width: 600px) {
+    .senior-quick-pain-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    .senior-pain-region-btn {
+        padding: 10px 8px;
+        min-height: 56px;
+        gap: 8px;
+    }
+    .senior-pain-region-icon {
+        width: 34px;
+        height: 34px;
+        font-size: 1.18em;
+    }
+    .senior-pain-region-name {
+        font-size: 0.86em;
+    }
+    .senior-pain-region-sub {
+        font-size: 0.7em;
+    }
+}
+
+/* 2. زر التحدث الصوتي السريع والاقتراحات الجاهزة في المحادثة السريرية */
+.btn-senior-voice-chat {
+    background: #f0f9ff !important;
+    border: 2px solid #0284c7 !important;
+    color: #0369a1 !important;
+    padding: 12px 16px !important;
+    border-radius: 12px !important;
+    font-weight: 900 !important;
+    font-size: 0.94em !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    white-space: nowrap !important;
+    transition: all 0.2s ease !important;
+    flex-shrink: 0 !important;
+}
+
+.btn-senior-voice-chat:hover,
+.btn-senior-voice-chat.recording-active {
+    background: #0284c7 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3) !important;
+}
+
+.chat-quick-reply-pill {
+    background: #ffffff !important;
+    border: 2px solid #0284c7 !important;
+    color: #0369a1 !important;
+    padding: 10px 16px !important;
+    border-radius: 25px !important;
+    font-size: 0.95em !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.1) !important;
+}
+
+.chat-quick-reply-pill:hover {
+    background: #0284c7 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+}
+
+/* 3. توحيد وتنقية كافة البطاقات والنوافذ في المظهر الطبي النهاري الفاتح */
+.doctor-welcome-presentation-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%) !important;
+    border: 2px solid #bae6fd !important;
+    box-shadow: 0 6px 22px rgba(15, 23, 42, 0.06) !important;
+    color: #0f172a !important;
+}
+
+.international-patients-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%) !important;
+    border: 2px solid #7dd3fc !important;
+    box-shadow: 0 6px 22px rgba(2, 132, 199, 0.08) !important;
+}
+
+.clinical-report-printable,
+.patient-recovery-master-card {
+    background: #ffffff !important;
+    border: 2px solid #bae6fd !important;
+    box-shadow: 0 8px 28px rgba(15, 23, 42, 0.07) !important;
+    color: #0f172a !important;
+}
+
+.clinical-exercise-card {
+    background: #ffffff !important;
+    border: 2px solid #bae6fd !important;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05) !important;
+    color: #0f172a !important;
+}
+
+.btn-plan-royal-card {
+    background: linear-gradient(135deg, #0d9488 0%, #059669 60%, #047857 100%) !important;
+    border: 2.5px solid #34d399 !important;
+    box-shadow: 0 10px 28px rgba(5, 150, 105, 0.28) !important;
+}
+
+.btn-plan-royal-card .royal-badge-pill {
+    background: rgba(255, 255, 255, 0.95) !important;
+    color: #065f46 !important;
+    border-color: #059669 !important;
+}
+
+.btn-plan-royal-card .royal-cta-headline {
+    color: #ffffff !important;
+}
+
+.btn-plan-royal-card .royal-cta-subline {
+    color: #ecfdf5 !important;
+}
+
+.pulse-green-dashed-wrapper {
+    background: #f0fdf4 !important;
+    border: 2px dashed #059669 !important;
+    color: #0f172a !important;
+    box-shadow: 0 4px 16px rgba(5, 150, 105, 0.1) !important;
+}
+
+.royal-clinical-lock-btn {
+    background: #f0f9ff !important;
+    border: 2px solid #0284c7 !important;
+    color: #0f172a !important;
+    box-shadow: 0 6px 20px rgba(2, 132, 199, 0.12) !important;
+}
+
 
