@@ -526,9 +526,9 @@ const ExerciseImageStudio = (function() {
         modalDiv.style.cssText = 'display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(5, 8, 15, 0.88); backdrop-filter: blur(8px); z-index: 100000; align-items: center; justify-content: center; padding: 15px; direction: rtl;';
 
         modalDiv.innerHTML = `
-            <div class="modal-inner" style="background: #0f172a; border: 1.5px solid var(--primary-gold); border-radius: 16px; width: 100%; max-width: 780px; max-height: 92vh; overflow-y: auto; padding: 25px; box-shadow: 0 15px 50px rgba(0,0,0,0.8); color: #e2e8f0;">
+            <div class="modal-inner" style="background: #f8fafc; border: 1.5px solid var(--primary-gold); border-radius: 16px; width: 100%; max-width: 780px; max-height: 92vh; overflow-y: auto; padding: 25px; box-shadow: 0 15px 50px rgba(0,0,0,0.8); color: #e2e8f0;">
                 <!-- Header -->
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(212, 175, 55, 0.25); padding-bottom: 15px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(2, 132, 199, 0.25); padding-bottom: 15px; margin-bottom: 20px;">
                     <div>
                         <h3 id="studio-modal-title" style="color: var(--primary-gold); margin: 0; font-size: 1.25em;">🖼️ تخصيص وتكييف صورة التمرين</h3>
                         <p style="color: #94a3b8; font-size: 0.82em; margin: 4px 0 0 0;">محرك التكييف التلقائي - تكييف أي صورة لتملأ الكادر المخصص للتمرين بالكامل</p>
@@ -543,7 +543,7 @@ const ExerciseImageStudio = (function() {
                         <span id="studio-status-note" style="font-size: 0.78em; color: #94a3b8;">جاهز لتكييف الصورة</span>
                     </div>
 
-                    <div style="display: flex; justify-content: center; background: #080d1a; border-radius: 12px; padding: 16px; border: 1px dashed #334155;">
+                    <div style="display: flex; justify-content: center; background: #f8fafc; border-radius: 12px; padding: 16px; border: 1px dashed #334155;">
                         <div style="position: relative; width: 250px; height: 250px; aspect-ratio: 1 / 1; border-radius: 12px; overflow: hidden; background: #ffffff; border: 2px solid var(--primary-gold); box-shadow: 0 4px 20px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
                             <canvas id="studio-preview-canvas" style="width: 100%; height: 100%; object-fit: contain; display: block;"></canvas>
                         </div>
@@ -551,16 +551,16 @@ const ExerciseImageStudio = (function() {
                 </div>
 
                 <!-- خيارات الحجم والتكييف التلقائي (Auto-Fit Controls) -->
-                <div style="background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                <div style="background: #f8fafc; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
                     <div style="font-size: 0.88em; font-weight: bold; color: #cbd5e1; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
                         <span>⚙️ خيارات التكييف والحجم التلقائي (Auto-Fit):</span>
                     </div>
 
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 15px;">
-                        <button type="button" id="studio-btn-mode-cover" onclick="ExerciseImageStudio.updateFitMode('cover')" style="background: var(--primary-gold); color: #0a0e14; border: 1px solid var(--primary-gold); padding: 9px 12px; border-radius: 8px; font-size: 0.86em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+                        <button type="button" id="studio-btn-mode-cover" onclick="ExerciseImageStudio.updateFitMode('cover')" style="background: var(--primary-gold); color: #ffffff; border: 1px solid var(--primary-gold); padding: 9px 12px; border-radius: 8px; font-size: 0.86em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
                             <span>🔲 ملء كامل الإطار (Auto-Cover)</span>
                         </button>
-                        <button type="button" id="studio-btn-mode-contain" onclick="ExerciseImageStudio.updateFitMode('contain')" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; font-size: 0.86em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+                        <button type="button" id="studio-btn-mode-contain" onclick="ExerciseImageStudio.updateFitMode('contain')" style="background: #f8fafc; color: #cbd5e1; border: 1px solid #334155; padding: 9px 12px; border-radius: 8px; font-size: 0.86em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
                             <span>🔳 احتواء متناسق كامل (Contain)</span>
                         </button>
                     </div>
@@ -572,14 +572,14 @@ const ExerciseImageStudio = (function() {
                             <input type="range" id="studio-zoom-slider" min="0.8" max="2.0" step="0.05" value="1.0" oninput="ExerciseImageStudio.setZoom(this.value)" style="flex: 1; accent-color: var(--primary-gold);">
                         </div>
 
-                        <button type="button" onclick="ExerciseImageStudio.rotateImage90()" style="background: #1e293b; color: #93c5fd; border: 1px solid #3b82f6; padding: 6px 12px; border-radius: 6px; font-size: 0.82em; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                        <button type="button" onclick="ExerciseImageStudio.rotateImage90()" style="background: #f8fafc; color: #93c5fd; border: 1px solid #3b82f6; padding: 6px 12px; border-radius: 6px; font-size: 0.82em; cursor: pointer; display: flex; align-items: center; gap: 4px;">
                             🔄 تدوير 90°
                         </button>
 
                         <div style="display: flex; align-items: center; gap: 6px;">
                             <span style="font-size: 0.82em; color: #94a3b8;">الخلفية:</span>
                             <button type="button" onclick="ExerciseImageStudio.setBgColor('#ffffff')" title="أبيض طبي" style="width: 22px; height: 22px; border-radius: 4px; background: #ffffff; border: 1px solid #94a3b8; cursor: pointer;"></button>
-                            <button type="button" onclick="ExerciseImageStudio.setBgColor('#0f172a')" title="داكن طبي" style="width: 22px; height: 22px; border-radius: 4px; background: #0f172a; border: 1px solid #334155; cursor: pointer;"></button>
+                            <button type="button" onclick="ExerciseImageStudio.setBgColor('#0f172a')" title="داكن طبي" style="width: 22px; height: 22px; border-radius: 4px; background: #f8fafc; border: 1px solid #334155; cursor: pointer;"></button>
                         </div>
                     </div>
                 </div>
@@ -588,7 +588,7 @@ const ExerciseImageStudio = (function() {
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 25px;">
                     <!-- خيار 1: سحب وإفلات أو تصفح ملف -->
                     <div id="studio-dropzone" 
-                         ondragover="event.preventDefault(); this.style.borderColor='var(--primary-gold)'; this.style.background='rgba(212,175,55,0.08)';"
+                         ondragover="event.preventDefault(); this.style.borderColor='var(--primary-gold)'; this.style.background='rgba(2, 132, 199, 0.08)';"
                          ondragleave="event.preventDefault(); this.style.borderColor='#334155'; this.style.background='transparent';"
                          ondrop="event.preventDefault(); this.style.borderColor='#334155'; this.style.background='transparent'; if(event.dataTransfer.files.length) ExerciseImageStudio.handleFileSelect(event.dataTransfer.files[0]);"
                          style="border: 2px dashed #334155; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s;"
@@ -600,12 +600,12 @@ const ExerciseImageStudio = (function() {
                     </div>
 
                     <!-- خيار 2: رابط صورة مباشر أو لصق من الحافظة -->
-                    <div style="background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div style="background: #f8fafc; border: 1px solid #1e293b; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
                         <div>
                             <label style="font-size: 0.85em; color: #cbd5e1; display: block; margin-bottom: 6px; font-weight: bold;">🔗 أو الصق رابط صورة مباشرة (URL):</label>
                             <div style="display: flex; gap: 6px;">
-                                <input type="url" id="studio-url-input" placeholder="https://example.com/image.jpg" style="flex: 1; background: #0b1120; border: 1px solid #334155; border-radius: 6px; padding: 8px 10px; color: #fff; font-size: 0.84em;">
-                                <button type="button" onclick="ExerciseImageStudio.loadFromUrlInput()" style="background: #1e293b; color: var(--primary-gold); border: 1px solid var(--primary-gold); padding: 8px 14px; border-radius: 6px; font-size: 0.84em; font-weight: bold; cursor: pointer;">تحميل</button>
+                                <input type="url" id="studio-url-input" placeholder="https://example.com/image.jpg" style="flex: 1; background: #f8fafc; border: 1px solid #334155; border-radius: 6px; padding: 8px 10px; color: #fff; font-size: 0.84em;">
+                                <button type="button" onclick="ExerciseImageStudio.loadFromUrlInput()" style="background: #f8fafc; color: var(--primary-gold); border: 1px solid var(--primary-gold); padding: 8px 14px; border-radius: 6px; font-size: 0.84em; font-weight: bold; cursor: pointer;">تحميل</button>
                             </div>
                         </div>
                         <div style="margin-top: 10px; background: rgba(56, 189, 248, 0.08); border: 1px dashed #38bdf8; border-radius: 6px; padding: 7px 10px; font-size: 0.78em; color: #7dd3fc; display: flex; align-items: center; gap: 6px;">
@@ -616,16 +616,16 @@ const ExerciseImageStudio = (function() {
                 </div>
 
                 <!-- Footer Actions -->
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-top: 1px solid rgba(212, 175, 55, 0.2); padding-top: 18px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-top: 1px solid rgba(2, 132, 199, 0.2); padding-top: 18px;">
                     <button type="button" onclick="ExerciseImageStudio.resetCurrentExerciseImage()" style="background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid #ef4444; padding: 10px 16px; border-radius: 8px; font-size: 0.88em; cursor: pointer; display: flex; align-items: center; gap: 6px;">
                         🔄 استعادة الرسم الأصلي
                     </button>
 
                     <div style="display: flex; gap: 10px;">
-                        <button type="button" onclick="ExerciseImageStudio.closeModal()" style="background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 10px 18px; border-radius: 8px; font-size: 0.9em; cursor: pointer;">
+                        <button type="button" onclick="ExerciseImageStudio.closeModal()" style="background: #f8fafc; color: #cbd5e1; border: 1px solid #334155; padding: 10px 18px; border-radius: 8px; font-size: 0.9em; cursor: pointer;">
                             إلغاء
                         </button>
-                        <button type="button" id="studio-btn-save" onclick="ExerciseImageStudio.applyAndSave()" style="background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%); color: #0a0e14; border: none; padding: 10px 24px; border-radius: 8px; font-weight: bold; font-size: 0.95em; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);">
+                        <button type="button" id="studio-btn-save" onclick="ExerciseImageStudio.applyAndSave()" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: none; padding: 10px 24px; border-radius: 8px; font-weight: bold; font-size: 0.95em; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);">
                             💾 حفظ وتطبيق الصورة في الكرت
                         </button>
                     </div>
@@ -685,11 +685,11 @@ const ExerciseImageStudio = (function() {
             const fitMode = (isCustom && customData.fitMode) ? customData.fitMode : 'contain';
 
             return `
-                <div style="background: #111827; border: 1px solid ${isCustom ? '#10b981' : 'rgba(212, 175, 55, 0.3)'}; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                <div style="background: #f8fafc; border: 1px solid ${isCustom ? '#10b981' : 'rgba(2, 132, 199, 0.3)'}; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
                     <div>
-                        <div style="position: relative; width: 100%; height: 140px; border-radius: 8px; overflow: hidden; background: #ffffff; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(212, 175, 55, 0.25);">
+                        <div style="position: relative; width: 100%; height: 140px; border-radius: 8px; overflow: hidden; background: #ffffff; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(2, 132, 199, 0.25);">
                             <img src="${imgUrl}" alt="${ex.name}" style="width: 100%; height: 100%; object-fit: ${fitMode}; display: block;">
-                            <span style="position: absolute; top: 6px; right: 6px; font-size: 0.72em; padding: 2px 6px; border-radius: 4px; font-weight: bold; ${isCustom ? 'background: rgba(16, 185, 129, 0.9); color: #fff;' : 'background: rgba(15, 23, 42, 0.85); color: var(--primary-gold); border: 1px solid rgba(212, 175, 55, 0.3);'}">
+                            <span style="position: absolute; top: 6px; right: 6px; font-size: 0.72em; padding: 2px 6px; border-radius: 4px; font-weight: bold; ${isCustom ? 'background: rgba(16, 185, 129, 0.9); color: #fff;' : 'background: rgba(15, 23, 42, 0.85); color: var(--primary-gold); border: 1px solid rgba(2, 132, 199, 0.3);'}">
                                 ${isCustom ? '✨ مخصصة' : 'أصلية'}
                             </span>
                         </div>
@@ -699,7 +699,7 @@ const ExerciseImageStudio = (function() {
                     </div>
 
                     <div style="display: flex; gap: 6px;">
-                        <button type="button" onclick="ExerciseImageStudio.openModal('${ex.id}', '${ex.visualType}', '${ex.name.replace(/'/g, "\\'")}')" style="flex: 1; background: var(--primary-gold); color: #0a0e14; border: none; padding: 7px 10px; border-radius: 6px; font-size: 0.82em; font-weight: bold; cursor: pointer;">
+                        <button type="button" onclick="ExerciseImageStudio.openModal('${ex.id}', '${ex.visualType}', '${ex.name.replace(/'/g, "\\'")}')" style="flex: 1; background: var(--primary-gold); color: #ffffff; border: none; padding: 7px 10px; border-radius: 6px; font-size: 0.82em; font-weight: bold; cursor: pointer;">
                             📷 تغيير الصورة
                         </button>
                         ${isCustom ? `
@@ -722,9 +722,9 @@ const ExerciseImageStudio = (function() {
         modalDiv.style.cssText = 'display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(5, 8, 15, 0.9); backdrop-filter: blur(8px); z-index: 99999; align-items: center; justify-content: center; padding: 15px; direction: rtl;';
 
         modalDiv.innerHTML = `
-            <div class="modal-inner" style="background: #0f172a; border: 1.5px solid var(--primary-gold); border-radius: 16px; width: 100%; max-width: 1150px; max-height: 94vh; overflow-y: auto; padding: 25px; box-shadow: 0 15px 50px rgba(0,0,0,0.8); color: #e2e8f0;">
+            <div class="modal-inner" style="background: #f8fafc; border: 1.5px solid var(--primary-gold); border-radius: 16px; width: 100%; max-width: 1150px; max-height: 94vh; overflow-y: auto; padding: 25px; box-shadow: 0 15px 50px rgba(0,0,0,0.8); color: #e2e8f0;">
                 <!-- Header -->
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid rgba(212, 175, 55, 0.25); padding-bottom: 15px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid rgba(2, 132, 199, 0.25); padding-bottom: 15px; margin-bottom: 20px;">
                     <div>
                         <h2 style="color: var(--primary-gold); margin: 0; font-size: 1.4em;">🖼️ مدير واستوديو صور مكتبة التمارين</h2>
                         <div style="color: #94a3b8; font-size: 0.84em; margin-top: 4px;">
@@ -749,9 +749,9 @@ const ExerciseImageStudio = (function() {
 
                 <!-- البحث والتصفية -->
                 <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
-                    <input type="text" id="gallery-manager-search" placeholder="🔍 ابحث عن تمرين بالاسم أو المنطقة..." oninput="ExerciseImageStudio.handleSearchInput(this.value)" style="flex: 1; min-width: 240px; background: #111827; border: 1px solid #334155; border-radius: 8px; padding: 10px 14px; color: #fff; font-size: 0.88em;">
+                    <input type="text" id="gallery-manager-search" placeholder="🔍 ابحث عن تمرين بالاسم أو المنطقة..." oninput="ExerciseImageStudio.handleSearchInput(this.value)" style="flex: 1; min-width: 240px; background: #f8fafc; border: 1px solid #334155; border-radius: 8px; padding: 10px 14px; color: #fff; font-size: 0.88em;">
                     
-                    <select id="gallery-manager-category-select" onchange="ExerciseImageStudio.handleCategorySelect(this.value)" style="background: #111827; border: 1px solid #334155; border-radius: 8px; padding: 10px 14px; color: var(--primary-gold); font-size: 0.88em; cursor: pointer;">
+                    <select id="gallery-manager-category-select" onchange="ExerciseImageStudio.handleCategorySelect(this.value)" style="background: #f8fafc; border: 1px solid #334155; border-radius: 8px; padding: 10px 14px; color: var(--primary-gold); font-size: 0.88em; cursor: pointer;">
                         <option value="all">🌟 كافة المناطق (الكل)</option>
                         <option value="cervical">الرقبة والرأس</option>
                         <option value="jaw">مفصل الفك (TMJ)</option>

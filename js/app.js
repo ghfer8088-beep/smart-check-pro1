@@ -9,6 +9,151 @@
     return true;
 })();
 
+// ==========================================================================
+// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي (Medical SVG Icon & Contrast Engine v33.25)
+// يحول كافة الأيقونات التفاعلية إلى أيقونات SVG طبية حديثة موحدة اللون (currentColor) دون أي تشتت لوني
+// ==========================================================================
+(function initMedicalSvgIconAndContrastEngine() {
+    const P = {
+        stethoscope: '<path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/>',
+        doctor: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/>',
+        folder: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>',
+        clipboard: '<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14h6"/><path d="M9 10h6"/>',
+        refresh: '<path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/>',
+        chat: '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',
+        phone: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+        support: '<path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>',
+        sparkle: '<path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>',
+        scan: '<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="12" y1="7" x2="12" y2="17"/>',
+        video: '<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>',
+        book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+        info: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+        share: '<rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>',
+        pulse: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+        edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>',
+        shieldCheck: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>',
+        mic: '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
+        volume: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>',
+        arrowLeft: '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+        user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+        target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+        clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+        alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+        checkCircle: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+        lock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+        unlock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>',
+        award: '<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>',
+        home: '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'
+    };
+
+    const MAP = {
+        '🩺': P.stethoscope, '👩‍⚕️': P.doctor, '👨‍⚕️': P.doctor, '🏥': P.stethoscope,
+        '📁': P.folder, '📂': P.folder, '📋': P.clipboard, '📄': P.clipboard, '📑': P.clipboard, '📝': P.edit,
+        '🔄': P.refresh, '💬': P.chat, '📞': P.phone, '📱': P.share, '📲': P.share,
+        '🛠️': P.support, '🎧': P.support, '⚙️': P.support,
+        '✨': P.sparkle, '🌟': P.sparkle, '⭐': P.sparkle,
+        '🩻': P.scan, '🦴': P.scan, '🧬': P.pulse, '🧠': P.pulse, '🦶': P.pulse, '📐': P.scan, '🦵': P.scan, '🦒': P.scan, '🦾': P.pulse,
+        '📹': P.video, '🎬': P.video, '📚': P.book, '📖': P.book,
+        '💡': P.info, 'ℹ️': P.info, '🧭': P.target, '⚡': P.pulse, '✏️': P.edit, '✍️': P.edit,
+        '🌿': P.shieldCheck, '🌱': P.shieldCheck, '🤲': P.shieldCheck, '🛡️': P.shieldCheck,
+        '🎤': P.mic, '🎙️': P.mic, '🔊': P.volume, '🔔': P.volume, '🔕': P.volume,
+        '⬅️': P.arrowLeft, '➔': P.arrowLeft, '⏭️': P.arrowLeft, '👇': P.arrowLeft, '👆': P.arrowLeft,
+        '👤': P.user, '👨': P.user, '👩': P.user, '👨‍👩‍👧‍👦': P.user,
+        '🎯': P.target, '🔍': P.target, '📍': P.target,
+        '⏳': P.clock, '⏱️': P.clock, '⏰': P.clock, '📅': P.clock,
+        '⚠️': P.alert, '🛑': P.alert, '🔴': P.alert, '🟡': P.info, '🟢': P.checkCircle, '🔵': P.info,
+        '✅': P.checkCircle, '☑️': P.checkCircle,
+        '🔒': P.lock, '🔓': P.unlock, '🔑': P.lock,
+        '🏆': P.award, '👑': P.award, '🎓': P.award, '🎁': P.award, '🎉': P.sparkle,
+        '🏋️': P.pulse, '💪': P.pulse, '🚀': P.pulse, '📈': P.pulse, '📊': P.pulse,
+        '⚖️': P.info, '🎂': P.user, '📏': P.scan, '⚧': P.user, '🕌': P.shieldCheck, '🌙': P.clock, '💼': P.folder, '💳': P.clipboard, '🏠': P.home,
+        '🫁': P.pulse, '💧': P.shieldCheck
+    };
+
+    const EMOJI_KEYS = Object.keys(MAP).sort((a, b) => b.length - a.length);
+    const EMOJI_REGEX = new RegExp('(' + EMOJI_KEYS.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')', 'g');
+    const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'OPTION', 'INPUT', 'SVG', 'TITLE']);
+
+    function createSvgNode(pathsHtml) {
+        const span = document.createElement('span');
+        span.innerHTML = `<svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${pathsHtml}</svg>`;
+        return span.firstChild;
+    }
+
+    let isRunning = false;
+    function processNode(root) {
+        if (!root || isRunning) return;
+        isRunning = true;
+        try {
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+                acceptNode(node) {
+                    const p = node.parentElement;
+                    if (!p || SKIP_TAGS.has(p.tagName) || p.closest('svg, script, style, textarea, option')) {
+                        return NodeFilter.FILTER_REJECT;
+                    }
+                    return EMOJI_REGEX.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+                }
+            });
+
+            const textNodes = [];
+            let cur;
+            while ((cur = walker.nextNode())) textNodes.push(cur);
+
+            textNodes.forEach(tNode => {
+                const text = tNode.nodeValue;
+                EMOJI_REGEX.lastIndex = 0;
+                const parts = text.split(EMOJI_REGEX);
+                if (parts.length <= 1) return;
+                const frag = document.createDocumentFragment();
+                parts.forEach(part => {
+                    if (!part) return;
+                    if (MAP[part]) {
+                        frag.appendChild(createSvgNode(MAP[part]));
+                    } else {
+                        frag.appendChild(document.createTextNode(part));
+                    }
+                });
+                if (tNode.parentNode) {
+                    tNode.parentNode.replaceChild(frag, tNode);
+                }
+            });
+        } catch (e) {}
+        isRunning = false;
+    }
+
+    if (typeof document !== 'undefined') {
+        const startObserver = () => {
+            processNode(document.body);
+            const obs = new MutationObserver(mutations => {
+                if (isRunning) return;
+                for (let i = 0; i < mutations.length; i++) {
+                    const m = mutations[i];
+                    if (m.type === 'characterData' && m.target) {
+                        const p = m.target.parentElement;
+                        if (p && !SKIP_TAGS.has(p.tagName)) processNode(p);
+                    } else if (m.addedNodes && m.addedNodes.length) {
+                        for (let j = 0; j < m.addedNodes.length; j++) {
+                            const n = m.addedNodes[j];
+                            if (n.nodeType === 1 && !SKIP_TAGS.has(n.tagName)) {
+                                processNode(n);
+                            } else if (n.nodeType === 3 && n.parentElement && !SKIP_TAGS.has(n.parentElement.tagName)) {
+                                processNode(n.parentElement);
+                            }
+                        }
+                    }
+                }
+            });
+            obs.observe(document.body, { childList: true, subtree: true, characterData: true });
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', startObserver);
+        } else {
+            startObserver();
+        }
+    }
+})();
+
 let currentSelectedPoint = null;
 let currentAssessmentData = null;
 let activePatient = null;
@@ -533,7 +678,7 @@ function renderSpecializedConsultationReferralCard(patientData) {
 
             <!-- زر الواتساب المباشر -->
             <div style="text-align: center;">
-                <a href="${waUrl}" target="_blank" class="btn-whatsapp-cta" style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 28px; border-radius: 50px; font-size: 1.05em; font-weight: 900; background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); color: #fff; text-decoration: none; box-shadow: 0 6px 25px rgba(37, 211, 102, 0.45); border: 1.5px solid #a7f3d0; cursor: pointer;">
+                <a href="${waUrl}" target="_blank" class="btn-whatsapp-cta" style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 28px; border-radius: 50px; font-size: 1.05em; font-weight: 900; background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); color: #ffffff; text-decoration: none; box-shadow: 0 6px 25px rgba(37, 211, 102, 0.45); border: 1.5px solid #a7f3d0; cursor: pointer;">
                     <span style="font-size: 1.3em;">💬</span>
                     <span>إرسال التقرير للمعالج جمال قبها مباشرة عبر واتساب</span>
                     <span>➔</span>
@@ -741,21 +886,9 @@ function selectAnatomyPoint(point, element) {
     
     const statusText = document.getElementById('selected-point-label');
     if (statusText) {
-        statusText.textContent = `✅ تم تحديد: ${point.title}`;
+        statusText.textContent = `تم تحديد: ${point.title}`;
         statusText.style.color = '#047857';
     }
-
-    // مزامنة أزرار الاختيار السريع لكبار السن مع النقطة المختارة
-    try {
-        document.querySelectorAll('.senior-pain-region-btn').forEach(btn => {
-            const bId = btn.getAttribute('data-point-id');
-            if (bId === point.id) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
-    } catch (e) {}
 
     renderAdaptiveQuestions(point.id);
     
@@ -788,36 +921,11 @@ function selectAnatomyPoint(point, element) {
     }
 }
 
-// دالة الاختيار السريع بضغطة واحدة لكبار السن والمستخدمين الجدد
-window.selectSeniorQuickPainRegion = function(pointId, view, btnEl) {
-    const targetView = view || 'back';
-    if (typeof switchAnatomyView === 'function') {
-        switchAnatomyView(targetView);
-    }
-    const list = targetView === 'front' ? frontPoints : backPoints;
-    const pt = Array.isArray(list) ? list.find(p => p.id === pointId) : null;
-    if (pt) {
-        const containerId = targetView === 'front' ? 'front-anatomy-container' : 'back-anatomy-container';
-        const hotspotEl = document.querySelector(`#${containerId} .anatomy-hotspot[data-point-id="${pointId}"]`);
-        selectAnatomyPoint(pt, hotspotEl);
-        if (btnEl && btnEl.classList) {
-            document.querySelectorAll('.senior-pain-region-btn').forEach(b => b.classList.remove('active'));
-            btnEl.classList.add('active');
-        }
-        const proceedBtn = document.getElementById('btn-goto-step2');
-        if (proceedBtn) {
-            try {
-                proceedBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            } catch (e) {}
-        }
-    }
-};
-
 window.handleStep1ProceedClick = function() {
     if (!currentSelectedPoint) {
         if (typeof SmartGuidance !== 'undefined' && typeof SmartGuidance.pointTo === 'function') {
-            const quickGrid = document.getElementById('senior-quick-pain-grid') || document.querySelector('.skeleton-viewport') || document.querySelector('.anatomy-card');
-            SmartGuidance.pointTo(quickGrid, 'يا غالي، اختر أولاً مكان ألمك بضغطة واحدة من القائمة أو من المجسم لنبدأ معك 👇', {
+            const viewport = document.querySelector('.skeleton-viewport') || document.querySelector('.anatomy-card');
+            SmartGuidance.pointTo(viewport, 'يا غالي، انقر أولاً على موضع ألمك من النقاط المضيئة على المجسم لنبدأ معك', {
                 handIcon: '👇',
                 placement: 'top',
                 autoScroll: true
@@ -1631,10 +1739,10 @@ function showRoyalReportLoadingModal() {
         `;
 
         modal.innerHTML = `
-            <div style="background: linear-gradient(135deg, #0b1320 0%, #16243b 50%, #0d1a2d 100%); border: 2px solid var(--primary-gold, #bae6fd); box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); border-radius: 22px; padding: 36px 28px; max-width: 480px; width: 100%; text-align: center; color: #0f172a; position: relative; overflow: hidden;">
+            <div style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2px solid var(--primary-gold, #bae6fd); box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); border-radius: 22px; padding: 36px 28px; max-width: 480px; width: 100%; text-align: center; color: #0f172a; position: relative; overflow: hidden;">
                 <div style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); pointer-events: none;"></div>
                 
-                <div style="font-size: 3.8rem; margin-bottom: 16px; line-height: 1; display: inline-block; filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.7)); animation: royalHourglassSpin 2.5s cubic-bezier(0.65, 0, 0.35, 1) infinite;">
+                <div style="font-size: 3.8rem; margin-bottom: 16px; line-height: 1; display: inline-block; filter: drop-shadow(0 0 20px rgba(2, 132, 199, 0.7)); animation: royalHourglassSpin 2.5s cubic-bezier(0.65, 0, 0.35, 1) infinite;">
                     ⏳
                 </div>
                 
@@ -1653,7 +1761,7 @@ function showRoyalReportLoadingModal() {
                 </p>
                 
                 <div style="background: #f8fafc; height: 8px; border-radius: 10px; overflow: hidden; border: 1px solid #bae6fd; margin-bottom: 14px; position: relative;">
-                    <div id="royal-loading-bar-inner" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); height: 100%; width: 25%; border-radius: 10px; transition: width 0.35s ease; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);"></div>
+                    <div id="royal-loading-bar-inner" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); height: 100%; width: 25%; border-radius: 10px; transition: width 0.35s ease; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14); color: #ffffff;"></div>
                 </div>
                 
                 <div id="royal-loading-status-text" style="font-size: 0.84rem; color: #0284c7; font-weight: 600; min-height: 20px;">
@@ -2584,7 +2692,7 @@ function getMriConsultationCardHTML() {
                     <div style="color: #0369a1; font-size: 0.82em;">✓ استشارة سريرية وتوجيه دقيق بدون أي التزام مالي مسبق.</div>
                 </div>
                 <div>
-                    <a href="https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent('مرحباً دكتور، لدي صورة/تقرير رنين مغناطيسي (MRI) وأود إرسالها لقراءتها وتحديد خطة العلاج المناسبة لحالتي.')}" target="_blank" style="background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); color: #0a0e14; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.95em; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);">
+                    <a href="https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent('مرحباً دكتور، لدي صورة/تقرير رنين مغناطيسي (MRI) وأود إرسالها لقراءتها وتحديد خطة العلاج المناسبة لحالتي.')}" target="_blank" style="background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.95em; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);">
                         💬 أرسل صورة الرنين للمعالج
                     </a>
                 </div>
@@ -2596,7 +2704,7 @@ function getMriConsultationCardHTML() {
 // محاكي ضغط الفقرات وتفريغ الأعصاب التفاعلي المطور (Advanced 3D Biomechanical Spine Simulator)
 function getInteractiveSpinalSimulatorHTML(painAreaTitle = 'العمود الفقري') {
     return `
-        <details class="no-print spinal-simulator-card" style="background: linear-gradient(135deg, #070d18 0%, #101c2e 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; margin-top: 14px; margin-bottom: 20px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); overflow: hidden;">
+        <details class="no-print spinal-simulator-card" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; margin-top: 14px; margin-bottom: 20px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); overflow: hidden;">
             <summary style="padding: 14px 18px; cursor: pointer; color: var(--primary-gold); font-weight: 800; font-size: 1em; display: flex; align-items: center; justify-content: space-between; list-style: none; user-select: none;">
                 <span style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 1.4em;">🩻</span>
@@ -2631,7 +2739,7 @@ function getInteractiveSpinalSimulatorHTML(painAreaTitle = 'العمود الف�
             </div>
 
             <!-- منطقة المحاكاة البصرية الكبيرة SVG -->
-            <div style="display: flex; justify-content: center; align-items: center; background: radial-gradient(circle at center, #0a1322 0%, #03060c 100%); border-radius: 12px; padding: 8px 4px; border: 1.5px solid #cbd5e1; margin-bottom: 10px; position: relative; overflow: hidden;">
+            <div style="display: flex; justify-content: center; align-items: center; background: radial-gradient(circle at center, #f8fafc 0%, #e0f2fe 100%); border-radius: 12px; padding: 8px 4px; border: 1.5px solid #cbd5e1; margin-bottom: 10px; position: relative; overflow: hidden;">
                 <svg id="spinal-sim-svg" viewBox="0 0 860 460" width="100%" class="spinal-sim-svg" style="max-width: 860px; display: block; margin: 0 auto; filter: drop-shadow(0 8px 25px rgba(0,0,0,0.7));">
                     <defs>
                         <!-- تدرج الفقرة العلوية -->
@@ -2658,9 +2766,9 @@ function getInteractiveSpinalSimulatorHTML(painAreaTitle = 'العمود الف�
                         </linearGradient>
 
                         <linearGradient id="discGradMedium" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stop-color="#f59e0b"/>
-                            <stop offset="60%" stop-color="#d97706"/>
-                            <stop offset="100%" stop-color="#b45309"/>
+                            <stop offset="0%" stop-color="#0284c7"/>
+                            <stop offset="60%" stop-color="#0284c7"/>
+                            <stop offset="100%" stop-color="#0284c7"/>
                         </linearGradient>
 
                         <linearGradient id="discGradHealthy" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -2678,9 +2786,9 @@ function getInteractiveSpinalSimulatorHTML(painAreaTitle = 'العمود الف�
                         </radialGradient>
 
                         <radialGradient id="herniaMediumGrad" cx="30%" cy="30%" r="70%">
-                            <stop offset="0%" stop-color="#fef08a"/>
-                            <stop offset="30%" stop-color="#f59e0b"/>
-                            <stop offset="75%" stop-color="#d97706"/>
+                            <stop offset="0%" stop-color="#0284c7"/>
+                            <stop offset="30%" stop-color="#0284c7"/>
+                            <stop offset="75%" stop-color="#0284c7"/>
                             <stop offset="100%" stop-color="#78350f"/>
                         </radialGradient>
 
@@ -2693,24 +2801,24 @@ function getInteractiveSpinalSimulatorHTML(painAreaTitle = 'العمود الف�
 
                         <!-- تدرج العصب الشوكي -->
                         <linearGradient id="nerveGradCompressed" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stop-color="#fef08a"/>
-                            <stop offset="30%" stop-color="#facc15"/>
-                            <stop offset="70%" stop-color="#eab308"/>
-                            <stop offset="100%" stop-color="#ca8a04"/>
+                            <stop offset="0%" stop-color="#0284c7"/>
+                            <stop offset="30%" stop-color="#0284c7"/>
+                            <stop offset="70%" stop-color="#0284c7"/>
+                            <stop offset="100%" stop-color="#0284c7"/>
                         </linearGradient>
 
                         <linearGradient id="nerveGradMedium" x1="0%" y1="0%" x2="100%" y2="0%">
                             <stop offset="0%" stop-color="#fef9c3"/>
-                            <stop offset="40%" stop-color="#facc15"/>
-                            <stop offset="80%" stop-color="#eab308"/>
+                            <stop offset="40%" stop-color="#0284c7"/>
+                            <stop offset="80%" stop-color="#0284c7"/>
                             <stop offset="100%" stop-color="#a16207"/>
                         </linearGradient>
 
                         <linearGradient id="nerveGradHealthy" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stop-color="#fef08a"/>
-                            <stop offset="50%" stop-color="#facc15"/>
-                            <stop offset="100%" stop-color="#ca8a04"/>
-                            <stop offset="100%" stop-color="#ca8a04"/>
+                            <stop offset="0%" stop-color="#0284c7"/>
+                            <stop offset="50%" stop-color="#0284c7"/>
+                            <stop offset="100%" stop-color="#0284c7"/>
+                            <stop offset="100%" stop-color="#0284c7"/>
                         </linearGradient>
 
                         <!-- فلتر الظل ثلاثي الأبعاد -->
@@ -2735,7 +2843,7 @@ function getInteractiveSpinalSimulatorHTML(painAreaTitle = 'العمود الف�
                         <!-- مسار العصب الخارجي العريض -->
                         <path id="sim-nerve-path" d="M 425,30 C 425,110 478,181 425,260 L 425,440" fill="none" stroke="url(#nerveGradCompressed)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" style="transition: d 0.08s ease;"/>
                         <!-- لب العصب اللامع الداخلي -->
-                        <path id="sim-nerve-core" d="M 425,30 C 425,110 478,181 425,260 L 425,440" fill="none" stroke="#fef08a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.8" style="transition: d 0.08s ease;"/>
+                        <path id="sim-nerve-core" d="M 425,30 C 425,110 478,181 425,260 L 425,440" fill="none" stroke="#0284c7" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.8" style="transition: d 0.08s ease;"/>
                     </g>
 
                     <!-- ================= 2. الفقرة العلوية L4 (جسم الفقرة + النتوءات الخلفية المتناسقة) ================= -->
@@ -2793,7 +2901,7 @@ function getInteractiveSpinalSimulatorHTML(painAreaTitle = 'العمود الف�
                     <g id="sim-nerve-sparks" style="display: block;">
                         <!-- صواعق كهربائية تنبثق مباشرة من نقطة انضغاط العصب واصطدامه بالديسك -->
                         <path d="M 465,175 L 495,155 L 485,178 L 515,162" fill="none" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round"/>
-                        <path d="M 468,188 L 502,192 L 490,205 L 520,210" fill="none" stroke="#facc15" stroke-width="3" stroke-linecap="round"/>
+                        <path d="M 468,188 L 502,192 L 490,205 L 520,210" fill="none" stroke="#0284c7" stroke-width="3" stroke-linecap="round"/>
                         <path d="M 462,202 L 492,228 L 482,238 L 508,255" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/>
                         <circle cx="466" cy="186" r="8" fill="#ef4444" opacity="0.8"/>
                     </g>
@@ -2801,7 +2909,7 @@ function getInteractiveSpinalSimulatorHTML(painAreaTitle = 'العمود الف�
                     <!-- ================= 6. البطاقات والنصوص التوضيحية التشريحية المتقنة ================= -->
                     <!-- بطاقة الفقرة العلوية -->
                     <g>
-                        <rect x="25" y="90" width="135" height="30" rx="6" fill="#0f172a" stroke="#64748b" stroke-width="1.5"/>
+                        <rect x="25" y="90" width="135" height="30" rx="6" fill="#ffffff" stroke="#64748b" stroke-width="1.5"/>
                         <text x="92" y="110" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">فقرة علوية (L4)</text>
                         <line x1="160" y1="105" x2="190" y2="105" stroke="#94a3b8" stroke-width="2"/>
                         <circle cx="190" cy="105" r="3" fill="#94a3b8"/>
@@ -2809,23 +2917,23 @@ function getInteractiveSpinalSimulatorHTML(painAreaTitle = 'العمود الف�
 
                     <!-- بطاقة الديسك الغضروفي -->
                     <g>
-                        <rect x="20" y="165" width="140" height="30" rx="6" fill="#0f172a" stroke="#ef4444" stroke-width="1.5"/>
-                        <text x="90" y="185" fill="#fca5a5" font-size="11.5" font-weight="bold" text-anchor="middle">الديسك (حلقات ليفية)</text>
+                        <rect x="20" y="165" width="140" height="30" rx="6" fill="#ffffff" stroke="#ef4444" stroke-width="1.5"/>
+                        <text x="90" y="185" fill="#dc2626" font-size="11.5" font-weight="bold" text-anchor="middle">الديسك (حلقات ليفية)</text>
                         <line x1="160" y1="180" x2="185" y2="180" stroke="#ef4444" stroke-width="2"/>
                         <circle cx="185" cy="180" r="3" fill="#ef4444"/>
                     </g>
 
                     <!-- بطاقة الفقرة السفلية -->
                     <g>
-                        <rect x="25" y="240" width="135" height="30" rx="6" fill="#0f172a" stroke="#64748b" stroke-width="1.5"/>
-                        <text x="92" y="260" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">فقرة سفلية (L5)</text>
+                        <rect x="25" y="240" width="135" height="30" rx="6" fill="#ffffff" stroke="#64748b" stroke-width="1.5"/>
+                        <text x="92" y="260" fill="#0f172a" font-size="12" font-weight="bold" text-anchor="middle">فقرة سفلية (L5)</text>
                         <line x1="160" y1="255" x2="190" y2="255" stroke="#94a3b8" stroke-width="2"/>
                         <circle cx="190" cy="255" r="3" fill="#94a3b8"/>
                     </g>
 
                     <!-- بطاقة النتوء الغضروفي البارز في الأعلى -->
                     <g>
-                        <rect x="350" y="15" width="200" height="32" rx="7" fill="#0f172a" stroke="#ef4444" stroke-width="1.8"/>
+                        <rect x="350" y="15" width="200" height="32" rx="7" fill="#ffffff" stroke="#ef4444" stroke-width="1.8"/>
                         <text id="sim-bulge-label-text" x="450" y="36" fill="#ef4444" font-size="12.5" font-weight="800" text-anchor="middle">🔴 انتفاخ وبروز الديسك</text>
                         <line x1="450" y1="47" x2="455" y2="145" stroke="#ef4444" stroke-width="1.8" stroke-dasharray="4,3"/>
                         <circle cx="455" cy="145" r="3.5" fill="#ef4444"/>
@@ -2833,23 +2941,23 @@ function getInteractiveSpinalSimulatorHTML(painAreaTitle = 'العمود الف�
 
                     <!-- بطاقة العصب الشوكي على اليمين -->
                     <g>
-                        <rect x="610" y="220" width="200" height="32" rx="7" fill="#0f172a" stroke="#eab308" stroke-width="1.8"/>
-                        <text id="sim-nerve-label-text" x="710" y="241" fill="#facc15" font-size="12.5" font-weight="800" text-anchor="middle">⚡ عصب شوكي مضغوط</text>
-                        <line x1="610" y1="236" x2="475" y2="195" stroke="#eab308" stroke-width="1.8" stroke-dasharray="4,3"/>
-                        <circle cx="475" cy="195" r="3.5" fill="#eab308"/>
+                        <rect x="610" y="220" width="200" height="32" rx="7" fill="#ffffff" stroke="#0284c7" stroke-width="1.8"/>
+                        <text id="sim-nerve-label-text" x="710" y="241" fill="#0284c7" font-size="12.5" font-weight="800" text-anchor="middle">⚡ عصب شوكي مضغوط</text>
+                        <line x1="610" y1="236" x2="475" y2="195" stroke="#0284c7" stroke-width="1.8" stroke-dasharray="4,3"/>
+                        <circle cx="475" cy="195" r="3.5" fill="#0284c7"/>
                     </g>
 
                     <!-- بطاقة المخرج العصبي -->
                     <g>
-                        <rect x="620" y="65" width="180" height="28" rx="6" fill="#0f172a" stroke="#38bdf8" stroke-width="1.2"/>
-                        <text x="710" y="84" fill="#38bdf8" font-size="11.5" font-weight="bold" text-anchor="middle">المخرج العصبي (Foramen)</text>
+                        <rect x="620" y="65" width="180" height="28" rx="6" fill="#ffffff" stroke="#38bdf8" stroke-width="1.2"/>
+                        <text x="710" y="84" fill="#0369a1" font-size="11.5" font-weight="bold" text-anchor="middle">المخرج العصبي (Foramen)</text>
                         <line x1="620" y1="79" x2="450" y2="110" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3,3"/>
                     </g>
                 </svg>
             </div>
 
             <!-- لوحة التحكم المباشرة الملتصقة بالمجسم (Control Dock) -->
-            <div style="background: #090f1a; border: 1.5px solid #bae6fd; border-radius: 12px; padding: 12px 14px; margin-bottom: 12px;">
+            <div style="background: #f8fafc; border: 1.5px solid #bae6fd; border-radius: 12px; padding: 12px 14px; margin-bottom: 12px;">
                 
                 <!-- السلايدر التفاعلي المباشر -->
                 <div style="margin-bottom: 10px;">
@@ -2947,7 +3055,7 @@ function updateSpinalSimulation(val) {
             discMain.setAttribute('stroke', '#059669');
         } else if (v >= 35) {
             discMain.setAttribute('fill', 'url(#discGradMedium)');
-            discMain.setAttribute('stroke', '#d97706');
+            discMain.setAttribute('stroke', '#0284c7');
         } else {
             discMain.setAttribute('fill', 'url(#discGradCompressed)');
             discMain.setAttribute('stroke', '#b91c1c');
@@ -2965,7 +3073,7 @@ function updateSpinalSimulation(val) {
             rib.setAttribute('d', `M ${x},${yTop+1} Q ${ribApexX},${bulgeY} ${x},${yBottom-1}`);
             
             if (i >= 7) {
-                rib.setAttribute('stroke', v >= 65 ? '#10b981' : (v >= 35 ? '#f59e0b' : '#ef4444'));
+                rib.setAttribute('stroke', v >= 65 ? '#10b981' : (v >= 35 ? '#0284c7' : '#ef4444'));
             } else {
                 rib.setAttribute('stroke', v >= 65 ? '#065f46' : (v >= 35 ? '#92400e' : '#7f1d1d'));
             }
@@ -2982,7 +3090,7 @@ function updateSpinalSimulation(val) {
         herniaAura.setAttribute('cy', bulgeY);
         herniaAura.setAttribute('rx', Math.max(10, 36 - ratio * 24));
         herniaAura.setAttribute('ry', Math.max(8, 24 - ratio * 15));
-        herniaAura.setAttribute('fill', v >= 65 ? 'rgba(16, 185, 129, 0.15)' : (v >= 35 ? 'rgba(245, 158, 11, 0.2)' : 'rgba(239, 68, 68, 0.35)'));
+        herniaAura.setAttribute('fill', v >= 65 ? 'rgba(16, 185, 129, 0.15)' : (v >= 35 ? 'rgba(2, 132, 199, 0.2)' : 'rgba(239, 68, 68, 0.35)'));
     }
 
     if (herniaHighlight) {
@@ -3053,11 +3161,11 @@ function updateSpinalSimulation(val) {
 
     if (metricBulge) {
         metricBulge.textContent = `${bulgeMm} ملم`;
-        metricBulge.style.color = v >= 65 ? '#10b981' : (v >= 35 ? '#f59e0b' : '#ef4444');
+        metricBulge.style.color = v >= 65 ? '#10b981' : (v >= 35 ? '#0284c7' : '#ef4444');
     }
     if (metricNerve) {
         metricNerve.textContent = `${nervePinchPct}%`;
-        metricNerve.style.color = v >= 65 ? '#10b981' : (v >= 35 ? '#f59e0b' : '#ef4444');
+        metricNerve.style.color = v >= 65 ? '#10b981' : (v >= 35 ? '#0284c7' : '#ef4444');
     }
     if (metricDisc) {
         metricDisc.textContent = `${discHeightMm} ملم`;
@@ -3086,21 +3194,21 @@ function updateSpinalSimulation(val) {
         }
     } else if (v >= 35) {
         if (badge) {
-            badge.style.background = 'rgba(245, 158, 11, 0.2)';
-            badge.style.color = '#f59e0b';
-            badge.style.borderColor = '#f59e0b';
+            badge.style.background = 'rgba(2, 132, 199, 0.2)';
+            badge.style.color = '#0284c7';
+            badge.style.borderColor = '#0284c7';
             badge.textContent = '⚡ المرحلة 2: تباعد جزئي للفقرات (استطالة وتخفيف مؤقت)';
         }
         if (bulgeLabel) {
             bulgeLabel.textContent = '🟡 انحسار جزئي لبروز الديسك';
-            bulgeLabel.setAttribute('fill', '#f59e0b');
+            bulgeLabel.setAttribute('fill', '#0284c7');
         }
         if (nerveLabel) {
             nerveLabel.textContent = '⚡ تخفيف جزئي للضغط العصبي';
-            nerveLabel.setAttribute('fill', '#f59e0b');
+            nerveLabel.setAttribute('fill', '#0284c7');
         }
         if (explanation) {
-            explanation.style.borderColor = '#f59e0b';
+            explanation.style.borderColor = '#0284c7';
             explanation.style.color = '#0369a1';
             explanation.innerHTML = '⚡ <strong>المرحلة 2 (تأثير الراحة والاستطالة):</strong> بفضل تمارين الإطالة والوضعيات الصحيحة تتباعد الفقرات جزئياً، مما يخفف شدة الاحتكاك المباشر مع العصب بنسبة 50% ويقلل من حدة الكهرباء والتنميل مؤقتاً.';
         }
@@ -3527,7 +3635,7 @@ function calculateInlineReportBMI() {
         const excessVsIdeal = parseFloat((w - idealW).toFixed(1));
         const addedLoad = parseFloat((excessKg * 4).toFixed(1));
         status = 'زيادة وزن';
-        color = '#f59e0b';
+        color = '#0284c7';
         deltaText = `⚠️ وزن زائد بمقدار +${excessKg} كجم عن الحد الصحي (+${excessVsIdeal} كجم عن الوزن المثالي)`;
         impact = `يضيف حوالي +${addedLoad} كجم حمولة ضغط إضافية على الركبتين وأسفل الظهر أثناء الحركة.`;
     } else if (bmi >= 30) {
@@ -4008,11 +4116,11 @@ async function renderPatientPortalData(authPatient) {
                 </div>
 
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button type="button" onclick="loadSavedPortalReport(${idx})" style="flex: 1; background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: #fff; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                    <button type="button" onclick="loadSavedPortalReport(${idx})" style="flex: 1; background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: #ffffff; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 0.85em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;">
                         <span>👁️</span> <span>استعراض التقرير الطبي</span>
                     </button>
                     ${logsCount > 0 ? `
-                    <button type="button" onclick="resumePatientSessionsFromPortal(${idx})" style="background: #2563eb; color: #fff; border: none; padding: 8px 14px; border-radius: 6px; font-size: 0.85em; font-weight: bold; cursor: pointer;">
+                    <button type="button" onclick="resumePatientSessionsFromPortal(${idx})" style="background: #2563eb; color: #ffffff; border: none; padding: 8px 14px; border-radius: 6px; font-size: 0.85em; font-weight: bold; cursor: pointer;">
                         🏋️ متابعة خطة التعافي
                     </button>
                     ` : ''}
@@ -4104,7 +4212,7 @@ function getReportSaveCardHTML(patientPhone = '', patientName = '') {
                         <input type="password" id="report-save-pin-input" maxlength="6" placeholder="مثال: 1234" style="width: 100%; background: #ffffff; border: 1.5px solid var(--primary-gold); padding: 10px 12px; border-radius: 8px; color: #0369a1; font-size: 1.1em; text-align: center; letter-spacing: 4px; box-sizing: border-box;">
                     </div>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <button type="button" onclick="handleRegisterFromReport()" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #0a0e14; border: none; padding: 11px 16px; border-radius: 8px; font-weight: bold; font-size: 0.98em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
+                        <button type="button" onclick="handleRegisterFromReport()" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: none; padding: 11px 16px; border-radius: 8px; font-weight: bold; font-size: 0.98em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                             <span>🔒</span> <span>حفظ وإنشاء ملفي الطبي (برمز PIN)</span>
                         </button>
                     </div>
@@ -4253,7 +4361,7 @@ function renderSpecializedClinicalReportStep3(data, reportContainer) {
         specEnTitle = 'Foot Drop & Peroneal Nerve Neuropathy';
         specIcon = '🦶';
         specCategory = 'اعتلال عصبي حركي للقدم وميكانيكا المشي';
-        specColor = '#f59e0b';
+        specColor = '#0284c7';
         specAdvice = 'سقوط القدم يستوجب كشفاً دقيقاً لسلامة العصب الشظوي وجذور الفقرات القطنية (L5) لتحديد إمكانية استعادة رفع المشط بالتقويم اليدوي والتحفيز العصبي المباشر.';
         specInterventionDesc = `${specCategory} - تتطلب كشفاً وتقويماً يدوياً مباشراً لتحرير الانضغاط الجذري للفقرات القطنية (L5) ومسار العصب الشظوي، واستعادة رفع مشط القدم وحماية أوتار الكاحل وميكانيكا المشي.`;
         specKeyPoints = [
@@ -4408,7 +4516,7 @@ function renderSpecializedClinicalReportStep3(data, reportContainer) {
                     لضمان أعلى معايير السلامة واستعادة القدرة الحركية، يرجى إرسال هذا التقرير مباشرة للمعالج <strong>جمال قبها</strong> لترتيب موعد جلسة بالعيادة أو تنسيق <strong>زيارة منزلية متكاملة</strong> للحالات التي يصعب نقلها.
                 </p>
                 <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
-                    <a href="${waUrl}" target="_blank" class="btn-whatsapp-cta" style="display: inline-flex; align-items: center; gap: 10px; padding: 15px 32px; border-radius: 50px; font-size: 1.1em; font-weight: 900; background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); color: #fff; text-decoration: none; box-shadow: 0 6px 25px rgba(37, 211, 102, 0.5); border: 1.5px solid #a7f3d0; cursor: pointer;">
+                    <a href="${waUrl}" target="_blank" class="btn-whatsapp-cta" style="display: inline-flex; align-items: center; gap: 10px; padding: 15px 32px; border-radius: 50px; font-size: 1.1em; font-weight: 900; background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); color: #ffffff; text-decoration: none; box-shadow: 0 6px 25px rgba(37, 211, 102, 0.5); border: 1.5px solid #a7f3d0; cursor: pointer;">
                         <span style="font-size: 1.3em;">💬</span>
                         <span>إرسال التقرير للمعالج جمال قبها عبر واتساب</span>
                         <span>➔</span>
@@ -4959,7 +5067,7 @@ function displayDiagnosticReport(data) {
                 const excessVsIdeal = parseFloat((w - idealW).toFixed(1));
                 const addedLoad = parseFloat((deltaKg * 4).toFixed(1));
                 bmiStatus = "زيادة وزن (Overweight)";
-                bmiColor = "#f59e0b";
+                bmiColor = "#0284c7";
                 deltaText = `⚠️ وزن زائد بمقدار +${deltaKg} كجم عن الحد الصحي (+${excessVsIdeal} كجم عن الوزن المثالي)`;
                 impact = `يضيف حوالي +${addedLoad} كجم حمولة ضغط إضافية على الركبتين وأسفل الظهر أثناء الحركة.`;
             } else if (bmiVal >= 30) {
@@ -5063,7 +5171,7 @@ function displayDiagnosticReport(data) {
                 </div>
 
                 <div style="background: #f8fafc; height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 16px;">
-                    <div style="background: ${data.isPreliminary ? 'linear-gradient(90deg, #38bdf8 0%, #0284c7 100%)' : 'linear-gradient(90deg, #d4af37 0%, #10b981 100%)'}; height: 100%; width: ${data.isPreliminary ? 60 : resolvedProbability}%;"></div>
+                    <div style="background: ${data.isPreliminary ? 'linear-gradient(90deg, #38bdf8 0%, #0284c7 100%)' : 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'}; height: 100%; width: ${data.isPreliminary ? 60 : resolvedProbability}%;"></div>
                 </div>
 
                 <div style="color: #1e293b; font-size: 0.9em; background: #f8fafc; padding: 10px 14px; border-radius: 8px; border-right: 3px solid #38bdf8;">
@@ -5197,7 +5305,7 @@ function displayDiagnosticReport(data) {
                         <button type="button" onclick="saveClinicalReport()" class="btn-header btn-header-emerald" style="padding: 11px 18px; font-weight: 900; font-size: 0.9em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);">
                             <span>💾</span> <span>حفظ التقرير</span>
                         </button>
-                        <button type="button" onclick="printClinicalReport()" class="btn-header" style="background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; border: 1.5px solid #60a5fa; padding: 11px 18px; font-weight: 900; font-size: 0.9em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.35);">
+                        <button type="button" onclick="printClinicalReport()" class="btn-header" style="background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #ffffff; border: 1.5px solid #60a5fa; padding: 11px 18px; font-weight: 900; font-size: 0.9em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.35);">
                             <span>🖨️</span> <span>طباعة / PDF</span>
                         </button>
                         <button type="button" onclick="sendWhatsAppDiagnosticReport()" class="btn-header btn-whatsapp-cta" style="padding: 11px 20px; font-weight: 900; font-size: 0.9em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);">
@@ -5226,7 +5334,7 @@ function displayDiagnosticReport(data) {
                         </div>
                     </div>
                     <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                        <a href="https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent('مرحباً دكتور جمال، أود الاستفسار عن ترتيب جلسة علاجية / زيارة منزلية (داخل الأردن) بخصوص حالتي.')}" target="_blank" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; padding: 9px 16px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.86em; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(16,185,129,0.3);">
+                        <a href="https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent('مرحباً دكتور جمال، أود الاستفسار عن ترتيب جلسة علاجية / زيارة منزلية (داخل الأردن) بخصوص حالتي.')}" target="_blank" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; padding: 9px 16px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.86em; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(16,185,129,0.3);">
                             <span>🏠</span> طلب زيارة منزلية
                         </a>
                         <a href="https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent('مرحباً دكتور جمال، أنا مقيم خارج الأردن وأود التنسيق معكم لقراءة صورة الرنين / استشارة دولية عن بُعد.')}" target="_blank" style="background: #f0f9ff; border: 1px solid #38bdf8; color: #0284c7; padding: 9px 16px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.86em; display: inline-flex; align-items: center; gap: 6px;">
@@ -5301,7 +5409,7 @@ function displayDiagnosticReport(data) {
                     const isLive = typeof WADA3AN_AI_CONFIG !== 'undefined' && WADA3AN_AI_CONFIG.isConfigured();
                     statusBadge.innerHTML = isLive ? '🟢 تحليل فوري' : '⚡ تحليل ذكي';
                     statusBadge.style.color = isLive ? '#047857' : '#0369a1';
-                    statusBadge.style.borderColor = isLive ? '#10b981' : '#d4af37';
+                    statusBadge.style.borderColor = isLive ? '#10b981' : '#0284c7';
                 }
             }).catch(err => {
                 console.warn('AI insight error:', err);
@@ -5402,7 +5510,7 @@ function renderVideoSuccessStories() {
         const whatsappUrl = `https://wa.me/962799307770?text=${whatsappMsg}`;
 
         return `
-            <div style="background: #111e33; border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
+            <div style="background: #f8fafc; border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
                 <div>
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                         <span style="color: var(--primary-gold); font-size: 0.82em; font-weight: bold;">${catSafe}</span>
@@ -5545,7 +5653,7 @@ function toggleAudioMuteStatus(btn) {
 // حل مبتكر ورعاية متكاملة لمرضى خارج الأردن
 function getInternationalPatientsCardHTML() {
     return `
-        <div class="international-patients-card" style="background: linear-gradient(135deg, #0b1329 0%, #0d1e3a 50%, #064e3b 100%); border: 1.5px solid #38bdf8; border-radius: 14px; padding: 22px; margin-top: 22px; margin-bottom: 22px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
+        <div class="international-patients-card" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid #38bdf8; border-radius: 14px; padding: 22px; margin-top: 22px; margin-bottom: 22px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span style="font-size: 1.6em;">🌍</span>
@@ -5889,8 +5997,8 @@ function showHumanitarianQuotaExhaustedNotice() {
     const noticeHTML = '🔒 <strong>تنبيه نظام الاستحقاق:</strong> مبادرة الرعاية الإنسانية المجانية متاحة <strong>لتشخيص واحد فقط لكل مراجع (على نفس الجهاز أو رقم الهاتف)</strong> وقد تم الاستفادة منها مسبقاً.<br><span style="color: #0369a1;">لإجراء فحص وتشخيص سريري جديد، يرجى اختيار إحدى الباقات المدفوعة عبر محفظة أورانج موني.</span>';
     if (msgEl) {
         msgEl.style.display = 'block';
-        msgEl.style.background = 'rgba(245, 158, 11, 0.18)';
-        msgEl.style.border = '1.5px solid #f59e0b';
+        msgEl.style.background = 'rgba(2, 132, 199, 0.18)';
+        msgEl.style.border = '1.5px solid #0284c7';
         msgEl.style.color = '#0369a1';
         msgEl.innerHTML = noticeHTML;
         try { msgEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
@@ -6612,9 +6720,9 @@ function selectPaywallPackage(n) {
     [1, 5, 10].forEach(k => {
         const el = document.getElementById('pkg-card-' + k);
         if (el) {
-            el.style.borderColor = (k === n) ? '#fef08a' : 'rgba(212,175,55,0.3)';
+            el.style.borderColor = (k === n) ? '#0284c7' : 'rgba(2, 132, 199, 0.3)';
             el.style.background = (k === n) ? '#e0f2fe' : '#ffffff';
-            el.style.boxShadow = (k === n) ? '0 0 25px rgba(254,240,138,0.3)' : 'none';
+            el.style.boxShadow = (k === n) ? '0 0 25px rgba(2, 132, 199, 0.3)' : 'none';
         }
     });
     const lbl = document.getElementById('pay-amount-label');
@@ -6641,10 +6749,10 @@ function renderRoyalPendingApprovalCardHTML(pendingReq, cfg) {
                 <div style="color: #475569; font-size: 0.9em; margin-bottom: 14px;">تم إشعار هاتف الطبيب فوراً، وسيصلك كود التفعيل المعتمد عبر الواتساب.</div>
                 <input type="text" id="pending-pin-code-input" maxlength="12" placeholder="أدخل كود التفعيل هنا" onkeydown="if(event.key==='Enter'){submitPromoOrTestUnlockCode('pending-pin-code-input');}" style="width: 100%; background: #ffffff; border: 2px solid #bae6fd; padding: 14px; border-radius: 12px; color: #0369a1; font-size: 1.4em; font-weight: 900; text-align: center; letter-spacing: 4px; font-family: monospace; box-sizing: border-box; margin-bottom: 12px;">
                 <input type="tel" id="code-alt-phone" value="${pendingReq.subscriberPhone || ''}" placeholder="📱 الهاتف المسجل عليه الكود" style="width: 100%; background: #ffffff; border: 1px solid #cbd5e1; padding: 11px; border-radius: 10px; color: #0f172a; font-size: 0.95em; text-align: center; direction: ltr; box-sizing: border-box; margin-bottom: 12px;">
-                <button type="button" onclick="submitPromoOrTestUnlockCode('pending-pin-code-input')" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #050911; border: none; padding: 14px; border-radius: 12px; font-weight: 900; font-size: 1.05em; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">🔓 تفعيل وفتح التقرير السريري الآن</button>
+                <button type="button" onclick="submitPromoOrTestUnlockCode('pending-pin-code-input')" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: none; padding: 14px; border-radius: 12px; font-weight: 900; font-size: 1.05em; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">🔓 تفعيل وفتح التقرير السريري الآن</button>
             </div>
             <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 18px;">
-                <button type="button" onclick="${isHum ? 'sendWhatsAppHumanitarianRequest()' : 'sendWhatsAppOrangePaymentReceipt()'}" style="background: #25d366; color: #fff; border: none; padding: 12px 22px; border-radius: 12px; font-weight: 800; font-size: 0.95em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(37,211,102,0.35);">💬 مراسلة الطبيب عبر واتساب للاستلام الفوري</button>
+                <button type="button" onclick="${isHum ? 'sendWhatsAppHumanitarianRequest()' : 'sendWhatsAppOrangePaymentReceipt()'}" style="background: #25d366; color: #ffffff; border: none; padding: 12px 22px; border-radius: 12px; font-weight: 800; font-size: 0.95em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(37,211,102,0.35);">💬 مراسلة الطبيب عبر واتساب للاستلام الفوري</button>
                 <button type="button" onclick="cancelPendingRequestAndEdit()" style="background: #f8fafc; border: 1px solid #cbd5e1; color: #1e293b; padding: 12px 18px; border-radius: 12px; font-size: 0.92em; cursor: pointer;">✏️ تعديل البيانات أو اختيار باقة أخرى</button>
             </div>
             <div id="paywall-status-feedback" style="display: none; margin-top: 14px; padding: 12px 16px; border-radius: 10px; font-size: 0.92em;"></div>
@@ -6683,8 +6791,8 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
                                 <span class="royal-icon-emoji" style="font-size: 1.5em;">🏋️</span>
                             </div>
                             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1;">
-                                <div class="pulsing-click-here" style="color: #0369a1; font-size: 1.18em; font-weight: 900; margin-bottom: 2px;">إضغط هنا الآن</div>
-                                <div class="royal-cta-headline" style="font-size: 1.3em; font-weight: 900; color: #0f172a;">للدخول إلى جلسة اليوم الأول والتمارين العلاجية</div>
+                                <div class="pulsing-click-here" style="color: #ffffff; font-size: 1.18em; font-weight: 900; margin-bottom: 2px;">إضغط هنا الآن</div>
+                                <div class="royal-cta-headline" style="font-size: 1.3em; font-weight: 900; color: #ffffff;">للدخول إلى جلسة اليوم الأول والتمارين العلاجية</div>
                             </div>
                             <div class="royal-arrow-box" style="width: 46px; height: 46px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
                                 <span class="royal-arrow-anim" style="font-size: 1.3em;">⬅️</span>
@@ -6737,7 +6845,7 @@ function getRecoveryPlanPaywallCardHTML(data, isRegisteredPatient, resolvedRepor
 
             <!-- زر فتح بوب الباقات الرئيسي (Magnetic Luxury CTA) -->
             <div style="max-width: 540px; margin: 0 auto 20px auto;">
-                <button type="button" onclick="openSubscriptionTiersModal()" class="royal-magnetic-pulse-btn" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #050911; border: 2px solid #bae6fd; padding: 18px 24px; border-radius: 16px; font-size: 1.22em; font-weight: 900; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14); display: flex; align-items: center; justify-content: center; gap: 12px; transition: transform 0.2s, box-shadow 0.2s;">
+                <button type="button" onclick="openSubscriptionTiersModal()" class="royal-magnetic-pulse-btn" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: 2px solid #bae6fd; padding: 18px 24px; border-radius: 16px; font-size: 1.22em; font-weight: 900; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14); display: flex; align-items: center; justify-content: center; gap: 12px; transition: transform 0.2s, box-shadow 0.2s;">
                     <span style="font-size: 1.3em;">🌟</span>
                     <span>عرض باقات الاشتراك وتفعيل التقرير</span>
                     <span style="font-size: 1.1em;">←</span>
@@ -7329,7 +7437,7 @@ function copyOrangeWalletNumber(walletNum = '0795651388') {
             copyBtn.style.color = '#ffffff';
             setTimeout(() => {
                 copyBtn.innerHTML = origHTML;
-                copyBtn.style.background = 'linear-gradient(135deg, #d4af37, #b45309)';
+                copyBtn.style.background = 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)';
                 copyBtn.style.color = '#050911';
             }, 2500);
         }
@@ -7349,10 +7457,10 @@ function switchPaywallOptionTab(tabId) {
         if (btn) {
             if (t === tabId) {
                 if (tabId === 'orange') {
-                    btn.style.background = 'linear-gradient(135deg, #d4af37 0%, #b45309 100%)';
+                    btn.style.background = 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)';
                     btn.style.color = '#050911';
-                    btn.style.borderColor = '#fef08a';
-                    btn.style.boxShadow = '0 6px 20px rgba(212, 175, 55, 0.4)';
+                    btn.style.borderColor = '#0284c7';
+                    btn.style.boxShadow = '0 6px 20px rgba(2, 132, 199, 0.4)';
                 } else if (tabId === 'humanitarian') {
                     btn.style.background = 'linear-gradient(135deg, #10b981 0%, #047857 100%)';
                     btn.style.color = '#ffffff';
@@ -7367,7 +7475,7 @@ function switchPaywallOptionTab(tabId) {
             } else {
                 btn.style.background = '#f0f9ff';
                 btn.style.color = '#cbd5e1';
-                btn.style.borderColor = 'rgba(212, 175, 55, 0.25)';
+                btn.style.borderColor = 'rgba(2, 132, 199, 0.25)';
                 btn.style.boxShadow = 'none';
             }
         }
@@ -8042,7 +8150,7 @@ window.addEventListener('storage', function(e) {
 // رسم شاشة الانتظار الملكية الحية بعد إرسال إشعار الدفع أو طلب الإعفاء الإنساني
 function _legacyPendingCardUnused(pendingReq, cfg) {
     const isHum = pendingReq.requestType === 'humanitarian';
-    const badgeColor = isHum ? '#10b981' : '#d4af37';
+    const badgeColor = isHum ? '#10b981' : '#0284c7';
     const sentBannerTitle = isHum
         ? '✅ تم إرسال طلب الإعفاء لوجه الله بنجاح إلى إدارة العيادة!'
         : `✅ تم إرسال إشعار تحويل محفظة أورانج (${cfg.priceJod} د.أ) بنجاح إلى إدارة العيادة!`;
@@ -8099,7 +8207,7 @@ function _legacyPendingCardUnused(pendingReq, cfg) {
                     </div>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <input type="text" id="pending-pin-code-input" maxlength="10" placeholder="أدخل كود التفعيل المكون من 4 أرقام..." style="flex: 2 1 180px; background: #ffffff; border: 1.5px solid #bae6fd; padding: 12px 14px; border-radius: 10px; color: #0369a1; font-size: 1.15em; font-weight: 900; text-align: center; letter-spacing: 3px; font-family: monospace; box-sizing: border-box;">
-                        <button type="button" onclick="submitPromoOrTestUnlockCode('pending-pin-code-input')" style="flex: 1 1 150px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #050911; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 900; font-size: 0.98em; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
+                        <button type="button" onclick="submitPromoOrTestUnlockCode('pending-pin-code-input')" style="flex: 1 1 150px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 900; font-size: 0.98em; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                             🔓 تفعيل وفتح التقرير الآن
                         </button>
                     </div>
@@ -8143,10 +8251,10 @@ function _legacyPaywallCardHTML(data, isRegisteredPatient, resolvedReportName, r
                                 <span class="royal-icon-emoji" style="font-size: 1.4em;">🏋️</span>
                             </div>
                             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex: 1;">
-                                <div class="pulsing-click-here" style="color: #0369a1; font-size: 1.15em; font-weight: 900; letter-spacing: 0.8px; margin-bottom: 2px;">
+                                <div class="pulsing-click-here" style="color: #ffffff; font-size: 1.15em; font-weight: 900; letter-spacing: 0.8px; margin-bottom: 2px;">
                                     إضغط هنا الآن
                                 </div>
-                                <div class="royal-cta-headline" style="font-size: 1.35em; font-weight: 900; color: #0f172a;  letter-spacing: 0.4px; line-height: 1.25; text-align: center;">
+                                <div class="royal-cta-headline" style="font-size: 1.35em; font-weight: 900; color: #ffffff;  letter-spacing: 0.4px; line-height: 1.25; text-align: center;">
                                     للدخول إلى جلسة اليوم الأول والتمارين العلاجية
                                 </div>
                             </div>
@@ -8194,7 +8302,7 @@ function _legacyPaywallCardHTML(data, isRegisteredPatient, resolvedReportName, r
 
             <!-- أزرار التبويبات الملكية -->
             <div style="display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap;">
-                <button type="button" id="paywall-tab-btn-orange" onclick="switchPaywallOptionTab('orange')" style="flex: 2 1 220px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #050911; border: 1.5px solid #bae6fd; padding: 13px 16px; border-radius: 12px; font-weight: 900; font-size: 0.95em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14); transition: all 0.2s;">
+                <button type="button" id="paywall-tab-btn-orange" onclick="switchPaywallOptionTab('orange')" style="flex: 2 1 220px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: 1.5px solid #bae6fd; padding: 13px 16px; border-radius: 12px; font-weight: 900; font-size: 0.95em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14); transition: all 0.2s;">
                     <span>💳</span> <span>الاشتراك عبر محفظة أورانج (${cfg.priceJod} د.أ)</span>
                 </button>
                 ${cfg.allowHumanitarian !== false ? (isHumanitarianLockedForUser(defaultPhone) ? `
@@ -8220,11 +8328,11 @@ function _legacyPaywallCardHTML(data, isRegisteredPatient, resolvedReportName, r
                             🍊 الخطوة (1): حوّل مبلغ (${cfg.priceJod} دنانير) إلى رقم ${cfg.walletName} المعتمد:
                         </div>
                         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                            <span style="color: #0f172a; font-size: 1.7em; font-weight: 900; font-family: monospace; letter-spacing: 2px; direction: ltr; text-shadow: 0 2px 10px rgba(212, 175, 55, 0.4);">${cfg.walletPhone}</span>
+                            <span style="color: #0f172a; font-size: 1.7em; font-weight: 900; font-family: monospace; letter-spacing: 2px; direction: ltr; text-shadow: 0 2px 10px rgba(2, 132, 199, 0.4);">${cfg.walletPhone}</span>
                             <span style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0369a1; font-size: 0.76em; padding: 2px 10px; border-radius: 12px; font-weight: bold;">Orange Money</span>
                         </div>
                     </div>
-                    <button type="button" id="btn-copy-orange-wallet" onclick="copyOrangeWalletNumber('${cfg.walletPhone}')" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid #bae6fd; color: #050911; padding: 11px 20px; border-radius: 10px; font-weight: 900; font-size: 0.92em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
+                    <button type="button" id="btn-copy-orange-wallet" onclick="copyOrangeWalletNumber('${cfg.walletPhone}')" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid #bae6fd; color: #ffffff; padding: 11px 20px; border-radius: 10px; font-weight: 900; font-size: 0.92em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                         <span>📋</span> نسخ رقم المحفظة
                     </button>
                 </div>
@@ -8249,7 +8357,7 @@ function _legacyPaywallCardHTML(data, isRegisteredPatient, resolvedReportName, r
                 </div>
 
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button type="button" onclick="submitOrangeWalletPaymentNotification()" style="flex: 2 1 280px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #050911; border: 1px solid #bae6fd; padding: 14px 22px; border-radius: 12px; font-size: 1.04em; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
+                    <button type="button" onclick="submitOrangeWalletPaymentNotification()" style="flex: 2 1 280px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: 1px solid #bae6fd; padding: 14px 22px; border-radius: 12px; font-size: 1.04em; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                         <span>📤</span> <span>أتممت التحويل (${cfg.priceJod} د.أ) — إرسال للإدارة للتأكيد وفتح التقرير</span>
                     </button>
                 </div>
@@ -8280,7 +8388,7 @@ function _legacyPaywallCardHTML(data, isRegisteredPatient, resolvedReportName, r
 
                 <!-- مربع الاختيار الفارغ لإقرار الأمانة والاستحقاق -->
                 <label id="hum-oath-box-label" for="hum-oath-checkbox" style="display: flex; align-items: flex-start; gap: 14px; background: #f0fdf4; border: 2px solid #10b981; border-radius: 14px; padding: 16px 18px; margin-bottom: 18px; cursor: pointer; transition: all 0.25s; box-shadow: inset 0 0 18px rgba(16, 185, 129, 0.1);">
-                    <input type="checkbox" id="hum-oath-checkbox" onchange="const lbl=document.getElementById('hum-oath-box-label'); if(lbl){lbl.style.borderColor=this.checked?'#fef08a':'#10b981'; lbl.style.background=this.checked?'rgba(16,185,129,0.24)':'rgba(16,185,129,0.12)';}" style="width: 24px; height: 24px; margin-top: 3px; accent-color: #10b981; cursor: pointer; flex-shrink: 0;">
+                    <input type="checkbox" id="hum-oath-checkbox" onchange="const lbl=document.getElementById('hum-oath-box-label'); if(lbl){lbl.style.borderColor=this.checked?'#0284c7':'#10b981'; lbl.style.background=this.checked?'rgba(16,185,129,0.24)':'rgba(16,185,129,0.12)';}" style="width: 24px; height: 24px; margin-top: 3px; accent-color: #10b981; cursor: pointer; flex-shrink: 0;">
                     <div style="flex: 1;">
                         <div style="color: #0369a1; font-weight: 900; font-size: 1.02em; line-height: 1.7;">
                             «أُقرّ أمام الله بأمانتي واستحقاقي لهذه المبادرة، وبأنني غير قادر مادياً على سداد قيمة الفحص في الأداة والبالغة 3 دنانير.»
@@ -8300,7 +8408,7 @@ function _legacyPaywallCardHTML(data, isRegisteredPatient, resolvedReportName, r
                 </div>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <input type="text" id="pay-promo-code-input" maxlength="12" placeholder="أدخل رمز التفعيل المعتمد هنا..." style="flex: 2 1 200px; background: #ffffff; border: 1.5px solid #bae6fd; padding: 13px 16px; border-radius: 10px; color: #0369a1; font-size: 1.15em; font-weight: 900; text-align: center; letter-spacing: 3px; font-family: monospace; box-sizing: border-box;">
-                    <button type="button" onclick="submitPromoOrTestUnlockCode('pay-promo-code-input')" style="flex: 1 1 160px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #050911; border: none; padding: 13px 22px; border-radius: 10px; font-weight: 900; font-size: 0.98em; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
+                    <button type="button" onclick="submitPromoOrTestUnlockCode('pay-promo-code-input')" style="flex: 1 1 160px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: none; padding: 13px 22px; border-radius: 10px; font-weight: 900; font-size: 0.98em; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                         🔓 تفعيل الكود وعرض التقرير
                     </button>
                 </div>
@@ -8950,7 +9058,7 @@ function getVitalsSummaryCardHTML(patient, assessment) {
             const excessKg = parseFloat((weight - maxHealthyW).toFixed(1));
             const addedLoad = parseFloat((excessKg * 4).toFixed(1));
             status = 'زيادة وزن';
-            color = '#f59e0b';
+            color = '#0284c7';
             deltaText = `⚠️ وزن زائد بمقدار +${excessKg} كجم عن الحد الصحي`;
             impact = `يضيف حوالي +${addedLoad} كجم حمولة ضغط ميكانيكية إضافية على المفاصل وأسفل الظهر أثناء الحركة.`;
         } else if (bmi >= 30) {
@@ -9216,7 +9324,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
     let clockSectionHTML = '';
     if (lockStatus.isLocked && lockStatus.remainingMs > 0) {
         clockSectionHTML = `
-            <div style="background: linear-gradient(135deg, #0b101b 0%, #172033 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
+            <div style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
                     <div style="color: var(--primary-gold); font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
                         <span>⏱️</span> ساعة التوقيت المعتمدة (فترة استشفاء جارية بعد الجلسة الأولى)
@@ -9319,14 +9427,14 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                         const hasLog = (sessionData.dailyLogs || []).some(l => Number(l.sessionNumber || l.day) === d);
                         const isUnlocked = isDay1Completed || hasLog || sessionData.isPlanCompleted;
                         let clickAction = isUnlocked ? `renderStep5SessionsDashboard('${patientId}', ${d})` : `showFutureSessionLockedPopup(1, ${d})`;
-                        let bg = isUnlocked ? (hasLog ? 'rgba(16, 185, 129, 0.15)' : 'rgba(56, 189, 248, 0.15)') : 'rgba(15, 23, 42, 0.6)';
-                        let border = isUnlocked ? (hasLog ? '1px solid #10b981' : '1.5px solid #38bdf8') : '1px dashed #475569';
-                        let color = isUnlocked ? (hasLog ? '#6ee7b7' : '#7dd3fc') : '#64748b';
-                        let badge = hasLog ? '✓ منجزة' : (isUnlocked ? 'متاحة' : '🔒 مقفلة');
+                        let bg = isUnlocked ? (hasLog ? '#f0fdf4' : '#f0f9ff') : '#f8fafc';
+                        let border = isUnlocked ? (hasLog ? '1.5px solid #10b981' : '1.5px solid #0284c7') : '1.5px dashed #cbd5e1';
+                        let color = isUnlocked ? (hasLog ? '#047857' : '#0369a1') : '#64748b';
+                        let badge = hasLog ? '✓ منجزة' : (isUnlocked ? 'متاحة' : 'مقفلة');
                         return `
-                            <button type="button" onclick="${clickAction}" style="background: ${bg}; border: ${border}; color: ${color}; padding: 8px 4px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; transition: 0.2s; min-width: 55px;">
+                            <button type="button" onclick="${clickAction}" style="background: ${bg}; border: ${border}; color: ${color}; padding: 8px 4px; border-radius: 8px; font-weight: 800; font-size: 0.82em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; transition: 0.2s; min-width: 55px;">
                                 <span>الجلسة ${d}</span>
-                                <span style="font-size: 0.72em; opacity: 0.85;">${badge}</span>
+                                <span style="font-size: 0.72em; opacity: 0.9;">${badge}</span>
                             </button>
                         `;
                     }).join('')}
@@ -9419,13 +9527,13 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                             </div>
                             <div>
                                 <div style="background: #f8fafc; height: 5px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
-                                    <div class="timer-progress-fill" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); height: 100%; width: ${isDay1Completed ? '100%' : '0%'}; transition: width 1s linear;"></div>
+                                    <div class="timer-progress-fill" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); height: 100%; width: ${isDay1Completed ? '100%' : '0%'}; transition: width 1s linear; color: #ffffff;"></div>
                                 </div>
                                 <div style="display: flex; gap: 8px; align-items: stretch;">
-                                    <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-completed="${isDay1Completed ? 'true' : 'false'}" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="flex: 1; background: ${isDay1Completed ? '#10b981' : 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'}; color: #0f172a; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.92em;">
+                                    <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-completed="${isDay1Completed ? 'true' : 'false'}" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="flex: 1; background: ${isDay1Completed ? '#10b981' : 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'}; color: #ffffff; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.92em;">
                                         ${isDay1Completed ? '✓ تم إنجاز التمرين بنجاح (انقر للإعادة إن رغبت)' : `⏱️ ابدأ مؤقت التمرين (${ex.duration})`}
                                     </button>
-                                    <button type="button" onclick="PatientFlow.markExerciseDone(this)" class="btn-mark-exercise-done" title="تأكيد إنجاز التمرين فوراً دون المؤقت" style="background: ${isDay1Completed ? 'rgba(16,185,129,0.2)' : 'rgba(100,116,139,0.15)'}; border: 1px solid ${isDay1Completed ? '#10b981' : '#cbd5e1'}; color: ${isDay1Completed ? '#10b981' : '#94a3b8'}; padding: 0 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85em; white-space: nowrap; transition: all 0.25s;">
+                                    <button type="button" onclick="PatientFlow.markExerciseDone(this)" class="btn-mark-exercise-done" title="تأكيد إنجاز التمرين فوراً دون المؤقت" style="background: ${isDay1Completed ? '#f0fdf4' : '#f8fafc'}; border: 1.5px solid ${isDay1Completed ? '#10b981' : '#cbd5e1'}; color: ${isDay1Completed ? '#047857' : '#334155'}; padding: 0 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85em; white-space: nowrap; transition: all 0.25s;">
                                         ${isDay1Completed ? 'منجز ✓' : 'تم ☑'}
                                     </button>
                                 </div>
@@ -9445,8 +9553,8 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                 <button type="button" onclick="handleStepperClick(5)" class="btn-plan-royal-card" style="margin: 0 auto; max-width: 620px; width: 100%; border-color: #10b981;">
                     <div class="royal-card-halo" style="background: radial-gradient(circle, rgba(16,185,129,0.3) 0%, transparent 70%);"></div>
                     <div class="royal-card-shimmer"></div>
-                    <div class="royal-badge-pill" style="border-color: #10b981; color: #047857;">
-                        <span class="royal-badge-dot" style="background: #10b981;"></span>
+                    <div class="royal-badge-pill" style="border-color: #10b981; color: #ffffff;">
+                        <span class="royal-badge-dot" style="background: #10b981; color: #ffffff;"></span>
                         <span>📅 الجلسة الأولى مكتملة وموثقة</span>
                     </div>
                     <div class="royal-main-content">
@@ -9454,10 +9562,10 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                             <span class="royal-icon-emoji">🚀</span>
                         </div>
                         <div class="royal-text-col">
-                            <div class="royal-cta-headline" style="color: #047857;">الانتقال إلى متابعة الجلسات (المرحلة 5)</div>
+                            <div class="royal-cta-headline" style="color: #ffffff;">الانتقال إلى متابعة الجلسات (المرحلة 5)</div>
                             <div class="royal-cta-subline">استعراض الجلسات التالية ومؤشرات التعافي المعتمدة 📈</div>
                         </div>
-                        <div class="royal-arrow-box" style="background: #10b981; color: #0a0e14;">
+                        <div class="royal-arrow-box" style="background: #10b981; color: #ffffff;">
                             <span class="royal-arrow-anim">⬅️</span>
                         </div>
                     </div>
@@ -9907,43 +10015,43 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                     const isCurrentProgression = (!sessionData.isPlanCompleted && d === progressionDay && !hasCompletedLog);
                     const isFutureLocked = (!isAllUnlockedNow && !hasCompletedLog && d > progressionDay);
 
-                    let bg = '#1e293b';
-                    let border = '1px solid #334155';
-                    let color = '#cbd5e1';
+                    let bg = '#ffffff';
+                    let border = '1.5px solid #cbd5e1';
+                    let color = '#334155';
                     let clickAction = `renderStep5SessionsDashboard('${patientId}', ${d}, null, true)`;
 
                     if (isCurrentActive) {
-                        bg = 'linear-gradient(135deg, rgba(212, 175, 55, 0.35) 0%, rgba(180, 130, 20, 0.25) 100%)';
-                        border = '2px solid var(--primary-gold)';
+                        bg = '#0284c7';
+                        border = '2px solid #0369a1';
                         color = '#ffffff';
                     } else if (isCompleted) {
-                        bg = 'rgba(16, 185, 129, 0.15)';
-                        border = '1px solid #10b981';
-                        color = '#6ee7b7';
+                        bg = '#f0fdf4';
+                        border = '1.5px solid #10b981';
+                        color = '#047857';
                     } else if (isCurrentProgression) {
-                        bg = 'rgba(56, 189, 248, 0.15)';
-                        border = '1.5px solid #38bdf8';
-                        color = '#7dd3fc';
+                        bg = '#f0f9ff';
+                        border = '1.5px solid #0284c7';
+                        color = '#0369a1';
                     } else if (isFutureLocked) {
-                        bg = 'rgba(15, 23, 42, 0.6)';
-                        border = '1px dashed #475569';
+                        bg = '#f8fafc';
+                        border = '1.5px dashed #cbd5e1';
                         color = '#64748b';
                         clickAction = `showFutureSessionLockedPopup(${progressionDay}, ${d})`;
                     }
 
-                    let statusBadge = '🔒 مقفلة';
+                    let statusBadge = 'مقفلة';
                     if (isCurrentActive) {
-                        statusBadge = isCompleted ? '🟢 المعروضة (مراجعة)' : '🟢 المعروضة';
+                        statusBadge = isCompleted ? 'المعروضة (مراجعة)' : 'المعروضة';
                     } else if (isCompleted) {
                         statusBadge = '✓ منجزة';
                     } else if (isCurrentProgression) {
-                        statusBadge = '🔵 جلستك الحالية';
+                        statusBadge = 'جلستك الحالية';
                     }
 
                     return `
-                        <button type="button" onclick="${clickAction}" style="background: ${bg}; border: ${border}; color: ${color}; padding: 10px 4px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: 0.2s; min-width: 60px;">
+                        <button type="button" onclick="${clickAction}" style="background: ${bg}; border: ${border}; color: ${color}; padding: 10px 4px; border-radius: 8px; font-weight: 800; font-size: 0.82em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: 0.2s; min-width: 60px;">
                             <span>الجلسة ${d}</span>
-                            <span style="font-size: 0.75em; opacity: 0.85;">${statusBadge}</span>
+                            <span style="font-size: 0.75em; opacity: 0.9;">${statusBadge}</span>
                         </button>
                     `;
                 }).join('')}
@@ -9997,7 +10105,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                     تم استكمال كافة تمارين وبروتوكول هذه الجلسة وتوثيق استجابة الأنسجة ومؤشرات التحسن بنجاح في خطتك العلاجية. يمكنك استعراض التمارين أدناه في أي وقت لتثبيت الشفاء.
                 </p>
                 ${sessionData.isPlanCompleted ? `
-                    <button type="button" onclick="renderStep6Completion('${patientId}')" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #0a0e14; font-weight: bold; border: none; padding: 8px 20px; border-radius: 20px; font-size: 0.88em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
+                    <button type="button" onclick="renderStep6Completion('${patientId}')" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; font-weight: bold; border: none; padding: 8px 20px; border-radius: 20px; font-size: 0.88em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                         🚀 الانتقال لبوابة الحل الجذري (الكايروبراكتيك)
                     </button>
                 ` : ''}
@@ -10018,14 +10126,14 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 <p style="color: #1e293b; font-size: 0.9em; margin: 0 0 16px 0; line-height: 1.6;">
                     لحماية مفاصلك وأنسجتك وتحقيق التعافي السريري المتدرج، لا يمكن تخطي الجلسات أو فتح الجلسة (${activeDay}) إلا بعد إتمام تمارين الجلسة السابقة (${reqNum}) وتوثيقها واستكمال فترة الاستشفاء الحيوي المقررة (24 ساعة).
                 </p>
-                <button type="button" onclick="${reqNum === 1 ? `renderStep4IndependentDay1('${patientId}')` : `renderStep5SessionsDashboard('${patientId}', ${reqNum})`}" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #0a0e14; font-weight: 900; border: none; padding: 10px 24px; border-radius: 25px; font-size: 0.95em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
+                <button type="button" onclick="${reqNum === 1 ? `renderStep4IndependentDay1('${patientId}')` : `renderStep5SessionsDashboard('${patientId}', ${reqNum})`}" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; font-weight: 900; border: none; padding: 10px 24px; border-radius: 25px; font-size: 0.95em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                     <span>🏋️</span> الانتقال للجلسة المطلوبة (#${reqNum}) ❯
                 </button>
             </div>
         `;
     } else if (lockStatus.isLocked && lockStatus.remainingMs > 0) {
         clock24HTML = `
-            <div id="session-24h-clock-card" style="background: linear-gradient(135deg, #0b101b 0%, #172033 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
+            <div id="session-24h-clock-card" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
                     <div style="color: var(--primary-gold); font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
                         <span>⏱️</span> ساعة التوقيت المعتمدة (فترة استشفاء جارية)
@@ -10085,7 +10193,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 <div style="font-size: 1.08em; margin-bottom: 8px;">✓ تم إنجاز الجلسة (#${activeDay}) بنجاح مسبقاً وهي موثقة في سجلك الطبي للتعافي.</div>
                 <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
                     ${sessionData.isPlanCompleted ? `
-                        <button type="button" onclick="renderStep6Completion('${patientId}')" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #0a0e14; font-weight: bold; border: none; padding: 10px 22px; border-radius: 25px; font-size: 0.92em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
+                        <button type="button" onclick="renderStep6Completion('${patientId}')" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; font-weight: bold; border: none; padding: 10px 22px; border-radius: 25px; font-size: 0.92em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                             👑 الانتقال لبوابة الحل الجذري (الكايروبراكتيك)
                         </button>
                     ` : (activeDay < progressionDay ? `
@@ -10119,7 +10227,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                     <div class="royal-clinical-lock-btn">
                         <!-- اليمين (RTL): أيقونة القفل الملكية ونص سيتم تفعيل الزر بعد انتهاء الوقت -->
                         <div style="display: flex; align-items: center; gap: 12px; text-align: right; flex-grow: 1;">
-                            <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 2px solid #bae6fd; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 2px solid #bae6fd; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #ffffff;">
                                 <span style="font-size: 1.25em; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));">🔒</span>
                             </div>
                             <div>
@@ -10140,7 +10248,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                                     <linearGradient id="circular-gauge-grad" x1="0%" y1="0%" x2="100%" y2="100%">
                                         <stop offset="0%" stop-color="#38bdf8" />
                                         <stop offset="50%" stop-color="#10b981" />
-                                        <stop offset="100%" stop-color="#f59e0b" />
+                                        <stop offset="100%" stop-color="#0284c7" />
                                     </linearGradient>
                                 </defs>
                                 <circle cx="27" cy="27" r="22" fill="transparent" stroke="rgba(255, 255, 255, 0.12)" stroke-width="4.5" />
@@ -10164,13 +10272,13 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                         </span>
                     </div>
 
-                    <button type="button" onclick="handleStep5CompletionClick('${patientId}', ${activeDay})" class="royal-clinical-next-btn active-unlocked" style="width: 100%; max-width: 620px; margin: 0 auto; background: linear-gradient(180deg, #10b981 0%, #059669 50%, #047857 51%, #065f46 100%) !important; color: #0f172a !important; border: 2px solid #6ee7b7 !important; border-radius: 50px !important; padding: 10px 24px 10px 14px !important; font-size: 1.15em !important; font-weight: 900 !important; letter-spacing: 0.5px; cursor: pointer; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 14px !important; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;  box-sizing: border-box;">
+                    <button type="button" onclick="handleStep5CompletionClick('${patientId}', ${activeDay})" class="royal-clinical-next-btn active-unlocked" style="width: 100%; max-width: 620px; margin: 0 auto; background: linear-gradient(180deg, #10b981 0%, #059669 50%, #047857 51%, #065f46 100%) !important; color: #ffffff !important; border: 2px solid #6ee7b7 !important; border-radius: 50px !important; padding: 10px 24px 10px 14px !important; font-size: 1.15em !important; font-weight: 900 !important; letter-spacing: 0.5px; cursor: pointer; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 14px !important; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;  box-sizing: border-box;">
                         <!-- Left Glossy Orb Icon Circle (لون الصحة والتعافي والراحة) -->
-                        <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 45%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.4) 100%), linear-gradient(135deg, #10b981 0%, #047857 100%); border: 2.5px solid #ffffff; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 45%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.4) 100%), linear-gradient(135deg, #10b981 0%, #047857 100%); border: 2.5px solid #ffffff; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #ffffff;">
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff" style="margin-left: 2px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));"><polygon points="6,4 20,12 6,20"/></svg>
                         </div>
                         <!-- Main Text -->
-                        <span style="flex-grow: 1; text-align: center; font-size: 1.08em; font-weight: 900; color: #0f172a !important; ">
+                        <span style="flex-grow: 1; text-align: center; font-size: 1.08em; font-weight: 900; color: #ffffff !important; ">
                             ${activeDay === 7 ? 'حفظ توثيق الجلسة الختامية (#7) وإتمام البرنامج والتخرج 🏆' : `حفظ تسجيل الجلسة (#${activeDay}) وتوثيق التقييم والانتقال للجلسة التالية 🚀`}
                         </span>
                         <!-- Right Arrow Chevron -->
@@ -10321,13 +10429,13 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                             </div>
                             <div>
                                 <div style="background: #f8fafc; height: 5px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
-                                    <div class="timer-progress-fill" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); height: 100%; width: ${isDayAlreadyCompleted ? '100%' : '0%'}; transition: width 1s linear;"></div>
+                                    <div class="timer-progress-fill" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); height: 100%; width: ${isDayAlreadyCompleted ? '100%' : '0%'}; transition: width 1s linear; color: #ffffff;"></div>
                                 </div>
                                 <div style="display: flex; gap: 8px; align-items: stretch;">
-                                    <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-completed="${isDayAlreadyCompleted ? 'true' : 'false'}" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="flex: 1; background: ${isDayAlreadyCompleted ? '#10b981' : 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'}; color: #0f172a; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.92em;">
+                                    <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-completed="${isDayAlreadyCompleted ? 'true' : 'false'}" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="flex: 1; background: ${isDayAlreadyCompleted ? '#10b981' : 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'}; color: #ffffff; border: none; padding: 10px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.92em;">
                                         ${isDayAlreadyCompleted ? '✓ تم إنجاز التمرين بنجاح (انقر للإعادة إن رغبت)' : `⏱️ ابدأ مؤقت التمرين (${ex.duration})`}
                                     </button>
-                                    <button type="button" onclick="PatientFlow.markExerciseDone(this)" class="btn-mark-exercise-done" title="تأكيد إنجاز التمرين فوراً دون المؤقت" style="background: ${isDayAlreadyCompleted ? 'rgba(16,185,129,0.2)' : 'rgba(100,116,139,0.15)'}; border: 1px solid ${isDayAlreadyCompleted ? '#10b981' : '#cbd5e1'}; color: ${isDayAlreadyCompleted ? '#10b981' : '#94a3b8'}; padding: 0 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85em; white-space: nowrap; transition: all 0.25s;">
+                                    <button type="button" onclick="PatientFlow.markExerciseDone(this)" class="btn-mark-exercise-done" title="تأكيد إنجاز التمرين فوراً دون المؤقت" style="background: ${isDayAlreadyCompleted ? '#f0fdf4' : '#f8fafc'}; border: 1.5px solid ${isDayAlreadyCompleted ? '#10b981' : '#cbd5e1'}; color: ${isDayAlreadyCompleted ? '#047857' : '#334155'}; padding: 0 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85em; white-space: nowrap; transition: all 0.25s;">
                                         ${isDayAlreadyCompleted ? 'منجز ✓' : 'تم ☑'}
                                     </button>
                                 </div>
@@ -10390,13 +10498,13 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                             </span>
                         </div>
 
-                        <button type="button" onclick="handleStep5CompletionClick('${effectivePid || patientId}', ${activeDay})" class="royal-clinical-next-btn active-unlocked" style="width: 100%; max-width: 620px; margin: 0 auto; background: linear-gradient(180deg, #10b981 0%, #059669 50%, #047857 51%, #065f46 100%) !important; color: #0f172a !important; border: 2px solid #6ee7b7 !important; border-radius: 50px !important; padding: 10px 24px 10px 14px !important; font-size: 1.15em !important; font-weight: 900 !important; letter-spacing: 0.5px; cursor: pointer; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 14px !important; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;  box-sizing: border-box;">
+                        <button type="button" onclick="handleStep5CompletionClick('${effectivePid || patientId}', ${activeDay})" class="royal-clinical-next-btn active-unlocked" style="width: 100%; max-width: 620px; margin: 0 auto; background: linear-gradient(180deg, #10b981 0%, #059669 50%, #047857 51%, #065f46 100%) !important; color: #ffffff !important; border: 2px solid #6ee7b7 !important; border-radius: 50px !important; padding: 10px 24px 10px 14px !important; font-size: 1.15em !important; font-weight: 900 !important; letter-spacing: 0.5px; cursor: pointer; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 14px !important; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;  box-sizing: border-box;">
                             <!-- Left Glossy Orb Icon Circle -->
-                            <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 45%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.4) 100%), linear-gradient(135deg, #10b981 0%, #047857 100%); border: 2.5px solid #ffffff; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.1) 45%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.4) 100%), linear-gradient(135deg, #10b981 0%, #047857 100%); border: 2.5px solid #ffffff; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #ffffff;">
                                 <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff" style="margin-left: 2px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));"><polygon points="6,4 20,12 6,20"/></svg>
                             </div>
                             <!-- Main Text -->
-                            <span style="flex-grow: 1; text-align: center; font-size: 1.08em; font-weight: 900; color: #0f172a !important; ">
+                            <span style="flex-grow: 1; text-align: center; font-size: 1.08em; font-weight: 900; color: #ffffff !important; ">
                                 ${activeDay === 7 ? 'حفظ توثيق الجلسة الختامية (#7) وإتمام البرنامج والتخرج 🏆' : `حفظ تسجيل الجلسة (#${activeDay}) وتوثيق التقييم والانتقال للجلسة التالية 🚀`}
                             </span>
                             <!-- Right Arrow Chevron -->
@@ -10763,7 +10871,7 @@ async function renderStep6Completion(patientId, sessionData = null) {
                             <div style="font-size: 0.92em; color: #0f172a; font-weight: 900; margin-top: 4px;">نسبة انخفاض وتسكين الألم 📉</div>
                             <div style="color: #047857; font-size: 0.8em; margin-top: 4px; font-weight: 700;">من (${basePain}/10) في البداية إلى (${endPain}/10) حالياً</div>
                             <div style="background: #f8fafc; height: 6px; border-radius: 4px; overflow: hidden; margin-top: 10px;">
-                                <div style="background: linear-gradient(90deg, #10b981, #34d399); width: ${painDrop}%; height: 100%;"></div>
+                                <div style="background: linear-gradient(90deg, #10b981, #34d399); width: ${painDrop}%; height: 100%; color: #ffffff;"></div>
                             </div>
                         </div>
 
@@ -10773,7 +10881,7 @@ async function renderStep6Completion(patientId, sessionData = null) {
                             <div style="font-size: 0.92em; color: #0f172a; font-weight: 900; margin-top: 4px;">مؤشر حرية الحركة والمرونة 🤸‍♂️</div>
                             <div style="color: #0284c7; font-size: 0.8em; margin-top: 4px; font-weight: 700;">تقييمك الفعلي لحركة المفصل في آخر جلسة</div>
                             <div style="background: #f8fafc; height: 6px; border-radius: 4px; overflow: hidden; margin-top: 10px;">
-                                <div style="background: linear-gradient(90deg, #0284c7, #38bdf8); width: ${mobilityScore}%; height: 100%;"></div>
+                                <div style="background: linear-gradient(90deg, #0284c7, #38bdf8); width: ${mobilityScore}%; height: 100%; color: #ffffff;"></div>
                             </div>
                         </div>
 
@@ -10783,7 +10891,7 @@ async function renderStep6Completion(patientId, sessionData = null) {
                             <div style="font-size: 0.92em; color: #0f172a; font-weight: 900; margin-top: 4px;">مؤشر جودة وعمق النوم 🌙</div>
                             <div style="color: #0369a1; font-size: 0.8em; margin-top: 4px; font-weight: 700;">تقييمك الفعلي للراحة الليلية في آخر جلسة</div>
                             <div style="background: #f8fafc; height: 6px; border-radius: 4px; overflow: hidden; margin-top: 10px;">
-                                <div style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); width: ${sleepScore}%; height: 100%;"></div>
+                                <div style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); width: ${sleepScore}%; height: 100%; color: #ffffff;"></div>
                             </div>
                         </div>
                     </div>
@@ -10858,7 +10966,7 @@ async function renderStep6Completion(patientId, sessionData = null) {
                             <span style="font-size: 1.3em;">🏠</span> <span>حجز زيارة منزلية للتقويم اليدوي (داخل الأردن)</span>
                         </a>
                         <!-- زر موعد العيادة المباشرة -->
-                        <a href="${clinicVisitWhatsAppUrl}" target="_blank" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #050911; padding: 15px 18px; border-radius: 12px; text-decoration: none; font-weight: 900; font-size: 0.98em; border: 1.5px solid #bae6fd; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14); display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.2s;">
+                        <a href="${clinicVisitWhatsAppUrl}" target="_blank" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; padding: 15px 18px; border-radius: 12px; text-decoration: none; font-weight: 900; font-size: 0.98em; border: 1.5px solid #bae6fd; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14); display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.2s;">
                             <span style="font-size: 1.3em;">🏥</span> <span>حجز موعد في العيادة (عمّان - خلدا)</span>
                         </a>
                     </div>
@@ -11192,8 +11300,8 @@ function handleStep4CompletionClick(patientId, forceSkip = false) {
                 const cardEl = firstUnfinished.closest('.clinical-exercise-card, .exercise-visual-card');
                 if (cardEl) {
                     cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    cardEl.style.outline = '2px solid #eab308';
-                    cardEl.style.boxShadow = '0 0 25px rgba(234, 179, 8, 0.6)';
+                    cardEl.style.outline = '2px solid #0284c7';
+                    cardEl.style.boxShadow = '0 0 25px rgba(2, 132, 199, 0.6)';
                     setTimeout(() => {
                         cardEl.style.outline = '';
                         cardEl.style.boxShadow = '';
@@ -11264,8 +11372,8 @@ async function handleStep5CompletionClick(patientId, sessionNumber, forceSkip = 
             if (uncompletedCards.length > 0) {
                 const firstUnfinished = uncompletedCards[0];
                 firstUnfinished.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                firstUnfinished.style.outline = '2px solid #eab308';
-                firstUnfinished.style.boxShadow = '0 0 25px rgba(234, 179, 8, 0.6)';
+                firstUnfinished.style.outline = '2px solid #0284c7';
+                firstUnfinished.style.boxShadow = '0 0 25px rgba(2, 132, 199, 0.6)';
                 setTimeout(() => {
                     firstUnfinished.style.outline = '';
                     firstUnfinished.style.boxShadow = '';
@@ -12052,7 +12160,7 @@ function openExerciseLibraryModal(filterCategory = 'all') {
             </div>
             <div>
                 <div style="background: #f8fafc; height: 5px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
-                    <div class="timer-progress-fill" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); height: 100%; width: 0%; transition: width 1s linear;"></div>
+                    <div class="timer-progress-fill" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); height: 100%; width: 0%; transition: width 1s linear; color: #ffffff;"></div>
                 </div>
                 <button type="button" onclick="PatientFlow.toggleExerciseTimer(this, ${ex.durationSec || 30})" class="btn-exercise-timer" data-running="false" data-remaining="${ex.durationSec || 30}" data-total="${ex.durationSec || 30}" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.88em;">
                     ⏱️ ابدأ مؤقت التمرين (${ex.duration})
@@ -12096,7 +12204,7 @@ function showAppUpdateNoticeBanner() {
                 <span style="color: #475569; font-size: 0.78em;">تم إطلاق تحسينات وتمارين سريرية جديدة</span>
             </div>
         </div>
-        <button type="button" onclick="forceAppUpdateAndClearCache()" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #0f172a; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 900; font-size: 0.86em; cursor: pointer; white-space: nowrap; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
+        <button type="button" onclick="forceAppUpdateAndClearCache()" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 900; font-size: 0.86em; cursor: pointer; white-space: nowrap; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
             تحديث الآن 🔄
         </button>
     `;
@@ -12109,7 +12217,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v33.20';
+const CURRENT_APP_VERSION = 'v33.25';
 window.CURRENT_APP_VERSION = CURRENT_APP_VERSION;
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
@@ -12159,8 +12267,8 @@ function _triggerAutoReloadCountdown(targetVer = null) {
 
     const countdownStart = 5;
     overlay.innerHTML = `
-        <div style="font-size: 3.5em; filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.7));">🔄</div>
-        <div style="color: #0369a1; font-size: 1.55em; font-weight: 900; line-height: 1.4; text-shadow: 0 2px 10px rgba(212,175,55,0.4);">
+        <div style="font-size: 3.5em; filter: drop-shadow(0 0 20px rgba(2, 132, 199, 0.7));">🔄</div>
+        <div style="color: #0369a1; font-size: 1.55em; font-weight: 900; line-height: 1.4; text-shadow: 0 2px 10px rgba(2, 132, 199, 0.4);">
             تم إطلاق تحديث جديد للمنظومة (${ver})!
         </div>
         <div style="color: #1e293b; font-size: 1.05em; line-height: 1.8; max-width: 440px;">
@@ -12790,7 +12898,7 @@ function openNewDiagnosisQuotaGateModal() {
                 💡 <strong>نصيحة توفيرية:</strong> عند بدء الفحص الجديد والوصول لخطوة التقرير، يمكنك اختيار <strong>باقة 5 فحوصات</strong> أو <strong>باقة 10 فحوصات</strong> لتحتفظ برصيد مفتوح لك ولعائلتك دون الحاجة للتفعيل في كل مرة.
             </div>
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <button type="button" onclick="const m=document.getElementById('new-diagnosis-quota-gate-modal'); if(m)m.remove(); resetToInitialState(true);" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #050911; border: 1.5px solid #bae6fd; padding: 14px 18px; border-radius: 12px; font-weight: 900; font-size: 1em; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
+                <button type="button" onclick="const m=document.getElementById('new-diagnosis-quota-gate-modal'); if(m)m.remove(); resetToInitialState(true);" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: 1.5px solid #bae6fd; padding: 14px 18px; border-radius: 12px; font-weight: 900; font-size: 1em; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">
                     💳 أوافق — بدء فحص جديد (مع شراء باقة جديدة للتقرير)
                 </button>
                 <button type="button" onclick="const m=document.getElementById('new-diagnosis-quota-gate-modal'); if(m)m.remove();" style="width: 100%; background: #f8fafc; color: #1e293b; border: 1px solid #cbd5e1; padding: 12px 18px; border-radius: 12px; font-weight: 800; font-size: 0.92em; cursor: pointer;">
@@ -13525,7 +13633,7 @@ function getNotificationReminderBannerHTML(patientId) {
                 </div>
             </div>
             <div>
-                <button type="button" id="btn-toggle-reminder" onclick="setupDailyNotificationReminder('${patientId}')" style="background: ${isEnabled && isGranted ? '#10b981' : 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)'}; color: #0a0e14; border: none; padding: 9px 18px; border-radius: 8px; font-weight: bold; font-size: 0.88em; cursor: pointer; transition: all 0.2s;">
+                <button type="button" id="btn-toggle-reminder" onclick="setupDailyNotificationReminder('${patientId}')" style="background: ${isEnabled && isGranted ? '#10b981' : 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)'}; color: #ffffff; border: none; padding: 9px 18px; border-radius: 8px; font-weight: bold; font-size: 0.88em; cursor: pointer; transition: all 0.2s;">
                     ${isEnabled && isGranted ? '✅ التذكير مفعل' : '🔔 تفعيل التنبيهات'}
                 </button>
             </div>
@@ -14748,7 +14856,7 @@ function playStationAudio(stationKey, onComplete, fallbackStationKey = null) {
                 if (reportBar) {
                     reportBar.style.display = 'flex';
                     reportBar.style.border = '2px solid var(--primary-gold)';
-                    reportBar.style.boxShadow = '0 0 20px rgba(212, 175, 55, 0.45)';
+                    reportBar.style.boxShadow = '0 0 20px rgba(2, 132, 199, 0.45)';
                 }
                 const playBtn = document.getElementById('btn-play-report-audio');
                 if (playBtn) {
@@ -14901,7 +15009,7 @@ function calculateBmiInfo(weightVal, heightVal) {
         const excessVsIdeal = parseFloat((weightVal - idealW).toFixed(1));
         const addedLoad = parseFloat((deltaKg * 4).toFixed(1));
         bmiStatus = "زيادة وزن (Overweight)";
-        bmiColor = "#f59e0b";
+        bmiColor = "#0284c7";
         deltaText = `⚠️ وزن زائد بمقدار +${deltaKg} كجم عن الحد الصحي (+${excessVsIdeal} كجم عن الوزن المثالي)`;
         impact = `يضيف حوالي +${addedLoad} كجم حمولة ضغط إضافية على الركبتين وأسفل الظهر أثناء الحركة.`;
     } else if (bmiVal >= 30) {
@@ -15119,7 +15227,7 @@ async function initAiClinicalChat() {
     messagesBox.innerHTML = `
         <div id="ai-doctor-calling-banner" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 18px 20px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 14px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); animation: fadeIn 0.3s ease;">
             <div style="display: flex; align-items: center; gap: 14px;">
-                <div style="position: relative; width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); display: flex; align-items: center; justify-content: center; font-size: 1.5em; border: 2px solid #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);">
+                <div style="position: relative; width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); display: flex; align-items: center; justify-content: center; font-size: 1.5em; border: 2px solid #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.5); color: #ffffff;">
                     📞
                 </div>
                 <div>
@@ -15155,9 +15263,9 @@ async function initAiClinicalChat() {
         messagesBox.innerHTML = `
             <div class="doctor-welcome-presentation-card" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 14px 18px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); animation: fadeIn 0.3s ease;">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="position: relative; width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, #10b981 0%, #047857 100%); display: flex; align-items: center; justify-content: center; font-size: 1.45em; border: 1.5px solid #bae6fd; box-shadow: 0 0 12px rgba(16, 185, 129, 0.5); flex-shrink: 0;">
+                    <div style="position: relative; width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, #10b981 0%, #047857 100%); display: flex; align-items: center; justify-content: center; font-size: 1.45em; border: 1.5px solid #bae6fd; box-shadow: 0 0 12px rgba(16, 185, 129, 0.5); flex-shrink: 0; color: #ffffff;">
                         🩺
-                        <span style="position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; background: #10b981; border: 2px solid #0f172a; box-shadow: 0 0 8px #10b981;"></span>
+                        <span style="position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; background: #10b981; border: 2px solid #0f172a; box-shadow: 0 0 8px #10b981; color: #ffffff;"></span>
                     </div>
                     <div>
                         <div style="color: #0f172a; font-weight: 800; font-size: 1em; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
@@ -15943,7 +16051,7 @@ async function sendChatMessage() {
             const excessVsIdeal = parseFloat((w - idealW).toFixed(1));
             const addedLoad = parseFloat((deltaKg * 4).toFixed(1));
             bmiStatus = "زيادة وزن (Overweight)";
-            bmiColor = "#f59e0b";
+            bmiColor = "#0284c7";
             deltaText = `⚠️ وزن زائد بمقدار +${deltaKg} كجم عن الحد الصحي (+${excessVsIdeal} كجم عن الوزن المثالي)`;
             impact = `يضيف حوالي +${addedLoad} كجم حمولة ضغط إضافية على الركبتين وأسفل الظهر أثناء الحركة.`;
         } else if (bmiVal >= 30) {

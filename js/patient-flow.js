@@ -52,7 +52,7 @@ const PatientFlow = (function() {
         const areaD = `${pathD} L ${points[points.length - 1].x} ${height - padY} L ${points[0].x} ${height - padY} Z`;
 
         return `
-            <div style="background: #0f172a; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 18px; margin-bottom: 22px;">
+            <div style="background: #f8fafc; border: 1px solid rgba(2, 132, 199, 0.3); border-radius: 12px; padding: 18px; margin-bottom: 22px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                     <div style="color: var(--primary-gold); font-weight: bold; font-size: 1.05em;">📈 منحنى تراجع وتلاشي الألم خلال برنامج الـ 7 أيام:</div>
                     <div style="display: flex; gap: 12px; font-size: 0.8em;">
@@ -71,9 +71,9 @@ const PatientFlow = (function() {
                         </defs>
                         
                         <!-- خطوط الشبكة الأفقية -->
-                        <line x1="${padX}" y1="${padY}" x2="${width - padX}" y2="${padY}" stroke="#1e293b" stroke-dasharray="3,3" />
-                        <line x1="${padX}" y1="${height/2}" x2="${width - padX}" y2="${height/2}" stroke="#1e293b" stroke-dasharray="3,3" />
-                        <line x1="${padX}" y1="${height - padY}" x2="${width - padX}" y2="${height - padY}" stroke="#334155" />
+                        <line x1="${padX}" y1="${padY}" x2="${width - padX}" y2="${padY}" stroke="#e2e8f0" stroke-dasharray="3,3" />
+                        <line x1="${padX}" y1="${height/2}" x2="${width - padX}" y2="${height/2}" stroke="#e2e8f0" stroke-dasharray="3,3" />
+                        <line x1="${padX}" y1="${height - padY}" x2="${width - padX}" y2="${height - padY}" stroke="#cbd5e1" />
 
                         <!-- المساحة المظللة والخط الرئيسي -->
                         <path d="${areaD}" fill="url(#painGrad)" />
@@ -81,8 +81,8 @@ const PatientFlow = (function() {
 
                         <!-- النقاط والقيم -->
                         ${points.map(pt => `
-                            <circle cx="${pt.x}" cy="${pt.y}" r="${pt.isEstimated ? 4 : 6}" fill="${pt.isEstimated ? '#1e293b' : '#10b981'}" stroke="#ffffff" stroke-width="2" />
-                            <text x="${pt.x}" y="${pt.y - 10}" fill="${pt.isEstimated ? '#94a3b8' : '#fef08a'}" font-size="11" font-weight="bold" text-anchor="middle">${pt.pain}/10</text>
+                            <circle cx="${pt.x}" cy="${pt.y}" r="${pt.isEstimated ? 4 : 6}" fill="${pt.isEstimated ? '#94a3b8' : '#059669'}" stroke="#ffffff" stroke-width="2" />
+                            <text x="${pt.x}" y="${pt.y - 10}" fill="${pt.isEstimated ? '#94a3b8' : '#0284c7'}" font-size="11" font-weight="bold" text-anchor="middle">${pt.pain}/10</text>
                             <text x="${pt.x}" y="${height - 10}" fill="#94a3b8" font-size="10" text-anchor="middle">${pt.label}</text>
                         `).join('')}
                     </svg>
@@ -846,7 +846,7 @@ const PatientFlow = (function() {
             clearInterval(activeExerciseTimerInterval);
             buttonEl.dataset.running = 'false';
             buttonEl.innerHTML = `<span>▶️ استئناف التمرين (${buttonEl.dataset.remaining} ثانية)</span>`;
-            buttonEl.style.background = 'linear-gradient(135deg, #d4af37 0%, #aa820a 100%)';
+            buttonEl.style.background = 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)';
             return;
         }
 
@@ -854,7 +854,7 @@ const PatientFlow = (function() {
         const total = parseInt(buttonEl.dataset.total || durationSeconds);
         buttonEl.dataset.running = 'true';
         buttonEl.dataset.total = total;
-        buttonEl.style.background = 'linear-gradient(135deg, #eab308 0%, #ca8a04 100%)';
+        buttonEl.style.background = 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)';
 
         // تشغيل صوت بدء التمرين
         if (typeof playStationAudio === 'function') {
@@ -994,13 +994,13 @@ const PatientFlow = (function() {
             banner.className = 'exercise-rest-transition-banner';
             banner.style.cssText = `
                 background: linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.96) 100%);
-                border: 2px solid #d4af37;
+                border: 2px solid #0284c7;
                 border-radius: 12px;
                 padding: 14px 20px;
                 margin: 14px 0;
                 text-align: center;
                 animation: pulse 1.5s infinite;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(212, 175, 55, 0.35);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(2, 132, 199, 0.35);
                 position: sticky;
                 top: 15px;
                 z-index: 1000;
@@ -1009,9 +1009,9 @@ const PatientFlow = (function() {
             `;
             banner.innerHTML = `
                 <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-                    <div style="font-weight: bold; color: #fbbf24; font-size: 1.05em; display: flex; align-items: center; gap: 8px;">
+                    <div style="font-weight: bold; color: #0284c7; font-size: 1.05em; display: flex; align-items: center; gap: 8px;">
                         <span>⏸️ خذ نفساً عميقاً (فترة راحة للأنسجة):</span>
-                        <span class="rest-timer-countdown" style="background: #d4af37; color: #0a0e14; padding: 2px 10px; border-radius: 12px; font-weight: 900;">${restSec} ثانية</span>
+                        <span class="rest-timer-countdown" style="background: #0284c7; color: #ffffff; padding: 2px 10px; border-radius: 12px; font-weight: 900;">${restSec} ثانية</span>
                     </div>
                     <div style="font-size: 0.88em; color: #94a3b8;">
                         التالي: <strong style="color: #ffffff;">${nextName}</strong>
@@ -1042,8 +1042,8 @@ const PatientFlow = (function() {
 
             // التركيز اللطيف والتمرير نحو التالي
             nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            nextCard.style.outline = '2px solid #d4af37';
-            nextCard.style.boxShadow = '0 0 25px rgba(212, 175, 55, 0.4)';
+            nextCard.style.outline = '2px solid #0284c7';
+            nextCard.style.boxShadow = '0 0 25px rgba(2, 132, 199, 0.4)';
 
             const finishRest = () => {
                 clearInterval(activeRestInterval);

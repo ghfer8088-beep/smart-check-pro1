@@ -226,7 +226,7 @@ const SmartGuidance = (function() {
             updateStageFlowBanner(1, 2);
             if (iconEl) iconEl.textContent = '✅';
             if (subEl) subEl.textContent = 'ممتاز! تم تحديد موضع الشكوى بنجاح';
-            if (mainEl) mainEl.innerHTML = `موضع الألم المختار: <strong style="color: #fef08a;">${point.title}</strong>`;
+            if (mainEl) mainEl.innerHTML = `موضع الألم المختار: <strong style="color: #0284c7;">${point.title}</strong>`;
 
             btn.className = 'sticky-guidance-action-btn state-ready';
             if (btnIcon) btnIcon.textContent = '🩺';
@@ -892,8 +892,8 @@ const SmartGuidance = (function() {
                     const targetCard = progress.nextUncompleted || document.querySelector('#step-section-4 .clinical-exercise-card');
                     if (targetCard) {
                         targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        targetCard.style.outline = '3px solid #eab308';
-                        targetCard.style.boxShadow = '0 0 25px rgba(234, 179, 8, 0.7)';
+                        targetCard.style.outline = '3px solid #0284c7';
+                        targetCard.style.boxShadow = '0 0 25px rgba(2, 132, 199, 0.7)';
                         setTimeout(() => {
                             targetCard.style.outline = '';
                             targetCard.style.boxShadow = '';

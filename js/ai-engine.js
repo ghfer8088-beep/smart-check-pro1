@@ -329,7 +329,7 @@ ${greetingInstruction}
     generateOfflineClinicalFallback(patientData) {
         const pNameClean = (patientData.patientName || '').trim().replace(/^يا\s+/i, '');
         const hasRealName = pNameClean && pNameClean !== 'المراجع الكريم' && pNameClean !== 'المراجع' && pNameClean !== 'المراجع المحترم';
-        const greetingText = hasRealName ? `أهلاً بك يا <strong style="color: #fef08a;">${pNameClean}</strong> في «وداعاً للألم»..` : `أهلاً بك في «وداعاً للألم»..`;
+        const greetingText = hasRealName ? `أهلاً بك يا <strong style="color: #0284c7;">${pNameClean}</strong> في «وداعاً للألم»..` : `أهلاً بك في «وداعاً للألم»..`;
         const painArea = patientData.painAreaTitle || patientData.title || 'المنطقة المحددة';
         let condition = patientData.primaryDiagnosis || patientData.probableCondition || patientData.conditionName || '';
         const pointId = (patientData.pointId || patientData.painAreaKey || '').toLowerCase();
@@ -404,7 +404,7 @@ ${greetingInstruction}
                 ${rootInfo}
                 ${secInfo}
                 ${userNotes}
-                <div style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 10px; padding: 14px 18px; margin: 14px 0; text-align: right;">
+                <div style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(2, 132, 199, 0.25); border-radius: 10px; padding: 14px 18px; margin: 14px 0; text-align: right;">
                     <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.98em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; text-align: right;">
                         <span>🔬</span> التفسير الميكانيكي والتشريحي لأصل المشكلة:
                     </div>

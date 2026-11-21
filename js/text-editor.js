@@ -227,11 +227,11 @@
             left: 0;
             right: 0;
             background: linear-gradient(90deg, #0f172a 0%, #064e3b 50%, #0f172a 100%);
-            color: #fef08a;
+            color: #0284c7;
             padding: 10px 16px;
             text-align: center;
             z-index: 999999;
-            border-bottom: 2px solid #d4af37;
+            border-bottom: 2px solid #0284c7;
             box-shadow: 0 4px 20px rgba(0,0,0,0.85);
             font-weight: bold;
             display: flex;
@@ -244,10 +244,10 @@
         banner.contentEditable = 'false';
         banner.innerHTML = `
             <span>✏️ وضع التعديل المباشر نَشِط الآن: انقر واكتب فوق أي نص على الشاشة بحرية!</span>
-            <button type="button" onclick="toggleLiveVisualEditing()" style="background: #10b981; color: #ffffff; border: 1.5px solid #fef08a; padding: 5px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit;">
+            <button type="button" onclick="toggleLiveVisualEditing()" style="background: #10b981; color: #ffffff; border: 1.5px solid #0284c7; padding: 5px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit;">
                 💾 حفظ وإنهاء التعديل
             </button>
-            <button type="button" onclick="openTextEditorModal()" style="background: rgba(212, 175, 55, 0.25); color: #fef08a; border: 1px solid #d4af37; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-family: inherit;">
+            <button type="button" onclick="openTextEditorModal()" style="background: rgba(2, 132, 199, 0.25); color: #0284c7; border: 1px solid #0284c7; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-family: inherit;">
                 ⚙️ نافذة الأداة
             </button>
         `;
@@ -292,10 +292,10 @@
         let html = '<div style="display: flex; flex-direction: column; gap: 6px;">';
         rules.forEach(rule => {
             html += `
-                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; padding: 6px 12px; font-size: 0.85em;">
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(2, 132, 199, 0.3); border-radius: 8px; padding: 6px 12px; font-size: 0.85em;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span style="color: #ef4444; text-decoration: line-through;">${escapeHtml(rule.from)}</span>
-                        <span style="color: #d4af37;">➔</span>
+                        <span style="color: #0284c7;">➔</span>
                         <span style="color: #10b981; font-weight: bold;">${escapeHtml(rule.to)}</span>
                     </div>
                     <button type="button" onclick="deleteReplacementRule('${escapeJs(rule.from)}')" title="حذف واستعادة الأصل" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8em;">✕</button>
@@ -336,7 +336,7 @@
                 z-index: 998;
                 background: linear-gradient(135deg, #0f172a 0%, #064e3b 100%);
                 border: 1.8px solid var(--primary-gold);
-                color: #fef08a;
+                color: #0284c7;
                 padding: 8px 16px;
                 border-radius: 30px;
                 font-family: 'Cairo', sans-serif;
@@ -345,7 +345,7 @@
                 display: flex;
                 align-items: center;
                 gap: 8px;
-                box-shadow: 0 6px 20px rgba(0,0,0,0.65), 0 0 12px rgba(212, 175, 55, 0.35);
+                box-shadow: 0 6px 20px rgba(0,0,0,0.65), 0 0 12px rgba(2, 132, 199, 0.35);
                 cursor: pointer;
                 transition: transform 0.2s ease, box-shadow 0.2s ease;
             `;
@@ -379,10 +379,10 @@
         modal.innerHTML = `
             <div style="background: linear-gradient(135deg, #0b1322 0%, #17253d 100%); border: 2px solid var(--primary-gold); border-radius: 16px; width: 100%; max-width: 540px; box-shadow: 0 15px 40px rgba(0,0,0,0.9); overflow: hidden; display: flex; flex-direction: column; max-height: 90vh;">
                 <!-- رأس النافذة -->
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid rgba(212, 175, 55, 0.3); background: rgba(15, 23, 42, 0.8);">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid rgba(2, 132, 199, 0.3); background: rgba(15, 23, 42, 0.8);">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span style="font-size: 1.3em;">✏️</span>
-                        <h3 style="margin: 0; color: #fef08a; font-size: 1.1em; font-weight: 800;">أداة تعديل النصوص السريعة</h3>
+                        <h3 style="margin: 0; color: #0284c7; font-size: 1.1em; font-weight: 800;">أداة تعديل النصوص السريعة</h3>
                     </div>
                     <button type="button" onclick="closeTextEditorModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.3em; cursor: pointer; padding: 4px;" title="إغلاق">✕</button>
                 </div>
@@ -393,20 +393,20 @@
                     <div id="editor-feedback-msg" style="display: none; background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 12px; border-radius: 8px; font-size: 0.85em; text-align: center; font-weight: bold;"></div>
 
                     <!-- القسم الأول: استبدال الكلمات -->
-                    <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 10px; padding: 14px;">
+                    <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(2, 132, 199, 0.25); border-radius: 10px; padding: 14px;">
                         <h4 style="margin: 0 0 10px 0; color: #38bdf8; font-size: 0.95em; font-weight: 800; display: flex; align-items: center; gap: 6px;">
                             <span>🔄</span> استبدال كلمة أو عبارة في كامل التطبيق:
                         </h4>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             <div>
                                 <label style="display: block; color: #cbd5e1; font-size: 0.8em; margin-bottom: 4px; font-weight: 600;">الكلمة الحالية (التي تريد تغييرها):</label>
-                                <input type="text" id="editor-from-text" placeholder="مثال: التقويم اليدوي" style="width: 100%; background: #080c14; border: 1px solid rgba(212, 175, 55, 0.4); color: #fff; padding: 8px 12px; border-radius: 8px; font-family: inherit; font-size: 0.9em; box-sizing: border-box;">
+                                <input type="text" id="editor-from-text" placeholder="مثال: التقويم اليدوي" style="width: 100%; background: #080c14; border: 1px solid rgba(2, 132, 199, 0.4); color: #fff; padding: 8px 12px; border-radius: 8px; font-family: inherit; font-size: 0.9em; box-sizing: border-box;">
                             </div>
                             <div>
                                 <label style="display: block; color: #cbd5e1; font-size: 0.8em; margin-bottom: 4px; font-weight: 600;">الكلمة الجديدة (البديلة):</label>
-                                <input type="text" id="editor-to-text" placeholder="مثال: الكايروبراكتيك" style="width: 100%; background: #080c14; border: 1px solid rgba(212, 175, 55, 0.4); color: #fff; padding: 8px 12px; border-radius: 8px; font-family: inherit; font-size: 0.9em; box-sizing: border-box;">
+                                <input type="text" id="editor-to-text" placeholder="مثال: الكايروبراكتيك" style="width: 100%; background: #080c14; border: 1px solid rgba(2, 132, 199, 0.4); color: #fff; padding: 8px 12px; border-radius: 8px; font-family: inherit; font-size: 0.9em; box-sizing: border-box;">
                             </div>
-                            <button type="button" onclick="executeWordReplacement()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 1px solid #34d399; color: #fff; padding: 9px; border-radius: 8px; font-family: inherit; font-size: 0.92em; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); margin-top: 4px;">
+                            <button type="button" onclick="executeWordReplacement()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 1px solid #34d399; color: #ffffff; padding: 9px; border-radius: 8px; font-family: inherit; font-size: 0.92em; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); margin-top: 4px;">
                                 ⚡ استبدال في كامل الصفحة وحفظ التعديل
                             </button>
                         </div>
@@ -414,19 +414,19 @@
 
                     <!-- القسم الثاني: وضع التحرير المباشر بالنقر -->
                     <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 14px;">
-                        <h4 style="margin: 0 0 6px 0; color: #fef08a; font-size: 0.95em; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+                        <h4 style="margin: 0 0 6px 0; color: #0284c7; font-size: 0.95em; font-weight: 800; display: flex; align-items: center; gap: 6px;">
                             <span>✍️</span> وضع التحرير المرئي المباشر (مثل Word):
                         </h4>
                         <p style="margin: 0 0 10px 0; color: #94a3b8; font-size: 0.82em; line-height: 1.5;">
                             عند تفعيل هذا الوضع، تصبح كامل الشاشة قابلة للكتابة، يمكنك النقر على أي عنوان أو نص وتعديله مباشرة لتجربة مظهره.
                         </p>
-                        <button type="button" id="btn-toggle-live-edit" onclick="toggleLiveVisualEditing()" style="background: #2563eb; border: 1px solid #60a5fa; color: #fff; padding: 8px 14px; border-radius: 8px; font-family: inherit; font-size: 0.88em; font-weight: bold; cursor: pointer; width: 100%;">
+                        <button type="button" id="btn-toggle-live-edit" onclick="toggleLiveVisualEditing()" style="background: #2563eb; border: 1px solid #60a5fa; color: #ffffff; padding: 8px 14px; border-radius: 8px; font-family: inherit; font-size: 0.88em; font-weight: bold; cursor: pointer; width: 100%;">
                             ✏️ تفعيل التعديل بالنقر المباشر
                         </button>
                     </div>
 
                     <!-- القسم الثالث: قائمة الكلمات المعدلة حالياً -->
-                    <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 10px; padding: 14px;">
+                    <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(2, 132, 199, 0.25); border-radius: 10px; padding: 14px;">
                         <h4 style="margin: 0 0 8px 0; color: #cbd5e1; font-size: 0.9em; font-weight: 700;">
                             📋 الكلمات المعدلة المحفوظة في التطبيق:
                         </h4>
@@ -435,8 +435,8 @@
                 </div>
 
                 <!-- تذييل النافذة: أزرار التصدير والإغلاق -->
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding: 12px 20px; border-top: 1px solid rgba(212, 175, 55, 0.3); background: rgba(15, 23, 42, 0.9);">
-                    <button type="button" onclick="copyReplacementsToClipboard()" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.3) 0%, rgba(16, 185, 129, 0.3) 100%); border: 1px solid var(--primary-gold); color: #fef08a; padding: 7px 14px; border-radius: 8px; font-family: inherit; font-size: 0.85em; font-weight: bold; cursor: pointer;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding: 12px 20px; border-top: 1px solid rgba(2, 132, 199, 0.3); background: rgba(15, 23, 42, 0.9);">
+                    <button type="button" onclick="copyReplacementsToClipboard()" style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.3) 0%, rgba(16, 185, 129, 0.3) 100%); border: 1px solid var(--primary-gold); color: #0284c7; padding: 7px 14px; border-radius: 8px; font-family: inherit; font-size: 0.85em; font-weight: bold; cursor: pointer;">
                         📋 نسخ التعديلات لإرسالها للمساعد
                     </button>
                     <button type="button" onclick="resetAllReplacements()" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 7px 12px; border-radius: 8px; font-family: inherit; font-size: 0.82em; cursor: pointer;">

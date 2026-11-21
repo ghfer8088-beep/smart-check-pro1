@@ -1190,7 +1190,7 @@ const ClinicalEngine = (function() {
                 const excessVsIdeal = parseFloat((w - idealW).toFixed(1));
                 const addedLoad = parseFloat((deltaKg * 4).toFixed(1));
                 bmiStatus = "زيادة وزن (Overweight)";
-                bmiColor = "#f59e0b";
+                bmiColor = "#0284c7";
                 deltaText = `⚠️ وزن زائد بمقدار +${deltaKg} كجم عن الحد الصحي الأعلى (+${excessVsIdeal} كجم عن الوزن المثالي ${idealW} كجم)`;
                 impact = `الوزن الزائد يضاعف الحمل الانضغاطي على الفقرات والمفاصل ويضيف حوالي ${addedLoad} كجم ضغطاً ميكانيكياً إضافياً على الركبتين وأسفل الظهر أثناء الحركة.`;
                 bmiPoints = 26;
@@ -1239,7 +1239,7 @@ const ClinicalEngine = (function() {
             strainAnalysis = "الفقرات والمفاصل تخضع لضغط محوري هائل يتطلب تفريغاً يدوياً عاجلاً (Decompression) لمنع تفاقم وتآكل الغضاريف.";
         } else if (biomechanicalStrainScore >= 55) {
             strainLevel = "متوسط إلى مرتفع";
-            strainColor = "#f59e0b";
+            strainColor = "#0284c7";
             strainAnalysis = "يوجد إجهاد مستمر على الأنسجة والمفاصل، تقويم الفقرات والتمارين التأهيلية ستحدث فرقاً جوهرياً في التسكين.";
         }
 
