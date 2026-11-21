@@ -392,32 +392,32 @@ ${greetingInstruction}
             }
         }
 
-        const userNotes = patientData.userNotes ? `<div style="background: rgba(15,23,42,0.6); padding: 10px 14px; border-radius: 8px; border-right: 3px solid #38bdf8; margin: 10px 0; color: #93c5fd; font-size: 0.88em;">📝 <strong>تفاصيل إضافية من وصفك:</strong> ${patientData.userNotes}</div>` : '';
-        const rootInfo = patientData.rootLevel ? `<div style="color: #38bdf8; font-size: 0.88em; font-weight: bold; margin-top: 5px;">🎯 المستوى التشريحي المستهدف: ${patientData.rootLevel}</div>` : '';
-        const secInfo = patientData.secondaryDiagnosis ? `<div style="color: #cbd5e1; font-size: 0.85em; margin-top: 4px;">• <strong>التشخيص التفريقي المصاحب:</strong> ${patientData.secondaryDiagnosis}</div>` : '';
+        const userNotes = patientData.userNotes ? `<div style="background: #f8fafc; padding: 10px 14px; border-radius: 8px; border-right: 3px solid #38bdf8; margin: 10px 0; color: #0369a1; font-size: 0.88em;">📝 <strong>تفاصيل إضافية من وصفك:</strong> ${patientData.userNotes}</div>` : '';
+        const rootInfo = patientData.rootLevel ? `<div style="color: #0369a1; font-size: 0.88em; font-weight: bold; margin-top: 5px;">🎯 المستوى التشريحي المستهدف: ${patientData.rootLevel}</div>` : '';
+        const secInfo = patientData.secondaryDiagnosis ? `<div style="color: #1e293b; font-size: 0.85em; margin-top: 4px;">• <strong>التشخيص التفريقي المصاحب:</strong> ${patientData.secondaryDiagnosis}</div>` : '';
 
         return `
-            <div class="ai-insight-formatted-content" style="line-height: 1.8; color: #e2e8f0; font-size: 0.95em; direction: rtl; text-align: right; word-spacing: normal; letter-spacing: normal;">
+            <div class="ai-insight-formatted-content" style="line-height: 1.8; color: #1e293b; font-size: 0.95em; direction: rtl; text-align: right; word-spacing: normal; letter-spacing: normal;">
                 <p class="ai-report-paragraph" style="margin-bottom: 12px; text-align: right; line-height: 1.8;">
-                    ${greetingText} بناءً على الفحص السريري المباشر لموضع <strong style="color: var(--primary-gold);">${painArea}</strong> وتفاصيل استشارتك ومؤشراتك الحيوية، فإن حالتك مصنفة سريرياً كـ: <strong style="color: #38bdf8;">${condition}</strong>.
+                    ${greetingText} بناءً على الفحص السريري المباشر لموضع <strong style="color: var(--primary-gold);">${painArea}</strong> وتفاصيل استشارتك ومؤشراتك الحيوية، فإن حالتك مصنفة سريرياً كـ: <strong style="color: #0369a1;">${condition}</strong>.
                 </p>
                 ${rootInfo}
                 ${secInfo}
                 ${userNotes}
-                <div style="background: rgba(17, 24, 39, 0.8); border: 1px solid rgba(2, 132, 199, 0.25); border-radius: 10px; padding: 14px 18px; margin: 14px 0; text-align: right;">
+                <div style="background: #f8fafc; border: 1px solid rgba(2, 132, 199, 0.25); border-radius: 10px; padding: 14px 18px; margin: 14px 0; text-align: right;">
                     <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.98em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; text-align: right;">
                         <span>🔬</span> التفسير الميكانيكي والتشريحي لأصل المشكلة:
                     </div>
-                    <div style="color: #cbd5e1; font-size: 0.92em; line-height: 1.75; text-align: right; word-spacing: normal;">
+                    <div style="color: #1e293b; font-size: 0.92em; line-height: 1.75; text-align: right; word-spacing: normal;">
                         ${mechanism}
                     </div>
                 </div>
 
-                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 14px 18px; margin: 14px 0; text-align: right;">
-                    <div style="color: #6ee7b7; font-weight: bold; font-size: 0.98em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; text-align: right;">
+                <div style="background: #dcfce7; border: 1px solid #dcfce7; border-radius: 10px; padding: 14px 18px; margin: 14px 0; text-align: right;">
+                    <div style="color: #047857; font-weight: bold; font-size: 0.98em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; text-align: right;">
                         <span>⚡</span> دور المعالجة اليدوية والكايروبراكتيك:
                     </div>
-                    <div style="color: #cbd5e1; font-size: 0.9em; line-height: 1.75; text-align: right; word-spacing: normal;">
+                    <div style="color: #1e293b; font-size: 0.9em; line-height: 1.75; text-align: right; word-spacing: normal;">
                         ${patientData.chiropracticProtocol ? patientData.chiropracticProtocol + ' ' : ''}يرتكز الحل الميكانيكي الجذري على تقنيات تفريغ الضغط اليدوي <span class="medical-latin-badge" dir="ltr">(Manual Decompression)</span> وتقويم الكايروبراكتيك لإعادة التوازن السليم للمفاصل وتخفيف الشد عن الأعصاب بأمان دون أدوية أو جراحة؛ ويسعد فريق «وداعاً للألم» تقديم التوجيه السريري وقراءة صور الرنين مجاناً عند الحاجة.
                     </div>
                 </div>
@@ -1506,7 +1506,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                 pill = document.createElement('div');
                 pill.id = 'ai-live-audio-pill';
                 pill.className = 'ai-live-audio-pill';
-                pill.style.cssText = 'position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); z-index: 99999; background: linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.98) 100%); border: 1.5px solid #38bdf8; border-radius: 30px; padding: 8px 18px; display: flex; align-items: center; gap: 12px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.35); backdrop-filter: blur(10px); direction: rtl;';
+                pill.style.cssText = 'position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); z-index: 99999; background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid #38bdf8; border-radius: 30px; padding: 8px 18px; display: flex; align-items: center; gap: 12px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 15px #e0f2fe; backdrop-filter: blur(10px); direction: rtl;';
                 pill.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 3px; height: 18px;">
                         <span style="width: 3px; background: #38bdf8; border-radius: 3px; animation: liveSoundWave 0.8s ease-in-out infinite alternate;"></span>
@@ -1514,8 +1514,8 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                         <span style="width: 3px; background: #38bdf8; border-radius: 3px; animation: liveSoundWave 0.7s ease-in-out infinite alternate 0.4s;"></span>
                         <span style="width: 3px; background: #38bdf8; border-radius: 3px; animation: liveSoundWave 1s ease-in-out infinite alternate 0.1s;"></span>
                     </div>
-                    <span id="ai-live-pill-text" style="color: #f1f5f9; font-size: 0.88em; font-weight: bold; white-space: nowrap;">🔊 ${persona.name} يتحدث الآن...</span>
-                    <button type="button" onclick="Wada3anAiEngine.stopSpeaking();" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; border-radius: 20px; padding: 4px 12px; font-size: 0.8em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.2s ease;">
+                    <span id="ai-live-pill-text" style="color: #1e293b; font-size: 0.88em; font-weight: bold; white-space: nowrap;">🔊 ${persona.name} يتحدث الآن...</span>
+                    <button type="button" onclick="Wada3anAiEngine.stopSpeaking();" style="background: #fee2e2; border: 1px solid #ef4444; color: #dc2626; border-radius: 20px; padding: 4px 12px; font-size: 0.8em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.2s ease;">
                         ⏹️ إيقاف الصوت
                     </button>
                 `;

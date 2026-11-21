@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <script>
     (function () {
-        const CURRENT_VERSION = 'v33.25';
+        const CURRENT_VERSION = 'v33.30';
         try {
             const savedVer = localStorage.getItem('scp_app_runtime_version');
             if (savedVer && savedVer !== CURRENT_VERSION) {
@@ -73,11 +73,11 @@
     <!-- End Meta Pixel Code -->
 
     <!-- منظومة الأمان السيبراني وحماية الملكية الفكرية وقفل النطاق -->
-    <script src="js/security-shield.js?v=33.25"></script>
-    <script src="js/system-watchdog.js?v=33.25"></script>
+    <script src="js/security-shield.js?v=33.30"></script>
+    <script src="js/system-watchdog.js?v=33.30"></script>
 
     <!-- وسوم تطبيق الويب التقدمي PWA والأيقونات الرسمية -->
-    <link rel="manifest" href="manifest.json?v=33.25">
+    <link rel="manifest" href="manifest.json?v=33.30">
     <link rel="icon" type="image/png" href="assets/logo.png">
     <link rel="shortcut icon" href="assets/logo.png">
     <link rel="apple-touch-icon" href="assets/logo.png">
@@ -89,7 +89,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="وداعاً للألم">
-    <link rel="stylesheet" href="css/style.css?v=33.25">
+    <link rel="stylesheet" href="css/style.css?v=33.30">
     <script>
         // التحقق من وصول أحدث إصدار وبث التحديث عالمياً لجميع الأجهزة
         (function() {
@@ -205,7 +205,7 @@
                 <div class="brand-version-badge" onclick="event.stopPropagation(); if(typeof forceAppUpdateAndClearCache==='function') forceAppUpdateAndClearCache();" title="انقر لتحديث وتنشيط التطبيق فوراً" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72em; color: #475569; margin-top: 1px; cursor: pointer; user-select: none;">
                     <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                     <span>الإصدار:</span>
-                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v33.25</strong>
+                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v33.30</strong>
                 </div>
             </div>
         </div>
@@ -426,7 +426,7 @@
         <section id="step-section-1" class="app-step-section">
 
             <!-- بنر استئناف الجلسة العلاجية الجارية تلقائياً لحماية المراجع من أي فقدان لجلسته -->
-            <div id="step1-active-session-banner" class="no-print" style="display: none; background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 2px solid #10b981; border-radius: 14px; padding: 14px 18px; margin-bottom: 14px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.35); align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div id="step1-active-session-banner" class="no-print" style="display: none; background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 2px solid #10b981; border-radius: 14px; padding: 14px 18px; margin-bottom: 14px; box-shadow: 0 4px 20px #dcfce7; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <span style="font-size: 1.8em;"><svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></span>
                     <div>
@@ -729,16 +729,16 @@
                     <div style="color: #475569; font-size: 0.82em; margin-bottom: 12px;">تساعدنا هذه البيانات في تخصيص خطة الاستشفاء الحركي لاستعادة نمط حياتك الطبيعي</div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px;">
                         <label style="color: #1e293b; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer; background: #ffffff; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
-                            <input type="checkbox" name="life_impact" value="الصلاة بسجود كامل وخشوع" style="accent-color: #38bdf8; width: 16px; height: 16px;"> <svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg> الصلاة بسجود كامل وخشوع
+                            <input type="checkbox" name="life_impact" value="الصلاة بسجود كامل وخشوع" style="accent-color: #0369a1; width: 16px; height: 16px;"> <svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg> الصلاة بسجود كامل وخشوع
                         </label>
                         <label style="color: #1e293b; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer; background: #ffffff; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
-                            <input type="checkbox" name="life_impact" value="النوم العميق المتواصل دون ألم" style="accent-color: #38bdf8; width: 16px; height: 16px;"> <svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> النوم العميق المتواصل دون ألم
+                            <input type="checkbox" name="life_impact" value="النوم العميق المتواصل دون ألم" style="accent-color: #0369a1; width: 16px; height: 16px;"> <svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> النوم العميق المتواصل دون ألم
                         </label>
                         <label style="color: #1e293b; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer; background: #ffffff; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
-                            <input type="checkbox" name="life_impact" value="حمل الأطفال واللعب مع الأسرة" style="accent-color: #38bdf8; width: 16px; height: 16px;"> <svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>‍<svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>‍👧‍👦 حمل الأطفال واللعب مع الأسرة
+                            <input type="checkbox" name="life_impact" value="حمل الأطفال واللعب مع الأسرة" style="accent-color: #0369a1; width: 16px; height: 16px;"> <svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>‍<svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>‍👧‍👦 حمل الأطفال واللعب مع الأسرة
                         </label>
                         <label style="color: #1e293b; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer; background: #ffffff; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
-                            <input type="checkbox" name="life_impact" value="الجلوس المريح والإنتاجية في العمل والقيادة" style="accent-color: #38bdf8; width: 16px; height: 16px;"> <svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> الجلوس المريح والإنتاجية في العمل والقيادة
+                            <input type="checkbox" name="life_impact" value="الجلوس المريح والإنتاجية في العمل والقيادة" style="accent-color: #0369a1; width: 16px; height: 16px;"> <svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> الجلوس المريح والإنتاجية في العمل والقيادة
                         </label>
                     </div>
                 </div>
@@ -937,7 +937,7 @@
 
             <!-- زر التواصل والإغلاق -->
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <a href="https://wa.me/962790360440?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20%D8%AC%D9%84%D8%B3%D8%A7%D8%AA%20%D8%A7%D9%84%D9%83%D8%A7%D9%8A%D8%B1%D9%88%D8%A8%D8%B1%D8%A7%D9%83%D8%AA%D9%8A%D9%83%20%D9%81%D9%8A%20%C2%AB%D9%88%D8%AF%D8%A7%D8%B9%D8%A7%D9%8B%20%D9%84%D9%84%D8%A3%D9%84%D9%85%C2%BB" target="_blank" rel="noopener noreferrer nofollow" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.95em; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);">
+                <a href="https://wa.me/962790360440?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20%D8%AC%D9%84%D8%B3%D8%A7%D8%AA%20%D8%A7%D9%84%D9%83%D8%A7%D9%8A%D8%B1%D9%88%D8%A8%D8%B1%D8%A7%D9%83%D8%AA%D9%8A%D9%83%20%D9%81%D9%8A%20%C2%AB%D9%88%D8%AF%D8%A7%D8%B9%D8%A7%D9%8B%20%D9%84%D9%84%D8%A3%D9%84%D9%85%C2%BB" target="_blank" rel="noopener noreferrer nofollow" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.95em; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px #dcfce7;">
                     <span><svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> تواصل مع «وداعاً للألم» للاستفسار أو حجز جلسة</span>
                     <span><svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
                 </a>
@@ -980,7 +980,7 @@
             </div>
 
             <div style="display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap;">
-                <a href="https://wa.me/962790360440?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%20%D8%AF%D9%83%D8%AA%D9%88%D8%B1%D8%8C%20%D9%84%D8%AF%D9%8A%20%D8%B5%D9%88%D8%B1%D8%A9%2F%D8%AA%D9%82%D8%B1%D9%8A%D8%B1%20%D8%B1%D9%86%D9%8A%D9%86%20%D9%85%D8%BA%D9%86%D8%A7%D8%B7%D9%8A%D8%B3%D9%8A%20(MRI)%20%D9%88%D8%A3%D9%88%D8%AF%20%D8%A5%D8%B1%D8%B3%D8%A7%D9%84%D9%87%D8%A7%20%D9%84%D9%82%D8%B1%D8%A7%D8%A1%D8%AA%D9%87%D8%A7%20%D9%88%D8%AA%D8%AD%D8%AF%D9%8A%D8%AF%20%D8%AE%D8%B7%D8%A9%20%D8%A7%D9%84%D8%B9%D9%84%D8%A7%D8%AC%20%D8%A7%D9%84%D9%85%D9%86%D8%A7%D8%B3%D8%A8%D8%A9%20%D9%84%D8%AD%D8%A7%D9%84%D8%AA%D9%8A." target="_blank" rel="noopener noreferrer nofollow" style="flex: 1; min-width: 220px; background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); color: #ffffff; padding: 12px 18px; border-radius: 8px; text-decoration: none; font-weight: 800; font-size: 0.95em; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.35);">
+                <a href="https://wa.me/962790360440?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%20%D8%AF%D9%83%D8%AA%D9%88%D8%B1%D8%8C%20%D9%84%D8%AF%D9%8A%20%D8%B5%D9%88%D8%B1%D8%A9%2F%D8%AA%D9%82%D8%B1%D9%8A%D8%B1%20%D8%B1%D9%86%D9%8A%D9%86%20%D9%85%D8%BA%D9%86%D8%A7%D8%B7%D9%8A%D8%B3%D9%8A%20(MRI)%20%D9%88%D8%A3%D9%88%D8%AF%20%D8%A5%D8%B1%D8%B3%D8%A7%D9%84%D9%87%D8%A7%20%D9%84%D9%82%D8%B1%D8%A7%D8%A1%D8%AA%D9%87%D8%A7%20%D9%88%D8%AA%D8%AD%D8%AF%D9%8A%D8%AF%20%D8%AE%D8%B7%D8%A9%20%D8%A7%D9%84%D8%B9%D9%84%D8%A7%D8%AC%20%D8%A7%D9%84%D9%85%D9%86%D8%A7%D8%B3%D8%A8%D8%A9%20%D9%84%D8%AD%D8%A7%D9%84%D8%AA%D9%8A." target="_blank" rel="noopener noreferrer nofollow" style="flex: 1; min-width: 220px; background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); color: #ffffff; padding: 12px 18px; border-radius: 8px; text-decoration: none; font-weight: 800; font-size: 0.95em; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px #e0f2fe;">
                     <span><svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> أرسل صورة الرنين للمعالج واتساب</span>
                 </a>
                 <button type="button" onclick="closeMriConsultationModal()" style="background: #f8fafc; color: #1e293b; border: 1px solid #cbd5e1; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">إغلاق</button>
@@ -1456,7 +1456,7 @@
             </div>
 
             <!-- شريط إرشادي تفاعلي يوضح للمريض بدقة أين يضغط للمتابعة وبدء الخطة -->
-            <div id="duaa-modal-guidance-strip" style="background: linear-gradient(135deg, #f0f9ff 0%, #f0fdf4 100%); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px 18px; margin: 0 auto 16px auto; max-width: 440px; color: #047857; font-size: 0.94em; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);">
+            <div id="duaa-modal-guidance-strip" style="background: linear-gradient(135deg, #f0f9ff 0%, #f0fdf4 100%); border: 1.5px solid #10b981; border-radius: 12px; padding: 12px 18px; margin: 0 auto 16px auto; max-width: 440px; color: #047857; font-size: 0.94em; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 0 15px #dcfce7;">
                 <span style="font-size: 1.3em;">👉</span>
                 <span>للمتابعة وبدء برنامجك، اضغط على الزر الأخضر أدناه</span>
                 <span style="font-size: 1.3em;"><svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></span>
@@ -1678,7 +1678,7 @@
                 </div>
 
                 <!-- باقة 3: باقة الحل الجذري الشاملة (10 فحوصات) -->
-                <div style="background: #f0fdf4; border: 2px solid #10b981; border-radius: 16px; padding: 20px 16px; display: flex; flex-direction: column; justify-content: space-between; position: relative; box-shadow: 0 8px 24px rgba(16,185,129,0.15);">
+                <div style="background: #f0fdf4; border: 2px solid #10b981; border-radius: 16px; padding: 20px 16px; display: flex; flex-direction: column; justify-content: space-between; position: relative; box-shadow: 0 8px 24px #dcfce7;">
                     <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; font-size: 0.72em; font-weight: 900; padding: 3px 12px; border-radius: 12px; border: 1px solid #6ee7b7; white-space: nowrap; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
                         <svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> القيمة القصوى • وفر 50%
                     </div>
@@ -1690,14 +1690,14 @@
                             <span id="tier-price-10" style="color: #0369a1; font-size: 1.8em; font-weight: 900; font-family: monospace;">15</span>
                             <span style="color: #1e293b; font-size: 0.88em; font-weight: bold; margin-right: 4px;">د.أ</span>
                         </div>
-                        <div style="border-top: 1px solid rgba(16,185,129,0.25); padding-top: 12px; margin-bottom: 16px; font-size: 0.82em; color: #1e293b; line-height: 1.7;">
+                        <div style="border-top: 1px solid #dcfce7; padding-top: 12px; margin-bottom: 16px; font-size: 0.82em; color: #1e293b; line-height: 1.7;">
                             <div style="margin-bottom: 6px;">✓ 10 فحوصات سريرية شاملة مدى الحياة</div>
                             <div style="margin-bottom: 6px;">✓ متابعة دورية ومقارنة مؤشرات الشفاء</div>
                             <div style="margin-bottom: 6px;">✓ أعلى قيمة توفيرية لك ولأحبائك</div>
                             <div style="margin-bottom: 6px;">✓ أولوية الدعم والاستشارات الحركية</div>
                         </div>
                     </div>
-                    <button type="button" id="tier-btn-10" onclick="selectTierForCheckout(10)" style="width: 100%; background: linear-gradient(135deg, #10b981, #047857); color: #ffffff; border: 1px solid #6ee7b7; padding: 11px; border-radius: 10px; font-weight: 900; font-size: 0.95em; cursor: pointer; box-shadow: 0 4px 14px rgba(16,185,129,0.35);">
+                    <button type="button" id="tier-btn-10" onclick="selectTierForCheckout(10)" style="width: 100%; background: linear-gradient(135deg, #10b981, #047857); color: #ffffff; border: 1px solid #6ee7b7; padding: 11px; border-radius: 10px; font-weight: 900; font-size: 0.95em; cursor: pointer; box-shadow: 0 4px 14px #dcfce7;">
                         اختيار الباقة الشاملة (15 د.أ) ←
                     </button>
                 </div>
@@ -1713,7 +1713,7 @@
                         <div style="margin-bottom: 14px;">
                             <span style="color: #047857; font-size: 1.5em; font-weight: 900;">مجاناً 100%</span>
                         </div>
-                        <div style="border-top: 1px solid rgba(239,68,68,0.2); padding-top: 12px; margin-bottom: 16px; font-size: 0.82em; color: #1e293b; line-height: 1.7;">
+                        <div style="border-top: 1px solid #fee2e2; padding-top: 12px; margin-bottom: 16px; font-size: 0.82em; color: #1e293b; line-height: 1.7;">
                             <div style="margin-bottom: 6px;">✓ تُقدَّم مجاناً لوجه الله تعالى</div>
                             <div style="margin-bottom: 6px;">✓ صدقة جارية عن روح والد المعالج</div>
                             <div style="margin-bottom: 6px;">✓ فحص سريري كامل + خطة تمارين</div>
@@ -1813,7 +1813,7 @@
 
             <!-- قسم 2: شاشة تأكيد استلام الحوالة وإدخال كود التفعيل المباشر -->
             <div id="chk-confirmation-pane" style="display: none; padding: 6px 0; text-align: center;">
-                <div style="background: #f0fdf4; border: 2px solid #10b981; border-radius: 16px; padding: 22px 18px; margin-bottom: 20px; box-shadow: 0 8px 30px rgba(16,185,129,0.2);">
+                <div style="background: #f0fdf4; border: 2px solid #10b981; border-radius: 16px; padding: 22px 18px; margin-bottom: 20px; box-shadow: 0 8px 30px #dcfce7;">
                     <div style="font-size: 2.8em; margin-bottom: 10px; line-height: 1;"><svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
                     <h3 style="color: #047857; margin: 0 0 10px 0; font-size: 1.25em; font-weight: 900; line-height: 1.5;">
                         تم استلام طلبك وجاري التأكد من صحة الحوالة، وفي حال كان رقم الحوالة صحيحاً سيصلك كود التفعيل.
@@ -1852,8 +1852,8 @@
     <div id="subscription-humanitarian-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(10px); z-index: 999999; align-items: center; justify-content: center; padding: 16px; overflow-y: auto;">
         <div class="modal-inner" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2.5px solid #10b981; border-radius: 22px; max-width: 580px; width: 100%; padding: 26px 20px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); box-sizing: border-box; text-align: right; position: relative;">
             
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(16,185,129,0.25); padding-bottom: 12px;">
-                <button type="button" onclick="backToSubscriptionTiersModal()" style="background: #f8fafc; border: 1px solid rgba(16,185,129,0.3); color: #1e293b; padding: 6px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #dcfce7; padding-bottom: 12px;">
+                <button type="button" onclick="backToSubscriptionTiersModal()" style="background: #f8fafc; border: 1px solid #dcfce7; color: #1e293b; padding: 6px 14px; border-radius: 8px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px;">
                     <span>←</span> <span>العودة للباقات</span>
                 </button>
                 <div style="color: #047857; font-weight: 900; font-size: 1.05em;">مبادرة الدعم الإنساني ❤️</div>
@@ -1861,7 +1861,7 @@
             </div>
 
             <!-- النص الإنساني الكريم والمحترم -->
-            <div style="background: #f0fdf4; border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 14px; padding: 18px; margin-bottom: 18px; text-align: center;">
+            <div style="background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 14px; padding: 18px; margin-bottom: 18px; text-align: center;">
                 <div style="font-size: 1.8em; margin-bottom: 6px;"><svg class="med-svg-icon" viewBox="0 0 24 24" width="1.18em" height="1.18em" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg> ❤️</div>
                 <div style="color: #0f172a; font-weight: 900; font-size: 1.15em; margin-bottom: 10px;">مبادرة الدعم الإنساني (مخصصة لغير المقتدرين مادياً)</div>
                 <p style="color: #1e293b; font-size: 0.9em; line-height: 1.8; margin: 0; text-align: justify;">
@@ -1890,7 +1890,7 @@
             </label>
 
             <!-- زر الإرسال -->
-            <button type="button" onclick="submitHumanitarianSubscriptionModal()" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: #ffffff; border: 1.5px solid #6ee7b7; padding: 14px; border-radius: 12px; font-weight: 900; font-size: 1.05em; cursor: pointer; box-shadow: 0 4px 20px rgba(16,185,129,0.35); display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <button type="button" onclick="submitHumanitarianSubscriptionModal()" style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: #ffffff; border: 1.5px solid #6ee7b7; padding: 14px; border-radius: 12px; font-weight: 900; font-size: 1.05em; cursor: pointer; box-shadow: 0 4px 20px #dcfce7; display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <span>إرسال طلب الاستفادة واستلام الكود</span> <span>❤️</span>
             </button>
         </div>
@@ -2033,10 +2033,10 @@
             const userPhone = (document.getElementById('support-user-phone')?.value || '').trim() || 'غير محدد';
             const userNote = (document.getElementById('support-user-note')?.value || '').trim();
             let currentStep = 'غير محدد';
-            let appVer = 'v33.25';
+            let appVer = 'v33.30';
             try {
                 currentStep = localStorage.getItem('smart_current_step') || '1';
-                appVer = document.getElementById('app-current-version-text')?.textContent?.trim() || localStorage.getItem('scp_app_runtime_version') || 'v33.25';
+                appVer = document.getElementById('app-current-version-text')?.textContent?.trim() || localStorage.getItem('scp_app_runtime_version') || 'v33.30';
             } catch (e) {}
 
             const msg =
@@ -2091,9 +2091,9 @@
 
             if (statusEl) {
                 statusEl.style.display = 'block';
-                statusEl.style.background = 'rgba(56, 189, 248, 0.2)';
+                statusEl.style.background = '#e0f2fe';
                 statusEl.style.border = '1px solid #38bdf8';
-                statusEl.style.color = '#7dd3fc';
+                statusEl.style.color = '#0369a1';
                 statusEl.innerHTML = '⏳ جاري اختبار المفتاح والاتصال بمحرك Google Gemini...';
             }
 
@@ -2105,15 +2105,15 @@
                 const res = await Wada3anAiEngine.testConnection(key);
                 if (statusEl) {
                     if (res.success) {
-                        statusEl.style.background = 'rgba(16, 185, 129, 0.25)';
+                        statusEl.style.background = '#dcfce7';
                         statusEl.style.border = '1px solid #10b981';
-                        statusEl.style.color = '#6ee7b7';
+                        statusEl.style.color = '#047857';
                         statusEl.innerHTML = `✅ ${res.message} - المحرك الذكي جاهز ومفعل 100%!`;
                         setTimeout(() => { closeAiKeySettingsModal(); }, 1800);
                     } else {
-                        statusEl.style.background = 'rgba(239, 68, 68, 0.25)';
+                        statusEl.style.background = '#fee2e2';
                         statusEl.style.border = '1px solid #ef4444';
-                        statusEl.style.color = '#fca5a5';
+                        statusEl.style.color = '#dc2626';
                         statusEl.innerHTML = `❌ ${res.message}`;
                     }
                 }
@@ -2283,23 +2283,23 @@
     </script>
 
     <!-- تحميل البرمجيات المعيارية بالترتيب الصحيح مع معيار Versioning لتجاوز الكاش -->
-    <script src="js/mqtt.min.js?v=33.25"></script>
-    <script src="js/cloud-sync.js?v=33.25"></script>
-    <script src="js/geo-tracker.js?v=33.25"></script>
-    <script src="js/database.js?v=33.25"></script>
-    <script src="js/exercise-image-studio.js?v=33.25"></script>
-    <script src="js/exercises-db.js?v=33.25"></script>
-    <script src="js/diagnostic-engine.js?v=33.25"></script>
-    <script src="js/audio-pacer.js?v=33.25"></script>
-    <script src="js/patient-flow.js?v=33.25"></script>
-    <script src="js/admin-engine.js?v=33.25"></script>
-    <script src="js/ai-config.js?v=33.25"></script>
-    <script src="js/ai-engine.js?v=33.25"></script>
-    <script src="js/app.js?v=33.25"></script>
-    <script src="js/text-editor.js?v=33.25"></script>
-    <script src="js/smart-guidance.js?v=33.25"></script>
-    <script src="js/whatsapp-dispatcher.js?v=33.25"></script>
-    <script src="js/mobile-alerts.js?v=33.25"></script>
+    <script src="js/mqtt.min.js?v=33.30"></script>
+    <script src="js/cloud-sync.js?v=33.30"></script>
+    <script src="js/geo-tracker.js?v=33.30"></script>
+    <script src="js/database.js?v=33.30"></script>
+    <script src="js/exercise-image-studio.js?v=33.30"></script>
+    <script src="js/exercises-db.js?v=33.30"></script>
+    <script src="js/diagnostic-engine.js?v=33.30"></script>
+    <script src="js/audio-pacer.js?v=33.30"></script>
+    <script src="js/patient-flow.js?v=33.30"></script>
+    <script src="js/admin-engine.js?v=33.30"></script>
+    <script src="js/ai-config.js?v=33.30"></script>
+    <script src="js/ai-engine.js?v=33.30"></script>
+    <script src="js/app.js?v=33.30"></script>
+    <script src="js/text-editor.js?v=33.30"></script>
+    <script src="js/smart-guidance.js?v=33.30"></script>
+    <script src="js/whatsapp-dispatcher.js?v=33.30"></script>
+    <script src="js/mobile-alerts.js?v=33.30"></script>
 
     <script>
         // مؤشر المراجعين المتواجدين أونلاين الآن (متزامن بدقة مع السحابة ولوحة الإدارة)

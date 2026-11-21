@@ -10,7 +10,7 @@
 })();
 
 // ==========================================================================
-// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي (Medical SVG Icon & Contrast Engine v33.25)
+// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي (Medical SVG Icon & Contrast Engine v33.30)
 // يحول كافة الأيقونات التفاعلية إلى أيقونات SVG طبية حديثة موحدة اللون (currentColor) دون أي تشتت لوني
 // ==========================================================================
 (function initMedicalSvgIconAndContrastEngine() {
@@ -117,6 +117,29 @@
                     tNode.parentNode.replaceChild(frag, tNode);
                 }
             });
+
+            // صمام أمان التباين الفوري: يمنع أي نص فاتح على أرضية فاتحة أو نص غامق على زر غامق
+            const styledEls = (root.nodeType === 1 && root.querySelectorAll) ? [root, ...root.querySelectorAll('[style]')] : [];
+            const SOLID_DARK_BG = /(?:#0284c7|#0369a1|#075985|#0d9488|#059669|#047857|#065f46|#064e3b|#10b981|#25d366|#128c7e|#1d4ed8|#2563eb|#1e40af|#ef4444|#dc2626|#b91c1c|#0f172a|#1e293b|#111827|rgb\(\s*(?:2,\s*132,\s*199|3,\s*105,\s*161|13,\s*148,\s*136|5,\s*150,\s*105|4,\s*120,\s*87|16,\s*185,\s*129|37,\s*211,\s*102|29,\s*78,\s*216|37,\s*99,\s*235|239,\s*68,\s*68|220,\s*38,\s*38|15,\s*23,\s*42|30,\s*41,\s*59|17,\s*24,\s*39)\s*\))/i;
+            const LIGHT_BG = /(?:#ffffff|#fff|#f8fafc|#f0f9ff|#e0f2fe|#f0fdf4|#dcfce7|#ecfdf5|#fef2f2|#fee2e2|rgb\(\s*(?:255,\s*255,\s*255|248,\s*250,\s*252|240,\s*249,\s*255|224,\s*242,\s*254|240,\s*253,\s*244|220,\s*252,\s*231|236,\s*253,\s*245|254,\s*242,\s*242|254,\s*226,\s*226)\s*\)|rgba\(\s*(?:16,\s*185,\s*129|56,\s*189,\s*248|2,\s*132,\s*199|239,\s*68,\s*68)\s*,\s*0\.[0123]\d*\s*\))/i;
+            const LIGHT_TEXT = /(?:#(?:ffffff|fff|f8fafc|f1f5f9|e2e8f0|cbd5e1|94a3b8|6ee7b7|a7f3d0|34d399|7dd3fc|38bdf8|fca5a5|fecaca)|rgb\(\s*(?:255,\s*255,\s*255|248,\s*250,\s*252|241,\s*245,\s*249|226,\s*232,\s*240|203,\s*213,\s*225|148,\s*163,\s*184|110,\s*231,\s*183|167,\s*243,\s*208|125,\s*211,\s*252|56,\s*189,\s*248|252,\s*165,\s*165)\s*\))/i;
+            const DARK_TEXT = /(?:#0f172a|#1e293b|#334155|#475569|#0a0e14|#080c14|#000000|#000|rgb\(\s*(?:15,\s*23,\s*42|30,\s*41,\s*59|51,\s*65,\s*85|71,\s*85,\s*105|10,\s*14,\s*20|0,\s*0,\s*0)\s*\))/i;
+
+            for (let k = 0; k < styledEls.length; k++) {
+                const el = styledEls[k];
+                if (!el || !el.style) continue;
+                const bg = el.style.background || el.style.backgroundColor || '';
+                const col = el.style.color || '';
+                if (!col) continue;
+                if (bg && LIGHT_BG.test(bg) && !SOLID_DARK_BG.test(bg) && LIGHT_TEXT.test(col)) {
+                    el.style.color = /#dcfce7|#f0fdf4|16,\s*185,\s*129/i.test(bg) ? '#065f46'
+                                   : /#e0f2fe|#f0f9ff|56,\s*189,\s*248|2,\s*132,\s*199/i.test(bg) ? '#0369a1'
+                                   : /#fee2e2|#fef2f2|239,\s*68,\s*68/i.test(bg) ? '#dc2626'
+                                   : '#0f172a';
+                } else if (bg && SOLID_DARK_BG.test(bg) && !/-webkit-background-clip/i.test(el.getAttribute('style') || '') && DARK_TEXT.test(col)) {
+                    el.style.color = '#ffffff';
+                }
+            }
         } catch (e) {}
         isRunning = false;
     }
@@ -589,7 +612,7 @@ function startSpecializedConsultation(specialtyKey) {
     const statusText = document.getElementById('selected-point-label');
     if (statusText) {
         statusText.textContent = `🎯 تم اختيار: ${specPoint.title}`;
-        statusText.style.color = '#38bdf8';
+        statusText.style.color = '#0369a1';
     }
 
     goToStep(2);
@@ -1659,7 +1682,7 @@ function renderAdaptiveQuestions(pointId) {
         <div style="background: #f8fafc; padding: 18px 20px; border-radius: 12px; margin-bottom: 18px; border: 1px solid #bae6fd;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                 <div style="color: var(--primary-gold); font-weight: bold; font-size: 1.05em;">${pData.tier3_neuro_mapping.title}</div>
-                <span style="color: #10b981; font-size: 0.78em; background: #f0fdf4; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.3);">اختر كل ما تشعر به</span>
+                <span style="color: #10b981; font-size: 0.78em; background: #f0fdf4; padding: 3px 8px; border-radius: 6px; border: 1px solid #dcfce7;">اختر كل ما تشعر به</span>
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px;">
                 ${pData.tier3_neuro_mapping.options.map(opt => `
@@ -1703,7 +1726,7 @@ function renderRedFlags() {
     let html = '';
     ClinicalEngine.RED_FLAGS_CRITERIA.forEach(rf => {
         html += `
-        <label class="red-flag-item" style="display: flex; align-items: center; gap: 10px; background: #fef2f2; border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; cursor: pointer;">
+        <label class="red-flag-item" style="display: flex; align-items: center; gap: 10px; background: #fef2f2; border: 1px solid #fee2e2; padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; cursor: pointer;">
             <input type="checkbox" name="red_flag" value="${rf.id}" style="accent-color: #ef4444; width: 16px; height: 16px;">
             <span style="color: #dc2626; font-size: 0.9em; font-weight: 500;">${rf.label}</span>
         </label>`;
@@ -2678,7 +2701,7 @@ function getTreatmentCostCalculatorHTML() {
 // بطاقة خدمة قراءة الرنين المغناطيسي المجانية (MRI Second Opinion Card)
 function getMriConsultationCardHTML() {
     return `
-        <div class="no-print" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid #38bdf8; border-radius: 14px; padding: 22px; margin-bottom: 25px; box-shadow: 0 8px 30px rgba(56, 189, 248, 0.15);">
+        <div class="no-print" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 1.5px solid #38bdf8; border-radius: 14px; padding: 22px; margin-bottom: 25px; box-shadow: 0 8px 30px #e0f2fe;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                 <div style="flex: 1; min-width: 270px;">
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
@@ -2692,7 +2715,7 @@ function getMriConsultationCardHTML() {
                     <div style="color: #0369a1; font-size: 0.82em;">✓ استشارة سريرية وتوجيه دقيق بدون أي التزام مالي مسبق.</div>
                 </div>
                 <div>
-                    <a href="https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent('مرحباً دكتور، لدي صورة/تقرير رنين مغناطيسي (MRI) وأود إرسالها لقراءتها وتحديد خطة العلاج المناسبة لحالتي.')}" target="_blank" style="background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.95em; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);">
+                    <a href="https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent('مرحباً دكتور، لدي صورة/تقرير رنين مغناطيسي (MRI) وأود إرسالها لقراءتها وتحديد خطة العلاج المناسبة لحالتي.')}" target="_blank" style="background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.95em; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px #e0f2fe;">
                         💬 أرسل صورة الرنين للمعالج
                     </a>
                 </div>
@@ -2745,17 +2768,17 @@ function getInteractiveSpinalSimulatorHTML(painAreaTitle = 'العمود الف�
                         <!-- تدرج الفقرة العلوية -->
                         <linearGradient id="boneGradUpper" x1="0%" y1="0%" x2="0%" y2="100%">
                             <stop offset="0%" stop-color="#ffffff"/>
-                            <stop offset="35%" stop-color="#f1f5f9"/>
-                            <stop offset="75%" stop-color="#cbd5e1"/>
-                            <stop offset="100%" stop-color="#94a3b8"/>
+                            <stop offset="35%" stop-color="#1e293b"/>
+                            <stop offset="75%" stop-color="#1e293b"/>
+                            <stop offset="100%" stop-color="#475569"/>
                         </linearGradient>
 
                         <!-- تدرج الفقرة السفلية -->
                         <linearGradient id="boneGradLower" x1="0%" y1="0%" x2="0%" y2="100%">
                             <stop offset="0%" stop-color="#ffffff"/>
-                            <stop offset="35%" stop-color="#f1f5f9"/>
-                            <stop offset="75%" stop-color="#cbd5e1"/>
-                            <stop offset="100%" stop-color="#94a3b8"/>
+                            <stop offset="35%" stop-color="#1e293b"/>
+                            <stop offset="75%" stop-color="#1e293b"/>
+                            <stop offset="100%" stop-color="#475569"/>
                         </linearGradient>
 
                         <!-- تدرجات الديسك حسب الحالة -->
@@ -2779,7 +2802,7 @@ function getInteractiveSpinalSimulatorHTML(painAreaTitle = 'العمود الف�
 
                         <!-- تدرج النتوء الغضروفي اللامع ثلاثي الأبعاد -->
                         <radialGradient id="herniaGrad" cx="30%" cy="30%" r="70%">
-                            <stop offset="0%" stop-color="#fca5a5"/>
+                            <stop offset="0%" stop-color="#dc2626"/>
                             <stop offset="25%" stop-color="#ef4444"/>
                             <stop offset="70%" stop-color="#b91c1c"/>
                             <stop offset="100%" stop-color="#450a0a"/>
@@ -2793,7 +2816,7 @@ function getInteractiveSpinalSimulatorHTML(painAreaTitle = 'العمود الف�
                         </radialGradient>
 
                         <radialGradient id="herniaHealthyGrad" cx="30%" cy="30%" r="70%">
-                            <stop offset="0%" stop-color="#6ee7b7"/>
+                            <stop offset="0%" stop-color="#047857"/>
                             <stop offset="35%" stop-color="#10b981"/>
                             <stop offset="75%" stop-color="#059669"/>
                             <stop offset="100%" stop-color="#064e3b"/>
@@ -2836,7 +2859,7 @@ function getInteractiveSpinalSimulatorHTML(painAreaTitle = 'العمود الف�
                     </defs>
 
                     <!-- خلفية المخرج العصبي التشريحي المتناسق (Intervertebral Foramen Glow) -->
-                    <ellipse cx="430" cy="198" rx="38" ry="58" fill="rgba(56, 189, 248, 0.05)" stroke="rgba(56, 189, 248, 0.25)" stroke-dasharray="4,4"/>
+                    <ellipse cx="430" cy="198" rx="38" ry="58" fill="#e0f2fe" stroke="#e0f2fe" stroke-dasharray="4,4"/>
 
                     <!-- ================= 1. العصب الشوكي (ملاصق تماماً لخلفية الديسك والمخرج العصبي) ================= -->
                     <g id="sim-nerve-group">
@@ -2863,7 +2886,7 @@ function getInteractiveSpinalSimulatorHTML(painAreaTitle = 'العمود الف�
                     <!-- ================= 3. الغضروف / الديسك المدمج بالكامل مع النتوء (Unified Herniated Disc) ================= -->
                     <g id="sim-disc-group">
                         <!-- ظل وهالة النتوء المتصل بالديسك -->
-                        <ellipse id="sim-hernia-aura" cx="455" cy="181" rx="35" ry="24" fill="rgba(239, 68, 68, 0.35)" filter="url(#herniaShadow)"/>
+                        <ellipse id="sim-hernia-aura" cx="455" cy="181" rx="35" ry="24" fill="#fee2e2" filter="url(#herniaShadow)"/>
 
                         <!-- مسار الديسك الموحد والمتصل تشريحياً بالنتوء بدون أي انفصال -->
                         <path id="sim-disc-main" d="M 175,165 C 240,171 320,171 385,165 C 410,167 465,160 465,181 C 465,202 410,195 385,197 C 320,191 240,191 175,197 Z" fill="url(#discGradCompressed)" stroke="#b91c1c" stroke-width="2.5" style="transition: all 0.08s ease;"/>
@@ -3090,7 +3113,7 @@ function updateSpinalSimulation(val) {
         herniaAura.setAttribute('cy', bulgeY);
         herniaAura.setAttribute('rx', Math.max(10, 36 - ratio * 24));
         herniaAura.setAttribute('ry', Math.max(8, 24 - ratio * 15));
-        herniaAura.setAttribute('fill', v >= 65 ? 'rgba(16, 185, 129, 0.15)' : (v >= 35 ? 'rgba(2, 132, 199, 0.2)' : 'rgba(239, 68, 68, 0.35)'));
+        herniaAura.setAttribute('fill', v >= 65 ? '#dcfce7' : (v >= 35 ? 'rgba(2, 132, 199, 0.2)' : '#fee2e2'));
     }
 
     if (herniaHighlight) {
@@ -3169,12 +3192,12 @@ function updateSpinalSimulation(val) {
     }
     if (metricDisc) {
         metricDisc.textContent = `${discHeightMm} ملم`;
-        metricDisc.style.color = v >= 65 ? '#10b981' : '#38bdf8';
+        metricDisc.style.color = v >= 65 ? '#10b981' : '#0369a1';
     }
 
     if (v >= 65) {
         if (badge) {
-            badge.style.background = 'rgba(16, 185, 129, 0.2)';
+            badge.style.background = '#dcfce7';
             badge.style.color = '#10b981';
             badge.style.borderColor = '#10b981';
             badge.textContent = '✅ المرحلة 3: تحرر العصب واستعادة اصطفاف الفقرات (الكايروبراكتيك)';
@@ -3189,7 +3212,7 @@ function updateSpinalSimulation(val) {
         }
         if (explanation) {
             explanation.style.borderColor = '#10b981';
-            explanation.style.color = '#6ee7b7';
+            explanation.style.color = '#047857';
             explanation.innerHTML = '✨ <strong>المرحلة 3 (أثر تقويم الكايروبراكتيك):</strong> يقوم المعالج بإعادة محاذاة الفقرات بدقة وتفريغ الحمل الميكانيكي، مما يفتح مسافة كافية بين الفقرتين ويوّلد قوة سحب عكسية (Negative Pressure) تجعل الديسك يرتد لمكانه، فيتحرر العصب تماماً ويزول الألم والتنميل.';
         }
     } else if (v >= 35) {
@@ -3214,7 +3237,7 @@ function updateSpinalSimulation(val) {
         }
     } else {
         if (badge) {
-            badge.style.background = 'rgba(239, 68, 68, 0.2)';
+            badge.style.background = '#fee2e2';
             badge.style.color = '#ef4444';
             badge.style.borderColor = '#ef4444';
             badge.textContent = '⚠️ المرحلة 1: انضغاط حاد وبروز الديسك على العصب';
@@ -3229,7 +3252,7 @@ function updateSpinalSimulation(val) {
         }
         if (explanation) {
             explanation.style.borderColor = '#ef4444';
-            explanation.style.color = '#fca5a5';
+            explanation.style.color = '#dc2626';
             explanation.innerHTML = '⚠️ <strong>المرحلة 1 (انضغاط حاد):</strong> تتقارب الفقرتان بسبب تشنج العضلات أو الخلل الميكانيكي، مما يضغط النواة اللبية ويجعل الألياف الخارجية للديسك تبرز للخلف وتصطدم مباشرة بالعصب الشوكي؛ فينتج ألم حاد وتنميل ممتد للساق أو الذراع.';
         }
     }
@@ -3627,7 +3650,7 @@ function calculateInlineReportBMI() {
     if (bmi < 18.5) {
         const deficitKg = parseFloat((minHealthyW - w).toFixed(1));
         status = 'نحافة';
-        color = '#38bdf8';
+        color = '#0369a1';
         deltaText = `⚠️ نقص وزن بمقدار -${deficitKg} كجم عن الحد الأدنى للوزن الصحي (${minHealthyW} كجم)`;
         impact = 'يوصى بتقوية الكتلة العضلية لتثبيت المفاصل وحمايتها من الإجهاد.';
     } else if (bmi >= 25 && bmi < 30) {
@@ -3956,8 +3979,8 @@ function updatePortalHeaderButton() {
         if (icon) icon.textContent = '👤';
         btn.title = `الملف الطبي: ${fullName}`;
         btn.style.borderColor = '#10b981';
-        btn.style.color = '#6ee7b7';
-        btn.style.background = 'rgba(16, 185, 129, 0.15)';
+        btn.style.color = '#047857';
+        btn.style.background = '#dcfce7';
     } else {
         label.textContent = 'ملفي الطبي';
         if (icon) icon.textContent = '📁';
@@ -4246,9 +4269,9 @@ async function handleRegisterFromReport() {
     if (!phone || phone.replace(/\D/g, '').length < 6) {
         if (msgEl) {
             msgEl.style.display = 'block';
-            msgEl.style.background = 'rgba(239, 68, 68, 0.15)';
+            msgEl.style.background = '#fee2e2';
             msgEl.style.border = '1px solid #ef4444';
-            msgEl.style.color = '#fca5a5';
+            msgEl.style.color = '#dc2626';
             msgEl.textContent = 'يرجى كتابة رقم هاتف صحيح لحفظ الملف.';
         }
         return;
@@ -4257,9 +4280,9 @@ async function handleRegisterFromReport() {
     if (!pin || pin.length < 4) {
         if (msgEl) {
             msgEl.style.display = 'block';
-            msgEl.style.background = 'rgba(239, 68, 68, 0.15)';
+            msgEl.style.background = '#fee2e2';
             msgEl.style.border = '1px solid #ef4444';
-            msgEl.style.color = '#fca5a5';
+            msgEl.style.color = '#dc2626';
             msgEl.textContent = 'الرمز السري (PIN) يجب أن يكون من 4 أرقام على الأقل.';
         }
         return;
@@ -4267,9 +4290,9 @@ async function handleRegisterFromReport() {
 
     if (msgEl) {
         msgEl.style.display = 'block';
-        msgEl.style.background = 'rgba(56, 189, 248, 0.15)';
+        msgEl.style.background = '#e0f2fe';
         msgEl.style.border = '1px solid #38bdf8';
-        msgEl.style.color = '#7dd3fc';
+        msgEl.style.color = '#0369a1';
         msgEl.textContent = '⏳ جاري إنشاء وحفظ ملفك الطبي...';
     }
 
@@ -4298,9 +4321,9 @@ async function handleRegisterFromReport() {
     const res = await SmartDB.registerPatientAccount(phone, pin, patientData);
     if (res && res.success) {
         if (msgEl) {
-            msgEl.style.background = 'rgba(16, 185, 129, 0.2)';
+            msgEl.style.background = '#dcfce7';
             msgEl.style.border = '1px solid #10b981';
-            msgEl.style.color = '#6ee7b7';
+            msgEl.style.color = '#047857';
             msgEl.innerHTML = `✅ ${res.message}! يمكنك الدخول دائماً لملفك الطبي من زر (ملفي الطبي) أعلى الشاشة.`;
         }
         updatePortalHeaderButton();
@@ -4327,9 +4350,9 @@ async function handleRegisterFromReport() {
         }, 1200);
     } else {
         if (msgEl) {
-            msgEl.style.background = 'rgba(239, 68, 68, 0.15)';
+            msgEl.style.background = '#fee2e2';
             msgEl.style.border = '1px solid #ef4444';
-            msgEl.style.color = '#fca5a5';
+            msgEl.style.color = '#dc2626';
             msgEl.textContent = res ? res.message : 'تعذر حفظ الملف';
         }
     }
@@ -4862,9 +4885,9 @@ async function saveClinicalReport() {
         const saveCardMsg = document.getElementById('report-save-status-msg');
         if (saveCardMsg) {
             saveCardMsg.style.display = 'block';
-            saveCardMsg.style.background = 'rgba(16, 185, 129, 0.2)';
+            saveCardMsg.style.background = '#dcfce7';
             saveCardMsg.style.border = '1px solid #10b981';
-            saveCardMsg.style.color = '#6ee7b7';
+            saveCardMsg.style.color = '#047857';
             saveCardMsg.textContent = '✅ تم حفظ التقرير في ملفك الطبي بنجاح!';
         }
 
@@ -5155,15 +5178,15 @@ function displayDiagnosticReport(data) {
             </div>
 
             <!-- ================= 2. النتيجة التشخيصية الكبرى المباشرة ================= -->
-            <div id="report-section-diagnosis" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border-radius: 14px; padding: 24px; border: 2px solid ${data.isPreliminary ? '#38bdf8' : 'var(--primary-gold)'}; margin-bottom: 22px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
+            <div id="report-section-diagnosis" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border-radius: 14px; padding: 24px; border: 2px solid ${data.isPreliminary ? '#0284c7' : 'var(--primary-gold)'}; margin-bottom: 22px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
                     <div>
                         <div style="color: #475569; font-size: 0.88em; font-weight: bold;">🩺 ${data.isPreliminary ? 'التقييم الاسترشادي الأولي:' : 'خلاصة التشخيص السريري المباشر:'}</div>
-                        <h2 style="color: ${data.isPreliminary ? '#7dd3fc' : 'var(--primary-gold)'}; margin: 6px 0 2px 0; font-size: 1.45em; font-weight: 900;">${formattedDiag}</h2>
+                        <h2 style="color: ${data.isPreliminary ? '#0284c7' : '#0369a1'}; margin: 6px 0 2px 0; font-size: 1.45em; font-weight: 900;">${formattedDiag}</h2>
                         ${formattedRoot ? `<div style="color: #0284c7; font-size: 0.88em; font-weight: bold; margin-top: 4px;">🎯 المستوى التشريحي المستهدف: ${formattedRoot}</div>` : ''}
                     </div>
                     <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-                        <span style="background: ${data.isPreliminary ? 'rgba(56, 189, 248, 0.2)' : 'rgba(16, 185, 129, 0.2)'}; border: 1.5px solid ${data.isPreliminary ? '#38bdf8' : '#10b981'}; color: ${data.isPreliminary ? '#7dd3fc' : '#6ee7b7'}; padding: 8px 18px; border-radius: 25px; font-weight: 800; font-size: 1em; letter-spacing: 0.5px;">
+                        <span style="background: ${data.isPreliminary ? '#0284c7' : '#059669'}; border: 1.5px solid ${data.isPreliminary ? '#0369a1' : '#047857'}; color: #ffffff; padding: 8px 18px; border-radius: 25px; font-weight: 900; font-size: 1em; letter-spacing: 0.5px; box-shadow: 0 3px 10px rgba(5, 150, 105, 0.25);">
                             ${data.isPreliminary ? 'فحص استرشادي أولي' : `احتمالية التشخيص: ${resolvedProbability}%`}
                         </span>
                         <div style="color: #475569; font-size: 0.76em;">${data.isPreliminary ? 'بانتظار استكمال الأعراض الدقيقة' : 'مبني على الفحص السريري الدقيق'}</div>
@@ -5181,7 +5204,7 @@ function displayDiagnosticReport(data) {
 
             <!-- ================= 3. تقرير وتفسير الطبيب الافتراضي المباشر (Gemini AI Clinical Engine) ================= -->
             <div id="ai-clinical-insight-card" class="ai-clinical-card" style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 24px; margin-bottom: 22px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07); position: relative;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid rgba(16, 185, 129, 0.25); padding-bottom: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid #dcfce7; padding-bottom: 14px;">
                     <div style="display: flex; align-items: center; gap: 12px; flex: 1 1 240px;">
                         <span style="font-size: 1.8em; filter: drop-shadow(0 2px 6px rgba(16,185,129,0.5));">👩‍⚕️</span>
                         <div>
@@ -5213,14 +5236,14 @@ function displayDiagnosticReport(data) {
 
                 <!-- شبكة المحفزات والمسكنات البيوميكانيكية الإكلينيكية -->
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; border-top: 1px solid #cbd5e1; padding-top: 16px;">
-                    <div style="background: #fef2f2; border: 1px solid rgba(239, 68, 68, 0.3); padding: 15px; border-radius: 10px;">
+                    <div style="background: #fef2f2; border: 1px solid #fee2e2; padding: 15px; border-radius: 10px;">
                         <div style="color: #ef4444; font-weight: bold; font-size: 0.92em; margin-bottom: 8px;">⚠️ محفزات تفاقم الألم (يجب تجنبها لحين الفحص):</div>
                         <ul style="color: #dc2626; margin: 0; padding-right: 18px; line-height: 1.7; font-size: 0.86em;">
                             ${(data.aggravatingFactors || []).map(f => `<li>${f}</li>`).join('')}
                         </ul>
                     </div>
 
-                    <div style="background: #f0fdf4; border: 1px solid rgba(16, 185, 129, 0.3); padding: 15px; border-radius: 10px;">
+                    <div style="background: #f0fdf4; border: 1px solid #dcfce7; padding: 15px; border-radius: 10px;">
                         <div style="color: #10b981; font-weight: bold; font-size: 0.92em; margin-bottom: 8px;">✨ وضعيات الراحة المسكنة المبدئية:</div>
                         <ul style="color: #047857; margin: 0; padding-right: 18px; line-height: 1.7; font-size: 0.86em;">
                             ${(data.relievingFactors || []).map(f => `<li>${f}</li>`).join('')}
@@ -5284,7 +5307,7 @@ function displayDiagnosticReport(data) {
                     
                     <!-- مؤشرات الاحتمالية ومؤشر الثقة السريرية -->
                     <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap; flex: 1 1 320px;">
-                        <div style="background: #ffffff; border: 1.5px solid #10b981; padding: 10px 18px; border-radius: 12px; text-align: center; min-width: 105px; box-shadow: 0 4px 15px rgba(16,185,129,0.15);">
+                        <div style="background: #ffffff; border: 1.5px solid #10b981; padding: 10px 18px; border-radius: 12px; text-align: center; min-width: 105px; box-shadow: 0 4px 15px #dcfce7;">
                             <div style="color: #10b981; font-weight: 900; font-size: 1.5em; font-family: monospace;">${resolvedProbability}%</div>
                             <div style="color: #475569; font-size: 0.78em; font-weight: bold; margin-top: 2px;">نسبة الاحتمالية</div>
                         </div>
@@ -5302,7 +5325,7 @@ function displayDiagnosticReport(data) {
 
                     <!-- أزرار الإجراءات: حفظ التقرير، طباعة / PDF، إرسال واتساب -->
                     <div class="report-action-buttons no-print" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; flex: 1 1 320px; justify-content: flex-end;">
-                        <button type="button" onclick="saveClinicalReport()" class="btn-header btn-header-emerald" style="padding: 11px 18px; font-weight: 900; font-size: 0.9em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);">
+                        <button type="button" onclick="saveClinicalReport()" class="btn-header btn-header-emerald" style="padding: 11px 18px; font-weight: 900; font-size: 0.9em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px #dcfce7;">
                             <span>💾</span> <span>حفظ التقرير</span>
                         </button>
                         <button type="button" onclick="printClinicalReport()" class="btn-header" style="background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #ffffff; border: 1.5px solid #60a5fa; padding: 11px 18px; font-weight: 900; font-size: 0.9em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.35);">
@@ -5334,7 +5357,7 @@ function displayDiagnosticReport(data) {
                         </div>
                     </div>
                     <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                        <a href="https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent('مرحباً دكتور جمال، أود الاستفسار عن ترتيب جلسة علاجية / زيارة منزلية (داخل الأردن) بخصوص حالتي.')}" target="_blank" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; padding: 9px 16px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.86em; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(16,185,129,0.3);">
+                        <a href="https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent('مرحباً دكتور جمال، أود الاستفسار عن ترتيب جلسة علاجية / زيارة منزلية (داخل الأردن) بخصوص حالتي.')}" target="_blank" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; padding: 9px 16px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.86em; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px #dcfce7;">
                             <span>🏠</span> طلب زيارة منزلية
                         </a>
                         <a href="https://wa.me/${CLINIC_WHATSAPP_NUMBER}?text=${encodeURIComponent('مرحباً دكتور جمال، أنا مقيم خارج الأردن وأود التنسيق معكم لقراءة صورة الرنين / استشارة دولية عن بُعد.')}" target="_blank" style="background: #f0f9ff; border: 1px solid #38bdf8; color: #0284c7; padding: 9px 16px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.86em; display: inline-flex; align-items: center; gap: 6px;">
@@ -6473,9 +6496,9 @@ async function submitPromoOrTestUnlockCode(inputIdOverride) {
             const msgEl = document.getElementById('paywall-status-feedback');
             if (msgEl) {
                 msgEl.style.display = 'block';
-                msgEl.style.background = 'rgba(16,185,129,0.2)';
+                msgEl.style.background = '#dcfce7';
                 msgEl.style.border = '1.5px solid #10b981';
-                msgEl.style.color = '#6ee7b7';
+                msgEl.style.color = '#047857';
                 msgEl.innerHTML = '✅ تم تأكيد الكود واعتماد التفعيل بنجاح! جاري تحميل التقرير الطبي... ⏱️';
             }
             setTimeout(() => { try { window.location.reload(); } catch (e3) {} }, 800);
@@ -6491,9 +6514,9 @@ async function _submitPromoOrTestUnlockCodeCore(inputIdOverride) {
     const say = (txt, ok) => {
         if (msgEl) {
             msgEl.style.display = 'block';
-            msgEl.style.background = ok ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.18)';
+            msgEl.style.background = ok ? '#dcfce7' : '#fee2e2';
             msgEl.style.border = '1.5px solid ' + (ok ? '#10b981' : '#ef4444');
-            msgEl.style.color = ok ? '#6ee7b7' : '#fca5a5';
+            msgEl.style.color = ok ? '#047857' : '#dc2626';
             msgEl.innerHTML = txt;
             try { msgEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
         }
@@ -7465,7 +7488,7 @@ function switchPaywallOptionTab(tabId) {
                     btn.style.background = 'linear-gradient(135deg, #10b981 0%, #047857 100%)';
                     btn.style.color = '#ffffff';
                     btn.style.borderColor = '#6ee7b7';
-                    btn.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.35)';
+                    btn.style.boxShadow = '0 6px 20px #dcfce7';
                 } else {
                     btn.style.background = 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)';
                     btn.style.color = '#ffffff';
@@ -7474,7 +7497,7 @@ function switchPaywallOptionTab(tabId) {
                 }
             } else {
                 btn.style.background = '#f0f9ff';
-                btn.style.color = '#cbd5e1';
+                btn.style.color = '#1e293b';
                 btn.style.borderColor = 'rgba(2, 132, 199, 0.25)';
                 btn.style.boxShadow = 'none';
             }
@@ -7551,9 +7574,9 @@ async function submitOrangeWalletPaymentNotification() {
         } else {
             if (msgEl) {
                 msgEl.style.display = 'block';
-                msgEl.style.background = 'rgba(239, 68, 68, 0.18)';
+                msgEl.style.background = '#fee2e2';
                 msgEl.style.border = '1px solid #ef4444';
-                msgEl.style.color = '#fca5a5';
+                msgEl.style.color = '#dc2626';
                 msgEl.innerHTML = '⚠️ يرجى إدخال <strong>الاسم</strong> أو <strong>رقم الهاتف</strong> على الأقل.';
             }
             if (typeof showRoyalPaymentToast === 'function') {
@@ -7568,9 +7591,9 @@ async function submitOrangeWalletPaymentNotification() {
     if (!subPhone || cleanPhoneDigits.length < 8) {
         if (msgEl) {
             msgEl.style.display = 'block';
-            msgEl.style.background = 'rgba(239, 68, 68, 0.18)';
+            msgEl.style.background = '#fee2e2';
             msgEl.style.border = '1px solid #ef4444';
-            msgEl.style.color = '#fca5a5';
+            msgEl.style.color = '#dc2626';
             msgEl.innerHTML = '⚠️ يرجى إدخال <strong>رقم هاتف صحيح (واتساب)</strong> ليصلك اعتماد التفعيل عليه.';
         }
         if (typeof showRoyalPaymentToast === 'function') {
@@ -7596,9 +7619,9 @@ async function submitOrangeWalletPaymentNotification() {
     const refError = (html) => {
         if (msgEl) {
             msgEl.style.display = 'block';
-            msgEl.style.background = 'rgba(239, 68, 68, 0.18)';
+            msgEl.style.background = '#fee2e2';
             msgEl.style.border = '1px solid #ef4444';
-            msgEl.style.color = '#fca5a5';
+            msgEl.style.color = '#dc2626';
             msgEl.innerHTML = html;
             try { msgEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
         }
@@ -7607,7 +7630,7 @@ async function submitOrangeWalletPaymentNotification() {
         }
         if (refInput) {
             refInput.style.borderColor = '#ef4444';
-            refInput.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.25)';
+            refInput.style.boxShadow = '0 0 0 3px #fee2e2';
             refInput.focus();
         }
     };
@@ -7844,9 +7867,9 @@ async function submitHumanitarianFreeActivation() {
         } else {
             if (msgEl) {
                 msgEl.style.display = 'block';
-                msgEl.style.background = 'rgba(239, 68, 68, 0.18)';
+                msgEl.style.background = '#fee2e2';
                 msgEl.style.border = '1px solid #ef4444';
-                msgEl.style.color = '#fca5a5';
+                msgEl.style.color = '#dc2626';
                 msgEl.innerHTML = '⚠️ يرجى كتابة <strong>اسمك الكريم</strong> أو <strong>رقم هاتفك</strong> لرفع طلب المبادرة.';
             }
             showRoyalPaymentToast('⚠️ يرجى كتابة اسمك الكريم أولاً.', 'warning');
@@ -7859,9 +7882,9 @@ async function submitHumanitarianFreeActivation() {
     if (!subPhone || cleanPhoneDigits.length < 8) {
         if (msgEl) {
             msgEl.style.display = 'block';
-            msgEl.style.background = 'rgba(239, 68, 68, 0.18)';
+            msgEl.style.background = '#fee2e2';
             msgEl.style.border = '1px solid #ef4444';
-            msgEl.style.color = '#fca5a5';
+            msgEl.style.color = '#dc2626';
             msgEl.innerHTML = '⚠️ يرجى إدخال <strong>رقم هاتفك الصحيح (الواتساب)</strong> ليتم فتح التقرير وإشعارك فور موافقة الإدارة.';
         }
         showRoyalPaymentToast('⚠️ يرجى إدخال رقم هاتفك الصحيح أولاً.', 'warning');
@@ -7872,9 +7895,9 @@ async function submitHumanitarianFreeActivation() {
     if (!oathCheckbox || !oathCheckbox.checked) {
         if (msgEl) {
             msgEl.style.display = 'block';
-            msgEl.style.background = 'rgba(239, 68, 68, 0.22)';
+            msgEl.style.background = '#fee2e2';
             msgEl.style.border = '1.5px solid #ef4444';
-            msgEl.style.color = '#fecaca';
+            msgEl.style.color = '#dc2626';
             msgEl.innerHTML = '⚠️ <strong>تنبيه:</strong> يرجى وضع علامة (✓) في مربع إقرار الأمانة والمسؤولية قبل إرسال الطلب.';
         }
         if (oathLabelBox) {
@@ -8017,9 +8040,9 @@ async function _legacySubmitPromoUnused(inputIdOverride) {
     if (!entered) {
         if (msgEl) {
             msgEl.style.display = 'block';
-            msgEl.style.background = 'rgba(239, 68, 68, 0.18)';
+            msgEl.style.background = '#fee2e2';
             msgEl.style.border = '1px solid #ef4444';
-            msgEl.style.color = '#fca5a5';
+            msgEl.style.color = '#dc2626';
             msgEl.textContent = '⚠️ يرجى إدخال رمز التفعيل المعتمد المرسل لك من إدارة العيادة.';
         }
         codeInput?.focus();
@@ -8047,9 +8070,9 @@ async function _legacySubmitPromoUnused(inputIdOverride) {
 
         if (msgEl) {
             msgEl.style.display = 'block';
-            msgEl.style.background = 'rgba(16, 185, 129, 0.2)';
+            msgEl.style.background = '#dcfce7';
             msgEl.style.border = '1.5px solid #10b981';
-            msgEl.style.color = '#6ee7b7';
+            msgEl.style.color = '#047857';
             msgEl.innerHTML = `✅ رمز التفعيل صحيح ومعتمد! جاري فتح التقرير الطبي الكامل وخطة الـ 7 أيام...`;
         }
 
@@ -8065,9 +8088,9 @@ async function _legacySubmitPromoUnused(inputIdOverride) {
     } else {
         if (msgEl) {
             msgEl.style.display = 'block';
-            msgEl.style.background = 'rgba(239, 68, 68, 0.18)';
+            msgEl.style.background = '#fee2e2';
             msgEl.style.border = '1px solid #ef4444';
-            msgEl.style.color = '#fca5a5';
+            msgEl.style.color = '#dc2626';
             msgEl.innerHTML = cleanPhoneDigits.length < 7
                 ? '❌ يرجى التأكد من إدخال رقم هاتفك أولاً في خانة الاشتراك ثم إدخال رمز التفعيل الخاص برقمك.'
                 : '❌ رمز التفعيل غير صحيح. يُمنح رمز التفعيل من الإدارة حصراً بعد التحقق من الحوالة أو الموافقة على طلب الإعفاء.';
@@ -8167,7 +8190,7 @@ function _legacyPendingCardUnused(pendingReq, cfg) {
     return `
         <div id="recovery-plan-master-card" class="recovery-plan-distinct-card no-print" style="padding: 28px 22px; margin-bottom: 25px; background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2px solid ${badgeColor}; border-radius: 22px; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);">
             <!-- شريط تأكيد إرسال الطلب البارز في قمة البطاقة -->
-            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 2px solid #10b981; border-radius: 16px; padding: 16px 18px; margin-bottom: 22px; text-align: center; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.25);">
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 2px solid #10b981; border-radius: 16px; padding: 16px 18px; margin-bottom: 22px; text-align: center; box-shadow: 0 8px 25px #dcfce7;">
                 <div style="color: #0369a1; font-size: 1.15em; font-weight: 900; margin-bottom: 6px;">${sentBannerTitle}</div>
                 <div style="color: #1e293b; font-size: 0.92em; line-height: 1.6;">${sentBannerSub}</div>
             </div>
@@ -8387,8 +8410,8 @@ function _legacyPaywallCardHTML(data, isRegisteredPatient, resolvedReportName, r
                 </div>
 
                 <!-- مربع الاختيار الفارغ لإقرار الأمانة والاستحقاق -->
-                <label id="hum-oath-box-label" for="hum-oath-checkbox" style="display: flex; align-items: flex-start; gap: 14px; background: #f0fdf4; border: 2px solid #10b981; border-radius: 14px; padding: 16px 18px; margin-bottom: 18px; cursor: pointer; transition: all 0.25s; box-shadow: inset 0 0 18px rgba(16, 185, 129, 0.1);">
-                    <input type="checkbox" id="hum-oath-checkbox" onchange="const lbl=document.getElementById('hum-oath-box-label'); if(lbl){lbl.style.borderColor=this.checked?'#0284c7':'#10b981'; lbl.style.background=this.checked?'rgba(16,185,129,0.24)':'rgba(16,185,129,0.12)';}" style="width: 24px; height: 24px; margin-top: 3px; accent-color: #10b981; cursor: pointer; flex-shrink: 0;">
+                <label id="hum-oath-box-label" for="hum-oath-checkbox" style="display: flex; align-items: flex-start; gap: 14px; background: #f0fdf4; border: 2px solid #10b981; border-radius: 14px; padding: 16px 18px; margin-bottom: 18px; cursor: pointer; transition: all 0.25s; box-shadow: inset 0 0 18px #dcfce7;">
+                    <input type="checkbox" id="hum-oath-checkbox" onchange="const lbl=document.getElementById('hum-oath-box-label'); if(lbl){lbl.style.borderColor=this.checked?'#0284c7':'#10b981'; lbl.style.background=this.checked?'#dcfce7':'#dcfce7';}" style="width: 24px; height: 24px; margin-top: 3px; accent-color: #10b981; cursor: pointer; flex-shrink: 0;">
                     <div style="flex: 1;">
                         <div style="color: #0369a1; font-weight: 900; font-size: 1.02em; line-height: 1.7;">
                             «أُقرّ أمام الله بأمانتي واستحقاقي لهذه المبادرة، وبأنني غير قادر مادياً على سداد قيمة الفحص في الأداة والبالغة 3 دنانير.»
@@ -9051,7 +9074,7 @@ function getVitalsSummaryCardHTML(patient, assessment) {
         if (bmi < 18.5) {
             const deficitKg = parseFloat((minHealthyW - weight).toFixed(1));
             status = 'نحافة / نقص كتلة';
-            color = '#38bdf8';
+            color = '#0369a1';
             deltaText = `⚠️ نقص في الوزن بمقدار -${deficitKg} كجم عن الحد الأدنى للوزن الصحي (${minHealthyW} كجم)`;
             impact = 'نقص الكتلة العضلية يقلل من الثبات الميكانيكي للمفاصل ويجعل الفقرات عرضة للإجهاد السريع.';
         } else if (bmi >= 25 && bmi < 30) {
@@ -9356,7 +9379,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
         `;
     } else if (isDay1Completed) {
         clockSectionHTML = `
-            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);">
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px #dcfce7;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
                     <div style="color: #10b981; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
                         <span>✅</span> تمارين الجلسة الأولى مكتملة وموثقة سريرياً
@@ -9368,7 +9391,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                 <p style="color: #1e293b; font-size: 0.9em; margin: 0 0 14px 0; line-height: 1.6;">
                     🎉 اكتملت فترة الاستشفاء الحيوي للأنسجة! يمكنك الانتقال للجلسة الثانية مباشرة لمواصلة برنامج التعافي.
                 </p>
-                <button type="button" onclick="renderStep5SessionsDashboard('${patientId}', 2)" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; font-weight: 900; border: none; padding: 10px 24px; border-radius: 25px; font-size: 0.95em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);">
+                <button type="button" onclick="renderStep5SessionsDashboard('${patientId}', 2)" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; font-weight: 900; border: none; padding: 10px 24px; border-radius: 25px; font-size: 0.95em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px #dcfce7;">
                     <span>🚀</span> الانتقال للجلسة الثانية (اليوم 2) ❯
                 </button>
             </div>
@@ -9447,13 +9470,13 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                     <span>🛡️</span> إرشادات البدء الآمن:
                 </div>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; font-size: 0.82em; color: #1e293b;">
-                    <div style="background: #f0fdf4; border: 1px solid rgba(16, 185, 129, 0.25); padding: 8px 10px; border-radius: 8px;">
+                    <div style="background: #f0fdf4; border: 1px solid #dcfce7; padding: 8px 10px; border-radius: 8px;">
                         <strong style="color: #047857;">🫁 تنفس هادئ:</strong> تنفس بعمق ولا تكتم نَفَسَك أثناء التمرين.
                     </div>
                     <div style="background: #f0f9ff; border: 1px solid #bae6fd; padding: 8px 10px; border-radius: 8px;">
                         <strong style="color: #0284c7;">🎯 تدرج بالحركة:</strong> ابدأ بنصف المدى وزده برفق دون أي إجهاد.
                     </div>
-                    <div style="background: #fef2f2; border: 1px solid rgba(239, 68, 68, 0.25); padding: 8px 10px; border-radius: 8px;">
+                    <div style="background: #fef2f2; border: 1px solid #fee2e2; padding: 8px 10px; border-radius: 8px;">
                         <strong style="color: #dc2626;">🛑 ضابط الأمان:</strong> توقف فوراً إذا شعرت بوخز حاد أو ألم كهربائي.
                     </div>
                     <div style="background: #f0f9ff; border: 1px solid #bae6fd; padding: 8px 10px; border-radius: 8px;">
@@ -9468,7 +9491,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
             <!-- 4. مؤشرات التحسن (تظهر حصراً إذا كانت الجلسة الأولى قد أُنجزت ووُثقت، أما قبل الإنجاز فلا تظهر لتجنب الأرقام الفارغة 0%) -->
             ${(isDay1Completed && day1Log) ? `
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 22px;">
-                <div style="background: #f8fafc; padding: 14px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3); text-align: center;">
+                <div style="background: #f8fafc; padding: 14px; border-radius: 12px; border: 1px solid #fee2e2; text-align: center;">
                     <div style="font-size: 1.8em; font-weight: bold; color: #ef4444;">${s4PainReduction}%</div>
                     <div style="color: #1e293b; font-size: 0.85em; font-weight: bold; margin-top: 4px;">مؤشر انخفاض الألم</div>
                     <div style="color: #475569; font-size: 0.74em; margin-top: 2px;">الألم الحالي (${day1Log.painScore}/10) مقارنة بالبداية (${basePain}/10)</div>
@@ -9478,7 +9501,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                     <div style="color: #1e293b; font-size: 0.85em; font-weight: bold; margin-top: 4px;">مؤشر المدى الحركي</div>
                     <div style="color: #475569; font-size: 0.74em; margin-top: 2px;">المرونة المقاسة بعد الجلسة الأولى</div>
                 </div>
-                <div style="background: #f8fafc; padding: 14px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); text-align: center;">
+                <div style="background: #f8fafc; padding: 14px; border-radius: 12px; border: 1px solid #dcfce7; text-align: center;">
                     <div style="font-size: 1.8em; font-weight: bold; color: #10b981;">${s4Sleep !== null ? s4Sleep + '%' : 'موثق ✓'}</div>
                     <div style="color: #1e293b; font-size: 0.85em; font-weight: bold; margin-top: 4px;">مؤشر جودة النوم والراحة</div>
                     <div style="color: #475569; font-size: 0.74em; margin-top: 2px;">تقييم الاسترخاء العصبي الموثق</div>
@@ -9545,15 +9568,15 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
 
             <!-- 5. زر توثيق إنجاز تمارين اليوم الأول أو بطاقة المتابعة في حال الإنجاز المسبق -->
             ${isDay1Completed ? `
-            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 2px solid #10b981; border-radius: 14px; padding: 24px; text-align: center; margin: 25px 0; box-shadow: 0 8px 30px rgba(16, 185, 129, 0.25);">
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 2px solid #10b981; border-radius: 14px; padding: 24px; text-align: center; margin: 25px 0; box-shadow: 0 8px 30px #dcfce7;">
                 <div style="color: #047857; font-size: 1.25em; font-weight: bold; margin-bottom: 8px;">✨ تمارين الجلسة الأولى مُنجزة وموثقة مسبقاً!</div>
                 <div style="color: #1e293b; font-size: 0.92em; margin-bottom: 20px; line-height: 1.7; max-width: 620px; margin-left: auto; margin-right: auto;">
                     لقد أتممت بنجاح تمارين اليوم الأول وهي مسجلة في سجلك الطبي. يمكنك مراجعة الحركات هنا في أي وقت، أو الانتقال مباشرة لمتابعة باقي الجلسات في المرحلة الخامسة.
                 </div>
                 <button type="button" onclick="handleStepperClick(5)" class="btn-plan-royal-card" style="margin: 0 auto; max-width: 620px; width: 100%; border-color: #10b981;">
-                    <div class="royal-card-halo" style="background: radial-gradient(circle, rgba(16,185,129,0.3) 0%, transparent 70%);"></div>
+                    <div class="royal-card-halo" style="background: radial-gradient(circle, #dcfce7 0%, transparent 70%);"></div>
                     <div class="royal-card-shimmer"></div>
-                    <div class="royal-badge-pill" style="border-color: #10b981; color: #ffffff;">
+                    <div class="royal-badge-pill" style="border-color: #10b981; color: #065f46;">
                         <span class="royal-badge-dot" style="background: #10b981; color: #ffffff;"></span>
                         <span>📅 الجلسة الأولى مكتملة وموثقة</span>
                     </div>
@@ -9572,7 +9595,7 @@ async function renderStep4IndependentDay1(patientId, sessionData = null) {
                 </button>
             </div>
             ` : `
-            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 2px solid #10b981; border-radius: 14px; padding: 24px; text-align: center; margin: 25px 0; box-shadow: 0 8px 30px rgba(16, 185, 129, 0.25);">
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 2px solid #10b981; border-radius: 14px; padding: 24px; text-align: center; margin: 25px 0; box-shadow: 0 8px 30px #dcfce7;">
                 <div style="color: #047857; font-size: 1.15em; font-weight: bold; margin-bottom: 8px;">🎯 خطوتك التالية بعد إتمام التمارين أعلاه:</div>
                 <div style="color: #1e293b; font-size: 0.9em; margin-bottom: 20px; line-height: 1.7; max-width: 600px; margin-left: auto; margin-right: auto;">
                     بعد انتهائك من أداء تمارين اليوم الأول، انقر على الزر أدناه لتوثيق إنجاز الجلسة الأولى وبدء فترة الاستشفاء الحيوي للأنسجة (24 ساعة). ستنتقل بعدها مباشرة لمتابعة باقي الجلسات (2 إلى 7) مع التقييم اليومي المعتمد.
@@ -9962,14 +9985,14 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                 </div>
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 12px;">
-                    <div style="background: #f0fdf4; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 14px;">
+                    <div style="background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 10px; padding: 14px;">
                         <div style="color: #10b981; font-weight: bold; font-size: 0.9em; margin-bottom: 8px;">✨ الإنجازات الإيجابية وأثرها البيوميكانيكي:</div>
                         <ul style="color: #047857; margin: 0; padding-right: 18px; line-height: 1.7; font-size: 0.85em;">
                             ${posHabits.length > 0 ? posHabits.map(h => `<li>${h}</li>`).join('') : '<li>لم يتم تسجيل سلوكيات إيجابية في هذه الجلسة.</li>'}
                         </ul>
                     </div>
 
-                    <div style="background: #fef2f2; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; padding: 14px;">
+                    <div style="background: #fef2f2; border: 1px solid #fee2e2; border-radius: 10px; padding: 14px;">
                         <div style="color: #ef4444; font-weight: bold; font-size: 0.9em; margin-bottom: 8px;">⚠️ السلوكيات السلبية وأثرها على المفاصل:</div>
                         <ul style="color: #dc2626; margin: 0; padding-right: 18px; line-height: 1.7; font-size: 0.85em;">
                             ${negHabits.length > 0 ? negHabits.map(h => `<li>${h}</li>`).join('') : '<li style="color: #10b981;">ممتاز! لم يتم رصد أي سلوكيات مجهدة للمفاصل.</li>'}
@@ -10092,7 +10115,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
 
     if (isDayAlreadyCompleted) {
         clock24HTML = `
-            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);">
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 20px 24px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px #dcfce7;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
                     <div style="color: #10b981; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
                         <span>✓</span> جلسة منجزة وموثقة سريرياً
@@ -10166,7 +10189,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
     } else {
         // إذا اكتمل العداد، نعرض شارة إنجاز فترة الاستشفاء واستعداد الجلسة للتوثيق
         clock24HTML = `
-            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 16px 20px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 18px rgba(16, 185, 129, 0.2);">
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 16px 20px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 18px #dcfce7;">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                     <div style="color: #047857; font-size: 1.02em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
                         <span>🎉</span> اكتملت فترة استشفاء الأنسجة (24 ساعة) بنجاح
@@ -10246,12 +10269,12 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                             <svg width="54" height="54" viewBox="0 0 54 54">
                                 <defs>
                                     <linearGradient id="circular-gauge-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stop-color="#38bdf8" />
+                                        <stop offset="0%" stop-color="#0369a1" />
                                         <stop offset="50%" stop-color="#10b981" />
                                         <stop offset="100%" stop-color="#0284c7" />
                                     </linearGradient>
                                 </defs>
-                                <circle cx="27" cy="27" r="22" fill="transparent" stroke="rgba(255, 255, 255, 0.12)" stroke-width="4.5" />
+                                <circle cx="27" cy="27" r="22" fill="transparent" stroke="#f8fafc" stroke-width="4.5" />
                                 <circle id="circular-progress-stroke" cx="27" cy="27" r="22" fill="transparent" stroke="url(#circular-gauge-grad)" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="138.23" stroke-dashoffset="${(138.23 * (1 - (initialPct / 100))).toFixed(1)}" />
                             </svg>
                             <div style="position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none;">
@@ -10354,7 +10377,7 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
 
             <!-- مؤشرات التحسن الثلاثة -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px;">
-                <div style="background: #f8fafc; padding: 18px; border-radius: 12px; border: 1.5px solid rgba(239, 68, 68, 0.4); text-align: center; position: relative; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1);">
+                <div style="background: #f8fafc; padding: 18px; border-radius: 12px; border: 1.5px solid rgba(239, 68, 68, 0.4); text-align: center; position: relative; box-shadow: 0 4px 15px #fee2e2;">
                     <div style="font-size: 2.2em; font-weight: bold; color: #ef4444; font-family: monospace;">${displayPainReduction}%</div>
                     <div style="color: #1e293b; font-size: 0.9em; font-weight: bold; margin-top: 4px;">مؤشر انخفاض وتلاشي الألم</div>
                     <div style="color: #475569; font-size: 0.75em; margin-top: 4px; line-height: 1.4;">
@@ -10371,13 +10394,13 @@ async function renderStep5SessionsDashboard(patientId, targetDay = null, session
                     ` : ''}
                 </div>
 
-                <div style="background: #f8fafc; padding: 18px; border-radius: 12px; border: 1.5px solid #bae6fd; text-align: center; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.1);">
+                <div style="background: #f8fafc; padding: 18px; border-radius: 12px; border: 1.5px solid #bae6fd; text-align: center; box-shadow: 0 4px 15px #e0f2fe;">
                     <div style="font-size: 2.2em; font-weight: bold; color: #0284c7; font-family: monospace;">${displayMobility ? displayMobility + '%' : '<span style="font-size: 0.62em; color: #0284c7;">قيد القياس ⏱️</span>'}</div>
                     <div style="color: #1e293b; font-size: 0.9em; font-weight: bold; margin-top: 4px;">مؤشر استعادة المدى الحركي</div>
                     <div style="color: #475569; font-size: 0.75em; margin-top: 4px; line-height: 1.4;">${(activeDayLog) ? 'المرونة التراكمية الموثقة للجلسة ' + activeDay : (lastPrevLog ? `استعادة الحركة التراكمية حتى الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day}` : 'سيُحسب بعد تقييمك لتمارين الجلسة الأولى')}</div>
                 </div>
 
-                <div style="background: #f8fafc; padding: 18px; border-radius: 12px; border: 1.5px solid rgba(16, 185, 129, 0.4); text-align: center; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.1);">
+                <div style="background: #f8fafc; padding: 18px; border-radius: 12px; border: 1.5px solid rgba(16, 185, 129, 0.4); text-align: center; box-shadow: 0 4px 15px #dcfce7;">
                     <div style="font-size: 2.2em; font-weight: bold; color: #10b981; font-family: monospace;">${displaySleep ? displaySleep + '%' : '<span style="font-size: 0.62em; color: #10b981;">قيد التقييم ⏱️</span>'}</div>
                     <div style="color: #1e293b; font-size: 0.9em; font-weight: bold; margin-top: 4px;">مؤشر جودة وعمق النوم والراحة</div>
                     <div style="color: #475569; font-size: 0.75em; margin-top: 4px; line-height: 1.4;">${(activeDayLog) ? 'جودة النوم والراحة التراكمية للجلسة ' + activeDay : (lastPrevLog ? `تراكم جودة النوم والراحة حتى الجلسة #${lastPrevLog.sessionNumber || lastPrevLog.day}` : 'سيُحسب بعد تقييمك لجودة النوم في الجلسة الأولى')}</div>
@@ -10847,7 +10870,7 @@ async function renderStep6Completion(patientId, sessionData = null) {
                     <div style="width: 76px; height: 76px; margin: 0 auto 14px auto; border-radius: 50%; background: linear-gradient(135deg, #f0f9ff 0%, #f0fdf4 100%); border: 2.5px solid #bae6fd; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14); display: flex; align-items: center; justify-content: center; font-size: 2.3em;">
                         👑
                     </div>
-                    <div style="display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #f0f9ff 0%, #f0fdf4 100%); border: 1.5px solid #10b981; color: #047857; padding: 6px 20px; border-radius: 30px; font-weight: 800; font-size: 0.9em; margin-bottom: 14px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);">
+                    <div style="display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #f0f9ff 0%, #f0fdf4 100%); border: 1.5px solid #10b981; color: #047857; padding: 6px 20px; border-radius: 30px; font-weight: 800; font-size: 0.9em; margin-bottom: 14px; box-shadow: 0 4px 15px #dcfce7;">
                         <span>✨</span> <span>إنجاز إرادي رائع — أتممتَ برنامج التهيئة الحركية (7 أيام) بنجاح</span>
                     </div>
                     <h2 style="font-size: 1.95em; margin: 0 0 10px 0; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; line-height: 1.35;">
@@ -11496,7 +11519,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
     }
 
     content.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(16, 185, 129, 0.3); padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #dcfce7; padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
             <div>
                 <h3 style="color: #10b981; margin: 0 0 4px 0; font-size: 1.35em; display: flex; align-items: center; gap: 8px;">
                     <span>📝</span> تقييم ومتابعة تقدم الجلسة (${sessionNumber === 1 ? 'الأولى #1' : `#${sessionNumber}`}) - ${areaTitle}
@@ -11506,7 +11529,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
             <button type="button" onclick="closeSessionAssessmentModal()" style="background: none; border: none; color: #475569; font-size: 1.8em; cursor: pointer; padding: 0 5px;">&times;</button>
         </div>
 
-        <div style="background: #f0fdf4; border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 10px; padding: 10px 14px; margin-bottom: 20px; color: #047857; font-size: 0.88em; line-height: 1.6;">
+        <div style="background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 10px; padding: 10px 14px; margin-bottom: 20px; color: #047857; font-size: 0.88em; line-height: 1.6;">
             💡 <strong>${formatPatientGreeting(sessionData.patient?.name)}:</strong> يرجى توثيق استجابتك الحقيقية لتمارين الجلسة وفترة الاستشفاء السابقة. إجاباتك تُحدّث فوراً مؤشرات الشفاء والرسم البياني للجلسة التالية.
         </div>
 
@@ -11567,7 +11590,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                     <span class="pulse-arrow-hand-right">👉</span>
                 </div>
             </div>
-            <input type="range" id="modal-mobility-slider" min="10" max="100" value="${initialMobilityVal}" oninput="document.getElementById('modal-mobility-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #38bdf8; margin-bottom: 12px; cursor: pointer;">
+            <input type="range" id="modal-mobility-slider" min="10" max="100" value="${initialMobilityVal}" oninput="document.getElementById('modal-mobility-val').textContent = this.value + ' %'" style="width: 100%; accent-color: #0369a1; margin-bottom: 12px; cursor: pointer;">
             
             <div style="color: #475569; font-size: 0.84em; margin-bottom: 8px;">اختر كل ما ينطبق على حركتك اليوم (اختيار متعدد):</div>
             <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
@@ -11578,14 +11601,14 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                     { val: 20, text: "صعوبة وتيبس شديد ومحدودية حركية واضحة" }
                 ]).map((opt) => `
                     <label style="color: #1e293b; font-size: 0.88em; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" name="modal_mobility_check" value="${opt.val}" onchange="window.updateModalMobilityFromCheck()" data-text="${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}" style="accent-color: #38bdf8; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
+                        <input type="checkbox" name="modal_mobility_check" value="${opt.val}" onchange="window.updateModalMobilityFromCheck()" data-text="${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}" style="accent-color: #0369a1; width: 16px; height: 16px;"> ${(opt.text || '').replace(/\s*\(\d+%\)/g, '')}
                     </label>
                 `).join('')}
             </div>
         </div>
 
         <!-- 3. جودة النوم مع الأعراض الليلية -->
-        <div style="margin-bottom: 20px; background: #ffffff; padding: 16px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3);">
+        <div style="margin-bottom: 20px; background: #ffffff; padding: 16px; border-radius: 12px; border: 1px solid #dcfce7;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <label style="color: #10b981; font-size: 0.95em; font-weight: bold;">
                     ${anatomicalConfig ? anatomicalConfig.sleepQuestion : '3. جودة النوم والراحة الليلة الماضية:'}
@@ -11618,7 +11641,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
 
         <!-- 4. السلوكيات الإيجابية والسلبية المنجزة -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 25px;">
-            <div style="background: #f0fdf4; border: 1px solid rgba(16, 185, 129, 0.3); padding: 16px; border-radius: 12px;">
+            <div style="background: #f0fdf4; border: 1px solid #dcfce7; padding: 16px; border-radius: 12px;">
                 <div style="color: #10b981; font-weight: bold; font-size: 0.95em; margin-bottom: 10px;">✨ السلوكيات الإيجابية المنجزة اليوم:</div>
                 ${(anatomicalConfig ? anatomicalConfig.positiveBehaviors : [
                     { id: "beh-exercise", text: "نفذت التمارين التأهيلية بانتظام" },
@@ -11633,7 +11656,7 @@ async function openSessionAssessmentModal(patientId, sessionNumber) {
                 `).join('')}
             </div>
 
-            <div style="background: #fef2f2; border: 1px solid rgba(239, 68, 68, 0.3); padding: 16px; border-radius: 12px;">
+            <div style="background: #fef2f2; border: 1px solid #fee2e2; padding: 16px; border-radius: 12px;">
                 <div style="color: #ef4444; font-weight: bold; font-size: 0.95em; margin-bottom: 10px;">⚠️ سلوكيات سلبية حدثت اليوم (للتصحيح):</div>
                 ${(anatomicalConfig ? anatomicalConfig.negativeBehaviors : [
                     { id: "neg-sitting", text: "جلوس طويل متواصل لأكثر من ساعة" },
@@ -11721,17 +11744,17 @@ window.updateModalPainLive = function(painVal, basePain) {
         const drop = Math.max(0, Math.min(100, Math.round(((basePain - painVal) / basePain) * 100)));
         badgeEl.textContent = `انخفاض وتلاشي الألم: ${drop}%`;
         if (drop >= 60) {
-            badgeEl.style.background = 'rgba(16, 185, 129, 0.2)';
+            badgeEl.style.background = '#dcfce7';
             badgeEl.style.borderColor = '#10b981';
-            badgeEl.style.color = '#6ee7b7';
+            badgeEl.style.color = '#047857';
         } else if (drop >= 30) {
-            badgeEl.style.background = 'rgba(56, 189, 248, 0.2)';
+            badgeEl.style.background = '#e0f2fe';
             badgeEl.style.borderColor = '#38bdf8';
-            badgeEl.style.color = '#7dd3fc';
+            badgeEl.style.color = '#0369a1';
         } else {
-            badgeEl.style.background = 'rgba(239, 68, 68, 0.2)';
+            badgeEl.style.background = '#fee2e2';
             badgeEl.style.borderColor = '#ef4444';
-            badgeEl.style.color = '#fca5a5';
+            badgeEl.style.color = '#dc2626';
         }
     }
 };
@@ -12217,7 +12240,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v33.25';
+const CURRENT_APP_VERSION = 'v33.30';
 window.CURRENT_APP_VERSION = CURRENT_APP_VERSION;
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
@@ -12543,7 +12566,7 @@ function switchAppModalTab(tab) {
 
         tabBtnShare.style.background = '#f8fafc';
         tabBtnShare.style.borderColor = '#334155';
-        tabBtnShare.style.color = '#94a3b8';
+        tabBtnShare.style.color = '#475569';
 
         contentInstall.style.display = 'block';
         contentShare.style.display = 'none';
@@ -12554,7 +12577,7 @@ function switchAppModalTab(tab) {
 
         tabBtnInstall.style.background = '#f8fafc';
         tabBtnInstall.style.borderColor = '#334155';
-        tabBtnInstall.style.color = '#94a3b8';
+        tabBtnInstall.style.color = '#475569';
 
         contentInstall.style.display = 'none';
         contentShare.style.display = 'block';
@@ -13526,7 +13549,7 @@ async function exportClinicalSummaryForDoctor(patientId) {
                     <div style="color: var(--primary-gold); font-weight: bold; font-size: 0.92em; margin-bottom: 8px;">🧬 السلوكيات الحركية والبيوميكانيكية الموثقة من جلسات المراجع:</div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px;">
                         ${recordedPosHabits.length > 0 ? `
-                            <div style="background: #f0fdf4; border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px; padding: 10px;">
+                            <div style="background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 8px; padding: 10px;">
                                 <div style="color: #10b981; font-weight: bold; font-size: 0.82em; margin-bottom: 4px;">✨ إنجازات إيجابية:</div>
                                 <ul style="color: #047857; margin: 0; padding-right: 16px; font-size: 0.8em; line-height: 1.6;">
                                     ${recordedPosHabits.map(h => `<li>${h}</li>`).join('')}
@@ -13534,7 +13557,7 @@ async function exportClinicalSummaryForDoctor(patientId) {
                             </div>
                         ` : ''}
                         ${recordedNegHabits.length > 0 ? `
-                            <div style="background: #fef2f2; border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px; padding: 10px;">
+                            <div style="background: #fef2f2; border: 1px solid #fee2e2; border-radius: 8px; padding: 10px;">
                                 <div style="color: #ef4444; font-weight: bold; font-size: 0.82em; margin-bottom: 4px;">⚠️ إجهادات رُصدت للتصحيح:</div>
                                 <ul style="color: #dc2626; margin: 0; padding-right: 16px; font-size: 0.8em; line-height: 1.6;">
                                     ${recordedNegHabits.map(h => `<li>${h}</li>`).join('')}
@@ -13624,7 +13647,7 @@ function getNotificationReminderBannerHTML(patientId) {
             <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 250px;">
                 <span style="font-size: 1.6em;">🔔</span>
                 <div>
-                    <div style="color: ${isEnabled && isGranted ? '#10b981' : '#38bdf8'}; font-weight: bold; font-size: 0.96em;">
+                    <div style="color: ${isEnabled && isGranted ? '#047857' : '#0369a1'}; font-weight: bold; font-size: 0.96em;">
                         ${isEnabled && isGranted ? '✓ تذكيرات الجلسات اليومية مفعلة بنجاح' : 'تفعيل التذكير اليومي الذكي للجلسات'}
                     </div>
                     <div style="color: #1e293b; font-size: 0.82em; margin-top: 2px;">
@@ -14449,9 +14472,9 @@ function toggleVoiceSpeechInput() {
         clinicalSpeechRecognition.stop();
         isVoiceRecordingActive = false;
         if (btn) {
-            btn.style.background = 'rgba(56, 189, 248, 0.15)';
+            btn.style.background = '#e0f2fe';
             btn.style.borderColor = '#38bdf8';
-            btn.style.color = '#38bdf8';
+            btn.style.color = '#0369a1';
         }
         if (icon) icon.textContent = '🎤';
         if (statusText) statusText.textContent = 'تحدث صوتياً (إملاء فوري)';
@@ -14468,9 +14491,9 @@ function toggleVoiceSpeechInput() {
         clinicalSpeechRecognition.onstart = () => {
             isVoiceRecordingActive = true;
             if (btn) {
-                btn.style.background = 'rgba(239, 68, 68, 0.2)';
+                btn.style.background = '#fee2e2';
                 btn.style.borderColor = '#ef4444';
-                btn.style.color = '#fca5a5';
+                btn.style.color = '#dc2626';
             }
             if (icon) icon.textContent = '🔴';
             if (statusText) statusText.textContent = 'جاري الاستماع إليك... تحدث الآن';
@@ -14498,9 +14521,9 @@ function toggleVoiceSpeechInput() {
             console.warn('Speech recognition error:', e.error);
             isVoiceRecordingActive = false;
             if (btn) {
-                btn.style.background = 'rgba(56, 189, 248, 0.15)';
+                btn.style.background = '#e0f2fe';
                 btn.style.borderColor = '#38bdf8';
-                btn.style.color = '#38bdf8';
+                btn.style.color = '#0369a1';
             }
             if (icon) icon.textContent = '🎤';
             if (statusText) statusText.textContent = 'تحدث صوتياً (إملاء فوري)';
@@ -14520,9 +14543,9 @@ function toggleVoiceSpeechInput() {
             isVoiceRecordingActive = false;
             const hasText = textarea && textarea.value.trim().length > 0;
             if (btn) {
-                btn.style.background = hasText ? 'rgba(16, 185, 129, 0.2)' : 'rgba(56, 189, 248, 0.15)';
+                btn.style.background = hasText ? '#dcfce7' : '#e0f2fe';
                 btn.style.borderColor = hasText ? '#10b981' : '#38bdf8';
-                btn.style.color = hasText ? '#6ee7b7' : '#38bdf8';
+                btn.style.color = hasText ? '#047857' : '#0369a1';
             }
             if (icon) icon.textContent = hasText ? '✅' : '🎤';
             if (statusText) statusText.textContent = hasText ? 'تم إدراج حديثك في المربع أدناه' : 'تحدث صوتياً (إملاء فوري)';
@@ -14531,9 +14554,9 @@ function toggleVoiceSpeechInput() {
             }
             setTimeout(() => {
                 if (btn) {
-                    btn.style.background = 'rgba(56, 189, 248, 0.15)';
+                    btn.style.background = '#e0f2fe';
                     btn.style.borderColor = '#38bdf8';
-                    btn.style.color = '#38bdf8';
+                    btn.style.color = '#0369a1';
                 }
                 if (icon) icon.textContent = '🎤';
                 if (statusText) statusText.textContent = 'تحدث صوتياً (إملاء فوري)';
@@ -14648,7 +14671,7 @@ function switchIntakeMode(mode) {
         }
         if (btnForm) {
             btnForm.style.background = 'transparent';
-            btnForm.style.color = '#94a3b8';
+            btnForm.style.color = '#475569';
         }
         if (subtitle) subtitle.textContent = 'حوار واستجواب سريري حي بالذكاء الاصطناعي لتشخيص منطقة الألم بدقة';
         if (clinicalDialogueState.step === 'init') {
@@ -14659,7 +14682,7 @@ function switchIntakeMode(mode) {
         if (formContainer) formContainer.style.display = 'block';
         if (btnChat) {
             btnChat.style.background = 'transparent';
-            btnChat.style.color = '#94a3b8';
+            btnChat.style.color = '#475569';
         }
         if (btnForm) {
             btnForm.style.background = 'var(--primary-gold)';
@@ -15061,7 +15084,7 @@ function renderVerifiedPatientVitalsBadge(box, vitals, name) {
         border-radius: 14px;
         padding: 12px 16px;
         margin: 10px 0 14px 0;
-        box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);
+        box-shadow: 0 4px 20px #dcfce7;
         animation: fadeIn 0.3s ease;
     `;
 
@@ -15863,7 +15886,7 @@ async function sendChatMessage() {
     if (messagesBox) {
         const typingEl = document.createElement('div');
         typingEl.id = loadingId;
-        typingEl.style.cssText = 'color: #94a3b8; font-size: 0.88em; padding: 6px 12px; display: flex; align-items: center; gap: 8px;';
+        typingEl.style.cssText = 'color: #475569; font-size: 0.88em; padding: 6px 12px; display: flex; align-items: center; gap: 8px;';
         typingEl.innerHTML = `<span style="animation: spin 1s linear infinite; display: inline-block;">⚙️</span> <span>${persona.name} يحلل إجابتك ويسجل رده...</span>`;
         messagesBox.appendChild(typingEl);
         messagesBox.scrollTop = messagesBox.scrollHeight;
@@ -17214,16 +17237,16 @@ function togglePlayAiInsightAudio() {
         if (icon) icon.textContent = '🔊';
         if (text) text.textContent = 'استمع للإرشاد الصوتي للتقرير السريري';
         if (btn) {
-            btn.style.background = 'rgba(56, 189, 248, 0.15)';
-            btn.style.color = '#38bdf8';
+            btn.style.background = '#e0f2fe';
+            btn.style.color = '#0369a1';
         }
         showToast('تم إيقاف الصوت', 'info');
         return;
     }
 
     if (btn) {
-        btn.style.background = 'rgba(16, 185, 129, 0.25)';
-        btn.style.color = '#6ee7b7';
+        btn.style.background = '#dcfce7';
+        btn.style.color = '#047857';
     }
     if (icon) icon.textContent = '⏸️';
     if (text) text.textContent = 'جاري الاستماع للإرشاد... اضغط للإيقاف';
@@ -17234,8 +17257,8 @@ function togglePlayAiInsightAudio() {
         if (icon) icon.textContent = '🔊';
         if (text) text.textContent = 'استمع للإرشاد الصوتي للتقرير السريري';
         if (btn) {
-            btn.style.background = 'rgba(56, 189, 248, 0.15)';
-            btn.style.color = '#38bdf8';
+            btn.style.background = '#e0f2fe';
+            btn.style.color = '#0369a1';
         }
     });
 }

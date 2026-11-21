@@ -779,18 +779,18 @@ const PatientFlow = (function() {
                     if (curPId) localStorage.removeItem(`custom_target_time_${curPId}`);
                     const clockCard = document.getElementById('session-24h-clock-card');
                     if (clockCard) {
-                        clockCard.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.95) 100%)';
+                        clockCard.style.background = 'linear-gradient(135deg, #dcfce7 0%, rgba(15, 23, 42, 0.95) 100%)';
                         clockCard.style.borderColor = '#10b981';
                         clockCard.innerHTML = `
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
                                 <div style="color: #10b981; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; gap: 8px;">
                                     <span>✅</span> الجلسة مفتوحة ومتاحة للبدء الآن
                                 </div>
-                                <span style="background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; color: #6ee7b7; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">
+                                <span style="background: #dcfce7; border: 1px solid #10b981; color: #047857; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold;">
                                     جاهزة للتطبيق والتوثيق
                                 </span>
                             </div>
-                            <p style="color: #cbd5e1; font-size: 0.9em; margin: 0; line-height: 1.6;">
+                            <p style="color: #1e293b; font-size: 0.9em; margin: 0; line-height: 1.6;">
                                 🎉 اكتملت فترة الاستشفاء الحيوي للأنسجة! يمكنك الآن أداء التمارين الموضحة بالأسفل ثم توثيق التقييم الحركي والانتقال للجلسة التالية.
                             </p>
                         `;
@@ -993,7 +993,7 @@ const PatientFlow = (function() {
             const banner = document.createElement('div');
             banner.className = 'exercise-rest-transition-banner';
             banner.style.cssText = `
-                background: linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.96) 100%);
+                background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
                 border: 2px solid #0284c7;
                 border-radius: 12px;
                 padding: 14px 20px;
@@ -1013,10 +1013,10 @@ const PatientFlow = (function() {
                         <span>⏸️ خذ نفساً عميقاً (فترة راحة للأنسجة):</span>
                         <span class="rest-timer-countdown" style="background: #0284c7; color: #ffffff; padding: 2px 10px; border-radius: 12px; font-weight: 900;">${restSec} ثانية</span>
                     </div>
-                    <div style="font-size: 0.88em; color: #94a3b8;">
+                    <div style="font-size: 0.88em; color: #475569;">
                         التالي: <strong style="color: #ffffff;">${nextName}</strong>
                     </div>
-                    <button type="button" class="btn-skip-rest" style="background: rgba(255,255,255,0.12); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; padding: 5px 12px; font-size: 0.82em; cursor: pointer; font-weight: bold;">
+                    <button type="button" class="btn-skip-rest" style="background: #f8fafc; color: #1e293b; border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; padding: 5px 12px; font-size: 0.82em; cursor: pointer; font-weight: bold;">
                         تخطي الراحة والبدء فوراً ⏭️
                     </button>
                 </div>

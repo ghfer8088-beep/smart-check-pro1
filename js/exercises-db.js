@@ -144,7 +144,7 @@ function generateExerciseIllustration(visualType, exerciseId = null, extraData =
             <button type="button" onclick="event.stopPropagation(); if (typeof ExerciseImageStudio !== 'undefined') ExerciseImageStudio.openModal('${safeExId}', '${visualType || ''}', '${exTitle}');"
                     title="إضافة أو تغيير وتكييف صورة هذا التمرين تلقائياً"
                     class="btn-customize-exercise-img no-print"
-                    style="position: absolute; bottom: 8px; left: 8px; background: rgba(15, 23, 42, 0.88); color: #cbd5e1; border: 1px solid rgba(212, 175, 55, 0.5); border-radius: 6px; padding: 4px 9px; font-size: 0.76em; cursor: pointer; display: flex; align-items: center; gap: 4px; z-index: 3; transition: all 0.2s;">
+                    style="position: absolute; bottom: 8px; left: 8px; background: #f8fafc; color: #1e293b; border: 1px solid rgba(212, 175, 55, 0.5); border-radius: 6px; padding: 4px 9px; font-size: 0.76em; cursor: pointer; display: flex; align-items: center; gap: 4px; z-index: 3; transition: all 0.2s;">
                 📷 <span>تغيير الصورة</span>
             </button>
             ` : ''}
@@ -165,12 +165,12 @@ function getExerciseFormGuideHTML(ex = {}) {
                 <span style="display: flex; align-items: center; gap: 6px;">🎯 التكنيك السريري السليم vs أخطاء شائعة</span>
                 <span class="toggle-icon" style="font-size: 0.8em; color: var(--primary-gold);">▼</span>
             </button>
-            <div class="form-tip-content" style="display: none; background: #060a10; border: 1px solid #1e293b; border-radius: 8px; padding: 12px; margin-top: 6px; font-size: 0.82em; line-height: 1.6; text-align: right;">
-                <div style="color: #10b981; margin-bottom: 8px; background: rgba(16, 185, 129, 0.08); padding: 8px 10px; border-radius: 6px; border-right: 3px solid #10b981;">
-                    <strong style="color: #6ee7b7;">✅ الطريقة السريرية الصحيحة:</strong><br>${tips.correct}
+            <div class="form-tip-content" style="display: none; background: #ffffff; border: 1px solid #1e293b; border-radius: 8px; padding: 12px; margin-top: 6px; font-size: 0.82em; line-height: 1.6; text-align: right;">
+                <div style="color: #10b981; margin-bottom: 8px; background: #dcfce7; padding: 8px 10px; border-radius: 6px; border-right: 3px solid #10b981;">
+                    <strong style="color: #047857;">✅ الطريقة السريرية الصحيحة:</strong><br>${tips.correct}
                 </div>
-                <div style="color: #ef4444; background: rgba(239, 68, 68, 0.08); padding: 8px 10px; border-radius: 6px; border-right: 3px solid #ef4444;">
-                    <strong style="color: #fca5a5;">❌ تجنب هذا الخطأ الشائع:</strong><br>${tips.mistake}
+                <div style="color: #ef4444; background: #fee2e2; padding: 8px 10px; border-radius: 6px; border-right: 3px solid #ef4444;">
+                    <strong style="color: #dc2626;">❌ تجنب هذا الخطأ الشائع:</strong><br>${tips.mistake}
                 </div>
             </div>
         </div>

@@ -226,7 +226,7 @@
             top: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(90deg, #0f172a 0%, #064e3b 50%, #0f172a 100%);
+            background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
             color: #0284c7;
             padding: 10px 16px;
             text-align: center;
@@ -285,20 +285,20 @@
 
         const rules = getStoredReplacements();
         if (rules.length === 0) {
-            listEl.innerHTML = '<div style="color: #94a3b8; font-size: 0.85em; text-align: center; padding: 8px;">لا توجد كلمات معدلة حالياً (النصوص الأصلية تعمل بالكامل).</div>';
+            listEl.innerHTML = '<div style="color: #475569; font-size: 0.85em; text-align: center; padding: 8px;">لا توجد كلمات معدلة حالياً (النصوص الأصلية تعمل بالكامل).</div>';
             return;
         }
 
         let html = '<div style="display: flex; flex-direction: column; gap: 6px;">';
         rules.forEach(rule => {
             html += `
-                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(2, 132, 199, 0.3); border-radius: 8px; padding: 6px 12px; font-size: 0.85em;">
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid rgba(2, 132, 199, 0.3); border-radius: 8px; padding: 6px 12px; font-size: 0.85em;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span style="color: #ef4444; text-decoration: line-through;">${escapeHtml(rule.from)}</span>
                         <span style="color: #0284c7;">➔</span>
                         <span style="color: #10b981; font-weight: bold;">${escapeHtml(rule.to)}</span>
                     </div>
-                    <button type="button" onclick="deleteReplacementRule('${escapeJs(rule.from)}')" title="حذف واستعادة الأصل" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8em;">✕</button>
+                    <button type="button" onclick="deleteReplacementRule('${escapeJs(rule.from)}')" title="حذف واستعادة الأصل" style="background: #fee2e2; border: 1px solid #ef4444; color: #dc2626; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8em;">✕</button>
                 </div>
             `;
         });
@@ -334,7 +334,7 @@
                 bottom: 22px;
                 right: 22px;
                 z-index: 998;
-                background: linear-gradient(135deg, #0f172a 0%, #064e3b 100%);
+                background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
                 border: 1.8px solid var(--primary-gold);
                 color: #0284c7;
                 padding: 8px 16px;
@@ -377,47 +377,47 @@
         `;
 
         modal.innerHTML = `
-            <div style="background: linear-gradient(135deg, #0b1322 0%, #17253d 100%); border: 2px solid var(--primary-gold); border-radius: 16px; width: 100%; max-width: 540px; box-shadow: 0 15px 40px rgba(0,0,0,0.9); overflow: hidden; display: flex; flex-direction: column; max-height: 90vh;">
+            <div style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); border: 2px solid var(--primary-gold); border-radius: 16px; width: 100%; max-width: 540px; box-shadow: 0 15px 40px rgba(0,0,0,0.9); overflow: hidden; display: flex; flex-direction: column; max-height: 90vh;">
                 <!-- رأس النافذة -->
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid rgba(2, 132, 199, 0.3); background: rgba(15, 23, 42, 0.8);">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid rgba(2, 132, 199, 0.3); background: #f8fafc;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span style="font-size: 1.3em;">✏️</span>
                         <h3 style="margin: 0; color: #0284c7; font-size: 1.1em; font-weight: 800;">أداة تعديل النصوص السريعة</h3>
                     </div>
-                    <button type="button" onclick="closeTextEditorModal()" style="background: none; border: none; color: #94a3b8; font-size: 1.3em; cursor: pointer; padding: 4px;" title="إغلاق">✕</button>
+                    <button type="button" onclick="closeTextEditorModal()" style="background: none; border: none; color: #475569; font-size: 1.3em; cursor: pointer; padding: 4px;" title="إغلاق">✕</button>
                 </div>
 
                 <!-- جسم النافذة -->
                 <div style="padding: 18px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px;">
                     <!-- رسالة التأكيد -->
-                    <div id="editor-feedback-msg" style="display: none; background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #6ee7b7; padding: 8px 12px; border-radius: 8px; font-size: 0.85em; text-align: center; font-weight: bold;"></div>
+                    <div id="editor-feedback-msg" style="display: none; background: #dcfce7; border: 1px solid #10b981; color: #047857; padding: 8px 12px; border-radius: 8px; font-size: 0.85em; text-align: center; font-weight: bold;"></div>
 
                     <!-- القسم الأول: استبدال الكلمات -->
-                    <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(2, 132, 199, 0.25); border-radius: 10px; padding: 14px;">
-                        <h4 style="margin: 0 0 10px 0; color: #38bdf8; font-size: 0.95em; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+                    <div style="background: #f8fafc; border: 1px solid rgba(2, 132, 199, 0.25); border-radius: 10px; padding: 14px;">
+                        <h4 style="margin: 0 0 10px 0; color: #0369a1; font-size: 0.95em; font-weight: 800; display: flex; align-items: center; gap: 6px;">
                             <span>🔄</span> استبدال كلمة أو عبارة في كامل التطبيق:
                         </h4>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             <div>
-                                <label style="display: block; color: #cbd5e1; font-size: 0.8em; margin-bottom: 4px; font-weight: 600;">الكلمة الحالية (التي تريد تغييرها):</label>
-                                <input type="text" id="editor-from-text" placeholder="مثال: التقويم اليدوي" style="width: 100%; background: #080c14; border: 1px solid rgba(2, 132, 199, 0.4); color: #fff; padding: 8px 12px; border-radius: 8px; font-family: inherit; font-size: 0.9em; box-sizing: border-box;">
+                                <label style="display: block; color: #1e293b; font-size: 0.8em; margin-bottom: 4px; font-weight: 600;">الكلمة الحالية (التي تريد تغييرها):</label>
+                                <input type="text" id="editor-from-text" placeholder="مثال: التقويم اليدوي" style="width: 100%; background: #ffffff; border: 1px solid rgba(2, 132, 199, 0.4); color: #0f172a; padding: 8px 12px; border-radius: 8px; font-family: inherit; font-size: 0.9em; box-sizing: border-box;">
                             </div>
                             <div>
-                                <label style="display: block; color: #cbd5e1; font-size: 0.8em; margin-bottom: 4px; font-weight: 600;">الكلمة الجديدة (البديلة):</label>
-                                <input type="text" id="editor-to-text" placeholder="مثال: الكايروبراكتيك" style="width: 100%; background: #080c14; border: 1px solid rgba(2, 132, 199, 0.4); color: #fff; padding: 8px 12px; border-radius: 8px; font-family: inherit; font-size: 0.9em; box-sizing: border-box;">
+                                <label style="display: block; color: #1e293b; font-size: 0.8em; margin-bottom: 4px; font-weight: 600;">الكلمة الجديدة (البديلة):</label>
+                                <input type="text" id="editor-to-text" placeholder="مثال: الكايروبراكتيك" style="width: 100%; background: #ffffff; border: 1px solid rgba(2, 132, 199, 0.4); color: #0f172a; padding: 8px 12px; border-radius: 8px; font-family: inherit; font-size: 0.9em; box-sizing: border-box;">
                             </div>
-                            <button type="button" onclick="executeWordReplacement()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 1px solid #34d399; color: #ffffff; padding: 9px; border-radius: 8px; font-family: inherit; font-size: 0.92em; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); margin-top: 4px;">
+                            <button type="button" onclick="executeWordReplacement()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: 1px solid #34d399; color: #ffffff; padding: 9px; border-radius: 8px; font-family: inherit; font-size: 0.92em; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px #dcfce7; margin-top: 4px;">
                                 ⚡ استبدال في كامل الصفحة وحفظ التعديل
                             </button>
                         </div>
                     </div>
 
                     <!-- القسم الثاني: وضع التحرير المباشر بالنقر -->
-                    <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 14px;">
+                    <div style="background: #f8fafc; border: 1px solid #e0f2fe; border-radius: 10px; padding: 14px;">
                         <h4 style="margin: 0 0 6px 0; color: #0284c7; font-size: 0.95em; font-weight: 800; display: flex; align-items: center; gap: 6px;">
                             <span>✍️</span> وضع التحرير المرئي المباشر (مثل Word):
                         </h4>
-                        <p style="margin: 0 0 10px 0; color: #94a3b8; font-size: 0.82em; line-height: 1.5;">
+                        <p style="margin: 0 0 10px 0; color: #475569; font-size: 0.82em; line-height: 1.5;">
                             عند تفعيل هذا الوضع، تصبح كامل الشاشة قابلة للكتابة، يمكنك النقر على أي عنوان أو نص وتعديله مباشرة لتجربة مظهره.
                         </p>
                         <button type="button" id="btn-toggle-live-edit" onclick="toggleLiveVisualEditing()" style="background: #2563eb; border: 1px solid #60a5fa; color: #ffffff; padding: 8px 14px; border-radius: 8px; font-family: inherit; font-size: 0.88em; font-weight: bold; cursor: pointer; width: 100%;">
@@ -426,8 +426,8 @@
                     </div>
 
                     <!-- القسم الثالث: قائمة الكلمات المعدلة حالياً -->
-                    <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(2, 132, 199, 0.25); border-radius: 10px; padding: 14px;">
-                        <h4 style="margin: 0 0 8px 0; color: #cbd5e1; font-size: 0.9em; font-weight: 700;">
+                    <div style="background: #f8fafc; border: 1px solid rgba(2, 132, 199, 0.25); border-radius: 10px; padding: 14px;">
+                        <h4 style="margin: 0 0 8px 0; color: #1e293b; font-size: 0.9em; font-weight: 700;">
                             📋 الكلمات المعدلة المحفوظة في التطبيق:
                         </h4>
                         <div id="editor-active-rules-list"></div>
@@ -435,11 +435,11 @@
                 </div>
 
                 <!-- تذييل النافذة: أزرار التصدير والإغلاق -->
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding: 12px 20px; border-top: 1px solid rgba(2, 132, 199, 0.3); background: rgba(15, 23, 42, 0.9);">
-                    <button type="button" onclick="copyReplacementsToClipboard()" style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.3) 0%, rgba(16, 185, 129, 0.3) 100%); border: 1px solid var(--primary-gold); color: #0284c7; padding: 7px 14px; border-radius: 8px; font-family: inherit; font-size: 0.85em; font-weight: bold; cursor: pointer;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding: 12px 20px; border-top: 1px solid rgba(2, 132, 199, 0.3); background: #f8fafc;">
+                    <button type="button" onclick="copyReplacementsToClipboard()" style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.3) 0%, #dcfce7 100%); border: 1px solid var(--primary-gold); color: #0284c7; padding: 7px 14px; border-radius: 8px; font-family: inherit; font-size: 0.85em; font-weight: bold; cursor: pointer;">
                         📋 نسخ التعديلات لإرسالها للمساعد
                     </button>
-                    <button type="button" onclick="resetAllReplacements()" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 7px 12px; border-radius: 8px; font-family: inherit; font-size: 0.82em; cursor: pointer;">
+                    <button type="button" onclick="resetAllReplacements()" style="background: #fee2e2; border: 1px solid #ef4444; color: #dc2626; padding: 7px 12px; border-radius: 8px; font-family: inherit; font-size: 0.82em; cursor: pointer;">
                         🔄 استعادة النصوص الأصلية
                     </button>
                 </div>
