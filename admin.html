@@ -60,9 +60,9 @@
     /></noscript>
     <!-- End Meta Pixel Code -->
 
-    <script src="js/system-watchdog.js?v=33.40"></script>
-    <script src="js/security-shield.js?v=33.40"></script>
-    <link rel="stylesheet" href="css/style.css?v=33.40">
+    <script src="js/system-watchdog.js?v=33.45"></script>
+    <script src="js/security-shield.js?v=33.45"></script>
+    <link rel="stylesheet" href="css/style.css?v=33.45">
     <style>
         :root {
             --primary-gold: #0284c7;
@@ -531,7 +531,7 @@
                     <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78em; color: #334155; margin-top: 3px; background: #f0f9ff; border: 1px solid #bae6fd; padding: 2px 10px; border-radius: 20px;">
                         <span style="display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #10b981;"></span>
                         <span>الإصدار المعتمد:</span>
-                        <strong style="color: #0369a1; font-family: monospace, sans-serif; font-size: 1.06em; font-weight: 900;">v33.40</strong>
+                        <strong style="color: #0369a1; font-family: monospace, sans-serif; font-size: 1.06em; font-weight: 900;">v33.45</strong>
                     </div>
                 </div>
             </div>
@@ -550,8 +550,8 @@
                         <span id="health-badge-icon">🛡️</span>
                         <span id="health-badge-text">درع المراقبة</span>
                     </button>
-                    <button type="button" id="btn-broadcast-version-global" onclick="handleUnifiedUpdateAndBroadcast()" class="btn-header" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border: 1.5px solid #047857; color: #ffffff; font-weight: 900; padding: 9px 14px; font-size: 0.85em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);" title="تحديث الكاش، ومزامنة السحابة، وبث التحديث العالمي (v33.40) لجميع الأجهزة والهواتف حول العالم بضغطة واحدة">
-                        <span>🚀</span> تحديث وبث الإصدار (v33.40)
+                    <button type="button" id="btn-broadcast-version-global" onclick="handleUnifiedUpdateAndBroadcast()" class="btn-header" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border: 1.5px solid #047857; color: #ffffff; font-weight: 900; padding: 9px 14px; font-size: 0.85em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);" title="تحديث الكاش، ومزامنة السحابة، وبث التحديث العالمي (v33.45) لجميع الأجهزة والهواتف حول العالم بضغطة واحدة">
+                        <span>🚀</span> تحديث وبث الإصدار (v33.45)
                     </button>
                     <a href="index.html" class="btn-header admin-btn-front" style="background: #0284c7; color: #ffffff; padding: 9px 14px; font-size: 0.85em; font-weight: 800; text-decoration: none; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1.5px solid #0369a1;" title="فتح واجهة المراجعين">
                         🌐 واجهة المراجعين
@@ -2605,17 +2605,17 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/clinic-patients-data.js?v=33.40"></script>
-    <script src="js/mqtt.min.js?v=33.40"></script>
-    <script src="js/cloud-sync.js?v=33.40"></script>
-    <script src="js/geo-tracker.js?v=33.40"></script>
-    <script src="js/database.js?v=33.40"></script>
-    <script src="js/exercise-image-studio.js?v=33.40"></script>
-    <script src="js/admin-engine.js?v=33.40"></script>
-    <script src="js/ai-config.js?v=33.40"></script>
-    <script src="js/ai-engine.js?v=33.40"></script>
-    <script src="js/whatsapp-dispatcher.js?v=33.40"></script>
-    <script src="js/mobile-alerts.js?v=33.40"></script>
+    <script src="js/clinic-patients-data.js?v=33.45"></script>
+    <script src="js/mqtt.min.js?v=33.45"></script>
+    <script src="js/cloud-sync.js?v=33.45"></script>
+    <script src="js/geo-tracker.js?v=33.45"></script>
+    <script src="js/database.js?v=33.45"></script>
+    <script src="js/exercise-image-studio.js?v=33.45"></script>
+    <script src="js/admin-engine.js?v=33.45"></script>
+    <script src="js/ai-config.js?v=33.45"></script>
+    <script src="js/ai-engine.js?v=33.45"></script>
+    <script src="js/whatsapp-dispatcher.js?v=33.45"></script>
+    <script src="js/mobile-alerts.js?v=33.45"></script>
 
     <script>
         // محرك صيانة وتطهير التخزين التلقائي لمنع تجاوز السعة (QuotaExceededError)
@@ -4487,15 +4487,14 @@
         function renderTable(list) {
             const mobileCardsContainer = document.getElementById('patients-cards-container');
 
-            // توليد بطاقات المراجعين الملكية الفاخرة المريحة للمدير مع التقسيم إلى صفحات (20 سجل لكل صفحة)
             if (mobileCardsContainer) {
                 const paginationEl = document.getElementById('patients-cards-pagination');
                 if (!list || list.length === 0) {
                     mobileCardsContainer.innerHTML = `
-                        <div style="text-align: center; padding: 40px 15px; color: #475569; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">
+                        <div style="text-align: center; padding: 40px 15px; color: #475569; background: #f8fafc; border-radius: 14px; border: 1.5px dashed #cbd5e1;">
                             <div style="font-size: 2em; margin-bottom: 10px;">📂</div>
-                            <div style="color: #334155; font-weight: bold; margin-bottom: 12px; font-size: 1.05em;">لا يوجد مراجعين مسجلين محلياً حالياً.</div>
-                            <button type="button" onclick="forceRestoreClinicBackup()" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: none; padding: 10px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.95em; box-shadow: 0 4px 15px rgba(212,175,55,0.4);">
+                            <div style="color: #0f172a; font-weight: 800; margin-bottom: 12px; font-size: 1.05em;">لا يوجد مراجعين مسجلين محلياً حالياً.</div>
+                            <button type="button" onclick="forceRestoreClinicBackup()" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: none; padding: 10px 24px; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 0.95em; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);">
                                 ⚡ استرجاع الـ 51 مريضاً من النسخة الاحتياطية فوراً
                             </button>
                         </div>`;
@@ -4519,239 +4518,194 @@
                         const flag = p.flag || '🌍';
                         const country = p.country || 'دولي';
                         const city = (p.city && p.city !== 'غير محدد') ? p.city : '';
-                        const deviceIcon = p.device === 'Mobile' ? '📱' : (p.device === 'Tablet' ? '📟' : '💻');
                         const cleanFlag = (flag === 'jo' || flag === 'JO' || country === 'Jordan' || country === 'الأردن') ? '🇯🇴' : (flag && flag !== '🌍' ? flag : '📍');
                         const locationDisplay = city ? `${cleanFlag} ${city}` : `${cleanFlag} ${country}`;
                         const safeId = (p.patientId || ('pat_' + idx)).replace(/[^a-zA-Z0-9_-]/g, '');
                         const accId = `royal-acc-${idx}-${safeId}`;
+                        const codesDrawerId = `royal-codes-${idx}-${safeId}`;
                         const computedProgSession = item.logsCount != null ? Math.min(7, Math.max(1, item.logsCount + 1)) : ((Array.isArray(p.dailyLogs) && p.dailyLogs.length) ? Math.min(7, p.dailyLogs.length + 1) : 2);
                         const patCurrentSession = computedProgSession;
                         const pPayType = p.paymentType || '';
                         const pPayStatus = p.paymentStatus || '';
-                        let paymentBadgeHTML = '';
                         const isPendingUnlock = pPayStatus.includes('بانتظار') || Boolean(p.pendingUnlockRequest);
                         const isPendingHumReq = !p.isPaidUnlocked && ((p.pendingUnlockRequest && p.pendingUnlockRequest.requestType === 'humanitarian') || pPayStatus.includes('إعفاء'));
                         const isPendingOrangeReq = !p.isPaidUnlocked && ((p.pendingUnlockRequest && p.pendingUnlockRequest.requestType === 'paid_orange_wallet') || (pPayStatus.includes('أورانج') && pPayStatus.includes('بانتظار')));
                         const ptReqTier = Number(p.pendingUnlockRequest?.packageSize) || (p.paymentType && p.paymentType.includes('10') ? 10 : (p.paymentType && p.paymentType.includes('5') ? 5 : 1));
                         const ptUnlockPin = generateAdminUnlockPin(displayPhoneStr || p.fullName || p.name || '', ptReqTier);
+
+                        // شارة حالة الاشتراك الموحدة والمختصرة (بدون نصوص طويلة تربك أعلى البطاقة)
+                        let paymentBadgeHTML = '';
                         if (isPendingHumReq) {
-                            paymentBadgeHTML = `<span style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(212, 175, 55, 0.25)); border: 1.5px solid #10b981; color: #0369a1; padding: 3px 10px; border-radius: 6px; font-size: 0.75em; font-weight: 900; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);">🤲 طلب إعفاء إنساني (أقرّ بالقسم الشرعي) — بانتظار موافقتك</span>`;
-                        } else if (isPendingUnlock && !p.isPaidUnlocked) {
-                            paymentBadgeHTML = `<span style="background: rgba(245, 158, 11, 0.22); border: 1.5px solid #f59e0b; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-size: 0.72em; font-weight: 900; display: inline-flex; align-items: center; gap: 3px;">${pPayStatus}</span>`;
+                            paymentBadgeHTML = `<span style="background: #fffbeb; border: 1.5px solid #f59e0b; color: #92400e; padding: 2px 8px; border-radius: 6px; font-size: 0.72em; font-weight: 900;">🤲 طلب إعفاء بالانتظار</span>`;
+                        } else if (isPendingOrangeReq || (isPendingUnlock && !p.isPaidUnlocked)) {
+                            paymentBadgeHTML = `<span style="background: #fff7ed; border: 1.5px solid #f97316; color: #9a3412; padding: 2px 8px; border-radius: 6px; font-size: 0.72em; font-weight: 900;">💳 حوالة بالانتظار</span>`;
                         } else if (pPayType === 'humanitarian' || pPayType === 'humanitarian_waiver' || pPayStatus.includes('إنساني') || pPayStatus.includes('إعفاء')) {
-                            paymentBadgeHTML = `<span style="background: rgba(239, 68, 68, 0.18); border: 1.5px solid #ef4444; color: #b91c1c; padding: 2px 8px; border-radius: 4px; font-size: 0.72em; font-weight: 900; display: inline-flex; align-items: center; gap: 3px;">❤️ إعفاء إنساني (صدقة جارية)</span>`;
+                            paymentBadgeHTML = `<span style="background: #fef2f2; border: 1px solid #ef4444; color: #b91c1c; padding: 2px 8px; border-radius: 6px; font-size: 0.72em; font-weight: 800;">❤️ إعفاء إنساني</span>`;
                         } else if (pPayType === 'paid_orange_wallet' || pPayType === 'orange_money' || pPayStatus.includes('أورانج') || p.amountPaid > 0) {
-                            paymentBadgeHTML = `<span style="background: linear-gradient(135deg, rgba(249, 115, 22, 0.35), rgba(212, 175, 55, 0.25)); border: 1px solid #f97316; color: #9a3412; padding: 2px 8px; border-radius: 4px; font-size: 0.7em; font-weight: 900; display: inline-flex; align-items: center; gap: 3px;">💳 مدفوع (${p.amountPaid || 3} د.أ)</span>`;
-                        } else if (pPayType === 'test_free' || pPayType === 'promo_or_test' || pPayStatus.includes('اختبار')) {
-                            paymentBadgeHTML = `<span style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-size: 0.7em; font-weight: bold; display: inline-flex; align-items: center; gap: 3px;">🔑 مفعل بكود</span>`;
+                            paymentBadgeHTML = `<span style="background: #ecfdf5; border: 1px solid #10b981; color: #065f46; padding: 2px 8px; border-radius: 6px; font-size: 0.72em; font-weight: 800;">💳 مدفوع (${p.amountPaid || 3} د.أ)</span>`;
+                        } else if (p.isPaidUnlocked) {
+                            paymentBadgeHTML = `<span style="background: #e0f2fe; border: 1px solid #0284c7; color: #0369a1; padding: 2px 8px; border-radius: 6px; font-size: 0.72em; font-weight: 800;">🔑 مفعّل</span>`;
                         }
 
                         const recordTs = getAdminRecordSortTimestamp(item);
                         const dateBadge = formatArabicDateSmart(recordTs);
+                        const genderShort = (p.gender === 'female' || p.gender === 'أنثى') ? 'أنثى' : 'ذكر';
+                        const ageShort = p.age ? (p.age + ' سنة') : '';
+                        const bmiShort = p.bmi || (p.weight && p.height ? (p.weight / Math.pow(p.height / 100, 2)).toFixed(1) : '');
 
                         return `
-                        <div class="royal-patient-card">
-                            <!-- رأس بطاقة المريض الفاخرة -->
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 8px;">
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.25em; font-weight: bold; flex-shrink: 0; box-shadow: 0 0 12px rgba(212,175,55,0.4);">
+                        <div class="royal-patient-card" style="display: flex; flex-direction: column; gap: 9px; padding: 14px 16px;">
+                            <!-- 1. الترويسة المدمجة والمنظمة (Header) -->
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+                                <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
+                                    <div style="width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.15em; font-weight: 900; flex-shrink: 0;">
                                         ${((p.fullName || p.name) || 'م')[0]}
                                     </div>
-                                    <div>
-                                        <div style="color: #0f172a; font-size: 1.18em; font-weight: 800; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                                            <span>${p.fullName || p.name || 'مراجع مجهول'}</span>
-                                            ${(p.isRegistered || item.isRegistered || p.accountPin || item.accountPin) ? `<span style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(245, 158, 11, 0.2)); border: 1px solid var(--primary-gold); color: #0369a1; padding: 2px 7px; border-radius: 4px; font-size: 0.7em; font-weight: bold; display: inline-flex; align-items: center; gap: 3px;">🔑 مسجل</span>` : ''}
-                                            ${(p.hasPreviousCompletedPlan || item.patient?.hasPreviousCompletedPlan) ? `<span style="background: rgba(212, 175, 55, 0.2); border: 1px solid var(--primary-gold); color: #0369a1; padding: 2px 7px; border-radius: 4px; font-size: 0.7em; font-weight: bold; display: inline-flex; align-items: center; gap: 3px;">🏅 أتم سابقاً خطة 7 أيام</span>` : ''}
+                                    <div style="min-width: 0; flex: 1;">
+                                        <!-- السطر الأول: الاسم + شارة الاشتراك الموحدة -->
+                                        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                            <strong style="color: #0f172a; font-size: 1.06em; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.fullName || p.name || 'مراجع'}</strong>
                                             ${paymentBadgeHTML}
-                                            <span style="font-size: 0.85em; color: var(--primary-gold);">★</span>
+                                            ${(p.isRegistered || item.isRegistered || p.accountPin || item.accountPin) ? `<span style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0369a1; padding: 1px 6px; border-radius: 5px; font-size: 0.68em; font-weight: 800;">🔑 PIN</span>` : ''}
                                         </div>
-                                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 0.8em; color: #475569; flex-wrap: wrap;">
-                                            ${displayPhoneStr ? `<span style="background: rgba(16, 185, 129, 0.16); border: 1px solid rgba(16, 185, 129, 0.45); padding: 1px 8px; border-radius: 4px; color: #065f46; font-weight: bold; font-family: monospace; direction: ltr; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;" title="رقم موبايل المراجع">📱 ${displayPhoneStr} <button type="button" onclick="event.stopPropagation(); navigator.clipboard?.writeText('${displayPhoneStr.replace(/'/g, '')}'); this.textContent='✓'; setTimeout(()=>this.textContent='📋',1200);" style="background:none;border:none;color:#065f46;cursor:pointer;padding:0;font-size:0.95em;" title="نسخ الرقم">📋</button></span>` : `<span style="background: rgba(100, 116, 139, 0.15); border: 1px solid #cbd5e1; padding: 1px 6px; border-radius: 4px; color: #475569; white-space: nowrap;">📱 بدون هاتف</span>`}
-                                            <span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); padding: 1px 6px; border-radius: 4px; color: #0369a1; font-weight: bold; white-space: nowrap;">${locationDisplay}</span>
-                                            <span style="color: #334155; white-space: nowrap;">${deviceIcon} ${p.device || 'Mobile'}</span>
+                                        <!-- السطر الثاني الموحد: الهاتف + المدينة + التاريخ في شريط أفقي أنيق واحد -->
+                                        <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 0.78em; color: #475569; flex-wrap: wrap;">
+                                            ${displayPhoneStr ? `<span style="background: #ecfdf5; border: 1px solid #a7f3d0; padding: 1px 7px; border-radius: 5px; color: #065f46; font-weight: 800; font-family: monospace; direction: ltr; display: inline-flex; align-items: center; gap: 4px;">📱 ${displayPhoneStr} <button type="button" onclick="event.stopPropagation(); navigator.clipboard?.writeText('${displayPhoneStr.replace(/'/g, '')}'); this.textContent='✓'; setTimeout(()=>this.textContent='📋',1200);" style="background:none;border:none;color:#065f46;cursor:pointer;padding:0;font-size:0.95em;" title="نسخ الرقم">📋</button></span>` : `<span style="color: #64748b;">بلا هاتف</span>`}
                                             <span style="color: #64748b;">•</span>
-                                            <span style="background: rgba(148, 163, 184, 0.12); border: 1px solid rgba(148, 163, 184, 0.25); padding: 1px 6px; border-radius: 4px; color: #0369a1; font-weight: bold; white-space: nowrap;" title="تاريخ السجل الأصلي: ${new Date(recordTs).toLocaleString('ar-EG')}">⏱️ ${dateBadge}</span>
+                                            <span style="color: #0369a1; font-weight: 700;">${locationDisplay}</span>
+                                            <span style="color: #64748b;">•</span>
+                                            <span style="color: #475569; font-weight: 700;" title="${new Date(recordTs).toLocaleString('ar-EG')}">${dateBadge}</span>
                                         </div>
                                     </div>
                                 </div>
-                                <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
-                                    <span style="background: rgba(16, 185, 129, 0.18); border: 1px solid #10b981; color: #065f46; padding: 4px 10px; border-radius: 14px; font-size: 0.82em; font-weight: bold; display: inline-block;">
-                                        ${item.recoveryScore != null ? item.recoveryScore + '% تعافي' : '<span style="color:#64748b">لا جلسات بعد</span>'}
+
+                                <!-- يسار الترويسة: نسبة التعافي + زر الحذف -->
+                                <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                                    <span style="background: ${item.recoveryScore != null ? '#ecfdf5' : '#f8fafc'}; border: 1px solid ${item.recoveryScore != null ? '#10b981' : '#cbd5e1'}; color: ${item.recoveryScore != null ? '#065f46' : '#64748b'}; padding: 3px 9px; border-radius: 12px; font-size: 0.76em; font-weight: 800;">
+                                        ${item.recoveryScore != null ? (item.recoveryScore + '% تعافي') : 'جديد'}
                                     </span>
-                                    <button type="button" onclick="deletePatientRecord('${p.patientId}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}')" title="حذف هذا السجل نهائياً" style="background: rgba(239, 68, 68, 0.14); border: 1.5px solid #ef4444; color: #dc2626; width: 34px; height: 34px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.1em; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);" onmouseover="this.style.background='#ef4444'; this.style.color='#fff';" onmouseout="this.style.background='rgba(239, 68, 68, 0.14)'; this.style.color='#dc2626';">
+                                    <button type="button" onclick="deletePatientRecord('${p.patientId}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}')" title="حذف السجل" style="background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; width: 30px; height: 30px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.95em; cursor: pointer;">
                                         🗑️
                                     </button>
                                 </div>
                             </div>
 
-                            <!-- شريط المؤشرات الحيوية البارز على واجهة البطاقة -->
-                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: #f8fafc; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; padding: 5px 10px; margin-bottom: 6px; font-size: 0.8em;">
-                                <span style="color: var(--primary-gold); font-weight: bold;">👤 المؤشرات الحيوية:</span>
-                                <span style="color: #1e293b;">العمر: <strong style="color: #0284c7;">${p.age ? p.age + ' سنة' : '-'}</strong></span>
-                                <span style="color: #64748b;">•</span>
-                                <span style="color: #1e293b;">الوزن: <strong style="color: #0284c7;">${p.weight ? p.weight + ' كغ' : '-'}</strong></span>
-                                <span style="color: #64748b;">•</span>
-                                <span style="color: #1e293b;">الطول: <strong style="color: #0284c7;">${p.height ? p.height + ' سم' : '-'}</strong></span>
-                                <span style="color: #64748b;">•</span>
-                                <span style="color: #1e293b;">BMI: <strong style="color: #10b981;">${p.bmi || (p.weight && p.height ? (p.weight / Math.pow(p.height/100, 2)).toFixed(1) : '-')}</strong></span>
-                                <span style="color: #64748b;">•</span>
-                                <span style="color: #334155;">${p.gender === 'female' || p.gender === 'أنثى' ? 'أنثى ♀' : 'ذكر ♂'}</span>
-                            </div>
-
-                            <!-- مؤشرات الحالة السريرية الرئيسية (مدمجة ومختصرة بدون تكرار) -->
-                            <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 0.86em; display: flex; flex-direction: column; gap: 5px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span style="color: #475569;">🩺 موضع الشكوى:</span>
-                                    <span style="color: #0f172a; font-weight: 700;">${item.painArea}</span>
+                            <!-- 2. الشريط السريري الموحد (موضع الشكوى + ملخص العمر والوزن + الجلسة الحالية في صندوق واحد بدلاً من 3 صناديق مكدسة) -->
+                            <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 8px 11px; display: flex; flex-direction: column; gap: 6px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    <div style="display: flex; align-items: center; gap: 5px; font-size: 0.85em;">
+                                        <span style="color: #0284c7; font-weight: 900;">🩺 الشكوى:</span>
+                                        <strong style="color: #0f172a; font-weight: 800;">${item.painArea}</strong>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.76em; color: #475569; font-weight: 700;">
+                                        <span>${genderShort}${ageShort ? ' • ' + ageShort : ''}${bmiShort ? ' • BMI ' + bmiShort : ''}</span>
+                                    </div>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span style="color: #475569;">🗓️ الجلسة الحالية:</span>
-                                    <span style="font-weight: 900;">
-                                        ${item.logsCount >= 7 
-                                            ? '<span style="color: #065f46; background: rgba(16, 185, 129, 0.2); padding: 2px 8px; border-radius: 4px; border: 1px solid #10b981;">🏆 أتم الـ 7 جلسات (مكتمل)</span>' 
-                                            : `<span style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; padding: 2px 10px; border-radius: 6px; font-weight: 900; box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);">🌟 الجلسة #${patCurrentSession} (الحالية)</span> <span style="color: #475569; font-size: 0.85em; font-weight: normal; margin-right: 4px;">(أنجز ${item.logsCount || 0} من 7)</span>`
-                                        }
+
+                                <!-- شريط الجلسات الـ 7 المدمج -->
+                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; pt: 4px; border-top: 1px dashed #cbd5e1; padding-top: 6px;">
+                                    <span style="font-size: 0.75em; font-weight: 800; color: #334155; white-space: nowrap;">
+                                        ${item.logsCount >= 7 ? '<strong style="color:#059669;">🏆 أتم 7/7</strong>' : `الجلسة <strong style="color:#0284c7;">#${patCurrentSession}</strong> (${item.logsCount || 0}/7):`}
                                     </span>
+                                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; flex: 1; max-width: 235px;">
+                                        ${[1, 2, 3, 4, 5, 6, 7].map(sNum => {
+                                            const isCompletedS = (item.logsCount >= sNum);
+                                            const isCurrentS = (sNum === patCurrentSession);
+                                            let sBg = '#ffffff';
+                                            let sBorder = '1px solid #cbd5e1';
+                                            let sColor = '#475569';
+                                            if (isCurrentS) {
+                                                sBg = '#0284c7';
+                                                sBorder = '1.5px solid #0369a1';
+                                                sColor = '#ffffff';
+                                            } else if (isCompletedS) {
+                                                sBg = '#ecfdf5';
+                                                sBorder = '1px solid #10b981';
+                                                sColor = '#065f46';
+                                            }
+                                            return `<button type="button" onclick="openPatientTimingModal('${p.patientId}', '${((p.fullName || p.name) || '').replace(/['\\\\]/g, '')}', ${sNum}, '${displayPhoneStr.replace(/'/g, '')}')" title="جلسة #${sNum} - اضغط لضبط توقيتها أو فتحها" style="background:${sBg}; border:${sBorder}; color:${sColor}; height:24px; border-radius:5px; font-size:0.72em; font-weight:900; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0;">${isCompletedS && !isCurrentS ? '✓' : sNum}</button>`;
+                                        }).join('')}
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- مسار الجلسات السريرية الـ 7 التفاعلي مع تمييز فائق للجلسة الحالية -->
-                            <div style="background: #f8fafc; border: 1.5px solid rgba(212, 175, 55, 0.35); border-radius: 10px; padding: 9px 12px; margin-bottom: 10px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; flex-wrap: wrap; gap: 4px;">
-                                    <span style="color: var(--primary-gold); font-size: 0.82em; font-weight: bold;">🎯 مسار الجلسات (اضغط أي جلسة لضبطها أو فتحها):</span>
-                                    <span style="font-size: 0.78em; color: #475569;">
-                                        ${item.logsCount >= 7 ? '<strong style="color: #065f46;">🏆 مكتمل 100%</strong>' : `الحالية: <strong style="color: #0369a1;">#${patCurrentSession}</strong>`}
-                                    </span>
-                                </div>
-                                <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;">
-                                    ${[1, 2, 3, 4, 5, 6, 7].map(sNum => {
-                                        const isCompletedS = (item.logsCount >= sNum);
-                                        const targetedSession = p.targetedSessionNum || (typeof safeStorageGet === 'function' ? safeStorageGet('targeted_session_' + p.patientId) : null);
-                                        const effectiveCurrentSession = patCurrentSession;
-                                        const isCurrentS = (sNum === effectiveCurrentSession);
-                                        
-                                        let sBg = '#f8fafc';
-                                        let sBorder = '1.5px solid #cbd5e1';
-                                        let sColor = '#334155';
-                                        let sClass = '';
-                                        let sBadge = '🔒';
-
-                                        if (isCurrentS) {
-                                            sClass = 'admin-current-session-badge';
-                                            sBg = 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)';
-                                            sBorder = '2px solid #fef08a';
-                                            sColor = '#ffffff';
-                                            sBadge = '🌟 الحالية';
-                                        } else if (isCompletedS) {
-                                            sBg = 'rgba(16, 185, 129, 0.2)';
-                                            sBorder = '1px solid #10b981';
-                                            sColor = '#6ee7b7';
-                                            sBadge = '✓ منجزة';
-                                        }
-
-                                        return `
-                                            <button type="button" onclick="openPatientTimingModal('${p.patientId}', '${((p.fullName || p.name) || '').replace(/['\\\\]/g, '')}', ${sNum}, '${displayPhoneStr.replace(/'/g, '')}')" title="جلسة #${sNum} - اضغط لضبط توقيتها أو فتحها" class="${sClass}" style="background: ${sBg}; border: ${sBorder}; color: ${sColor}; padding: 5px 2px; border-radius: 6px; font-size: 0.75em; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'">
-                                                <span style="font-weight: 900;">#${sNum}</span>
-                                                <span style="font-size: 0.7em; white-space: nowrap;">${sBadge}</span>
-                                            </button>
-                                        `;
-                                    }).join('')}
-                                </div>
+                            <!-- 3. تنبيهات الطلبات المعلقة (تظهر فقط إن وجد طلب إعفاء أو حوالة أورانج بالانتظار) -->
+                            ${isPendingHumReq ? `
+                            <div style="background: #f0fdf4; border: 1.5px solid #10b981; border-radius: 9px; padding: 8px 10px; font-size: 0.8em; color: #065f46;">
+                                <strong>🤲 طلب إعفاء إنساني بالانتظار:</strong> أقرّ المراجع بعدم قدرته المادية على سداد 3 د.أ.
                             </div>
+                            ` : (isPendingOrangeReq ? `
+                            <div style="background: #fffbeb; border: 1.5px solid #f97316; border-radius: 9px; padding: 8px 10px; font-size: 0.8em; color: #9a3412;">
+                                <div><strong>💳 حوالة أورانج بالانتظار:</strong> مرجع الحوالة: <strong style="font-family:monospace; color:#0369a1;">${p.pendingUnlockRequest?.transferRef || '—'}</strong></div>
+                                ${(() => {
+                                    const ref = String(p.pendingUnlockRequest?.transferRef || '').replace(/\s+/g, '');
+                                    if (!ref) return '';
+                                    const dup = (list || []).filter(o => o && o !== p && String(o.pendingUnlockRequest?.transferRef || o.paidTransferRef || '').replace(/\s+/g, '') === ref);
+                                    return dup.length > 0 ? `<div style="margin-top:4px; color:#b91c1c; font-weight:900;">⚠️ تحذير: رقم الحوالة مستخدم مسبقاً!</div>` : '';
+                                })()}
+                            </div>
+                            ` : '')}
 
+                            <!-- 4. درج أكواد التفعيل الفورية (مدمج وقابل للطي، ويُفتح تلقائياً للطلبات المعلقة) -->
+                            ${adminCodesBoxHTML(displayPhoneStr, p.fullName || p.name, ptReqTier, { collapsible: true, defaultOpen: (isPendingHumReq || isPendingOrangeReq), drawerId: codesDrawerId })}
 
-                            <!-- الإجراءات الرئيسية للمدير: زر التقرير الملكي البارز في القمة -->
-                            <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;">
-                                ${isPendingHumReq ? `
-                                <div style="background: #f0fdf4; border: 1.5px solid #10b981; border-radius: 10px; padding: 10px 12px; color: #0369a1; font-size: 0.85em; line-height: 1.55;">
-                                    <div style="font-weight: 900; color: #065f46; margin-bottom: 3px;">🤲 طلب مبادرة الدعم الإنساني (بانتظار موافقتك):</div>
-                                    <div style="color: #1e293b;">أقرّ المراجع: «أُقرّ أمام الله بأمانتي واستحقاقي لهذه المبادرة، وبأنني غير قادر مادياً على سداد قيمة الفحص في الأداة والبالغة 3 دنانير».</div>
-                                </div>
-                                ` : (isPendingOrangeReq ? `
-                                <div style="background: #fffbeb; border: 1.5px solid #f97316; border-radius: 10px; padding: 10px 12px; color: #9a3412; font-size: 0.85em; line-height: 1.55;">
-                                    <div style="font-weight: 900; color: #c2410c; margin-bottom: 3px;">💳 إشعار تحويل محفظة أورانج (بانتظار تأكيدك):</div>
-                                    <div style="color: #1e293b;">رقم الحوالة: <strong style="font-family: monospace; color: #0369a1; letter-spacing: 1px;">${p.pendingUnlockRequest?.transferRef || '— لم يُدخل —'}</strong></div>
-                                    ${(() => {
-                                        const ref = String(p.pendingUnlockRequest?.transferRef || '').replace(/\s+/g, '');
-                                        if (!ref) return '';
-                                        const dup = (list || []).filter(o => o && o !== p && String(o.pendingUnlockRequest?.transferRef || o.paidTransferRef || '').replace(/\s+/g, '') === ref);
-                                        return dup.length > 0 ? `<div style="margin-top: 5px; background: rgba(239,68,68,0.2); border: 1px solid #ef4444; color: #b91c1c; padding: 5px 8px; border-radius: 6px; font-weight: 900;">⚠️ تحذير: رقم الحوالة هذا مستخدم مسبقاً لدى (${dup.map(o => o.fullName || o.name || o.phone || '—').join('، ')})</div>` : '';
-                                    })()}
-                                    <div style="color: #475569; font-size: 0.85em; margin-top: 4px;">✔️ طابق رقم الحوالة والمبلغ مع إشعار أورانج موني على محفظتك قبل الموافقة.</div>
-                                </div>
-                                ` : '')}
-                                ${adminCodesBoxHTML(displayPhoneStr, p.fullName || p.name, Number(p.pendingUnlockRequest?.packageSize) || 1)}
+                            <!-- 5. أزرار الإجراءات السريرية السريعة -->
+                            <div style="display: flex; flex-direction: column; gap: 6px;">
                                 ${!p.isPaidUnlocked ? `
-                                <button type="button" onclick="quickAdminUnlockPatient('${p.patientId}', '${cleanPhone}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}', '${isPendingHumReq ? 'humanitarian' : (p.pendingUnlockRequest?.requestType || 'paid_orange_wallet')}')" style="width: 100%; background: ${isPendingHumReq ? 'linear-gradient(135deg, #10b981 0%, #047857 100%)' : 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'}; color: #ffffff; border: 1.5px solid ${isPendingHumReq ? '#6ee7b7' : '#fef08a'}; padding: 9px 12px; border-radius: 8px; font-size: 0.9em; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);">
+                                <button type="button" onclick="quickAdminUnlockPatient('${p.patientId}', '${cleanPhone}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}', '${isPendingHumReq ? 'humanitarian' : (p.pendingUnlockRequest?.requestType || 'paid_orange_wallet')}')" style="width: 100%; background: ${isPendingHumReq ? 'linear-gradient(135deg, #059669 0%, #047857 100%)' : 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)'}; color: #ffffff; border: none; padding: 9px 12px; border-radius: 9px; font-size: 0.86em; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
                                     <span>${isPendingHumReq ? `✅ اعتماد الإعفاء وفتح التقرير (${ptUnlockPin})` : `🔓 موافقة وتفعيل التقرير (${ptUnlockPin})`}</span>
                                 </button>
                                 ` : `
-                                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(16, 185, 129, 0.14); border: 1px solid #10b981; border-radius: 8px; padding: 8px 12px; font-size: 0.84em; color: #065f46; font-weight: bold;">
-                                    <span>✅ تم فتح التقرير والتمارين لهذا المراجع (${p.paymentStatus || 'مفعل'})</span>
-                                    <button type="button" onclick="quickAdminUnlockPatient('${p.patientId}', '${cleanPhone}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}', '${p.paymentType || 'paid_orange_wallet'}')" style="background: rgba(212, 175, 55, 0.2); border: 1px solid #d4af37; color: #0369a1; padding: 4px 10px; border-radius: 6px; font-size: 0.85em; font-weight: bold; cursor: pointer;">🔄 إعادة بث الفتح</button>
+                                <div style="display: flex; justify-content: space-between; align-items: center; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 5px 10px; font-size: 0.78em; color: #065f46; font-weight: 800;">
+                                    <span>✅ التقرير والتمارين مفعّلة (${p.paymentStatus || 'معتمد'})</span>
+                                    <button type="button" onclick="quickAdminUnlockPatient('${p.patientId}', '${cleanPhone}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}', '${p.paymentType || 'paid_orange_wallet'}')" style="background: #ffffff; border: 1px solid #10b981; color: #065f46; padding: 2px 8px; border-radius: 6px; font-size: 0.9em; font-weight: 800; cursor: pointer;">🔄 إعادة بث</button>
                                 </div>
                                 `}
-                                <button type="button" onclick="openAdminPatientReportModal('${p.patientId}')" style="width: 100%; background: linear-gradient(135deg, #059669 0%, #10b981 50%, #047857 100%); color: #ffffff; border: none; padding: 13px; border-radius: 9px; font-size: 1.02em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);">
-                                    <span>👁️ عرض التقرير السريري والطبي الكامل</span>
-                                </button>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+
+                                <!-- شريط الأزرار الثلاثة الموحد: التقرير الطبي + واتساب + التوقيت -->
+                                <div style="display: grid; grid-template-columns: 1.35fr 1fr 1fr; gap: 6px;">
+                                    <button type="button" onclick="openAdminPatientReportModal('${p.patientId}')" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; border: none; padding: 9px 8px; border-radius: 8px; font-size: 0.84em; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap;">
+                                        <span>👁️ التقرير الطبي</span>
+                                    </button>
                                     ${cleanPhone ? `
-                                    <a href="https://wa.me/${cleanPhone}" target="_blank" style="background: #25d366; color: #fff; text-decoration: none; padding: 10px; border-radius: 8px; font-size: 0.9em; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 5px; text-align: center;">
-                                        <span>💬 مراسلة واتساب</span>
+                                    <a href="https://wa.me/${cleanPhone}" target="_blank" style="background: #25d366; color: #ffffff; text-decoration: none; padding: 9px 8px; border-radius: 8px; font-size: 0.84em; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap;">
+                                        <span>💬 واتساب</span>
                                     </a>` : `
-                                    <button type="button" disabled style="background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; padding: 10px; border-radius: 8px; font-size: 0.85em;">
-                                        بلا هاتف مسجل
+                                    <button type="button" disabled style="background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; padding: 9px 8px; border-radius: 8px; font-size: 0.8em; white-space: nowrap;">
+                                        بلا هاتف
                                     </button>`}
-                                    <button type="button" onclick="openPatientTimingModal('${p.patientId}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}', ${patCurrentSession}, '${displayPhoneStr.replace(/'/g, '')}')" style="background: #2563eb; color: #fff; border: none; padding: 10px; border-radius: 8px; font-size: 0.9em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;">
-                                        <span>⏱️ تعديل التوقيت</span>
+                                    <button type="button" onclick="openPatientTimingModal('${p.patientId}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}', ${patCurrentSession}, '${displayPhoneStr.replace(/'/g, '')}')" style="background: #0284c7; color: #ffffff; border: none; padding: 9px 8px; border-radius: 8px; font-size: 0.84em; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap;">
+                                        <span>⏱️ التوقيت</span>
                                     </button>
                                 </div>
                             </div>
 
-                            <!-- زر فتح طي الأكورديون للتفاصيل السريرية الكاملة للمريض -->
-                            <button type="button" onclick="togglePatientAccordion('${accId}')" style="width: 100%; background: #f1f5f9; border: 1px dashed #cbd5e1; color: #334155; padding: 9px; border-radius: 6px; font-size: 0.84em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
-                                <span>📋 باقي التفاصيل والبيانات الشخصية للمريض</span>
+                            <!-- 6. أكورديون التفاصيل الإضافية المطوي -->
+                            <button type="button" onclick="togglePatientAccordion('${accId}')" style="width: 100%; background: #f8fafc; border: 1px dashed #cbd5e1; color: #475569; padding: 6px 10px; border-radius: 7px; font-size: 0.78em; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+                                <span>📋 المؤشرات الحيوية الكاملة وبيانات الملف (${p.patientId || ''})</span>
                                 <span id="${accId}-icon">▼</span>
                             </button>
 
-                            <!-- محتوى الأكورديون المطوي -->
-                            <div id="${accId}" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(212, 175, 55, 0.2); font-size: 0.85em; color: #334155;">
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
-                                    <div style="background: #f8fafc; padding: 7px 10px; border-radius: 6px;">
-                                        <span style="color: #475569;">رقم الملف:</span> <strong style="color: var(--primary-gold);">${p.patientId}</strong>
+                            <div id="${accId}" style="display: none; padding-top: 8px; border-top: 1px solid #e2e8f0; font-size: 0.82em; color: #334155;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+                                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px 8px; border-radius: 6px;">
+                                        <span style="color: #475569;">رقم الملف:</span> <strong style="color: #0369a1;">${p.patientId}</strong>
                                     </div>
-                                    <div style="background: #f8fafc; padding: 7px 10px; border-radius: 6px;">
-                                        <span style="color: #475569;">📱 رقم الهاتف:</span> <strong style="color: #065f46; font-family: monospace;" dir="ltr">${displayPhoneStr || 'غير مسجل'}</strong>
+                                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px 8px; border-radius: 6px;">
+                                        <span style="color: #475569;">الهاتف:</span> <strong style="color: #065f46; font-family: monospace;" dir="ltr">${displayPhoneStr || 'غير مسجل'}</strong>
                                     </div>
-                                    <div style="background: #f8fafc; padding: 7px 10px; border-radius: 6px;">
-                                        <span style="color: #475569;">حالة الحساب:</span> <strong style="${(p.isRegistered || item.isRegistered || p.accountPin || item.accountPin) ? 'color:#10b981;' : 'color:#475569;'}">${(p.isRegistered || item.isRegistered || p.accountPin || item.accountPin) ? '🔑 حساب مسجل (محمي بـ PIN)' : 'زائر بدون تسجيل'}</strong>
+                                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px 8px; border-radius: 6px;">
+                                        <span style="color: #475569;">الجنس والعمر:</span> <strong>${genderShort} • ${p.age || '-'} سنة</strong>
                                     </div>
-                                    <div style="background: #f8fafc; padding: 7px 10px; border-radius: 6px;">
-                                        <span style="color: #475569;">الجنس:</span> <strong>${p.gender === 'female' || p.gender === 'أنثى' ? 'أنثى' : 'ذكر'}</strong>
-                                    </div>
-                                    <div style="background: #f8fafc; padding: 7px 10px; border-radius: 6px;">
-                                        <span style="color: #475569;">العمر:</span> <strong>${p.age || '-'} سنة</strong>
-                                    </div>
-                                    <div style="background: #f8fafc; padding: 7px 10px; border-radius: 6px;">
-                                        <span style="color: #475569;">الوزن:</span> <strong>${p.weight || '-'} كغ</strong>
-                                    </div>
-                                    <div style="background: #f8fafc; padding: 7px 10px; border-radius: 6px;">
-                                        <span style="color: #475569;">الطول:</span> <strong>${p.height || '-'} سم</strong>
-                                    </div>
-                                    <div style="background: #f8fafc; padding: 7px 10px; border-radius: 6px;">
-                                        <span style="color: #475569;">كتلة الجسم BMI:</span> <strong>${p.bmi || '-'}</strong>
+                                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px 8px; border-radius: 6px;">
+                                        <span style="color: #475569;">الوزن والطول:</span> <strong>${p.weight || '-'} كغ • ${p.height || '-'} سم (BMI: ${bmiShort || '-'})</strong>
                                     </div>
                                 </div>
                                 ${p.mriReportText ? `
-                                <div style="background: #f8fafc; padding: 8px 10px; border-radius: 6px; margin-bottom: 8px;">
-                                    <div style="color: #0284c7; font-weight: bold; margin-bottom: 2px;">📄 تقرير الرنين المغناطيسي:</div>
-                                    <div style="color: #1e293b; font-size: 0.9em;">${p.mriReportText}</div>
+                                <div style="background: #f0f9ff; border: 1px solid #bae6fd; padding: 7px 10px; border-radius: 6px; margin-bottom: 6px;">
+                                    <div style="color: #0369a1; font-weight: 800; margin-bottom: 2px;">📄 تقرير الرنين المغناطيسي:</div>
+                                    <div style="color: #0f172a; font-size: 0.9em;">${p.mriReportText}</div>
                                 </div>` : ''}
-                                <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
-                                    <button type="button" onclick="deletePatientRecord('${p.patientId}', '${((p.fullName || p.name) || '').replace(/['\\]/g, '')}')" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #b91c1c; padding: 6px 14px; border-radius: 6px; font-size: 0.82em; cursor: pointer;">
-                                        🗑️ حذف سجل المراجع
-                                    </button>
-                                </div>
                             </div>
                         </div>`;
                     }).join('');
@@ -4760,8 +4714,8 @@
                     if (paginationEl) {
                         if (totalPages <= 1) {
                             paginationEl.innerHTML = `
-                                <div style="color: #475569; font-size: 0.88em; text-align: center; padding: 8px;">
-                                    إجمالي السجلات: <strong style="color: var(--primary-gold);">${totalItems}</strong> سجل
+                                <div style="color: #475569; font-size: 0.88em; text-align: center; padding: 10px; font-weight: 700;">
+                                    إجمالي السجلات: <strong style="color: #0284c7;">${totalItems}</strong> سجل
                                 </div>`;
                         } else {
                             let pageBtnsHtml = '';
@@ -4775,28 +4729,28 @@
                             for (let pNum = startPage; pNum <= endPage; pNum++) {
                                 const isActive = pNum === currentCardsPage;
                                 pageBtnsHtml += `
-                                    <button type="button" onclick="setCardsPage(${pNum})" style="min-width: 38px; height: 38px; border-radius: 8px; font-weight: bold; font-size: 0.95em; cursor: pointer; transition: all 0.2s; border: ${isActive ? '2px solid var(--primary-gold)' : '1px solid #334155'}; background: ${isActive ? 'var(--primary-gold)' : 'rgba(15, 23, 42, 0.8)'}; color: ${isActive ? '#ffffff' : '#0f172a'};">
+                                    <button type="button" onclick="setCardsPage(${pNum})" style="min-width: 38px; height: 38px; border-radius: 8px; font-weight: 800; font-size: 0.92em; cursor: pointer; transition: all 0.2s; border: ${isActive ? '2px solid #0369a1' : '1.5px solid #cbd5e1'}; background: ${isActive ? '#0284c7' : '#ffffff'}; color: ${isActive ? '#ffffff' : '#0f172a'};">
                                         ${pNum}
                                     </button>`;
                             }
 
                             paginationEl.innerHTML = `
                                 <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; margin: 15px 0 25px 0;">
-                                    <div style="color: #475569; font-size: 0.9em; text-align: center;">
-                                        عرض السجلات <strong style="color: #0284c7;">${startIdx + 1}</strong> إلى <strong style="color: #0284c7;">${endIdx}</strong> من إجمالي <strong style="color: var(--primary-gold);">${totalItems}</strong> سجل (صفحة ${currentCardsPage} من ${totalPages})
+                                    <div style="color: #475569; font-size: 0.9em; text-align: center; font-weight: 700;">
+                                        عرض السجلات <strong style="color: #0284c7;">${startIdx + 1}</strong> إلى <strong style="color: #0284c7;">${endIdx}</strong> من إجمالي <strong style="color: #0369a1;">${totalItems}</strong> سجل (صفحة ${currentCardsPage} من ${totalPages})
                                     </div>
                                     <div style="display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;">
-                                        <button type="button" onclick="setCardsPage(1)" ${currentCardsPage === 1 ? 'disabled' : ''} style="height: 38px; padding: 0 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: ${currentCardsPage === 1 ? '#1e293b' : 'rgba(15, 23, 42, 0.8)'}; color: ${currentCardsPage === 1 ? '#64748b' : '#1e293b'}; cursor: ${currentCardsPage === 1 ? 'not-allowed' : 'pointer'}; font-weight: bold; font-size: 0.88em;">
+                                        <button type="button" onclick="setCardsPage(1)" ${currentCardsPage === 1 ? 'disabled' : ''} style="height: 38px; padding: 0 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; background: ${currentCardsPage === 1 ? '#f1f5f9' : '#ffffff'}; color: ${currentCardsPage === 1 ? '#64748b' : '#0f172a'}; cursor: ${currentCardsPage === 1 ? 'not-allowed' : 'pointer'}; font-weight: 800; font-size: 0.88em;">
                                             « الأولى
                                         </button>
-                                        <button type="button" onclick="setCardsPage(${currentCardsPage - 1})" ${currentCardsPage === 1 ? 'disabled' : ''} style="height: 38px; padding: 0 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: ${currentCardsPage === 1 ? '#1e293b' : 'rgba(15, 23, 42, 0.8)'}; color: ${currentCardsPage === 1 ? '#64748b' : '#1e293b'}; cursor: ${currentCardsPage === 1 ? 'not-allowed' : 'pointer'}; font-weight: bold; font-size: 0.88em;">
+                                        <button type="button" onclick="setCardsPage(${currentCardsPage - 1})" ${currentCardsPage === 1 ? 'disabled' : ''} style="height: 38px; padding: 0 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; background: ${currentCardsPage === 1 ? '#f1f5f9' : '#ffffff'}; color: ${currentCardsPage === 1 ? '#64748b' : '#0f172a'}; cursor: ${currentCardsPage === 1 ? 'not-allowed' : 'pointer'}; font-weight: 800; font-size: 0.88em;">
                                             ‹ السابق
                                         </button>
                                         ${pageBtnsHtml}
-                                        <button type="button" onclick="setCardsPage(${currentCardsPage + 1})" ${currentCardsPage === totalPages ? 'disabled' : ''} style="height: 38px; padding: 0 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: ${currentCardsPage === totalPages ? '#1e293b' : 'rgba(15, 23, 42, 0.8)'}; color: ${currentCardsPage === totalPages ? '#64748b' : '#1e293b'}; cursor: ${currentCardsPage === totalPages ? 'not-allowed' : 'pointer'}; font-weight: bold; font-size: 0.88em;">
+                                        <button type="button" onclick="setCardsPage(${currentCardsPage + 1})" ${currentCardsPage === totalPages ? 'disabled' : ''} style="height: 38px; padding: 0 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; background: ${currentCardsPage === totalPages ? '#f1f5f9' : '#ffffff'}; color: ${currentCardsPage === totalPages ? '#64748b' : '#0f172a'}; cursor: ${currentCardsPage === totalPages ? 'not-allowed' : 'pointer'}; font-weight: 800; font-size: 0.88em;">
                                             التالي ›
                                         </button>
-                                        <button type="button" onclick="setCardsPage(${totalPages})" ${currentCardsPage === totalPages ? 'disabled' : ''} style="height: 38px; padding: 0 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: ${currentCardsPage === totalPages ? '#1e293b' : 'rgba(15, 23, 42, 0.8)'}; color: ${currentCardsPage === totalPages ? '#64748b' : '#1e293b'}; cursor: ${currentCardsPage === totalPages ? 'not-allowed' : 'pointer'}; font-weight: bold; font-size: 0.88em;">
+                                        <button type="button" onclick="setCardsPage(${totalPages})" ${currentCardsPage === totalPages ? 'disabled' : ''} style="height: 38px; padding: 0 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; background: ${currentCardsPage === totalPages ? '#f1f5f9' : '#ffffff'}; color: ${currentCardsPage === totalPages ? '#64748b' : '#0f172a'}; cursor: ${currentCardsPage === totalPages ? 'not-allowed' : 'pointer'}; font-weight: 800; font-size: 0.88em;">
                                             الأخيرة »
                                         </button>
                                     </div>
@@ -7465,29 +7419,59 @@ function copyAdminCode(code) {
             }
         }
         window.handleTriggerAutoWhatsAppFromNotif = handleTriggerAutoWhatsAppFromNotif;
-        function adminCodesBoxHTML(phone, name, highlightTier) {
+        function adminCodesBoxHTML(phone, name, highlightTier, opts = {}) {
             const seed = (phone && String(phone).replace(/\D/g, '').length >= 7) ? phone : (name || '');
             if (!seed) return '';
             const sp = String(seed).replace(/['"\\]/g, '');
             const sn = String(name || '').replace(/['"\\]/g, '');
             const ph = String(phone || '').replace(/['"\\]/g, '');
+            const collapsible = Boolean(opts && opts.collapsible);
+            const defaultOpen = Boolean(opts && opts.defaultOpen);
+            const drawerId = (opts && opts.drawerId) ? opts.drawerId : ('codes-drawer-' + Math.random().toString(36).slice(2, 9));
+
             const cell = (tier, label, isHum = false) => {
                 const c = generateAdminUnlockPin(seed, tier);
                 const hl = (highlightTier === tier);
-                const bg = isHum ? '#fef2f2' : (hl ? '#e0f2fe' : '#f8fafc');
+                const bg = isHum ? '#fef2f2' : (hl ? '#e0f2fe' : '#ffffff');
                 const border = isHum ? '#ef4444' : (hl ? '#0284c7' : '#cbd5e1');
                 const txtColor = isHum ? '#b91c1c' : '#0369a1';
-                return `<div style="display:flex; align-items:center; justify-content:space-between; gap:6px; background:${bg}; border:1.5px solid ${border}; border-radius:10px; padding:6px 10px;">
+                return `<div style="display:flex; align-items:center; justify-content:space-between; gap:6px; background:${bg}; border:1.5px solid ${border}; border-radius:9px; padding:5px 8px;">
                     <div style="display:flex; flex-direction:column; gap:1px;">
-                        <span style="color:#334155; font-size:0.74em; font-weight:800;">${label}</span>
-                        <strong style="font-family:monospace; color:${txtColor}; font-size:1.05em; font-weight:900; letter-spacing:1.5px;">${c}</strong>
+                        <span style="color:#475569; font-size:0.72em; font-weight:800;">${label}</span>
+                        <strong style="font-family:monospace; color:${txtColor}; font-size:1.02em; font-weight:900; letter-spacing:1.2px;">${c}</strong>
                     </div>
                     <div style="display:flex; align-items:center; gap:4px;">
-                        <button type="button" onclick="copyAdminCode('${c}')" title="نسخ الكود" style="background:#ffffff; color:${txtColor}; border:1px solid ${border}; border-radius:6px; padding:4px 8px; cursor:pointer; font-size:0.76em; font-weight:800;">📋 نسخ</button>
-                        <button type="button" onclick="sendAdminCodeWA('${ph}','${sn}','${tier}')" title="إرسال عبر واتساب" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:4px 8px; cursor:pointer; font-size:0.78em; font-weight:800;">💬</button>
+                        <button type="button" onclick="copyAdminCode('${c}')" title="نسخ الكود" style="background:#f8fafc; color:${txtColor}; border:1px solid ${border}; border-radius:6px; padding:3px 7px; cursor:pointer; font-size:0.74em; font-weight:800;">📋 نسخ</button>
+                        <button type="button" onclick="sendAdminCodeWA('${ph}','${sn}','${tier}')" title="إرسال عبر واتساب" style="background:#059669; color:#ffffff; border:none; border-radius:6px; padding:3px 7px; cursor:pointer; font-size:0.76em; font-weight:800;">💬</button>
                     </div>
                 </div>`;
             };
+
+            const primaryCode = generateAdminUnlockPin(seed, highlightTier || 1);
+
+            if (collapsible) {
+                return `<div style="background:#f0f9ff; border:1.5px solid #bae6fd; border-radius:10px; padding:7px 10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
+                        <button type="button" onclick="togglePatientAccordion('${drawerId}')" style="background:none; border:none; color:#0369a1; font-size:0.82em; font-weight:900; cursor:pointer; padding:0; display:inline-flex; align-items:center; gap:6px;">
+                            <span>🔑 أكواد التفعيل الفورية (<strong style="font-family:monospace; letter-spacing:1px;">${primaryCode}</strong>)</span>
+                            <span id="${drawerId}-icon" style="font-size:0.85em;">${defaultOpen ? '▲' : '▼'}</span>
+                        </button>
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            <button type="button" onclick="copyAdminCode('${primaryCode}')" style="background:#ffffff; border:1px solid #0284c7; color:#0369a1; border-radius:6px; padding:2px 8px; cursor:pointer; font-size:0.74em; font-weight:800;">📋 نسخ الكود</button>
+                            <button type="button" onclick="adminBumpSerialAndRefresh('${sp}')" title="توليد كود جديد لنفس المراجع" style="background:#ffffff; border:1px solid #cbd5e1; color:#334155; border-radius:6px; padding:2px 7px; cursor:pointer; font-size:0.73em; font-weight:800;">🔄 جديد</button>
+                        </div>
+                    </div>
+                    <div id="${drawerId}" style="display:${defaultOpen ? 'block' : 'none'}; margin-top:8px; padding-top:8px; border-top:1px solid #bae6fd;">
+                        <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;">
+                            ${cell(1, '🔑 تشخيص واحد (3 د.أ)')}
+                            ${cell(5, '📦 باقة 5 (10 د.أ)')}
+                            ${cell(10, '👑 باقة 10 (15 د.أ)')}
+                            ${cell('humanitarian', '❤️ إعفاء إنساني', true)}
+                        </div>
+                    </div>
+                </div>`;
+            }
+
             return `<div style="background:#f0f9ff; border:1.5px solid #bae6fd; border-radius:12px; padding:10px; margin:8px 0;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:7px; flex-wrap:wrap; gap:6px;">
                     <span style="color:#0369a1; font-size:0.8em; font-weight:900;">🔑 أكواد التفعيل الفورية للمراجع:</span>
@@ -8928,13 +8912,13 @@ function copyAdminCode(code) {
 
         // 🚀 تحديث الكاش ومزامنة السحابة وبث التحديث العالمي بضغطة واحدة
         async function handleUnifiedUpdateAndBroadcast() {
-            if (confirm('🚀 تحديث وبث الإصدار (v33.40):\n\nهل تود تحديث الكاش المحلي، ومزامنة السجلات، وبث التحديث الجديد لكافة هواتف وأجهزة المراجعين المتصلة فوراً؟')) {
+            if (confirm('🚀 تحديث وبث الإصدار (v33.45):\n\nهل تود تحديث الكاش المحلي، ومزامنة السجلات، وبث التحديث الجديد لكافة هواتف وأجهزة المراجعين المتصلة فوراً؟')) {
                 // 1. بث التحديث السحابي الشامل
                 try {
                     if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                         SmartCloudSync.broadcastAppVersionUpdate({
-                            version: 'v33.40',
-                            title: 'تحديث المنظومة (v33.40)',
+                            version: 'v33.45',
+                            title: 'تحديث المنظومة (v33.45)',
                             timestamp: Date.now()
                         });
                     }
@@ -8957,17 +8941,17 @@ function copyAdminCode(code) {
         }
         window.handleUnifiedUpdateAndBroadcast = handleUnifiedUpdateAndBroadcast;
 
-        // بث رسالة التحديث الجديد الشامل (v33.40) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
+        // بث رسالة التحديث الجديد الشامل (v33.45) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
         function handleBroadcastGlobalVersion() {
-            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v33.40) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
+            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v33.45) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
                 if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                     SmartCloudSync.broadcastAppVersionUpdate({
-                        version: 'v33.40',
-                        title: 'تحديث المنظومة (v33.40)',
+                        version: 'v33.45',
+                        title: 'تحديث المنظومة (v33.45)',
                         timestamp: Date.now()
                     });
                 }
-                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v33.40) عبر شبكة البث اللحظي MQTT و NTFY لكافة الأجهزة!');
+                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v33.45) عبر شبكة البث اللحظي MQTT و NTFY لكافة الأجهزة!');
             }
         }
         window.handleBroadcastGlobalVersion = handleBroadcastGlobalVersion;
@@ -9436,7 +9420,7 @@ function copyAdminCode(code) {
 
 <script>
 // ==========================================================================
-// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي في لوحة القيادة السريرية (v33.40)
+// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي في لوحة القيادة السريرية (v33.45)
 // ==========================================================================
 (function initAdminMedicalSvgIconAndContrastEngine() {
     const P = {
@@ -9610,7 +9594,7 @@ function copyAdminCode(code) {
 <script>
 // ===== تحديث تلقائي للوحة الإدارة: تقارن إصدارها بإصدار الأداة المنشور (sw.js) وتحدّث نفسها =====
 (function () {
-    const ADMIN_VER = 'v33.40';
+    const ADMIN_VER = 'v33.45';
     window.ADMIN_VER = ADMIN_VER;
     let busy = false;
     async function check(force) {

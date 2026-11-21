@@ -3845,7 +3845,7 @@
     function handleAppVersionUpdateMessage(data) {
         if (!data || !data.version) return;
         const newVer = String(data.version).trim();
-        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v33.40');
+        const curVer = (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v33.45');
         const numNew = _parseVersionNumber(newVer);
         const numCur = _parseVersionNumber(curVer);
 
@@ -3864,7 +3864,7 @@
     }
 
     function broadcastAppVersionUpdate(options = {}) {
-        const ver = options.version || (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v33.40');
+        const ver = options.version || (typeof CURRENT_APP_VERSION !== 'undefined' ? CURRENT_APP_VERSION : 'v33.45');
         const payload = {
             type: 'app_version_update',
             version: ver,

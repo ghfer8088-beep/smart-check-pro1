@@ -10,7 +10,7 @@
 })();
 
 // ==========================================================================
-// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي (Medical SVG Icon & Contrast Engine v33.40)
+// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي (Medical SVG Icon & Contrast Engine v33.45)
 // يحول كافة الأيقونات التفاعلية إلى أيقونات SVG طبية حديثة موحدة اللون (currentColor) دون أي تشتت لوني
 // ==========================================================================
 (function initMedicalSvgIconAndContrastEngine() {
@@ -12240,7 +12240,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v33.40';
+const CURRENT_APP_VERSION = 'v33.45';
 window.CURRENT_APP_VERSION = CURRENT_APP_VERSION;
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
