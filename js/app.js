@@ -10,7 +10,7 @@
 })();
 
 // ==========================================================================
-// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي (Medical SVG Icon & Contrast Engine v33.60)
+// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي (Medical SVG Icon & Contrast Engine v33.65)
 // يحول كافة الأيقونات التفاعلية إلى أيقونات SVG طبية حديثة موحدة اللون (currentColor) دون أي تشتت لوني
 // ==========================================================================
 (function initMedicalSvgIconAndContrastEngine() {
@@ -605,6 +605,10 @@ function startSpecializedConsultation(specialtyKey) {
         localStorage.setItem('smart_current_exam_id', newExamId);
         sessionStorage.setItem('scp_current_exam_id', newExamId);
         sessionStorage.removeItem('scp_current_exam_paid_unlocked');
+        sessionStorage.setItem('scp_is_fresh_new_exam', 'true');
+        localStorage.setItem('scp_is_fresh_new_exam', 'true');
+        window._freshNewExamMode = true;
+        localStorage.removeItem('smart_chat_intake_state');
         localStorage.setItem('smart_current_point', JSON.stringify(specPoint));
         localStorage.setItem('smart_max_reached_step', '2');
     } catch(e) {}
@@ -902,6 +906,10 @@ function selectAnatomyPoint(point, element) {
         localStorage.setItem('smart_current_exam_id', newExamId);
         sessionStorage.setItem('scp_current_exam_id', newExamId);
         sessionStorage.removeItem('scp_current_exam_paid_unlocked');
+        sessionStorage.setItem('scp_is_fresh_new_exam', 'true');
+        localStorage.setItem('scp_is_fresh_new_exam', 'true');
+        window._freshNewExamMode = true;
+        localStorage.removeItem('smart_chat_intake_state');
         localStorage.setItem('smart_current_point', JSON.stringify(point));
         localStorage.setItem('smart_max_reached_step', '2');
         if (typeof updateStepperVisuals === 'function') updateStepperVisuals(1);
@@ -1120,8 +1128,9 @@ window.getAllPatientDailyLogsCombined = getAllPatientDailyLogsCombined;
 async function getMaxUnlockedStep() {
     let maxStep = 1;
     try {
-        const isFreshExam = sessionStorage.getItem('scp_is_fresh_new_exam') === 'true' 
-            || window._freshNewExamMode === true 
+        const isFreshExam = sessionStorage.getItem('scp_is_fresh_new_exam') === 'true'
+            || localStorage.getItem('scp_is_fresh_new_exam') === 'true'
+            || window._freshNewExamMode === true
             || (!currentAssessmentData && !localStorage.getItem('smart_current_assessment'));
 
         // فحص جديد: يتم حصر التقدم الصارم بما أُنجز في هذا الفحص فقط ومنع الارتباط بفحوصات سابقة
@@ -1194,8 +1203,9 @@ window.getMaxUnlockedStep = getMaxUnlockedStep;
 
 function getMaxUnlockedStepSync() {
     try {
-        const isFreshExam = sessionStorage.getItem('scp_is_fresh_new_exam') === 'true' 
-            || window._freshNewExamMode === true 
+        const isFreshExam = sessionStorage.getItem('scp_is_fresh_new_exam') === 'true'
+            || localStorage.getItem('scp_is_fresh_new_exam') === 'true'
+            || window._freshNewExamMode === true
             || (!currentAssessmentData && !localStorage.getItem('smart_current_assessment'));
         if (isFreshExam) {
             if (currentAssessmentData && (currentAssessmentData.primaryDiagnosis || currentAssessmentData.diagnosisTitle)) return 3;
@@ -1383,11 +1393,35 @@ async function restoreActiveSessionState() {
         activePatient = SmartDB.sanitizePatientData(activePatient);
     }
 
-    // إذا كان المراجع قد بدأ فحصاً جديداً: يمنع استرجاع تشخيصات أو تقارير الفحوصات السابقة
-    const isFreshExamMode = sessionStorage.getItem('scp_is_fresh_new_exam') === 'true' || window._freshNewExamMode === true;
+    // إذا كان المراجع قد بدأ فحصاً جديداً أو ما زال في المرحلة 1 أو 2 قبل صدور التقرير: يمنع استرجاع تشخيصات أو تقارير الفحوصات السابقة
+    const curStepSaved = parseInt(localStorage.getItem('smart_current_step') || '1', 10);
+    const isFreshExamMode = sessionStorage.getItem('scp_is_fresh_new_exam') === 'true'
+        || localStorage.getItem('scp_is_fresh_new_exam') === 'true'
+        || window._freshNewExamMode === true
+        || (curStepSaved <= 2 && !localStorage.getItem('smart_current_assessment'));
     if (isFreshExamMode) {
         currentAssessmentData = null;
-        currentSelectedPoint = null;
+        if (!currentSelectedPoint && !queryPid) {
+            try {
+                const rawPt = localStorage.getItem('smart_current_point');
+                if (rawPt) currentSelectedPoint = JSON.parse(rawPt);
+            } catch(e) {}
+        }
+        if (currentSelectedPoint) {
+            const found = document.querySelector(`.anatomy-hotspot[data-point-id="${currentSelectedPoint.id}"]`);
+            if (found) found.classList.add('active');
+            const statusText = document.getElementById('selected-point-label');
+            if (statusText) {
+                statusText.textContent = `🎯 تم تحديد: ${currentSelectedPoint.title}`;
+                statusText.style.color = '#10b981';
+            }
+            const proceedBtn = document.getElementById('btn-goto-step2');
+            if (proceedBtn) {
+                proceedBtn.disabled = false;
+                proceedBtn.style.opacity = '1';
+            }
+        }
+        await getMaxUnlockedStep();
         return;
     }
 
@@ -2367,6 +2401,8 @@ async function runDiagnosticAnalysis() {
             currentAssessmentData.isPaidUnlocked = false;
             currentAssessmentData.isPlanActivated = false;
             sessionStorage.removeItem('scp_is_fresh_new_exam');
+            localStorage.removeItem('scp_is_fresh_new_exam');
+            localStorage.removeItem('smart_chat_intake_state');
             window._freshNewExamMode = false;
             localStorage.setItem('smart_current_assessment', JSON.stringify(currentAssessmentData));
             localStorage.setItem('smart_max_reached_step', '3');
@@ -7153,7 +7189,9 @@ function renderPreReportPaywallGate(data, reportContainer) {
             const chkOpen = document.getElementById('subscription-checkout-modal')?.style?.display === 'flex';
             const humOpen = document.getElementById('subscription-humanitarian-modal')?.style?.display === 'flex';
             const promoOpen = document.getElementById('subscription-promocode-modal')?.style?.display === 'flex';
-            if (typeof openSubscriptionTiersModal === 'function' && !isCurrentPatientPlanUnlocked() && !hasPendingReq && !chkOpen && !humOpen && !promoOpen) {
+            const currentVisibleStep = parseInt(localStorage.getItem('smart_current_step') || '1', 10);
+            const step3Visible = document.getElementById('step-section-3')?.style?.display === 'block';
+            if (currentVisibleStep === 3 && step3Visible && typeof openSubscriptionTiersModal === 'function' && !isCurrentPatientPlanUnlocked() && !hasPendingReq && !chkOpen && !humOpen && !promoOpen) {
                 openSubscriptionTiersModal();
             }
         }, 700);
@@ -12199,7 +12237,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v33.60';
+const CURRENT_APP_VERSION = 'v33.65';
 window.CURRENT_APP_VERSION = CURRENT_APP_VERSION;
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
@@ -13008,6 +13046,8 @@ function resetToInitialState(force = false) {
 
     // تمييز صريح بأن جلسة فحص جديد بدأت لمنع أي تقدم بالمراحل أو استرجاع بيانات فحص سابق
     sessionStorage.setItem('scp_is_fresh_new_exam', 'true');
+    localStorage.setItem('scp_is_fresh_new_exam', 'true');
+    localStorage.removeItem('smart_chat_intake_state');
     window._freshNewExamMode = true;
     window._activeExamPaidUnlocked = false;
     window._activeExamPaidId = null;
@@ -14221,8 +14261,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // تجهيز التقرير في الخلفية فقط إذا كانت المرحلة المستهدفة هي التقرير (المرحلة 3 أو أقل) لمنع طغيان شريط التوجيه على المرحلة 5
-    if (currentAssessmentData && (!savedTargetStep || savedTargetStep <= 3)) {
+    // تجهيز التقرير في الخلفية فقط إذا كانت المرحلة المستهدفة هي التقرير (المرحلة 3 حصراً) لمنع فتح نافذة الاشتراك أثناء المرحلة 1 أو 2
+    if (currentAssessmentData && savedTargetStep === 3) {
         try { displayDiagnosticReport(currentAssessmentData); } catch(e) {}
     }
 
@@ -14323,9 +14363,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (currentSelectedPoint) {
                 renderAdaptiveQuestions(currentSelectedPoint.id);
             }
+            if (typeof restoreClinicalChatState === 'function') {
+                restoreClinicalChatState();
+            }
             goToStep(2);
             return;
         }
+    }
+
+    if (savedTargetStep === 1) {
+        goToStep(1);
+        return;
     }
 
     if (isPaidUnlockedNow && (logs && logs.length >= 7 || savedTargetStep === 6)) {
@@ -14346,6 +14394,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     } else if (currentSelectedPoint || maxUnlocked >= 2) {
         if (currentSelectedPoint) renderAdaptiveQuestions(currentSelectedPoint.id);
+        if (typeof restoreClinicalChatState === 'function') restoreClinicalChatState();
         goToStep(2);
         return;
     }
@@ -15789,7 +15838,74 @@ function appendChatMessage(sender, text, options = {}) {
     setTimeout(() => keepFocusOnSarahInterrogation(), 60);
 
     clinicalDialogueState.history.push({ sender, text });
+    if (typeof persistClinicalChatState === 'function') {
+        persistClinicalChatState();
+    }
 }
+
+// حفظ واستعادة حالة حوار الاستجواب السريري عند تحديث الصفحة حتى يعود المراجع لنفس المحادثة تماماً
+function persistClinicalChatState() {
+    try {
+        if (typeof clinicalDialogueState === 'undefined') return;
+        const payload = {
+            pointId: (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.id : '',
+            step: clinicalDialogueState.step || 'init',
+            history: Array.isArray(clinicalDialogueState.history) ? clinicalDialogueState.history : [],
+            collectedSymptoms: Array.isArray(clinicalDialogueState.collectedSymptoms) ? clinicalDialogueState.collectedSymptoms : [],
+            patientName: clinicalDialogueState.patientName || '',
+            patientFullName: clinicalDialogueState.patientFullName || '',
+            patientFirstName: clinicalDialogueState.patientFirstName || '',
+            patientGender: clinicalDialogueState.patientGender || '',
+            patientPhone: clinicalDialogueState.patientPhone || '',
+            patientVitals: clinicalDialogueState.patientVitals || {},
+            vitalsAcknowledged: !!clinicalDialogueState.vitalsAcknowledged,
+            welcomeCompleted: !!clinicalDialogueState.welcomeCompleted,
+            hasStartedWelcome: !!clinicalDialogueState.hasStartedWelcome
+        };
+        localStorage.setItem('smart_chat_intake_state', JSON.stringify(payload));
+    } catch (e) {}
+}
+window.persistClinicalChatState = persistClinicalChatState;
+
+function restoreClinicalChatState() {
+    try {
+        const raw = localStorage.getItem('smart_chat_intake_state');
+        if (!raw) return false;
+        const saved = JSON.parse(raw);
+        if (!saved || !Array.isArray(saved.history) || saved.history.length === 0) return false;
+
+        const curPtId = (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint) ? currentSelectedPoint.id : '';
+        if (saved.pointId && curPtId && saved.pointId !== curPtId) return false;
+
+        const box = document.getElementById('ai-chat-messages-box');
+        if (!box) return false;
+
+        box.innerHTML = '';
+        clinicalDialogueState.history = [];
+        clinicalDialogueState.step = (saved.step && saved.step !== 'init') ? saved.step : 'clinical_questions';
+        clinicalDialogueState.collectedSymptoms = Array.isArray(saved.collectedSymptoms) ? saved.collectedSymptoms : [];
+        clinicalDialogueState.patientName = saved.patientName || '';
+        clinicalDialogueState.patientFullName = saved.patientFullName || '';
+        clinicalDialogueState.patientFirstName = saved.patientFirstName || '';
+        clinicalDialogueState.patientGender = saved.patientGender || '';
+        clinicalDialogueState.patientPhone = saved.patientPhone || '';
+        clinicalDialogueState.patientVitals = saved.patientVitals || {};
+        clinicalDialogueState.vitalsAcknowledged = !!saved.vitalsAcknowledged;
+        clinicalDialogueState.welcomeCompleted = !!saved.welcomeCompleted;
+        clinicalDialogueState.hasStartedWelcome = true;
+        clinicalDialogueState.isStarting = false;
+
+        saved.history.forEach(item => {
+            if (item && item.sender && item.text) {
+                appendChatMessage(item.sender, item.text);
+            }
+        });
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+window.restoreClinicalChatState = restoreClinicalChatState;
 
 // عرض أزرار الردود السريعة المقترحة لتسهيل الإجابة على كبار السن بضغطة واحدة مع بقاء حرية الكتابة والصوت
 function renderChatQuickReplies(replies) {
