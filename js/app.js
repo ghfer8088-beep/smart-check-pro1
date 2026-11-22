@@ -10,7 +10,7 @@
 })();
 
 // ==========================================================================
-// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي (Medical SVG Icon & Contrast Engine v33.50)
+// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي (Medical SVG Icon & Contrast Engine v33.55)
 // يحول كافة الأيقونات التفاعلية إلى أيقونات SVG طبية حديثة موحدة اللون (currentColor) دون أي تشتت لوني
 // ==========================================================================
 (function initMedicalSvgIconAndContrastEngine() {
@@ -12240,7 +12240,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v33.50';
+const CURRENT_APP_VERSION = 'v33.55';
 window.CURRENT_APP_VERSION = CURRENT_APP_VERSION;
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
@@ -16433,6 +16433,7 @@ async function sendChatMessage() {
             currentStep: clinicalDialogueState.step,
             history: clinicalDialogueState.history,
             painPointTitle: currentSelectedPoint.title,
+            pointId: (currentSelectedPoint && currentSelectedPoint.id) || '',
             patientName: clinicalDialogueState.patientName,
             patientGender: resolvedGender,
             patientPhone: clinicalDialogueState.patientPhone,
@@ -16448,6 +16449,7 @@ async function sendChatMessage() {
             currentStep: clinicalDialogueState.step,
             history: clinicalDialogueState.history,
             painPointTitle: currentSelectedPoint.title,
+            pointId: (currentSelectedPoint && currentSelectedPoint.id) || '',
             patientName: clinicalDialogueState.patientName,
             patientGender: resolvedGender,
             patientPhone: clinicalDialogueState.patientPhone,
@@ -16467,6 +16469,7 @@ async function sendChatMessage() {
             currentStep: clinicalDialogueState.step,
             history: clinicalDialogueState.history,
             painPointTitle: currentSelectedPoint.title,
+            pointId: (currentSelectedPoint && currentSelectedPoint.id) || '',
             patientName: clinicalDialogueState.patientName,
             patientGender: resolvedGender,
             patientPhone: clinicalDialogueState.patientPhone,

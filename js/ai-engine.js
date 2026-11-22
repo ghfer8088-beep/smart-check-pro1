@@ -516,6 +516,12 @@ ${greetingInstruction}
             ['ذراعك', 'ذراعكِ'],
             ['يوقظك', 'يوقظكِ'],
             ['تمنعك', 'تمنعكِ'],
+            ['يمنعك', 'يمنعكِ'],
+            ['يعيقك', 'يعيقكِ'],
+            ['تضطر', 'تضطرين'],
+            ['ظهرك', 'ظهركِ'],
+            ['كتفك', 'كتفكِ'],
+            ['وزنك', 'وزنكِ'],
             ['سلامتك', 'سلامتكِ'],
             ['سؤالك', 'سؤالكِ'],
             ['معك', 'معكِ'],
@@ -533,33 +539,579 @@ ${greetingInstruction}
         return res;
     },
 
+    // تحديد التصنيف التشريحي الدقيق لنقطة الألم المختارة مع التمييز بين مفصل الكتف والأبهر وسائر المفاصل
+    resolveAnatomicalCategory(context = {}) {
+        const title = (context.painPointTitle || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint ? currentSelectedPoint.title : '') || '').toLowerCase();
+        const ptId = (context.pointId || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint ? currentSelectedPoint.id : '') || '').toLowerCase();
+        const tLower = (title + ' ' + ptId).toLowerCase();
+        const specType = context.specialtyType || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint && currentSelectedPoint.specialtyType) || null;
+
+        if (specType === 'stroke' || /stroke|جلطة|جلطات/i.test(tLower)) {
+            return 'specialized_stroke';
+        }
+        if (specType === 'foot_drop' || /foot_drop|سقوط\s*القدم|رفع\s*المشط/i.test(tLower)) {
+            return 'specialized_foot_drop';
+        }
+        if (specType === 'scoliosis' || /scoliosis|جنف|انحراف\s*العمود/i.test(tLower)) {
+            return 'specialized_scoliosis';
+        }
+        if (/ورك|مفصل\s*الورك|ثنية\s*الفخذ|فخذ\s*أمامي|hip/i.test(tLower)) {
+            return 'hip_joint';
+        }
+        if (/أبهر|ابهر|لوح\s*الكتف|لوحي\s*الكتف|بين\s*الكتفين|قفص\s*صدري|فقرات\s*صدرية|أضلاع|اضلاع|scapula|thoracic|rhomboid/i.test(tLower)) {
+            return 'thoracic_abhar';
+        }
+        if (/كتف|ترقوة|كفة\s*مدورة|أوتار\s*الكتف|مفصل\s*الكتف|shoulder|rotator|clavicle|deltoid/i.test(tLower)) {
+            return 'shoulder_joint';
+        }
+        if (/رقبة|رقبه|عنق|رأس|راس|صداع|فك|صدغ|جمجمة|cervical|neck|head/i.test(tLower)) {
+            return 'neck_head';
+        }
+        if (/ركبة|ركبه|صابونة|غضروف\s*هلالي|رباط\s*صليبي|ساق|سمانة|بطة|knee|calf|patella|meniscus/i.test(tLower)) {
+            return 'knee_leg';
+        }
+        if (/كاحل|قدم|باطن\s*القدم|كعب|مسمار|مشط|أكيليس|اكيليس|أخمص|اخمص|ankle|foot|plantar|heel/i.test(tLower)) {
+            return 'foot_ankle';
+        }
+        if (/كوع|مرفق|ساعد|ذراع|زند|كعبرة|عضد|elbow|forearm/i.test(tLower)) {
+            return 'elbow_arm';
+        }
+        if (/(?:معصم|رسغ|نفق\s*رسغي|نفق\s*الرسغ|كف\s*اليد|راحة\s*اليد|أصابع\s*اليد|اصابع\s*اليد|إبهام|ابهام|wrist|carpal|hand)/i.test(tLower)) {
+            return 'wrist_hand';
+        }
+        if (/ظهر|قطن|قطنية|lumbar|دسك|ديسك|غضروف|l4|l5|أسفل\s*الظهر|اسفل\s*الظهر|عرق\s*النسا|سياتيكا|حوض|عجز|عصعص|إلية|كمثرية/i.test(tLower)) {
+            return 'lower_back_pelvis';
+        }
+        return 'lower_back_pelvis';
+    },
+
+    // بناء بروتوكول الاستجواب السريري التشريحي المخصص لكل مفصل مع فلترة ما تم سؤاله أو الإجابة عنه
+    getClinicalInterrogationProtocol(context = {}) {
+        const anatCat = this.resolveAnatomicalCategory(context);
+        const titleStr = context.painPointTitle || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint ? currentSelectedPoint.title : '') || 'موضع الشكوى';
+        const history = context.history || [];
+        const lastUserMessage = context.lastUserMessage || '';
+        const allContextText = history.map(h => h.text).join(' ') + ' ' + lastUserMessage;
+        const userContextText = history.filter(h => h.sender === 'user').map(h => h.text).join(' ') + ' ' + lastUserMessage;
+        const botHistoryText = history.filter(h => h.sender === 'bot').map(h => h.text).join(' ');
+
+        const isAcuteTrauma = /(?:إصابة\s*مفاجئة|اصابة\s*مفاجئة|فجأة|فجاة|وقعت|سقوط|وقوع|التواء|التوت|لويت|انلوى|حملت\s*شي|رفعت\s*شي|حركة\s*مفاجئة|حركة\s*غلط|حادث|ضربة|خبطة|طق|طقت|تمزق|خلع|شد\s*مفاجئ)/i.test(allContextText);
+
+        let facets = [];
+
+        switch (anatCat) {
+            case 'specialized_stroke':
+                facets = [
+                    {
+                        id: 'stroke_side_onset',
+                        label: 'الجانب المتأثر بالجلطة وتاريخ حدوثها',
+                        coveredRegex: /(?:يمين|يسار|أيمن|ايمن|أيسر|ايسر|منذ|شهر|سنة|أسبوع)/i,
+                        askedRegex: /(?:الجانب أو الطرف الأكثر تأثراً|منذ متى حدثت الجلطة)/i,
+                        question: `ما هو الجانب أو الطرف الأكثر تأثراً بالضعف أو التصلب (الجانب الأيمن أم الأيسر)، ومنذ متى حدثت الجلطة؟`
+                    },
+                    {
+                        id: 'stroke_spasticity',
+                        label: 'درجة التشنج العضلي اللاإرادي (Spasticity) في اليد والساق',
+                        coveredRegex: /(?:تشنج|تيبس|تصلب|ارتخاء|أصابع|اصابع|قبضة|شد)/i,
+                        askedRegex: /(?:بتشنج وتيبس عضلي لاإرادي|Spasticity|ضعف وارتخاء في حركة الساق)/i,
+                        question: `هل تشعر بتشنج وتيبس عضلي لاإرادي (Spasticity) في حركة اليد والأصابع، أم ضعف وارتخاء في حركة الساق؟`
+                    },
+                    {
+                        id: 'stroke_mobility',
+                        label: 'القدرة على الوقوف والمشي والاتزان',
+                        coveredRegex: /(?:مشي|وقوف|عكاز|مشاية|ووكر|كرسي|مساعدة|مرافق|توازن)/i,
+                        askedRegex: /(?:الوقوف والمشي بمفردك|مساعدة مرافق أو استخدام عكاز)/i,
+                        question: `هل تستطيع الوقوف والمشي بمفردك بأمان، أم تحتاج لمساعدة مرافق أو استخدام عكاز/مشاية؟`
+                    },
+                    {
+                        id: 'stroke_rehab_history',
+                        label: 'التأهيل الحركي السابق',
+                        coveredRegex: /(?:جلسات|علاج طبيعي|تأهيل|مستشفى|تمارين)/i,
+                        askedRegex: /(?:تلقيت جلسات علاج طبيعي|بدأت مرحلة التأهيل)/i,
+                        question: `هل تلقيت جلسات علاج طبيعي وتأهيل حركي سابقاً، وما أبرز حركة تود استعادتها في حياتك اليومية؟`
+                    }
+                ];
+                break;
+
+            case 'specialized_foot_drop':
+                facets = [
+                    {
+                        id: 'fd_side_gait',
+                        label: 'القدم المصابة والتعثر أثناء المشي',
+                        coveredRegex: /(?:يمنى|يسرى|يمين|يسار|تعثر|سقوط|مشط)/i,
+                        askedRegex: /(?:أي قدم تشتكي من صعوبة رفع المشط|مسببة التعثر)/i,
+                        question: `في أي قدم تشتكي من صعوبة رفع المشط (اليمنى أم اليسرى)، وهل تسقط مقدمة القدم لأسفل عند المشي مسببة التعثر؟`
+                    },
+                    {
+                        id: 'fd_etiology',
+                        label: 'سبب سقوط القدم (عصب قطني L5 أم إصابة محيطية)',
+                        coveredRegex: /(?:ديسك|ظهر|جراحة|عملية|ركبة|عصب|ساق|إصابة)/i,
+                        askedRegex: /(?:ظهر سقوط القدم بعد ألم حاد|L5|جراحة أو إصابة)/i,
+                        question: `هل ظهر سقوط القدم بعد ألم حاد أو انزلاق غضروفي في أسفل الظهر (L5)، أم بعد جراحة أو إصابة في الركبة والساق؟`
+                    },
+                    {
+                        id: 'fd_sensory',
+                        label: 'الخدر على ظهر القدم والسطح الخارجي للساق',
+                        coveredRegex: /(?:خدر|تنميل|إحساس|احساس|سليم|بدون)/i,
+                        askedRegex: /(?:السطح الخارجي للساق وأعلى ظهر القدم)/i,
+                        question: `هل تشعر بخدر أو تنميل يمتد على السطح الخارجي للساق وأعلى ظهر القدم؟`
+                    },
+                    {
+                        id: 'fd_afo_duration',
+                        label: 'مدة الحالة واستخدام دعامة AFO',
+                        coveredRegex: /(?:منذ|شهر|سنة|أسبوع|دعامة|جبيرة|AFO)/i,
+                        askedRegex: /(?:تستخدم دعامة مشط القدم|AFO)/i,
+                        question: `منذ متى بدأت هذه المشكلة، وهل تستخدم دعامة مشط القدم (AFO) لمساعدتك على المشي حالياً؟`
+                    }
+                ];
+                break;
+
+            case 'specialized_scoliosis':
+                facets = [
+                    {
+                        id: 'scol_posture_asymmetry',
+                        label: 'تفاوت ارتفاع الكتفين أو ميلان الحوض',
+                        coveredRegex: /(?:كتف|لوح|حوض|ميلان|تفاوت|بروز)/i,
+                        askedRegex: /(?:تفاوتاً ظاهراً في ارتفاع الكتفين|ميلاً في الحوض)/i,
+                        question: `هل تلاحظ تفاوتاً ظاهراً في ارتفاع الكتفين، لوحي الظهر، أو ميلاً في الحوض عند الوقوف؟`
+                    },
+                    {
+                        id: 'scol_xray_cobb',
+                        label: 'الأشعة السينية وزاوية كوب (Cobb Angle)',
+                        coveredRegex: /(?:أشعة|اشعة|درجة|زاوية|كوب|cobb|صورة)/i,
+                        askedRegex: /(?:تصوير أشعة سينية|زاوية كوب|Cobb Angle)/i,
+                        question: `هل تم إجراء تصوير أشعة سينية (X-Ray) سابقة وقياس زاوية الانحناء (زاوية كوب Cobb Angle)؟`
+                    },
+                    {
+                        id: 'scol_muscle_fatigue',
+                        label: 'الإجهاد العضلي وحركة التنفس',
+                        coveredRegex: /(?:إجهاد|اجهاد|تشنج|وقوف|تنفس|نفس|تعب)/i,
+                        askedRegex: /(?:إجهاد وتشنج عضلي في أحد جانبي الظهر)/i,
+                        question: `هل تشعر بإجهاد وتشنج عضلي في أحد جانبي الظهر أكثر من الآخر عند الوقوف الطويل أو المشي؟`
+                    },
+                    {
+                        id: 'scol_duration',
+                        label: 'تاريخ اكتشاف التقوس',
+                        coveredRegex: /(?:منذ|سنة|شهر|طفولة|مراهقة|فترة)/i,
+                        askedRegex: /(?:منذ متى لاحظت هذا التقوس)/i,
+                        question: `منذ متى لاحظت هذا التقوس، وهل يزداد الألم مع الجلوس الطويل أو حمل الحقيبة؟`
+                    }
+                ];
+                break;
+
+            case 'shoulder_joint':
+                facets = [
+                    {
+                        id: 'shoulder_painful_arc',
+                        label: 'قوس الحركة المؤلم ورفع الذراع للجانب أو خلف الظهر',
+                        coveredRegex: /(?:رفع|أعلى|اعلى|خلف الظهر|جانب|تمشيط|ارتداء|لبس|فوق الرأس)/i,
+                        askedRegex: /(?:رفع ذراعك|قوس الحركة|مد اليد خلف الظهر|فوق مستوى الكتف)/i,
+                        question: `هل يظهر الألم بوضوح عند رفع الذراع جانبياً للأعلى فوق مستوى الكتف، أم عند محاولة مد اليد خلف الظهر؟`
+                    },
+                    {
+                        id: 'shoulder_cuff_mechanics',
+                        label: 'ثبات أوتار الكفة المدورة (ضعف الرفع مقابل الطقطقة والتعليق)',
+                        coveredRegex: /(?:ضعف|قوة|طقطقة|تعليق|احتكاك|ثقل|ما بقدر أرفع|فلتان|خلع)/i,
+                        askedRegex: /(?:ضعف مفاجئ في قوة الذراع|طقطقة وتعليق ميكانيكي داخل مفصل الكتف)/i,
+                        question: `هل تشعر بضعف في قوة الذراع يمنعك من تثبيتها عند الرفع، أم تلاحظ طقطقة وتعليقاً ميكانيكياً داخل مفصل الكتف؟`
+                    },
+                    {
+                        id: 'shoulder_cervical_screen',
+                        label: 'تمييز ألم الكتف الوتري عن انضغاط عصب الرقبة',
+                        coveredRegex: /(?:خدر|تنميل|كهربا|أصابع|اصابع|رقبة|موضعي|محصور|ما في خدر|بدون خدر)/i,
+                        askedRegex: /(?:محصور داخل مفصل الكتف|يمتد معه خدر أو تنميل ينزل من الرقبة)/i,
+                        question: `هل الألم محصور داخل مفصل الكتف وأعلى الذراع فقط، أم يترافق مع خدر أو تنميل يمتد من الرقبة حتى أصابع اليد؟`
+                    },
+                    {
+                        id: 'shoulder_onset_mechanism',
+                        label: 'آلية بداية إصابة الكتف ومدتها الزمنية',
+                        coveredRegex: /(?:منذ|شهر|أسبوع|اسبوع|سنة|أيام|ايام|إصابة|اصابة|فجأة|حملت|شد|وقعت)/i,
+                        askedRegex: /(?:منذ متى بدأت مشكلة الكتف|حركة رفع أو شد مفاجئ)/i,
+                        question: isAcuteTrauma
+                            ? `بعد هذه الإصابة المفاجئة في **${titleStr}**، هل لاحظت أي تورم أو محدودية حادة تمنعك من تحريك المفصل في مداه الكامل؟`
+                            : `منذ متى بدأت مشكلة **${titleStr}**، وهل ظهرت بعد حركة رفع أو شد مفاجئ للذراع أم تطورت تدريجياً مع الإجهاد؟`
+                    },
+                    {
+                        id: 'shoulder_sleep_relief',
+                        label: 'تأثير الاستلقاء على الكتف ليلاً ووضعية إراحة الذراع',
+                        coveredRegex: /(?:نوم|ليل|تقلب|استلقاء|مخدة|وسادة|كمادات|راحة|بصحى)/i,
+                        askedRegex: /(?:النوم على جهة الكتف|يوقظك الألم عند التقلب|الوضعية التي تمنح ذراعك)/i,
+                        question: `ما هي الوضعية التي تمنح ذراعك وكتفك أكبر قدر من الراحة خلال اليوم، وهل يعيقك الألم عن ارتداء الملابس أو حمل الأشياء؟`
+                    }
+                ];
+                break;
+
+            case 'thoracic_abhar':
+                facets = [
+                    {
+                        id: 'abhar_breathing_scapula',
+                        label: 'تأثر الأبهر بالتنفس العميق وحركة لوح الكتف',
+                        coveredRegex: /(?:نفس عميق|شهيق|تنفس|لوح الكتف|كتفين للخلف|طعنة)/i,
+                        askedRegex: /(?:أخذ نفس عميق|تحريك الكتفين للخلف|بين لوحي الكتف)/i,
+                        question: `هل يزداد ألم **${titleStr}** كطعنة أو شدّ عميق بين لوحي الكتف عند أخذ نفس عميق أو تحريك الكتفين للخلف؟`
+                    },
+                    {
+                        id: 'abhar_posture_neck',
+                        label: 'ارتباط الأبهر بالجلوس المكتبي وعضلات الرقبة',
+                        coveredRegex: /(?:مكتب|شاشة|كمبيوتر|هاتف|قيادة|انحناء|رقبة|جلوس)/i,
+                        askedRegex: /(?:الجلوس الطويل أمام الشاشات|يمتد الشد صعوداً نحو أسفل الرقبة)/i,
+                        question: `هل يشتد هذا التشنج مع الجلوس الطويل أو العمل باليدين، وهل يمتد الشد صعوداً نحو أسفل الرقبة أو حول القفص الصدري؟`
+                    },
+                    {
+                        id: 'abhar_trigger_vs_nerve',
+                        label: 'بؤرة عقدة الأبهر العضلية مقابل الخدر العصبي',
+                        coveredRegex: /(?:عقدة|نقطة|خدر|تنميل|ذراع|ضغط عليها)/i,
+                        askedRegex: /(?:عقدة عضلية محددة ومؤلمة|يمتد منها خدر نحو الذراع)/i,
+                        question: `هل تشعر بوجود عقدة عضلية محددة تحت لوح الكتف تؤلمك عند الضغط عليها، أم يمتد منها خدر وتنميل نحو الذراع؟`
+                    },
+                    {
+                        id: 'abhar_duration_cold',
+                        label: 'مدة تشنج الأبهر ومحفزات البرودة أو المجهود',
+                        coveredRegex: /(?:منذ|شهر|أسبوع|اسبوع|سنة|أيام|مكيف|برد|هواء)/i,
+                        askedRegex: /(?:منذ متى يتكرر معك|تيار هواء بارد أو مجهود)/i,
+                        question: `منذ متى يتكرر معك ألم **${titleStr}**، وهل يزداد فجأة بعد التعرض لتيار هواء بارد أو مجهود عضلي؟`
+                    },
+                    {
+                        id: 'abhar_relief_sleep',
+                        label: 'استجابة الأبهر للحرارة أو التدليك وتأثيره على النوم',
+                        coveredRegex: /(?:كمادات|دافئ|حرارة|تدليك|مساج|نوم|ليل|تقلب)/i,
+                        askedRegex: /(?:الكمادات الدافئة أو التدليك|يزعجك أثناء النوم)/i,
+                        question: `هل يخف التشنج مؤقتاً مع الكمادات الدافئة أو تحريك لوح الكتف، وهل يوقظك الألم عند التقلب ليلاً؟`
+                    }
+                ];
+                break;
+
+            case 'neck_head':
+                facets = [
+                    {
+                        id: 'neck_rotation_flexion',
+                        label: 'حركة التفات الرقبة والانحناء للشاشات',
+                        coveredRegex: /(?:التفات|يمين|يسار|انحناء|شاشة|موبايل|هاتف|خلف|حركة الرأس)/i,
+                        askedRegex: /(?:الالتفات بالرأس يميناً ويساراً|الانحناء الطويل للشاشات)/i,
+                        question: `هل يزداد ألم **${titleStr}** عند الالتفات بالرأس يميناً ويساراً أو إرجاعه للخلف، أم يشتد مع الانحناء للهاتف والشاشات؟`
+                    },
+                    {
+                        id: 'neck_radiculopathy',
+                        label: 'امتداد العصب العنقي للكتف والذراع والأصابع',
+                        coveredRegex: /(?:خدر|تنميل|كهربا|ذراع|أصابع|اصابع|كتف|سليم|بدون خدر)/i,
+                        askedRegex: /(?:ينزل ألم كهربائي أو خدر|وصولاً لأصابع اليد)/i,
+                        question: `هل ينزل من الرقبة ألم كهربائي أو خدر وتنميل يمتد عبر الكتف والذراع وصولاً لأصابع اليد؟`
+                    },
+                    {
+                        id: 'neck_cervicogenic_headache',
+                        label: 'الصداع العنقي خلف الجمجمة أو الدوار',
+                        coveredRegex: /(?:صداع|رأس|راس|جمجمة|دوخة|دوار|زغللة|عيون|ثقل)/i,
+                        askedRegex: /(?:صداع يبدأ من قاعدة الجمجمة|شعور بدوخة عند تحريك الرقبة)/i,
+                        question: `هل يرافق ألم الرقبة ثقل أو صداع يبدأ من قاعدة الجمجمة خلف الرأس، أو شعور بدوخة عند تحريك الرقبة؟`
+                    },
+                    {
+                        id: 'neck_grip_weakness',
+                        label: 'قوة قبضة اليد والذراع',
+                        coveredRegex: /(?:ضعف|قبضة|حمل|إجهاد|ثقل في الذراع)/i,
+                        askedRegex: /(?:ضعف في قبضة اليد أو إجهاد سريع في الذراع)/i,
+                        question: `هل تلاحظ أي ضعف في قبضة اليد أو ثقلاً في الذراع عند حمل الأشياء اليومية؟`
+                    },
+                    {
+                        id: 'neck_duration_pillow',
+                        label: 'مدة ألم الرقبة وتأثير وسادة النوم',
+                        coveredRegex: /(?:منذ|شهر|أسبوع|اسبوع|سنة|أيام|وسادة|مخدة|نوم)/i,
+                        askedRegex: /(?:منذ متى بدأت هذه الشكوى|وضعية الوسادة أثناء النوم)/i,
+                        question: `منذ متى بدأت هذه الشكوى في **${titleStr}**، وهل يتأثر الألم بوضعية الوسادة أثناء النوم؟`
+                    }
+                ];
+                break;
+
+            case 'hip_joint':
+                facets = [
+                    {
+                        id: 'hip_groin_vs_lateral',
+                        label: 'تحديد بؤرة الورك (ثنية الفخذ الأمامية أم الجانب الخارجي)',
+                        coveredRegex: /(?:ثنية الفخذ|أمام|امام|جانب|خارجي|إلية|ردف|عرق النسا)/i,
+                        askedRegex: /(?:ثنية الفخذ من الأمام|جانب الورك الخارجي)/i,
+                        question: `هل يتركز الألم عميقاً في ثنية الفخذ من الأمام، أم في جانب الورك الخارجي ومنطقة الإلية؟`
+                    },
+                    {
+                        id: 'hip_loading_rotation',
+                        label: 'تحمل الوزن، صعود الدرج، وربط الحذاء',
+                        coveredRegex: /(?:مشي|درج|ساق فوق|حذاء|جوارب|جلوس|وقوف)/i,
+                        askedRegex: /(?:صعود الدرج|ارتداء الحذاء|وضع ساق فوق الأخرى)/i,
+                        question: `هل يزداد ألم **${titleStr}** عند المشي وصعود الدرج، أم عند ثني الورك لارتداء الحذاء أو وضع ساق فوق الأخرى؟`
+                    },
+                    {
+                        id: 'hip_clicking_radiation',
+                        label: 'الطقطقة المفصلية في الورك أو امتداد الألم للركبة',
+                        coveredRegex: /(?:طقطقة|تعليق|احتكاك|يمتد|ركبة|فخذ|خدر)/i,
+                        askedRegex: /(?:طقطقة أو تعليق داخل مفصل الورك|يمتد الألم نزولاً نحو الفخذ)/i,
+                        question: `هل تشعر بطقطقة أو تعليق داخل مفصل الورك عند الحركة، أم يمتد الألم نزولاً نحو الفخذ والركبة؟`
+                    },
+                    {
+                        id: 'hip_duration_gait',
+                        label: 'مدة ألم الورك وتأثيره على خطوة المشي',
+                        coveredRegex: /(?:منذ|شهر|أسبوع|اسبوع|سنة|أيام|عرج|خطوة)/i,
+                        askedRegex: /(?:منذ متى تعاني من ألم|عرجاً خفيفاً أو صعوبة في بداية خطوات)/i,
+                        question: `منذ متى تعاني من ألم **${titleStr}**، وهل يسبب لك صعوبة أو عرجاً خفيفاً مع المشي؟`
+                    },
+                    {
+                        id: 'hip_sleep_side',
+                        label: 'الاستلقاء على جهة الورك ليلاً ووضعيات الراحة',
+                        coveredRegex: /(?:نوم|ليل|تقلب|استلقاء|جانب|راحة)/i,
+                        askedRegex: /(?:الاستلقاء على جهة الورك المصاب ليلاً)/i,
+                        question: `هل يزداد الألم عند الاستلقاء على جهة الورك المصاب ليلاً، وما الوضعية الأكثر إراحة لك؟`
+                    }
+                ];
+                break;
+
+            case 'knee_leg':
+                facets = [
+                    {
+                        id: 'knee_stairs_flexion',
+                        label: 'نزول وصعود الدرج وثني الركبة للصلاة أو القرفصاء',
+                        coveredRegex: /(?:درج|سلم|قرفصاء|ثني|صلاة|ركوع|سجود|جلوس|وقوف)/i,
+                        askedRegex: /(?:نزول الدرج|ثني الركبة للصلاة|القرفصاء)/i,
+                        question: `هل يشتد ألم **${titleStr}** أكثر عند نزول وصعود الدرج أو ثني الركبة للصلاة والقرفصاء، أم بعد الجلوس الطويل؟`
+                    },
+                    {
+                        id: 'knee_mechanical_signs',
+                        label: 'العلامات الميكانيكية للركبة (طقطقة، تعليق، خيانة، تورم)',
+                        coveredRegex: /(?:طقطقة|احتكاك|تعليق|تعلق|تخون|خيانة|تورم|انتفاخ|ارتشاح|مي)/i,
+                        askedRegex: /(?:طقطقة أو احتكاكاً داخل الركبة|تخونك|تورم أو انتفاخ)/i,
+                        question: `هل تلاحظ طقطقة أو احتكاكاً داخل الركبة، أو شعوراً بأن المفصل «يعلق» أو غير ثابت، وهل يوجد أي تورم؟`
+                    },
+                    {
+                        id: 'knee_localization',
+                        label: 'موقع الألم الدقيق حول الركبة (خلف الصابونة أم الجوانب)',
+                        coveredRegex: /(?:صابونة|أمام|امام|جانب|داخلي|خارجي|خلف الركبة)/i,
+                        askedRegex: /(?:خلف وحول صابونة الركبة|الجوانب الداخلية)/i,
+                        question: `هل يتركز الألم خلف وحول صابونة الركبة من الأمام، أم في الجانب الداخلي/الخارجي للمفصل أو خلف الركبة؟`
+                    },
+                    {
+                        id: 'knee_duration_onset',
+                        label: 'بداية إصابة الركبة ومدتها الزمنية',
+                        coveredRegex: /(?:منذ|شهر|أسبوع|اسبوع|سنة|أيام|التواء|وقعت|إصابة)/i,
+                        askedRegex: /(?:منذ متى بدأ ألم|سبقه التواء أو مجهود)/i,
+                        question: isAcuteTrauma
+                            ? `بعد هذه الإصابة المفاجئة في الركبة، هل تستطيع فرد وثني الركبة بالكامل وتحميل وزنك عليها أثناء المشي؟`
+                            : `منذ متى تعاني من ألم **${titleStr}**، وهل سبقه التواء أو مجهود مشي أم ظهر تدريجياً؟`
+                    },
+                    {
+                        id: 'knee_walking_relief',
+                        label: 'تأثير ألم الركبة على المشي والوضعيات المريحة',
+                        coveredRegex: /(?:مسافة|مشي|مد الساق|راحة|كمادات|نوم)/i,
+                        askedRegex: /(?:المسافة التي تستطيع مشيها|يرتاح المفصل عند مد الساق)/i,
+                        question: `إلى أي مدى يؤثر الألم على مشيك اليومي، وهل يرتاح المفصل عند مد الساق أو وضع كمادات؟`
+                    }
+                ];
+                break;
+
+            case 'foot_ankle':
+                facets = [
+                    {
+                        id: 'foot_first_step_vs_ankle',
+                        label: 'ألم الخطوة الأولى في الكعب مقابل ألم مفصل الكاحل',
+                        coveredRegex: /(?:أول خطوة|اول خطوة|كعب|مسمار|التواء|مفصل الكاحل|مشي|وقوف)/i,
+                        askedRegex: /(?:أول خطوة صباحاً عند النزول من السرير|مفصل الكاحل وأوتاره)/i,
+                        question: `هل تلاحظ ألماً حاداً كالمسمار أسفل الكعب مع أول خطوات المشي بعد الراحة، أم يتركز الألم في مفصل الكاحل وأوتاره أثناء الحركة؟`
+                    },
+                    {
+                        id: 'foot_swelling_stability',
+                        label: 'التورم وثبات مفصل الكاحل',
+                        coveredRegex: /(?:تورم|انتفاخ|ثبات|يلتوي|التواء|وتر أكيليس)/i,
+                        askedRegex: /(?:تورماً أو عدم ثبات|شعور بأن الكاحل قد يلتوي)/i,
+                        question: `هل تلاحظ أي تورم حول الكاحل أو القدم، أو شعوراً بعدم ثبات المفصل عند المشي؟`
+                    },
+                    {
+                        id: 'foot_nerve_tingling',
+                        label: 'حرقان أو تنميل باطن القدم والأصابع',
+                        coveredRegex: /(?:خدر|تنميل|حرقان|حرارة|لسعة|أصابع|باطن القدم|موضعي)/i,
+                        askedRegex: /(?:حرقان أو تنميل في باطن القدم|ألم ميكانيكي موضعي)/i,
+                        question: `هل يترافق الألم مع حرقان أو تنميل في باطن القدم والأصابع، أم هو ألم ميكانيكي موضعي عند الضغط والمشي؟`
+                    },
+                    {
+                        id: 'foot_duration_onset',
+                        label: 'مدة شكوى القدم/الكاحل وآلية حدوثها',
+                        coveredRegex: /(?:منذ|شهر|أسبوع|اسبوع|سنة|أيام|حذاء|وقوف طويل)/i,
+                        askedRegex: /(?:منذ متى بدأت هذه الشكوى|التواء مفاجئ أو وقوف طويل)/i,
+                        question: `منذ متى بدأت هذه الشكوى في **${titleStr}**، وهل ظهرت بعد التواء مفاجئ أم بسبب الوقوف والمشي الطويل؟`
+                    },
+                    {
+                        id: 'foot_relief',
+                        label: 'تأثير الوقوف المتواصل وما يريح القدم',
+                        coveredRegex: /(?:راحة|رفع القدم|كمادات|حذاء طبي|جلوس)/i,
+                        askedRegex: /(?:الوقوف المتواصل، وما الذي يخففه)/i,
+                        question: `كيف يتأثر الألم مع الوقوف المتواصل، وما الذي يخفف حدته خلال اليوم؟`
+                    }
+                ];
+                break;
+
+            case 'elbow_arm':
+                facets = [
+                    {
+                        id: 'elbow_grip_provocation',
+                        label: 'تحفيز ألم الكوع عند الإمساك بالأشياء والمصافحة',
+                        coveredRegex: /(?:إمساك|امساك|مصافحة|حمل|مقبض|كوب|عصر|رفع)/i,
+                        askedRegex: /(?:عند المصافحة، الإمساك بالأشياء|رفع كوب، أو لف مقبض)/i,
+                        question: `هل يزداد ألم **${titleStr}** عند الإمساك بالأشياء، المصافحة، رفع كوب، أو لف مقبض الباب؟`
+                    },
+                    {
+                        id: 'elbow_epicondyle_site',
+                        label: 'موقع الألم (البروز الخارجي أم الداخلي للكوع)',
+                        coveredRegex: /(?:خارجي|داخلي|بروز|عظمة الكوع|ساعد)/i,
+                        askedRegex: /(?:البروز العظمي الخارجي للكوع|الجهة الداخلية للمرفق)/i,
+                        question: `هل يتركز الألم في البروز العظمي الخارجي للكوع ويمتد لعضلات الساعد، أم في الجهة الداخلية للمرفق؟`
+                    },
+                    {
+                        id: 'elbow_ulnar_nerve',
+                        label: 'فحص العصب الزندي وتنميل الأصابع',
+                        coveredRegex: /(?:خدر|تنميل|كهربا|خنصر|بنصر|أصابع|اصابع|بدون خدر)/i,
+                        askedRegex: /(?:تنميل أو وخز كهربائي من الكوع إلى إصبع الخنصر)/i,
+                        question: `هل يمتد أي تنميل أو وخز كهربائي من الكوع عبر الساعد وصولاً لإصبع الخنصر والبنصر، أم أن الألم وتري موضعي؟`
+                    },
+                    {
+                        id: 'elbow_range_duration',
+                        label: 'مدى فرد وثني الكوع ومدة الإصابة',
+                        coveredRegex: /(?:منذ|شهر|أسبوع|اسبوع|سنة|أيام|فرد|ثني)/i,
+                        askedRegex: /(?:فرد وثني الذراع بالكامل|منذ متى بدأت هذه المشكلة)/i,
+                        question: `منذ متى تعاني من ألم **${titleStr}**، وهل تستطيع فرد وثني مفصل الكوع بالكامل بدون ألم؟`
+                    },
+                    {
+                        id: 'elbow_work_relief',
+                        label: 'تأثير ألم الكوع على العمل اليومي ووضعيات الراحة',
+                        coveredRegex: /(?:كمبيوتر|عمل|شغل|راحة|كمادات|مشد)/i,
+                        askedRegex: /(?:استخدام الكمبيوتر أو أعمالك اليدوية)/i,
+                        question: `هل يعيقك الألم عن استخدام الكمبيوتر أو مهامك اليدوية اليومية، وما الذي يخفف حدته؟`
+                    }
+                ];
+                break;
+
+            case 'wrist_hand':
+                facets = [
+                    {
+                        id: 'wrist_numbness_pattern',
+                        label: 'توزيع الخدر في الأصابع (النفق الرسغي مقابل أوتار الرسغ)',
+                        coveredRegex: /(?:خدر|تنميل|كهربا|إبهام|ابهام|سبابة|أصابع|اصابع|نفق رسغي)/i,
+                        askedRegex: /(?:تنميل أو خدر أو لسعة كهربائية في أصابع الإبهام|متلازمة النفق الرسغي)/i,
+                        question: `هل تشعر بخدر أو تنميل يتركز في الإبهام والسبابة والوسطى، أم أن الألم موضعي في مفصل الرسغ وقاعدة الإبهام؟`
+                    },
+                    {
+                        id: 'wrist_grip_provocation',
+                        label: 'تحفيز ألم المعصم مع الكتابة والهاتف وثني الرسغ',
+                        coveredRegex: /(?:فأرة|ماوس|كتابة|هاتف|موبايل|ثني المعصم|إمساك|قبضة)/i,
+                        askedRegex: /(?:استخدام الفأرة والكتابة|تصفح الهاتف بالإبهام)/i,
+                        question: `هل يشتد ألم **${titleStr}** عند استخدام الهاتف والكمبيوتر، أو عند ثني المعصم والإمساك بالأشياء؟`
+                    },
+                    {
+                        id: 'wrist_weakness_swelling',
+                        label: 'ضعف قبضة اليد أو التورم حول الرسغ',
+                        coveredRegex: /(?:ضعف|سقوط الأشياء|تورم|بروز|كيس|انتفاخ)/i,
+                        askedRegex: /(?:ضعفاً في قبضة اليد أو سقوط الأشياء|تورم أو بروز حول الرسغ)/i,
+                        question: `هل تلاحظ ضعفاً في قبضة اليد أو سقوط الأشياء منها أحياناً، وهل يوجد أي تورم حول الرسغ؟`
+                    },
+                    {
+                        id: 'wrist_duration_onset',
+                        label: 'مدة شكوى المعصم وآلية بدايتها',
+                        coveredRegex: /(?:منذ|شهر|أسبوع|اسبوع|سنة|أيام|وقعت|إصابة|ضغط عمل)/i,
+                        askedRegex: /(?:منذ متى بدأت هذه الأعراض في المعصم|منذ متى تعاني من هذا الألم)/i,
+                        question: `منذ متى بدأت هذه الأعراض في **${titleStr}**، وهل ظهرت بعد إجهاد عمل متكرر باليد أم بعد إصابة أو سقوط؟`
+                    },
+                    {
+                        id: 'wrist_night_shaking',
+                        label: 'الاستيقاظ ليلاً بسبب خدر أو ألم اليد',
+                        coveredRegex: /(?:نوم|ليل|بصحى|هز اليد|تدليك)/i,
+                        askedRegex: /(?:يوقظك خدر أو ألم اليد من النوم|هزّ يدك)/i,
+                        question: `هل يوقظك خدر أو ألم اليد من النوم ليلاً وتضطر لهزّ يدك أو تحريكها حتى ترتاح؟`
+                    }
+                ];
+                break;
+
+            default: // lower_back_pelvis
+                facets = [
+                    {
+                        id: 'lumbar_directional_provocation',
+                        label: 'اتجاه الحركة المحفزة للألم (الجلوس والانحناء للأمام مقابل الوقوف والمشي)',
+                        coveredRegex: /(?:جلوس|انحناء|مشي|وقوف|ركوع|سجود|حمل|نهوض)/i,
+                        askedRegex: /(?:الجلوس الطويل والانحناء للأمام، أم عند الوقوف المستقيم والمشي)/i,
+                        question: `هل يزداد ألم **${titleStr}** أكثر عند الجلوس الطويل والانحناء للأمام، أم عند الوقوف المستقيم والمشي؟`
+                    },
+                    {
+                        id: 'lumbar_sciatic_radiation',
+                        label: 'امتداد عرق النسا والخدر نحو الإلية والفخذ والساق',
+                        coveredRegex: /(?:خدر|تنميل|كهربا|عرق النسا|ساق|رجل|فخذ|قدم|إلية|محصور|بدون خدر)/i,
+                        askedRegex: /(?:خدر أو لسعة كهربائية من أسفل الظهر|نحو الفخذ والساق)/i,
+                        question: `هل الألم محصور في أسفل الظهر والحوض فقط، أم يمتد كخدر أو لسعة (عرق النسا) نحو الإلية والفخذ والساق؟`
+                    },
+                    {
+                        id: 'lumbar_intrathecal_motor',
+                        label: 'اختبار الضغط الجذري (السعال/العطاس) وقوة مشط القدم',
+                        coveredRegex: /(?:سعال|عطاس|كحة|ضعف|مشط القدم|أصابع القدم|كعب)/i,
+                        askedRegex: /(?:السعال أو العطاس|قوة المشي على الكعبين)/i,
+                        question: `هل تلاحظ زيادة حادة في الألم عند السعال أو العطاس أو التقلب في السرير، وهل قوة القدم والأصابع أثناء المشي طبيعية؟`
+                    },
+                    {
+                        id: 'lumbar_duration_onset',
+                        label: 'مدة ألم أسفل الظهر وآلية بدايته',
+                        coveredRegex: /(?:منذ|شهر|أسبوع|اسبوع|سنة|أيام|فجأة|حملت|حركة)/i,
+                        askedRegex: /(?:منذ متى بدأت هذه المشكلة|حمل وزن أو حركة خاطئة)/i,
+                        question: `منذ متى تعاني من ألم **${titleStr}**، وهل بدأ فجأة بعد حمل وزن أو حركة خاطئة أم تطور تدريجياً؟`
+                    },
+                    {
+                        id: 'lumbar_relief_sleep',
+                        label: 'وضعيات إراحة الظهر وتأثير الألم على النوم',
+                        coveredRegex: /(?:استلقاء|ثني الركبتين|نوم|ليل|تقلب|راحة|كمادات)/i,
+                        askedRegex: /(?:الوضعية التي تخفف ألم ظهرك|يوقظك الألم عند التقلب)/i,
+                        question: `ما هي الوضعية الأكثر إراحة لظهرك (مثل الاستلقاء مع ثني الركبتين)، وهل يوقظك الألم من النوم ليلاً؟`
+                    }
+                ];
+                break;
+        }
+
+        const evaluatedFacets = facets.map((f, index) => {
+            // لا نعتبر المحور الأول مغطى تلقائياً إلا إذا سُئل عنه أو أجاب المراجع بتفصيل بعد السؤال الافتتاحي
+            const isAsked = f.askedRegex.test(botHistoryText);
+            const isAnswered = f.coveredRegex.test(userContextText) && (isAsked || index > 0 || history.filter(h => h.sender === 'user').length >= 2);
+            return {
+                ...f,
+                isCovered: isAsked || isAnswered
+            };
+        });
+
+        const coveredList = evaluatedFacets.filter(f => f.isCovered);
+        const uncoveredList = evaluatedFacets.filter(f => !f.isCovered);
+
+        return {
+            anatCat,
+            isAcuteTrauma,
+            facets: evaluatedFacets,
+            coveredList,
+            uncoveredList,
+            nextFacet: uncoveredList[0] || evaluatedFacets[evaluatedFacets.length - 1]
+        };
+    },
+
     // معالجة رد المريض وتوليد رد تفاعلي طبي وإنساني فائق الذكاء (Conversational Clinical Agent)
     async advanceClinicalDialogue(context) {
         const { currentStep, history, painPointTitle, patientName, patientPhone, patientVitals, lastUserMessage, patientGender, vitalsAlreadyAcknowledged, welcomeAlreadyDone } = context;
         const allContextText = (history || []).map(h => h.text).join(' ') + ' ' + (lastUserMessage || '') + ' ' + (patientName || '');
+        const botHistoryText = (history || []).filter(h => h.sender === 'bot').map(h => h.text).join(' ');
         const hasVitalsKnown = !!(vitalsAlreadyAcknowledged || welcomeAlreadyDone || (patientVitals && patientVitals.age));
 
-        // تحليل دقيق لما تم الإجابة عنه وتغطيته في الحوار حتى اللحظة لمنع التكرار نهائياً
-        const hasCoveredProvocation = /(?:جلوس|انحناء|مشي|وقوف|حركة|يزداد|يشتد|عطس|كحة|حمل|ركوع|سجود|بزيد|بشتد)/i.test(allContextText);
-        const hasCoveredNumbness = /(?:خدر|تنميل|لسعة|كهربا|وخز|سليم|ما في|بدون خدر|ما بحس|طبيعي|حرارة|حرقان)/i.test(allContextText);
-        const hasCoveredRadiation = /(?:فخذ|ساق|رجل|قدم|كعب|مشط|عرق النسا|ذراع|يد|أصابع|اصابع|كتف)/i.test(allContextText);
-        const hasCoveredDuration = /(?:منذ|شهر|شهرين|سنة|سنتين|أسبوع|اسبوع|أيام|ايام|فترة|صارلي|زمان)/i.test(allContextText);
-        const hasCoveredMorning = /(?:صباح|استيقاظ|تصلب|تيبس|تخشب)/i.test(allContextText);
-        const hasCoveredSleep = /(?:نوم|ليل|تقلب|استيقظ|بصحى|بفيق)/i.test(allContextText);
-        const hasCoveredCoughPressure = /(?:سعال|عطاس|كحة|نفس عميق|حزق)/i.test(allContextText);
-        const hasCoveredRelief = /(?:استلقاء|تمدد|راحة|وسادة|مخدر|مسكن|كمادات|حرارة|جليد)/i.test(allContextText);
-
-        const coveredFacets = [];
-        if (hasCoveredProvocation) coveredFacets.push('- محفزات الألم مع الحركة والجلوس (تمت تغطيتها وإثباتها، ⛔ ممنوع منعاً باتاً السؤال عن الجلوس أو المشي أو الانحناء أو الوقوف مرة أخرى)');
-        if (hasCoveredNumbness || hasCoveredRadiation) coveredFacets.push('- الخدر والتنميل وامتداد الألم العصبي للأطراف (تمت تغطيتها وإثباتها، ⛔ ممنوع السؤال هل تشعر بخدر أو تنميل ثانية)');
-        if (hasCoveredDuration) coveredFacets.push('- مدة الإصابة وبداية الألم (تمت تغطيتها وإثباتها، ⛔ ممنوع السؤال منذ متى بدأ الألم)');
-        if (hasCoveredMorning) coveredFacets.push('- التيبس والتصلب الصباحي (تمت تغطيتها وإثباتها)');
-        if (hasCoveredSleep) coveredFacets.push('- تأثير الألم على النوم والتقلب ليلاً (تمت تغطيتها وإثباتها)');
-        if (hasCoveredCoughPressure) coveredFacets.push('- اختبار زيادة الضغط النخاعي بالسعال أو العطاس (تمت تغطيتها وإثباتها)');
-        if (hasCoveredRelief) coveredFacets.push('- وضعيات تفريغ الألم والراحة (تمت تغطيتها وإثباتها)');
         const resolvedGender = patientGender || (typeof detectArabicGender === 'function' ? detectArabicGender(patientName || '', allContextText) : 'male');
         const isFemale = (resolvedGender === 'female');
         const specType = context.specialtyType || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint && currentSelectedPoint.specialtyType) || null;
+
+        // استخراج البروتوكول التشريحي الدقيق للمفصل المختار
+        const protocol = this.getClinicalInterrogationProtocol({
+            ...context,
+            specialtyType: specType
+        });
+
+        const coveredFacets = protocol.coveredList.map(f => `- ${f.label} (تمت تغطيتها وإثباتها، ⛔ ممنوع إعادة السؤال عنها نهائياً)`);
+        const uncoveredFacetsPrompt = protocol.uncoveredList.slice(0, 3).map((f, idx) => {
+            const qText = isFemale ? this.adaptTextToFeminine(f.question.replace(/\*\*/g, '')) : f.question.replace(/\*\*/g, '');
+            return `     ${idx + 1}. [${f.label}]: اسأل: "${qText}"`;
+        }).join('\n');
+
+        // هل رسالة المراجع الأخيرة سؤال خارجي عام (أسعار، عنوان، فيتامينات) أم إجابة سريرية طبيعية على سؤال الطبيب؟
+        const isOffTopicUserQuestion = /(?:كم\s*السعر|سعر|تكلفة|رسوم|وين\s*موقعكم|عنوانكم|وين\s*العيادة|فيتامين|b12|مغنيسيوم|كالسيوم|شو\s*تخصصك|مين\s*انت)/i.test(lastUserMessage || '');
 
         const key = WADA3AN_AI_CONFIG.getApiKey();
         // في حال عدم توفر مفتاح أو تعذر الاتصال، الرد بذكاء تفاعلي يعالج ما قاله المراجع فعلياً بعد محاكاة التحليل الطبي
@@ -619,12 +1171,20 @@ ${greetingInstruction}
 - المراجع ذكر (اسمه: ${patientName || 'المراجع الكريم'}). خاطبه بصيغة المذكر الوقورة المباشرة بدفء واحترام.
 `;
 
+        const traumaDirective = protocol.isAcuteTrauma ? `
+🌟 تنبيه بيوميكانيكي خاص (إصابة حادة أو مفاجئة Acute Trauma / Sudden Injury):
+- المراجع ذكر أن مشكلته في [${painPointTitle || 'المفصل'}] بدأت نتيجة إصابة مفاجئة أو حركة/حمل مفاجئ أو التواء/سقوط.
+- ⛔ ممنوع منعاً باتاً ومطلقاً سؤاله عن "التيبس الصباحي في أول ربع ساعة عند الاستيقاظ" أو "التخشب الصباحي المزمن"، لأن التيبس الصباحي خاص بالخشونة المزمنة والروماتيزم ولا علاقة له بالإصابات الحادة!
+- ركّز استجوابك السريري حصراً على: مدى الحركة الفعلي للمفصل، وجود ضعف في الوتر أو طقطقة/تعليق أو تورم، أو امتداد العصب.
+` : '';
+
         const systemPrompt = `
 أنتِ الدكتورة سارة (استشارية التأهيل والتقويم السريري) في «وداعاً للألم».
 أنتِ طبيبة استشارية سريرية ذكية ومتفاعلة 100%، دافئة ومطمئنة ولستِ آلة جامدة.
 ${specializedPromptSection}
+${traumaDirective}
 
-المراجع اختار موضع الشكوى على المجسم: [${painPointTitle || 'العمود الفقري والمفاصل'}].
+المراجع اختار موضع الشكوى على المجسم: [${painPointTitle || 'العمود الفقري والمفاصل'}] (التصنيف التشريحي: ${protocol.anatCat}).
 بيانات المريض المعروفة حتى الآن:
 - الاسم: ${patientName || 'لم يُذكر بعد'}
 - الجنس: ${isFemale ? 'أنثى (امرأة / سيدة - يجب مخاطبتها بصيغة المؤنث حصراً ومطلقاً)' : 'ذكر (رجل)'}
@@ -639,20 +1199,18 @@ ${genderDirective}
    ⛔ ممنوع تكرار السؤال الافتتاحي ("ما الذي تعاني منه تحديداً") لأن المراجع قد شرح أعراضه بالفعل في سجل الحوار!
 
 2. قاعدة الاعتماد والتثبيت الفوري (Acknowledge & Validate First):
-   - في أول جملة من ردك، أثبت استيعابك لكلام المراجع الأخير ولخص الأعراض التي ذكرها باقتضاب سريري ذكي ومطمئن ومباشر لإشعاره بأنك طبيب ينصت بعناية فائقة لكل كلمة قالها.
-   (مثال: "سلامتك يا ${patientName || (isFemale ? 'يا أختي الكريمة' : 'يا طيب')}، وصفك لألم [تلخيص دقيق ومقتضب لما ذكره المراجع] يشير بوضوح إلى...").
+   - في أول جملة من ردك، أثبت استيعابك لكلام المراجع الأخير ولخص دلالته السريرية لمفصل [${painPointTitle || 'موضع الشكوى'}] باقتضاب ذكي ومطمئن ومباشر.
+   - ⛔ ممنوع منعاً باتاً استخدام عبارة "وعودةً لفحص موضع ألمك بدقة:" عندما يكون المراجع يجيب عن سؤالك السريري! انتقل من تحليلك لإجابته إلى سؤالك السريري التالي بانسيابية طبية طبيعية مباشرة.
 
-3. قاعدة منع التكرار المطلق (Strict Anti-Repetition):
-   - ⛔ ممنوع منعاً باتاً ومطلقاً تكرار أي سؤال تم التطرق إليه أو أجاب عنه المراجع سابقاً بأي صياغة أخرى أو مرادفات مختلفة!
-${coveredFacets.length > 0 ? `   الأعراض والحقائق المثبتة في هذا الحوار حتى الآن:\n${coveredFacets.join('\n')}` : ''}
+3. قاعدة منع التكرار والأسئلة الافتراضية المعلبة (Strict Anti-Repetition & No Canned Questions):
+   - ⛔ ممنوع منعاً باتاً ومطلقاً تكرار أي سؤال تم التطرق إليه أو أجاب عنه المراجع سابقاً!
+   - ⛔ ممنوع منعاً باتاً طرح سؤال "كيف تشعر في أول ربع ساعة عند الاستيقاظ صباحاً؟ هل يوجد تيبس وتخشب عضلي يحتاج وقتاً حتى يلين؟" كسؤال افتراضي!
+   - ⛔ ممنوع سؤال مريض الكتف أو الركبة أو المعصم أو الكاحل أو الكوع عن "السعال والعطاس والضغط النخاعي" (هذا السؤال خاص بفقرات أسفل الظهر فقط).
+${coveredFacets.length > 0 ? `   الأعراض والزوايا التي تمت تغطيتها في هذا الحوار حتى الآن:\n${coveredFacets.join('\n')}` : ''}
 
-4. التقدم نحو سؤال سريري متقدم وجديد تماماً (Advance to a Fresh Diagnostic Facet):
-   - وجّه سؤالك التالي حصراً إلى زاوية فحص سريري جديدة ومختلفة تماماً لم يتم سؤالها إطلاقاً في هذا الحوار، بحسب ما يناسب موضع الألم [${painPointTitle || 'موضع الشكوى'}]:
-     * إذا لم يُسأل عن امتداد الضغط النخاعي: اسأل هل تلاحظ زيادة حادة في وخزة الألم عند السعال أو العطاس أو أخذ نفس عميق؟
-     * إذا لم يُسأل عن طبيعة المفصل صباحاً: اسأل كيف تشعر في أول ربع ساعة عند الاستيقاظ صباحاً؟ هل يوجد تيبس وتخشب عضلي يحتاج وقتاً حتى يلين؟
-     * إذا كان الألم يمتد للساق/الذراع ولم يُسأل عن قوته الطرفية: اسأل هل تشعر بضعف في مشط القدم أو ثقل في حركة الأصابع أو صعوبة رفع المشط؟
-     * إذا لم يُسأل عن وضعيات الراحة: اسأل ما هي الوضعية الأكثر إراحة وتخفيفاً للألم (مثل الاستلقاء وثني الركبتين أم وضع كمادات دافئة)؟
-     * إذا لم يُسأل عن تأثير النوم: اسأل هل يوقظك الألم من النوم ليلاً عند التقلب؟
+4. التقدم نحو زاوية فحص سريري تشريحية مخصصة لـ [${painPointTitle || 'موضع الشكوى'}] (Anatomical Differential Diagnosis):
+   - اختر سؤالك السريري التالي حصراً من الزوايا التشريحية المتبقية الخاصة بمفصل [${painPointTitle || 'موضع الشكوى'}] والتي لم تُسأل بعد:
+${uncoveredFacetsPrompt || `     1. اسأل عن مدى تأثير الألم على الأنشطة الحركية اليومية وما هي الوضعية الأكثر إراحة للمفصل.`}
 
 - سجل الحوار حتى الآن:
 ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h.text}`).join('\n')}
@@ -708,9 +1266,8 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
      * مرحلة الاستقصاء السريري التراكمي المتدرج (Clinical Interrogation):
         - تنبيه حاسم: تم الترحيب بالمراجع وتوثيق بياناته ومؤشراته الحيوية مسبقاً، ⛔ ممنوع منعاً باتاً ومطلقاً إعادة الترحيب به أو إعادة ذكر توثيق المؤشرات الحيوية في أي رد إطلاقاً!
         - ⛔ ممنوع منعاً باتاً تكرار السؤال الافتتاحي أو أي سؤال تمت تغطيته في سجل الحوار!
-        - تفاعل فوراً مع إجابة المريض الأخيرة في أول جملة (اعتماد وتثمين ما قاله)، ثم اطرح سؤال متابعة جديد حصراً من بين المحاور غير المكتملة.
-        - إذا كانت إجابات المريض مقتضبة، تعمق في السؤال واستوضح تفاصيل الأعراض لزاوية تشخيصية جديدة.
-        - ممنوع منعاً باتاً استعجال إنهاء الحوار قبل استيفاء الفحص السريري وتغطية المحفزات والأعصاب والشدة وتأثير النوم والعمل!
+        - تفاعل فوراً مع إجابة المريض الأخيرة في أول جملة (اعتماد وتثمين ما قاله)، ثم اطرح سؤال متابعة جديد حصراً من بين الزوايا التشريحية غير المكتملة لموضع [${painPointTitle || 'موضع الشكوى'}].
+        - ممنوع منعاً باتاً استعجال إنهاء الحوار قبل استيفاء الفحص السريري التشريحي للمفصل!
       * المرحلة 2: بعد استيفاء الاستقصاء السريري العميق وتشكل الصورة التشخيصية المتكاملة:
        - لخص له سبب الألم البيوميكانيكي باختصار شديد ومريح في سطرين فقط دون تفاصيل مطولة.
        ${hasValidPhoneNow ? `
@@ -722,7 +1279,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
          واختم ردك حصراً بـ [READY_FOR_DIAGNOSIS].
        ` : `
        - اطلب رقم هاتفه بوضوح واطمئنان:
-         "اكتمل الآن تقييمك السريري الشامل وتحددت طبيعة المشكلة والفقرات المتأثرة بدقة! أدخل رقم هاتفك لفتح التقرير السريري الخاص بك ولربط ملفك بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:"
+         "اكتمل الآن تقييمك السريري الشامل وتحددت طبيعة المشكلة بدقة! أدخل رقم هاتفك لفتح التقرير السريري الخاص بك ولربط ملفك بالخطة العلاجية والتأهيلية بإشراف المعالج جمال:"
          وحدد الخطوة بـ [ASK_PHONE].
        `}
      * المرحلة 3: بعد استلام رقم الهاتف:
@@ -731,21 +1288,9 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
          "تم تسجيل رقم هاتفك بنجاح يا [الاسم]. نقوم الآن بإصدار تقريرك السريري المتكامل وتحويلك فوراً لصفحة التشخيص وخطة التعافي... ⏱️"
        - واختم حصراً بـ [READY_FOR_DIAGNOSIS] [EXTRACTED_PHONE: الرقم].
 
-9. الصلاحيات الطبية الشاملة والإجابة على أي سؤال (وكيل Gemini خبير يعمل لدى «وداعاً للألم»):
-   - أنت تمتلك كامل الصلاحيات والمعارف الطبية والعلمية والصحية العامة كوكيل ذكي يمثل «وداعاً للألم» للكايروبراكتيك والطب التكاملي.
-   - أجب عن أي سؤال أو استفسار يطرحه المريض مهما كان نوعه (طبي، تشريحي، استفسار عن أعراض أخرى، نقص فيتامينات، تغذية، مسببات الألم، أدوية، عمليات، أو أسئلة عامة) بمعرفة طبية وعلمية دقيقة ودافئة.
-   - إذا سأل المريض عن سبب المشكلة وهل هي عضلية أو عصبية أو نقص فيتامينات:
-     * اشرح له التمييز السريري العلمي:
-       1) الأسباب الميكانيكية والعضلية: تشنج العضلات التعويضي ونقاط الزناد العضلية وإجهاد الأربطة واختلال محاذاة الفقرات والمفاصل.
-       2) الأسباب العصبية: انضغاط جذور الأعصاب الخارجة من بين الفقرات (مثل عرق النسا أو انضغاط الجذور العنقية) مسبباً خدر وتنميل ولسعات حارقة للأطراف.
-       3) الأسباب الأيضية ونقص الفيتامينات كاحتمالات مساعدة ومكملة:
-          - نقص فيتامين B12 (يؤثر مباشرة على غلاف الميالين العصبي ويسبب التنميل والوخز).
-          - نقص فيتامين D والكالسيوم (يسبب وهناً عضلياً وآلاماً عميقة بالفقرات وضعف كثافة العظام).
-          - نقص المغنيسيوم (المسؤول الأول عن التقلصات والشد العضلي الليفي وتشنج الأبهر).
-          - احتمالات أمراض جهازية كخمول الغدة الدرقية أو الالتهابات الروماتيزمية.
-   - 🌟 القاعدة الذهبية لإعادة التوجيه (Golden Bridge):
-     مهما كان السؤال الذي أجبته للمريض، اختم دائماً إجابتك بربط سلس ولبق يعيد المريض لمتابعة فحص وتشخيص موضع ألمه المختار:
-     مثال: "وعودةً لفحص موضع ألمك في [${painPointTitle || 'موضع الشكوى'}] بدقة: هل تلاحظ ...؟"
+9. الصلاحيات الطبية الشاملة والإجابة على أي استفسار خارجي يطرحه المراجع:
+   - إذا طرح المراجع سؤالاً علمياً أو عاماً خارج مسار الاستجواب (مثل سؤال عن الفيتامينات، التغذية، الأدوية، أو الخدمات)، أجب عنه بدقة علمية ودافئة ثم اربطه بلطف بسؤالك السريري التالي.
+   - أما إذا كان المراجع يجيب عن سؤالك السريري حول ألمه، فلا تستخدم عبارات مثل "وعودةً لفحص موضع ألمك بدقة:" لأننا أصلاً في صلب فحص الألم!
 
 10. استخراج البيانات (بدقة متناهية):
    - إذا ذكر المريض اسمه صراحة: [EXTRACTED_NAME: الاسم الكامل للمريض كما ذكره (مثال: أسامة محمد أو ياسر أحمد)]. (ممنوع منعاً باتاً استخراج كلمات الشكوى أو الأفعال مثل 'اشعر' أو 'أشعر' أو 'احس' أو 'اعاني' أو كلمات التحية كاسم، وإذا لم يذكر اسمه فاكتب: غير محدد).
@@ -760,7 +1305,7 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
 `;
 
         try {
-            const rawReply = await this.callRawGemini(systemPrompt, { maxTokens: 1024, temperature: 0.5 });
+            const rawReply = await this.callRawGemini(systemPrompt, { maxTokens: 1024, temperature: 0.45 });
             if (rawReply && rawReply.trim()) {
                 let extractedPhone = null;
                 const phoneM = rawReply.match(/\[EXTRACTED_PHONE:\s*([^\]]+)\]/);
@@ -821,15 +1366,31 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
                         .trim();
                 }
 
-                // تنظيف أي تكرار لأسئلة تم تغطيتها في الحوار
-                if (hasCoveredProvocation) {
-                    message = message.replace(/(?:كيف يتصرف الألم مع (?:أوضاع )?(?:الجلوس|المشي|الانحناء)[^؟?\n]*[؟?])/gi, '').trim();
-                    message = message.replace(/(?:هل يزداد ألمك مع (?:الجلوس|المشي|الانحناء|الحركة)[^؟?\n]*[؟?])/gi, '').trim();
-                }
-                if (hasCoveredNumbness) {
-                    message = message.replace(/(?:هل تشعر[ي]? (?:بأي )?(?:خدر|تنميل|حرارة|لسعات كهربائية)[^؟?\n]*[؟?])/gi, '').trim();
+                // إزالة عبارة "وعودةً لفحص موضع ألمك بدقة:" الآلية إذا كان المراجع يجيب عن سؤال سريري عادي
+                if (!isOffTopicUserQuestion) {
+                    message = message
+                        .replace(/وعودةً\s*لفحص\s*موضع\s*ألمك[ِ]?(?:\s*في\s*[^\n:：]+)?\s*بدقة\s*[:：]?\s*/gi, '')
+                        .trim();
                 }
 
+                // حارس سريري ضد سؤال "أول ربع ساعة عند الاستيقاظ صباحاً / تيبس وتخشب عضلي" المعلب
+                const nextAnatQuestionRaw = protocol.nextFacet ? protocol.nextFacet.question.replace(/\*\*/g, '') : `ما هي الحركة أو الوضعية التي تريح مفصل ${painPointTitle || 'الألم'} أكثر؟`;
+                const nextAnatQuestion = isFemale ? this.adaptTextToFeminine(nextAnatQuestionRaw) : nextAnatQuestionRaw;
+
+                if (/(?:أول\s*ربع\s*ساعة|اول\s*ربع\s*ساعة|تخشب\s*عضلي\s*في|يحتاج\s*وقتاً\s*حتى\s*يلين)/i.test(message)) {
+                    // استبدال جملة السؤال المعلب بالسؤال التشريحي المخصص للمفصل
+                    message = message
+                        .replace(/(?:كيف\s*تشعر(?:ين)?\s*في\s*أول\s*ربع\s*ساعة[^؟?\n]*[؟?]\s*)?(?:هل\s*(?:يوجد|تلاحظ(?:ين)?)\s*(?:تيبس|تيبساً)[^؟?\n]*[؟?])/gi, nextAnatQuestion)
+                        .replace(/كيف\s*تشعر(?:ين)?\s*في\s*أول\s*ربع\s*ساعة[^؟?\n]*[؟?]/gi, nextAnatQuestion)
+                        .trim();
+                }
+
+                // حارس سريري ضد سؤال "السعال والعطاس" لمفاصل الأطراف (الكتف، الركبة، الكاحل، المعصم، الكوع، الورك)
+                if (protocol.anatCat !== 'lower_back_pelvis' && /(?:السعال|العطاس)/i.test(message)) {
+                    message = message
+                        .replace(/هل\s*تلاحظ(?:ين)?\s*زيادة[^؟?\n]*(?:السعال|العطاس)[^؟?\n]*[؟?]/gi, nextAnatQuestion)
+                        .trim();
+                }
 
                 // حساب عدد رسائل المريض الفعلية في المحادثة لضمان استقصاء سريري متكامل وعميق
                 const userClinicalMessagesCount = (history || []).filter(h => h.sender === 'user').length;
@@ -842,30 +1403,18 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
 
                 let isExplicitlyAskingPhone = (rawReply.includes('[ASK_PHONE]') || rawReply.includes('[READY_FOR_DIAGNOSIS]')) && !hasValidPhoneNow;
 
-                // صمام أمان سريري: ممنوع منعاً باتاً طلب الهاتف قبل استيفاء 3 أسئلة وإجابات استقصائية متعمقة على الأقل
+                // صمام أمان سريري: ممنوع منعاً باتاً طلب الهاتف قبل استيفاء 3 أسئلة وإجابات استقصائية متعمقة على الأقل، مع طرح السؤال التشريحي المخصص للمفصل حصراً
                 if (isExplicitlyAskingPhone && !isConsultationThorough && !hasValidPhoneNow) {
                     isExplicitlyAskingPhone = false;
                     isReady = false;
                     const pNameStr = (patientName && patientName !== 'غير محدد') ? ` يا ${patientName}` : '';
                     message = message.replace(/(?:اكتمل الآن تقييمك|أدخل رقم هاتفك|يرجى تزويدي برقم هاتفك|لفتح التقرير الطبي).*$/s, '').trim();
                     if (!message || message.length < 20) {
-                        if (!hasCoveredCoughPressure && (hasCoveredProvocation || hasCoveredRadiation)) {
-                            message = isFemale
-                                ? `وللتدقيق في مستوى الضغط النخاعي بدقة${pNameStr}، هل تلاحظين زيادة مفاجئة أو وخزة حادة في الألم عند السعال، العطاس، أو أخذ نفس عميق؟ وهل يوقظك الألم من النوم ليلاً؟`
-                                : `وللتدقيق في مستوى الضغط النخاعي بدقة${pNameStr}، هل تلاحظ زيادة مفاجئة أو وخزة حادة في الألم عند السعال، العطاس، أو أخذ نفس عميق؟ وهل يوقظك الألم من النوم ليلاً؟`;
-                        } else if (!hasCoveredMorning) {
-                            message = isFemale
-                                ? `واستكمالاً للفحص الحركي${pNameStr}، كيف تشعرين في أول ربع ساعة عند الاستيقاظ صباحاً؟ هل تلاحظين تيبساً وتخشباً في المفصل يحتاج وقتاً حتى يلين؟`
-                                : `واستكمالاً للفحص الحركي${pNameStr}، كيف تشعر في أول ربع ساعة عند الاستيقاظ صباحاً؟ هل تلاحظ تيبساً وتخشباً في المفصل يحتاج وقتاً حتى يلين؟`;
-                        } else {
-                            message = isFemale
-                                ? `ولتحديد مسار الخطة العلاجية بدقة${pNameStr}، ما هي الوضعية الأكثر إراحة لألمكِ، وهل يعيقك الألم عن أنشطتكِ وعملكِ اليومي؟`
-                                : `ولتحديد مسار الخطة العلاجية بدقة${pNameStr}، ما هي الوضعية الأكثر إراحة لألمك، وهل يعيقك الألم عن أنشطتك وعملك اليومي؟`;
-                        }
+                        message = isFemale
+                            ? `واستكمالاً لفحص **${painPointTitle || 'موضع الشكوى'}** بدقة${pNameStr}، ${nextAnatQuestion}`
+                            : `واستكمالاً لفحص **${painPointTitle || 'موضع الشكوى'}** بدقة${pNameStr}، ${nextAnatQuestion}`;
                     } else if (!message.includes('؟')) {
-                        message += isFemale
-                            ? `\n\nوللتدقيق السريري، هل تلاحظين زيادة الألم عند السعال أو العطاس أو التقلب أثناء النوم؟`
-                            : `\n\nوللتدقيق السريري، هل تلاحظ زيادة الألم عند السعال أو العطاس أو التقلب أثناء النوم؟`;
+                        message += `\n\n${nextAnatQuestion}`;
                     }
                 }
 
@@ -1005,127 +1554,18 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
         const userText = (lastUserMessage || '').trim();
         const title = painPointTitle || 'موضع الألم';
 
-        // تحديد التصنيف التشريحي الدقيق لنقطة الألم المختارة
-        const ptId = (context.pointId || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint ? currentSelectedPoint.id : '') || '').toLowerCase();
-        const tLower = (title + ' ' + ptId).toLowerCase();
-        const specType = context.specialtyType || (typeof currentSelectedPoint !== 'undefined' && currentSelectedPoint && currentSelectedPoint.specialtyType) || null;
+        // تحديد البروتوكول التشريحي الدقيق لنقطة الألم المختارة
+        const protocol = this.getClinicalInterrogationProtocol(context);
+        const anatCat = protocol.anatCat;
+        const pFacets = protocol.facets;
 
-        let anatCat = 'lower_back_pelvis';
-        if (specType === 'stroke' || /stroke|جلطة|جلطات/i.test(tLower)) {
-            anatCat = 'specialized_stroke';
-        } else if (specType === 'foot_drop' || /foot_drop|سقوط\s*القدم|رفع\s*المشط/i.test(tLower)) {
-            anatCat = 'specialized_foot_drop';
-        } else if (specType === 'scoliosis' || /scoliosis|جنف|انحراف\s*العمود/i.test(tLower)) {
-            anatCat = 'specialized_scoliosis';
-        } else if (/ورك|مفصل\s*الورك|فخذ|hip/i.test(tLower)) {
-            anatCat = 'hip_joint';
-        } else if (/ظهر|قطن|قطنية|lumbar|دسك|غضروف|l4|l5|أسفل\s*الظهر|اسفل\s*الظهر|عرق\s*النسا|سياتيكا|حوض|عجز|عصعص/i.test(tLower)) {
-            anatCat = 'lower_back_pelvis';
-        } else if (/رقبة|رقبه|عنق|رأس|راس|صداع|فك|صدغ|جمجمة|cervical|neck|head/i.test(tLower)) {
-            anatCat = 'neck_head';
-        } else if (/كتف|لوح\s*الكتف|أبهر|ابهر|ترقوة|كفة\s*مدورة|shoulder|scapula|trapezius/i.test(tLower)) {
-            anatCat = 'shoulder_scapula';
-        } else if (/ركبة|ركبه|صابونة|ساق|سمانة|بطة|knee|calf|patella/i.test(tLower)) {
-            anatCat = 'knee_leg';
-        } else if (/كاحل|قدم|باطن\s*القدم|كعب|مشط|أكيليس|اكيليس|أخمص|اخمص|ankle|foot|plantar|heel/i.test(tLower)) {
-            anatCat = 'foot_ankle';
-        } else if (/كوع|مرفق|ساعد|ذراع|زند|كعبرة|elbow|forearm/i.test(tLower)) {
-            anatCat = 'elbow_arm';
-        } else if (/(?:^|\s|[،.؟!,])(?:معصم|معصمي|المعصم|رسغ|رسغي|الرسغ|نفق\s*رسغي|نفق\s*الرسغ|كف\s*اليد|راحة\s*اليد|أصابع\s*اليد|اصابع\s*اليد|إبهام|ابهام|wrist|carpal)(?:$|\s|[،.؟!,])/i.test(tLower)) {
-            anatCat = 'wrist_hand';
-        } else {
-            anatCat = 'lower_back_pelvis';
-        }
-
-        // أسئلة وفحوصات سريرية دقيقة متوافقة تشريحياً 100% مع العضو المصاب
-        const getAnatomicalQuestions = (category, titleStr) => {
-            switch(category) {
-                case 'specialized_stroke':
-                    return {
-                        provocation: `ما هو الجانب أو الطرف الأكثر تأثراً بالضعف أو التصلب (الجانب الأيمن أم الأيسر)، ومنذ متى حدثت الجلطة؟`,
-                        numbness: `هل تشعر بتشنج وتيبس عضلي لاإرادي (Spasticity) في حركة اليد والأصابع، أم ضعف وارتخاء في حركة الساق؟`,
-                        stiffness: `هل تستطيع الوقوف والمشي بمفردك بأمان، أم تحتاج لمساعدة مرافق أو استخدام عكاز/مشاية؟`,
-                        duration: `منذ متى بدأت مرحلة التأهيل، وهل تلقيت جلسات علاج طبيعي وتأهيل حركي سابقاً؟`
-                    };
-                case 'specialized_foot_drop':
-                    return {
-                        provocation: `في أي قدم تشتكي من صعوبة رفع المشط (اليمنى أم اليسرى)، وهل تسقط مقدمة القدم لأسفل عند المشي مسببة التعثر؟`,
-                        numbness: `هل ظهر سقوط القدم بعد ألم حاد أو ديسك في أسفل الظهر (L5)، أم بعد جراحة أو إصابة في الركبة؟`,
-                        stiffness: `هل تشعر بخدر أو تنميل يمتد على السطح الخارجي للساق وأعلى ظهر القدم؟`,
-                        duration: `منذ متى بدأت هذه المشكلة، وهل تستخدم دعامة مشط القدم (AFO) لمساعدتك على المشي حالياً؟`
-                    };
-                case 'specialized_scoliosis':
-                    return {
-                        provocation: `هل تلاحظ تفاوتاً ظاهراً في ارتفاع الكتفين، لوحي الظهر، أو ميلاً في الحوض عند الوقوف؟`,
-                        numbness: `هل تم إجراء تصوير أشعة سينية (X-Ray) سابقة وقياس زاوية الانحناء (زاوية كوب Cobb Angle)؟`,
-                        stiffness: `هل تشعر بإجهاد وتشنج عضلي في أحد جانبي الظهر أكثر من الآخر عند الوقوف الطويل أو المشي؟`,
-                        duration: `منذ متى لاحظت هذا التقوس، وهل يرافقه أي ألم في الظهر أو صعوبة في التنفس مع المجهود؟`
-                    };
-                case 'hip_joint':
-                    return {
-                        provocation: `هل يزداد ألم **${titleStr}** عند المشي وصعود الدرج، الجلوس ووضع ساق فوق الأخرى، أم عند النوم على جهة المفصل المصاب؟`,
-                        numbness: `هل تشعر بصلادة وتيبس عميق في ثنية الفخذ من الأمام أو في العضلة الجانبية ومسار عرق النسا؟`,
-                        stiffness: `هل تجد صعوبة في ثني الورك لربط الحذاء أو ارتداء الجوارب عند الاستيقاظ صباحاً؟`,
-                        duration: `منذ متى تعاني من ألم **${titleStr}** تحديداً، وهل يحد من قدرتك على المشي والانتقال بحرية؟`
-                    };
-                case 'wrist_hand':
-                    return {
-                        provocation: `هل يزداد ألم **${titleStr}** عند استخدام الفأرة والكتابة، تصفح الهاتف بالإبهام، أو ثني المعصم أثناء النوم؟`,
-                        numbness: `هل تشعر بتنميل أو خدر أو لسعة كهربائية في أصابع الإبهام أو السبابة أو راحة اليد (علامات متلازمة النفق الرسغي)؟`,
-                        stiffness: `هل تشعر بتيبس وتصلب في حركة المعصم والأصابع عند الاستيقاظ صباحاً، وهل يخف بعد تحريك وتدليك اليد؟`,
-                        duration: `منذ متى تعاني من هذا الألم في **${titleStr}** تحديداً، وهل يوقظك خدر الأصابع من النوم؟`
-                    };
-                case 'foot_ankle':
-                    return {
-                        provocation: `هل تلاحظ ألماً حاداً كالمسمار في الكعب مع أول خطوة صباحاً عند النزول من السرير، أم يتركز الألم في التواء مفصل الكاحل مع المشي؟`,
-                        numbness: `هل يمتد التنميل أو اللسعة الحارة إلى باطن القدم أو أصابع القدمين، أم هو ألم موضعي في عظام الكاحل؟`,
-                        stiffness: `هل تشعر بتيبس وقصر في أوتار الكاحل وعضلة السمانة صباحاً، وهل يخف بعد دقائق من المشي؟`,
-                        duration: `منذ متى بدأت هذه الشكوى في **${titleStr}**، وهل يؤثر الألم على قدرتك على المشي والوقوف؟`
-                    };
-                case 'knee_leg':
-                    return {
-                        provocation: `هل يشتد الألم عند نزول الدرج، القرفصاء، أو ثني الركبة للصلاة والجلوس على الأرض؟`,
-                        numbness: `هل ينزل ألم كهربائي أو خدر من الركبة نحو الساق والقدم، أم تشعر بطقطقة واحتكاك موضعي داخل المفصل؟`,
-                        stiffness: `هل تشعر بتخشب وتيبس في الركبة بعد الجلوس الطويل، وتجد صعوبة في فرد المفصل بالكامل؟`,
-                        duration: `منذ متى تعاني من ألم **${titleStr}**، وهل تلاحظ أي انتفاخ أو تورم في المفصل؟`
-                    };
-                case 'elbow_arm':
-                    return {
-                        provocation: `هل يزداد الألم في عظمة الكوع الخارجية عند المصافحة، الإمساك بالأشياء، أو عصر ومسك المقابض؟`,
-                        numbness: `هل يمتد التنميل أو اللسعة الكهربائية على طول الساعد وصولاً للأصابع؟`,
-                        stiffness: `هل تشعر بتشنج وإجهاد في عضلات الساعد يزداد مع استخدام الكمبيوتر أو حمل الأشياء؟`,
-                        duration: `منذ متى بدأت هذه المشكلة في **${titleStr}**، وهل تمنعك من ممارسة أنشطتك اليومية؟`
-                    };
-                case 'shoulder_scapula':
-                    return {
-                        provocation: `هل تجد صعوبة وألماً عند رفع ذراعك للأعلى، النوم على جهة الكتف المصاب، أو الوصول بيدك خلف الظهر؟`,
-                        numbness: `هل يمتد الألم أو الخدر من الكتف واللوح نحو الذراع أو أصابع اليد؟`,
-                        stiffness: `هل تشعر بوجود عقدة عضلية متشنجة (الأبهر) تزداد عند الجلوس المكتبي أو التعرض للمكيف البارد؟`,
-                        duration: `منذ متى تعاني من ألم **${titleStr}**، وهل يوقظك الألم عند التقلب أثناء النوم؟`
-                    };
-                case 'neck_head':
-                    return {
-                        provocation: `هل يزداد الألم مع الانحناء الطويل للشاشات والمكاتب، أو عند الالتفات بالرأس يميناً ويساراً؟`,
-                        numbness: `هل ينزل ألم كهربائي أو خدر من الرقبة نحو الكتف والذراع، أو يترافق مع صداع خلف الرأس؟`,
-                        stiffness: `هل تشعر بتصلب وتشنج في عضلات الرقبة وقاعدة الجمجمة مع ثقل في الرأس؟`,
-                        duration: `منذ متى بدأت هذه الشكوى في **${titleStr}**، وما هي الوضعية الأكثر إراحة لرقبتك؟`
-                    };
-                default: // lower_back_pelvis
-                    return {
-                        provocation: `هل يزداد الألم عند الجلوس الطويل والانحناء للأمام، أم عند الوقوف المستقيم والمشي؟`,
-                        numbness: `هل يمتد هذا الشعور كخدر أو لسعة كهربائية من أسفل الظهر وعضلات الإلية والورك نحو الفخذ والساق (أعراض عرق النسا)؟`,
-                        stiffness: `هل تشعر بتيبس وتشنج في أسفل الظهر عند الاستيقاظ صباحاً أو بعد الجلوس الطويل؟`,
-                        duration: `منذ متى تعاني من ألم **${titleStr}**، وهل يوقظك الألم من النوم أو يعيق حركتك؟`
-                    };
-            }
-        };
-
-        const rawAnatQ = getAnatomicalQuestions(anatCat, title);
+        const adaptQ = (qStr) => isFemale ? this.adaptTextToFeminine(qStr) : qStr;
         const anatQ = {
-            provocation: this.adaptTextToFeminine(rawAnatQ.provocation),
-            numbness: this.adaptTextToFeminine(rawAnatQ.numbness),
-            stiffness: this.adaptTextToFeminine(rawAnatQ.stiffness),
-            duration: this.adaptTextToFeminine(rawAnatQ.duration)
+            provocation: adaptQ(pFacets[0]?.question || `هل يزداد ألم **${title}** مع الحركة؟`),
+            numbness: adaptQ(pFacets[1]?.question || `هل يرافق ألم **${title}** أي خدر أو تنميل؟`),
+            stiffness: adaptQ(pFacets[2]?.question || `هل تلاحظ أي محدودية في حركة **${title}**؟`),
+            duration: adaptQ(pFacets[3]?.question || `منذ متى تعاني من ألم **${title}**؟`),
+            relief: adaptQ(pFacets[4]?.question || `ما هي الوضعية الأكثر إراحة لـ **${title}**؟`)
         };
 
         // تتبع شامل للمحادثة لمنع تكرار أي سؤال سابق
@@ -1383,62 +1823,29 @@ ${history.map(h => `${h.sender === 'bot' ? 'الطبيب' : 'المريض'}: ${h
             }
         }
 
-        // ✅ استجواب متسلسل متعمق يتقدم في كل دور دون تكرار أي سؤال سابق إطلاقاً
+        // ✅ استجواب متسلسل متعمق يتقدم في كل دور عبر المحاور التشريحية المخصصة للمفصل دون تكرار أي سؤال سابق إطلاقاً
         const botHistoryText = (history || []).filter(h => h.sender === 'bot').map(h => h.text).join(' ');
-
-        const hasAskedProvocation = botHistoryText.includes(rawAnatQ.provocation) || /(?:أوضاع الحركة|عند المشي|نزول الدرج|عند الجلوس الطويل|عظمة الكوع|رفع ذراعك|تشتكين من صعوبة|تشتكي من صعوبة)/i.test(botHistoryText);
-        const hasAskedNumbness = botHistoryText.includes(rawAnatQ.numbness) || /(?:الأعصاب الطرفية|خدر أو تنميل|خدر أو لسعة|يمتد التنميل)/i.test(botHistoryText);
-        const hasAskedDuration = botHistoryText.includes(rawAnatQ.duration) || /(?:منذ متى تعاني|منذ متى بدأت هذه الشكوى|منذ متى بدأت هذه المشكلة)/i.test(botHistoryText);
-        const hasAskedStiffness = botHistoryText.includes(rawAnatQ.stiffness) || /(?:الكمبيوتر|حمل الأشياء|تيبس|تخشب|تصلب|عقدة عضلية|ثنية الفخذ|الاستيقاظ صباحاً)/i.test(botHistoryText);
         const hasAskedIntensity = /(?:رقماً من 1 إلى 10|شدة الألم)/i.test(botHistoryText);
-        const hasAskedLifeImpact = /(?:كيف يؤثر هذا الألم|روتينك وحياتك)/i.test(botHistoryText);
-
-        const hasAddressedProvocation = /(?:جلوس|انحناء|مشي|وقوف|حركة|يزداد|يشتد|عطس|كحة|حمل|ركوع|سجود|بزيد|بشتد)/i.test(allHistoryText);
-        const hasAddressedDuration = /(?:منذ|شهر|شهرين|سنة|سنتين|أسبوع|اسبوع|أيام|ايام|فترة|صارلي|زمان)/i.test(allHistoryText);
-        const hasAddressedLifeImpact = /(?:نوم|عمل|وظيفة|دوام|يقظ|يمنع|يصعب|حياة)/i.test(allHistoryText);
-        const hasAddressedMorning = /(?:صباح|استيقاظ|تصلب|تيبس|تخشب)/i.test(allHistoryText);
         const hasAddressedIntensity = /(?:شدة|حدة|قوي|خفيف|متوسط|رقم|من عشرة|\/10)/i.test(allHistoryText);
 
-        // اختيار السؤال التالي المتدرج بناءً على الفجوات السريرية وما لم يُسأل بعد
-        if (!hasAskedProvocation && !hasAddressedProvocation) {
+        // إذا بقي محور تشريحي مخصص للمفصل لم يُسأل بعد ولم نستوفِ 4 أدوار، نطرح السؤال التشريحي التالي مباشرة
+        if (protocol.uncoveredList.length > 0 && userTurnCount < 4) {
+            const nextFacetObj = protocol.uncoveredList[0];
+            const nextQuestionAdapted = adaptQ(nextFacetObj.question);
             return {
-                message: `${acknowledgmentPrefix}لاستكمال الصورة السريرية لـ **${title}**:\n${anatQ.provocation}`,
+                message: `${acknowledgmentPrefix}${nextQuestionAdapted}`,
                 quickReplies: [],
                 nextStep: 'chatting'
             };
-        } else if (!hasAskedNumbness && !hasAddressedNumbness) {
+        } else if (!hasAskedIntensity && !hasAddressedIntensity && userTurnCount < 3) {
             return {
-                message: `${acknowledgmentPrefix}سؤال سريري دقيق لفحص الأعصاب الطرفية:\n${anatQ.numbness}`,
-                quickReplies: [],
-                nextStep: 'chatting'
-            };
-        } else if (!hasAskedStiffness && !hasAddressedMorning) {
-            return {
-                message: `${acknowledgmentPrefix}${anatQ.stiffness}`,
-                quickReplies: [],
-                nextStep: 'chatting'
-            };
-        } else if (!hasAskedDuration && !hasAddressedDuration) {
-            return {
-                message: `${acknowledgmentPrefix}${anatQ.duration}`,
-                quickReplies: [],
-                nextStep: 'chatting'
-            };
-        } else if (!hasAskedIntensity && !hasAddressedIntensity) {
-            return {
-                message: `${acknowledgmentPrefix}لأحدد شدة الخلل الميكانيكي بدقة، لو تعطيني رقماً من 1 إلى 10 يصف شدة الألم في **${title}** في أوقات ذروته؟`,
-                quickReplies: [],
-                nextStep: 'chatting'
-            };
-        } else if (!hasAskedLifeImpact && !hasAddressedLifeImpact) {
-            return {
-                message: `${acknowledgmentPrefix}وضح لي، كيف يؤثر هذا الألم في **${title}** على روتينك وحياتك اليومية؟ هل يوقظك من النوم أو يعيق عملك ومشيك؟`,
+                message: `${acknowledgmentPrefix}${adaptQ(`لأحدد شدة الخلل الميكانيكي بدقة، لو تعطيني رقماً من 1 إلى 10 يصف شدة الألم في **${title}** في أوقات ذروته؟`)}`,
                 quickReplies: [],
                 nextStep: 'chatting'
             };
         } else if (userTurnCount < 3) {
             return {
-                message: `${acknowledgmentPrefix}حدثني أكثر، ما هي أكثر حركة أو وضعية تريح الألم في **${title}** وتخفف التوتر عنك؟`,
+                message: `${acknowledgmentPrefix}${anatQ.relief}`,
                 quickReplies: [],
                 nextStep: 'chatting'
             };
