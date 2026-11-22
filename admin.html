@@ -531,7 +531,7 @@
                     <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78em; color: #334155; margin-top: 3px; background: #f0f9ff; border: 1px solid #bae6fd; padding: 2px 10px; border-radius: 20px;">
                         <span style="display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #10b981;"></span>
                         <span>الإصدار المعتمد:</span>
-                        <strong style="color: #0369a1; font-family: monospace, sans-serif; font-size: 1.06em; font-weight: 900;">v33.55</strong>
+                        <strong style="color: #0369a1; font-family: monospace, sans-serif; font-size: 1.06em; font-weight: 900;">v33.60</strong>
                     </div>
                 </div>
             </div>
@@ -550,8 +550,8 @@
                         <span id="health-badge-icon">🛡️</span>
                         <span id="health-badge-text">درع المراقبة</span>
                     </button>
-                    <button type="button" id="btn-broadcast-version-global" onclick="handleUnifiedUpdateAndBroadcast()" class="btn-header" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border: 1.5px solid #047857; color: #ffffff; font-weight: 900; padding: 9px 14px; font-size: 0.85em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);" title="تحديث الكاش، ومزامنة السحابة، وبث التحديث العالمي (v33.55) لجميع الأجهزة والهواتف حول العالم بضغطة واحدة">
-                        <span>🚀</span> تحديث وبث الإصدار (v33.55)
+                    <button type="button" id="btn-broadcast-version-global" onclick="handleUnifiedUpdateAndBroadcast()" class="btn-header" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border: 1.5px solid #047857; color: #ffffff; font-weight: 900; padding: 9px 14px; font-size: 0.85em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);" title="تحديث الكاش، ومزامنة السحابة، وبث التحديث العالمي (v33.60) لجميع الأجهزة والهواتف حول العالم بضغطة واحدة">
+                        <span>🚀</span> تحديث وبث الإصدار (v33.60)
                     </button>
                     <a href="index.html" class="btn-header admin-btn-front" style="background: #0284c7; color: #ffffff; padding: 9px 14px; font-size: 0.85em; font-weight: 800; text-decoration: none; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1.5px solid #0369a1;" title="فتح واجهة المراجعين">
                         🌐 واجهة المراجعين
@@ -8954,13 +8954,13 @@ function copyAdminCode(code) {
 
         // 🚀 تحديث الكاش ومزامنة السحابة وبث التحديث العالمي بضغطة واحدة
         async function handleUnifiedUpdateAndBroadcast() {
-            if (confirm('🚀 تحديث وبث الإصدار (v33.55):\n\nهل تود تحديث الكاش المحلي، ومزامنة السجلات، وبث التحديث الجديد لكافة هواتف وأجهزة المراجعين المتصلة فوراً؟')) {
+            if (confirm('🚀 تحديث وبث الإصدار (v33.60):\n\nهل تود تحديث الكاش المحلي، ومزامنة السجلات، وبث التحديث الجديد لكافة هواتف وأجهزة المراجعين المتصلة فوراً؟')) {
                 // 1. بث التحديث السحابي الشامل
                 try {
                     if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                         SmartCloudSync.broadcastAppVersionUpdate({
-                            version: 'v33.55',
-                            title: 'تحديث المنظومة (v33.55)',
+                            version: 'v33.60',
+                            title: 'تحديث المنظومة (v33.60)',
                             timestamp: Date.now()
                         });
                     }
@@ -8983,17 +8983,17 @@ function copyAdminCode(code) {
         }
         window.handleUnifiedUpdateAndBroadcast = handleUnifiedUpdateAndBroadcast;
 
-        // بث رسالة التحديث الجديد الشامل (v33.55) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
+        // بث رسالة التحديث الجديد الشامل (v33.60) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
         function handleBroadcastGlobalVersion() {
-            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v33.55) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
+            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v33.60) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
                 if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                     SmartCloudSync.broadcastAppVersionUpdate({
-                        version: 'v33.55',
-                        title: 'تحديث المنظومة (v33.55)',
+                        version: 'v33.60',
+                        title: 'تحديث المنظومة (v33.60)',
                         timestamp: Date.now()
                     });
                 }
-                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v33.55) عبر شبكة البث اللحظي MQTT و NTFY لكافة الأجهزة!');
+                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v33.60) عبر شبكة البث اللحظي MQTT و NTFY لكافة الأجهزة!');
             }
         }
         window.handleBroadcastGlobalVersion = handleBroadcastGlobalVersion;
@@ -9462,7 +9462,7 @@ function copyAdminCode(code) {
 
 <script>
 // ==========================================================================
-// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي في لوحة القيادة السريرية (v33.55)
+// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي في لوحة القيادة السريرية (v33.60)
 // ==========================================================================
 (function initAdminMedicalSvgIconAndContrastEngine() {
     const P = {
@@ -9636,7 +9636,7 @@ function copyAdminCode(code) {
 <script>
 // ===== تحديث تلقائي للوحة الإدارة: تقارن إصدارها بإصدار الأداة المنشور (sw.js) وتحدّث نفسها =====
 (function () {
-    const ADMIN_VER = 'v33.55';
+    const ADMIN_VER = 'v33.60';
     window.ADMIN_VER = ADMIN_VER;
     let busy = false;
     async function check(force) {

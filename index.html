@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <script>
     (function () {
-        const CURRENT_VERSION = 'v33.55';
+        const CURRENT_VERSION = 'v33.60';
         try {
             const savedVer = localStorage.getItem('scp_app_runtime_version');
             if (savedVer && savedVer !== CURRENT_VERSION) {
@@ -205,7 +205,7 @@
                 <div class="brand-version-badge" onclick="event.stopPropagation(); if(typeof forceAppUpdateAndClearCache==='function') forceAppUpdateAndClearCache();" title="انقر لتحديث وتنشيط التطبيق فوراً" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72em; color: #475569; margin-top: 1px; cursor: pointer; user-select: none;">
                     <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                     <span>الإصدار:</span>
-                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v33.55</strong>
+                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v33.60</strong>
                 </div>
             </div>
         </div>
@@ -1610,7 +1610,7 @@
     <!-- 🌟 النوافذ المنبثقة الاحترافية لباقات الاشتراك وتأكيد الدفع (Two-Step Subscription Modals) -->
     <!-- ========================================================================= -->
 
-    <!-- نافذة 1: اختيار الباقة العلاجية الفاخرة والمكبرة (Subscription Tiers Modal v33.55) -->
+    <!-- نافذة 1: اختيار الباقة العلاجية الفاخرة والمكبرة (Subscription Tiers Modal v33.60) -->
     <div id="subscription-tiers-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(12px); z-index: 999999; align-items: center; justify-content: center; padding: 18px; overflow-y: auto;">
         <div class="modal-inner" style="background: #ffffff; border: 3px solid #0284c7; border-radius: 28px; max-width: 1240px; width: 96%; padding: 34px 30px; box-shadow: 0 24px 60px rgba(2, 132, 199, 0.22); box-sizing: border-box; text-align: right; position: relative; overflow: hidden;">
             
@@ -2055,10 +2055,10 @@
             const userPhone = (document.getElementById('support-user-phone')?.value || '').trim() || 'غير محدد';
             const userNote = (document.getElementById('support-user-note')?.value || '').trim();
             let currentStep = 'غير محدد';
-            let appVer = 'v33.55';
+            let appVer = 'v33.60';
             try {
                 currentStep = localStorage.getItem('smart_current_step') || '1';
-                appVer = document.getElementById('app-current-version-text')?.textContent?.trim() || localStorage.getItem('scp_app_runtime_version') || 'v33.55';
+                appVer = document.getElementById('app-current-version-text')?.textContent?.trim() || localStorage.getItem('scp_app_runtime_version') || 'v33.60';
             } catch (e) {}
 
             const msg =

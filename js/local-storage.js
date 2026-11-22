@@ -428,28 +428,22 @@ async function getRecoveryProgress(patientId) {
     return await getData(STORES.recoveryProgress, patientId);
 }
 
-// حساب مؤشر التعافي
+// حساب مؤشر التعافي بناءً على المؤشرات الثلاثة الفعلية للمريض (الألم، الحركة، النوم)
 async function calculateRecoveryScore(patientId) {
     const logs = await getPatientDailyLogs(patientId);
-    
-    if (logs.length === 0) return 0;
-    
-    // حساب تحسن الألم
-    const firstPainScore = logs[0].painScore;
-    const lastPainScore = logs[logs.length - 1].painScore;
-    const painImprovement = firstPainScore - lastPainScore;
-    const painScore = Math.min(100, Math.max(0, (painImprovement / firstPainScore) * 100));
-    
-    // حساب الالتزام بالتمارين
-    const exerciseCompliance = (logs.filter(log => log.exerciseCompleted).length / logs.length) * 100;
-    
-    // حساب تحسن الحركة
-    const movementImprovement = logs[logs.length - 1].movementScore - logs[0].movementScore;
-    const movementScore = Math.min(100, Math.max(0, (movementImprovement / 10) * 100));
-    
-    // حساب النتيجة النهائية
-    const recoveryScore = (painScore * 0.4) + (exerciseCompliance * 0.3) + (movementScore * 0.3);
-    
+    if (!logs || logs.length === 0) return 0;
+
+    const latestLog = logs[logs.length - 1];
+    const currentPain = typeof latestLog.painScore === 'number' ? Math.max(0, Math.min(10, latestLog.painScore)) : 5;
+    const painReliefPct = Math.max(0, Math.min(100, Math.round(((10 - currentPain) / 10) * 100)));
+    const mobScore = typeof latestLog.mobilityRate === 'number'
+        ? Math.max(0, Math.min(100, latestLog.mobilityRate))
+        : (typeof latestLog.movementScore === 'number' ? Math.max(0, Math.min(100, latestLog.movementScore)) : painReliefPct);
+    const slpScore = typeof latestLog.sleepRate === 'number'
+        ? Math.max(0, Math.min(100, latestLog.sleepRate))
+        : (typeof latestLog.sleepQuality === 'number' ? Math.max(0, Math.min(100, latestLog.sleepQuality)) : painReliefPct);
+
+    const recoveryScore = (painReliefPct * 0.4) + (mobScore * 0.35) + (slpScore * 0.25);
     return Math.round(recoveryScore);
 }
 
