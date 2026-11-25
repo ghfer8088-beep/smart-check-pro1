@@ -251,6 +251,17 @@ const SmartDB = (function() {
                 try { prevRecord = JSON.parse(existingRaw); } catch(e) {}
             }
             let mergedPatient = prevRecord ? { ...prevRecord, ...patient } : { ...patient };
+            // الحفاظ على بيانات مصدر الاشتراك التسويقي (Attribution) ودمجها بذكاء دون استبدال المصدر الأول المعروف
+            try {
+                const curAttr = (typeof SmartAttribution !== 'undefined' && typeof SmartAttribution.getAttributionSnapshot === 'function')
+                    ? SmartAttribution.getAttributionSnapshot()
+                    : null;
+                if (typeof SmartAttribution !== 'undefined' && typeof SmartAttribution.mergeAttributionSnapshots === 'function') {
+                    mergedPatient.attribution = SmartAttribution.mergeAttributionSnapshots(prevRecord?.attribution, patient.attribution || curAttr);
+                } else {
+                    mergedPatient.attribution = patient.attribution || prevRecord?.attribution || curAttr || null;
+                }
+            } catch (attrErr) {}
             // الحفاظ الصارم على تاريخ التسجيل الأصلي للمريض وعدم تحديثه لتاريخ اليوم عند تعديل الجلسات
             if (prevRecord && prevRecord.createdAt) {
                 mergedPatient.createdAt = prevRecord.createdAt;
@@ -1338,6 +1349,13 @@ const SmartDB = (function() {
             }
 
             const nowIso = new Date().toISOString();
+            const currentAttr = (typeof SmartAttribution !== 'undefined' && typeof SmartAttribution.getAttributionSnapshot === 'function')
+                ? SmartAttribution.getAttributionSnapshot()
+                : null;
+            const mergedAttr = (typeof SmartAttribution !== 'undefined' && typeof SmartAttribution.mergeAttributionSnapshots === 'function')
+                ? SmartAttribution.mergeAttributionSnapshots(existingPt?.attribution, patientData?.attribution || currentAttr)
+                : (patientData?.attribution || existingPt?.attribution || currentAttr || null);
+
             const merged = {
                 ...(existingPt || {}),
                 ...patientData,
@@ -1347,6 +1365,7 @@ const SmartDB = (function() {
                 cleanPhone: cleanPhone,
                 isRegistered: true,
                 accountPin: cleanPin,
+                attribution: mergedAttr,
                 registeredAt: existingPt?.registeredAt || nowIso,
                 lastLoginAt: nowIso
             };
@@ -1366,6 +1385,7 @@ const SmartDB = (function() {
                     height: merged.height,
                     bmi: merged.bmi,
                     accountPin: cleanPin,
+                    attribution: mergedAttr,
                     registeredAt: merged.registeredAt,
                     lastLoginAt: nowIso
                 };
@@ -1392,6 +1412,7 @@ const SmartDB = (function() {
                 weight: merged.weight,
                 height: merged.height,
                 bmi: merged.bmi,
+                attribution: mergedAttr,
                 isRegistered: true,
                 loginTime: Date.now()
             });
@@ -1450,6 +1471,13 @@ const SmartDB = (function() {
             }
 
             // نجاح تسجيل الدخول
+            const currentAttr = (typeof SmartAttribution !== 'undefined' && typeof SmartAttribution.getAttributionSnapshot === 'function')
+                ? SmartAttribution.getAttributionSnapshot()
+                : null;
+            const loginAttr = (typeof SmartAttribution !== 'undefined' && typeof SmartAttribution.mergeAttributionSnapshots === 'function')
+                ? SmartAttribution.mergeAttributionSnapshots(matchedPatient?.attribution || acc?.attribution, currentAttr)
+                : (matchedPatient?.attribution || acc?.attribution || currentAttr || null);
+
             const activePt = matchedPatient || {
                 patientId: acc.patientId,
                 name: acc.name,
@@ -1459,8 +1487,10 @@ const SmartDB = (function() {
                 weight: acc.weight,
                 height: acc.height,
                 bmi: acc.bmi,
+                attribution: loginAttr,
                 isRegistered: true
             };
+            if (!activePt.attribution && loginAttr) activePt.attribution = loginAttr;
 
             setAuthPatient({
                 phone: cleanPhone,
@@ -1472,6 +1502,7 @@ const SmartDB = (function() {
                 weight: activePt.weight || acc?.weight,
                 height: activePt.height || acc?.height,
                 bmi: activePt.bmi || acc?.bmi,
+                attribution: loginAttr,
                 isRegistered: true,
                 loginTime: Date.now()
             });

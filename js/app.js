@@ -10,7 +10,7 @@
 })();
 
 // ==========================================================================
-// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي (Medical SVG Icon & Contrast Engine v33.72)
+// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي (Medical SVG Icon & Contrast Engine v33.73)
 // يحول كافة الأيقونات التفاعلية إلى أيقونات SVG طبية حديثة موحدة اللون (currentColor) دون أي تشتت لوني
 // ==========================================================================
 (function initMedicalSvgIconAndContrastEngine() {
@@ -2470,6 +2470,9 @@ async function runDiagnosticAnalysis() {
             deviceLabel: currentDevInfo.label || currentDevInfo.type,
             isRegistered: !!(authPatientData && authPatientData.isRegistered),
             accountPin: (authPatientData && authPatientData.accountPin) || '',
+            attribution: (typeof SmartAttribution !== 'undefined' && typeof SmartAttribution.mergeAttributionSnapshots === 'function')
+                ? SmartAttribution.mergeAttributionSnapshots(authPatientData?.attribution, SmartAttribution.getAttributionSnapshot())
+                : (authPatientData?.attribution || null),
             dailyLogs: [],
             logs: [],
             completedSessions: 0,
@@ -7787,6 +7790,10 @@ async function submitOrangeWalletPaymentNotification() {
         console.warn('SmartMobileAlerts error:', pushErr);
     }
 
+    const attrSnap = (typeof SmartAttribution !== 'undefined' && typeof SmartAttribution.getAttributionSnapshot === 'function')
+        ? SmartAttribution.getAttributionSnapshot()
+        : (window.activePatient?.attribution || null);
+
     const pendingObj = {
         patientId: pId,
         examId: (typeof getCurrentExamGateId === 'function' ? getCurrentExamGateId() : '') || '',
@@ -7797,7 +7804,8 @@ async function submitOrangeWalletPaymentNotification() {
         transferRef: normRef,
         amountJod: chosenPrice,
         walletPhone: cfg.walletPhone,
-        painArea: painArea
+        painArea: painArea,
+        attribution: attrSnap
     };
     savePendingUnlockRequest(pendingObj);
     syncPendingPatientRequestToAdmin(pId, subName, subPhone, painArea, `⏳ بانتظار تأكيد حوالة أورانج (${chosenPrice} د.أ - ${pkgTitle})`, pendingObj);
@@ -7820,6 +7828,7 @@ async function submitOrangeWalletPaymentNotification() {
                 unlockPin: generateUserBoundCode(subPhone, window._selPkg || 1, 0),
                 unlockCode: generateUserBoundCode(subPhone, window._selPkg || 1, 0),
                 painArea: painArea,
+                attribution: attrSnap,
                 pendingApproval: true
             }
         });
@@ -8016,6 +8025,10 @@ async function submitHumanitarianFreeActivation() {
         }
     } catch (pushErr) {}
 
+    const humAttrSnap = (typeof SmartAttribution !== 'undefined' && typeof SmartAttribution.getAttributionSnapshot === 'function')
+        ? SmartAttribution.getAttributionSnapshot()
+        : (window.activePatient?.attribution || null);
+
     const pendingObj = {
         patientId: pId,
         examId: (typeof getCurrentExamGateId === 'function' ? getCurrentExamGateId() : '') || '',
@@ -8026,6 +8039,7 @@ async function submitHumanitarianFreeActivation() {
         waiverReason: waiverReason,
         amountJod: 0,
         painArea: painArea,
+        attribution: humAttrSnap,
         justSubmitted: true
     };
     savePendingUnlockRequest(pendingObj);
@@ -8048,6 +8062,7 @@ async function submitHumanitarianFreeActivation() {
                 unlockCode: unlockPin,
                 packageSize: 1,
                 painArea: painArea,
+                attribution: humAttrSnap,
                 pendingApproval: true
             }
         });
@@ -12249,7 +12264,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v33.72';
+const CURRENT_APP_VERSION = 'v33.73';
 window.CURRENT_APP_VERSION = CURRENT_APP_VERSION;
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;

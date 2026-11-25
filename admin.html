@@ -60,9 +60,9 @@
     /></noscript>
     <!-- End Meta Pixel Code -->
 
-    <script src="js/system-watchdog.js?v=33.72"></script>
-    <script src="js/security-shield.js?v=33.72"></script>
-    <link rel="stylesheet" href="css/style.css?v=33.72">
+    <script src="js/system-watchdog.js?v=33.73"></script>
+    <script src="js/security-shield.js?v=33.73"></script>
+    <link rel="stylesheet" href="css/style.css?v=33.73">
     <style>
         :root {
             --primary-gold: #0284c7;
@@ -531,7 +531,7 @@
                     <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78em; color: #334155; margin-top: 3px; background: #f0f9ff; border: 1px solid #bae6fd; padding: 2px 10px; border-radius: 20px;">
                         <span style="display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #10b981;"></span>
                         <span>الإصدار المعتمد:</span>
-                        <strong style="color: #0369a1; font-family: monospace, sans-serif; font-size: 1.06em; font-weight: 900;">v33.72</strong>
+                        <strong style="color: #0369a1; font-family: monospace, sans-serif; font-size: 1.06em; font-weight: 900;">v33.73</strong>
                     </div>
                 </div>
             </div>
@@ -550,8 +550,8 @@
                         <span id="health-badge-icon">🛡️</span>
                         <span id="health-badge-text">درع المراقبة</span>
                     </button>
-                    <button type="button" id="btn-broadcast-version-global" onclick="handleUnifiedUpdateAndBroadcast()" class="btn-header" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border: 1.5px solid #047857; color: #ffffff; font-weight: 900; padding: 9px 14px; font-size: 0.85em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);" title="تحديث الكاش، ومزامنة السحابة، وبث التحديث العالمي (v33.72) لجميع الأجهزة والهواتف حول العالم بضغطة واحدة">
-                        <span>🚀</span> تحديث وبث الإصدار (v33.72)
+                    <button type="button" id="btn-broadcast-version-global" onclick="handleUnifiedUpdateAndBroadcast()" class="btn-header" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border: 1.5px solid #047857; color: #ffffff; font-weight: 900; padding: 9px 14px; font-size: 0.85em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);" title="تحديث الكاش، ومزامنة السحابة، وبث التحديث العالمي (v33.73) لجميع الأجهزة والهواتف حول العالم بضغطة واحدة">
+                        <span>🚀</span> تحديث وبث الإصدار (v33.73)
                     </button>
                     <a href="index.html" class="btn-header admin-btn-front" style="background: #0284c7; color: #ffffff; padding: 9px 14px; font-size: 0.85em; font-weight: 800; text-decoration: none; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1.5px solid #0369a1;" title="فتح واجهة المراجعين">
                         🌐 واجهة المراجعين
@@ -939,9 +939,14 @@
                                 <h4 style="margin: 0 0 6px 0; color: #0f172a; font-size: 1.1em; font-weight: 900;">السجل المحاسبي الكامل والمبيعات</h4>
                                 <p style="margin: 0; color: #475569; font-size: 0.88em; line-height: 1.6;">استعراض كافة القيود المالية، مبيعات اليوم والشهر، وتفاصيل الباقات الفردية والعائلية والإعفاءات الإنسانية.</p>
                             </div>
-                            <button type="button" onclick="openFinancialLedgerModal()" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: none; padding: 12px; border-radius: 10px; font-weight: 900; font-size: 0.92em; cursor: pointer;">
-                                فتح السجل المحاسبي الشامل
-                            </button>
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <button type="button" onclick="openFinancialLedgerModal('ledger')" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: none; padding: 12px; border-radius: 10px; font-weight: 900; font-size: 0.92em; cursor: pointer;">
+                                    فتح السجل المحاسبي الشامل
+                                </button>
+                                <button type="button" onclick="openFinancialLedgerModal('analytics')" style="width: 100%; background: #eff6ff; color: #1d4ed8; border: 1.5px solid #93c5fd; padding: 10px; border-radius: 10px; font-weight: 900; font-size: 0.88em; cursor: pointer;">
+                                    📣 تحليل مصادر التسويق والمبيعات (ROAS / CAC)
+                                </button>
+                            </div>
                         </div>
 
                         <div class="admin-hub-card">
@@ -1423,17 +1428,22 @@
     <!-- 💰 نافذة النظام المحاسبي وسجل المبيعات والاشتراكات (Financial Ledger Modal) -->
     <!-- ========================================================================== -->
     <div id="financial-ledger-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.72); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 12px; overflow-y: auto;">
-        <div class="modal-inner" style="background: #ffffff; border: 2px solid #0284c7; border-radius: 20px; max-width: 1400px; width: 98%; height: 94vh; max-height: 94vh; display: flex; flex-direction: column; padding: 18px 22px; box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25); box-sizing: border-box; overflow: hidden; position: relative;">
+        <div class="modal-inner" style="background: #ffffff; border: 2px solid #0284c7; border-radius: 20px; max-width: 1440px; width: 98%; height: 94vh; max-height: 94vh; display: flex; flex-direction: column; padding: 18px 22px; box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25); box-sizing: border-box; overflow: hidden; position: relative;">
             
             <!-- الهيدر المدمج -->
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; flex-shrink: 0;">
-                <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; flex-shrink: 0;">
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                     <div style="width: 40px; height: 40px; border-radius: 12px; background: #e0f2fe; border: 1.5px solid #7dd3fc; display: flex; align-items: center; justify-content: center; font-size: 1.35em;">💰</div>
                     <div>
-                        <h2 style="color: #0369a1; margin: 0; font-size: 1.25em; font-weight: 900;">النظام المحاسبي وسجل المبيعات والاشتراكات</h2>
-                        <div style="color: #475569; font-size: 0.8em; margin-top: 2px;">
-                            رصد مالي موحّد لجميع الباقات المدفوعة والمبادرات الإنسانية بدون تكرار
+                        <h2 style="color: #0369a1; margin: 0; font-size: 1.2em; font-weight: 900;">النظام المحاسبي وتحليل مصادر التسويق والمبيعات</h2>
+                        <div style="color: #475569; font-size: 0.78em; margin-top: 2px;">
+                            رصد مالي موحّد لجميع الباقات المدفوعة مع تتبع مصدر الاشتراك الأول والأخير والعائد على الإنفاق (ROAS)
                         </div>
+                    </div>
+                    <!-- أزرار التبديل بين سجل المبيعات وتحليل مصادر التسويق -->
+                    <div style="display: inline-flex; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 10px; padding: 3px; gap: 4px;">
+                        <button type="button" id="acct-tab-btn-ledger" onclick="switchAccountingModalView('ledger')" style="background: #0284c7; color: #ffffff; border: none; padding: 6px 14px; border-radius: 7px; font-size: 0.8em; font-weight: 800; cursor: pointer;">📑 سجل المبيعات</button>
+                        <button type="button" id="acct-tab-btn-analytics" onclick="switchAccountingModalView('analytics')" style="background: transparent; color: #334155; border: none; padding: 6px 14px; border-radius: 7px; font-size: 0.8em; font-weight: 800; cursor: pointer;">📊 تحليل مصادر التسويق والمبيعات</button>
                     </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
@@ -1453,43 +1463,15 @@
                 </div>
             </div>
 
-            <!-- شريط المؤشرات المحاسبية المدمج (5 بطاقات مدمجة بسطر واحد) -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 12px; flex-shrink: 0;">
-                <div style="background: #f0f9ff; border: 1.5px solid #0284c7; border-radius: 12px; padding: 10px 12px; text-align: center;">
-                    <div style="color: #0369a1; font-size: 0.76em; font-weight: 800;">إجمالي المحصل 💰</div>
-                    <div id="acct-total-rev" style="color: #0f172a; font-size: 1.45em; font-weight: 900; font-family: monospace; margin-top: 2px;">0 د.أ</div>
-                    <div id="acct-total-orders" style="color: #475569; font-size: 0.72em;">0 عملية مدفوعة</div>
-                </div>
-                <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 10px 12px; text-align: center;">
-                    <div style="color: #475569; font-size: 0.76em; font-weight: 800;">فحص فردي (3 د.أ)</div>
-                    <div id="acct-single-count" style="color: #0284c7; font-size: 1.35em; font-weight: 900; font-family: monospace; margin-top: 2px;">0</div>
-                    <div id="acct-single-sum" style="color: #475569; font-size: 0.72em;">0 د.أ</div>
-                </div>
-                <div style="background: #f5f3ff; border: 1.5px solid #c4b5fd; border-radius: 12px; padding: 10px 12px; text-align: center;">
-                    <div style="color: #6d28d9; font-size: 0.76em; font-weight: 800;">باقة 5 (10 د.أ) ⭐</div>
-                    <div id="acct-pack5-count" style="color: #6d28d9; font-size: 1.35em; font-weight: 900; font-family: monospace; margin-top: 2px;">0</div>
-                    <div id="acct-pack5-sum" style="color: #5b21b6; font-size: 0.72em;">0 د.أ</div>
-                </div>
-                <div style="background: #ecfdf5; border: 1.5px solid #6ee7b7; border-radius: 12px; padding: 10px 12px; text-align: center;">
-                    <div style="color: #047857; font-size: 0.76em; font-weight: 800;">باقة 10 (15 د.أ) 👑</div>
-                    <div id="acct-pack10-count" style="color: #047857; font-size: 1.35em; font-weight: 900; font-family: monospace; margin-top: 2px;">0</div>
-                    <div id="acct-pack10-sum" style="color: #065f46; font-size: 0.72em;">0 د.أ</div>
-                </div>
-                <div style="background: #fff1f2; border: 1.5px solid #fda4af; border-radius: 12px; padding: 10px 12px; text-align: center;">
-                    <div style="color: #be123c; font-size: 0.76em; font-weight: 800;">رعاية إنسانية ❤️</div>
-                    <div id="acct-hum-count" style="color: #be123c; font-size: 1.35em; font-weight: 900; font-family: monospace; margin-top: 2px;">0</div>
-                    <div id="acct-hum-val" style="color: #881337; font-size: 0.72em;">صدقة جارية (0 د.أ)</div>
-                </div>
-            </div>
-
-            <!-- شريط أدوات التصفية والبحث الموحّد والمدمج -->
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;">
+            <!-- شريط أدوات التصفية والبحث الموحّد والمدمج (مشترك بين السجل والتحليل) -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                     <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                         <span style="color: #334155; font-size: 0.8em; font-weight: 800;">📅 الفترة:</span>
                         <button type="button" class="acct-time-btn active" onclick="filterFinancialByTime('all', this)" style="background: #0284c7; color: #ffffff; border: 1px solid #0284c7; padding: 4px 11px; border-radius: 16px; font-weight: 800; font-size: 0.78em; cursor: pointer;">الإجمالي الكلي</button>
                         <button type="button" class="acct-time-btn" onclick="filterFinancialByTime('today', this)" style="background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; padding: 4px 11px; border-radius: 16px; font-weight: 700; font-size: 0.78em; cursor: pointer;">اليوم</button>
                         <button type="button" class="acct-time-btn" onclick="filterFinancialByTime('week', this)" style="background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; padding: 4px 11px; border-radius: 16px; font-weight: 700; font-size: 0.78em; cursor: pointer;">آخر 7 أيام</button>
+                        <button type="button" class="acct-time-btn" onclick="filterFinancialByTime('30days', this)" style="background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; padding: 4px 11px; border-radius: 16px; font-weight: 700; font-size: 0.78em; cursor: pointer;">آخر 30 يوماً</button>
                         <button type="button" class="acct-time-btn" onclick="filterFinancialByTime('month', this)" style="background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; padding: 4px 11px; border-radius: 16px; font-weight: 700; font-size: 0.78em; cursor: pointer;">هذا الشهر</button>
                     </div>
                     <div style="display: flex; align-items: center; gap: 6px; font-size: 0.78em; color: #475569; flex-wrap: wrap;">
@@ -1502,7 +1484,7 @@
                 </div>
 
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
-                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
                         <button type="button" class="acct-filter-btn active" onclick="filterFinancialLedger('all', this)" style="background: #0284c7; color: #ffffff; border: 1px solid #0284c7; padding: 5px 12px; border-radius: 16px; font-weight: 800; font-size: 0.78em; cursor: pointer;">
                             الكل (<span id="acct-count-all">0</span>)
                         </button>
@@ -1518,38 +1500,212 @@
                         <button type="button" class="acct-filter-btn" onclick="filterFinancialLedger('humanitarian', this)" style="background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; padding: 5px 12px; border-radius: 16px; font-weight: 700; font-size: 0.78em; cursor: pointer;">
                             إنسانية (<span id="acct-count-hum">0</span>)
                         </button>
+                        <select id="acct-source-filter" onchange="filterFinancialBySource(this.value)" style="background: #ffffff; border: 1px solid #cbd5e1; color: #0f172a; padding: 4px 10px; border-radius: 16px; font-weight: 700; font-size: 0.78em; cursor: pointer;">
+                            <option value="all">📣 كل المصادر</option>
+                            <option value="Facebook Ads">Facebook Ads</option>
+                            <option value="Facebook Page">Facebook Page</option>
+                            <option value="Facebook Groups">Facebook Groups</option>
+                            <option value="Instagram">Instagram</option>
+                            <option value="Google">Google</option>
+                            <option value="Direct">Direct</option>
+                            <option value="Unknown">Unknown</option>
+                        </select>
+                        <select id="acct-campaign-filter" onchange="filterFinancialByCampaign(this.value)" style="background: #ffffff; border: 1px solid #cbd5e1; color: #0f172a; padding: 4px 10px; border-radius: 16px; font-weight: 700; font-size: 0.78em; cursor: pointer;">
+                            <option value="all">🎯 كل الحملات</option>
+                        </select>
                     </div>
-                    <div style="flex: 1; max-width: 300px; min-width: 210px;">
-                        <input type="text" id="acct-search-input" placeholder="🔍 بحث بالاسم، الهاتف، الكود، أو الحوالة..." oninput="searchFinancialLedger(this.value)" style="width: 100%; background: #ffffff; border: 1.5px solid #cbd5e1; padding: 6px 12px; border-radius: 8px; color: #0f172a; font-size: 0.82em; box-sizing: border-box; outline: none;">
+                    <div style="flex: 1; max-width: 280px; min-width: 190px;">
+                        <input type="text" id="acct-search-input" placeholder="🔍 بحث بالاسم، الهاتف، الكود، أو المصدر..." oninput="searchFinancialLedger(this.value)" style="width: 100%; background: #ffffff; border: 1.5px solid #cbd5e1; padding: 6px 12px; border-radius: 8px; color: #0f172a; font-size: 0.82em; box-sizing: border-box; outline: none;">
                     </div>
                 </div>
             </div>
 
-            <!-- جدول العمليات المحاسبية التفصيلي (Spacious Scrollable Table) -->
-            <div style="flex: 1; min-height: 300px; overflow-y: auto; overflow-x: auto; border: 1.5px solid #cbd5e1; border-radius: 12px; background: #ffffff;">
-                <table style="width: 100%; border-collapse: collapse; text-align: right; font-size: 0.88em;">
-                    <thead>
-                        <tr style="background: #f0f9ff; border-bottom: 2px solid #bae6fd; color: #0369a1; font-weight: 900; position: sticky; top: 0; z-index: 2;">
-                            <th style="padding: 12px 12px;">#</th>
-                            <th style="padding: 12px 12px;">التاريخ والوقت</th>
-                            <th style="padding: 12px 12px;">المشترك</th>
-                            <th style="padding: 12px 12px;">الهاتف</th>
-                            <th style="padding: 12px 12px;">الباقة</th>
-                            <th style="padding: 12px 12px;">المبلغ</th>
-                            <th style="padding: 12px 12px;">طريقة الدفع / المرجع</th>
-                            <th style="padding: 12px 12px;">الحالة</th>
-                            <th style="padding: 12px 12px;">الكود المعتمد</th>
-                            <th style="padding: 12px 12px; text-align: center;">إجراء</th>
-                        </tr>
-                    </thead>
-                    <tbody id="acct-ledger-tbody">
-                        <tr>
-                            <td colspan="10" style="text-align: center; padding: 30px; color: #475569;">
-                                جاري تحميل السجل المحاسبي...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <!-- القسم 1: سجل المبيعات والفواتير -->
+            <div id="acct-ledger-view" style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+                <!-- شريط المؤشرات المحاسبية المدمج (5 بطاقات مدمجة بسطر واحد) -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 10px; flex-shrink: 0;">
+                    <div style="background: #f0f9ff; border: 1.5px solid #0284c7; border-radius: 12px; padding: 10px 12px; text-align: center;">
+                        <div style="color: #0369a1; font-size: 0.76em; font-weight: 800;">إجمالي المحصل 💰</div>
+                        <div id="acct-total-rev" style="color: #0f172a; font-size: 1.45em; font-weight: 900; font-family: monospace; margin-top: 2px;">0 د.أ</div>
+                        <div id="acct-total-orders" style="color: #475569; font-size: 0.72em;">0 عملية مدفوعة</div>
+                    </div>
+                    <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 10px 12px; text-align: center;">
+                        <div style="color: #475569; font-size: 0.76em; font-weight: 800;">فحص فردي (3 د.أ)</div>
+                        <div id="acct-single-count" style="color: #0284c7; font-size: 1.35em; font-weight: 900; font-family: monospace; margin-top: 2px;">0</div>
+                        <div id="acct-single-sum" style="color: #475569; font-size: 0.72em;">0 د.أ</div>
+                    </div>
+                    <div style="background: #f5f3ff; border: 1.5px solid #c4b5fd; border-radius: 12px; padding: 10px 12px; text-align: center;">
+                        <div style="color: #6d28d9; font-size: 0.76em; font-weight: 800;">باقة 5 (10 د.أ) ⭐</div>
+                        <div id="acct-pack5-count" style="color: #6d28d9; font-size: 1.35em; font-weight: 900; font-family: monospace; margin-top: 2px;">0</div>
+                        <div id="acct-pack5-sum" style="color: #5b21b6; font-size: 0.72em;">0 د.أ</div>
+                    </div>
+                    <div style="background: #ecfdf5; border: 1.5px solid #6ee7b7; border-radius: 12px; padding: 10px 12px; text-align: center;">
+                        <div style="color: #047857; font-size: 0.76em; font-weight: 800;">باقة 10 (15 د.أ) 👑</div>
+                        <div id="acct-pack10-count" style="color: #047857; font-size: 1.35em; font-weight: 900; font-family: monospace; margin-top: 2px;">0</div>
+                        <div id="acct-pack10-sum" style="color: #065f46; font-size: 0.72em;">0 د.أ</div>
+                    </div>
+                    <div style="background: #fff1f2; border: 1.5px solid #fda4af; border-radius: 12px; padding: 10px 12px; text-align: center;">
+                        <div style="color: #be123c; font-size: 0.76em; font-weight: 800;">رعاية إنسانية ❤️</div>
+                        <div id="acct-hum-count" style="color: #be123c; font-size: 1.35em; font-weight: 900; font-family: monospace; margin-top: 2px;">0</div>
+                        <div id="acct-hum-val" style="color: #881337; font-size: 0.72em;">صدقة جارية (0 د.أ)</div>
+                    </div>
+                </div>
+
+                <!-- جدول العمليات المحاسبية التفصيلي (Spacious Scrollable Table) -->
+                <div style="flex: 1; min-height: 260px; overflow-y: auto; overflow-x: auto; border: 1.5px solid #cbd5e1; border-radius: 12px; background: #ffffff;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: right; font-size: 0.88em;">
+                        <thead>
+                            <tr style="background: #f0f9ff; border-bottom: 2px solid #bae6fd; color: #0369a1; font-weight: 900; position: sticky; top: 0; z-index: 2;">
+                                <th style="padding: 12px 12px;">#</th>
+                                <th style="padding: 12px 12px;">التاريخ والوقت</th>
+                                <th style="padding: 12px 12px;">المشترك</th>
+                                <th style="padding: 12px 12px;">الهاتف</th>
+                                <th style="padding: 12px 12px;">الباقة</th>
+                                <th style="padding: 12px 12px;">المبلغ</th>
+                                <th style="padding: 12px 12px;">مصدر الاشتراك</th>
+                                <th style="padding: 12px 12px;">طريقة الدفع / المرجع</th>
+                                <th style="padding: 12px 12px;">الحالة</th>
+                                <th style="padding: 12px 12px;">الكود المعتمد</th>
+                                <th style="padding: 12px 12px; text-align: center;">إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="acct-ledger-tbody">
+                            <tr>
+                                <td colspan="11" style="text-align: center; padding: 30px; color: #475569;">
+                                    جاري تحميل السجل المحاسبي...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- القسم 2: تحليل مصادر التسويق والمبيعات (Marketing Attribution & ROAS) -->
+            <div id="acct-analytics-view" style="display: none; flex: 1; overflow-y: auto; padding-left: 4px; flex-direction: column; gap: 14px;">
+                <!-- 8 بطاقات مؤشرات تحليل التسويق -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 10px;">
+                    <div style="background: #f0f9ff; border: 1.5px solid #0284c7; border-radius: 12px; padding: 10px 12px; text-align: center;">
+                        <div style="color: #0369a1; font-size: 0.76em; font-weight: 800;">المشتركون المدفوعون ✅</div>
+                        <div id="attr-kpi-paid-count" style="color: #0f172a; font-size: 1.45em; font-weight: 900; font-family: monospace;">0</div>
+                        <div style="color: #475569; font-size: 0.7em;">مؤكد ومفعّل فقط</div>
+                    </div>
+                    <div style="background: #ecfdf5; border: 1.5px solid #10b981; border-radius: 12px; padding: 10px 12px; text-align: center;">
+                        <div style="color: #047857; font-size: 0.76em; font-weight: 800;">إجمالي الإيرادات 💵</div>
+                        <div id="attr-kpi-revenue" style="color: #047857; font-size: 1.45em; font-weight: 900; font-family: monospace;">0 د.أ</div>
+                        <div style="color: #065f46; font-size: 0.7em;">من الاشتراكات المدفوعة</div>
+                    </div>
+                    <div style="background: #eff6ff; border: 1.5px solid #3b82f6; border-radius: 12px; padding: 10px 12px; text-align: center;">
+                        <div style="color: #1d4ed8; font-size: 0.76em; font-weight: 800;">الإعلانات المدفوعة 📣</div>
+                        <div id="attr-kpi-ads-count" style="color: #1d4ed8; font-size: 1.45em; font-weight: 900; font-family: monospace;">0</div>
+                        <div id="attr-kpi-ads-rev" style="color: #1e40af; font-size: 0.7em;">0 د.أ</div>
+                    </div>
+                    <div style="background: #faf5ff; border: 1.5px solid #a855f7; border-radius: 12px; padding: 10px 12px; text-align: center;">
+                        <div style="color: #7e22ce; font-size: 0.76em; font-weight: 800;">الصفحة الطبية 🩺</div>
+                        <div id="attr-kpi-page-count" style="color: #7e22ce; font-size: 1.45em; font-weight: 900; font-family: monospace;">0</div>
+                        <div id="attr-kpi-page-rev" style="color: #6b21a8; font-size: 0.7em;">0 د.أ</div>
+                    </div>
+                    <div style="background: #fffbeb; border: 1.5px solid #f59e0b; border-radius: 12px; padding: 10px 12px; text-align: center;">
+                        <div style="color: #b45309; font-size: 0.76em; font-weight: 800;">المجموعات 👥</div>
+                        <div id="attr-kpi-groups-count" style="color: #b45309; font-size: 1.45em; font-weight: 900; font-family: monospace;">0</div>
+                        <div id="attr-kpi-groups-rev" style="color: #92400e; font-size: 0.7em;">0 د.أ</div>
+                    </div>
+                    <div style="background: #f8fafc; border: 1.5px solid #94a3b8; border-radius: 12px; padding: 10px 12px; text-align: center;">
+                        <div style="color: #334155; font-size: 0.76em; font-weight: 800;">مباشر / غير محدد 🌐</div>
+                        <div id="attr-kpi-direct-count" style="color: #334155; font-size: 1.45em; font-weight: 900; font-family: monospace;">0</div>
+                        <div id="attr-kpi-direct-rev" style="color: #475569; font-size: 0.7em;">0 د.أ</div>
+                    </div>
+                    <div style="background: #fff7ed; border: 1.5px solid #fb923c; border-radius: 12px; padding: 10px 12px; text-align: center;">
+                        <div style="color: #c2410c; font-size: 0.76em; font-weight: 800;">متوسط تكلفة المشترك CAC</div>
+                        <div id="attr-kpi-avg-cac" style="color: #c2410c; font-size: 1.35em; font-weight: 900; font-family: monospace;">--</div>
+                        <div id="attr-kpi-roas" style="color: #9a3412; font-size: 0.7em;">ROAS: --</div>
+                    </div>
+                </div>
+
+                <!-- جدول أداء المصادر -->
+                <div style="border: 1.5px solid #cbd5e1; border-radius: 12px; background: #ffffff; overflow: hidden;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; gap: 8px;">
+                        <strong style="color: #0f172a; font-size: 0.95em;">📈 جدول أداء القنوات والمصادر التسويقية (First Touch)</strong>
+                        <button type="button" onclick="exportMarketingAttributionCSV()" style="background: #ecfdf5; border: 1.5px solid #6ee7b7; color: #047857; padding: 5px 12px; border-radius: 8px; font-size: 0.78em; font-weight: 800; cursor: pointer;">📥 تصدير نتائج المصادر CSV</button>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: right; font-size: 0.85em;">
+                            <thead>
+                                <tr style="background: #f0f9ff; border-bottom: 1.5px solid #bae6fd; color: #0369a1;">
+                                    <th style="padding: 9px 12px;">المصدر</th>
+                                    <th style="padding: 9px 12px;">نوع القناة</th>
+                                    <th style="padding: 9px 12px;">المشتركون المدفوعون</th>
+                                    <th style="padding: 9px 12px;">النسبة %</th>
+                                    <th style="padding: 9px 12px;">إجمالي الإيرادات</th>
+                                    <th style="padding: 9px 12px;">متوسط الإيراد (ARPU)</th>
+                                    <th style="padding: 9px 12px;">الإنفاق الإعلاني</th>
+                                    <th style="padding: 9px 12px;">تكلفة الاشتراك (CAC)</th>
+                                    <th style="padding: 9px 12px;">العائد (ROAS)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attr-source-performance-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- حاسبة الإنفاق الإعلاني وتكلفة اكتساب العميل والعائد (ROAS) -->
+                <div style="border: 1.5px solid #cbd5e1; border-radius: 12px; background: #ffffff; padding: 12px 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+                        <strong style="color: #0f172a; font-size: 0.95em;">💸 إدارة الإنفاق الإعلاني للحملات وحساب CAC و ROAS</strong>
+                        <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8em; background: #f8fafc; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 8px;">
+                            <label for="attr-usd-jod-rate" style="font-weight: 800; color: #334155;">سعر الصرف (1 USD = JOD):</label>
+                            <input type="number" id="attr-usd-jod-rate" step="0.001" min="0.1" value="0.709" onchange="updateAttributionExchangeRate(this.value)" style="width: 72px; padding: 3px 6px; border: 1px solid #94a3b8; border-radius: 6px; font-weight: 800; text-align: center;">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; background: #f8fafc; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 10px;">
+                        <div style="flex: 1.2; min-width: 150px;">
+                            <label style="display: block; font-size: 0.74em; font-weight: 800; color: #475569; margin-bottom: 3px;">اسم الحملة (utm_campaign)</label>
+                            <input type="text" id="spend-campaign-name" placeholder="مثال: jordan_launch" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 7px; font-size: 0.84em; box-sizing: border-box;">
+                        </div>
+                        <div style="flex: 1; min-width: 140px;">
+                            <label style="display: block; font-size: 0.74em; font-weight: 800; color: #475569; margin-bottom: 3px;">المصدر التسويقي</label>
+                            <select id="spend-source-name" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 7px; font-size: 0.84em; background: #ffffff;">
+                                <option value="Facebook Ads">Facebook Ads</option>
+                                <option value="Facebook Page">Facebook Page</option>
+                                <option value="Facebook Groups">Facebook Groups</option>
+                                <option value="Instagram">Instagram</option>
+                                <option value="Google">Google</option>
+                            </select>
+                        </div>
+                        <div style="width: 110px;">
+                            <label style="display: block; font-size: 0.74em; font-weight: 800; color: #475569; margin-bottom: 3px;">الإنفاق</label>
+                            <input type="number" id="spend-amount-val" min="0" step="0.01" placeholder="35" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 7px; font-size: 0.84em; box-sizing: border-box;">
+                        </div>
+                        <div style="width: 95px;">
+                            <label style="display: block; font-size: 0.74em; font-weight: 800; color: #475569; margin-bottom: 3px;">العملة</label>
+                            <select id="spend-currency-val" style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 7px; font-size: 0.84em; background: #ffffff;">
+                                <option value="USD">USD ($)</option>
+                                <option value="JOD">JOD (د.أ)</option>
+                            </select>
+                        </div>
+                        <button type="button" onclick="saveCampaignAdSpendEntry()" style="background: #0284c7; color: #ffffff; border: none; padding: 7px 14px; border-radius: 7px; font-size: 0.82em; font-weight: 800; cursor: pointer;">💾 حفظ الإنفاق</button>
+                    </div>
+
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: right; font-size: 0.84em;">
+                            <thead>
+                                <tr style="background: #f1f5f9; border-bottom: 1.5px solid #cbd5e1; color: #1e293b;">
+                                    <th style="padding: 8px 10px;">الحملة</th>
+                                    <th style="padding: 8px 10px;">المصدر</th>
+                                    <th style="padding: 8px 10px;">الإنفاق المدخل</th>
+                                    <th style="padding: 8px 10px;">الإنفاق الموحد (د.أ)</th>
+                                    <th style="padding: 8px 10px;">المشتركون المدفوعون</th>
+                                    <th style="padding: 8px 10px;">الإيرادات (د.أ)</th>
+                                    <th style="padding: 8px 10px;">تكلفة الاشتراك (CAC)</th>
+                                    <th style="padding: 8px 10px;">متوسط الإيراد (ARPU)</th>
+                                    <th style="padding: 8px 10px;">العائد (ROAS)</th>
+                                    <th style="padding: 8px 10px; text-align: center;">حذف</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attr-campaigns-roas-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -2598,17 +2754,17 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/clinic-patients-data.js?v=33.72"></script>
-    <script src="js/mqtt.min.js?v=33.72"></script>
-    <script src="js/cloud-sync.js?v=33.72"></script>
-    <script src="js/geo-tracker.js?v=33.72"></script>
-    <script src="js/database.js?v=33.72"></script>
-    <script src="js/exercise-image-studio.js?v=33.72"></script>
-    <script src="js/admin-engine.js?v=33.72"></script>
-    <script src="js/ai-config.js?v=33.72"></script>
-    <script src="js/ai-engine.js?v=33.72"></script>
-    <script src="js/whatsapp-dispatcher.js?v=33.72"></script>
-    <script src="js/mobile-alerts.js?v=33.72"></script>
+    <script src="js/clinic-patients-data.js?v=33.73"></script>
+    <script src="js/mqtt.min.js?v=33.73"></script>
+    <script src="js/cloud-sync.js?v=33.73"></script>
+    <script src="js/geo-tracker.js?v=33.73"></script>
+    <script src="js/database.js?v=33.73"></script>
+    <script src="js/exercise-image-studio.js?v=33.73"></script>
+    <script src="js/admin-engine.js?v=33.73"></script>
+    <script src="js/ai-config.js?v=33.73"></script>
+    <script src="js/ai-engine.js?v=33.73"></script>
+    <script src="js/whatsapp-dispatcher.js?v=33.73"></script>
+    <script src="js/mobile-alerts.js?v=33.73"></script>
 
     <script>
         // محرك صيانة وتطهير التخزين التلقائي لمنع تجاوز السعة (QuotaExceededError)
@@ -7621,11 +7777,25 @@ function copyAdminCode(code) {
         // 💰 دوال النظام المحاسبي المتكامل وسجل المبيعات والاشتراكات (v31.10)
         // =========================================================================
         let currentAcctFilter = 'all';        // 'all', 'single', 'pack5', 'pack10', 'humanitarian'
-        let currentAcctTimeFilter = 'all';    // 'all', 'today', 'week', 'month', 'custom'
+        let currentAcctTimeFilter = 'all';    // 'all', 'today', 'week', '30days', 'month', 'custom'
+        let currentAcctSourceFilter = 'all';
+        let currentAcctCampaignFilter = 'all';
+        let currentAcctViewMode = 'ledger';   // 'ledger' | 'analytics'
         let currentAcctSearch = '';
         let currentAcctDateFrom = '';
         let currentAcctDateTo = '';
         let cachedAccountingRecords = [];
+
+        function normalizeAttributionForRecord(raw) {
+            const a = (raw && raw.attribution) ? raw.attribution : (raw || {});
+            const firstSource = a.firstSource || raw?.firstSource || 'Unknown';
+            const lastSource = a.lastSource || raw?.lastSource || firstSource || 'Unknown';
+            const channelType = a.channelType || raw?.channelType || (firstSource === 'Direct' ? 'direct' : 'unknown');
+            const campaignName = a.campaignName || raw?.campaignName || a.utm_campaign || '';
+            const firstTouchAt = a.firstTouchAt || raw?.firstTouchAt || '';
+            const lastTouchAt = a.lastTouchAt || raw?.lastTouchAt || firstTouchAt || '';
+            return { firstSource, lastSource, channelType, campaignName, firstTouchAt, lastTouchAt };
+        }
 
         function isDateInPeriod(dateStr, period, fromDateStr, toDateStr) {
             if (!dateStr || period === 'all') return true;
@@ -7641,6 +7811,10 @@ function copyAdminCode(code) {
             if (period === 'week') {
                 const diffMs = now.getTime() - d.getTime();
                 return diffMs >= 0 && diffMs <= 7 * 24 * 60 * 60 * 1000;
+            }
+            if (period === '30days') {
+                const diffMs = now.getTime() - d.getTime();
+                return diffMs >= 0 && diffMs <= 30 * 24 * 60 * 60 * 1000;
             }
             if (period === 'month') {
                 return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
@@ -7687,10 +7861,13 @@ function copyAdminCode(code) {
         }
         window.recordAccountingTransaction = recordAccountingTransaction;
 
-        function openFinancialLedgerModal() {
+        function openFinancialLedgerModal(initialView = 'ledger') {
             const modal = document.getElementById('financial-ledger-modal');
             if (modal) modal.style.display = 'flex';
             refreshAndRenderAccountingLedger();
+            if (typeof switchAccountingModalView === 'function') {
+                switchAccountingModalView(initialView === 'analytics' ? 'analytics' : 'ledger');
+            }
         }
         window.openFinancialLedgerModal = openFinancialLedgerModal;
 
@@ -7726,7 +7903,8 @@ function copyAdminCode(code) {
 
                 seenKeys.add(fullKey);
                 seenPhoneTier.add(phoneTierKey);
-                records.push(rec);
+                const normAttr = normalizeAttributionForRecord(rec);
+                records.push({ ...rec, ...normAttr });
             };
 
             // 1. استرجاع القيود المسجلة مسبقاً في المخزن المحاسبي الدائم (smart_accounting_ledger)
@@ -7785,7 +7963,8 @@ function copyAdminCode(code) {
                             paymentMethod: isHum ? 'إعفاء إنساني' : 'محفظة أورانج موني',
                             status: p.isPaidUnlocked ? 'مفعّل ومعتمد' : (pStatus.includes('بانتظار') ? 'بانتظار التأكيد' : 'معتمد'),
                             isUnlocked: Boolean(p.isPaidUnlocked),
-                            pin: p.unlockPin || generateAdminUnlockPin(pPhone || pName, tier === 'pack10' ? 10 : (tier === 'pack5' ? 5 : 1))
+                            pin: p.unlockPin || generateAdminUnlockPin(pPhone || pName, tier === 'pack10' ? 10 : (tier === 'pack5' ? 5 : 1)),
+                            attribution: p.attribution || p.pendingUnlockRequest?.attribution || null
                         });
                     }
                 });
@@ -7837,7 +8016,8 @@ function copyAdminCode(code) {
                             paymentMethod: isHumNotif ? 'إعفاء إنساني' : 'محفظة أورانج موني',
                             status: n.read || n.meta?.approved ? 'مفعّل ومعتمد' : 'بانتظار التأكيد',
                             isUnlocked: Boolean(n.read || n.meta?.approved),
-                            pin: n.meta?.unlockPin || n.meta?.unlockCode || generateAdminUnlockPin(pPhone || pName, isHumNotif ? 'humanitarian' : (tier === 'pack10' ? 10 : (tier === 'pack5' ? 5 : 1)))
+                            pin: n.meta?.unlockPin || n.meta?.unlockCode || generateAdminUnlockPin(pPhone || pName, isHumNotif ? 'humanitarian' : (tier === 'pack10' ? 10 : (tier === 'pack5' ? 5 : 1))),
+                            attribution: n.meta?.attribution || null
                         });
                     }
                 });
@@ -7892,6 +8072,13 @@ function copyAdminCode(code) {
             let humCount = 0;
 
             (recordsList || []).forEach(r => {
+                const isConfirmedPaid = !String(r.status || '').includes('بانتظار') && r.isUnlocked !== false;
+                if (r.tier === 'humanitarian') {
+                    if (isConfirmedPaid) humCount++;
+                    return;
+                }
+                if (!isConfirmedPaid) return;
+
                 if (r.tier === 'single') {
                     singleCount++;
                     singleSum += (r.amount || 0);
@@ -7907,8 +8094,6 @@ function copyAdminCode(code) {
                     pack10Sum += (r.amount || 0);
                     totalRevenue += (r.amount || 0);
                     totalOrders++;
-                } else if (r.tier === 'humanitarian') {
-                    humCount++;
                 }
             });
 
@@ -8005,39 +8190,64 @@ function copyAdminCode(code) {
             const humEl = document.getElementById('stat-humanitarian-count'); if (humEl) humEl.textContent = allTimeTotals.humCount;
 
             renderAccountingTableRows();
+            if (typeof populateCampaignFilterOptions === 'function') populateCampaignFilterOptions();
+            if (typeof renderMarketingAttributionAnalytics === 'function') renderMarketingAttributionAnalytics();
+        }
+
+        function getSourceBadgeHtml(src, lastSrc, camp) {
+            const s = src || 'Unknown';
+            let bg = '#f1f5f9', fg = '#475569', br = '#cbd5e1';
+            if (s === 'Facebook Ads') { bg = '#eff6ff'; fg = '#1d4ed8'; br = '#93c5fd'; }
+            else if (s === 'Facebook Page') { bg = '#faf5ff'; fg = '#7e22ce'; br = '#d8b4fe'; }
+            else if (s === 'Facebook Groups') { bg = '#fffbeb'; fg = '#b45309'; br = '#fcd34d'; }
+            else if (s === 'Instagram') { bg = '#fdf2f8'; fg = '#be185d'; br = '#f9a8d4'; }
+            else if (s === 'Google') { bg = '#ecfdf5'; fg = '#047857'; br = '#6ee7b7'; }
+            else if (s === 'Direct') { bg = '#f8fafc'; fg = '#334155'; br = '#94a3b8'; }
+
+            const campSub = camp ? `<div style="font-size:0.72em; color:#64748b; margin-top:2px;">🎯 ${camp}</div>` : '';
+            const lastSub = (lastSrc && lastSrc !== s && lastSrc !== 'Unknown') ? `<div style="font-size:0.7em; color:#0284c7;">آخر زيارة: ${lastSrc}</div>` : '';
+            return `<span style="background:${bg}; color:${fg}; border:1px solid ${br}; padding:2px 8px; border-radius:6px; font-weight:800; font-size:0.78em; white-space:nowrap; display:inline-block;">${s}</span>${campSub}${lastSub}`;
+        }
+
+        function getFilteredAccountingRecords() {
+            let filtered = cachedAccountingRecords || [];
+            filtered = filtered.filter(r => isDateInPeriod(r.date, currentAcctTimeFilter, currentAcctDateFrom, currentAcctDateTo));
+            if (currentAcctFilter !== 'all') {
+                filtered = filtered.filter(r => r.tier === currentAcctFilter);
+            }
+            if (currentAcctSourceFilter !== 'all') {
+                filtered = filtered.filter(r => (r.firstSource || 'Unknown') === currentAcctSourceFilter);
+            }
+            if (currentAcctCampaignFilter !== 'all') {
+                filtered = filtered.filter(r => (r.campaignName || '') === currentAcctCampaignFilter);
+            }
+            if (currentAcctSearch) {
+                const q = currentAcctSearch.toLowerCase();
+                filtered = filtered.filter(r =>
+                    (r.patientName || '').toLowerCase().includes(q) ||
+                    (r.patientPhone || '').includes(q) ||
+                    (r.transferRef || '').toLowerCase().includes(q) ||
+                    (r.paymentMethod || '').toLowerCase().includes(q) ||
+                    (r.firstSource || '').toLowerCase().includes(q) ||
+                    (r.lastSource || '').toLowerCase().includes(q) ||
+                    (r.campaignName || '').toLowerCase().includes(q) ||
+                    (r.pin || '').includes(q)
+                );
+            }
+            return filtered;
         }
 
         function renderAccountingTableRows() {
             const tbody = document.getElementById('acct-ledger-tbody');
             if (!tbody) return;
 
-            let filtered = cachedAccountingRecords;
-
-            // 1. فلتر الفترة الزمنية
-            filtered = filtered.filter(r => isDateInPeriod(r.date, currentAcctTimeFilter, currentAcctDateFrom, currentAcctDateTo));
-
-            // 2. فلتر نوع الباقة
-            if (currentAcctFilter !== 'all') {
-                filtered = filtered.filter(r => r.tier === currentAcctFilter);
-            }
-
-            // 3. فلتر البحث النصي
-            if (currentAcctSearch) {
-                const q = currentAcctSearch.toLowerCase();
-                filtered = filtered.filter(r => 
-                    (r.patientName || '').toLowerCase().includes(q) ||
-                    (r.patientPhone || '').includes(q) ||
-                    (r.transferRef || '').toLowerCase().includes(q) ||
-                    (r.paymentMethod || '').toLowerCase().includes(q) ||
-                    (r.pin || '').includes(q)
-                );
-            }
+            const filtered = getFilteredAccountingRecords();
 
             if (filtered.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="10" style="text-align: center; padding: 40px; color: #475569; font-size: 0.95em;">
-                            لا توجد عمليات مسجلة مطابقة للفلاتر الزمنية ونوع الباقة المحدد.
+                        <td colspan="11" style="text-align: center; padding: 40px; color: #475569; font-size: 0.95em;">
+                            لا توجد عمليات مسجلة مطابقة للفلاتر الزمنية ونوع الباقة والمصدر المحدد.
                         </td>
                     </tr>
                 `;
@@ -8061,7 +8271,6 @@ function copyAdminCode(code) {
                     ? `<span style="background: rgba(245, 158, 11, 0.15); color: #b45309; padding: 2px 8px; border-radius: 6px; font-size: 0.8em; font-weight: bold;">⏳ بانتظار التأكيد</span>`
                     : `<span style="background: rgba(16, 185, 129, 0.15); color: #065f46; padding: 2px 8px; border-radius: 6px; font-size: 0.8em; font-weight: bold;">✓ مفعّل ومعتمد</span>`;
 
-                // زر الواتساب السريع
                 const cleanDigits = (r.patientPhone || '').replace(/\D/g, '').replace(/^0/, '962');
                 const waMsg = `مرحباً بك أخي/أختي ${r.patientName} 🌸\nمنصة «وداعاً للألم» للكايروبراكتيك.\nكود تفعيل اشتراكك في [${r.tierName}] هو:\n👉 *${r.pin}* 👈\nنتمنى لك دوام الصحة والعافية.`;
                 const waUrl = cleanDigits ? `https://api.whatsapp.com/send?phone=${cleanDigits}&text=${encodeURIComponent(waMsg)}` : '';
@@ -8070,6 +8279,7 @@ function copyAdminCode(code) {
                 const isGenericRef = !rawRef || /^(?:حوالة محفظة أورانج|إعفاء إنساني معتمد|إعفاء إنساني مسجل)$/i.test(rawRef);
                 const methodLabel = (r.paymentMethod || 'محفظة أورانج موني').replace(/\s*\(صدقة جارية\)/g, '');
                 const methodDisplay = isGenericRef ? methodLabel : `${methodLabel} • <span style="color:#0369a1;font-weight:800;">${rawRef}</span>`;
+                const sourceDisplay = getSourceBadgeHtml(r.firstSource || 'Unknown', r.lastSource, r.campaignName);
 
                 return `
                     <tr style="border-bottom: 1px solid #e2e8f0; transition: background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
@@ -8079,6 +8289,7 @@ function copyAdminCode(code) {
                         <td style="padding: 10px 12px; color: #475569; font-family: monospace; direction: ltr; text-align: right;">${r.patientPhone || '--'}</td>
                         <td style="padding: 10px 12px; white-space: nowrap;">${tierBadge}</td>
                         <td style="padding: 10px 12px; font-weight: 900; white-space: nowrap; color: ${r.amount > 0 ? '#0369a1' : '#475569'}; font-family: monospace;">${r.amount > 0 ? r.amount + ' د.أ' : 'مجاناً'}</td>
+                        <td style="padding: 10px 12px;">${sourceDisplay}</td>
                         <td style="padding: 10px 12px; color: #334155; font-size: 0.92em;">${methodDisplay}</td>
                         <td style="padding: 10px 12px; white-space: nowrap;">${statusBadge}</td>
                         <td style="padding: 10px 12px;">
@@ -8094,6 +8305,258 @@ function copyAdminCode(code) {
                 `;
             }).join('');
         }
+
+        function switchAccountingModalView(viewMode) {
+            currentAcctViewMode = viewMode === 'analytics' ? 'analytics' : 'ledger';
+            const ledgerView = document.getElementById('acct-ledger-view');
+            const analyticsView = document.getElementById('acct-analytics-view');
+            const btnLedger = document.getElementById('acct-tab-btn-ledger');
+            const btnAnalytics = document.getElementById('acct-tab-btn-analytics');
+            if (ledgerView) ledgerView.style.display = currentAcctViewMode === 'ledger' ? 'flex' : 'none';
+            if (analyticsView) analyticsView.style.display = currentAcctViewMode === 'analytics' ? 'flex' : 'none';
+            if (btnLedger) {
+                btnLedger.style.background = currentAcctViewMode === 'ledger' ? '#0284c7' : 'transparent';
+                btnLedger.style.color = currentAcctViewMode === 'ledger' ? '#ffffff' : '#334155';
+            }
+            if (btnAnalytics) {
+                btnAnalytics.style.background = currentAcctViewMode === 'analytics' ? '#0284c7' : 'transparent';
+                btnAnalytics.style.color = currentAcctViewMode === 'analytics' ? '#ffffff' : '#334155';
+            }
+            if (currentAcctViewMode === 'analytics') renderMarketingAttributionAnalytics();
+        }
+        window.switchAccountingModalView = switchAccountingModalView;
+
+        function filterFinancialBySource(src) {
+            currentAcctSourceFilter = src || 'all';
+            renderAccountingTableRows();
+            renderMarketingAttributionAnalytics();
+        }
+        window.filterFinancialBySource = filterFinancialBySource;
+
+        function filterFinancialByCampaign(camp) {
+            currentAcctCampaignFilter = camp || 'all';
+            renderAccountingTableRows();
+            renderMarketingAttributionAnalytics();
+        }
+        window.filterFinancialByCampaign = filterFinancialByCampaign;
+
+        function populateCampaignFilterOptions() {
+            const sel = document.getElementById('acct-campaign-filter');
+            if (!sel) return;
+            const prev = currentAcctCampaignFilter;
+            const campaigns = Array.from(new Set((cachedAccountingRecords || []).map(r => r.campaignName).filter(Boolean)));
+            sel.innerHTML = '<option value="all">🎯 كل الحملات</option>' + campaigns.map(c => `<option value="${c}">${c}</option>`).join('');
+            sel.value = campaigns.includes(prev) ? prev : 'all';
+            currentAcctCampaignFilter = sel.value;
+        }
+
+        function getAttributionExchangeRate() {
+            const stored = parseFloat(localStorage.getItem('smart_attr_usd_to_jod_rate') || '0.709');
+            return (isFinite(stored) && stored > 0) ? stored : 0.709;
+        }
+
+        function updateAttributionExchangeRate(val) {
+            const rate = parseFloat(val);
+            if (isFinite(rate) && rate > 0) {
+                localStorage.setItem('smart_attr_usd_to_jod_rate', rate.toFixed(3));
+                renderMarketingAttributionAnalytics();
+            }
+        }
+        window.updateAttributionExchangeRate = updateAttributionExchangeRate;
+
+        function getCampaignAdSpendList() {
+            try {
+                const raw = JSON.parse(localStorage.getItem('smart_campaign_ad_spend_v1') || '[]');
+                return Array.isArray(raw) ? raw : [];
+            } catch (e) { return []; }
+        }
+
+        function saveCampaignAdSpendEntry() {
+            const campaign = (document.getElementById('spend-campaign-name')?.value || '').trim();
+            const source = (document.getElementById('spend-source-name')?.value || 'Facebook Ads').trim();
+            const amount = parseFloat(document.getElementById('spend-amount-val')?.value || '0');
+            const currency = document.getElementById('spend-currency-val')?.value || 'USD';
+            if (!campaign || !isFinite(amount) || amount < 0) {
+                alert('يرجى إدخال اسم الحملة ومبلغ الإنفاق الصحيح.');
+                return;
+            }
+            const list = getCampaignAdSpendList();
+            const idx = list.findIndex(x => x.campaign.toLowerCase() === campaign.toLowerCase() && x.source === source);
+            const entry = { campaign, source, amount, currency, updatedAt: new Date().toISOString() };
+            if (idx >= 0) list[idx] = entry;
+            else list.unshift(entry);
+            localStorage.setItem('smart_campaign_ad_spend_v1', JSON.stringify(list));
+            if (document.getElementById('spend-campaign-name')) document.getElementById('spend-campaign-name').value = '';
+            if (document.getElementById('spend-amount-val')) document.getElementById('spend-amount-val').value = '';
+            renderMarketingAttributionAnalytics();
+        }
+        window.saveCampaignAdSpendEntry = saveCampaignAdSpendEntry;
+
+        function deleteCampaignAdSpendEntry(idx) {
+            const list = getCampaignAdSpendList();
+            if (idx >= 0 && idx < list.length) {
+                list.splice(idx, 1);
+                localStorage.setItem('smart_campaign_ad_spend_v1', JSON.stringify(list));
+                renderMarketingAttributionAnalytics();
+            }
+        }
+        window.deleteCampaignAdSpendEntry = deleteCampaignAdSpendEntry;
+
+        function computeAttributionAnalytics(recordsList, spendList, usdToJod) {
+            const rate = (isFinite(usdToJod) && usdToJod > 0) ? usdToJod : 0.709;
+            // فقط الاشتراكات المدفوعة والمؤكدة فعلياً!
+            const paidRecords = (recordsList || []).filter(r => {
+                const isConfirmed = !String(r.status || '').includes('بانتظار') && r.isUnlocked !== false;
+                return isConfirmed && r.tier !== 'humanitarian' && Number(r.amount || 0) > 0;
+            });
+
+            const totalPaid = paidRecords.length;
+            const totalRevenue = paidRecords.reduce((s, r) => s + Number(r.amount || 0), 0);
+
+            const bySource = {};
+            paidRecords.forEach(r => {
+                const src = r.firstSource || 'Unknown';
+                if (!bySource[src]) bySource[src] = { source: src, channelType: r.channelType || 'unknown', count: 0, revenue: 0, spendJod: 0 };
+                bySource[src].count++;
+                bySource[src].revenue += Number(r.amount || 0);
+            });
+
+            let totalSpendJod = 0;
+            const campaignRows = (spendList || []).map((sp, idx) => {
+                const spendJod = sp.currency === 'USD' ? (Number(sp.amount || 0) * rate) : Number(sp.amount || 0);
+                totalSpendJod += spendJod;
+                if (bySource[sp.source]) bySource[sp.source].spendJod += spendJod;
+
+                const matched = paidRecords.filter(r =>
+                    (r.campaignName || '').toLowerCase() === String(sp.campaign || '').toLowerCase() &&
+                    (!sp.source || (r.firstSource || 'Unknown') === sp.source)
+                );
+                const cCount = matched.length;
+                const cRev = matched.reduce((s, r) => s + Number(r.amount || 0), 0);
+                const cac = cCount > 0 ? (spendJod / cCount) : null;
+                const arpu = cCount > 0 ? (cRev / cCount) : 0;
+                const roas = spendJod > 0 ? (cRev / spendJod) : null;
+                return { idx, ...sp, spendJod, paidCount: cCount, revenue: cRev, cac, arpu, roas };
+            });
+
+            const sourceRows = Object.values(bySource).map(row => ({
+                ...row,
+                sharePct: totalPaid > 0 ? ((row.count / totalPaid) * 100) : 0,
+                arpu: row.count > 0 ? (row.revenue / row.count) : 0,
+                cac: (row.spendJod > 0 && row.count > 0) ? (row.spendJod / row.count) : null,
+                roas: row.spendJod > 0 ? (row.revenue / row.spendJod) : null
+            })).sort((a, b) => b.revenue - a.revenue || b.count - a.count);
+
+            const adsGroup = paidRecords.filter(r => r.firstSource === 'Facebook Ads' || r.channelType === 'paid_ads');
+            const pageGroup = paidRecords.filter(r => r.firstSource === 'Facebook Page' || r.channelType === 'medical_page');
+            const groupsGroup = paidRecords.filter(r => r.firstSource === 'Facebook Groups' || r.channelType === 'facebook_groups');
+            const directUnknownGroup = paidRecords.filter(r => !r.firstSource || r.firstSource === 'Direct' || r.firstSource === 'Unknown');
+
+            const avgCac = (totalSpendJod > 0 && totalPaid > 0) ? (totalSpendJod / totalPaid) : null;
+            const totalRoas = totalSpendJod > 0 ? (totalRevenue / totalSpendJod) : null;
+
+            return {
+                totalPaid,
+                totalRevenue,
+                adsCount: adsGroup.length,
+                adsRev: adsGroup.reduce((s, r) => s + Number(r.amount || 0), 0),
+                pageCount: pageGroup.length,
+                pageRev: pageGroup.reduce((s, r) => s + Number(r.amount || 0), 0),
+                groupsCount: groupsGroup.length,
+                groupsRev: groupsGroup.reduce((s, r) => s + Number(r.amount || 0), 0),
+                directUnknownCount: directUnknownGroup.length,
+                directUnknownRev: directUnknownGroup.reduce((s, r) => s + Number(r.amount || 0), 0),
+                totalSpendJod,
+                avgCac,
+                totalRoas,
+                sourceRows,
+                campaignRows
+            };
+        }
+
+        function renderMarketingAttributionAnalytics() {
+            const rateInput = document.getElementById('attr-usd-jod-rate');
+            const rate = getAttributionExchangeRate();
+            if (rateInput && document.activeElement !== rateInput) rateInput.value = rate;
+
+            const filtered = getFilteredAccountingRecords();
+            const spendList = getCampaignAdSpendList();
+            const stats = computeAttributionAnalytics(filtered, spendList, rate);
+
+            const setText = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+            setText('attr-kpi-paid-count', stats.totalPaid);
+            setText('attr-kpi-revenue', `${stats.totalRevenue.toFixed(2).replace(/\.00$/, '')} د.أ`);
+            setText('attr-kpi-ads-count', stats.adsCount);
+            setText('attr-kpi-ads-rev', `${stats.adsRev.toFixed(2).replace(/\.00$/, '')} د.أ`);
+            setText('attr-kpi-page-count', stats.pageCount);
+            setText('attr-kpi-page-rev', `${stats.pageRev.toFixed(2).replace(/\.00$/, '')} د.أ`);
+            setText('attr-kpi-groups-count', stats.groupsCount);
+            setText('attr-kpi-groups-rev', `${stats.groupsRev.toFixed(2).replace(/\.00$/, '')} د.أ`);
+            setText('attr-kpi-direct-count', stats.directUnknownCount);
+            setText('attr-kpi-direct-rev', `${stats.directUnknownRev.toFixed(2).replace(/\.00$/, '')} د.أ`);
+            setText('attr-kpi-avg-cac', stats.avgCac !== null ? `${stats.avgCac.toFixed(2)} د.أ` : '--');
+            setText('attr-kpi-roas', stats.totalRoas !== null ? `ROAS: ${stats.totalRoas.toFixed(2)}x` : 'أدخل الإنفاق الإعلاني');
+
+            const srcTbody = document.getElementById('attr-source-performance-tbody');
+            if (srcTbody) {
+                srcTbody.innerHTML = stats.sourceRows.length === 0
+                    ? '<tr><td colspan="9" style="text-align:center;padding:20px;color:#64748b;">لا توجد اشتراكات مدفوعة مطابقة للفلاتر الحالية.</td></tr>'
+                    : stats.sourceRows.map(r => `
+                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                            <td style="padding: 8px 12px; font-weight: 800; color: #0f172a;">${r.source}</td>
+                            <td style="padding: 8px 12px; color: #475569;">${r.channelType}</td>
+                            <td style="padding: 8px 12px; font-weight: 800; color: #0284c7; font-family: monospace;">${r.count}</td>
+                            <td style="padding: 8px 12px; color: #334155; font-family: monospace;">${r.sharePct.toFixed(1)}%</td>
+                            <td style="padding: 8px 12px; font-weight: 900; color: #047857; font-family: monospace;">${r.revenue.toFixed(2).replace(/\.00$/, '')} د.أ</td>
+                            <td style="padding: 8px 12px; color: #334155; font-family: monospace;">${r.arpu.toFixed(2)} د.أ</td>
+                            <td style="padding: 8px 12px; color: #b45309; font-family: monospace;">${r.spendJod > 0 ? r.spendJod.toFixed(2) + ' د.أ' : '--'}</td>
+                            <td style="padding: 8px 12px; color: #c2410c; font-family: monospace;">${r.cac !== null ? r.cac.toFixed(2) + ' د.أ' : '--'}</td>
+                            <td style="padding: 8px 12px; font-weight: 800; color: ${r.roas >= 1 ? '#047857' : '#b91c1c'}; font-family: monospace;">${r.roas !== null ? r.roas.toFixed(2) + 'x' : '--'}</td>
+                        </tr>
+                    `).join('');
+            }
+
+            const campTbody = document.getElementById('attr-campaigns-roas-tbody');
+            if (campTbody) {
+                campTbody.innerHTML = stats.campaignRows.length === 0
+                    ? '<tr><td colspan="10" style="text-align:center;padding:16px;color:#64748b;">لم يتم إدخال إنفاق إعلاني لحملات بعد.</td></tr>'
+                    : stats.campaignRows.map(c => `
+                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                            <td style="padding: 8px 10px; font-weight: 800; color: #0f172a;">${c.campaign}</td>
+                            <td style="padding: 8px 10px;">${c.source}</td>
+                            <td style="padding: 8px 10px; font-family: monospace;">${c.amount} ${c.currency}</td>
+                            <td style="padding: 8px 10px; font-family: monospace; color: #b45309;">${c.spendJod.toFixed(2)} د.أ</td>
+                            <td style="padding: 8px 10px; font-family: monospace; font-weight: 800; color: #0284c7;">${c.paidCount}</td>
+                            <td style="padding: 8px 10px; font-family: monospace; font-weight: 800; color: #047857;">${c.revenue.toFixed(2).replace(/\.00$/, '')} د.أ</td>
+                            <td style="padding: 8px 10px; font-family: monospace; color: #c2410c;">${c.cac !== null ? c.cac.toFixed(2) + ' د.أ' : '--'}</td>
+                            <td style="padding: 8px 10px; font-family: monospace;">${c.arpu.toFixed(2)} د.أ</td>
+                            <td style="padding: 8px 10px; font-family: monospace; font-weight: 900; color: ${c.roas >= 1 ? '#047857' : '#b91c1c'};">${c.roas !== null ? c.roas.toFixed(2) + 'x (' + Math.round(c.roas * 100) + '%)' : '--'}</td>
+                            <td style="padding: 8px 10px; text-align: center;"><button type="button" onclick="deleteCampaignAdSpendEntry(${c.idx})" style="background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;border-radius:6px;padding:2px 8px;cursor:pointer;font-size:0.8em;">حذف</button></td>
+                        </tr>
+                    `).join('');
+            }
+        }
+        window.renderMarketingAttributionAnalytics = renderMarketingAttributionAnalytics;
+
+        function exportMarketingAttributionCSV() {
+            const filtered = getFilteredAccountingRecords();
+            const stats = computeAttributionAnalytics(filtered, getCampaignAdSpendList(), getAttributionExchangeRate());
+            let csv = '\uFEFF';
+            csv += 'المصدر,نوع القناة,المشتركون المدفوعون,النسبة %,إجمالي الإيرادات (د.أ),متوسط الإيراد ARPU (د.أ),الإنفاق الإعلاني (د.أ),تكلفة الاشتراك CAC (د.أ),ROAS\n';
+            stats.sourceRows.forEach(r => {
+                csv += `"${r.source}","${r.channelType}",${r.count},${r.sharePct.toFixed(1)}%,${r.revenue.toFixed(2)},${r.arpu.toFixed(2)},${r.spendJod.toFixed(2)},${r.cac !== null ? r.cac.toFixed(2) : ''},${r.roas !== null ? r.roas.toFixed(2) + 'x' : ''}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `smart_check_marketing_attribution_${new Date().toISOString().slice(0, 10)}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+        window.exportMarketingAttributionCSV = exportMarketingAttributionCSV;
 
         function filterFinancialByTime(period, btnEl) {
             currentAcctTimeFilter = period || 'all';
@@ -8172,12 +8635,12 @@ function copyAdminCode(code) {
                 return;
             }
             let csv = '\uFEFF';
-            csv += 'رقم القيد,التاريخ والوقت,المشترك,الهاتف,نوع الباقة,المبلغ (د.أ),طريقة الدفع / المرجع,الحالة,كود التفعيل\n';
+            csv += 'رقم القيد,التاريخ والوقت,المشترك,الهاتف,نوع الباقة,المبلغ (د.أ),المصدر الأول,آخر مصدر,نوع القناة,اسم الحملة,تاريخ أول زيارة,تاريخ آخر زيارة,طريقة الدفع / المرجع,الحالة,كود التفعيل\n';
             records.forEach((r, i) => {
                 const dStr = r.date ? new Date(r.date).toLocaleString('ar-JO') : '--';
                 const cleanName = String(r.patientName || '').replace(/,/g, ' ');
                 const cleanRef = String((r.paymentMethod ? r.paymentMethod + ' - ' : '') + (r.transferRef || '')).replace(/,/g, ' ');
-                csv += `${i + 1},"${dStr}","${cleanName}","${r.patientPhone || ''}","${r.tierName}",${r.amount},"${cleanRef}","${r.status}","${r.pin || ''}"\n`;
+                csv += `${i + 1},"${dStr}","${cleanName}","${r.patientPhone || ''}","${r.tierName}",${r.amount},"${r.firstSource || 'Unknown'}","${r.lastSource || 'Unknown'}","${r.channelType || 'unknown'}","${r.campaignName || ''}","${r.firstTouchAt || ''}","${r.lastTouchAt || ''}","${cleanRef}","${r.status}","${r.pin || ''}"\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
@@ -8651,6 +9114,27 @@ function copyAdminCode(code) {
                 if (typeof recordAccountingTransaction === 'function') {
                     const pkgTier = resolvedType === 'humanitarian' ? 'humanitarian' : (resolvedAmt === 15 ? 'pack10' : (resolvedAmt === 10 ? 'pack5' : 'single'));
                     const pkgName = resolvedType === 'humanitarian' ? 'مبادرة إنسانية' : (resolvedAmt === 15 ? 'باقة 10 فحوصات' : (resolvedAmt === 10 ? 'باقة 5 فحوصات' : 'تشخيص فردي'));
+
+                    // استخراج بيانات مصدر الاشتراك التسويقي (Attribution) من سجل المريض أو الإشعار
+                    let matchedAttr = null;
+                    try {
+                        const tPh8 = String(resolvedPhone || '').replace(/\D/g, '').slice(-8);
+                        if (Array.isArray(allNotificationsList)) {
+                            const mNotif = allNotificationsList.find(n => (notifId && n.id === notifId) || (patientId && n.patientId === patientId) || (tPh8 && String(n.patientPhone || '').replace(/\D/g, '').slice(-8) === tPh8));
+                            if (mNotif && mNotif.meta && mNotif.meta.attribution) matchedAttr = mNotif.meta.attribution;
+                        }
+                        if (!matchedAttr && Array.isArray(allPatientsList)) {
+                            const mPtItem = allPatientsList.find(it => {
+                                const pt = it.patient || {};
+                                return (patientId && (pt.patientId === patientId || pt.id === patientId)) || (tPh8 && String(pt.phone || '').replace(/\D/g, '').slice(-8) === tPh8);
+                            });
+                            if (mPtItem && mPtItem.patient) {
+                                matchedAttr = mPtItem.patient.attribution || mPtItem.patient.pendingUnlockRequest?.attribution || null;
+                            }
+                        }
+                    } catch (attrErr) {}
+                    const normAttr = normalizeAttributionForRecord(matchedAttr);
+
                     recordAccountingTransaction({
                         id: 'TX-NOTIF-' + (notifId || patientId || Date.now()),
                         date: new Date().toISOString(),
@@ -8664,7 +9148,9 @@ function copyAdminCode(code) {
                         paymentMethod: resolvedType === 'humanitarian' ? 'إعفاء إنساني (صدقة جارية)' : 'محفظة أورانج موني',
                         status: 'مفعّل ومعتمد',
                         isUnlocked: true,
-                        pin: pin
+                        pin: pin,
+                        attribution: matchedAttr,
+                        ...normAttr
                     });
                 }
             } catch (e) {}
@@ -8941,13 +9427,13 @@ function copyAdminCode(code) {
 
         // 🚀 تحديث الكاش ومزامنة السحابة وبث التحديث العالمي بضغطة واحدة
         async function handleUnifiedUpdateAndBroadcast() {
-            if (confirm('🚀 تحديث وبث الإصدار (v33.72):\n\nهل تود تحديث الكاش المحلي، ومزامنة السجلات، وبث التحديث الجديد لكافة هواتف وأجهزة المراجعين المتصلة فوراً؟')) {
+            if (confirm('🚀 تحديث وبث الإصدار (v33.73):\n\nهل تود تحديث الكاش المحلي، ومزامنة السجلات، وبث التحديث الجديد لكافة هواتف وأجهزة المراجعين المتصلة فوراً؟')) {
                 // 1. بث التحديث السحابي الشامل
                 try {
                     if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                         SmartCloudSync.broadcastAppVersionUpdate({
-                            version: 'v33.72',
-                            title: 'تحديث المنظومة (v33.72)',
+                            version: 'v33.73',
+                            title: 'تحديث المنظومة (v33.73)',
                             timestamp: Date.now()
                         });
                     }
@@ -8970,17 +9456,17 @@ function copyAdminCode(code) {
         }
         window.handleUnifiedUpdateAndBroadcast = handleUnifiedUpdateAndBroadcast;
 
-        // بث رسالة التحديث الجديد الشامل (v33.72) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
+        // بث رسالة التحديث الجديد الشامل (v33.73) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
         function handleBroadcastGlobalVersion() {
-            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v33.72) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
+            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v33.73) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
                 if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                     SmartCloudSync.broadcastAppVersionUpdate({
-                        version: 'v33.72',
-                        title: 'تحديث المنظومة (v33.72)',
+                        version: 'v33.73',
+                        title: 'تحديث المنظومة (v33.73)',
                         timestamp: Date.now()
                     });
                 }
-                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v33.72) عبر شبكة البث اللحظي MQTT و NTFY لكافة الأجهزة!');
+                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v33.73) عبر شبكة البث اللحظي MQTT و NTFY لكافة الأجهزة!');
             }
         }
         window.handleBroadcastGlobalVersion = handleBroadcastGlobalVersion;
@@ -9449,7 +9935,7 @@ function copyAdminCode(code) {
 
 <script>
 // ==========================================================================
-// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي في لوحة القيادة السريرية (v33.72)
+// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي في لوحة القيادة السريرية (v33.73)
 // ==========================================================================
 (function initAdminMedicalSvgIconAndContrastEngine() {
     const P = {
@@ -9623,7 +10109,7 @@ function copyAdminCode(code) {
 <script>
 // ===== تحديث تلقائي للوحة الإدارة: تقارن إصدارها بإصدار الأداة المنشور (sw.js) وتحدّث نفسها =====
 (function () {
-    const ADMIN_VER = 'v33.72';
+    const ADMIN_VER = 'v33.73';
     window.ADMIN_VER = ADMIN_VER;
     let busy = false;
     async function check(force) {

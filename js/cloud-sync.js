@@ -1241,6 +1241,13 @@
                 enhancedRecord.phone = existing.phone || existing.patientPhone;
                 enhancedRecord.patientPhone = enhancedRecord.phone;
             }
+            if (existing.attribution || enhancedRecord.attribution) {
+                if (typeof SmartAttribution !== 'undefined' && typeof SmartAttribution.mergeAttributionSnapshots === 'function') {
+                    enhancedRecord.attribution = SmartAttribution.mergeAttributionSnapshots(existing.attribution, enhancedRecord.attribution);
+                } else {
+                    enhancedRecord.attribution = enhancedRecord.attribution || existing.attribution;
+                }
+            }
             const isSameOngoingExam = existing.status === 'in_progress'
                 || String(existing.chiefDiagnosis || '').includes('استشارة سريرية جارية')
                 || (existing.painArea === enhancedRecord.painArea && !existing.isPlanCompleted);
