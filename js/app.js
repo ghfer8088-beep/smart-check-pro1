@@ -10,7 +10,7 @@
 })();
 
 // ==========================================================================
-// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي (Medical SVG Icon & Contrast Engine v33.67)
+// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي (Medical SVG Icon & Contrast Engine v33.68)
 // يحول كافة الأيقونات التفاعلية إلى أيقونات SVG طبية حديثة موحدة اللون (currentColor) دون أي تشتت لوني
 // ==========================================================================
 (function initMedicalSvgIconAndContrastEngine() {
@@ -6805,7 +6805,19 @@ function renderRoyalPendingApprovalCardHTML(pendingReq, cfg) {
             <div style="color: #1e293b; font-size: 0.96em; margin-bottom: 18px;">المراجع: <strong style="color: #0f172a;">${pendingReq.subscriberName}</strong> • الهاتف: <span dir="ltr" style="color: #0369a1; font-weight: bold;">${pendingReq.subscriberPhone}</span></div>
             <div style="background: #f8fafc; border: 2px solid #bae6fd; border-radius: 18px; padding: 22px 20px; max-width: 580px; margin: 0 auto;">
                 <div style="color: #0369a1; font-weight: 900; font-size: 1.15em; margin-bottom: 6px;">🔑 خطوتك الأخيرة: أدخل كود التفعيل</div>
-                <div style="color: #475569; font-size: 0.9em; margin-bottom: 14px;">تم إشعار هاتف الطبيب فوراً، وسيصلك كود التفعيل المعتمد عبر الواتساب.</div>
+                <div style="color: #475569; font-size: 0.9em; margin-bottom: 12px;">تم إشعار هاتف الطبيب فوراً، وسيصلك كود التفعيل المعتمد عبر الواتساب.</div>
+                <div class="pending-code-delay-pulse" style="background: #f0fdf4; border: 2px solid #10b981; border-radius: 14px; padding: 12px 14px; margin-bottom: 14px; text-align: right; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 9px; flex: 1; min-width: 220px;">
+                        <span style="width: 11px; height: 11px; border-radius: 50%; background: #059669; display: inline-block; flex-shrink: 0; animation: pulseDot 1.4s infinite;"></span>
+                        <span style="color: #0f172a; font-size: 0.9em; font-weight: 800; line-height: 1.55;">
+                            تنويه هام: في حال تأخر وصول كود التفعيل لأكثر من دقيقة، تواصل معنا على الواتساب لتفعيل باقتك بشكل فوري.
+                        </span>
+                    </div>
+                    <button type="button" onclick="${isHum ? 'sendWhatsAppHumanitarianRequest()' : 'sendWhatsAppOrangePaymentReceipt()'}" style="background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: #ffffff; border: 1.5px solid #065f46; padding: 8px 14px; border-radius: 10px; font-weight: 900; font-size: 0.86em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; box-shadow: 0 3px 10px rgba(5, 150, 105, 0.22);">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        <span>تواصل عبر واتساب الآن</span>
+                    </button>
+                </div>
                 <input type="text" id="pending-pin-code-input" maxlength="12" placeholder="أدخل كود التفعيل هنا" onkeydown="if(event.key==='Enter'){submitPromoOrTestUnlockCode('pending-pin-code-input');}" style="width: 100%; background: #ffffff; border: 2px solid #bae6fd; padding: 14px; border-radius: 12px; color: #0369a1; font-size: 1.4em; font-weight: 900; text-align: center; letter-spacing: 4px; font-family: monospace; box-sizing: border-box; margin-bottom: 12px;">
                 <input type="tel" id="code-alt-phone" value="${pendingReq.subscriberPhone || ''}" placeholder="📱 الهاتف المسجل عليه الكود" style="width: 100%; background: #ffffff; border: 1px solid #cbd5e1; padding: 11px; border-radius: 10px; color: #0f172a; font-size: 0.95em; text-align: center; direction: ltr; box-sizing: border-box; margin-bottom: 12px;">
                 <button type="button" onclick="submitPromoOrTestUnlockCode('pending-pin-code-input')" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: none; padding: 14px; border-radius: 12px; font-weight: 900; font-size: 1.05em; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.14);">🔓 تفعيل وفتح التقرير السريري الآن</button>
@@ -12237,7 +12249,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v33.67';
+const CURRENT_APP_VERSION = 'v33.68';
 window.CURRENT_APP_VERSION = CURRENT_APP_VERSION;
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
