@@ -1,5 +1,5 @@
 // ==========================================================================
-// SmartCheckTools - First-Party Marketing Attribution Tracker (v33.73)
+// SmartCheckTools - First-Party Marketing Attribution Tracker (v33.74)
 // Tracks First Touch & Last Touch UTM parameters securely in 1st-party storage.
 // Privacy-safe: Never sends health, symptom, diagnosis, or PII data to ad platforms.
 // ==========================================================================

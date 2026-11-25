@@ -10,7 +10,7 @@
 })();
 
 // ==========================================================================
-// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي (Medical SVG Icon & Contrast Engine v33.73)
+// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي (Medical SVG Icon & Contrast Engine v33.74)
 // يحول كافة الأيقونات التفاعلية إلى أيقونات SVG طبية حديثة موحدة اللون (currentColor) دون أي تشتت لوني
 // ==========================================================================
 (function initMedicalSvgIconAndContrastEngine() {
@@ -12264,7 +12264,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v33.73';
+const CURRENT_APP_VERSION = 'v33.74';
 window.CURRENT_APP_VERSION = CURRENT_APP_VERSION;
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;
@@ -14127,16 +14127,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     let savedPatientId = queryPatientId;
 
     if (!savedPatientId) {
+        savedPatientId = sessionStorage.getItem('scp_active_patient_id')
+            || localStorage.getItem('smart_current_patient_id')
+            || localStorage.getItem('smart_last_active_patient_id');
+    }
+
+    if (!savedPatientId) {
         const authPInit = (typeof SmartDB !== 'undefined' && typeof SmartDB.getAuthPatient === 'function') ? SmartDB.getAuthPatient() : null;
         if (authPInit && (authPInit.patientId || authPInit.id)) {
             savedPatientId = authPInit.patientId || authPInit.id;
         }
-    }
-
-    if (!savedPatientId) {
-        savedPatientId = sessionStorage.getItem('scp_active_patient_id')
-            || localStorage.getItem('smart_current_patient_id')
-            || localStorage.getItem('smart_last_active_patient_id');
     }
 
     if (!savedPatientId) {
@@ -14236,10 +14236,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             let assessments = [];
             try { assessments = await SmartDB.getPatientAssessments(savedPatientId); } catch(e) {}
             
-            // عزل صارم: منع تسرب أي تقرير يخص مريضاً آخر أو جلسة سابقة غير متطابقة
+            // عزل ذكي: الحفاظ على التقرير الحالي إذا كان المراجع في مرحلة التقرير/الاشتراك، ولا يتم مسحه إلا إذا كان خاصاً بمريض مختلف مع وجود تقييم أحدث في السجل
             if (currentAssessmentData && currentAssessmentData.patientId && savedPatientId && currentAssessmentData.patientId !== savedPatientId) {
-                currentAssessmentData = null;
-                try { localStorage.removeItem('smart_current_assessment'); } catch(e) {}
+                const savedStepNow = parseInt(localStorage.getItem('smart_current_step') || '1', 10);
+                if (savedStepNow >= 3 && (currentAssessmentData.primaryDiagnosis || currentAssessmentData.diagnosisTitle)) {
+                    // المراجع في صفحة التقرير/الاشتراك حالياً — لا تمسح تقريره عند التحديث
+                } else if (assessments && assessments.length > 0) {
+                    currentAssessmentData = assessments[assessments.length - 1];
+                }
             }
 
             if (!currentAssessmentData) {
@@ -14346,7 +14350,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                          || (parseInt(localStorage.getItem('smart_max_reached_step') || '0', 10) >= 4)
                          || (currentAssessmentData && (!currentAssessmentData.patientId || currentAssessmentData.patientId === effectivePatientId)));
     } else if (savedTargetStep === 3) {
-        isTargetStepValid = !!currentAssessmentData && (!currentAssessmentData.patientId || currentAssessmentData.patientId === effectivePatientId);
+        isTargetStepValid = !!currentAssessmentData && (!!currentAssessmentData.primaryDiagnosis || !!currentAssessmentData.diagnosisTitle || !currentAssessmentData.patientId || currentAssessmentData.patientId === effectivePatientId);
     } else if (savedTargetStep === 2) {
         isTargetStepValid = !!currentSelectedPoint;
     }
