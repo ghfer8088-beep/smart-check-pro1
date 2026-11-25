@@ -10,7 +10,7 @@
 })();
 
 // ==========================================================================
-// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي (Medical SVG Icon & Contrast Engine v33.68)
+// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي (Medical SVG Icon & Contrast Engine v33.69)
 // يحول كافة الأيقونات التفاعلية إلى أيقونات SVG طبية حديثة موحدة اللون (currentColor) دون أي تشتت لوني
 // ==========================================================================
 (function initMedicalSvgIconAndContrastEngine() {
@@ -6945,11 +6945,11 @@ function openSubscriptionTiersModal() {
     const cfg = getActivePaymentGateConfig();
     const pr = getPkgPrices(cfg);
     const p1 = document.getElementById('tier-price-1'); if (p1) p1.textContent = pr[1];
-    const b1 = document.getElementById('tier-btn-1'); if (b1) b1.textContent = 'اختيار باقة الجلسة (' + pr[1] + ' د.أ) ←';
+    const b1 = document.getElementById('tier-btn-1'); if (b1) b1.innerHTML = '<span>اختيار باقة الجلسة</span><span style="white-space: nowrap; font-size: 0.95em; opacity: 0.96;">(' + pr[1] + ' د.أ) ←</span>';
     const p5 = document.getElementById('tier-price-5'); if (p5) p5.textContent = pr[5];
-    const b5 = document.getElementById('tier-btn-5'); if (b5) b5.textContent = 'اختيار الباقة العائلية (' + pr[5] + ' د.أ) ←';
+    const b5 = document.getElementById('tier-btn-5'); if (b5) b5.innerHTML = '<span>اختيار الباقة العائلية</span><span style="white-space: nowrap; font-size: 0.95em; opacity: 0.96;">(' + pr[5] + ' د.أ) ←</span>';
     const p10 = document.getElementById('tier-price-10'); if (p10) p10.textContent = pr[10];
-    const b10 = document.getElementById('tier-btn-10'); if (b10) b10.textContent = 'اختيار الباقة الشاملة (' + pr[10] + ' د.أ) ←';
+    const b10 = document.getElementById('tier-btn-10'); if (b10) b10.innerHTML = '<span>اختيار الباقة الشاملة</span><span style="white-space: nowrap; font-size: 0.95em; opacity: 0.96;">(' + pr[10] + ' د.أ) ←</span>';
 
     const modal = document.getElementById('subscription-tiers-modal');
     if (modal) modal.style.display = 'flex';
@@ -12249,7 +12249,7 @@ window.showAppUpdateNoticeBanner = showAppUpdateNoticeBanner;
 // ============================================================
 // 🔄 منظومة التحديث السلسة — هادئة تماماً، لا تقطع الجلسة ولا تفرض إعادة التحميل
 // ============================================================
-const CURRENT_APP_VERSION = 'v33.68';
+const CURRENT_APP_VERSION = 'v33.69';
 window.CURRENT_APP_VERSION = CURRENT_APP_VERSION;
 let _versionCheckInProgress = false;
 let _autoReloadTriggered = false;

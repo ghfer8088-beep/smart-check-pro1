@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <script>
     (function () {
-        const CURRENT_VERSION = 'v33.68';
+        const CURRENT_VERSION = 'v33.69';
         try {
             const savedVer = localStorage.getItem('scp_app_runtime_version');
             if (savedVer && savedVer !== CURRENT_VERSION) {
@@ -205,7 +205,7 @@
                 <div class="brand-version-badge" onclick="event.stopPropagation(); if(typeof forceAppUpdateAndClearCache==='function') forceAppUpdateAndClearCache();" title="انقر لتحديث وتنشيط التطبيق فوراً" style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72em; color: #475569; margin-top: 1px; cursor: pointer; user-select: none;">
                     <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 6px #10b981;"></span>
                     <span>الإصدار:</span>
-                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v33.68</strong>
+                    <strong id="app-current-version-text" style="color: var(--primary-gold); font-family: monospace, sans-serif; font-size: 1.08em; letter-spacing: 0.5px; font-weight: 800;">v33.69</strong>
                 </div>
             </div>
         </div>
@@ -1610,7 +1610,7 @@
     <!-- 🌟 النوافذ المنبثقة الاحترافية لباقات الاشتراك وتأكيد الدفع (Two-Step Subscription Modals) -->
     <!-- ========================================================================= -->
 
-    <!-- نافذة 1: اختيار الباقة العلاجية الفاخرة والمكبرة (Subscription Tiers Modal v33.68) -->
+    <!-- نافذة 1: اختيار الباقة العلاجية الفاخرة والمكبرة (Subscription Tiers Modal v33.69) -->
     <div id="subscription-tiers-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(12px); z-index: 999999; align-items: center; justify-content: center; padding: 18px; overflow-y: auto;">
         <div class="modal-inner" style="background: #ffffff; border: 3px solid #0284c7; border-radius: 28px; max-width: 1240px; width: 96%; padding: 34px 30px; box-shadow: 0 24px 60px rgba(2, 132, 199, 0.22); box-sizing: border-box; text-align: right; position: relative; overflow: hidden;">
             
@@ -1657,8 +1657,9 @@
                             <div style="margin-bottom: 4px; display: flex; align-items: center; gap: 7px;"><span style="color: #0284c7; font-weight: 900;">✓</span> <span>إمكانية طباعة التقرير وحفظه في ملفك</span></div>
                         </div>
                     </div>
-                    <button type="button" id="tier-btn-1" onclick="selectTierForCheckout(1)" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: 1.5px solid #0369a1; padding: 14px 16px; border-radius: 14px; font-weight: 900; font-size: 1.02em; cursor: pointer; box-shadow: 0 6px 18px rgba(2, 132, 199, 0.28); transition: all 0.2s;">
-                        اختيار باقة الجلسة (3 د.أ) ←
+                    <button type="button" id="tier-btn-1" onclick="selectTierForCheckout(1)" style="width: 100%; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: 1.5px solid #0369a1; padding: 12px 14px; border-radius: 14px; font-weight: 900; font-size: 0.98em; cursor: pointer; box-shadow: 0 6px 18px rgba(2, 132, 199, 0.28); transition: all 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; line-height: 1.35;">
+                        <span>اختيار باقة الجلسة</span>
+                        <span style="white-space: nowrap; font-size: 0.95em; opacity: 0.96;">(3 د.أ) ←</span>
                     </button>
                 </div>
 
@@ -1685,8 +1686,9 @@
                             <div style="margin-bottom: 4px; display: flex; align-items: center; gap: 7px;"><span style="color: #7c3aed; font-weight: 900;">✓</span> <span>حفظ دائم ومستمر في ملفك الطبي</span></div>
                         </div>
                     </div>
-                    <button type="button" id="tier-btn-5" onclick="selectTierForCheckout(5)" style="width: 100%; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: #ffffff; border: 1.5px solid #5b21b6; padding: 14px 16px; border-radius: 14px; font-weight: 900; font-size: 1.02em; cursor: pointer; box-shadow: 0 6px 18px rgba(124, 58, 237, 0.3);">
-                        اختيار الباقة العائلية (10 د.أ) ←
+                    <button type="button" id="tier-btn-5" onclick="selectTierForCheckout(5)" style="width: 100%; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: #ffffff; border: 1.5px solid #5b21b6; padding: 12px 14px; border-radius: 14px; font-weight: 900; font-size: 0.98em; cursor: pointer; box-shadow: 0 6px 18px rgba(124, 58, 237, 0.3); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; line-height: 1.35;">
+                        <span>اختيار الباقة العائلية</span>
+                        <span style="white-space: nowrap; font-size: 0.95em; opacity: 0.96;">(10 د.أ) ←</span>
                     </button>
                 </div>
 
@@ -1713,8 +1715,9 @@
                             <div style="margin-bottom: 4px; display: flex; align-items: center; gap: 7px;"><span style="color: #059669; font-weight: 900;">✓</span> <span>أولوية الدعم والاستشارات السريرية</span></div>
                         </div>
                     </div>
-                    <button type="button" id="tier-btn-10" onclick="selectTierForCheckout(10)" style="width: 100%; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; border: 1.5px solid #065f46; padding: 14px 16px; border-radius: 14px; font-weight: 900; font-size: 1.02em; cursor: pointer; box-shadow: 0 6px 18px rgba(5, 150, 105, 0.28);">
-                        اختيار الباقة الشاملة (15 د.أ) ←
+                    <button type="button" id="tier-btn-10" onclick="selectTierForCheckout(10)" style="width: 100%; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #ffffff; border: 1.5px solid #065f46; padding: 12px 14px; border-radius: 14px; font-weight: 900; font-size: 0.98em; cursor: pointer; box-shadow: 0 6px 18px rgba(5, 150, 105, 0.28); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; line-height: 1.35;">
+                        <span>اختيار الباقة الشاملة</span>
+                        <span style="white-space: nowrap; font-size: 0.95em; opacity: 0.96;">(15 د.أ) ←</span>
                     </button>
                 </div>
 
@@ -1739,8 +1742,9 @@
                             <div style="margin-bottom: 4px; display: flex; align-items: center; gap: 7px;"><span style="color: #e11d48; font-weight: 900;">✓</span> <span>مخصصة لغير المقتدرين مادياً فقط</span></div>
                         </div>
                     </div>
-                    <button type="button" onclick="openHumanitarianSubscriptionModal()" style="width: 100%; background: linear-gradient(135deg, #e11d48 0%, #be123c 100%); color: #ffffff; border: 1.5px solid #9f1239; padding: 14px 16px; border-radius: 14px; font-weight: 900; font-size: 1.02em; cursor: pointer; box-shadow: 0 6px 18px rgba(225, 29, 72, 0.25);">
-                        طلب مبادرة الدعم الإنساني ←
+                    <button type="button" onclick="openHumanitarianSubscriptionModal()" style="width: 100%; background: linear-gradient(135deg, #e11d48 0%, #be123c 100%); color: #ffffff; border: 1.5px solid #9f1239; padding: 12px 14px; border-radius: 14px; font-weight: 900; font-size: 0.98em; cursor: pointer; box-shadow: 0 6px 18px rgba(225, 29, 72, 0.25); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; line-height: 1.35;">
+                        <span>طلب مبادرة الدعم الإنساني</span>
+                        <span style="white-space: nowrap; font-size: 0.95em; opacity: 0.96;">(مجاناً 100%) ←</span>
                     </button>
                 </div>
             </div>
@@ -2069,10 +2073,10 @@
             const userPhone = (document.getElementById('support-user-phone')?.value || '').trim() || 'غير محدد';
             const userNote = (document.getElementById('support-user-note')?.value || '').trim();
             let currentStep = 'غير محدد';
-            let appVer = 'v33.68';
+            let appVer = 'v33.69';
             try {
                 currentStep = localStorage.getItem('smart_current_step') || '1';
-                appVer = document.getElementById('app-current-version-text')?.textContent?.trim() || localStorage.getItem('scp_app_runtime_version') || 'v33.68';
+                appVer = document.getElementById('app-current-version-text')?.textContent?.trim() || localStorage.getItem('scp_app_runtime_version') || 'v33.69';
             } catch (e) {}
 
             const msg =
