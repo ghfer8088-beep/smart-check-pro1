@@ -60,9 +60,9 @@
     /></noscript>
     <!-- End Meta Pixel Code -->
 
-    <script src="js/system-watchdog.js?v=33.71"></script>
-    <script src="js/security-shield.js?v=33.71"></script>
-    <link rel="stylesheet" href="css/style.css?v=33.71">
+    <script src="js/system-watchdog.js?v=33.72"></script>
+    <script src="js/security-shield.js?v=33.72"></script>
+    <link rel="stylesheet" href="css/style.css?v=33.72">
     <style>
         :root {
             --primary-gold: #0284c7;
@@ -531,7 +531,7 @@
                     <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.78em; color: #334155; margin-top: 3px; background: #f0f9ff; border: 1px solid #bae6fd; padding: 2px 10px; border-radius: 20px;">
                         <span style="display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #10b981;"></span>
                         <span>الإصدار المعتمد:</span>
-                        <strong style="color: #0369a1; font-family: monospace, sans-serif; font-size: 1.06em; font-weight: 900;">v33.71</strong>
+                        <strong style="color: #0369a1; font-family: monospace, sans-serif; font-size: 1.06em; font-weight: 900;">v33.72</strong>
                     </div>
                 </div>
             </div>
@@ -550,8 +550,8 @@
                         <span id="health-badge-icon">🛡️</span>
                         <span id="health-badge-text">درع المراقبة</span>
                     </button>
-                    <button type="button" id="btn-broadcast-version-global" onclick="handleUnifiedUpdateAndBroadcast()" class="btn-header" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border: 1.5px solid #047857; color: #ffffff; font-weight: 900; padding: 9px 14px; font-size: 0.85em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);" title="تحديث الكاش، ومزامنة السحابة، وبث التحديث العالمي (v33.71) لجميع الأجهزة والهواتف حول العالم بضغطة واحدة">
-                        <span>🚀</span> تحديث وبث الإصدار (v33.71)
+                    <button type="button" id="btn-broadcast-version-global" onclick="handleUnifiedUpdateAndBroadcast()" class="btn-header" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border: 1.5px solid #047857; color: #ffffff; font-weight: 900; padding: 9px 14px; font-size: 0.85em; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);" title="تحديث الكاش، ومزامنة السحابة، وبث التحديث العالمي (v33.72) لجميع الأجهزة والهواتف حول العالم بضغطة واحدة">
+                        <span>🚀</span> تحديث وبث الإصدار (v33.72)
                     </button>
                     <a href="index.html" class="btn-header admin-btn-front" style="background: #0284c7; color: #ffffff; padding: 9px 14px; font-size: 0.85em; font-weight: 800; text-decoration: none; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1.5px solid #0369a1;" title="فتح واجهة المراجعين">
                         🌐 واجهة المراجعين
@@ -1422,141 +1422,124 @@
     <!-- ========================================================================== -->
     <!-- 💰 نافذة النظام المحاسبي وسجل المبيعات والاشتراكات (Financial Ledger Modal) -->
     <!-- ========================================================================== -->
-    <div id="financial-ledger-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 9999; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;">
-        <div class="modal-inner" style="background: #ffffff; border: 2px solid var(--primary-gold); border-radius: 20px; max-width: 1100px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; padding: 24px; box-shadow: 0 15px 50px rgba(0,0,0,0.95); box-sizing: border-box; overflow: hidden; position: relative;">
+    <div id="financial-ledger-modal" class="app-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.72); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 12px; overflow-y: auto;">
+        <div class="modal-inner" style="background: #ffffff; border: 2px solid #0284c7; border-radius: 20px; max-width: 1400px; width: 98%; height: 94vh; max-height: 94vh; display: flex; flex-direction: column; padding: 18px 22px; box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25); box-sizing: border-box; overflow: hidden; position: relative;">
             
-            <!-- الهيدر -->
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid rgba(212, 175, 55, 0.3); padding-bottom: 14px; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="font-size: 2.2em; filter: drop-shadow(0 0 10px rgba(212,175,55,0.4));">💰</div>
+            <!-- الهيدر المدمج -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; flex-shrink: 0;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 40px; height: 40px; border-radius: 12px; background: #e0f2fe; border: 1.5px solid #7dd3fc; display: flex; align-items: center; justify-content: center; font-size: 1.35em;">💰</div>
                     <div>
-                        <h2 style="color: var(--primary-gold); margin: 0; font-size: 1.35em; font-weight: 900;">النظام المحاسبي وسجل المبيعات والاشتراكات</h2>
-                        <div style="color: #475569; font-size: 0.86em; margin-top: 3px;">
-                            رصد مالي دقيق وشامل لجميع الباقات المشتراة والمبالغ المحصّلة والمبادرات الإنسانية منذ إطلاق المنصة
+                        <h2 style="color: #0369a1; margin: 0; font-size: 1.25em; font-weight: 900;">النظام المحاسبي وسجل المبيعات والاشتراكات</h2>
+                        <div style="color: #475569; font-size: 0.8em; margin-top: 2px;">
+                            رصد مالي موحّد لجميع الباقات المدفوعة والمبادرات الإنسانية بدون تكرار
                         </div>
                     </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                    <button type="button" onclick="copyFinancialLedgerSummary()" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-gold); color: #0369a1; padding: 7px 12px; border-radius: 8px; font-size: 0.8em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;" title="نسخ ملخص الحسابات">
+                    <button type="button" onclick="copyFinancialLedgerSummary()" style="background: #f0f9ff; border: 1.5px solid #7dd3fc; color: #0369a1; padding: 6px 12px; border-radius: 8px; font-size: 0.8em; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
                         <span>📋</span> <span>نسخ الملخص</span>
                     </button>
-                    <button type="button" onclick="exportAccountingLedgerCSV()" style="background: rgba(16, 185, 129, 0.18); border: 1px solid #10b981; color: #065f46; padding: 7px 12px; border-radius: 8px; font-size: 0.8em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;" title="تصدير كشف الحساب كملف Excel / CSV">
+                    <button type="button" onclick="exportAccountingLedgerCSV()" style="background: #ecfdf5; border: 1.5px solid #6ee7b7; color: #047857; padding: 6px 12px; border-radius: 8px; font-size: 0.8em; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
                         <span>📥</span> <span>تصدير CSV</span>
                     </button>
-                    <button type="button" onclick="printAccountingLedgerReport()" style="background: rgba(56, 189, 248, 0.18); border: 1px solid #38bdf8; color: #0369a1; padding: 7px 12px; border-radius: 8px; font-size: 0.8em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;" title="طباعة كشف الحساب المالي الرسمي">
+                    <button type="button" onclick="printAccountingLedgerReport()" style="background: #f8fafc; border: 1.5px solid #cbd5e1; color: #1e293b; padding: 6px 12px; border-radius: 8px; font-size: 0.8em; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
                         <span>🖨️</span> <span>طباعة كشف</span>
                     </button>
-                    <button type="button" onclick="openManualTransactionModal()" style="background: rgba(249, 115, 22, 0.2); border: 1px solid #f97316; color: #9a3412; padding: 7px 12px; border-radius: 8px; font-size: 0.8em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;" title="إضافة قيد بيع يدوي (دفع كاش أو حوالة عيادة)">
+                    <button type="button" onclick="openManualTransactionModal()" style="background: #fff7ed; border: 1.5px solid #fdba74; color: #9a3412; padding: 6px 12px; border-radius: 8px; font-size: 0.8em; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
                         <span>➕</span> <span>قيد بيع يدوي</span>
                     </button>
-                    <button type="button" onclick="closeFinancialLedgerModal()" aria-label="إغلاق" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); color: #334155; font-size: 1.4em; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+                    <button type="button" onclick="closeFinancialLedgerModal()" aria-label="إغلاق" style="background: #f1f5f9; border: 1.5px solid #cbd5e1; color: #0f172a; font-size: 1.35em; font-weight: 900; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;">&times;</button>
                 </div>
             </div>
 
-            <!-- بطاقات ملخص المؤشرات المحاسبية الخمسة (5 KPI Cards) -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 18px;">
-                
-                <!-- 1. إجمالي الإيرادات -->
-                <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.18) 0%, rgba(180, 83, 9, 0.15) 100%); border: 1.5px solid var(--primary-gold); border-radius: 14px; padding: 14px; text-align: center; box-shadow: 0 4px 14px rgba(212,175,55,0.15);">
-                    <div style="color: #475569; font-size: 0.78em; font-weight: bold; margin-bottom: 2px;">إجمالي المبالغ المحصلة 💰</div>
-                    <div id="acct-total-rev" style="color: #0369a1; font-size: 1.85em; font-weight: 900; font-family: monospace;">0 د.أ</div>
-                    <div id="acct-total-orders" style="color: #334155; font-size: 0.75em; margin-top: 2px;">0 عملية مدفوعة</div>
+            <!-- شريط المؤشرات المحاسبية المدمج (5 بطاقات مدمجة بسطر واحد) -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 12px; flex-shrink: 0;">
+                <div style="background: #f0f9ff; border: 1.5px solid #0284c7; border-radius: 12px; padding: 10px 12px; text-align: center;">
+                    <div style="color: #0369a1; font-size: 0.76em; font-weight: 800;">إجمالي المحصل 💰</div>
+                    <div id="acct-total-rev" style="color: #0f172a; font-size: 1.45em; font-weight: 900; font-family: monospace; margin-top: 2px;">0 د.أ</div>
+                    <div id="acct-total-orders" style="color: #475569; font-size: 0.72em;">0 عملية مدفوعة</div>
                 </div>
-
-                <!-- 2. تشخيص فردي (3 د.أ) -->
-                <div style="background: #f8fafc; border: 1.5px solid #64748b; border-radius: 14px; padding: 14px; text-align: center;">
-                    <div style="color: #475569; font-size: 0.78em; font-weight: bold; margin-bottom: 2px;">فحص فردي (3 د.أ) 🔑</div>
-                    <div id="acct-single-count" style="color: #0284c7; font-size: 1.6em; font-weight: 900; font-family: monospace;">0</div>
-                    <div id="acct-single-sum" style="color: #475569; font-size: 0.75em; margin-top: 2px;">0 د.أ</div>
+                <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 10px 12px; text-align: center;">
+                    <div style="color: #475569; font-size: 0.76em; font-weight: 800;">فحص فردي (3 د.أ)</div>
+                    <div id="acct-single-count" style="color: #0284c7; font-size: 1.35em; font-weight: 900; font-family: monospace; margin-top: 2px;">0</div>
+                    <div id="acct-single-sum" style="color: #475569; font-size: 0.72em;">0 د.أ</div>
                 </div>
-
-                <!-- 3. باقة التعافي العائلي (10 د.أ) -->
-                <div style="background: rgba(245, 158, 11, 0.08); border: 1.5px solid #f59e0b; border-radius: 14px; padding: 14px; text-align: center;">
-                    <div style="color: #9a3412; font-size: 0.78em; font-weight: bold; margin-bottom: 2px;">باقة عائلية 5 (10 د.أ) ⭐</div>
-                    <div id="acct-pack5-count" style="color: #b45309; font-size: 1.6em; font-weight: 900; font-family: monospace;">0</div>
-                    <div id="acct-pack5-sum" style="color: #0369a1; font-size: 0.75em; margin-top: 2px;">0 د.أ</div>
+                <div style="background: #f5f3ff; border: 1.5px solid #c4b5fd; border-radius: 12px; padding: 10px 12px; text-align: center;">
+                    <div style="color: #6d28d9; font-size: 0.76em; font-weight: 800;">باقة 5 (10 د.أ) ⭐</div>
+                    <div id="acct-pack5-count" style="color: #6d28d9; font-size: 1.35em; font-weight: 900; font-family: monospace; margin-top: 2px;">0</div>
+                    <div id="acct-pack5-sum" style="color: #5b21b6; font-size: 0.72em;">0 د.أ</div>
                 </div>
-
-                <!-- 4. باقة الحل الجذري الشاملة (15 د.أ) -->
-                <div style="background: rgba(16, 185, 129, 0.08); border: 1.5px solid #10b981; border-radius: 14px; padding: 14px; text-align: center;">
-                    <div style="color: #065f46; font-size: 0.78em; font-weight: bold; margin-bottom: 2px;">باقة شاملة 10 (15 د.أ) 👑</div>
-                    <div id="acct-pack10-count" style="color: #047857; font-size: 1.6em; font-weight: 900; font-family: monospace;">0</div>
-                    <div id="acct-pack10-sum" style="color: #065f46; font-size: 0.75em; margin-top: 2px;">0 د.أ</div>
+                <div style="background: #ecfdf5; border: 1.5px solid #6ee7b7; border-radius: 12px; padding: 10px 12px; text-align: center;">
+                    <div style="color: #047857; font-size: 0.76em; font-weight: 800;">باقة 10 (15 د.أ) 👑</div>
+                    <div id="acct-pack10-count" style="color: #047857; font-size: 1.35em; font-weight: 900; font-family: monospace; margin-top: 2px;">0</div>
+                    <div id="acct-pack10-sum" style="color: #065f46; font-size: 0.72em;">0 د.أ</div>
                 </div>
-
-                <!-- 5. مبادرة الرعاية الإنسانية (0 د.أ) -->
-                <div style="background: rgba(239, 68, 68, 0.08); border: 1.5px solid #ef4444; border-radius: 14px; padding: 14px; text-align: center;">
-                    <div style="color: #b91c1c; font-size: 0.78em; font-weight: bold; margin-bottom: 2px;">رعاية إنسانية (مجاناً) ❤️</div>
-                    <div id="acct-hum-count" style="color: #dc2626; font-size: 1.6em; font-weight: 900; font-family: monospace;">0</div>
-                    <div id="acct-hum-val" style="color: #334155; font-size: 0.75em; margin-top: 2px;">صدقة جارية (0 د.أ)</div>
+                <div style="background: #fff1f2; border: 1.5px solid #fda4af; border-radius: 12px; padding: 10px 12px; text-align: center;">
+                    <div style="color: #be123c; font-size: 0.76em; font-weight: 800;">رعاية إنسانية ❤️</div>
+                    <div id="acct-hum-count" style="color: #be123c; font-size: 1.35em; font-weight: 900; font-family: monospace; margin-top: 2px;">0</div>
+                    <div id="acct-hum-val" style="color: #881337; font-size: 0.72em;">صدقة جارية (0 د.أ)</div>
                 </div>
             </div>
 
-            <!-- شريط الفلاتر الزمنية السريعة (Time Period Filters) -->
-            <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                    <span style="color: #334155; font-size: 0.82em; font-weight: bold;">📅 الفترة الزمنية:</span>
-                    <button type="button" class="acct-time-btn active" onclick="filterFinancialByTime('all', this)" style="background: var(--primary-gold); color: #ffffff; border: 1px solid var(--primary-gold); padding: 5px 12px; border-radius: 16px; font-weight: bold; font-size: 0.8em; cursor: pointer;">
-                        🌟 الإجمالي الكلي (منذ الإطلاق)
-                    </button>
-                    <button type="button" class="acct-time-btn" onclick="filterFinancialByTime('today', this)" style="background: #1e293b; color: #ffffff; border: 1px solid #cbd5e1; padding: 5px 12px; border-radius: 16px; font-size: 0.8em; cursor: pointer;">
-                        🟢 مبيعات اليوم
-                    </button>
-                    <button type="button" class="acct-time-btn" onclick="filterFinancialByTime('week', this)" style="background: #1e293b; color: #ffffff; border: 1px solid #cbd5e1; padding: 5px 12px; border-radius: 16px; font-size: 0.8em; cursor: pointer;">
-                        📅 آخر 7 أيام
-                    </button>
-                    <button type="button" class="acct-time-btn" onclick="filterFinancialByTime('month', this)" style="background: #1e293b; color: #ffffff; border: 1px solid #cbd5e1; padding: 5px 12px; border-radius: 16px; font-size: 0.8em; cursor: pointer;">
-                        🗓️ هذا الشهر
-                    </button>
+            <!-- شريط أدوات التصفية والبحث الموحّد والمدمج -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        <span style="color: #334155; font-size: 0.8em; font-weight: 800;">📅 الفترة:</span>
+                        <button type="button" class="acct-time-btn active" onclick="filterFinancialByTime('all', this)" style="background: #0284c7; color: #ffffff; border: 1px solid #0284c7; padding: 4px 11px; border-radius: 16px; font-weight: 800; font-size: 0.78em; cursor: pointer;">الإجمالي الكلي</button>
+                        <button type="button" class="acct-time-btn" onclick="filterFinancialByTime('today', this)" style="background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; padding: 4px 11px; border-radius: 16px; font-weight: 700; font-size: 0.78em; cursor: pointer;">اليوم</button>
+                        <button type="button" class="acct-time-btn" onclick="filterFinancialByTime('week', this)" style="background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; padding: 4px 11px; border-radius: 16px; font-weight: 700; font-size: 0.78em; cursor: pointer;">آخر 7 أيام</button>
+                        <button type="button" class="acct-time-btn" onclick="filterFinancialByTime('month', this)" style="background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; padding: 4px 11px; border-radius: 16px; font-weight: 700; font-size: 0.78em; cursor: pointer;">هذا الشهر</button>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.78em; color: #475569; flex-wrap: wrap;">
+                        <span>من:</span>
+                        <input type="date" id="acct-date-from" onchange="handleCustomDateFilter()" style="background: #ffffff; border: 1px solid #cbd5e1; color: #0f172a; padding: 3px 8px; border-radius: 6px; font-size: 0.92em; outline: none;">
+                        <span>إلى:</span>
+                        <input type="date" id="acct-date-to" onchange="handleCustomDateFilter()" style="background: #ffffff; border: 1px solid #cbd5e1; color: #0f172a; padding: 3px 8px; border-radius: 6px; font-size: 0.92em; outline: none;">
+                        <button type="button" onclick="clearCustomDateFilter()" style="background: #ffffff; border: 1px solid #cbd5e1; color: #334155; padding: 4px 9px; border-radius: 6px; cursor: pointer; font-weight: 700;">إلغاء</button>
+                    </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8em; color: #475569;">
-                    <span>من:</span>
-                    <input type="date" id="acct-date-from" onchange="handleCustomDateFilter()" style="background: #f8fafc; border: 1px solid #cbd5e1; color: #0f172a; padding: 4px 8px; border-radius: 6px; font-size: 0.82em; outline: none;">
-                    <span>إلى:</span>
-                    <input type="date" id="acct-date-to" onchange="handleCustomDateFilter()" style="background: #f8fafc; border: 1px solid #cbd5e1; color: #0f172a; padding: 4px 8px; border-radius: 6px; font-size: 0.82em; outline: none;">
-                    <button type="button" onclick="clearCustomDateFilter()" style="background: rgba(255,255,255,0.06); border: 1px solid #cbd5e1; color: #334155; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.78em;">إلغاء</button>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <button type="button" class="acct-filter-btn active" onclick="filterFinancialLedger('all', this)" style="background: #0284c7; color: #ffffff; border: 1px solid #0284c7; padding: 5px 12px; border-radius: 16px; font-weight: 800; font-size: 0.78em; cursor: pointer;">
+                            الكل (<span id="acct-count-all">0</span>)
+                        </button>
+                        <button type="button" class="acct-filter-btn" onclick="filterFinancialLedger('single', this)" style="background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; padding: 5px 12px; border-radius: 16px; font-weight: 700; font-size: 0.78em; cursor: pointer;">
+                            فحص فردي (<span id="acct-count-single">0</span>)
+                        </button>
+                        <button type="button" class="acct-filter-btn" onclick="filterFinancialLedger('pack5', this)" style="background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; padding: 5px 12px; border-radius: 16px; font-weight: 700; font-size: 0.78em; cursor: pointer;">
+                            باقة 5 (<span id="acct-count-pack5">0</span>)
+                        </button>
+                        <button type="button" class="acct-filter-btn" onclick="filterFinancialLedger('pack10', this)" style="background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; padding: 5px 12px; border-radius: 16px; font-weight: 700; font-size: 0.78em; cursor: pointer;">
+                            باقة 10 (<span id="acct-count-pack10">0</span>)
+                        </button>
+                        <button type="button" class="acct-filter-btn" onclick="filterFinancialLedger('humanitarian', this)" style="background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; padding: 5px 12px; border-radius: 16px; font-weight: 700; font-size: 0.78em; cursor: pointer;">
+                            إنسانية (<span id="acct-count-hum">0</span>)
+                        </button>
+                    </div>
+                    <div style="flex: 1; max-width: 300px; min-width: 210px;">
+                        <input type="text" id="acct-search-input" placeholder="🔍 بحث بالاسم، الهاتف، الكود، أو الحوالة..." oninput="searchFinancialLedger(this.value)" style="width: 100%; background: #ffffff; border: 1.5px solid #cbd5e1; padding: 6px 12px; border-radius: 8px; color: #0f172a; font-size: 0.82em; box-sizing: border-box; outline: none;">
+                    </div>
                 </div>
             </div>
 
-            <!-- شريط التصفية والبحث (Package Types & Search) -->
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button type="button" class="acct-filter-btn active" onclick="filterFinancialLedger('all', this)" style="background: var(--primary-gold); color: #ffffff; border: 1px solid var(--primary-gold); padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 0.82em; cursor: pointer;">
-                        الكل (<span id="acct-count-all">0</span>)
-                    </button>
-                    <button type="button" class="acct-filter-btn" onclick="filterFinancialLedger('single', this)" style="background: #1e293b; color: #ffffff; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 20px; font-size: 0.82em; cursor: pointer;">
-                        تشخيص فردي (<span id="acct-count-single">0</span>)
-                    </button>
-                    <button type="button" class="acct-filter-btn" onclick="filterFinancialLedger('pack5', this)" style="background: #1e293b; color: #ffffff; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 20px; font-size: 0.82em; cursor: pointer;">
-                        باقة 5 (<span id="acct-count-pack5">0</span>)
-                    </button>
-                    <button type="button" class="acct-filter-btn" onclick="filterFinancialLedger('pack10', this)" style="background: #1e293b; color: #ffffff; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 20px; font-size: 0.82em; cursor: pointer;">
-                        باقة 10 (<span id="acct-count-pack10">0</span>)
-                    </button>
-                    <button type="button" class="acct-filter-btn" onclick="filterFinancialLedger('humanitarian', this)" style="background: #1e293b; color: #ffffff; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 20px; font-size: 0.82em; cursor: pointer;">
-                        مبادرة إنسانية (<span id="acct-count-hum">0</span>)
-                    </button>
-                </div>
-                <div style="flex: 1; max-width: 280px; min-width: 200px;">
-                    <input type="text" id="acct-search-input" placeholder="🔍 بحث باسم المشترك، الهاتف، أو الحوالة..." oninput="searchFinancialLedger(this.value)" style="width: 100%; background: #f8fafc; border: 1.5px solid #cbd5e1; padding: 7px 12px; border-radius: 8px; color: #0f172a; font-size: 0.82em; box-sizing: border-box; outline: none;">
-                </div>
-            </div>
-
-            <!-- جدول العمليات المحاسبية التفصيلي (Scrollable Table) -->
-            <div style="flex: 1; overflow-y: auto; overflow-x: auto; border: 1px solid #cbd5e1; border-radius: 12px; background: #f8fafc;">
-                <table style="width: 100%; border-collapse: collapse; text-align: right; font-size: 0.85em;">
+            <!-- جدول العمليات المحاسبية التفصيلي (Spacious Scrollable Table) -->
+            <div style="flex: 1; min-height: 300px; overflow-y: auto; overflow-x: auto; border: 1.5px solid #cbd5e1; border-radius: 12px; background: #ffffff;">
+                <table style="width: 100%; border-collapse: collapse; text-align: right; font-size: 0.88em;">
                     <thead>
-                        <tr style="background: #f8fafc; border-bottom: 1.5px solid #cbd5e1; color: #475569; font-weight: bold; position: sticky; top: 0; z-index: 2;">
-                            <th style="padding: 11px 12px;">#</th>
-                            <th style="padding: 11px 12px;">التاريخ والوقت</th>
-                            <th style="padding: 11px 12px;">المشترك</th>
-                            <th style="padding: 11px 12px;">الهاتف</th>
-                            <th style="padding: 11px 12px;">الباقة</th>
-                            <th style="padding: 11px 12px;">المبلغ</th>
-                            <th style="padding: 11px 12px;">طريقة الدفع / المرجع</th>
-                            <th style="padding: 11px 12px;">الحالة</th>
-                            <th style="padding: 11px 12px;">الكود المعتمد</th>
-                            <th style="padding: 11px 12px; text-align: center;">إجراء</th>
+                        <tr style="background: #f0f9ff; border-bottom: 2px solid #bae6fd; color: #0369a1; font-weight: 900; position: sticky; top: 0; z-index: 2;">
+                            <th style="padding: 12px 12px;">#</th>
+                            <th style="padding: 12px 12px;">التاريخ والوقت</th>
+                            <th style="padding: 12px 12px;">المشترك</th>
+                            <th style="padding: 12px 12px;">الهاتف</th>
+                            <th style="padding: 12px 12px;">الباقة</th>
+                            <th style="padding: 12px 12px;">المبلغ</th>
+                            <th style="padding: 12px 12px;">طريقة الدفع / المرجع</th>
+                            <th style="padding: 12px 12px;">الحالة</th>
+                            <th style="padding: 12px 12px;">الكود المعتمد</th>
+                            <th style="padding: 12px 12px; text-align: center;">إجراء</th>
                         </tr>
                     </thead>
                     <tbody id="acct-ledger-tbody">
@@ -2615,17 +2598,17 @@
     </div>
 
     <!-- اسكربتات إدارة قاعدة البيانات والمزامنة السحابية والذكاء الاصطناعي واستوديو الصور -->
-    <script src="js/clinic-patients-data.js?v=33.71"></script>
-    <script src="js/mqtt.min.js?v=33.71"></script>
-    <script src="js/cloud-sync.js?v=33.71"></script>
-    <script src="js/geo-tracker.js?v=33.71"></script>
-    <script src="js/database.js?v=33.71"></script>
-    <script src="js/exercise-image-studio.js?v=33.71"></script>
-    <script src="js/admin-engine.js?v=33.71"></script>
-    <script src="js/ai-config.js?v=33.71"></script>
-    <script src="js/ai-engine.js?v=33.71"></script>
-    <script src="js/whatsapp-dispatcher.js?v=33.71"></script>
-    <script src="js/mobile-alerts.js?v=33.71"></script>
+    <script src="js/clinic-patients-data.js?v=33.72"></script>
+    <script src="js/mqtt.min.js?v=33.72"></script>
+    <script src="js/cloud-sync.js?v=33.72"></script>
+    <script src="js/geo-tracker.js?v=33.72"></script>
+    <script src="js/database.js?v=33.72"></script>
+    <script src="js/exercise-image-studio.js?v=33.72"></script>
+    <script src="js/admin-engine.js?v=33.72"></script>
+    <script src="js/ai-config.js?v=33.72"></script>
+    <script src="js/ai-engine.js?v=33.72"></script>
+    <script src="js/whatsapp-dispatcher.js?v=33.72"></script>
+    <script src="js/mobile-alerts.js?v=33.72"></script>
 
     <script>
         // محرك صيانة وتطهير التخزين التلقائي لمنع تجاوز السعة (QuotaExceededError)
@@ -7720,23 +7703,37 @@ function copyAdminCode(code) {
         function extractAllAccountingRecords() {
             const records = [];
             const seenKeys = new Set();
+            const seenPhoneTier = new Set();
             const cfg = getAdminPaymentGateConfig();
+
+            const normRef = (raw) => {
+                const s = String(raw || '').trim();
+                if (!s || /^(?:حوالة محفظة أورانج|إعفاء إنساني معتمد|إعفاء إنساني مسجل|دفع إلكتروني)$/i.test(s)) return '';
+                return s;
+            };
+            const addUniqueRecord = (rec) => {
+                if (!rec) return;
+                const cleanPhone = String(rec.patientPhone || '').replace(/\D/g, '').slice(-8);
+                const cleanName = String(rec.patientName || '').trim().replace(/\s+/g, ' ');
+                const tier = rec.tier || 'single';
+                const realRef = normRef(rec.transferRef);
+                const identity = cleanPhone || cleanName;
+                const phoneTierKey = `${identity}_${tier}`;
+                const fullKey = `${phoneTierKey}_${realRef}`;
+
+                if (seenKeys.has(fullKey)) return;
+                if (!realRef && seenPhoneTier.has(phoneTierKey)) return;
+
+                seenKeys.add(fullKey);
+                seenPhoneTier.add(phoneTierKey);
+                records.push(rec);
+            };
 
             // 1. استرجاع القيود المسجلة مسبقاً في المخزن المحاسبي الدائم (smart_accounting_ledger)
             try {
                 const storedLedger = JSON.parse(localStorage.getItem('smart_accounting_ledger') || '[]');
                 if (Array.isArray(storedLedger)) {
-                    storedLedger.forEach(st => {
-                        if (!st) return;
-                        const pPhone = String(st.patientPhone || '').replace(/\D/g, '').slice(-8);
-                        const pName = String(st.patientName || '').trim();
-                        const ref = String(st.transferRef || '').trim();
-                        const key = `${pPhone || pName}_${st.tier}_${ref || st.id}`;
-                        if (!seenKeys.has(key)) {
-                            seenKeys.add(key);
-                            records.push(st);
-                        }
-                    });
+                    storedLedger.forEach(st => addUniqueRecord(st));
                 }
             } catch (e) {}
 
@@ -7755,48 +7752,41 @@ function copyAdminCode(code) {
                     const isHum = pType.includes('humanitarian') || pStatus.includes('إنساني') || pStatus.includes('إعفاء');
 
                     if (isPaid || isHum) {
-                        const cleanPhone = String(pPhone).replace(/\D/g, '').slice(-8);
-                        const cleanRef = String(p.transferRef || p.receiptNo || '').trim();
-                        const key = `${cleanPhone || pName}_${isHum ? 'hum' : 'paid'}_${cleanRef}`;
-                        if (!seenKeys.has(key)) {
-                            seenKeys.add(key);
-                            
-                            let tier = 'single';
-                            let tierName = 'تشخيص فردي';
-                            let price = isHum ? 0 : 3;
+                        let tier = 'single';
+                        let tierName = 'تشخيص فردي';
+                        let price = isHum ? 0 : 3;
 
-                            if (isHum) {
-                                tier = 'humanitarian';
-                                tierName = 'مبادرة إنسانية';
-                                price = 0;
-                            } else if (p.packageSize === 10 || amtPaid === 15 || (p.unlockPin && String(p.unlockPin).startsWith('10'))) {
-                                tier = 'pack10';
-                                tierName = 'باقة 10 فحوصات';
-                                price = 15;
-                            } else if (p.packageSize === 5 || amtPaid === 10 || (p.unlockPin && String(p.unlockPin).startsWith('5'))) {
-                                tier = 'pack5';
-                                tierName = 'باقة 5 فحوصات';
-                                price = 10;
-                            } else {
-                                price = amtPaid > 0 ? amtPaid : (cfg.priceJod || 3);
-                            }
-
-                            records.push({
-                                id: 'TX-P-' + (pId || Math.random().toString(36).slice(2, 7)),
-                                date: p.unlockedAt || p.paidAt || p.createdAt || p.registeredAt || p.lastUpdated || p.date || p.timestamp || new Date().toISOString(),
-                                patientId: pId,
-                                patientName: pName,
-                                patientPhone: pPhone,
-                                tier: tier,
-                                tierName: tierName,
-                                amount: price,
-                                transferRef: p.transferRef || p.receiptNo || (isHum ? 'إعفاء إنساني معتمد' : 'حوالة محفظة أورانج'),
-                                paymentMethod: isHum ? 'إعفاء إنساني (صدقة جارية)' : 'محفظة أورانج موني',
-                                status: p.isPaidUnlocked ? 'مفعّل ومعتمد' : (pStatus.includes('بانتظار') ? 'بانتظار التأكيد' : 'معتمد'),
-                                isUnlocked: Boolean(p.isPaidUnlocked),
-                                pin: p.unlockPin || generateAdminUnlockPin(pPhone || pName, tier === 'pack10' ? 10 : (tier === 'pack5' ? 5 : 1))
-                            });
+                        if (isHum) {
+                            tier = 'humanitarian';
+                            tierName = 'مبادرة إنسانية';
+                            price = 0;
+                        } else if (p.packageSize === 10 || amtPaid === 15 || (p.unlockPin && String(p.unlockPin).startsWith('10'))) {
+                            tier = 'pack10';
+                            tierName = 'باقة 10 فحوصات';
+                            price = 15;
+                        } else if (p.packageSize === 5 || amtPaid === 10 || (p.unlockPin && String(p.unlockPin).startsWith('5'))) {
+                            tier = 'pack5';
+                            tierName = 'باقة 5 فحوصات';
+                            price = 10;
+                        } else {
+                            price = amtPaid > 0 ? amtPaid : (cfg.priceJod || 3);
                         }
+
+                        addUniqueRecord({
+                            id: 'TX-P-' + (pId || Math.random().toString(36).slice(2, 7)),
+                            date: p.unlockedAt || p.paidAt || p.createdAt || p.registeredAt || p.lastUpdated || p.date || p.timestamp || new Date().toISOString(),
+                            patientId: pId,
+                            patientName: pName,
+                            patientPhone: pPhone,
+                            tier: tier,
+                            tierName: tierName,
+                            amount: price,
+                            transferRef: p.transferRef || p.receiptNo || '',
+                            paymentMethod: isHum ? 'إعفاء إنساني' : 'محفظة أورانج موني',
+                            status: p.isPaidUnlocked ? 'مفعّل ومعتمد' : (pStatus.includes('بانتظار') ? 'بانتظار التأكيد' : 'معتمد'),
+                            isUnlocked: Boolean(p.isPaidUnlocked),
+                            pin: p.unlockPin || generateAdminUnlockPin(pPhone || pName, tier === 'pack10' ? 10 : (tier === 'pack5' ? 5 : 1))
+                        });
                     }
                 });
             }
@@ -7811,50 +7801,44 @@ function copyAdminCode(code) {
                         const pPhone = n.patientPhone || n.meta?.subscriberPhone || '';
                         const pName = n.patientName || n.meta?.subscriberName || 'مشترك';
                         const ref = String(n.meta?.transferRef || '').trim();
-                        const cleanPhone = String(pPhone).replace(/\D/g, '').slice(-8);
-                        const key = `${cleanPhone || pName}_${isHumNotif ? 'hum' : 'paid'}_${ref}`;
 
-                        if (!seenKeys.has(key)) {
-                            seenKeys.add(key);
+                        let tier = 'single';
+                        let tierName = 'تشخيص فردي';
+                        let price = isHumNotif ? 0 : 3;
+                        const pkgSize = n.meta?.packageSize || 1;
+                        const metaAmt = Number(n.meta?.amountJod || 0);
 
-                            let tier = 'single';
-                            let tierName = 'تشخيص فردي';
-                            let price = isHumNotif ? 0 : 3;
-                            const pkgSize = n.meta?.packageSize || 1;
-                            const metaAmt = Number(n.meta?.amountJod || 0);
-
-                            if (isHumNotif) {
-                                tier = 'humanitarian';
-                                tierName = 'مبادرة إنسانية';
-                                price = 0;
-                            } else if (pkgSize === 10 || metaAmt === 15) {
-                                tier = 'pack10';
-                                tierName = 'باقة 10 فحوصات';
-                                price = 15;
-                            } else if (pkgSize === 5 || metaAmt === 10) {
-                                tier = 'pack5';
-                                tierName = 'باقة 5 فحوصات';
-                                price = 10;
-                            } else {
-                                price = metaAmt > 0 ? metaAmt : (cfg.priceJod || 3);
-                            }
-
-                            records.push({
-                                id: n.id || ('TX-N-' + Math.random().toString(36).slice(2, 7)),
-                                date: n.time || n.timestamp || n.date || n.meta?.approvedAt || n.meta?.requestedAt || new Date().toISOString(),
-                                patientId: n.patientId || '',
-                                patientName: pName,
-                                patientPhone: pPhone,
-                                tier: tier,
-                                tierName: tierName,
-                                amount: price,
-                                transferRef: ref || (isHumNotif ? 'إعفاء إنساني معتمد' : 'حوالة محفظة أورانج'),
-                                paymentMethod: isHumNotif ? 'إعفاء إنساني (صدقة جارية)' : 'محفظة أورانج موني',
-                                status: n.read || n.meta?.approved ? 'مفعّل ومعتمد' : 'بانتظار التأكيد',
-                                isUnlocked: Boolean(n.read || n.meta?.approved),
-                                pin: n.meta?.unlockPin || n.meta?.unlockCode || generateAdminUnlockPin(pPhone || pName, isHumNotif ? 'humanitarian' : (tier === 'pack10' ? 10 : (tier === 'pack5' ? 5 : 1)))
-                            });
+                        if (isHumNotif) {
+                            tier = 'humanitarian';
+                            tierName = 'مبادرة إنسانية';
+                            price = 0;
+                        } else if (pkgSize === 10 || metaAmt === 15) {
+                            tier = 'pack10';
+                            tierName = 'باقة 10 فحوصات';
+                            price = 15;
+                        } else if (pkgSize === 5 || metaAmt === 10) {
+                            tier = 'pack5';
+                            tierName = 'باقة 5 فحوصات';
+                            price = 10;
+                        } else {
+                            price = metaAmt > 0 ? metaAmt : (cfg.priceJod || 3);
                         }
+
+                        addUniqueRecord({
+                            id: n.id || ('TX-N-' + Math.random().toString(36).slice(2, 7)),
+                            date: n.time || n.timestamp || n.date || n.meta?.approvedAt || n.meta?.requestedAt || new Date().toISOString(),
+                            patientId: n.patientId || '',
+                            patientName: pName,
+                            patientPhone: pPhone,
+                            tier: tier,
+                            tierName: tierName,
+                            amount: price,
+                            transferRef: ref,
+                            paymentMethod: isHumNotif ? 'إعفاء إنساني' : 'محفظة أورانج موني',
+                            status: n.read || n.meta?.approved ? 'مفعّل ومعتمد' : 'بانتظار التأكيد',
+                            isUnlocked: Boolean(n.read || n.meta?.approved),
+                            pin: n.meta?.unlockPin || n.meta?.unlockCode || generateAdminUnlockPin(pPhone || pName, isHumNotif ? 'humanitarian' : (tier === 'pack10' ? 10 : (tier === 'pack5' ? 5 : 1)))
+                        });
                     }
                 });
             }
@@ -7863,12 +7847,10 @@ function copyAdminCode(code) {
             try {
                 const usedHumPhones = JSON.parse(localStorage.getItem('smart_humanitarian_used_phones') || '[]');
                 if (Array.isArray(usedHumPhones)) {
-                    usedHumPhones.forEach((hPhone, idx) => {
+                    usedHumPhones.forEach((hPhone) => {
                         const cleanPhone = String(hPhone).replace(/\D/g, '').slice(-8);
-                        const key = `${cleanPhone}_hum_permanent`;
-                        if (cleanPhone && !seenKeys.has(key)) {
-                            seenKeys.add(key);
-                            records.push({
+                        if (cleanPhone) {
+                            addUniqueRecord({
                                 id: 'TX-HUM-' + cleanPhone,
                                 date: localStorage.getItem('smart_humanitarian_used_at') || new Date().toISOString(),
                                 patientId: 'pat_hum_' + cleanPhone,
@@ -7877,8 +7859,8 @@ function copyAdminCode(code) {
                                 tier: 'humanitarian',
                                 tierName: 'مبادرة إنسانية',
                                 amount: 0,
-                                transferRef: 'إعفاء إنساني مسجل',
-                                paymentMethod: 'إعفاء إنساني (صدقة جارية)',
+                                transferRef: '',
+                                paymentMethod: 'إعفاء إنساني',
                                 status: 'مفعّل ومعتمد',
                                 isUnlocked: true,
                                 pin: generateAdminUnlockPin(hPhone, 'humanitarian')
@@ -8084,16 +8066,21 @@ function copyAdminCode(code) {
                 const waMsg = `مرحباً بك أخي/أختي ${r.patientName} 🌸\nمنصة «وداعاً للألم» للكايروبراكتيك.\nكود تفعيل اشتراكك في [${r.tierName}] هو:\n👉 *${r.pin}* 👈\nنتمنى لك دوام الصحة والعافية.`;
                 const waUrl = cleanDigits ? `https://api.whatsapp.com/send?phone=${cleanDigits}&text=${encodeURIComponent(waMsg)}` : '';
 
+                const rawRef = String(r.transferRef || '').trim();
+                const isGenericRef = !rawRef || /^(?:حوالة محفظة أورانج|إعفاء إنساني معتمد|إعفاء إنساني مسجل)$/i.test(rawRef);
+                const methodLabel = (r.paymentMethod || 'محفظة أورانج موني').replace(/\s*\(صدقة جارية\)/g, '');
+                const methodDisplay = isGenericRef ? methodLabel : `${methodLabel} • <span style="color:#0369a1;font-weight:800;">${rawRef}</span>`;
+
                 return `
-                    <tr style="border-bottom: 1px solid #e2e8f0; transition: background 0.15s;" onmouseover="this.style.background='rgba(212,175,55,0.04)'" onmouseout="this.style.background='transparent'">
+                    <tr style="border-bottom: 1px solid #e2e8f0; transition: background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
                         <td style="padding: 10px 12px; color: #64748b; font-family: monospace;">${idx + 1}</td>
                         <td style="padding: 10px 12px; color: #334155; white-space: nowrap;">${dStr}</td>
                         <td style="padding: 10px 12px; font-weight: bold; color: #0f172a;">${r.patientName}</td>
                         <td style="padding: 10px 12px; color: #475569; font-family: monospace; direction: ltr; text-align: right;">${r.patientPhone || '--'}</td>
-                        <td style="padding: 10px 12px;">${tierBadge}</td>
-                        <td style="padding: 10px 12px; font-weight: 900; color: ${r.amount > 0 ? '#0369a1' : '#475569'}; font-family: monospace;">${r.amount > 0 ? r.amount + ' د.أ' : 'مجاناً'}</td>
-                        <td style="padding: 10px 12px; color: #9a3412; font-family: monospace; letter-spacing: 0.5px;">${r.paymentMethod ? r.paymentMethod + ' - ' : ''}${r.transferRef}</td>
-                        <td style="padding: 10px 12px;">${statusBadge}</td>
+                        <td style="padding: 10px 12px; white-space: nowrap;">${tierBadge}</td>
+                        <td style="padding: 10px 12px; font-weight: 900; white-space: nowrap; color: ${r.amount > 0 ? '#0369a1' : '#475569'}; font-family: monospace;">${r.amount > 0 ? r.amount + ' د.أ' : 'مجاناً'}</td>
+                        <td style="padding: 10px 12px; color: #334155; font-size: 0.92em;">${methodDisplay}</td>
+                        <td style="padding: 10px 12px; white-space: nowrap;">${statusBadge}</td>
                         <td style="padding: 10px 12px;">
                             <span style="font-family: monospace; font-size: 1.1em; font-weight: 900; color: #0284c7; letter-spacing: 1.5px; background: rgba(56, 189, 248, 0.1); padding: 2px 8px; border-radius: 6px;">${r.pin}</span>
                         </td>
@@ -8954,13 +8941,13 @@ function copyAdminCode(code) {
 
         // 🚀 تحديث الكاش ومزامنة السحابة وبث التحديث العالمي بضغطة واحدة
         async function handleUnifiedUpdateAndBroadcast() {
-            if (confirm('🚀 تحديث وبث الإصدار (v33.71):\n\nهل تود تحديث الكاش المحلي، ومزامنة السجلات، وبث التحديث الجديد لكافة هواتف وأجهزة المراجعين المتصلة فوراً؟')) {
+            if (confirm('🚀 تحديث وبث الإصدار (v33.72):\n\nهل تود تحديث الكاش المحلي، ومزامنة السجلات، وبث التحديث الجديد لكافة هواتف وأجهزة المراجعين المتصلة فوراً؟')) {
                 // 1. بث التحديث السحابي الشامل
                 try {
                     if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                         SmartCloudSync.broadcastAppVersionUpdate({
-                            version: 'v33.71',
-                            title: 'تحديث المنظومة (v33.71)',
+                            version: 'v33.72',
+                            title: 'تحديث المنظومة (v33.72)',
                             timestamp: Date.now()
                         });
                     }
@@ -8983,17 +8970,17 @@ function copyAdminCode(code) {
         }
         window.handleUnifiedUpdateAndBroadcast = handleUnifiedUpdateAndBroadcast;
 
-        // بث رسالة التحديث الجديد الشامل (v33.71) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
+        // بث رسالة التحديث الجديد الشامل (v33.72) لجميع الأجهزة والهواتف المتصلة بالعالم فوراً
         function handleBroadcastGlobalVersion() {
-            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v33.71) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
+            if (confirm('هل تود بث رسالة التحديث الجديد (الإصدار v33.72) الآن لجميع الهواتف والأجهزة المتصلة حول العالم؟\n\nسيصل إشعار التحديث وتحديث الكاش بالعد التنازلي التلقائي لكافة المراجعين.')) {
                 if (window.SmartCloudSync && typeof SmartCloudSync.broadcastAppVersionUpdate === 'function') {
                     SmartCloudSync.broadcastAppVersionUpdate({
-                        version: 'v33.71',
-                        title: 'تحديث المنظومة (v33.71)',
+                        version: 'v33.72',
+                        title: 'تحديث المنظومة (v33.72)',
                         timestamp: Date.now()
                     });
                 }
-                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v33.71) عبر شبكة البث اللحظي MQTT و NTFY لكافة الأجهزة!');
+                alert('🚀 تم بنجاح بث إشعار التحديث العالمي (v33.72) عبر شبكة البث اللحظي MQTT و NTFY لكافة الأجهزة!');
             }
         }
         window.handleBroadcastGlobalVersion = handleBroadcastGlobalVersion;
@@ -9462,7 +9449,7 @@ function copyAdminCode(code) {
 
 <script>
 // ==========================================================================
-// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي في لوحة القيادة السريرية (v33.71)
+// 🎨 محرك الأيقونات الطبية الحديثة SVG وضبط التباين التلقائي في لوحة القيادة السريرية (v33.72)
 // ==========================================================================
 (function initAdminMedicalSvgIconAndContrastEngine() {
     const P = {
@@ -9636,7 +9623,7 @@ function copyAdminCode(code) {
 <script>
 // ===== تحديث تلقائي للوحة الإدارة: تقارن إصدارها بإصدار الأداة المنشور (sw.js) وتحدّث نفسها =====
 (function () {
-    const ADMIN_VER = 'v33.71';
+    const ADMIN_VER = 'v33.72';
     window.ADMIN_VER = ADMIN_VER;
     let busy = false;
     async function check(force) {
